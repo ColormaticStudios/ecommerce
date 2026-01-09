@@ -1,11 +1,11 @@
-# Ecommerce API Backend
+# ColormaticStudios/ecommerce: A self-hostable ecommerce platform
 
-A RESTful ecommerce API backend built with Go, Gin, GORM, and PostgreSQL.
+A RESTful ecommerce API built with Go, Gin, GORM, and PostgreSQL.
 
 > [!WARNING]
 > This project was partially vibe-coded. I have not reviewed all of the code, I cannot guarantee quality, use at your own risk.
 
-See [frontend/README.md](frontend/README.md) for details about the frontend.
+### See [frontend/README.md](frontend/README.md) for details about the frontend.
 
 ## Features
 
