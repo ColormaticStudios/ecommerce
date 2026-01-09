@@ -7,6 +7,11 @@ A RESTful ecommerce API built with Go, Gin, GORM, and PostgreSQL.
 
 ### See [frontend/README.md](frontend/README.md) for details about the frontend.
 
+## Screenshots
+
+![Product page](screenshots/product-page.png)
+![Homepage](screenshots/homepage.png)
+
 ## Features
 
 - **Authentication & Authorization**
