@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+@import "./button.css";
+@import "./input.css";
+
+body {
+	@apply dark:bg-gray-800 dark:text-white;
+}

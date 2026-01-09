@@ -1,0 +1,19 @@
+.btn {
+	@apply m-1 cursor-pointer rounded-md px-4 py-2;
+	@apply transition-[background-color,border-color] duration-200;
+}
+
+.btn-large {
+	@apply text-lg;
+}
+
+.btn-regular {
+	@apply rounded-md border border-gray-300 bg-gray-200;
+	@apply dark:border-gray-500 dark:bg-gray-600;
+}
+
+.btn-primary {
+	@apply text-white;
+	@apply border border-blue-400 bg-blue-500;
+	@apply hover:border-blue-500 hover:bg-blue-600;
+}
