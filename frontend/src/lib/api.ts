@@ -154,6 +154,7 @@ export class API {
 
 	// Profile Management
 	public async getProfile(): Promise<ProfileModel> {
+		// There's a weird quirk about how Gin handles the routing so we have to hit `/me/`, not `/me`
 		return await this.request("GET", "/me/");
 	}
 
@@ -162,7 +163,7 @@ export class API {
 		currency?: string;
 		profile_photo_url?: string;
 	}): Promise<ProfileModel> {
-		return await this.request("PATCH", "/me", data);
+		return await this.request("PATCH", "/me/", data);
 	}
 
 	// Admin Operations
