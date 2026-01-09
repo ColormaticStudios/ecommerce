@@ -4,6 +4,7 @@
 	import { formatPrice } from "$lib/utils";
 	import { onMount, getContext } from "svelte";
 	import { page } from "$app/state";
+	import { resolve } from "$app/paths";
 
 	const api: API = getContext("api");
 	const productID = page.params.id;
@@ -69,7 +70,7 @@
 									? 'border-gray-900 dark:border-gray-100'
 									: 'border-gray-300 dark:border-gray-600'}
 									bg-gray-100 dark:bg-gray-700"
-								on:click={() => (selectedImage = i)}
+								onclick={() => (selectedImage = i)}
 								aria-label={`View image ${i + 1}`}
 							>
 								<img src={img} alt="" class="h-full w-full object-cover" />
@@ -147,7 +148,7 @@
 				<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
 					{#each product.related_products as related (related.sku)}
 						<a
-							href={`/product/${related.id}`}
+							href={resolve(`/product/${related.id}`)}
 							class="rounded-lg border border-gray-200 bg-gray-50 p-3 transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
 						>
 							<div class="line-clamp-1 text-sm font-medium">
