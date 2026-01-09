@@ -72,8 +72,8 @@ export function parseCart(cart: CartModel): CartModel {
 	return {
 		id: cart.id,
 		user_id: cart.user_id,
-		items: cart.items.map(parseCartItem)
-	}
+		items: cart.items.map(parseCartItem),
+	};
 }
 
 export interface CartModel {
@@ -87,8 +87,8 @@ export function parseCartItem(cartItem: CartItemModel): CartItemModel {
 		id: cartItem.id,
 		product_id: cartItem.product_id,
 		quantity: cartItem.quantity,
-		product: parseProduct(cartItem.product)
-	}
+		product: parseProduct(cartItem.product),
+	};
 }
 
 export interface CartItemModel {
@@ -124,8 +124,8 @@ export function parseOrderItem(orderItem: OrderItemModel): OrderItemModel {
 		product_id: orderItem.product_id,
 		quantity: orderItem.quantity,
 		price: orderItem.price,
-		product: parseProduct(orderItem.product)
-	}
+		product: parseProduct(orderItem.product),
+	};
 }
 
 export interface OrderItemModel {
