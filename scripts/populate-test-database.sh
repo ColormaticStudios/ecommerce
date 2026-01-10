@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Make sure we are running the latest code changes
-make build-cli
+make cli
 
 # Create test user
 bin/ecommerce-cli user create -u "fred" -n "Fred Wellis" -e "fred@wellis.org" -p "secret" -r "admin"
