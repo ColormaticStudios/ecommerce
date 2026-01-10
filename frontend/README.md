@@ -26,6 +26,7 @@ You can use any Javascript package manager, e.g. NPM, Bun, Yarn, PNPM, etc. For 
    ```
 
 2. **Install dependencies**
+
    ```bash
    bun install
    ```

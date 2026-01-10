@@ -1,14 +1,16 @@
 import {
 	type ProductModel,
+	type UserModel,
 	type PageModel,
-	type ProfileModel,
 	type OrderModel,
 	type CartModel,
 	type CartItemModel,
+	type ProfileModel,
 	parseProduct,
 	parseOrder,
 	parseCart,
 	parseCartItem,
+	parseProfile,
 } from "$lib/models";
 import { getCookie, setCookie } from "$lib/cookie";
 
@@ -30,12 +32,12 @@ export class API {
 		}
 	}
 
-	private async request(
+	private async request<T>(
 		method: string,
 		path: string,
 		data?: object,
 		params?: Record<string, unknown>
-	) {
+	): Promise<T> {
 		const headers = new Headers();
 		headers.append("Content-Type", "application/json");
 
@@ -74,7 +76,7 @@ export class API {
 			};
 		}
 
-		return body;
+		return body as T;
 	}
 
 	// Authentication
@@ -83,20 +85,27 @@ export class API {
 		email: string;
 		password: string;
 		name?: string;
-	}) {
+	}): Promise<{ token: string; user: ProfileModel }> {
 		return this.request("POST", "/auth/register", data);
 	}
 
-	public async login(data: { email: string; password: string }) {
+	public async login(data: {
+		email: string;
+		password: string;
+	}): Promise<{ token: string; user: ProfileModel }> {
 		return this.request("POST", "/auth/login", data);
 	}
 
-	public async createOrder(data: { items: Array<{ product_id: number; quantity: number }> }) {
-		return this.request("POST", "/me/orders", data);
+	public async createOrder(data: {
+		items: Array<{ product_id: number; quantity: number }>;
+	}): Promise<OrderModel> {
+		const response = await this.request<OrderModel>("POST", "/me/orders", data);
+		return parseOrder(response);
 	}
 
-	public async processPayment(orderId: number) {
-		return this.request("POST", `/me/orders/${orderId}/pay`);
+	public async processPayment(orderId: number): Promise<OrderModel> {
+		const response = await this.request<OrderModel>("POST", `/me/orders/${orderId}/pay`);
+		return parseOrder(response);
 	}
 
 	// Product Management
@@ -109,7 +118,7 @@ export class API {
 		page?: number;
 		limit?: number;
 	}): Promise<PageModel> {
-		const response = await this.request("GET", "/products", undefined, params);
+		const response = await this.request<PageModel>("GET", "/products", undefined, params);
 
 		const page: PageModel = {
 			data: response.data.map(parseProduct),
@@ -120,7 +129,7 @@ export class API {
 	}
 
 	public async getProduct(id: number): Promise<ProductModel> {
-		const response = await this.request("GET", `/products/${id}`);
+		const response = await this.request<ProductModel>("GET", `/products/${id}`);
 		const Product: ProductModel = parseProduct(response);
 
 		return Product;
@@ -128,42 +137,44 @@ export class API {
 
 	// Cart Operations
 	public async viewCart(): Promise<CartModel> {
-		const response: CartModel = await this.request("GET", "/me/cart");
+		const response = await this.request<CartModel>("GET", "/me/cart");
 		const cart = parseCart(response);
 
 		return cart;
 	}
 
 	public async addToCart(data: { product_id: number; quantity: number }): Promise<CartModel> {
-		const response: CartModel = await this.request("POST", "/me/cart", data);
+		const response = await this.request<CartModel>("POST", "/me/cart", data);
 		const cart = parseCart(response);
 
 		return cart;
 	}
 
 	public async updateCartItem(itemId: number, data: { quantity: number }): Promise<CartItemModel> {
-		const response: CartItemModel = await this.request("PATCH", `/me/cart/${itemId}`, data);
+		const response = await this.request<CartItemModel>("PATCH", `/me/cart/${itemId}`, data);
 		const cartItem = parseCartItem(response);
 
 		return cartItem;
 	}
 
-	public async removeCartItem(itemId: number): Promise<object> {
+	public async removeCartItem(itemId: number): Promise<{ message?: string }> {
 		return await this.request("DELETE", `/me/cart/${itemId}`);
 	}
 
 	// Profile Management
-	public async getProfile(): Promise<ProfileModel> {
+	public async getProfile(): Promise<UserModel> {
 		// There's a weird quirk about how Gin handles the routing so we have to hit `/me/`, not `/me`
-		return await this.request("GET", "/me/");
+		const response = await this.request<ProfileModel>("GET", "/me/");
+		return parseProfile(response);
 	}
 
 	public async updateProfile(data: {
 		name?: string;
 		currency?: string;
 		profile_photo_url?: string;
-	}): Promise<ProfileModel> {
-		return await this.request("PATCH", "/me/", data);
+	}): Promise<UserModel> {
+		const response = await this.request<ProfileModel>("PATCH", "/me/", data);
+		return parseProfile(response);
 	}
 
 	// Admin Operations
@@ -174,20 +185,22 @@ export class API {
 		price: number;
 		stock?: number;
 		images?: string[];
-	}) {
-		return this.request("POST", "/admin/products", data);
+	}): Promise<ProductModel> {
+		const response = await this.request<ProductModel>("POST", "/admin/products", data);
+		return parseProduct(response);
 	}
 
 	// Order Management
 	public async listOrders(params?: { page?: number; limit?: number }): Promise<OrderModel[]> {
-		const response: OrderModel[] = await this.request("GET", "/me/orders", undefined, params);
+		const response = await this.request<OrderModel[]>("GET", "/me/orders", undefined, params);
 		const orders = response.map(parseOrder);
 
 		return orders;
 	}
 
-	public async getOrderDetails(orderId: number) {
-		return this.request("GET", `/me/orders/${orderId}`);
+	public async getOrderDetails(orderId: number): Promise<OrderModel> {
+		const response = await this.request<OrderModel>("GET", `/me/orders/${orderId}`);
+		return parseOrder(response);
 	}
 
 	// Auth Token Management

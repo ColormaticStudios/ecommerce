@@ -1,5 +1,5 @@
 import { type API } from "$lib/api";
-import { type ProfileModel, type UserModel } from "$lib/models";
+import { parseProfile, type ProfileModel, type UserModel } from "$lib/models";
 import { writable } from "svelte/store";
 
 export class User implements UserModel {
@@ -12,6 +12,9 @@ export class User implements UserModel {
 	role: string;
 	currency: string;
 	profile_photo_url: string | null;
+	created_at: Date;
+	updated_at: Date;
+	deleted_at: Date | null;
 
 	constructor(
 		api: API,
@@ -22,7 +25,10 @@ export class User implements UserModel {
 		name: string | null,
 		role: string,
 		currency: string,
-		profile_photo_url: string | null
+		profile_photo_url: string | null,
+		created_at: Date,
+		updated_at: Date,
+		deleted_at: Date | null
 	) {
 		this.api = api;
 		this.id = id;
@@ -34,6 +40,9 @@ export class User implements UserModel {
 		this.currency = currency;
 		this.role = role;
 		this.profile_photo_url = profile_photo_url;
+		this.created_at = created_at;
+		this.updated_at = updated_at;
+		this.deleted_at = deleted_at;
 	}
 
 	logOut() {
@@ -54,16 +63,20 @@ export async function getProfile(api: API): Promise<User | null> {
 	}
 
 	if (userData) {
+		const parsed = parseProfile(userData);
 		const user = new User(
 			api,
-			userData.id,
-			userData.subject,
-			userData.username,
-			userData.email,
-			userData.name,
-			userData.role,
-			userData.currency,
-			userData.profile_photo_url
+			parsed.id,
+			parsed.subject,
+			parsed.username,
+			parsed.email,
+			parsed.name,
+			parsed.role,
+			parsed.currency,
+			parsed.profile_photo_url,
+			parsed.created_at,
+			parsed.updated_at,
+			parsed.deleted_at
 		);
 		return user;
 	}
