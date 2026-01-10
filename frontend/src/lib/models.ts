@@ -202,7 +202,7 @@ interface OrderItemPayload extends Omit<
 	deleted_at: string | Date | null;
 }
 
-interface OrderPayload extends Omit<
+export interface OrderPayload extends Omit<
 	OrderModel,
 	"created_at" | "updated_at" | "deleted_at" | "items"
 > {

@@ -6,6 +6,7 @@ import {
 	type CartModel,
 	type CartItemModel,
 	type ProfileModel,
+	type OrderPayload,
 	parseProduct,
 	parseOrder,
 	parseCart,
@@ -104,11 +105,11 @@ export class API {
 	}
 
 	public async processPayment(orderId: number): Promise<OrderModel> {
-		const response = await this.request<{ order?: OrderModel } | OrderModel>(
+		const response = await this.request<{ order?: OrderPayload } | OrderPayload>(
 			"POST",
 			`/me/orders/${orderId}/pay`
 		);
-		const payload = "order" in response ? response.order : response;
+		const payload = "order" in response ? response.order : (response as OrderPayload);
 		if (!payload) {
 			throw new Error("Missing order payload");
 		}

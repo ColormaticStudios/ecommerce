@@ -108,22 +108,24 @@
 				<div
 					class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 				>
-					<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+					<div class="grid grid-cols-[1fr_auto] items-start gap-3 sm:items-center">
 						<div>
 							<p class="text-sm text-gray-500 dark:text-gray-400">Order #{order.id}</p>
 							<p class="text-xl font-semibold text-gray-900 dark:text-gray-100">
 								{formatPrice(order.total, $userStore?.currency ?? "USD")}
 							</p>
 						</div>
-						<span
-							class={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${statusBadge(order.status)}`}
-						>
-							{order.status}
-						</span>
+						<div class="flex flex-col items-end gap-1 justify-self-end text-right">
+							<span
+								class={`inline-flex w-min items-center rounded-full px-3 py-1 text-xs font-medium ${statusBadge(order.status)}`}
+							>
+								{order.status}
+							</span>
+							<p class="text-sm text-gray-600 dark:text-gray-400">
+								{order.created_at.toLocaleDateString()}
+							</p>
+						</div>
 					</div>
-					<p class="mt-3 text-sm text-gray-600 dark:text-gray-400">
-						Placed {order.created_at.toLocaleDateString()}
-					</p>
 				</div>
 			{/each}
 		</div>

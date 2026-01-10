@@ -68,6 +68,7 @@
 				statusMessage = "Payment processed.";
 			}
 			orderPlaced = true;
+			window.dispatchEvent(new CustomEvent("cart:updated"));
 		} catch (err) {
 			console.error(err);
 			const error = err as {
@@ -200,10 +201,7 @@
 							{formatPrice(total, $userStore?.currency ?? "USD")}
 						</span>
 					</div>
-					<div class="flex items-center justify-between">
-						<span>Processing</span>
-						<span>Free</span>
-					</div>
+					<!-- TODO: Tax and shipping -->
 				</div>
 				<button
 					class="btn btn-large btn-primary mt-6! w-full"

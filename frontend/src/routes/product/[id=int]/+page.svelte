@@ -55,6 +55,7 @@
 		adding = true;
 		try {
 			await api.addToCart({ product_id: product.id, quantity: clampedQuantity });
+			window.dispatchEvent(new CustomEvent("cart:updated"));
 			showToast("Added to cart.");
 		} catch (err) {
 			console.error(err);
@@ -102,11 +103,7 @@
 
 				<div class="h-8 w-1/3 rounded bg-gray-200 dark:bg-gray-700"></div>
 
-				<div class="flex gap-3">
-					<div class="h-12 flex-1 rounded bg-gray-200 dark:bg-gray-700"></div>
-					<!--<div class="h-12 w-28 rounded bg-gray-200 dark:bg-gray-700"></div>-->
-					<!-- Re-enable when wishlist is implemented -->
-				</div>
+				<div class="h-12 flex-1 rounded bg-gray-200 dark:bg-gray-700"></div>
 			</div>
 		</div>
 	{:else if product}
@@ -178,18 +175,18 @@
 				<!-- Actions -->
 				<div class="mt-4 flex gap-3">
 					<div
-						class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900"
+						class="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1.5 sm:gap-2 sm:px-3 sm:py-2 dark:border-gray-800 dark:bg-gray-900"
 					>
 						<button
 							type="button"
-							class="h-9 w-9 rounded-full border border-gray-300 text-lg text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+							class="h-8 w-8 rounded-full border border-gray-300 text-base text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 sm:h-9 sm:w-9 sm:text-lg dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
 							disabled={quantity <= 1}
 							onclick={() => (quantity = Math.max(1, quantity - 1))}
 						>
 							-
 						</button>
 						<input
-							class="w-14 text-center text-lg font-medium text-gray-900 outline-none dark:bg-gray-900 dark:text-gray-100"
+							class="w-12 text-center text-base font-medium text-gray-900 outline-none sm:w-14 sm:text-lg dark:bg-gray-900 dark:text-gray-100"
 							type="number"
 							min="1"
 							max={product.stock}
@@ -197,29 +194,21 @@
 						/>
 						<button
 							type="button"
-							class="h-9 w-9 rounded-full border border-gray-300 text-lg text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+							class="h-8 w-8 rounded-full border border-gray-300 text-base text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 sm:h-9 sm:w-9 sm:text-lg dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
 							disabled={product.stock === 0 || quantity >= product.stock}
-							onclick={() => (quantity = Math.min(product.stock, quantity + 1))}
+							onclick={() => (quantity = Math.min(product ? product.stock : 1000, quantity + 1))}
 						>
 							+
 						</button>
 					</div>
 					<button
-						class="flex-1 cursor-pointer rounded-lg bg-gray-900 px-4 py-3 text-lg font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
+						class="flex-1 cursor-pointer rounded-lg bg-gray-900 px-4 py-3 text-lg font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:hover:bg-gray-400 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
 						disabled={product.stock === 0 || adding}
 						onclick={addToCart}
 					>
 						<i class="bi bi-cart-plus-fill"></i>
 						{adding ? "Adding..." : "Add to cart"}
 					</button>
-
-					<!--<button
-						class="cursor-pointer rounded-lg border border-gray-300 px-4 py-3 text-lg font-medium text-gray-900 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700"
-					>
-					  <i class="bi bi-list-stars"></i>
-						Add to wishlist
-					</button>-->
-					<!-- Wishlist is not implemented -->
 				</div>
 
 				<!-- Metadata -->

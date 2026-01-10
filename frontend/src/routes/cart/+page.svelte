@@ -51,6 +51,7 @@
 		try {
 			await api.updateCartItem(itemId, { quantity });
 			await loadCart({ silent: true });
+			window.dispatchEvent(new CustomEvent("cart:updated"));
 		} catch (err) {
 			console.error(err);
 			errorMessage = "Unable to update that item.";
@@ -63,6 +64,7 @@
 		try {
 			await api.removeCartItem(itemId);
 			await loadCart({ silent: true });
+			window.dispatchEvent(new CustomEvent("cart:updated"));
 		} catch (err) {
 			console.error(err);
 			errorMessage = "Unable to remove that item.";
