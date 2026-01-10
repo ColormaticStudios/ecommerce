@@ -47,7 +47,6 @@ export async function getProfile(api: API): Promise<User | null> {
 	let userData: ProfileModel;
 	try {
 		userData = await api.getProfile();
-		console.dir(userData);
 	} catch (err) {
 		console.warn("Failed to retrieve profile. Session token may be expired.");
 		console.error(err);
@@ -66,7 +65,6 @@ export async function getProfile(api: API): Promise<User | null> {
 			userData.currency,
 			userData.profile_photo_url
 		);
-		console.dir(user);
 		return user;
 	}
 	return null;
