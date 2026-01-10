@@ -28,10 +28,10 @@
 				href={resolve(`/product/${product.id}`)}
 				class="block rounded-xl border border-gray-200 bg-gray-50 transition
 					hover:border-gray-300 hover:bg-gray-100 hover:shadow-sm
-					dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600 dark:hover:bg-gray-700"
+					dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:hover:bg-gray-800"
 			>
 				<!-- Image -->
-				<div class="aspect-square overflow-hidden rounded-t-xl bg-gray-200 dark:bg-gray-600">
+				<div class="aspect-square overflow-hidden rounded-t-xl bg-gray-200 dark:bg-gray-700">
 					{#if product.images?.length}
 						<img
 							src={product.images[0]}

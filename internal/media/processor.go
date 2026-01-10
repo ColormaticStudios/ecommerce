@@ -13,6 +13,7 @@ import (
 
 	"ecommerce/models"
 
+	"github.com/h2non/bimg"
 	"gorm.io/gorm"
 )
 
@@ -53,9 +54,26 @@ func (s *Service) processJob(job Job) error {
 		outputRelPath = filepath.ToSlash(filepath.Join(job.ID, "original.webp"))
 		outputPath = s.LocalPath(outputRelPath)
 		if err := convertImageToWebp(inputPath, outputPath); err != nil {
-			return err
+			if strings.Contains(strings.ToLower(err.Error()), "webp") {
+				ext := filepath.Ext(job.Filename)
+				if ext == "" {
+					ext = extensionForMime(mimeType)
+				}
+				if ext == "" {
+					ext = ".img"
+				}
+				outputRelPath = filepath.ToSlash(filepath.Join(job.ID, "original"+ext))
+				outputPath = s.LocalPath(outputRelPath)
+				if err := moveFile(inputPath, outputPath); err != nil {
+					return err
+				}
+				outputMime = mimeType
+			} else {
+				return err
+			}
+		} else {
+			outputMime = "image/webp"
 		}
-		outputMime = "image/webp"
 	case strings.HasPrefix(mimeType, "video/"):
 		outputRelPath = filepath.ToSlash(filepath.Join(job.ID, "original.webm"))
 		outputPath = s.LocalPath(outputRelPath)
@@ -133,20 +151,81 @@ func detectMime(path string) (string, error) {
 	return http.DetectContentType(buf[:n]), nil
 }
 
+func extensionForMime(mimeType string) string {
+	switch mimeType {
+	case "image/jpeg":
+		return ".jpg"
+	case "image/png":
+		return ".png"
+	case "image/gif":
+		return ".gif"
+	case "image/webp":
+		return ".webp"
+	case "image/heic":
+		return ".heic"
+	case "image/heif":
+		return ".heif"
+	case "image/bmp":
+		return ".bmp"
+	case "image/tiff":
+		return ".tiff"
+	default:
+		return ""
+	}
+}
+
+func moveFile(src string, dest string) error {
+	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+		return err
+	}
+	if err := os.Rename(src, dest); err == nil {
+		return nil
+	}
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+	targetFile, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer targetFile.Close()
+	if _, err := io.Copy(targetFile, sourceFile); err != nil {
+		return err
+	}
+	return os.Remove(src)
+}
+
 func convertImageToWebp(inputPath string, outputPath string) error {
 	if err := os.MkdirAll(filepath.Dir(outputPath), 0o755); err != nil {
 		return err
 	}
 
-	args := []string{
-		"-y",
-		"-i", inputPath,
-		"-vf", fmt.Sprintf("scale='min(%d,iw)':-2", defaultImageMaxWidth),
-		"-c:v", "libwebp",
-		"-quality", "82",
-		outputPath,
+	buffer, err := bimg.Read(inputPath)
+	if err != nil {
+		return err
 	}
-	return runFFmpeg(args)
+
+	image := bimg.NewImage(buffer)
+	size, err := image.Size()
+	if err != nil {
+		return err
+	}
+
+	options := bimg.Options{
+		Type:    bimg.WEBP,
+		Quality: 82,
+	}
+	if size.Width > defaultImageMaxWidth {
+		options.Width = defaultImageMaxWidth
+	}
+
+	processed, err := image.Process(options)
+	if err != nil {
+		return err
+	}
+	return bimg.Write(outputPath, processed)
 }
 
 func convertImageToWebpThumbnail(inputPath string, outputPath string, size int) error {
@@ -154,16 +233,23 @@ func convertImageToWebpThumbnail(inputPath string, outputPath string, size int) 
 		return err
 	}
 
-	filter := fmt.Sprintf("scale=%d:%d:force_original_aspect_ratio=increase,crop=%d:%d", size, size, size, size)
-	args := []string{
-		"-y",
-		"-i", inputPath,
-		"-vf", filter,
-		"-c:v", "libwebp",
-		"-quality", "82",
-		outputPath,
+	buffer, err := bimg.Read(inputPath)
+	if err != nil {
+		return err
 	}
-	return runFFmpeg(args)
+
+	image := bimg.NewImage(buffer)
+	processed, err := image.Process(bimg.Options{
+		Type:    bimg.WEBP,
+		Quality: 82,
+		Width:   size,
+		Height:  size,
+		Crop:    true,
+	})
+	if err != nil {
+		return err
+	}
+	return bimg.Write(outputPath, processed)
 }
 
 func convertVideoToWebm(inputPath string, outputPath string) error {

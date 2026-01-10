@@ -142,7 +142,7 @@ interface CartPayload extends Omit<
 	CartModel,
 	"created_at" | "updated_at" | "deleted_at" | "items"
 > {
-	items: CartItemPayload[];
+	items?: CartItemPayload[];
 	created_at: string | Date;
 	updated_at: string | Date;
 	deleted_at: string | Date | null;
@@ -152,7 +152,7 @@ export function parseCart(cart: CartPayload): CartModel {
 	return {
 		id: cart.id,
 		user_id: cart.user_id,
-		items: cart.items.map(parseCartItem),
+		items: (cart.items ?? []).map(parseCartItem),
 		created_at: parseDate(cart.created_at) ?? new Date(),
 		updated_at: parseDate(cart.updated_at) ?? new Date(),
 		deleted_at: parseDate(cart.deleted_at),
@@ -206,7 +206,7 @@ interface OrderPayload extends Omit<
 	OrderModel,
 	"created_at" | "updated_at" | "deleted_at" | "items"
 > {
-	items: OrderItemPayload[];
+	items?: OrderItemPayload[];
 	created_at: string | Date;
 	updated_at: string | Date;
 	deleted_at: string | Date | null;
@@ -221,7 +221,7 @@ export function parseOrder(order: OrderPayload): OrderModel {
 		created_at: parseDate(order.created_at) ?? new Date(),
 		updated_at: parseDate(order.updated_at) ?? new Date(),
 		deleted_at: parseDate(order.deleted_at),
-		items: order.items.map(parseOrderItem),
+		items: (order.items ?? []).map(parseOrderItem),
 	};
 }
 

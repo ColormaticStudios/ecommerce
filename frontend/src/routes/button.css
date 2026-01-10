@@ -1,5 +1,5 @@
 .btn {
-	@apply m-1 cursor-pointer rounded-md px-4 py-2;
+	@apply m-1 cursor-pointer rounded-lg px-4 py-2;
 	@apply transition-[background-color,border-color] duration-200;
 }
 
@@ -8,12 +8,39 @@
 }
 
 .btn-regular {
-	@apply rounded-md border border-gray-300 bg-gray-200;
-	@apply dark:border-gray-500 dark:bg-gray-600;
+	@apply border border-gray-300 bg-gray-200;
+	@apply dark:border-gray-600 dark:bg-gray-700;
+	@apply hover:border-gray-200 hover:bg-gray-100;
+	@apply hover:dark:border-gray-700 hover:dark:bg-gray-800;
+}
+
+.btn.btn-regular:disabled {
+	@apply text-gray-300;
+	@apply border-gray-400 bg-gray-300;
+	@apply dark:border-gray-500 dark:bg-gray-400;
+	@apply cursor-auto;
 }
 
 .btn-primary {
 	@apply text-white;
 	@apply border border-blue-400 bg-blue-500;
 	@apply hover:border-blue-500 hover:bg-blue-600;
+}
+
+.btn.btn-primary:disabled {
+	@apply text-gray-300;
+	@apply border-blue-600 bg-blue-700;
+	@apply cursor-auto;
+}
+
+.btn-warning {
+	@apply text-white;
+	@apply border border-orange-400 bg-orange-500;
+	@apply hover:border-orange-300 hover:bg-orange-400;
+}
+
+.btn.btn-warning:disabled {
+	@apply text-gray-300;
+	@apply border-orange-600 bg-orange-700;
+	@apply cursor-auto;
 }

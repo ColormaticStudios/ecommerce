@@ -533,30 +533,33 @@ Creates a new user account and returns a JWT.
 
 ```json
 {
-	"id": 1,
-	"user_id": 1,
-	"status": "PAID",
-	"total": 59.98,
-	"items": [
-		{
-			"id": 1,
-			"order_id": 1,
-			"product_id": 1,
-			"quantity": 2,
-			"price": 29.99,
-			"product": {
+	"message": "Payment processed successfully",
+	"order": {
+		"id": 1,
+		"user_id": 1,
+		"status": "PAID",
+		"total": 59.98,
+		"items": [
+			{
 				"id": 1,
-				"sku": "PROD-001",
-				"name": "Product Name",
+				"order_id": 1,
+				"product_id": 1,
+				"quantity": 2,
 				"price": 29.99,
-				"stock": 100,
-				"images": []
+				"product": {
+					"id": 1,
+					"sku": "PROD-001",
+					"name": "Product Name",
+					"price": 29.99,
+					"stock": 100,
+					"images": []
+				}
 			}
-		}
-	],
-	"created_at": "2024-01-01T12:00:00Z",
-	"updated_at": "2024-01-01T12:00:00Z",
-	"deleted_at": null
+		],
+		"created_at": "2024-01-01T12:00:00Z",
+		"updated_at": "2024-01-01T12:00:00Z",
+		"deleted_at": null
+	}
 }
 ```
 

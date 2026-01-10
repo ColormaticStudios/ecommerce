@@ -9,11 +9,65 @@
 	const api = new API();
 	setContext("api", api);
 
-	onMount(async () => {
+	let menuOpen = $state(false);
+	let menuRef = $state<HTMLDivElement | null>(null);
+	let cartCount = $state<number | null>(null);
+	let cartCountLoading = $state(false);
+	let cartCountLoaded = $state(false);
+
+	async function refreshCartCount() {
+		api.tokenFromCookie();
+		if (!api.isAuthenticated()) {
+			cartCount = null;
+			return;
+		}
+		cartCountLoading = true;
+		try {
+			const cart = await api.viewCart();
+			cartCount = cart.items.length;
+			cartCountLoaded = true;
+		} catch (err) {
+			console.error(err);
+			cartCount = null;
+		} finally {
+			cartCountLoading = false;
+		}
+	}
+
+	onMount(() => {
 		api.tokenFromCookie();
 
 		if (api.isAuthenticated()) {
 			userStore.load(api);
+		}
+
+		const handleClick = (event: MouseEvent) => {
+			if (!menuOpen || !menuRef) {
+				return;
+			}
+			if (!menuRef.contains(event.target as Node)) {
+				menuOpen = false;
+			}
+		};
+
+		const handleKeydown = (event: KeyboardEvent) => {
+			if (event.key === "Escape") {
+				menuOpen = false;
+			}
+		};
+
+		window.addEventListener("click", handleClick);
+		window.addEventListener("keydown", handleKeydown);
+
+		return () => {
+			window.removeEventListener("click", handleClick);
+			window.removeEventListener("keydown", handleKeydown);
+		};
+	});
+
+	$effect(() => {
+		if (menuOpen && !cartCountLoaded) {
+			void refreshCartCount();
 		}
 	});
 
@@ -32,7 +86,76 @@
 		<a href={resolve("/")} class="navlink text-2xl">Home</a>
 	</div>
 	{#if $userStore}
-		{$userStore.name}
+		<div class="relative" bind:this={menuRef}>
+			<button
+				type="button"
+				class="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-gray-900 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:border-gray-600 dark:hover:bg-gray-700"
+				onclick={(event) => {
+					event.stopPropagation();
+					menuOpen = !menuOpen;
+				}}
+			>
+				{#if $userStore.profile_photo_url}
+					<img
+						src={$userStore.profile_photo_url}
+						alt="Profile"
+						class="h-7 w-7 rounded-full object-cover"
+					/>
+				{:else}
+					<span
+						class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-200"
+					>
+						{($userStore.name || $userStore.username || "?").slice(0, 1).toUpperCase()}
+					</span>
+				{/if}
+				<span class="max-w-35 truncate">
+					{$userStore.name || $userStore.username}
+				</span>
+				<i class="bi bi-chevron-down text-xs"></i>
+			</button>
+			{#if menuOpen}
+				<div
+					class="absolute right-0 mt-2 w-44 rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-900"
+				>
+					<a href={resolve("/cart")} class="menu-item" onclick={() => (menuOpen = false)}>
+						<span class="flex w-full items-center justify-between gap-2">
+							<span>
+								<i class="bi bi-cart"></i>
+								{#if cartCountLoading}
+									<span class="text-xs text-gray-400">...</span>
+								{:else if cartCount != null}
+									<span class="text-xs text-gray-500">({cartCount})</span>
+								{/if}
+							</span>
+							<span>View cart</span>
+						</span>
+					</a>
+					<a href={resolve("/checkout")} class="menu-item" onclick={() => (menuOpen = false)}>
+						<i class="bi bi-credit-card"></i>
+						Checkout
+					</a>
+					<a href={resolve("/profile")} class="menu-item" onclick={() => (menuOpen = false)}>
+						<i class="bi bi-person"></i>
+						Edit profile
+					</a>
+					<a href={resolve("/orders")} class="menu-item" onclick={() => (menuOpen = false)}>
+						<i class="bi bi-receipt"></i>
+						Orders
+					</a>
+					<button
+						type="button"
+						class="menu-item text-left"
+						onclick={() => {
+							menuOpen = false;
+							$userStore.logOut();
+						}}
+					>
+						<i class="bi bi-box-arrow-right"></i>
+						Sign out
+					</button>
+				</div>
+			{/if}
+		</div>
 	{:else}
 		<div>
 			<a href={resolve("/login")} class="navlink text-xl">Log In</a>
@@ -50,5 +173,9 @@
 		@apply px-2 dark:text-white;
 		@apply hover:text-gray-500 dark:hover:text-gray-300;
 		@apply transition-[color] duration-200;
+	}
+
+	.menu-item {
+		@apply flex w-full items-center justify-between rounded-md px-3 py-2 text-gray-700 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-800 dark:hover:text-white;
 	}
 </style>

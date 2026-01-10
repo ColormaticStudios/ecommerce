@@ -22,6 +22,7 @@ import (
 	tusdhandler "github.com/tus/tusd/v2/pkg/handler"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func main() {
@@ -38,8 +39,22 @@ func main() {
 	}
 	log.Println("[INFO] Configuration loaded successfully")
 
+	if err := media.CheckDependencies(); err != nil {
+		log.Fatalf("[ERROR] Dependency check failed: %v", err)
+	}
+
 	// Connect to database
-	db, err := gorm.Open(postgres.Open(cfg.DBURL), &gorm.Config{})
+	gormLogger := logger.New(
+		log.New(os.Stdout, "", log.LstdFlags),
+		logger.Config{
+			SlowThreshold:             200 * time.Millisecond,
+			LogLevel:                  logger.Warn,
+			IgnoreRecordNotFoundError: true,
+		},
+	)
+	db, err := gorm.Open(postgres.Open(cfg.DBURL), &gorm.Config{
+		Logger: gormLogger,
+	})
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to connect to database: %v", err)
 	}
@@ -106,9 +121,14 @@ func main() {
 				"Origin",
 				"Content-Type",
 				"Authorization",
+				"Tus-Resumable",
+				"Upload-Length",
+				"Upload-Metadata",
+				"Upload-Offset",
 			},
 			ExposeHeaders: []string{
 				"Content-Length",
+				"Location",
 			},
 			AllowCredentials: false,
 			MaxAge:           12 * time.Hour,
@@ -182,6 +202,7 @@ func main() {
 					}
 				}()
 
+				mediaRoutes.Any("/uploads", gin.WrapH(http.StripPrefix("/api/v1/media/uploads", tusd)))
 				mediaRoutes.Any("/uploads/*path", gin.WrapH(http.StripPrefix("/api/v1/media/uploads", tusd)))
 			}
 

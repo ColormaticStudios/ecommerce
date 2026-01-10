@@ -104,8 +104,15 @@ export class API {
 	}
 
 	public async processPayment(orderId: number): Promise<OrderModel> {
-		const response = await this.request<OrderModel>("POST", `/me/orders/${orderId}/pay`);
-		return parseOrder(response);
+		const response = await this.request<{ order?: OrderModel } | OrderModel>(
+			"POST",
+			`/me/orders/${orderId}/pay`
+		);
+		const payload = "order" in response ? response.order : response;
+		if (!payload) {
+			throw new Error("Missing order payload");
+		}
+		return parseOrder(payload);
 	}
 
 	// Product Management
@@ -177,6 +184,68 @@ export class API {
 		return parseProfile(response);
 	}
 
+	public async uploadMedia(file: File): Promise<string> {
+		if (!this.accessToken) {
+			throw new Error("Not authenticated");
+		}
+
+		const uploadUrl = new URL(`${this.baseUrl}${API_ROUTE}/media/uploads`);
+		const metadata = `filename ${btoa(unescape(encodeURIComponent(file.name)))}`;
+
+		const createResponse = await fetch(uploadUrl.toString(), {
+			method: "POST",
+			headers: {
+				"Tus-Resumable": "1.0.0",
+				"Upload-Length": String(file.size),
+				"Upload-Metadata": metadata,
+				Authorization: `Bearer ${this.accessToken}`,
+			},
+		});
+
+		if (!createResponse.ok) {
+			throw new Error(`Failed to create upload: ${createResponse.statusText}`);
+		}
+
+		const location = createResponse.headers.get("Location");
+		if (!location) {
+			throw new Error("Upload location missing");
+		}
+
+		const resolvedLocation = location.startsWith("/") ? `${this.baseUrl}${location}` : location;
+
+		const patchResponse = await fetch(resolvedLocation, {
+			method: "PATCH",
+			headers: {
+				"Tus-Resumable": "1.0.0",
+				"Upload-Offset": "0",
+				"Content-Type": "application/offset+octet-stream",
+				Authorization: `Bearer ${this.accessToken}`,
+			},
+			body: file,
+		});
+
+		if (!patchResponse.ok) {
+			throw new Error(`Failed to upload media: ${patchResponse.statusText}`);
+		}
+
+		const parsed = new URL(location, this.baseUrl);
+		const segments = parsed.pathname.split("/").filter(Boolean);
+		const mediaId = segments[segments.length - 1];
+		if (!mediaId) {
+			throw new Error("Upload ID missing");
+		}
+
+		return mediaId;
+	}
+
+	public async attachProfilePhoto(mediaId: string): Promise<{ message?: string }> {
+		return await this.request("POST", "/me/profile-photo", { media_id: mediaId });
+	}
+
+	public async removeProfilePhoto(): Promise<{ message?: string }> {
+		return await this.request("DELETE", "/me/profile-photo");
+	}
+
 	// Admin Operations
 	public async createProduct(data: {
 		sku: string;
@@ -210,6 +279,7 @@ export class API {
 
 	public removeToken() {
 		this.accessToken = undefined;
+		setCookie("accessToken", "", "Strict");
 	}
 
 	public tokenFromCookie() {

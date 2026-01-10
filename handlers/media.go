@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"ecommerce/internal/media"
 	"ecommerce/models"
@@ -40,14 +42,49 @@ func SetProfilePhoto(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 		}
 
 		var mediaObj models.MediaObject
-		if err := db.First(&mediaObj, "id = ?", req.MediaID).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Media not found"})
-			return
+		deadline := time.Now().Add(2 * time.Second)
+		for {
+			if err := db.First(&mediaObj, "id = ?", req.MediaID).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) && time.Now().Before(deadline) {
+					time.Sleep(150 * time.Millisecond)
+					continue
+				}
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					c.JSON(http.StatusNotFound, gin.H{"error": "Media not found"})
+				} else {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load media"})
+				}
+				return
+			}
+			break
 		}
 
-		if mediaObj.Status != media.StatusReady {
-			c.JSON(http.StatusConflict, gin.H{"error": "Media is still processing"})
-			return
+		if mediaObj.Status != media.StatusReady || mediaObj.OriginalPath == "" {
+			if mediaObj.Status == media.StatusFailed {
+				c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Media processing failed"})
+				return
+			}
+
+			processingDeadline := time.Now().Add(2 * time.Second)
+			for time.Now().Before(processingDeadline) {
+				time.Sleep(150 * time.Millisecond)
+				if err := db.First(&mediaObj, "id = ?", req.MediaID).Error; err != nil {
+					c.JSON(http.StatusNotFound, gin.H{"error": "Media not found"})
+					return
+				}
+				if mediaObj.Status == media.StatusReady && mediaObj.OriginalPath != "" {
+					break
+				}
+				if mediaObj.Status == media.StatusFailed {
+					c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Media processing failed"})
+					return
+				}
+			}
+
+			if mediaObj.Status != media.StatusReady || mediaObj.OriginalPath == "" {
+				c.JSON(http.StatusConflict, gin.H{"error": "Media is still processing"})
+				return
+			}
 		}
 
 		if !strings.HasPrefix(mediaObj.MimeType, "image/") {
@@ -152,12 +189,28 @@ func AttachProductMedia(db *gorm.DB, mediaService *media.Service) gin.HandlerFun
 
 		for _, mediaID := range req.MediaIDs {
 			var mediaObj models.MediaObject
-			if err := db.First(&mediaObj, "id = ?", mediaID).Error; err != nil {
-				c.JSON(http.StatusNotFound, gin.H{"error": "Media not found: " + mediaID})
-				return
+			mediaDeadline := time.Now().Add(2 * time.Second)
+			for {
+				if err := db.First(&mediaObj, "id = ?", mediaID).Error; err != nil {
+					if errors.Is(err, gorm.ErrRecordNotFound) && time.Now().Before(mediaDeadline) {
+						time.Sleep(150 * time.Millisecond)
+						continue
+					}
+					if errors.Is(err, gorm.ErrRecordNotFound) {
+						c.JSON(http.StatusNotFound, gin.H{"error": "Media not found: " + mediaID})
+					} else {
+						c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load media: " + mediaID})
+					}
+					return
+				}
+				break
 			}
 			if mediaObj.Status != media.StatusReady {
-				c.JSON(http.StatusConflict, gin.H{"error": "Media is still processing: " + mediaID})
+				if mediaObj.Status == media.StatusFailed {
+					c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Media processing failed: " + mediaID})
+				} else {
+					c.JSON(http.StatusConflict, gin.H{"error": "Media is still processing: " + mediaID})
+				}
 				return
 			}
 

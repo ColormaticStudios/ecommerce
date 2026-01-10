@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -265,6 +266,20 @@ func ProcessPayment(db *gorm.DB) gin.HandlerFunc {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product stock"})
 				return
 			}
+		}
+
+		// Clear user's cart after successful payment
+		var cart models.Cart
+		if err := tx.Where("user_id = ?", user.ID).First(&cart).Error; err == nil {
+			if err := tx.Where("cart_id = ?", cart.ID).Delete(&models.CartItem{}).Error; err != nil {
+				tx.Rollback()
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear cart"})
+				return
+			}
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load cart"})
+			return
 		}
 
 		// Commit transaction

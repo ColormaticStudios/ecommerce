@@ -2,22 +2,91 @@
 	import { type ProductModel } from "$lib/models";
 	import { type API } from "$lib/api";
 	import { formatPrice } from "$lib/utils";
-	import { onMount, getContext } from "svelte";
+	import { onMount, getContext, onDestroy } from "svelte";
 	import { page } from "$app/state";
 	import { resolve } from "$app/paths";
 
 	const api: API = getContext("api");
 	const productID = page.params.id;
 
-	let product: ProductModel | null = null;
-	let selectedImage = 0;
-	let loading = true;
+	let product = $state<ProductModel | null>(null);
+	let selectedImage = $state(0);
+	let loading = $state(true);
+	let adding = $state(false);
+	let quantity = $state(1);
+	let toastMessage = $state("");
+	let toastVisible = $state(false);
+	let toastTimeout: ReturnType<typeof setTimeout> | null = null;
+	let toastHideTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	function showToast(message: string) {
+		toastMessage = message;
+		toastVisible = true;
+
+		if (toastTimeout) {
+			clearTimeout(toastTimeout);
+		}
+		if (toastHideTimeout) {
+			clearTimeout(toastHideTimeout);
+		}
+
+		toastTimeout = setTimeout(() => {
+			toastVisible = false;
+		}, 4200);
+
+		toastHideTimeout = setTimeout(() => {
+			toastMessage = "";
+		}, 4600);
+	}
+
+	async function addToCart() {
+		if (!product) {
+			return;
+		}
+
+		api.tokenFromCookie();
+		if (!api.isAuthenticated()) {
+			showToast("Please log in to add items to cart.");
+			return;
+		}
+
+		const clampedQuantity = Math.min(Math.max(1, Number(quantity) || 1), product.stock);
+		quantity = clampedQuantity;
+		adding = true;
+		try {
+			await api.addToCart({ product_id: product.id, quantity: clampedQuantity });
+			showToast("Added to cart.");
+		} catch (err) {
+			console.error(err);
+			showToast("Could not add to cart.");
+		} finally {
+			adding = false;
+		}
+	}
 
 	onMount(async () => {
 		product = await api.getProduct(parseInt(productID ?? "0"));
 		loading = false;
 	});
+
+	onDestroy(() => {
+		if (toastTimeout) {
+			clearTimeout(toastTimeout);
+		}
+		if (toastHideTimeout) {
+			clearTimeout(toastHideTimeout);
+		}
+	});
 </script>
+
+{#if toastMessage}
+	<div class={`toast ${toastVisible ? "toast-visible" : ""}`} role="status" aria-live="polite">
+		<span>{toastMessage}</span>
+		{#if toastMessage === "Added to cart."}
+			<a href={resolve("/cart")} class="toast-link">Go to cart</a>
+		{/if}
+	</div>
+{/if}
 
 <section class="mx-auto max-w-7xl px-4 py-8">
 	{#if loading}
@@ -108,12 +177,40 @@
 
 				<!-- Actions -->
 				<div class="mt-4 flex gap-3">
+					<div
+						class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900"
+					>
+						<button
+							type="button"
+							class="h-9 w-9 rounded-full border border-gray-300 text-lg text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+							disabled={quantity <= 1}
+							onclick={() => (quantity = Math.max(1, quantity - 1))}
+						>
+							-
+						</button>
+						<input
+							class="w-14 text-center text-lg font-medium text-gray-900 outline-none dark:bg-gray-900 dark:text-gray-100"
+							type="number"
+							min="1"
+							max={product.stock}
+							bind:value={quantity}
+						/>
+						<button
+							type="button"
+							class="h-9 w-9 rounded-full border border-gray-300 text-lg text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+							disabled={product.stock === 0 || quantity >= product.stock}
+							onclick={() => (quantity = Math.min(product.stock, quantity + 1))}
+						>
+							+
+						</button>
+					</div>
 					<button
 						class="flex-1 cursor-pointer rounded-lg bg-gray-900 px-4 py-3 text-lg font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
-						disabled={product.stock === 0}
+						disabled={product.stock === 0 || adding}
+						onclick={addToCart}
 					>
-						<i class="bi bi-bag-plus-fill"></i>
-						Add to cart
+						<i class="bi bi-cart-plus-fill"></i>
+						{adding ? "Adding..." : "Add to cart"}
 					</button>
 
 					<!--<button
@@ -168,3 +265,43 @@
 		<div class="text-red-500">Product not found.</div>
 	{/if}
 </section>
+
+<style>
+	.toast {
+		position: fixed;
+		top: 1.5rem;
+		left: 50%;
+		transform: translate(-50%, -20px);
+		opacity: 0;
+		padding: 0.75rem 1.25rem;
+		border-radius: 999px;
+		background: rgba(17, 24, 39, 0.92);
+		color: white;
+		font-size: 0.95rem;
+		box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+		transition:
+			transform 220ms ease,
+			opacity 220ms ease;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.75rem;
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		z-index: 50;
+	}
+
+	.toast-visible {
+		transform: translate(-50%, 0);
+		opacity: 1;
+	}
+
+	.toast-link {
+		color: #93c5fd;
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+	.toast-link:hover {
+		text-decoration: underline;
+	}
+</style>
