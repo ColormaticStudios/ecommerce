@@ -25,7 +25,7 @@
 	<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
 		{#each products as product (product.sku)}
 			<a
-				href={resolve(`/product/${product.ID}`)}
+				href={resolve(`/product/${product.id}`)}
 				class="block rounded-xl border border-gray-200 bg-gray-50 transition
 					hover:border-gray-300 hover:bg-gray-100 hover:shadow-sm
 					dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600 dark:hover:bg-gray-700"

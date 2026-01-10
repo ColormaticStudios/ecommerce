@@ -132,7 +132,7 @@
 					<div><strong>SKU:</strong> {product.sku}</div>
 					<div>
 						<strong>Updated:</strong>
-						{product.UpdatedAt.toLocaleDateString()}
+						{product.updated_at.toLocaleDateString()}
 					</div>
 				</div>
 			</div>
@@ -154,10 +154,11 @@
 							<div class="line-clamp-1 text-sm font-medium">
 								{related.name}
 							</div>
-							<!--<div class="text-sm text-gray-600 dark:text-gray-400">
-								{formatPrice(related.price)}
-							</div>-->
-							<!-- RelatedProduct currently does not have price -->
+							{#if related.price != null}
+								<div class="text-sm text-gray-600 dark:text-gray-400">
+									{formatPrice(related.price)}
+								</div>
+							{/if}
 						</a>
 					{/each}
 				</div>

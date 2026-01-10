@@ -56,10 +56,10 @@ export async function getProfile(api: API): Promise<User | null> {
 	if (userData) {
 		const user = new User(
 			api,
-			userData.ID,
-			userData.Subject,
-			userData.Username,
-			userData.Email,
+			userData.id,
+			userData.subject,
+			userData.username,
+			userData.email,
 			userData.name,
 			userData.role,
 			userData.currency,

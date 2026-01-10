@@ -1,9 +1,7 @@
 package models
 
-import "gorm.io/gorm"
-
 type Product struct {
-	gorm.Model
+	BaseModel
 	SKU         string   `json:"sku" gorm:"unique;not null"`
 	Name        string   `json:"name" gorm:"not null"`
 	Description string   `json:"description"`

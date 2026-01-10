@@ -7,18 +7,23 @@ export interface UserModel {
 	role: string;
 	currency: string;
 	profile_photo_url: string | null;
+	created_at?: Date;
+	updated_at?: Date;
+	deleted_at?: Date | null;
 }
 
-// Why is ProfileModel different from UserModel? No idea.
 export interface ProfileModel {
-	ID: number;
-	Subject: string;
-	Username: string;
-	Email: string;
+	id: number;
+	subject: string;
+	username: string;
+	email: string;
 	name: string | null;
 	role: string;
 	currency: string;
 	profile_photo_url: string | null;
+	created_at?: string | Date;
+	updated_at?: string | Date;
+	deleted_at?: string | Date | null;
 }
 
 export interface PageModel {
@@ -31,28 +36,67 @@ export interface PageModel {
 	};
 }
 
-// The argument `product` is technically not a product, the dates are strings. It's close enough though.
-export function parseProduct(product: ProductModel): ProductModel {
+interface RelatedProductPayload {
+	ID?: number;
+	id?: number;
+	SKU?: string;
+	sku?: string;
+	Name?: string;
+	name?: string;
+	Price?: number;
+	price?: number;
+}
+
+interface ProductPayload
+	extends Omit<ProductModel, "created_at" | "updated_at" | "deleted_at" | "related_products"> {
+	created_at: string | Date;
+	updated_at: string | Date;
+	deleted_at: string | Date | null;
+	related_products?: RelatedProductPayload[];
+}
+
+function parseRelatedProduct(product: RelatedProductPayload): RelatedProductModel {
 	return {
-		CreatedAt: new Date(product.CreatedAt),
-		DeletedAt: new Date(product.DeletedAt),
-		UpdatedAt: new Date(product.UpdatedAt),
-		ID: product.ID,
+		id: product.id ?? product.ID ?? 0,
+		sku: product.sku ?? product.SKU ?? "",
+		name: product.name ?? product.Name ?? "",
+		price: product.price ?? product.Price,
+	};
+}
+
+function parseDate(value: string | Date | null | undefined): Date | null {
+	if (!value) {
+		return null;
+	}
+	if (value instanceof Date) {
+		return value;
+	}
+	const parsed = new Date(value);
+	return Number.isNaN(parsed.valueOf()) ? null : parsed;
+}
+
+// The argument `product` is technically not a product, the dates are strings. It's close enough though.
+export function parseProduct(product: ProductPayload): ProductModel {
+	return {
+		created_at: parseDate(product.created_at) ?? new Date(),
+		deleted_at: parseDate(product.deleted_at),
+		updated_at: parseDate(product.updated_at) ?? new Date(),
+		id: product.id,
 		sku: product.sku,
 		name: product.name,
 		description: product.description,
 		price: product.price,
 		stock: product.stock,
 		images: product.images,
-		related_products: product.related_products,
+		related_products: (product.related_products ?? []).map(parseRelatedProduct),
 	};
 }
 
 export interface ProductModel {
-	CreatedAt: Date;
-	DeletedAt: Date;
-	UpdatedAt: Date;
-	ID: number;
+	created_at: Date;
+	deleted_at: Date | null;
+	updated_at: Date;
+	id: number;
 	sku: string;
 	name: string;
 	description: string;
@@ -66,6 +110,7 @@ export interface RelatedProductModel {
 	id: number;
 	sku: string;
 	name: string;
+	price?: number;
 }
 
 export function parseCart(cart: CartModel): CartModel {

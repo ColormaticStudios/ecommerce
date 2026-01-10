@@ -1,7 +1,5 @@
 package models
 
-import "gorm.io/gorm"
-
 const (
 	StatusPending = "PENDING"
 	StatusPaid    = "PAID"
@@ -9,7 +7,7 @@ const (
 )
 
 type Order struct {
-	gorm.Model
+	BaseModel
 	UserID uint        `json:"user_id"`
 	User   User        `json:"user" gorm:"foreignKey:UserID"`
 	Total  float64     `json:"total"`
@@ -18,7 +16,7 @@ type Order struct {
 }
 
 type OrderItem struct {
-	gorm.Model
+	BaseModel
 	OrderID   uint    `json:"order_id"`
 	Order     Order   `json:"-" gorm:"foreignKey:OrderID"`
 	ProductID uint    `json:"product_id"`

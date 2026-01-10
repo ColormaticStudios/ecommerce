@@ -1,15 +1,11 @@
 package models
 
-import (
-	"gorm.io/gorm"
-)
-
 type User struct {
-	gorm.Model
+	BaseModel
 	// Identity fields from OIDC provider (optional for email/password users)
-	Subject      string `gorm:"uniqueIndex"` // The unique ID from the IdP (e.g., "sub" claim)
-	Username     string `gorm:"uniqueIndex;not null"`
-	Email        string `gorm:"uniqueIndex;not null"`
+	Subject      string `json:"subject" gorm:"uniqueIndex"` // The unique ID from the IdP (e.g., "sub" claim)
+	Username     string `json:"username" gorm:"uniqueIndex;not null"`
+	Email        string `json:"email" gorm:"uniqueIndex;not null"`
 	PasswordHash string `json:"-"` // Hashed password (only for email/password auth)
 
 	// Profile information
