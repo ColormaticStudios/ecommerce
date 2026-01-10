@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
+	"ecommerce/internal/media"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -10,7 +12,7 @@ import (
 )
 
 // GetProfile retrieves the authenticated user's profile
-func GetProfile(db *gorm.DB) gin.HandlerFunc {
+func GetProfile(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// The userID is the OIDC Subject claim stored in the middleware
 		subject := c.GetString("userID")
@@ -23,6 +25,15 @@ func GetProfile(db *gorm.DB) gin.HandlerFunc {
 		if err := db.Where("subject = ?", subject).First(&user).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User profile not found"})
 			return
+		}
+
+		if mediaService != nil {
+			profileURL, err := mediaService.UserProfilePhotoURL(user.ID)
+			if err == nil {
+				user.ProfilePhoto = profileURL
+			} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+				mediaService.Logger.Printf("[WARN] Failed to load profile photo: %v", err)
+			}
 		}
 
 		c.JSON(http.StatusOK, user)

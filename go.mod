@@ -14,11 +14,18 @@ require (
 	golang.org/x/crypto v0.40.0
 	golang.org/x/oauth2 v0.34.0
 	gorm.io/driver/postgres v1.6.0
+	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.1
 )
 
 require (
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
+	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8 // indirect
+)
+
+require (
 	github.com/pquerna/cachecontrol v0.2.0 // indirect
+	github.com/tus/tusd/v2 v2.8.0
 	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
 )
 

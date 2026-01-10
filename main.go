@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"time"
 
 	"ecommerce/config"
 	"ecommerce/handlers"
+	"ecommerce/internal/media"
 	"ecommerce/middleware"
 	"ecommerce/models"
 
@@ -16,6 +18,8 @@ import (
 	"github.com/didip/tollbooth_gin"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	tusdfilestore "github.com/tus/tusd/v2/pkg/filestore"
+	tusdhandler "github.com/tus/tusd/v2/pkg/handler"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -42,7 +46,17 @@ func main() {
 	log.Println("[INFO] Database connection established")
 
 	// Auto-migrate the schema
-	if err := db.AutoMigrate(&models.User{}, &models.Product{}, &models.Order{}, &models.OrderItem{}, &models.Cart{}, &models.CartItem{}); err != nil {
+	if err := db.AutoMigrate(
+		&models.User{},
+		&models.Product{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.MediaObject{},
+		&models.MediaVariant{},
+		&models.MediaReference{},
+	); err != nil {
 		log.Fatalf("[ERROR] Failed to migrate database: %v", err)
 	}
 	log.Println("[INFO] Database migration completed")
@@ -52,6 +66,10 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	r := gin.New()
+
+	if cfg.ServeMedia {
+		r.Static("/media", cfg.MediaRoot)
+	}
 
 	// Request logging middleware (custom format)
 	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
@@ -117,6 +135,12 @@ func main() {
 		log.Fatalf("Failed to parse variable DISABLE_LOCAL_SIGN_IN: %v", err)
 	}
 
+	mediaService := media.NewService(db, cfg.MediaRoot, cfg.MediaPublicURL, log.Default())
+	if err := mediaService.EnsureDirs(); err != nil {
+		log.Fatalf("[ERROR] Failed to initialize media directories: %v", err)
+	}
+	mediaService.StartProcessor()
+
 	api := r.Group("/api")
 	{
 		apiv1 := api.Group("/v1")
@@ -131,15 +155,44 @@ func main() {
 			apiv1.GET("/auth/oidc/login", handlers.OIDCLogin(cfg.OIDCProvider, cfg.OIDCClientID, cfg.OIDCRedirectURI))
 			apiv1.GET("/auth/oidc/callback", handlers.OIDCCallback(db, cfg.JWTSecret, cfg.OIDCProvider, cfg.OIDCClientID))
 
-			apiv1.GET("/products", handlers.GetProducts(db))
-			apiv1.GET("/products/:id", handlers.GetProductByID(db))
+			apiv1.GET("/products", handlers.GetProducts(db, mediaService))
+			apiv1.GET("/products/:id", handlers.GetProductByID(db, mediaService))
+
+			mediaRoutes := apiv1.Group("/media")
+			mediaRoutes.Use(middleware.AuthMiddleware(jwtSecret, ""))
+			{
+				composer := tusdhandler.NewStoreComposer()
+				store := tusdfilestore.New(mediaService.TusDir())
+				store.UseIn(composer)
+
+				tusd, err := tusdhandler.NewHandler(tusdhandler.Config{
+					BasePath:              "/api/v1/media/uploads",
+					StoreComposer:         composer,
+					NotifyCompleteUploads: true,
+				})
+				if err != nil {
+					log.Fatalf("[ERROR] Failed to initialize tusd: %v", err)
+				}
+
+				go func() {
+					for event := range tusd.CompleteUploads {
+						if err := mediaService.HandleTusdComplete(event.Upload); err != nil {
+							log.Printf("[ERROR] Media upload completion failed: %v", err)
+						}
+					}
+				}()
+
+				mediaRoutes.Any("/uploads/*path", gin.WrapH(http.StripPrefix("/api/v1/media/uploads", tusd)))
+			}
 
 			// PROTECTED USER ROUTES
 			userRoutes := apiv1.Group("/me")
 			userRoutes.Use(middleware.AuthMiddleware(jwtSecret, ""))
 			{
-				userRoutes.GET("/", handlers.GetProfile(db))
+				userRoutes.GET("/", handlers.GetProfile(db, mediaService))
 				userRoutes.PATCH("/", handlers.UpdateProfile(db))
+				userRoutes.POST("/profile-photo", handlers.SetProfilePhoto(db, mediaService))
+				userRoutes.DELETE("/profile-photo", handlers.DeleteProfilePhoto(db, mediaService))
 				userRoutes.GET("/cart", handlers.GetCart(db))
 				userRoutes.POST("/cart", handlers.AddCartItem(db))
 				userRoutes.PATCH("/cart/:itemId", handlers.UpdateCartItem(db))
@@ -156,7 +209,9 @@ func main() {
 			{
 				adminRoutes.POST("/products", handlers.CreateProduct(db))
 				adminRoutes.PATCH("/products/:id", handlers.UpdateProduct(db))
-				adminRoutes.DELETE("/products/:id", handlers.DeleteProduct(db))
+				adminRoutes.DELETE("/products/:id", handlers.DeleteProduct(db, mediaService))
+				adminRoutes.POST("/products/:id/media", handlers.AttachProductMedia(db, mediaService))
+				adminRoutes.DELETE("/products/:id/media/:mediaId", handlers.DetachProductMedia(db, mediaService))
 				adminRoutes.GET("/orders", handlers.GetAllOrders(db))
 				adminRoutes.GET("/orders/:id", handlers.GetAdminOrderByID(db))
 				adminRoutes.PATCH("/orders/:id/status", handlers.UpdateOrderStatus(db))

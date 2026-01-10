@@ -13,6 +13,9 @@ type Config struct {
 	OIDCRedirectURI    string `mapstructure:"OIDC_REDIRECT_URI"`
 	DevMode            bool   `mapstructure:"DEV_MODE"`
 	PublicURL          string `mapstructure:"PUBLIC_URL"`
+	MediaRoot          string `mapstructure:"MEDIA_ROOT"`
+	MediaPublicURL     string `mapstructure:"MEDIA_PUBLIC_URL"`
+	ServeMedia         bool   `mapstructure:"SERVE_MEDIA"`
 }
 
 func LoadConfig() (config Config, err error) {

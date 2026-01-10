@@ -2,7 +2,6 @@
 
 ## 1. Overview
 This API powers a simple e-commerce backend server.
-Base URL: `https://api.example.com` (replace with your deployment URL)
 
 Endpoints are grouped by role:
 - **Public** – no authentication required.
@@ -543,14 +542,66 @@ Sample payload (decoded base64):
 
 ---
 
-## 10. Rate Limiting & CORS
+## 10. Media Uploads
+
+Uploads use the TUS resumable protocol at `/media/uploads`. Clients must send `Authorization: Bearer <token>` on all requests.
+
+### Create Upload (TUS)
+**POST** `/media/uploads`
+
+Headers:
+- `Tus-Resumable: 1.0.0`
+- `Upload-Length: <bytes>`
+- `Upload-Metadata: filename <base64>`
+
+**Success Response** – HTTP 201
+`Location` header includes the upload URL. The upload ID is the last path segment.
+
+### Attach Profile Photo
+**POST** `/me/profile-photo`
+
+| Field | Type | Validation | Description |
+|-------|------|------------|-------------|
+| `media_id` | string | required | Upload ID from TUS |
+
+**Success Response** – HTTP 200
+Returns the user with `profile_photo_url` set.
+
+**Error Responses**
+- HTTP 400 – Media is not an image
+- HTTP 409 – Media is still processing
+- HTTP 413 – Profile photo too large
+
+### Remove Profile Photo
+**DELETE** `/me/profile-photo`
+
+**Success Response** – HTTP 200
+
+### Attach Product Media (Admin)
+**POST** `/admin/products/{id}/media`
+
+| Field | Type | Validation | Description |
+|-------|------|------------|-------------|
+| `media_ids` | array | required | Upload IDs from TUS |
+
+**Success Response** – HTTP 200
+Returns the product with `images` set from attached media.
+
+### Detach Product Media (Admin)
+**DELETE** `/admin/products/{id}/media/{mediaId}`
+
+**Success Response** – HTTP 200
+
+---
+
+## 11. Rate Limiting & CORS
 
 - **Rate limit:** 100 requests per second per IP (enforced by tollbooth).
 - **CORS:** All origins allowed (`*`). In production, restrict to your front‑end domains.
 
 ---
 
-## 11. Sample cURL Commands
+## 12. Sample cURL Commands
 
 **Register**
 ```/dev/null/curl-register#L1-7

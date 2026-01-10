@@ -51,6 +51,7 @@ A RESTful ecommerce API built with Go, Gin, GORM, and PostgreSQL.
 - Go 1.21 or higher
 - Docker or Podman (for running Postgres database)
 - Make
+- FFmpeg (for media processing)
 - NPM/Bun/Yarn/PNPM (for frontend)
 
 ## Setup
@@ -212,6 +213,24 @@ bin/ecommerce-cli product edit \
 bin/ecommerce-cli product edit \
 	--sku PROD-001 \
 	--new-sku PROD-002
+```
+
+**Set related products:**
+
+```bash
+bin/ecommerce-cli product related-set --id 1 --related-id 2,3,4
+# or by SKU
+bin/ecommerce-cli product related-set --sku PROD-001 --related-sku PROD-002 --related-sku PROD-003
+```
+
+**Upload media and attach to a product:**
+
+```bash
+bin/ecommerce-cli product media-upload \
+  --id 1 \
+  --file ./path/to/image.jpg \
+  --api-base http://localhost:3000 \
+  --token <admin-jwt>
 ```
 
 **Delete a product:**

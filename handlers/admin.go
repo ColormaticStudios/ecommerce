@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"ecommerce/internal/media"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -89,7 +90,7 @@ func UpdateProduct(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-func DeleteProduct(db *gorm.DB) gin.HandlerFunc {
+func DeleteProduct(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var product models.Product
@@ -100,10 +101,36 @@ func DeleteProduct(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		var refs []models.MediaReference
+		if mediaService != nil {
+			if err := db.Where("owner_type = ? AND owner_id = ? AND role = ?",
+				media.OwnerTypeProduct, product.ID, media.RoleProductImage).Find(&refs).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load product media"})
+				return
+			}
+		}
+
 		// Delete the product
-		if err := db.Delete(&product).Error; err != nil {
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Delete(&product).Error; err != nil {
+				return err
+			}
+			if mediaService != nil {
+				if err := tx.Where("owner_type = ? AND owner_id = ? AND role = ?",
+					media.OwnerTypeProduct, product.ID, media.RoleProductImage).Delete(&models.MediaReference{}).Error; err != nil {
+					return err
+				}
+			}
+			return nil
+		}); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete product"})
 			return
+		}
+
+		if mediaService != nil {
+			for _, ref := range refs {
+				_ = mediaService.DeleteIfOrphan(ref.MediaID)
+			}
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "Product deleted successfully"})

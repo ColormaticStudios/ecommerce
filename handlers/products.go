@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"ecommerce/internal/media"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +20,7 @@ import (
 //   - order: sort order (asc, desc) - default: desc
 //   - page: page number (default: 1)
 //   - limit: items per page (default: 20, max: 100)
-func GetProducts(db *gorm.DB) gin.HandlerFunc {
+func GetProducts(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		query := db.Model(&models.Product{})
 
@@ -92,6 +93,16 @@ func GetProducts(db *gorm.DB) gin.HandlerFunc {
 			totalPages++
 		}
 
+		for i := range products {
+			if mediaService == nil {
+				break
+			}
+			mediaURLs, err := mediaService.ProductMediaURLs(products[i].ID)
+			if err == nil && len(mediaURLs) > 0 {
+				products[i].Images = mediaURLs
+			}
+		}
+
 		c.JSON(http.StatusOK, gin.H{
 			"data": products,
 			"pagination": gin.H{
@@ -105,7 +116,7 @@ func GetProducts(db *gorm.DB) gin.HandlerFunc {
 }
 
 // GetProductByID retrieves a specific product and its related items
-func GetProductByID(db *gorm.DB) gin.HandlerFunc {
+func GetProductByID(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var product models.Product
@@ -114,6 +125,13 @@ func GetProductByID(db *gorm.DB) gin.HandlerFunc {
 		if err := db.Preload("Related").First(&product, id).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
+		}
+
+		if mediaService != nil {
+			mediaURLs, err := mediaService.ProductMediaURLs(product.ID)
+			if err == nil && len(mediaURLs) > 0 {
+				product.Images = mediaURLs
+			}
 		}
 
 		c.JSON(http.StatusOK, product)
