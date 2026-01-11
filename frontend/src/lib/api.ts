@@ -49,6 +49,9 @@ export class API {
 		const url = new URL(`${this.baseUrl}${API_ROUTE}${path}`);
 		if (params) {
 			Object.entries(params).forEach(([key, value]) => {
+				if (value === undefined || value === null || value === "") {
+					return;
+				}
 				url.searchParams.append(key, String(value));
 			});
 		}
@@ -260,6 +263,58 @@ export class API {
 		return parseProduct(response);
 	}
 
+	public async updateProduct(
+		id: number,
+		data: {
+			sku?: string;
+			name?: string;
+			description?: string;
+			price?: number;
+			stock?: number;
+			images?: string[];
+		}
+	): Promise<ProductModel> {
+		const response = await this.request<ProductModel>("PATCH", `/admin/products/${id}`, data);
+		return parseProduct(response);
+	}
+
+	public async deleteProduct(id: number): Promise<{ message?: string }> {
+		return await this.request("DELETE", `/admin/products/${id}`);
+	}
+
+	public async attachProductMedia(id: number, mediaIds: string[]): Promise<ProductModel> {
+		const response = await this.request<ProductModel>("POST", `/admin/products/${id}/media`, {
+			media_ids: mediaIds,
+		});
+		return parseProduct(response);
+	}
+
+	public async detachProductMedia(id: number, mediaId: string): Promise<ProductModel> {
+		const response = await this.request<ProductModel>(
+			"DELETE",
+			`/admin/products/${id}/media/${mediaId}`
+		);
+		return parseProduct(response);
+	}
+
+	public async updateProductMediaOrder(id: number, mediaIds: string[]): Promise<ProductModel> {
+		const response = await this.request<ProductModel>(
+			"PATCH",
+			`/admin/products/${id}/media/order`,
+			{
+				media_ids: mediaIds,
+			}
+		);
+		return parseProduct(response);
+	}
+
+	public async updateProductRelated(id: number, relatedIds: number[]): Promise<ProductModel> {
+		const response = await this.request<ProductModel>("PATCH", `/admin/products/${id}/related`, {
+			related_ids: relatedIds,
+		});
+		return parseProduct(response);
+	}
+
 	// Order Management
 	public async listOrders(params?: { page?: number; limit?: number }): Promise<OrderModel[]> {
 		const response = await this.request<OrderModel[]>("GET", "/me/orders", undefined, params);
@@ -271,6 +326,40 @@ export class API {
 	public async getOrderDetails(orderId: number): Promise<OrderModel> {
 		const response = await this.request<OrderModel>("GET", `/me/orders/${orderId}`);
 		return parseOrder(response);
+	}
+
+	// Admin Order Management
+	public async listAdminOrders(params?: { page?: number; limit?: number }): Promise<OrderModel[]> {
+		const response = await this.request<OrderModel[]>("GET", "/admin/orders", undefined, params);
+		return response.map(parseOrder);
+	}
+
+	public async getAdminOrderDetails(orderId: number): Promise<OrderModel> {
+		const response = await this.request<OrderModel>("GET", `/admin/orders/${orderId}`);
+		return parseOrder(response);
+	}
+
+	public async updateOrderStatus(
+		orderId: number,
+		data: { status: OrderModel["status"] }
+	): Promise<OrderModel> {
+		const response = await this.request<OrderModel>(
+			"PATCH",
+			`/admin/orders/${orderId}/status`,
+			data
+		);
+		return parseOrder(response);
+	}
+
+	// Admin User Management
+	public async listUsers(params?: { page?: number; limit?: number }): Promise<UserModel[]> {
+		const response = await this.request<ProfileModel[]>("GET", "/admin/users", undefined, params);
+		return response.map(parseProfile);
+	}
+
+	public async updateUserRole(userId: number, data: { role: string }): Promise<UserModel> {
+		const response = await this.request<ProfileModel>("PATCH", `/admin/users/${userId}/role`, data);
+		return parseProfile(response);
 	}
 
 	// Auth Token Management

@@ -30,5 +30,6 @@ type MediaReference struct {
 	OwnerType string    `json:"owner_type" gorm:"size:32;index;not null"`
 	OwnerID   uint      `json:"owner_id" gorm:"index;not null"`
 	Role      string    `json:"role" gorm:"size:32;index;not null"`
+	Position  int       `json:"position" gorm:"default:0"`
 	CreatedAt time.Time `json:"created_at"`
 }

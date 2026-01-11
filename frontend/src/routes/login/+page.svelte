@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
 	import type { UserModel } from "$lib/models";
+	import Alert from "$lib/components/alert.svelte";
 	import { getProfile, userStore } from "$lib/user";
 	import Password from "$lib/components/password.svelte";
 	import { getContext } from "svelte";
@@ -61,12 +62,14 @@
 		/>
 		<Password bind:value={password} name="password" placeholder="Password" />
 		{#if errorMessage}
-			<p
-				class="w-full rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/40 dark:text-red-200"
-			>
-				<i class="bi bi-exclamation-triangle-fill mr-1"></i>
-				{errorMessage}
-			</p>
+			<div class="w-full">
+				<Alert
+					message={errorMessage}
+					tone="error"
+					icon="bi-x-circle-fill"
+					onClose={() => (errorMessage = "")}
+				/>
+			</div>
 		{/if}
 		<input class="btn btn-large btn-primary" type="submit" value="Log In" />
 	</form>

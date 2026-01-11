@@ -21,6 +21,10 @@ type MediaAttachManyRequest struct {
 	MediaIDs []string `json:"media_ids" binding:"required"`
 }
 
+type MediaOrderRequest struct {
+	MediaIDs []string `json:"media_ids" binding:"required"`
+}
+
 func SetProfilePhoto(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		subject := c.GetString("userID")
@@ -187,6 +191,16 @@ func AttachProductMedia(db *gorm.DB, mediaService *media.Service) gin.HandlerFun
 			return
 		}
 
+		var maxPosition int
+		if err := db.Model(&models.MediaReference{}).
+			Where("owner_type = ? AND owner_id = ? AND role = ?",
+				media.OwnerTypeProduct, product.ID, media.RoleProductImage).
+			Select("COALESCE(MAX(position), 0)").
+			Scan(&maxPosition).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load media order"})
+			return
+		}
+
 		for _, mediaID := range req.MediaIDs {
 			var mediaObj models.MediaObject
 			mediaDeadline := time.Now().Add(2 * time.Second)
@@ -205,26 +219,110 @@ func AttachProductMedia(db *gorm.DB, mediaService *media.Service) gin.HandlerFun
 				}
 				break
 			}
-			if mediaObj.Status != media.StatusReady {
+			if mediaObj.Status != media.StatusReady || mediaObj.OriginalPath == "" {
 				if mediaObj.Status == media.StatusFailed {
 					c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Media processing failed: " + mediaID})
-				} else {
-					c.JSON(http.StatusConflict, gin.H{"error": "Media is still processing: " + mediaID})
+					return
 				}
-				return
+
+				processingDeadline := time.Now().Add(2 * time.Second)
+				for time.Now().Before(processingDeadline) {
+					time.Sleep(150 * time.Millisecond)
+					if err := db.First(&mediaObj, "id = ?", mediaID).Error; err != nil {
+						c.JSON(http.StatusNotFound, gin.H{"error": "Media not found: " + mediaID})
+						return
+					}
+					if mediaObj.Status == media.StatusReady && mediaObj.OriginalPath != "" {
+						break
+					}
+					if mediaObj.Status == media.StatusFailed {
+						c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Media processing failed: " + mediaID})
+						return
+					}
+				}
+
+				if mediaObj.Status != media.StatusReady || mediaObj.OriginalPath == "" {
+					c.JSON(http.StatusConflict, gin.H{"error": "Media is still processing: " + mediaID})
+					return
+				}
 			}
 
+			maxPosition++
 			ref := models.MediaReference{
 				MediaID:   mediaID,
 				OwnerType: media.OwnerTypeProduct,
 				OwnerID:   product.ID,
 				Role:      media.RoleProductImage,
+				Position:  maxPosition,
 			}
 			if err := db.Where("media_id = ? AND owner_type = ? AND owner_id = ? AND role = ?",
 				ref.MediaID, ref.OwnerType, ref.OwnerID, ref.Role).FirstOrCreate(&ref).Error; err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to attach media"})
 				return
 			}
+		}
+
+		if mediaService != nil {
+			productImages, _ := mediaService.ProductMediaURLs(product.ID)
+			product.Images = productImages
+		}
+		c.JSON(http.StatusOK, product)
+	}
+}
+
+func UpdateProductMediaOrder(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		var product models.Product
+		if err := db.First(&product, id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+			return
+		}
+
+		var req MediaOrderRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if len(req.MediaIDs) == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Media IDs required"})
+			return
+		}
+
+		var refs []models.MediaReference
+		if err := db.Where("owner_type = ? AND owner_id = ? AND role = ?",
+			media.OwnerTypeProduct, product.ID, media.RoleProductImage).
+			Find(&refs).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load product media"})
+			return
+		}
+
+		refByID := make(map[string]models.MediaReference, len(refs))
+		for _, ref := range refs {
+			refByID[ref.MediaID] = ref
+		}
+
+		for _, mediaID := range req.MediaIDs {
+			if _, ok := refByID[mediaID]; !ok {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Media not attached: " + mediaID})
+				return
+			}
+		}
+
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			for index, mediaID := range req.MediaIDs {
+				if err := tx.Model(&models.MediaReference{}).
+					Where("media_id = ? AND owner_type = ? AND owner_id = ? AND role = ?",
+						mediaID, media.OwnerTypeProduct, product.ID, media.RoleProductImage).
+					Update("position", index+1).Error; err != nil {
+					return err
+				}
+			}
+			return nil
+		}); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update media order"})
+			return
 		}
 
 		productImages, _ := mediaService.ProductMediaURLs(product.ID)

@@ -147,6 +147,12 @@
 					<div
 						class="absolute right-0 mt-2 w-44 rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-900"
 					>
+						{#if $userStore.role === "admin"}
+							<a href={resolve("/admin")} class="menu-item" onclick={() => (menuOpen = false)}>
+								Admin
+								<i class="bi bi-shield-lock"></i>
+							</a>
+						{/if}
 						<a href={resolve("/checkout")} class="menu-item" onclick={() => (menuOpen = false)}>
 							Checkout
 							<i class="bi bi-credit-card"></i>

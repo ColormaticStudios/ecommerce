@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
 	import { type OrderModel } from "$lib/models";
+	import Alert from "$lib/components/alert.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
 	import { getContext, onMount } from "svelte";
@@ -93,7 +94,14 @@
 			{/each}
 		</div>
 	{:else if errorMessage}
-		<p class="mt-4 text-red-500">{errorMessage}</p>
+		<div class="mt-4">
+			<Alert
+				message={errorMessage}
+				tone="error"
+				icon="bi-x-circle-fill"
+				onClose={() => (errorMessage = "")}
+			/>
+		</div>
 	{:else if orders.length === 0}
 		<div
 			class="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"

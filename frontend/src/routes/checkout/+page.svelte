@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
 	import { type CartModel, type OrderModel } from "$lib/models";
+	import Alert from "$lib/components/alert.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
 	import { getContext, onMount } from "svelte";
@@ -153,7 +154,14 @@
 			></div>
 		</div>
 	{:else if errorMessage}
-		<p class="mt-4 text-red-500">{errorMessage}</p>
+		<div class="mt-4">
+			<Alert
+				message={errorMessage}
+				tone="error"
+				icon="bi-x-circle-fill"
+				onClose={() => (errorMessage = "")}
+			/>
+		</div>
 	{:else if !cart || cart.items.length === 0}
 		<p class="mt-4 text-gray-600 dark:text-gray-300">
 			Your cart is empty. Visit the
@@ -214,7 +222,14 @@
 				</button>
 
 				{#if statusMessage}
-					<p class="mt-4 text-sm text-green-600">{statusMessage}</p>
+					<div class="mt-4">
+						<Alert
+							message={statusMessage}
+							tone="success"
+							icon="bi-check-circle-fill"
+							onClose={() => (statusMessage = "")}
+						/>
+					</div>
 				{/if}
 				{#if order}
 					<p class="mt-2 text-sm text-gray-600 dark:text-gray-300">

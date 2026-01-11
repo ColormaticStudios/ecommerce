@@ -9,7 +9,11 @@ import (
 func (s *Service) ProductMediaURLs(productID uint) ([]string, error) {
 	var refs []models.MediaReference
 	if err := s.DB.Where("owner_type = ? AND owner_id = ? AND role = ?",
-		OwnerTypeProduct, productID, RoleProductImage).Find(&refs).Error; err != nil {
+		OwnerTypeProduct, productID, RoleProductImage).
+		Order("position asc").
+		Order("created_at asc").
+		Order("id asc").
+		Find(&refs).Error; err != nil {
 		return nil, err
 	}
 
@@ -27,14 +31,99 @@ func (s *Service) ProductMediaURLs(productID uint) ([]string, error) {
 		return nil, err
 	}
 
-	urls := make([]string, 0, len(mediaObjs))
+	mediaByID := make(map[string]models.MediaObject, len(mediaObjs))
 	for _, obj := range mediaObjs {
+		mediaByID[obj.ID] = obj
+	}
+
+	urls := make([]string, 0, len(refs))
+	for _, ref := range refs {
+		obj, ok := mediaByID[ref.MediaID]
+		if !ok {
+			continue
+		}
 		if obj.Status != StatusReady || obj.OriginalPath == "" {
 			continue
 		}
 		urls = append(urls, s.PublicURLFor(obj.OriginalPath))
 	}
 	return urls, nil
+}
+
+func (s *Service) ProductMediaURLsByProductIDs(productIDs []uint) (map[uint][]string, error) {
+	urlsByProduct := make(map[uint][]string)
+	if len(productIDs) == 0 {
+		return urlsByProduct, nil
+	}
+
+	uniqueIDs := make([]uint, 0, len(productIDs))
+	seen := make(map[uint]struct{}, len(productIDs))
+	for _, id := range productIDs {
+		if id == 0 {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		uniqueIDs = append(uniqueIDs, id)
+	}
+
+	if len(uniqueIDs) == 0 {
+		return urlsByProduct, nil
+	}
+
+	var refs []models.MediaReference
+	if err := s.DB.Where("owner_type = ? AND owner_id IN ? AND role = ?",
+		OwnerTypeProduct, uniqueIDs, RoleProductImage).
+		Order("owner_id asc").
+		Order("position asc").
+		Order("created_at asc").
+		Order("id asc").
+		Find(&refs).Error; err != nil {
+		return nil, err
+	}
+
+	if len(refs) == 0 {
+		return urlsByProduct, nil
+	}
+
+	mediaIDs := make([]string, 0, len(refs))
+	mediaSeen := make(map[string]struct{}, len(refs))
+	for _, ref := range refs {
+		if _, ok := mediaSeen[ref.MediaID]; ok {
+			continue
+		}
+		mediaSeen[ref.MediaID] = struct{}{}
+		mediaIDs = append(mediaIDs, ref.MediaID)
+	}
+
+	if len(mediaIDs) == 0 {
+		return urlsByProduct, nil
+	}
+
+	var mediaObjs []models.MediaObject
+	if err := s.DB.Where("id IN ?", mediaIDs).Find(&mediaObjs).Error; err != nil {
+		return nil, err
+	}
+
+	mediaByID := make(map[string]models.MediaObject, len(mediaObjs))
+	for _, obj := range mediaObjs {
+		mediaByID[obj.ID] = obj
+	}
+
+	for _, ref := range refs {
+		obj, ok := mediaByID[ref.MediaID]
+		if !ok {
+			continue
+		}
+		if obj.Status != StatusReady || obj.OriginalPath == "" {
+			continue
+		}
+		urlsByProduct[ref.OwnerID] = append(urlsByProduct[ref.OwnerID], s.PublicURLFor(obj.OriginalPath))
+	}
+
+	return urlsByProduct, nil
 }
 
 func (s *Service) UserProfilePhotoURL(userID uint) (string, error) {

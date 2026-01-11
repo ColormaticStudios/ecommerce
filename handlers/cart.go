@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"ecommerce/internal/media"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -40,8 +41,30 @@ func getOrCreateCart(db *gorm.DB, userID uint) (*models.Cart, error) {
 	return &cart, nil
 }
 
+func applyCartMedia(cart *models.Cart, mediaService *media.Service) {
+	if mediaService == nil {
+		return
+	}
+	productIDs := make([]uint, 0, len(cart.Items))
+	for i := range cart.Items {
+		productIDs = append(productIDs, cart.Items[i].ProductID)
+	}
+
+	mediaByProduct, err := mediaService.ProductMediaURLsByProductIDs(productIDs)
+	if err != nil {
+		return
+	}
+
+	for i := range cart.Items {
+		mediaURLs := mediaByProduct[cart.Items[i].ProductID]
+		if len(mediaURLs) > 0 {
+			cart.Items[i].Product.Images = mediaURLs
+		}
+	}
+}
+
 // AddCartItem adds an item to the user's cart
-func AddCartItem(db *gorm.DB) gin.HandlerFunc {
+func AddCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get user subject from middleware
 		subject := c.GetString("userID")
@@ -130,12 +153,13 @@ func AddCartItem(db *gorm.DB) gin.HandlerFunc {
 
 		// Reload cart with items
 		db.Preload("Items.Product").First(cart, cart.ID)
+		applyCartMedia(cart, mediaService)
 		c.JSON(http.StatusOK, cart)
 	}
 }
 
 // GetCart retrieves the user's cart
-func GetCart(db *gorm.DB) gin.HandlerFunc {
+func GetCart(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get user subject from middleware
 		subject := c.GetString("userID")
@@ -158,12 +182,13 @@ func GetCart(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		applyCartMedia(cart, mediaService)
 		c.JSON(http.StatusOK, cart)
 	}
 }
 
 // UpdateCartItem updates the quantity of a cart item
-func UpdateCartItem(db *gorm.DB) gin.HandlerFunc {
+func UpdateCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get user subject from middleware
 		subject := c.GetString("userID")
@@ -228,6 +253,12 @@ func UpdateCartItem(db *gorm.DB) gin.HandlerFunc {
 
 		// Reload with product
 		db.Preload("Product").First(&cartItem, cartItem.ID)
+		if mediaService != nil {
+			mediaURLs, err := mediaService.ProductMediaURLs(cartItem.ProductID)
+			if err == nil && len(mediaURLs) > 0 {
+				cartItem.Product.Images = mediaURLs
+			}
+		}
 		c.JSON(http.StatusOK, cartItem)
 	}
 }

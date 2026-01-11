@@ -2,12 +2,13 @@
 	import { type ProductModel } from "$lib/models";
 	import { type API } from "$lib/api";
 	import { formatPrice } from "$lib/utils";
-	import { onMount, getContext, onDestroy } from "svelte";
+	import { userStore } from "$lib/user";
+	import { getContext, onDestroy } from "svelte";
 	import { page } from "$app/state";
 	import { resolve } from "$app/paths";
 
 	const api: API = getContext("api");
-	const productID = page.params.id;
+	const productId = $derived(Number(page.params.id));
 
 	let product = $state<ProductModel | null>(null);
 	let selectedImage = $state(0);
@@ -18,6 +19,7 @@
 	let toastVisible = $state(false);
 	let toastTimeout: ReturnType<typeof setTimeout> | null = null;
 	let toastHideTimeout: ReturnType<typeof setTimeout> | null = null;
+	let loadSequence = 0;
 
 	function showToast(message: string) {
 		toastMessage = message;
@@ -65,9 +67,38 @@
 		}
 	}
 
-	onMount(async () => {
-		product = await api.getProduct(parseInt(productID ?? "0"));
-		loading = false;
+	$effect(() => {
+		const id = productId;
+		if (!Number.isFinite(id) || id <= 0) {
+			product = null;
+			loading = false;
+			return;
+		}
+
+		const sequence = ++loadSequence;
+		loading = true;
+		product = null;
+		selectedImage = 0;
+		quantity = 1;
+
+		(async () => {
+			try {
+				const fetched = await api.getProduct(id);
+				if (sequence !== loadSequence) {
+					return;
+				}
+				product = fetched;
+			} catch (err) {
+				console.error(err);
+				if (sequence === loadSequence) {
+					product = null;
+				}
+			} finally {
+				if (sequence === loadSequence) {
+					loading = false;
+				}
+			}
+		})();
 	});
 
 	onDestroy(() => {
@@ -131,7 +162,7 @@
 						{#each product.images as img, i (i)}
 							<button
 								type="button"
-								class="h-16 w-16 overflow-hidden rounded-md border
+								class="h-16 w-16 cursor-pointer overflow-hidden rounded-md border
 									{selectedImage === i
 									? 'border-gray-900 dark:border-gray-100'
 									: 'border-gray-300 dark:border-gray-600'}
@@ -148,9 +179,20 @@
 
 			<!-- Product details -->
 			<div class="flex flex-col gap-4">
-				<h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-					{product.name}
-				</h1>
+				<div class="flex items-start justify-between gap-3">
+					<h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+						{product.name}
+					</h1>
+					{#if $userStore?.role === "admin"}
+						<a
+							href={resolve(`/admin/product/${product.id}`)}
+							class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-gray-300 text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+							aria-label="Edit product"
+						>
+							<i class="bi bi-wrench-adjustable"></i>
+						</a>
+					{/if}
+				</div>
 
 				<p class="text-gray-600 dark:text-gray-400">
 					{product.description}
@@ -173,7 +215,7 @@
 				</div>
 
 				<!-- Actions -->
-				<div class="mt-4 flex gap-3">
+				<div class="mt-4 flex flex-wrap gap-3">
 					<div
 						class="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1.5 sm:gap-2 sm:px-3 sm:py-2 dark:border-gray-800 dark:bg-gray-900"
 					>

@@ -90,6 +90,58 @@ func UpdateProduct(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
+type UpdateRelatedRequest struct {
+	RelatedIDs []uint `json:"related_ids"`
+}
+
+func UpdateProductRelated(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		var product models.Product
+
+		if err := db.Preload("Related").First(&product, id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+			return
+		}
+
+		var req UpdateRelatedRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		for _, relatedID := range req.RelatedIDs {
+			if relatedID == product.ID {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Product cannot be related to itself"})
+				return
+			}
+		}
+
+		var related []models.Product
+		if len(req.RelatedIDs) > 0 {
+			if err := db.Where("id IN ?", req.RelatedIDs).Find(&related).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load related products"})
+				return
+			}
+		}
+
+		if err := db.Model(&product).Association("Related").Replace(related); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update related products"})
+			return
+		}
+
+		product.Related = related
+		if mediaService != nil {
+			mediaURLs, err := mediaService.ProductMediaURLs(product.ID)
+			if err == nil && len(mediaURLs) > 0 {
+				product.Images = mediaURLs
+			}
+		}
+
+		c.JSON(http.StatusOK, product)
+	}
+}
+
 func DeleteProduct(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")

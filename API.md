@@ -579,6 +579,26 @@ Creates a new user account and returns a JWT.
 
 **DELETE** `/admin/products/{id}`
 
+### 7.4 Reorder Product Media
+
+**PATCH** `/admin/products/{id}/media/order`
+
+**Request**
+
+```json
+{ "media_ids": ["<media-id-1>", "<media-id-2>"] }
+```
+
+### 7.5 Update Related Products
+
+**PATCH** `/admin/products/{id}/related`
+
+**Request**
+
+```json
+{ "related_ids": [2, 3, 4] }
+```
+
 ---
 
 ## 8. Admin: Orders

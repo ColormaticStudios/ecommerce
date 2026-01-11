@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
+	import Alert from "$lib/components/alert.svelte";
+	import { uploadMediaFiles } from "$lib/media";
 	import { getProfile, userStore } from "$lib/user";
 	import { getContext, onDestroy, onMount } from "svelte";
 	import { resolve } from "$app/paths";
@@ -91,13 +93,15 @@
 			return;
 		}
 
-		api.tokenFromCookie();
 		uploading = true;
 		errorMessage = "";
 		statusMessage = "";
 
 		try {
-			const mediaId = await api.uploadMedia(selectedFile);
+			const [mediaId] = await uploadMediaFiles(api, [selectedFile]);
+			if (!mediaId) {
+				throw new Error("Upload failed");
+			}
 			await api.attachProfilePhoto(mediaId);
 			await loadProfile();
 			statusMessage = "Profile photo updated.";
@@ -280,10 +284,20 @@
 						</div>
 
 						{#if errorMessage}
-							<p class="text-sm text-red-500">{errorMessage}</p>
+							<Alert
+								message={errorMessage}
+								tone="error"
+								icon="bi-x-circle-fill"
+								onClose={() => (errorMessage = "")}
+							/>
 						{/if}
 						{#if statusMessage}
-							<p class="text-sm text-green-600">{statusMessage}</p>
+							<Alert
+								message={statusMessage}
+								tone="success"
+								icon="bi-check-circle-fill"
+								onClose={() => (statusMessage = "")}
+							/>
 						{/if}
 
 						<button class="btn btn-large btn-primary float-right" type="submit">
