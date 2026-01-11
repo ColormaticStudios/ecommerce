@@ -378,7 +378,10 @@
 				id: option.id,
 				sku: option.sku,
 				name: option.name,
+				description: option.description,
 				price: option.price,
+				stock: option.stock,
+				cover_image: option.images[0],
 			},
 		];
 		relatedOptions = relatedOptions.filter((item) => item.id !== option.id);

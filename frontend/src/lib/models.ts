@@ -56,7 +56,10 @@ interface RelatedProductPayload {
 	id: number;
 	sku: string;
 	name: string;
+	description?: string | null;
 	price?: number;
+	cover_image?: string | null;
+	stock?: number;
 }
 
 interface ProductPayload extends Omit<
@@ -68,6 +71,7 @@ interface ProductPayload extends Omit<
 	deleted_at: string | Date | null;
 	related_products?: RelatedProductPayload[];
 	images?: string[];
+	cover_image?: string;
 }
 
 function parseRelatedProduct(product: RelatedProductPayload): RelatedProductModel {
@@ -75,7 +79,10 @@ function parseRelatedProduct(product: RelatedProductPayload): RelatedProductMode
 		id: product.id,
 		sku: product.sku,
 		name: product.name,
+		description: product.description ?? null,
 		price: product.price,
+		cover_image: product.cover_image ?? null,
+		stock: product.stock ?? 0,
 	};
 }
 
@@ -92,6 +99,7 @@ function parseDate(value: string | Date | null | undefined): Date | null {
 
 // The argument `product` is technically not a product, the dates are strings. It's close enough though.
 export function parseProduct(product: ProductPayload): ProductModel {
+	const coverImage = product.cover_image ?? product.images?.[0] ?? null;
 	return {
 		created_at: parseDate(product.created_at) ?? new Date(),
 		deleted_at: parseDate(product.deleted_at),
@@ -103,6 +111,7 @@ export function parseProduct(product: ProductPayload): ProductModel {
 		price: product.price,
 		stock: product.stock,
 		images: product.images ?? [],
+		cover_image: coverImage ?? undefined,
 		related_products: (product.related_products ?? []).map(parseRelatedProduct),
 	};
 }
@@ -118,6 +127,7 @@ export interface ProductModel {
 	price: number;
 	stock: number;
 	images: string[];
+	cover_image?: string;
 	related_products: RelatedProductModel[];
 }
 
@@ -125,7 +135,10 @@ export interface RelatedProductModel {
 	id: number;
 	sku: string;
 	name: string;
+	description: string | null;
 	price?: number;
+	cover_image: string | null;
+	stock: number;
 }
 
 interface CartItemPayload extends Omit<

@@ -90,11 +90,14 @@
 </svelte:head>
 
 <nav class="flex items-center justify-between bg-gray-100 px-3 py-2 dark:bg-gray-900">
-	<div>
+	<div class="flex items-center gap-2">
 		<a href={resolve("/")} class="navlink text-2xl">Home</a>
 	</div>
-	{#if $userStore}
-		<div class="flex items-center gap-3">
+	<div class="flex items-center gap-3">
+		<a href={resolve("/search")} class="navlink text-lg" aria-label="search">
+			<i class="bi bi-search"></i>
+		</a>
+		{#if $userStore}
 			<a
 				href={resolve("/cart")}
 				class="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:border-gray-600 dark:hover:bg-gray-700"
@@ -179,13 +182,13 @@
 					</div>
 				{/if}
 			</div>
-		</div>
-	{:else}
-		<div>
-			<a href={resolve("/login")} class="navlink text-xl">Log In</a>
-			<a href={resolve("/signup")} class="navlink text-xl">Sign Up</a>
-		</div>
-	{/if}
+		{:else}
+			<div>
+				<a href={resolve("/login")} class="navlink text-xl">Log In</a>
+				<a href={resolve("/signup")} class="navlink text-xl">Sign Up</a>
+			</div>
+		{/if}
+	</div>
 </nav>
 
 {@render children?.()}

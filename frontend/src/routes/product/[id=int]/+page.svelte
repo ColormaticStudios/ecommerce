@@ -2,6 +2,7 @@
 	import { type ProductModel } from "$lib/models";
 	import { type API } from "$lib/api";
 	import { formatPrice } from "$lib/utils";
+	import ProductCard from "$lib/components/ProductCard.svelte";
 	import { userStore } from "$lib/user";
 	import { getContext, onDestroy } from "svelte";
 	import { page } from "$app/state";
@@ -273,21 +274,23 @@
 					Related Products
 				</h2>
 
-				<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+				<div class="flex gap-4 overflow-x-auto pb-2">
 					{#each product.related_products as related (related.sku)}
-						<a
-							href={resolve(`/product/${related.id}`)}
-							class="rounded-lg border border-gray-200 bg-gray-50 p-3 transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
-						>
-							<div class="line-clamp-1 text-sm font-medium">
-								{related.name}
-							</div>
-							{#if related.price != null}
-								<div class="text-sm text-gray-600 dark:text-gray-400">
-									{formatPrice(related.price)}
-								</div>
-							{/if}
-						</a>
+						<div class="w-64 shrink-0">
+							<ProductCard
+								href={resolve(`/product/${related.id}`)}
+								showStock={true}
+								imageAspect="wide"
+								data={{
+									//id: related.id, // Unused
+									name: related.name,
+									description: related.description,
+									price: related.price,
+									image: related.cover_image,
+									stock: related.stock,
+								}}
+							/>
+						</div>
 					{/each}
 				</div>
 			</div>

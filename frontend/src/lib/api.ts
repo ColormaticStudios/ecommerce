@@ -131,8 +131,14 @@ export class API {
 	}): Promise<PageModel> {
 		const response = await this.request<PageModel>("GET", "/products", undefined, params);
 
+		const data = response.data.map(parseProduct).map((product) => {
+			return {
+				...product,
+				cover_image: product.cover_image ?? product.images[0] ?? null,
+			};
+		});
 		const page: PageModel = {
-			data: response.data.map(parseProduct),
+			data,
 			pagination: response.pagination,
 		};
 
