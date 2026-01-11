@@ -381,7 +381,7 @@
 								</span>
 								<div class="flex items-center gap-2">
 									<button
-										class="btn btn-regular cursor-pointer"
+										class="btn btn-regular"
 										type="button"
 										disabled={productPage <= 1}
 										onclick={() => changeProductPage(productPage - 1)}
@@ -389,7 +389,7 @@
 										Prev
 									</button>
 									<button
-										class="btn btn-regular cursor-pointer"
+										class="btn btn-regular"
 										type="button"
 										disabled={productPage >= productTotalPages}
 										onclick={() => changeProductPage(productPage + 1)}
@@ -425,7 +425,7 @@
 				<div class="flex items-center justify-between">
 					<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Orders</h2>
 					<button
-						class="btn btn-regular cursor-pointer"
+						class="btn btn-regular"
 						type="button"
 						onclick={loadOrders}
 						disabled={ordersLoading}
@@ -469,21 +469,21 @@
 										</span>
 										<div class="flex gap-2">
 											<button
-												class="btn btn-regular cursor-pointer"
+												class="btn btn-regular"
 												type="button"
 												onclick={() => updateOrder(order.id, "PENDING")}
 											>
 												Pending
 											</button>
 											<button
-												class="btn btn-regular cursor-pointer"
+												class="btn btn-regular"
 												type="button"
 												onclick={() => updateOrder(order.id, "PAID")}
 											>
 												Paid
 											</button>
 											<button
-												class="btn btn-regular cursor-pointer"
+												class="btn btn-regular"
 												type="button"
 												onclick={() => updateOrder(order.id, "FAILED")}
 											>
@@ -505,12 +505,7 @@
 			>
 				<div class="flex items-center justify-between">
 					<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Users</h2>
-					<button
-						class="btn btn-regular cursor-pointer"
-						type="button"
-						onclick={loadUsers}
-						disabled={usersLoading}
-					>
+					<button class="btn btn-regular" type="button" onclick={loadUsers} disabled={usersLoading}>
 						Refresh
 					</button>
 				</div>

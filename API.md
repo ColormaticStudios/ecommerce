@@ -54,8 +54,17 @@ All responses use JSON. Errors are returned as `{ "error": "message" }` with an 
 	"price": 29.99,
 	"stock": 100,
 	"images": ["https://.../media/..."],
+	"cover_image": "https://.../media/...",
 	"related_products": [
-		{ "id": 2, "sku": "PROD-002", "name": "Related", "price": 19.99 }
+		{
+			"id": 2,
+			"sku": "PROD-002",
+			"name": "Related",
+			"description": "Related product description",
+			"price": 19.99,
+			"stock": 12,
+			"cover_image": "https://.../media/..."
+		}
 	],
 	"created_at": "2024-01-01T12:00:00Z",
 	"updated_at": "2024-01-01T12:00:00Z",

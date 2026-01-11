@@ -94,12 +94,16 @@ func GetProducts(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 		}
 
 		for i := range products {
-			if mediaService == nil {
-				break
+			if mediaService != nil {
+				mediaURLs, err := mediaService.ProductMediaURLs(products[i].ID)
+				if err == nil && len(mediaURLs) > 0 {
+					products[i].Images = mediaURLs
+					products[i].CoverImage = &mediaURLs[0]
+					continue
+				}
 			}
-			mediaURLs, err := mediaService.ProductMediaURLs(products[i].ID)
-			if err == nil && len(mediaURLs) > 0 {
-				products[i].Images = mediaURLs
+			if len(products[i].Images) > 0 {
+				products[i].CoverImage = &products[i].Images[0]
 			}
 		}
 
@@ -131,6 +135,24 @@ func GetProductByID(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 			mediaURLs, err := mediaService.ProductMediaURLs(product.ID)
 			if err == nil && len(mediaURLs) > 0 {
 				product.Images = mediaURLs
+				product.CoverImage = &mediaURLs[0]
+			}
+		}
+		if product.CoverImage == nil && len(product.Images) > 0 {
+			product.CoverImage = &product.Images[0]
+		}
+
+		for i := range product.Related {
+			if mediaService != nil {
+				mediaURLs, err := mediaService.ProductMediaURLs(product.Related[i].ID)
+				if err == nil && len(mediaURLs) > 0 {
+					product.Related[i].Images = mediaURLs
+					product.Related[i].CoverImage = &mediaURLs[0]
+					continue
+				}
+			}
+			if len(product.Related[i].Images) > 0 {
+				product.Related[i].CoverImage = &product.Related[i].Images[0]
 			}
 		}
 

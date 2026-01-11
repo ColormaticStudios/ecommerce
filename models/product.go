@@ -8,6 +8,7 @@ type Product struct {
 	Price       float64  `json:"price" gorm:"not null"`
 	Stock       int      `json:"stock" gorm:"default:0"`
 	Images      []string `json:"images" gorm:"type:text[]"`
+	CoverImage  *string  `json:"cover_image,omitempty" gorm:"-"`
 	// Self-referential relationship for related products
 	Related []Product `json:"related_products" gorm:"many2many:product_related;"`
 }

@@ -157,8 +157,8 @@
 	});
 </script>
 
-<section class="overflow-hidden">
-	<div class="mx-auto mt-12 max-w-6xl px-4 py-12">
+<section>
+	<div class="mx-auto mt-12 max-w-6xl px-4">
 		<div class="flex flex-col gap-6">
 			<div>
 				<h1 class="text-3xl font-semibold text-gray-900 dark:text-gray-100">Product Search</h1>
@@ -224,7 +224,7 @@
 	</div>
 </section>
 
-<section class="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-10">
+<section class="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6">
 	<div class="flex flex-wrap items-center justify-between gap-4">
 		<div class="text-sm text-gray-500 dark:text-gray-400">
 			{#if loading}
@@ -233,7 +233,8 @@
 				{errorMessage}
 			{:else if searchQuery}
 				<span class="font-medium text-gray-700 dark:text-gray-200">
-					{totalResults} results for "{searchQuery}"
+					{totalResults}
+					{totalResults === 1 ? "result" : "results"} for "{searchQuery}"
 				</span>
 			{:else}
 				<span class="font-medium text-gray-700 dark:text-gray-200">
@@ -250,7 +251,7 @@
 
 	{#if !loading && !errorMessage && results.length === 0}
 		<div
-			class="mt-6 rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center sm:px-10 dark:border-gray-700 dark:bg-gray-900"
+			class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center sm:px-10 dark:border-gray-700 dark:bg-gray-900"
 		>
 			<h2 class="text-3xl font-semibold text-gray-900 dark:text-gray-100">No matches found.</h2>
 			<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -268,7 +269,7 @@
 		</div>
 	{:else}
 		<div
-			class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+			class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
 		>
 			{#each results as product (product.sku)}
 				<ProductCard
@@ -303,7 +304,7 @@
 			<span>Page {currentPage} of {totalPages}</span>
 			<div class="flex items-center gap-2">
 				<button
-					class="btn btn-regular flex cursor-pointer items-center gap-2"
+					class="btn btn-regular flex items-center gap-2"
 					type="button"
 					disabled={currentPage <= 1}
 					onclick={() => updateUrl({ page: currentPage - 1 })}
@@ -312,7 +313,7 @@
 					Prev
 				</button>
 				<button
-					class="btn btn-regular flex cursor-pointer items-center gap-2"
+					class="btn btn-regular flex items-center gap-2"
 					type="button"
 					disabled={currentPage >= totalPages}
 					onclick={() => updateUrl({ page: currentPage + 1 })}

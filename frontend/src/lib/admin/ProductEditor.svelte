@@ -444,6 +444,252 @@
 	});
 </script>
 
+{#snippet ProductFields()}
+	<div>
+		<label for="admin-product-name" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
+			Name
+		</label>
+		<input
+			id="admin-product-name"
+			name="name"
+			class="textinput mt-1"
+			type="text"
+			bind:value={name}
+		/>
+	</div>
+	<div>
+		<label for="admin-product-sku" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
+			SKU
+		</label>
+		<input id="admin-product-sku" name="sku" class="textinput mt-1" type="text" bind:value={sku} />
+	</div>
+	<div>
+		<label for="admin-product-description" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
+			Description
+		</label>
+		<textarea
+			id="admin-product-description"
+			name="description"
+			class="mt-1 w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+			rows="4"
+			bind:value={description}
+		></textarea>
+	</div>
+	<div class="grid gap-4 sm:grid-cols-2">
+		<div>
+			<label for="admin-product-price" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
+				Price
+			</label>
+			<input
+				id="admin-product-price"
+				name="price"
+				class="textinput mt-1"
+				type="number"
+				min="0"
+				step="0.01"
+				bind:value={price}
+			/>
+		</div>
+		<div>
+			<label for="admin-product-stock" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
+				Stock
+			</label>
+			<input
+				id="admin-product-stock"
+				name="stock"
+				class="textinput mt-1"
+				type="number"
+				min="0"
+				bind:value={stock}
+			/>
+		</div>
+	</div>
+{/snippet}
+
+{#snippet MediaUpload(showHint: boolean)}
+	<div class="rounded-xl border border-dashed border-gray-300 p-4 dark:border-gray-700">
+		<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Upload media</p>
+		<input
+			class="hidden"
+			type="file"
+			accept="image/*"
+			multiple
+			bind:this={mediaInputRef}
+			onchange={(event) => {
+				const target = event.target as HTMLInputElement;
+				mediaFiles = target.files;
+			}}
+			disabled={!canEditProduct}
+		/>
+		<div class="mt-3 flex flex-wrap items-center gap-2">
+			<button
+				class="btn btn-regular"
+				type="button"
+				disabled={!canEditProduct || uploading}
+				onclick={() => mediaInputRef?.click()}
+			>
+				Choose files
+			</button>
+			<button
+				class="btn btn-primary"
+				type="button"
+				disabled={!canEditProduct || uploading || !mediaFilesCount}
+				onclick={uploadMedia}
+			>
+				{uploading ? "Uploading..." : "Attach uploads"}
+			</button>
+			{#if mediaFilesCount}
+				<span class="text-xs text-gray-500 dark:text-gray-400">{mediaFilesCount} selected</span>
+			{/if}
+		</div>
+		{#if showHint && !canEditProduct}
+			<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+				Select a product to upload images.
+			</p>
+		{/if}
+	</div>
+{/snippet}
+
+{#snippet MediaGrid()}
+	<div class="grid grid-cols-2 gap-3">
+		{#each mediaOrderView as image, index (image)}
+			<div class="relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
+				<img
+					src={image}
+					alt={product ? `${product.name} ${index + 1}` : `Product image ${index + 1}`}
+					class="h-28 w-full object-cover"
+				/>
+				<button
+					class="absolute top-2 right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm transition hover:bg-white dark:bg-gray-900/80 dark:text-gray-200 dark:hover:bg-gray-800"
+					type="button"
+					disabled={mediaDeleting !== null || mediaReordering}
+					onclick={() => detachMedia(image)}
+					aria-label="Remove image"
+				>
+					{#if mediaDeleting && extractMediaId(image) === mediaDeleting}
+						<i class="bi bi-arrow-repeat animate-spin"></i>
+					{:else}
+						<i class="bi bi-trash"></i>
+					{/if}
+				</button>
+				<div class="absolute right-2 bottom-2 flex gap-1">
+					<button
+						class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-900/80 dark:text-gray-200 dark:hover:bg-gray-800"
+						type="button"
+						disabled={mediaReordering || index === 0}
+						onclick={() => moveMedia(index, -1)}
+						aria-label="Move image up"
+					>
+						<i class="bi bi-chevron-left"></i>
+					</button>
+					<button
+						class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-900/80 dark:text-gray-200 dark:hover:bg-gray-800"
+						type="button"
+						disabled={mediaReordering || index === mediaOrderView.length - 1}
+						onclick={() => moveMedia(index, 1)}
+						aria-label="Move image down"
+					>
+						<i class="bi bi-chevron-right"></i>
+					</button>
+				</div>
+			</div>
+		{/each}
+	</div>
+	{#if hasPendingMediaOrder}
+		<button
+			class="btn btn-primary mt-3"
+			type="button"
+			disabled={mediaReordering}
+			onclick={saveMediaOrder}
+		>
+			<i class="bi bi-floppy-fill mr-1"></i>
+			{mediaReordering ? "Saving..." : "Save order"}
+		</button>
+	{/if}
+{/snippet}
+
+{#snippet RelatedProducts()}
+	<div class="flex items-center justify-between">
+		<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Related products</p>
+		<button
+			class="btn btn-primary"
+			type="button"
+			disabled={!canEditProduct || relatedSaving}
+			onclick={saveRelatedProducts}
+		>
+			<i class="bi bi-floppy-fill mr-1"></i>
+			{relatedSaving ? "Saving..." : "Save related"}
+		</button>
+	</div>
+	<form
+		class="mt-3 flex flex-nowrap items-center gap-2"
+		onsubmit={(event) => {
+			event.preventDefault();
+			searchRelatedProducts();
+		}}
+	>
+		<input
+			class="textinput min-w-0 flex-1"
+			type="search"
+			placeholder="Search products"
+			bind:value={relatedQuery}
+		/>
+		<button
+			class="aspect-square cursor-pointer rounded-md border border-gray-200 p-2 dark:border-gray-700"
+			type="submit"
+			disabled={!canEditProduct || relatedLoading}
+			aria-label="Search related products"
+		>
+			<i class="bi bi-search"></i>
+		</button>
+	</form>
+
+	{#if relatedOptions.length}
+		<div class="mt-3 space-y-2">
+			{#each relatedOptions as option (option.id)}
+				<div
+					class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-800 dark:bg-gray-900"
+				>
+					<div>
+						<p class="font-semibold text-gray-900 dark:text-gray-100">{option.name}</p>
+						<p class="text-xs text-gray-500 dark:text-gray-400">SKU {option.sku}</p>
+					</div>
+					<button class="btn btn-regular" type="button" onclick={() => addRelatedProduct(option)}>
+						Add
+					</button>
+				</div>
+			{/each}
+		</div>
+	{:else if relatedQuery.trim()}
+		<p class="mt-3 text-xs text-gray-500 dark:text-gray-400">No matches.</p>
+	{/if}
+
+	{#if relatedSelected.length}
+		<div class="mt-4 space-y-2">
+			{#each relatedSelected as related (related.id)}
+				<div
+					class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-gray-800 dark:bg-gray-800"
+				>
+					<div>
+						<p class="font-semibold text-gray-900 dark:text-gray-100">{related.name}</p>
+						<p class="text-xs text-gray-500 dark:text-gray-400">SKU {related.sku}</p>
+					</div>
+					<button
+						class="btn btn-danger"
+						type="button"
+						onclick={() => removeRelatedProduct(related.id)}
+					>
+						<i class="bi bi-dash-circle-fill mr-1"></i>
+						Remove
+					</button>
+				</div>
+			{/each}
+		</div>
+	{:else}
+		<p class="mt-4 text-xs text-gray-500 dark:text-gray-400">No related products selected.</p>
+	{/if}
+{/snippet}
+
 {#if showMessages}
 	{#if errorMessage}
 		<div class="mt-6">
@@ -483,83 +729,15 @@
 			class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 		>
 			<div class="space-y-4 text-sm">
-				<div>
-					<label for="admin-product-sku" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
-						SKU
-					</label>
-					<input id="admin-product-sku" class="textinput mt-1" type="text" bind:value={sku} />
-				</div>
-				<div>
-					<label for="admin-product-name" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
-						Name
-					</label>
-					<input id="admin-product-name" class="textinput mt-1" type="text" bind:value={name} />
-				</div>
-				<div>
-					<label
-						for="admin-product-description"
-						class="text-xs tracking-[0.2em] text-gray-500 uppercase"
-					>
-						Description
-					</label>
-					<textarea
-						id="admin-product-description"
-						class="mt-1 w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
-						rows="4"
-						bind:value={description}
-					></textarea>
-				</div>
-				<div class="grid gap-4 sm:grid-cols-2">
-					<div>
-						<label
-							for="admin-product-price"
-							class="text-xs tracking-[0.2em] text-gray-500 uppercase"
-						>
-							Price
-						</label>
-						<input
-							id="admin-product-price"
-							class="textinput mt-1"
-							type="number"
-							min="0"
-							step="0.01"
-							bind:value={price}
-						/>
-					</div>
-					<div>
-						<label
-							for="admin-product-stock"
-							class="text-xs tracking-[0.2em] text-gray-500 uppercase"
-						>
-							Stock
-						</label>
-						<input
-							id="admin-product-stock"
-							class="textinput mt-1"
-							type="number"
-							min="0"
-							bind:value={stock}
-						/>
-					</div>
-				</div>
+				{@render ProductFields()}
 			</div>
 
 			<div class="mt-6 flex flex-wrap justify-between">
-				<button
-					class="btn btn-primary cursor-pointer"
-					type="button"
-					onclick={saveProduct}
-					disabled={saving}
-				>
+				<button class="btn btn-primary" type="button" onclick={saveProduct} disabled={saving}>
 					<i class="bi bi-floppy-fill mr-1"></i>
 					{saving ? "Saving..." : "Save changes"}
 				</button>
-				<button
-					class="btn btn-danger cursor-pointer"
-					type="button"
-					disabled={deleting}
-					onclick={deleteProduct}
-				>
+				<button class="btn btn-danger" type="button" disabled={deleting} onclick={deleteProduct}>
 					<i class="bi bi-trash-fill mr-1"></i>
 					{deleting ? "Deleting..." : "Delete product"}
 				</button>
@@ -569,104 +747,14 @@
 		<div
 			class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 		>
-			<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Media</h2>
 			{#if mediaOrderView.length}
-				<div class="mt-4 grid grid-cols-2 gap-3">
-					{#each mediaOrderView as image, index (image)}
-						<div
-							class="relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800"
-						>
-							<img
-								src={image}
-								alt={product ? `${product.name} ${index + 1}` : `Product image ${index + 1}`}
-								class="h-28 w-full object-cover"
-							/>
-							<button
-								class="absolute top-2 right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm transition hover:bg-white dark:bg-gray-900/80 dark:text-gray-200 dark:hover:bg-gray-800"
-								type="button"
-								disabled={mediaDeleting !== null || mediaReordering}
-								onclick={() => detachMedia(image)}
-								aria-label="Remove image"
-							>
-								{#if mediaDeleting && extractMediaId(image) === mediaDeleting}
-									<i class="bi bi-arrow-repeat animate-spin"></i>
-								{:else}
-									<i class="bi bi-trash"></i>
-								{/if}
-							</button>
-							<div class="absolute right-2 bottom-2 flex gap-1">
-								<button
-									class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-900/80 dark:text-gray-200 dark:hover:bg-gray-800"
-									type="button"
-									disabled={mediaReordering || index === 0}
-									onclick={() => moveMedia(index, -1)}
-									aria-label="Move image up"
-								>
-									<i class="bi bi-chevron-left"></i>
-								</button>
-								<button
-									class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-900/80 dark:text-gray-200 dark:hover:bg-gray-800"
-									type="button"
-									disabled={mediaReordering || index === mediaOrderView.length - 1}
-									onclick={() => moveMedia(index, 1)}
-									aria-label="Move image down"
-								>
-									<i class="bi bi-chevron-right"></i>
-								</button>
-							</div>
-						</div>
-					{/each}
-				</div>
-				{#if hasPendingMediaOrder}
-					<button
-						class="btn btn-primary mt-3 cursor-pointer"
-						type="button"
-						disabled={mediaReordering}
-						onclick={saveMediaOrder}
-					>
-						<i class="bi bi-floppy-fill mr-1"></i>
-						{mediaReordering ? "Saving..." : "Save order"}
-					</button>
-				{/if}
+				{@render MediaGrid()}
 			{:else}
 				<p class="mt-4 text-sm text-gray-500 dark:text-gray-400">No images yet.</p>
 			{/if}
 
-			<div class="mt-6 rounded-xl border border-dashed border-gray-300 p-4 dark:border-gray-700">
-				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Upload media</p>
-				<input
-					class="hidden"
-					type="file"
-					accept="image/*"
-					multiple
-					bind:this={mediaInputRef}
-					onchange={(event) => {
-						const target = event.target as HTMLInputElement;
-						mediaFiles = target.files;
-					}}
-					disabled={!canEditProduct}
-				/>
-				<div class="mt-3 flex flex-wrap items-center gap-2">
-					<button
-						class="btn btn-regular cursor-pointer"
-						type="button"
-						disabled={!canEditProduct || uploading}
-						onclick={() => mediaInputRef?.click()}
-					>
-						Choose files
-					</button>
-					<button
-						class="btn btn-primary cursor-pointer"
-						type="button"
-						disabled={!canEditProduct || uploading || !mediaFilesCount}
-						onclick={uploadMedia}
-					>
-						{uploading ? "Uploading..." : "Attach uploads"}
-					</button>
-					{#if mediaFilesCount}
-						<span class="text-xs text-gray-500 dark:text-gray-400">{mediaFilesCount} selected</span>
-					{/if}
-				</div>
+			<div class="mt-6">
+				{@render MediaUpload(false)}
 			</div>
 		</div>
 	</div>
@@ -674,89 +762,7 @@
 	<div
 		class="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 	>
-		<div class="flex items-center justify-between">
-			<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Related products</p>
-			<button
-				class="btn btn-primary cursor-pointer"
-				type="button"
-				disabled={!canEditProduct || relatedSaving}
-				onclick={saveRelatedProducts}
-			>
-				<i class="bi bi-floppy-fill mr-1"></i>
-				{relatedSaving ? "Saving..." : "Save related"}
-			</button>
-		</div>
-		<form
-			class="mt-3 flex flex-nowrap items-center gap-2"
-			onsubmit={(event) => {
-				event.preventDefault();
-				searchRelatedProducts();
-			}}
-		>
-			<input
-				class="textinput min-w-0 flex-1"
-				type="search"
-				placeholder="Search products"
-				bind:value={relatedQuery}
-			/>
-			<button
-				class="aspect-square cursor-pointer rounded-md border border-gray-200 p-2 dark:border-gray-700"
-				type="submit"
-				disabled={!canEditProduct || relatedLoading}
-				aria-label="Search related products"
-			>
-				<i class="bi bi-search"></i>
-			</button>
-		</form>
-
-		{#if relatedOptions.length}
-			<div class="mt-3 space-y-2">
-				{#each relatedOptions as option (option.id)}
-					<div
-						class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-800 dark:bg-gray-900"
-					>
-						<div>
-							<p class="font-semibold text-gray-900 dark:text-gray-100">{option.name}</p>
-							<p class="text-xs text-gray-500 dark:text-gray-400">SKU {option.sku}</p>
-						</div>
-						<button
-							class="btn btn-regular cursor-pointer"
-							type="button"
-							onclick={() => addRelatedProduct(option)}
-						>
-							Add
-						</button>
-					</div>
-				{/each}
-			</div>
-		{:else if relatedQuery.trim()}
-			<p class="mt-3 text-xs text-gray-500 dark:text-gray-400">No matches.</p>
-		{/if}
-
-		{#if relatedSelected.length}
-			<div class="mt-4 space-y-2">
-				{#each relatedSelected as related (related.id)}
-					<div
-						class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-gray-800 dark:bg-gray-800"
-					>
-						<div>
-							<p class="font-semibold text-gray-900 dark:text-gray-100">{related.name}</p>
-							<p class="text-xs text-gray-500 dark:text-gray-400">SKU {related.sku}</p>
-						</div>
-						<button
-							class="btn btn-danger cursor-pointer"
-							type="button"
-							onclick={() => removeRelatedProduct(related.id)}
-						>
-							<i class="bi bi-dash-circle-fill mr-1"></i>
-							Remove
-						</button>
-					</div>
-				{/each}
-			</div>
-		{:else}
-			<p class="mt-4 text-xs text-gray-500 dark:text-gray-400">No related products selected.</p>
-		{/if}
+		{@render RelatedProducts()}
 	</div>
 {:else}
 	<div
@@ -780,255 +786,47 @@
 		{/if}
 
 		<div class="mt-4 space-y-4 text-sm">
-			<div>
-				<label for="sku" class="text-xs tracking-[0.2em] text-gray-500 uppercase">SKU</label>
-				<input name="sku" class="textinput mt-1" type="text" bind:value={sku} />
-			</div>
-			<div>
-				<label for="name" class="text-xs tracking-[0.2em] text-gray-500 uppercase">Name</label>
-				<input name="name" class="textinput mt-1" type="text" bind:value={name} />
-			</div>
-			<div>
-				<label for="description" class="text-xs tracking-[0.2em] text-gray-500 uppercase"
-					>Description</label
+			{@render ProductFields()}
+			<div
+				class="mt-2 mb-6 flex flex-wrap justify-between border-b border-gray-200 pb-6 text-base dark:border-gray-800"
+			>
+				<button
+					class="btn btn-primary btn-large grow"
+					type="button"
+					onclick={saveProduct}
+					disabled={saving}
 				>
-				<textarea
-					name="description"
-					class="mt-1 w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
-					rows="4"
-					bind:value={description}
-				></textarea>
-			</div>
-			<div class="grid gap-4 sm:grid-cols-2">
-				<div>
-					<label for="price" class="text-xs tracking-[0.2em] text-gray-500 uppercase">Price</label>
-					<input
-						name="price"
-						class="textinput mt-1"
-						type="number"
-						min="0"
-						step="0.01"
-						bind:value={price}
-					/>
-				</div>
-				<div>
-					<label for="stock" class="text-xs tracking-[0.2em] text-gray-500 uppercase">Stock</label>
-					<input name="stock" class="textinput mt-1" type="number" min="0" bind:value={stock} />
-				</div>
-			</div>
-
-			<div class="rounded-xl border border-dashed border-gray-300 p-4 dark:border-gray-700">
-				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Upload media</p>
-				<input
-					class="hidden"
-					type="file"
-					accept="image/*"
-					multiple
-					bind:this={mediaInputRef}
-					onchange={(event) => {
-						const target = event.target as HTMLInputElement;
-						mediaFiles = target.files;
-					}}
-					disabled={!canEditProduct}
-				/>
-				<div class="mt-3 flex flex-wrap items-center gap-2">
+					<i
+						class={`bi ${
+							saving ? "bi-floppy-fill" : canEditProduct ? "bi-floppy-fill" : "bi-patch-plus-fill"
+						} mr-1`}
+					></i>
+					{saving ? "Saving..." : canEditProduct ? "Save changes" : "Create product"}
+				</button>
+				{#if canEditProduct}
 					<button
-						class="btn btn-regular cursor-pointer"
+						class="btn btn-danger btn-large grow"
 						type="button"
-						disabled={!canEditProduct || uploading}
-						onclick={() => mediaInputRef?.click()}
+						disabled={deleting}
+						onclick={deleteProduct}
 					>
-						Choose files
+						<i class="bi bi-trash-fill"></i>
+						{deleting ? "Deleting..." : "Delete product"}
 					</button>
-					<button
-						class="btn btn-primary cursor-pointer"
-						type="button"
-						disabled={!canEditProduct || uploading || !mediaFilesCount}
-						onclick={uploadMedia}
-					>
-						{uploading ? "Uploading..." : "Attach uploads"}
-					</button>
-					{#if mediaFilesCount}
-						<span class="text-xs text-gray-500 dark:text-gray-400">{mediaFilesCount} selected</span>
-					{/if}
-				</div>
-				{#if !canEditProduct}
-					<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-						Select a product to upload images.
-					</p>
 				{/if}
 			</div>
+			{@render MediaUpload(true)}
 		</div>
 
 		{#if mediaOrderView.length}
 			<div class="mt-6">
 				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Images</p>
-				<div class="mt-3 grid grid-cols-2 gap-3">
-					{#each mediaOrderView as imageUrl, index (imageUrl)}
-						<div
-							class="relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800"
-						>
-							<img src={imageUrl} alt="Product" class="h-28 w-full object-cover" />
-							<button
-								class="absolute top-2 right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm transition hover:bg-white dark:bg-gray-900/80 dark:text-gray-200 dark:hover:bg-gray-800"
-								type="button"
-								disabled={mediaDeleting !== null || mediaReordering}
-								onclick={() => detachMedia(imageUrl)}
-								aria-label="Remove image"
-							>
-								{#if mediaDeleting && extractMediaId(imageUrl) === mediaDeleting}
-									<i class="bi bi-arrow-repeat animate-spin"></i>
-								{:else}
-									<i class="bi bi-trash"></i>
-								{/if}
-							</button>
-							<div class="absolute right-2 bottom-2 flex gap-1">
-								<button
-									class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-900/80 dark:text-gray-200 dark:hover:bg-gray-800"
-									type="button"
-									disabled={mediaReordering || index === 0}
-									onclick={() => moveMedia(index, -1)}
-									aria-label="Move image up"
-								>
-									<i class="bi bi-chevron-left"></i>
-								</button>
-								<button
-									class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-900/80 dark:text-gray-200 dark:hover:bg-gray-800"
-									type="button"
-									disabled={mediaReordering || index === mediaOrderView.length - 1}
-									onclick={() => moveMedia(index, 1)}
-									aria-label="Move image down"
-								>
-									<i class="bi bi-chevron-right"></i>
-								</button>
-							</div>
-						</div>
-					{/each}
-				</div>
-				{#if hasPendingMediaOrder}
-					<button
-						class="btn btn-primary mt-3 cursor-pointer"
-						type="button"
-						disabled={mediaReordering}
-						onclick={saveMediaOrder}
-					>
-						{mediaReordering ? "Saving..." : "Save order"}
-					</button>
-				{/if}
+				{@render MediaGrid()}
 			</div>
 		{/if}
 
 		<div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-800">
-			<div class="flex items-center justify-between">
-				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Related products</p>
-				<button
-					class="btn btn-primary cursor-pointer"
-					type="button"
-					disabled={!canEditProduct || relatedSaving}
-					onclick={saveRelatedProducts}
-				>
-					<i class="bi bi-floppy-fill mr-1"></i>
-					{relatedSaving ? "Saving..." : "Save related"}
-				</button>
-			</div>
-			<form
-				class="mt-3 flex flex-nowrap items-center gap-2"
-				onsubmit={(event) => {
-					event.preventDefault();
-					searchRelatedProducts();
-				}}
-			>
-				<input
-					class="textinput min-w-0 flex-1"
-					type="search"
-					placeholder="Search products"
-					bind:value={relatedQuery}
-				/>
-				<button
-					class="aspect-square cursor-pointer rounded-md border border-gray-200 p-2 dark:border-gray-700"
-					type="submit"
-					disabled={!canEditProduct || relatedLoading}
-					aria-label="Search related products"
-				>
-					<i class="bi bi-search"></i>
-				</button>
-			</form>
-
-			{#if relatedOptions.length}
-				<div class="mt-3 space-y-2">
-					{#each relatedOptions as option (option.id)}
-						<div
-							class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-800 dark:bg-gray-900"
-						>
-							<div>
-								<p class="font-semibold text-gray-900 dark:text-gray-100">{option.name}</p>
-								<p class="text-xs text-gray-500 dark:text-gray-400">SKU {option.sku}</p>
-							</div>
-							<button
-								class="btn btn-regular cursor-pointer"
-								type="button"
-								onclick={() => addRelatedProduct(option)}
-							>
-								Add
-							</button>
-						</div>
-					{/each}
-				</div>
-			{:else if relatedQuery.trim()}
-				<p class="mt-3 text-xs text-gray-500 dark:text-gray-400">No matches.</p>
-			{/if}
-
-			{#if relatedSelected.length}
-				<div class="mt-4 space-y-2">
-					{#each relatedSelected as related (related.id)}
-						<div
-							class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-gray-800 dark:bg-gray-800"
-						>
-							<div>
-								<p class="font-semibold text-gray-900 dark:text-gray-100">{related.name}</p>
-								<p class="text-xs text-gray-500 dark:text-gray-400">SKU {related.sku}</p>
-							</div>
-							<button
-								class="btn btn-danger cursor-pointer"
-								type="button"
-								onclick={() => removeRelatedProduct(related.id)}
-							>
-								<i class="bi bi-dash-circle-fill mr-1"></i>
-								Remove
-							</button>
-						</div>
-					{/each}
-				</div>
-			{:else}
-				<p class="mt-4 text-xs text-gray-500 dark:text-gray-400">No related products selected.</p>
-			{/if}
-		</div>
-
-		<div class="mt-6 flex flex-wrap justify-between">
-			<button
-				class="btn btn-primary btn-large m-0! cursor-pointer"
-				type="button"
-				onclick={saveProduct}
-				disabled={saving}
-			>
-				<i
-					class={`bi ${
-						saving ? "bi-floppy-fill" : canEditProduct ? "bi-floppy-fill" : "bi-patch-plus-fill"
-					} mr-1`}
-				></i>
-				{saving ? "Saving..." : canEditProduct ? "Save changes" : "Create product"}
-			</button>
-			{#if canEditProduct}
-				<button
-					class="btn btn-danger m-0! cursor-pointer"
-					type="button"
-					disabled={deleting}
-					onclick={deleteProduct}
-				>
-					<i class="bi bi-trash-fill"></i>
-					{deleting ? "Deleting..." : "Delete product"}
-				</button>
-			{/if}
+			{@render RelatedProducts()}
 		</div>
 	</div>
 {/if}
