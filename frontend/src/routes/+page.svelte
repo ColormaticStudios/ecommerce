@@ -41,7 +41,7 @@
 				<div
 					class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 				>
-					<div class="aspect-[4/3] animate-pulse rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+					<div class="aspect-4/3 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-800"></div>
 					<div class="mt-4 h-5 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
 					<div class="mt-2 h-4 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
 					<div class="mt-4 h-9 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-800"></div>
