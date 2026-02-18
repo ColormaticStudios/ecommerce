@@ -168,8 +168,8 @@
 				<ButtonLink href={resolve("/")} variant="primary" size="large">Continue shopping</ButtonLink>
 			</div>
 		</div>
-	{:else}
-		<div class="mt-6 grid gap-6 lg:grid-cols-[1.6fr_0.8fr]">
+		{:else}
+			<div class="mt-6 grid items-start gap-6 lg:grid-cols-[1.6fr_0.8fr]">
 			<div class="space-y-4">
 				{#each cart.items as item (item.id)}
 					<div
