@@ -38,7 +38,6 @@ export class User implements UserModel {
 		this.name = name;
 		this.role = role;
 		this.currency = currency;
-		this.role = role;
 		this.profile_photo_url = profile_photo_url;
 		this.created_at = created_at;
 		this.updated_at = updated_at;

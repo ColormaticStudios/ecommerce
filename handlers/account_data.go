@@ -261,7 +261,11 @@ func DeleteSavedPaymentMethod(db *gorm.DB) gin.HandlerFunc {
 		if method.IsDefault {
 			var replacement models.SavedPaymentMethod
 			if err := tx.Where("user_id = ?", user.ID).Order("created_at DESC").First(&replacement).Error; err == nil {
-				_ = tx.Model(&replacement).Update("is_default", true).Error
+				if err := tx.Model(&replacement).Update("is_default", true).Error; err != nil {
+					tx.Rollback()
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete payment method"})
+					return
+				}
 			}
 		}
 		if err := tx.Commit().Error; err != nil {
@@ -422,7 +426,11 @@ func DeleteSavedAddress(db *gorm.DB) gin.HandlerFunc {
 		if address.IsDefault {
 			var replacement models.SavedAddress
 			if err := tx.Where("user_id = ?", user.ID).Order("created_at DESC").First(&replacement).Error; err == nil {
-				_ = tx.Model(&replacement).Update("is_default", true).Error
+				if err := tx.Model(&replacement).Update("is_default", true).Error; err != nil {
+					tx.Rollback()
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete address"})
+					return
+				}
 			}
 		}
 		if err := tx.Commit().Error; err != nil {
