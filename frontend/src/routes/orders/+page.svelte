@@ -3,9 +3,10 @@
 	import { type OrderModel } from "$lib/models";
 	import Alert from "$lib/components/Alert.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
+	import Toast from "$lib/components/Toast.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
-	import { getContext, onMount } from "svelte";
+	import { getContext, onDestroy, onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
 	import { resolve } from "$app/paths";
 
@@ -25,6 +26,40 @@
 	let statusFilter = $state<"" | OrderModel["status"]>("");
 	let startDate = $state("");
 	let endDate = $state("");
+	let toastMessage = $state("");
+	let toastVisible = $state(false);
+	let toastTimeout: ReturnType<typeof setTimeout> | null = null;
+	let toastHideTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	function clearToast() {
+		if (toastTimeout) {
+			clearTimeout(toastTimeout);
+		}
+		if (toastHideTimeout) {
+			clearTimeout(toastHideTimeout);
+		}
+		toastVisible = false;
+		toastMessage = "";
+	}
+
+	function showToast(message: string) {
+		toastMessage = message;
+		toastVisible = true;
+
+		if (toastTimeout) {
+			clearTimeout(toastTimeout);
+		}
+		if (toastHideTimeout) {
+			clearTimeout(toastHideTimeout);
+		}
+
+		toastTimeout = setTimeout(() => {
+			toastVisible = false;
+		}, 3200);
+		toastHideTimeout = setTimeout(() => {
+			toastMessage = "";
+		}, 3600);
+	}
 
 	async function loadOrders() {
 		authChecked = true;
@@ -114,10 +149,31 @@
 		});
 	}
 
-	onMount(loadOrders);
+	onMount(() => {
+		if (typeof window !== "undefined") {
+			const flag = window.sessionStorage.getItem("orders_toast");
+			if (flag === "order_placed") {
+				window.sessionStorage.removeItem("orders_toast");
+				showToast("Order placed successfully.");
+			}
+		}
+		void loadOrders();
+	});
+
+	onDestroy(() => {
+		clearToast();
+	});
 </script>
 
 <section class="mx-auto max-w-5xl px-4 py-10">
+	<Toast
+		message={toastMessage}
+		visible={toastVisible}
+		tone="success"
+		position="top-center"
+		onClose={clearToast}
+	/>
+
 	<div class="flex flex-wrap items-end justify-between gap-4">
 		<div>
 			<h1 class="text-3xl font-semibold text-gray-900 dark:text-gray-100">Your Orders</h1>

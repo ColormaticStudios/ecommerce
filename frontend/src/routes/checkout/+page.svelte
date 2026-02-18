@@ -243,6 +243,9 @@
 			}
 			orderPlaced = true;
 			window.dispatchEvent(new CustomEvent("cart:updated"));
+			if (typeof window !== "undefined") {
+				window.sessionStorage.setItem("orders_toast", "order_placed");
+			}
 			await goto(resolve("/orders"));
 		} catch (err) {
 			console.error(err);

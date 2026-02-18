@@ -3,6 +3,7 @@
 	import { type API } from "$lib/api";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import QuantitySelector from "$lib/components/QuantitySelector.svelte";
+	import Toast from "$lib/components/Toast.svelte";
 	import { formatPrice } from "$lib/utils";
 	import ProductCard from "$lib/components/ProductCard.svelte";
 	import { userStore } from "$lib/user";
@@ -24,6 +25,17 @@
 	let toastTimeout: ReturnType<typeof setTimeout> | null = null;
 	let toastHideTimeout: ReturnType<typeof setTimeout> | null = null;
 	let loadSequence = 0;
+
+	function clearToast() {
+		if (toastTimeout) {
+			clearTimeout(toastTimeout);
+		}
+		if (toastHideTimeout) {
+			clearTimeout(toastHideTimeout);
+		}
+		toastVisible = false;
+		toastMessage = "";
+	}
 
 	function showToast(message: string) {
 		toastMessage = message;
@@ -106,23 +118,19 @@
 	});
 
 	onDestroy(() => {
-		if (toastTimeout) {
-			clearTimeout(toastTimeout);
-		}
-		if (toastHideTimeout) {
-			clearTimeout(toastHideTimeout);
-		}
+		clearToast();
 	});
 </script>
 
-{#if toastMessage}
-	<div class={`toast ${toastVisible ? "toast-visible" : ""}`} role="status" aria-live="polite">
-		<span>{toastMessage}</span>
-		{#if toastMessage === "Added to cart."}
-			<a href={resolve("/cart")} class="toast-link">Go to cart</a>
-		{/if}
-	</div>
-{/if}
+<Toast
+	message={toastMessage}
+	visible={toastVisible}
+	tone={toastMessage === "Could not add to cart." ? "error" : "success"}
+	position="top-center"
+	actionHref={toastMessage === "Added to cart." ? resolve("/cart") : undefined}
+	actionLabel={toastMessage === "Added to cart." ? "Go to cart" : ""}
+	onClose={clearToast}
+/>
 
 <section class="mx-auto max-w-7xl px-4 py-8">
 	{#if loading}
@@ -278,43 +286,3 @@
 		<div class="text-red-500">Product not found.</div>
 	{/if}
 </section>
-
-<style>
-	.toast {
-		position: fixed;
-		top: 1.5rem;
-		left: 50%;
-		transform: translate(-50%, -20px);
-		opacity: 0;
-		padding: 0.75rem 1.25rem;
-		border-radius: 999px;
-		background: rgba(17, 24, 39, 0.92);
-		color: white;
-		font-size: 0.95rem;
-		box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-		transition:
-			transform 220ms ease,
-			opacity 220ms ease;
-		display: inline-flex;
-		align-items: center;
-		gap: 0.75rem;
-		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
-		z-index: 50;
-	}
-
-	.toast-visible {
-		transform: translate(-50%, 0);
-		opacity: 1;
-	}
-
-	.toast-link {
-		color: #93c5fd;
-		font-weight: 600;
-		text-decoration: none;
-	}
-
-	.toast-link:hover {
-		text-decoration: underline;
-	}
-</style>
