@@ -9,6 +9,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const sessionCookieName = "session_token"
+
 type CustomClaims struct {
 	Email string `json:"email"`
 	Role  string `json:"role"`
@@ -24,14 +26,22 @@ func AuthMiddleware(secretKey string, requiredRole string) gin.HandlerFunc {
 			return
 		}
 
-		// 1. Extract the token from the Authorization header
+		// 1. Extract the token from Authorization header or HttpOnly session cookie
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is missing"})
-			return
+		tokenString := ""
+		if authHeader != "" {
+			tokenString = strings.TrimPrefix(authHeader, "Bearer ")
 		}
 
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		if tokenString == "" {
+			if cookieToken, err := c.Cookie(sessionCookieName); err == nil {
+				tokenString = cookieToken
+			}
+		}
+		if tokenString == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
+			return
+		}
 
 		// 2. Parse and validate the token (try MapClaims first, then CustomClaims)
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {

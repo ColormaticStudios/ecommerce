@@ -9,8 +9,7 @@ export interface AdminAccessResult {
 }
 
 export async function checkAdminAccess(api: API): Promise<AdminAccessResult> {
-	api.tokenFromCookie();
-	const isAuthenticated = api.isAuthenticated();
+	const isAuthenticated = await api.refreshAuthState();
 	if (!isAuthenticated) {
 		return { isAuthenticated, isAdmin: false, user: null };
 	}

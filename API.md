@@ -12,8 +12,10 @@ Base URL:
 Authentication:
 
 - **Public** endpoints require no auth.
-- **User** endpoints require JWT: `Authorization: Bearer <token>`.
-- **Admin** endpoints require JWT with role `admin`.
+- **User/Admin** endpoints use an HttpOnly session cookie (`session_token`) set by auth endpoints.
+- Frontends must send requests with credentials enabled (`fetch(..., { credentials: "include" })`).
+- Non-browser clients may still use `Authorization: Bearer <jwt>`.
+- **Admin** endpoints require role `admin`.
 
 All responses use JSON. Errors are returned as `{ "error": "message" }` with an HTTP status code.
 
@@ -144,7 +146,7 @@ Note: `/auth/register` and `/auth/login` can be disabled by setting `DISABLE_LOC
 
 **POST** `/auth/register`
 
-Creates a new user account and returns a JWT.
+Creates a new user account and sets an HttpOnly session cookie.
 
 **Request**
 
@@ -161,7 +163,6 @@ Creates a new user account and returns a JWT.
 
 ```json
 {
-	"token": "<jwt>",
 	"user": {
 		"id": 1,
 		"username": "johndoe",
@@ -171,6 +172,8 @@ Creates a new user account and returns a JWT.
 	}
 }
 ```
+
+Also returns `Set-Cookie: session_token=...; HttpOnly; ...`.
 
 **Error Responses**
 
@@ -190,8 +193,10 @@ Creates a new user account and returns a JWT.
 **Success Response** – HTTP 200
 
 ```json
-{ "token": "<jwt>", "user": { "id": 1, "username": "johndoe" } }
+{ "user": { "id": 1, "username": "johndoe" } }
 ```
+
+Also returns `Set-Cookie: session_token=...; HttpOnly; ...`.
 
 **Error Responses**
 
@@ -220,7 +225,21 @@ Creates a new user account and returns a JWT.
 **Success Response** – HTTP 200
 
 ```json
-{ "token": "<jwt>", "user": { "id": 1, "username": "johndoe" } }
+{ "user": { "id": 1, "username": "johndoe" } }
+```
+
+Also returns `Set-Cookie: session_token=...; HttpOnly; ...`.
+
+### 2.5 Logout
+
+**POST** `/auth/logout`
+
+Clears the session cookie.
+
+**Success Response** – HTTP 200
+
+```json
+{ "message": "Logged out" }
 ```
 
 ---
@@ -744,6 +763,20 @@ You can pay with:
 
 **GET** `/admin/orders`
 
+**Query Params**
+
+- `page` (number, default 1)
+- `limit` (number, default 20, max 100)
+
+**Success Response** – HTTP 200
+
+```json
+{
+	"data": [],
+	"pagination": { "page": 1, "limit": 20, "total": 0, "total_pages": 0 }
+}
+```
+
 ### 8.2 Get Order
 
 **GET** `/admin/orders/{id}`
@@ -760,6 +793,20 @@ You can pay with:
 
 **GET** `/admin/users`
 
+**Query Params**
+
+- `page` (number, default 1)
+- `limit` (number, default 20, max 100)
+
+**Success Response** – HTTP 200
+
+```json
+{
+	"data": [],
+	"pagination": { "page": 1, "limit": 20, "total": 0, "total_pages": 0 }
+}
+```
+
 ### 9.2 Update User Role
 
 **PATCH** `/admin/users/{id}/role`
@@ -774,7 +821,7 @@ You can pay with:
 
 ## 10. Media Uploads
 
-Uploads use the TUS resumable protocol at `/media/uploads`. Clients must send `Authorization: Bearer <token>` on all requests.
+Uploads use the TUS resumable protocol at `/media/uploads`. Authenticated browser clients should send credentials (session cookie) on all requests.
 
 ### 10.1 Create Upload (TUS)
 

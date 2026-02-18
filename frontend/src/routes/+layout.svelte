@@ -16,8 +16,8 @@
 	let cartCountLoaded = $state(false);
 
 	async function refreshCartCount() {
-		api.tokenFromCookie();
-		if (!api.isAuthenticated()) {
+		const authenticated = await api.refreshAuthState();
+		if (!authenticated) {
 			cartCount = null;
 			cartCountLoaded = true;
 			return;
@@ -36,11 +36,7 @@
 	}
 
 	onMount(() => {
-		api.tokenFromCookie();
-
-		if (api.isAuthenticated()) {
-			userStore.load(api);
-		}
+		void userStore.load(api);
 
 		const handleClick = (event: MouseEvent) => {
 			if (!menuOpen || !menuRef) {
@@ -173,7 +169,7 @@
 							class="menu-item text-left cursor-pointer"
 							onclick={() => {
 								menuOpen = false;
-								$userStore.logOut();
+								void $userStore.logOut();
 							}}
 						>
 							Sign out

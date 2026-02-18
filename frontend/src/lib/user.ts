@@ -44,8 +44,12 @@ export class User implements UserModel {
 		this.deleted_at = deleted_at;
 	}
 
-	logOut() {
-		this.api.removeToken();
+	async logOut() {
+		try {
+			await this.api.logout();
+		} catch (err) {
+			console.error(err);
+		}
 		userStore.logout();
 		location.reload();
 	}
@@ -56,8 +60,10 @@ export async function getProfile(api: API): Promise<User | null> {
 	try {
 		userData = await api.getProfile();
 	} catch (err) {
-		console.warn("Failed to retrieve profile. Session token may be expired.");
-		console.error(err);
+		const error = err as { status?: number };
+		if (error.status !== 401) {
+			console.error(err);
+		}
 		return null;
 	}
 

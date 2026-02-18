@@ -17,6 +17,7 @@
 	let activeTab = $state<"products" | "orders" | "users">("products");
 	let authChecked = $state(false);
 	let loading = $state(true);
+	let isAuthenticated = $state(false);
 	let isAdmin = $state(false);
 	let errorMessage = $state("");
 	let statusMessage = $state("");
@@ -172,6 +173,7 @@
 		authChecked = true;
 		try {
 			const result = await checkAdminAccess(api);
+			isAuthenticated = result.isAuthenticated;
 			isAdmin = result.isAdmin;
 			if (isAdmin) {
 				await Promise.all([loadProducts(), loadOrders(), loadUsers()]);
@@ -247,7 +249,7 @@
 
 	{#if !authChecked}
 		<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">Checking your access…</p>
-	{:else if !api.isAuthenticated()}
+	{:else if !isAuthenticated}
 		<p class="mt-6 text-gray-600 dark:text-gray-300">
 			Please
 			<a href={resolve("/login")} class="text-blue-600 hover:underline dark:text-blue-400">

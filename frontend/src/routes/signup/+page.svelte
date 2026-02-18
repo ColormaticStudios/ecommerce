@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
-	import type { UserModel } from "$lib/models";
 	import Alert from "$lib/components/alert.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import { getProfile, userStore } from "$lib/user";
@@ -30,18 +29,13 @@
 			return;
 		}
 
-		interface Response {
-			token?: string;
-			user?: UserModel;
-		}
-		let response: Response = {};
 		try {
-			response = (await api.register({
+			await api.register({
 				username: username,
 				email: email,
 				password: password,
 				name: name,
-			})) as Response;
+			});
 		} catch (err) {
 			const error = err as { body?: { error?: string } };
 			errorMessage = error.body?.error ?? "Unable to create account. Please check your details.";
@@ -49,7 +43,6 @@
 			return;
 		}
 
-		api.setToken(response.token);
 		let user = await getProfile(api);
 		if (user) {
 			userStore.setUser(user);

@@ -14,6 +14,7 @@
 	let loading = $state(true);
 	let errorMessage = $state("");
 	let authChecked = $state(false);
+	let isAuthenticated = $state(false);
 	const skeletonRows = [0, 1, 2];
 	const currency = $derived($userStore?.currency ?? "USD");
 	let page = $state(1);
@@ -25,9 +26,9 @@
 	let endDate = $state("");
 
 	async function loadOrders() {
-		api.tokenFromCookie();
 		authChecked = true;
-		if (!api.isAuthenticated()) {
+		isAuthenticated = await api.refreshAuthState();
+		if (!isAuthenticated) {
 			loading = false;
 			return;
 		}
@@ -122,7 +123,7 @@
 		</div>
 	</div>
 
-	{#if authChecked && api.isAuthenticated()}
+	{#if authChecked && isAuthenticated}
 		<div class="mt-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
 			<div class="grid gap-3 sm:grid-cols-4">
 				<div class="sm:col-span-1">
@@ -211,7 +212,7 @@
 				</div>
 			{/each}
 		</div>
-	{:else if !api.isAuthenticated()}
+	{:else if !isAuthenticated}
 		<p class="mt-4 text-gray-600 dark:text-gray-300">
 			Please
 			<a href={resolve("/login")} class="text-blue-600 hover:underline dark:text-blue-400">

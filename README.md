@@ -15,7 +15,7 @@ A RESTful ecommerce API built with Go, Gin, GORM, and PostgreSQL.
 ## Features
 
 - **Authentication & Authorization**
-   - JWT-based authentication
+   - Cookie-based authentication (HttpOnly session cookie)
    - User registration and login
    - Role-based access control (admin/customer)
    - OpenID Connect support
@@ -125,6 +125,12 @@ See `.env.example` for all required environment variables.
 - `OIDC_REDIRECT_URI`: OIDC redirect URI (optional)
 - `DEV_MODE`: Whether to allow connections from localhost (optional)
 - `PUBLIC_URL`: What host to allow connections from in production
+
+### Auth Cookies (Dev vs Prod)
+
+- Development (`DEV_MODE=true`): auth cookie is `HttpOnly`, `SameSite=Lax`, `Secure=false` so login works over `http://localhost`.
+- Production (`DEV_MODE=false`): auth cookie is `HttpOnly`, `SameSite=None`, `Secure=true`.
+- Frontend requests must include credentials (for example `fetch(..., { credentials: "include" })`).
 
 ## API Endpoints
 

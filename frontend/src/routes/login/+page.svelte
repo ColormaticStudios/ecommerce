@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
-	import type { UserModel } from "$lib/models";
 	import Alert from "$lib/components/alert.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import { getProfile, userStore } from "$lib/user";
@@ -20,16 +19,11 @@
 		event.preventDefault();
 		errorMessage = "";
 
-		interface Response {
-			token?: string;
-			user?: UserModel;
-		}
-		let response: Response = {};
 		try {
-			response = (await api.login({
+			await api.login({
 				email: email,
 				password: password,
-			})) as Response;
+			});
 		} catch (err) {
 			const error = err as { body?: { error?: string } };
 			errorMessage = error.body?.error ?? "Invalid email or password.";
@@ -37,7 +31,6 @@
 			return;
 		}
 
-		api.setToken(response.token);
 		let user = await getProfile(api);
 		if (user) {
 			userStore.setUser(user);

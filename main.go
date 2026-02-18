@@ -132,7 +132,7 @@ func main() {
 				"Content-Length",
 				"Location",
 			},
-			AllowCredentials: false,
+			AllowCredentials: true,
 			MaxAge:           12 * time.Hour,
 		}))
 	} else {
@@ -157,6 +157,18 @@ func main() {
 		log.Fatalf("Failed to parse variable DISABLE_LOCAL_SIGN_IN: %v", err)
 	}
 
+	cookieSameSite := http.SameSiteLaxMode
+	cookieSecure := false
+	if !cfg.DevMode {
+		cookieSameSite = http.SameSiteNoneMode
+		cookieSecure = true
+	}
+	authCookieCfg := handlers.AuthCookieConfig{
+		Secure:   cookieSecure,
+		Domain:   "",
+		SameSite: cookieSameSite,
+	}
+
 	mediaService := media.NewService(db, cfg.MediaRoot, cfg.MediaPublicURL, log.Default())
 	if err := mediaService.EnsureDirs(); err != nil {
 		log.Fatalf("[ERROR] Failed to initialize media directories: %v", err)
@@ -170,12 +182,13 @@ func main() {
 			// PUBLIC ROUTES
 			if !disableLocalSignIn {
 				// Only allow these routes if they are enabled
-				apiv1.POST("/auth/register", handlers.Register(db, jwtSecret))
-				apiv1.POST("/auth/login", handlers.Login(db, jwtSecret))
+				apiv1.POST("/auth/register", handlers.Register(db, jwtSecret, authCookieCfg))
+				apiv1.POST("/auth/login", handlers.Login(db, jwtSecret, authCookieCfg))
 			}
+			apiv1.POST("/auth/logout", handlers.Logout(authCookieCfg))
 
-			apiv1.GET("/auth/oidc/login", handlers.OIDCLogin(cfg.OIDCProvider, cfg.OIDCClientID, cfg.OIDCRedirectURI))
-			apiv1.GET("/auth/oidc/callback", handlers.OIDCCallback(db, cfg.JWTSecret, cfg.OIDCProvider, cfg.OIDCClientID))
+			apiv1.GET("/auth/oidc/login", handlers.OIDCLogin(cfg.OIDCProvider, cfg.OIDCClientID, cfg.OIDCRedirectURI, authCookieCfg))
+			apiv1.GET("/auth/oidc/callback", handlers.OIDCCallback(db, cfg.JWTSecret, cfg.OIDCProvider, cfg.OIDCClientID, cfg.OIDCRedirectURI, authCookieCfg))
 
 			apiv1.GET("/products", handlers.GetProducts(db, mediaService))
 			apiv1.GET("/products/:id", handlers.GetProductByID(db, mediaService))

@@ -17,7 +17,6 @@ import {
 	parseSavedPaymentMethod,
 	parseSavedAddress,
 } from "$lib/models";
-import { getCookie, setCookie } from "$lib/cookie";
 
 const API_ROUTE = "/api/v1";
 
@@ -43,18 +42,13 @@ interface PageResponse<T> {
 
 export class API {
 	private baseUrl: string;
-	private accessToken: string | undefined;
+	private authenticated: boolean;
+	private authStateResolved: boolean;
 
 	constructor(baseUrl = "http://localhost:3000") {
 		this.baseUrl = baseUrl;
-		this.accessToken = undefined;
-	}
-
-	public setToken(token: string | undefined) {
-		this.accessToken = token;
-		if (token) {
-			setCookie("accessToken", token, "Strict");
-		}
+		this.authenticated = false;
+		this.authStateResolved = false;
 	}
 
 	private async request<T>(
@@ -65,10 +59,6 @@ export class API {
 	): Promise<T> {
 		const headers = new Headers();
 		headers.append("Content-Type", "application/json");
-
-		if (this.accessToken) {
-			headers.set("Authorization", `Bearer ${this.accessToken}`);
-		}
 
 		const url = new URL(`${this.baseUrl}${API_ROUTE}${path}`);
 		if (params) {
@@ -84,6 +74,7 @@ export class API {
 			method,
 			headers,
 			body: method === "GET" ? undefined : JSON.stringify(data),
+			credentials: "include",
 		});
 
 		const text = await response.text();
@@ -97,6 +88,10 @@ export class API {
 		}
 
 		if (!response.ok) {
+			if (response.status === 401) {
+				this.authenticated = false;
+				this.authStateResolved = true;
+			}
 			throw {
 				status: response.status,
 				statusText: response.statusText,
@@ -113,15 +108,27 @@ export class API {
 		email: string;
 		password: string;
 		name?: string;
-	}): Promise<{ token: string; user: ProfileModel }> {
-		return this.request("POST", "/auth/register", data);
+	}): Promise<{ user: ProfileModel }> {
+		const response = await this.request<{ user: ProfileModel }>("POST", "/auth/register", data);
+		this.authenticated = true;
+		this.authStateResolved = true;
+		return response;
 	}
 
 	public async login(data: {
 		email: string;
 		password: string;
-	}): Promise<{ token: string; user: ProfileModel }> {
-		return this.request("POST", "/auth/login", data);
+	}): Promise<{ user: ProfileModel }> {
+		const response = await this.request<{ user: ProfileModel }>("POST", "/auth/login", data);
+		this.authenticated = true;
+		this.authStateResolved = true;
+		return response;
+	}
+
+	public async logout(): Promise<void> {
+		await this.request("POST", "/auth/logout");
+		this.authenticated = false;
+		this.authStateResolved = true;
 	}
 
 	public async createOrder(data: {
@@ -228,6 +235,8 @@ export class API {
 	public async getProfile(): Promise<UserModel> {
 		// There's a weird quirk about how Gin handles the routing so we have to hit `/me/`, not `/me`
 		const response = await this.request<ProfileModel>("GET", "/me/");
+		this.authenticated = true;
+		this.authStateResolved = true;
 		return parseProfile(response);
 	}
 
@@ -241,10 +250,6 @@ export class API {
 	}
 
 	public async uploadMedia(file: File): Promise<string> {
-		if (!this.accessToken) {
-			throw new Error("Not authenticated");
-		}
-
 		const uploadUrl = new URL(`${this.baseUrl}${API_ROUTE}/media/uploads`);
 		const metadata = `filename ${btoa(unescape(encodeURIComponent(file.name)))}`;
 
@@ -254,8 +259,8 @@ export class API {
 				"Tus-Resumable": "1.0.0",
 				"Upload-Length": String(file.size),
 				"Upload-Metadata": metadata,
-				Authorization: `Bearer ${this.accessToken}`,
 			},
+			credentials: "include",
 		});
 
 		if (!createResponse.ok) {
@@ -275,9 +280,9 @@ export class API {
 				"Tus-Resumable": "1.0.0",
 				"Upload-Offset": "0",
 				"Content-Type": "application/offset+octet-stream",
-				Authorization: `Bearer ${this.accessToken}`,
 			},
 			body: file,
+			credentials: "include",
 		});
 
 		if (!patchResponse.ok) {
@@ -504,20 +509,26 @@ export class API {
 		return parseProfile(response);
 	}
 
-	// Auth Token Management
-	public isAuthenticated() {
-		return this.accessToken ? true : false;
-	}
-
-	public removeToken() {
-		this.accessToken = undefined;
-		setCookie("accessToken", "", "Strict");
-	}
-
-	public tokenFromCookie() {
-		const tokenCookie = getCookie("accessToken");
-		if (tokenCookie) {
-			this.accessToken = tokenCookie;
+	public async refreshAuthState(): Promise<boolean> {
+		if (this.authStateResolved) {
+			return this.authenticated;
 		}
+
+		try {
+			await this.getProfile();
+			return true;
+		} catch (err) {
+			const error = err as { status?: number };
+			if (error.status === 401) {
+				this.authenticated = false;
+				this.authStateResolved = true;
+				return false;
+			}
+			throw err;
+		}
+	}
+
+	public isAuthenticated() {
+		return this.authenticated;
 	}
 }

@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -19,6 +18,15 @@ import (
 	"gorm.io/gorm"
 )
 
+const SessionCookieName = "session_token"
+const oidcStateCookieName = "oidc_state"
+
+type AuthCookieConfig struct {
+	Secure   bool
+	Domain   string
+	SameSite http.SameSite
+}
+
 type RegisterRequest struct {
 	Username string `json:"username" binding:"required,min=3,max=50"`
 	Email    string `json:"email" binding:"required,email"`
@@ -32,12 +40,64 @@ type LoginRequest struct {
 }
 
 type AuthResponse struct {
-	Token string      `json:"token"`
-	User  models.User `json:"user"`
+	User models.User `json:"user"`
+}
+
+func setSessionCookie(c *gin.Context, token string, cfg AuthCookieConfig) {
+	maxAge := int((7 * 24 * time.Hour).Seconds())
+	c.SetSameSite(cfg.SameSite)
+	c.SetCookie(
+		SessionCookieName,
+		token,
+		maxAge,
+		"/",
+		cfg.Domain,
+		cfg.Secure,
+		true,
+	)
+}
+
+func clearSessionCookie(c *gin.Context, cfg AuthCookieConfig) {
+	c.SetSameSite(cfg.SameSite)
+	c.SetCookie(
+		SessionCookieName,
+		"",
+		-1,
+		"/",
+		cfg.Domain,
+		cfg.Secure,
+		true,
+	)
+}
+
+func setOIDCStateCookie(c *gin.Context, state string, cfg AuthCookieConfig) {
+	c.SetSameSite(cfg.SameSite)
+	c.SetCookie(
+		oidcStateCookieName,
+		state,
+		300,
+		"/",
+		cfg.Domain,
+		cfg.Secure,
+		true,
+	)
+}
+
+func clearOIDCStateCookie(c *gin.Context, cfg AuthCookieConfig) {
+	c.SetSameSite(cfg.SameSite)
+	c.SetCookie(
+		oidcStateCookieName,
+		"",
+		-1,
+		"/",
+		cfg.Domain,
+		cfg.Secure,
+		true,
+	)
 }
 
 // Register creates a new user account
-func Register(db *gorm.DB, jwtSecret string) gin.HandlerFunc {
+func Register(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req RegisterRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -94,15 +154,13 @@ func Register(db *gorm.DB, jwtSecret string) gin.HandlerFunc {
 		// Clear password hash from response
 		user.PasswordHash = ""
 
-		c.JSON(http.StatusCreated, AuthResponse{
-			Token: token,
-			User:  user,
-		})
+		setSessionCookie(c, token, cookieCfg)
+		c.JSON(http.StatusCreated, AuthResponse{User: user})
 	}
 }
 
 // Login authenticates a user and returns a JWT token
-func Login(db *gorm.DB, jwtSecret string) gin.HandlerFunc {
+func Login(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req LoginRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -139,10 +197,8 @@ func Login(db *gorm.DB, jwtSecret string) gin.HandlerFunc {
 		// Clear password hash from response
 		user.PasswordHash = ""
 
-		c.JSON(http.StatusOK, AuthResponse{
-			Token: token,
-			User:  user,
-		})
+		setSessionCookie(c, token, cookieCfg)
+		c.JSON(http.StatusOK, AuthResponse{User: user})
 	}
 }
 
@@ -167,7 +223,7 @@ func generateSubjectID(email string) string {
 }
 
 // OIDCLogin redirects the user to the OIDC provider’s authorization endpoint
-func OIDCLogin(oidcProvider string, clientID string, redirectURI string) gin.HandlerFunc {
+func OIDCLogin(oidcProvider string, clientID string, redirectURI string, cookieCfg AuthCookieConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := context.Background()
 		provider, err := oidc.NewProvider(ctx, oidcProvider)
@@ -184,8 +240,8 @@ func OIDCLogin(oidcProvider string, clientID string, redirectURI string) gin.Han
 			Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
 		}
 
-		state := fmt.Sprintf("%d", time.Now().UnixNano())
-		// In a real app you should store the state in a cookie/session and validate it in the callback
+		state := uuid.NewString()
+		setOIDCStateCookie(c, state, cookieCfg)
 		authURL := oauth2Config.AuthCodeURL(state)
 		c.Redirect(http.StatusFound, authURL)
 	}
@@ -193,7 +249,7 @@ func OIDCLogin(oidcProvider string, clientID string, redirectURI string) gin.Han
 
 // OIDCCallback exchanges the authorization code for tokens, validates the ID token,
 // creates/updates the local user record, and returns a JWT for the API.
-func OIDCCallback(db *gorm.DB, jwtSecret string, oidcProvider string, clientID string) gin.HandlerFunc {
+func OIDCCallback(db *gorm.DB, jwtSecret string, oidcProvider string, clientID string, redirectURI string, cookieCfg AuthCookieConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := context.Background()
 		provider, err := oidc.NewProvider(ctx, oidcProvider)
@@ -202,10 +258,18 @@ func OIDCCallback(db *gorm.DB, jwtSecret string, oidcProvider string, clientID s
 			return
 		}
 
+		state := c.Query("state")
+		expectedState, err := c.Cookie(oidcStateCookieName)
+		if state == "" || err != nil || state != expectedState {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid OIDC state"})
+			return
+		}
+		clearOIDCStateCookie(c, cookieCfg)
+
 		oauth2Config := oauth2.Config{
 			ClientID:     clientID,
 			ClientSecret: "", // secret may be needed for confidential clients
-			RedirectURL:  c.Request.URL.Scheme + "://" + c.Request.Host + "/auth/oidc/callback",
+			RedirectURL:  redirectURI,
 			Endpoint:     provider.Endpoint(),
 			Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
 		}
@@ -276,9 +340,14 @@ func OIDCCallback(db *gorm.DB, jwtSecret string, oidcProvider string, clientID s
 			return
 		}
 
-		c.JSON(http.StatusOK, AuthResponse{
-			Token: tokenString,
-			User:  user,
-		})
+		setSessionCookie(c, tokenString, cookieCfg)
+		c.JSON(http.StatusOK, AuthResponse{User: user})
+	}
+}
+
+func Logout(cookieCfg AuthCookieConfig) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		clearSessionCookie(c, cookieCfg)
+		c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
 	}
 }

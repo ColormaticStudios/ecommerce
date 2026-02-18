@@ -11,14 +11,16 @@
 	const productId = $derived(Number(page.params.id));
 	const hasProductId = $derived(Number.isFinite(productId) && productId > 0);
 
-	let authChecked = $state(false);
-	let isAdmin = $state(false);
+let authChecked = $state(false);
+let isAuthenticated = $state(false);
+let isAdmin = $state(false);
 	let accessError = $state("");
 	onMount(async () => {
 		authChecked = true;
 		accessError = "";
 		try {
 			const result = await checkAdminAccess(api);
+			isAuthenticated = result.isAuthenticated;
 			isAdmin = result.isAdmin;
 		} catch (err) {
 			console.error(err);
@@ -43,7 +45,7 @@
 
 	{#if !authChecked}
 		<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">Checking access…</p>
-	{:else if !api.isAuthenticated()}
+	{:else if !isAuthenticated}
 		<p class="mt-6 text-gray-600 dark:text-gray-300">
 			Please
 			<a href={resolve("/login")} class="text-blue-600 hover:underline dark:text-blue-400">

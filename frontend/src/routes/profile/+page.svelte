@@ -33,6 +33,7 @@
 	let uploading = $state(false);
 	let removing = $state(false);
 	let authChecked = $state(false);
+	let isAuthenticated = $state(false);
 	let busyAction = $state(false);
 
 	let paymentMethods = $state<SavedPaymentMethodModel[]>([]);
@@ -77,9 +78,9 @@
 	}
 
 	async function loadProfile() {
-		api.tokenFromCookie();
 		authChecked = true;
-		if (!api.isAuthenticated()) {
+		isAuthenticated = await api.refreshAuthState();
+		if (!isAuthenticated) {
 			loading = false;
 			return;
 		}
@@ -170,7 +171,6 @@
 			return;
 		}
 
-		api.tokenFromCookie();
 		removing = true;
 		photoError = "";
 		photoStatus = "";
@@ -338,7 +338,7 @@
 					class="h-64 animate-pulse rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
 				></div>
 			</div>
-		{:else if !api.isAuthenticated()}
+		{:else if !isAuthenticated}
 			<p class="mt-4 text-gray-600 dark:text-gray-300">
 				Please
 				<a href={resolve("/login")} class="text-blue-600 hover:underline dark:text-blue-400">

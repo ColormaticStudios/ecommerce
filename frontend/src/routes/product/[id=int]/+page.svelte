@@ -50,8 +50,8 @@
 			return;
 		}
 
-		api.tokenFromCookie();
-		if (!api.isAuthenticated()) {
+		const authenticated = await api.refreshAuthState();
+		if (!authenticated) {
 			showToast("Please log in to add items to cart.");
 			return;
 		}
