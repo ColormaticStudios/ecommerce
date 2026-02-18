@@ -365,11 +365,20 @@
 					class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 				>
 					<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Order summary</h3>
-					<div class="mt-4 h-4 w-28 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-					<Button variant="primary" size="large" class="mt-6! w-full" type="button" disabled={true}>
-						<i class="bi bi-cart-check-fill mr-1"></i>
-						Place order
-					</Button>
+					<div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-1">
+						<div class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+							<div class="flex items-center justify-between">
+								<span>Subtotal</span>
+								<div class="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
+							</div>
+						</div>
+						<div class="border-l border-gray-200 pl-4 dark:border-gray-800 sm:border-l-0 sm:pl-0">
+							<Button variant="primary" size="large" class="w-full" type="button" disabled={true}>
+								<i class="bi bi-cart-check-fill mr-1"></i>
+								Place order
+							</Button>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -512,25 +521,29 @@
 					class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 				>
 					<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Order summary</h3>
-					<div class="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-300">
-						<div class="flex items-center justify-between">
-							<span>Subtotal</span>
-							<span class="font-medium text-gray-900 dark:text-gray-100">
-								{formatPrice(total, $userStore?.currency ?? "USD")}
-							</span>
+					<div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-1">
+						<div class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+							<div class="flex items-center justify-between">
+								<span>Subtotal</span>
+								<span class="font-medium text-gray-900 dark:text-gray-100">
+									{formatPrice(total, $userStore?.currency ?? "USD")}
+								</span>
+							</div>
+						</div>
+						<div class="border-l border-gray-200 pl-4 dark:border-gray-800 sm:border-l-0 sm:pl-0">
+							<Button
+								variant="primary"
+								size="large"
+								class="w-full"
+								type="button"
+								disabled={processing || orderPlaced}
+								onclick={placeOrder}
+							>
+								<i class="bi bi-cart-check-fill mr-1"></i>
+								{processing ? "Processing..." : orderPlaced ? "Order placed" : "Place order"}
+							</Button>
 						</div>
 					</div>
-					<Button
-						variant="primary"
-						size="large"
-						class="mt-6! w-full"
-						type="button"
-						disabled={processing || orderPlaced}
-						onclick={placeOrder}
-					>
-						<i class="bi bi-cart-check-fill mr-1"></i>
-						{processing ? "Processing..." : orderPlaced ? "Order placed" : "Place order"}
-					</Button>
 
 					{#if errorMessage}
 						<div class="mt-4">
