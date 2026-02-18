@@ -21,6 +21,7 @@ import (
 const SessionCookieName = "session_token"
 const csrfCookieName = "csrf_token"
 const oidcStateCookieName = "oidc_state"
+const oidcRedirectCookieName = "oidc_redirect"
 
 type AuthCookieConfig struct {
 	Secure   bool
@@ -122,6 +123,51 @@ func clearOIDCStateCookie(c *gin.Context, cfg AuthCookieConfig) {
 		cfg.Secure,
 		true,
 	)
+}
+
+func setOIDCRedirectCookie(c *gin.Context, redirectPath string, cfg AuthCookieConfig) {
+	c.SetSameSite(cfg.SameSite)
+	c.SetCookie(
+		oidcRedirectCookieName,
+		redirectPath,
+		300,
+		"/",
+		cfg.Domain,
+		cfg.Secure,
+		true,
+	)
+}
+
+func clearOIDCRedirectCookie(c *gin.Context, cfg AuthCookieConfig) {
+	c.SetSameSite(cfg.SameSite)
+	c.SetCookie(
+		oidcRedirectCookieName,
+		"",
+		-1,
+		"/",
+		cfg.Domain,
+		cfg.Secure,
+		true,
+	)
+}
+
+func sanitizeRedirectPath(path string) string {
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return "/"
+	}
+	if strings.HasPrefix(path, "/") && !strings.HasPrefix(path, "//") {
+		return path
+	}
+	return "/"
+}
+
+func wantsJSONResponse(c *gin.Context) bool {
+	if strings.EqualFold(c.Query("format"), "json") {
+		return true
+	}
+	accept := strings.ToLower(c.GetHeader("Accept"))
+	return strings.Contains(accept, "application/json")
 }
 
 // Register creates a new user account
@@ -271,7 +317,9 @@ func OIDCLogin(oidcProvider string, clientID string, redirectURI string, cookieC
 		}
 
 		state := uuid.NewString()
+		postLoginRedirect := sanitizeRedirectPath(c.Query("redirect"))
 		setOIDCStateCookie(c, state, cookieCfg)
+		setOIDCRedirectCookie(c, postLoginRedirect, cookieCfg)
 		authURL := oauth2Config.AuthCodeURL(state)
 		c.Redirect(http.StatusFound, authURL)
 	}
@@ -372,7 +420,19 @@ func OIDCCallback(db *gorm.DB, jwtSecret string, oidcProvider string, clientID s
 
 		setSessionCookie(c, tokenString, cookieCfg)
 		setCSRFCookie(c, uuid.NewString(), cookieCfg)
-		c.JSON(http.StatusOK, AuthResponse{User: user})
+
+		postLoginRedirect := "/"
+		if redirectCookie, err := c.Cookie(oidcRedirectCookieName); err == nil {
+			postLoginRedirect = sanitizeRedirectPath(redirectCookie)
+		}
+		clearOIDCRedirectCookie(c, cookieCfg)
+
+		if wantsJSONResponse(c) {
+			c.JSON(http.StatusOK, AuthResponse{User: user})
+			return
+		}
+
+		c.Redirect(http.StatusFound, postLoginRedirect)
 	}
 }
 

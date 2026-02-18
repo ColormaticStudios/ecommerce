@@ -209,7 +209,7 @@ Also returns `Set-Cookie: session_token=...; HttpOnly; ...`.
 
 **Query Params**
 
-- `redirect` (optional)
+- `redirect` (optional) relative frontend path to return to after successful login (for example `/orders`)
 
 **Success Response** – HTTP 302
 
@@ -229,6 +229,9 @@ Also returns `Set-Cookie: session_token=...; HttpOnly; ...`.
 ```
 
 Also returns `Set-Cookie: session_token=...; HttpOnly; ...`.
+
+By default browser requests are redirected (HTTP 302) to the saved post-login path (or `/`).
+To force JSON for API/mobile clients, send `Accept: application/json` or `?format=json`.
 
 ### 2.5 Logout
 
