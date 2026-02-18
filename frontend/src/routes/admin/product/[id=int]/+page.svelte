@@ -13,10 +13,18 @@
 
 	let authChecked = $state(false);
 	let isAdmin = $state(false);
+	let accessError = $state("");
 	onMount(async () => {
 		authChecked = true;
-		const result = await checkAdminAccess(api);
-		isAdmin = result.isAdmin;
+		accessError = "";
+		try {
+			const result = await checkAdminAccess(api);
+			isAdmin = result.isAdmin;
+		} catch (err) {
+			console.error(err);
+			isAdmin = false;
+			accessError = "Unable to check admin access.";
+		}
 	});
 </script>
 
@@ -48,6 +56,9 @@
 			class="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white p-6 text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300"
 		>
 			<p class="text-lg font-medium">You do not have access to this page.</p>
+			{#if accessError}
+				<p class="mt-2 text-sm">{accessError}</p>
+			{/if}
 		</div>
 	{:else}
 		<ProductEditor {productId} layout="split" showHeader={false} showClear={false} />

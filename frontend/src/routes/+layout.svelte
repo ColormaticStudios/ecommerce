@@ -170,7 +170,7 @@
 						</a>
 						<button
 							type="button"
-							class="menu-item text-left"
+							class="menu-item text-left cursor-pointer"
 							onclick={() => {
 								menuOpen = false;
 								$userStore.logOut();

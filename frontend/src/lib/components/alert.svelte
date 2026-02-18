@@ -23,7 +23,7 @@
 <div
 	class={`flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-sm ${styles.container}`}
 >
-	<span>
+	<span class="min-w-0 break-words [overflow-wrap:anywhere]">
 		{#if icon}
 			<i class={`bi ${icon} mr-1`}></i>
 		{/if}

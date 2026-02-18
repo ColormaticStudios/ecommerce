@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -326,21 +328,42 @@ type UpdateOrderStatusRequest struct {
 	Status string `json:"status" binding:"required,oneof=PENDING PAID FAILED"`
 }
 
+type ProcessPaymentInputMethod struct {
+	CardholderName string `json:"cardholder_name" binding:"required"`
+	CardNumber     string `json:"card_number" binding:"required"`
+	ExpMonth       int    `json:"exp_month" binding:"required,min=1,max=12"`
+	ExpYear        int    `json:"exp_year" binding:"required,min=2000,max=2200"`
+}
+
+type ProcessPaymentInputAddress struct {
+	FullName   string `json:"full_name" binding:"required"`
+	Line1      string `json:"line1" binding:"required"`
+	Line2      string `json:"line2"`
+	City       string `json:"city" binding:"required"`
+	State      string `json:"state"`
+	PostalCode string `json:"postal_code" binding:"required"`
+	Country    string `json:"country" binding:"required,len=2"`
+}
+
+type ProcessPaymentRequest struct {
+	PaymentMethodID *uint                       `json:"payment_method_id"`
+	AddressID       *uint                       `json:"address_id"`
+	PaymentMethod   *ProcessPaymentInputMethod  `json:"payment_method"`
+	Address         *ProcessPaymentInputAddress `json:"address"`
+}
+
 // ProcessPayment processes payment for an order (mock implementation)
 func ProcessPayment(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
 	mediaService := resolveMediaService(mediaServices...)
 	return func(c *gin.Context) {
-		// Get user subject from middleware
-		subject := c.GetString("userID")
-		if subject == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		user, ok := getAuthenticatedUser(db, c)
+		if !ok {
 			return
 		}
 
-		// Find user by subject
-		var user models.User
-		if err := db.Where("subject = ?", subject).First(&user).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		var req ProcessPaymentRequest
+		if err := c.ShouldBindJSON(&req); err != nil && !errors.Is(err, io.EOF) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -366,6 +389,17 @@ func ProcessPayment(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFun
 			return
 		}
 
+		paymentDisplay, err := resolvePaymentDisplayForOrder(db, user.ID, req)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		shippingAddress, err := resolveShippingAddressForOrder(db, user.ID, req)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
 		// Mock payment processing - in a real app, this would call a payment provider
 		// For now, we'll simulate a successful payment
 		// In production, you'd validate payment details, process with Stripe/PayPal/etc.
@@ -380,6 +414,8 @@ func ProcessPayment(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFun
 
 		// Update order status
 		order.Status = models.StatusPaid
+		order.PaymentMethodDisplay = paymentDisplay
+		order.ShippingAddressPretty = shippingAddress
 		if err := tx.Save(&order).Error; err != nil {
 			tx.Rollback()
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update order status"})
@@ -446,6 +482,67 @@ func ProcessPayment(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFun
 			"order":   order,
 		})
 	}
+}
+
+func resolvePaymentDisplayForOrder(db *gorm.DB, userID uint, req ProcessPaymentRequest) (string, error) {
+	if req.PaymentMethodID != nil {
+		var method models.SavedPaymentMethod
+		if err := db.Where("id = ? AND user_id = ?", *req.PaymentMethodID, userID).First(&method).Error; err != nil {
+			return "", fmt.Errorf("payment method not found")
+		}
+		return paymentMethodDisplay(method.Brand, method.Last4), nil
+	}
+
+	if req.PaymentMethod != nil {
+		cardDigits := digitsOnly(req.PaymentMethod.CardNumber)
+		if len(cardDigits) < 12 || len(cardDigits) > 19 {
+			return "", fmt.Errorf("card number must be 12 to 19 digits")
+		}
+		brand := detectCardBrand(cardDigits)
+		last4 := cardDigits[len(cardDigits)-4:]
+		return paymentMethodDisplay(brand, last4), nil
+	}
+
+	var method models.SavedPaymentMethod
+	if err := db.Where("user_id = ? AND is_default = ?", userID, true).First(&method).Error; err == nil {
+		return paymentMethodDisplay(method.Brand, method.Last4), nil
+	}
+
+	return "", fmt.Errorf("payment method is required")
+}
+
+func resolveShippingAddressForOrder(db *gorm.DB, userID uint, req ProcessPaymentRequest) (string, error) {
+	if req.AddressID != nil {
+		var address models.SavedAddress
+		if err := db.Where("id = ? AND user_id = ?", *req.AddressID, userID).First(&address).Error; err != nil {
+			return "", fmt.Errorf("address not found")
+		}
+		return addressPretty(address), nil
+	}
+
+	if req.Address != nil {
+		country := strings.ToUpper(strings.TrimSpace(req.Address.Country))
+		if len(country) != 2 {
+			return "", fmt.Errorf("country must be a 2-letter code")
+		}
+		address := models.SavedAddress{
+			FullName:   strings.TrimSpace(req.Address.FullName),
+			Line1:      strings.TrimSpace(req.Address.Line1),
+			Line2:      strings.TrimSpace(req.Address.Line2),
+			City:       strings.TrimSpace(req.Address.City),
+			State:      strings.TrimSpace(req.Address.State),
+			PostalCode: strings.TrimSpace(req.Address.PostalCode),
+			Country:    country,
+		}
+		return addressPretty(address), nil
+	}
+
+	var address models.SavedAddress
+	if err := db.Where("user_id = ? AND is_default = ?", userID, true).First(&address).Error; err == nil {
+		return addressPretty(address), nil
+	}
+
+	return "", fmt.Errorf("shipping address is required")
 }
 
 // UpdateOrderStatus updates the status of an order (for webhooks or admin)

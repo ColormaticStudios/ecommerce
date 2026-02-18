@@ -109,6 +109,8 @@ All responses use JSON. Errors are returned as `{ "error": "message" }` with an 
 	"user_id": 1,
 	"status": "PENDING",
 	"total": 59.98,
+	"payment_method_display": "Visa •••• 4242",
+	"shipping_address_pretty": "123 Main St, Portland, OR, 97201, US",
 	"items": [
 		{
 			"id": 1,
@@ -308,6 +310,72 @@ Creates a new user account and returns a JWT.
 { "id": 1, "name": "John Doe", "currency": "USD" }
 ```
 
+### 4.3 Saved Payment Methods
+
+**GET** `/me/payment-methods`
+
+Lists saved payment methods for the authenticated user.
+
+**POST** `/me/payment-methods`
+
+Creates a saved payment method (dummy, stores card metadata only).
+
+**Request**
+
+```json
+{
+	"cardholder_name": "Jane Doe",
+	"card_number": "4242 4242 4242 4242",
+	"exp_month": 12,
+	"exp_year": 2030,
+	"nickname": "Personal Visa",
+	"set_default": true
+}
+```
+
+**PATCH** `/me/payment-methods/{id}/default`
+
+Sets the selected method as default.
+
+**DELETE** `/me/payment-methods/{id}`
+
+Deletes a saved payment method.
+
+### 4.4 Saved Addresses
+
+**GET** `/me/addresses`
+
+Lists saved addresses for the authenticated user.
+
+**POST** `/me/addresses`
+
+Creates a saved address.
+
+**Request**
+
+```json
+{
+	"label": "Home",
+	"full_name": "Jane Doe",
+	"line1": "123 Main St",
+	"line2": "Apt 4",
+	"city": "Portland",
+	"state": "OR",
+	"postal_code": "97201",
+	"country": "US",
+	"phone": "+1-555-555-0100",
+	"set_default": true
+}
+```
+
+**PATCH** `/me/addresses/{id}/default`
+
+Sets the selected address as default.
+
+**DELETE** `/me/addresses/{id}`
+
+Deletes a saved address.
+
 ---
 
 ## 5. Cart (User)
@@ -444,6 +512,8 @@ Creates a new user account and returns a JWT.
 			"user_id": 1,
 			"status": "PENDING",
 			"total": 59.98,
+			"payment_method_display": "Visa •••• 4242",
+			"shipping_address_pretty": "123 Main St, Portland, OR, 97201, US",
 			"items": [
 				{
 					"id": 1,
@@ -483,6 +553,8 @@ Creates a new user account and returns a JWT.
 	"user_id": 1,
 	"status": "PENDING",
 	"total": 59.98,
+	"payment_method_display": "Visa •••• 4242",
+	"shipping_address_pretty": "123 Main St, Portland, OR, 97201, US",
 	"items": [
 		{
 			"id": 1,
@@ -525,6 +597,8 @@ Creates a new user account and returns a JWT.
 	"user_id": 1,
 	"status": "PENDING",
 	"total": 59.98,
+	"payment_method_display": null,
+	"shipping_address_pretty": null,
 	"items": [
 		{
 			"id": 1,
@@ -553,6 +627,42 @@ Creates a new user account and returns a JWT.
 
 **POST** `/me/orders/{id}/pay`
 
+You can pay with:
+- saved IDs (`payment_method_id`, `address_id`)
+- inline one-time values (`payment_method`, `address`)
+- omitted fields if defaults exist on account.
+
+**Request (saved values)**
+
+```json
+{
+	"payment_method_id": 3,
+	"address_id": 7
+}
+```
+
+**Request (one-time values)**
+
+```json
+{
+	"payment_method": {
+		"cardholder_name": "Jane Doe",
+		"card_number": "4242424242424242",
+		"exp_month": 12,
+		"exp_year": 2030
+	},
+	"address": {
+		"full_name": "Jane Doe",
+		"line1": "123 Main St",
+		"line2": "Apt 4",
+		"city": "Portland",
+		"state": "OR",
+		"postal_code": "97201",
+		"country": "US"
+	}
+}
+```
+
 **Success Response** – HTTP 200
 
 ```json
@@ -563,6 +673,8 @@ Creates a new user account and returns a JWT.
 		"user_id": 1,
 		"status": "PAID",
 		"total": 59.98,
+		"payment_method_display": "Visa •••• 4242",
+		"shipping_address_pretty": "123 Main St, Apt 4, Portland, OR, 97201, US",
 		"items": [
 			{
 				"id": 1,

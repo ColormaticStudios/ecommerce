@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { type ProductModel } from "$lib/models";
 	import { type API } from "$lib/api";
-	import NumberInput from "$lib/components/NumberInput.svelte";
+	import IconButton from "$lib/components/IconButton.svelte";
+	import QuantitySelector from "$lib/components/QuantitySelector.svelte";
 	import { formatPrice } from "$lib/utils";
 	import ProductCard from "$lib/components/ProductCard.svelte";
 	import { userStore } from "$lib/user";
 	import { getContext, onDestroy } from "svelte";
+	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import { resolve } from "$app/paths";
 
@@ -186,13 +188,15 @@
 						{product.name}
 					</h1>
 					{#if $userStore?.role === "admin"}
-						<a
-							href={resolve(`/admin/product/${product.id}`)}
-							class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-gray-300 text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+						<IconButton
+							size="md"
+							outlined={true}
 							aria-label="Edit product"
+							title="Edit product"
+							onclick={() => goto(resolve(`/admin/product/${product!.id}`))}
 						>
 							<i class="bi bi-wrench-adjustable"></i>
-						</a>
+						</IconButton>
 					{/if}
 				</div>
 
@@ -218,33 +222,7 @@
 
 				<!-- Actions -->
 				<div class="mt-4 flex flex-wrap gap-3">
-					<div
-						class="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1.5 sm:gap-2 sm:px-3 sm:py-2 dark:border-gray-800 dark:bg-gray-900"
-					>
-						<button
-							type="button"
-							class="h-8 w-8 rounded-full border border-gray-300 text-base text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 sm:h-9 sm:w-9 sm:text-lg dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-							disabled={quantity <= 1}
-							onclick={() => (quantity = Math.max(1, quantity - 1))}
-						>
-							-
-						</button>
-							<NumberInput
-								class="w-12 text-center text-base font-medium text-gray-900 outline-none sm:w-14 sm:text-lg dark:bg-gray-900 dark:text-gray-100"
-								full={false}
-								min="1"
-								max={product.stock}
-								bind:value={quantity}
-							/>
-						<button
-							type="button"
-							class="h-8 w-8 rounded-full border border-gray-300 text-base text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 sm:h-9 sm:w-9 sm:text-lg dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-							disabled={product.stock === 0 || quantity >= product.stock}
-							onclick={() => (quantity = Math.min(product ? product.stock : 1000, quantity + 1))}
-						>
-							+
-						</button>
-					</div>
+					<QuantitySelector bind:value={quantity} min={1} max={product.stock} />
 					<button
 						class="flex-1 cursor-pointer rounded-lg bg-gray-900 px-4 py-3 text-lg font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:hover:bg-gray-400 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
 						disabled={product.stock === 0 || adding}

@@ -71,6 +71,8 @@ func main() {
 		&models.MediaObject{},
 		&models.MediaVariant{},
 		&models.MediaReference{},
+		&models.SavedPaymentMethod{},
+		&models.SavedAddress{},
 	); err != nil {
 		log.Fatalf("[ERROR] Failed to migrate database: %v", err)
 	}
@@ -222,6 +224,14 @@ func main() {
 				userRoutes.GET("/orders/:id", handlers.GetOrderByID(db, mediaService))
 				userRoutes.POST("/orders", handlers.CreateOrder(db, mediaService))
 				userRoutes.POST("/orders/:id/pay", handlers.ProcessPayment(db, mediaService))
+				userRoutes.GET("/payment-methods", handlers.GetSavedPaymentMethods(db))
+				userRoutes.POST("/payment-methods", handlers.CreateSavedPaymentMethod(db))
+				userRoutes.DELETE("/payment-methods/:id", handlers.DeleteSavedPaymentMethod(db))
+				userRoutes.PATCH("/payment-methods/:id/default", handlers.SetDefaultPaymentMethod(db))
+				userRoutes.GET("/addresses", handlers.GetSavedAddresses(db))
+				userRoutes.POST("/addresses", handlers.CreateSavedAddress(db))
+				userRoutes.DELETE("/addresses/:id", handlers.DeleteSavedAddress(db))
+				userRoutes.PATCH("/addresses/:id/default", handlers.SetDefaultAddress(db))
 			}
 
 			// ADMIN ROUTES

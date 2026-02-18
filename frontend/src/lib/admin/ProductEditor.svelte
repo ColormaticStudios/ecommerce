@@ -2,6 +2,7 @@
 	import { type API } from "$lib/api";
 	import Alert from "$lib/components/alert.svelte";
 	import Button from "$lib/components/Button.svelte";
+	import IconButton from "$lib/components/IconButton.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
 	import { type ProductModel, type RelatedProductModel } from "$lib/models";
@@ -51,8 +52,12 @@
 	let mediaReordering = $state(false);
 	let relatedLoading = $state(false);
 	let relatedSaving = $state(false);
-	let errorMessage = $state("");
-	let statusMessage = $state("");
+	let productErrorMessage = $state("");
+	let productStatusMessage = $state("");
+	let mediaErrorMessage = $state("");
+	let mediaStatusMessage = $state("");
+	let relatedErrorMessage = $state("");
+	let relatedStatusMessage = $state("");
 
 	let sku = $state("");
 	let name = $state("");
@@ -65,6 +70,7 @@
 	let relatedQuery = $state("");
 	let relatedOptions = $state<ProductModel[]>([]);
 	let relatedSelected = $state<RelatedProductModel[]>([]);
+	let relatedLastSearchedQuery = $state("");
 
 	const mediaFilesCount = $derived(mediaFiles ? mediaFiles.length : 0);
 	const mediaOrderView = $derived(pendingMediaOrder ?? product?.images ?? []);
@@ -78,30 +84,66 @@
 	);
 	const hasProduct = $derived(Boolean(product));
 	const canEditProduct = $derived(resolvedProductId != null);
+	const relatedBaseline = $derived(product?.related_products ?? []);
+	const hasPendingRelatedChanges = $derived.by(() => {
+		const selectedIds = [...relatedSelected.map((item) => item.id)].sort((a, b) => a - b).join("|");
+		const baselineIds = [...relatedBaseline.map((item) => item.id)].sort((a, b) => a - b).join("|");
+		return selectedIds !== baselineIds;
+	});
 
 	let loadSequence = 0;
 	let lastLoadedId = $state<number | null>(null);
 
-	function clearMessages() {
-		if (showMessages) {
-			errorMessage = "";
-			statusMessage = "";
-		}
+	function clearProductMessages() {
+		productErrorMessage = "";
+		productStatusMessage = "";
+	}
+
+	function clearMediaMessages() {
+		mediaErrorMessage = "";
+		mediaStatusMessage = "";
+	}
+
+	function clearRelatedMessages() {
+		relatedErrorMessage = "";
+		relatedStatusMessage = "";
+	}
+
+	function clearAllMessages() {
+		clearProductMessages();
+		clearMediaMessages();
+		clearRelatedMessages();
 		onErrorMessage?.("");
 		onStatusMessage?.("");
 	}
 
-	function setError(message: string) {
-		if (showMessages) {
-			errorMessage = message;
-		}
+	function setProductError(message: string) {
+		productErrorMessage = message;
 		onErrorMessage?.(message);
 	}
 
-	function setStatus(message: string) {
-		if (showMessages) {
-			statusMessage = message;
-		}
+	function setProductStatus(message: string) {
+		productStatusMessage = message;
+		onStatusMessage?.(message);
+	}
+
+	function setMediaError(message: string) {
+		mediaErrorMessage = message;
+		onErrorMessage?.(message);
+	}
+
+	function setMediaStatus(message: string) {
+		mediaStatusMessage = message;
+		onStatusMessage?.(message);
+	}
+
+	function setRelatedError(message: string) {
+		relatedErrorMessage = message;
+		onErrorMessage?.(message);
+	}
+
+	function setRelatedStatus(message: string) {
+		relatedStatusMessage = message;
 		onStatusMessage?.(message);
 	}
 
@@ -116,6 +158,7 @@
 		relatedQuery = "";
 		relatedOptions = [];
 		relatedSelected = [];
+		relatedLastSearchedQuery = "";
 	}
 
 	function hydrateForm(value: ProductModel) {
@@ -146,7 +189,7 @@
 	async function loadProduct(id: number, seedProduct?: ProductModel | null) {
 		const sequence = ++loadSequence;
 		loading = true;
-		clearMessages();
+		clearProductMessages();
 		if (!seedProduct) {
 			product = null;
 			resetForm();
@@ -162,7 +205,7 @@
 		} catch (err) {
 			console.error(err);
 			if (sequence === loadSequence) {
-				setError("Unable to load product.");
+				setProductError("Unable to load product.");
 			}
 		} finally {
 			if (sequence === loadSequence) {
@@ -172,7 +215,7 @@
 	}
 
 	async function saveProduct() {
-		clearMessages();
+		clearProductMessages();
 		saving = true;
 		try {
 			const trimmedStock = String(stock ?? "").trim();
@@ -185,7 +228,7 @@
 			};
 
 			if (!payload.sku || !payload.name || Number.isNaN(payload.price)) {
-				setError("Please provide SKU, name, and a valid price.");
+				setProductError("Please provide SKU, name, and a valid price.");
 				return;
 			}
 
@@ -201,7 +244,7 @@
 				updated = merged;
 				hydrateForm(merged);
 				onProductUpdated?.(merged);
-				setStatus("Product updated.");
+				setProductStatus("Product updated.");
 			} else if (allowCreate) {
 				updated = await api.createProduct(payload);
 				product = updated;
@@ -209,13 +252,13 @@
 				hydrateForm(updated);
 				onProductCreated?.(updated);
 				onProductUpdated?.(updated);
-				setStatus("Product created.");
+				setProductStatus("Product created.");
 			} else {
-				setError("Please select a product to edit.");
+				setProductError("Please select a product to edit.");
 			}
 		} catch (err) {
 			console.error(err);
-			setError("Unable to save product.");
+			setProductError("Unable to save product.");
 		} finally {
 			saving = false;
 		}
@@ -228,7 +271,7 @@
 		if (!confirm("Delete this product? This cannot be undone.")) {
 			return;
 		}
-		clearMessages();
+		clearProductMessages();
 		deleting = true;
 		try {
 			const deletedId = resolvedProductId;
@@ -236,13 +279,13 @@
 			product = null;
 			resetForm();
 			onProductDeleted?.(deletedId);
-			setStatus("Product deleted.");
+			setProductStatus("Product deleted.");
 			if (clearOnDelete) {
 				productId = null;
 			}
 		} catch (err) {
 			console.error(err);
-			setError("Unable to delete product.");
+			setProductError("Unable to delete product.");
 		} finally {
 			deleting = false;
 		}
@@ -252,7 +295,7 @@
 		if (!resolvedProductId || !mediaFiles || mediaFiles.length === 0) {
 			return;
 		}
-		clearMessages();
+		clearMediaMessages();
 		uploading = true;
 		try {
 			const mediaIds = await uploadMediaFiles(api, mediaFiles);
@@ -260,14 +303,14 @@
 			product = updated;
 			hydrateForm(updated);
 			onProductUpdated?.(updated);
-			setStatus("Media attached.");
+			setMediaStatus("Media attached.");
 		} catch (err) {
 			console.error(err);
 			const error = err as { status?: number; body?: { error?: string } };
 			if (error.status === 409 && error.body?.error) {
-				setError(error.body.error);
+				setMediaError(error.body.error);
 			} else {
-				setError("Unable to upload media.");
+				setMediaError("Unable to upload media.");
 			}
 		} finally {
 			uploading = false;
@@ -280,23 +323,23 @@
 		}
 		const mediaId = extractMediaId(mediaUrl);
 		if (!mediaId) {
-			setError("Unable to find media ID for deletion.");
+			setMediaError("Unable to find media ID for deletion.");
 			return;
 		}
 		if (!confirm("Remove this image from the product?")) {
 			return;
 		}
-		clearMessages();
+		clearMediaMessages();
 		mediaDeleting = mediaId;
 		try {
 			const updated = await api.detachProductMedia(resolvedProductId, mediaId);
 			product = updated;
 			hydrateForm(updated);
 			onProductUpdated?.(updated);
-			setStatus("Media removed.");
+			setMediaStatus("Media removed.");
 		} catch (err) {
 			console.error(err);
-			setError("Unable to remove media.");
+			setMediaError("Unable to remove media.");
 		} finally {
 			mediaDeleting = null;
 		}
@@ -316,6 +359,10 @@
 		pendingMediaOrder = reordered;
 	}
 
+	function discardMediaOrderChanges() {
+		pendingMediaOrder = null;
+	}
+
 	async function saveMediaOrder() {
 		if (!resolvedProductId || !hasPendingMediaOrder || !pendingMediaOrder) {
 			return;
@@ -326,35 +373,38 @@
 			.filter((id): id is string => Boolean(id));
 
 		if (mediaIds.length !== pendingMediaOrder.length) {
-			setError("Unable to reorder media.");
+			setMediaError("Unable to reorder media.");
 			return;
 		}
 
 		mediaReordering = true;
-		clearMessages();
+		clearMediaMessages();
 		try {
 			const updated = await api.updateProductMediaOrder(resolvedProductId, mediaIds);
 			product = updated;
 			pendingMediaOrder = null;
 			onProductUpdated?.(updated);
-			setStatus("Image order updated.");
+			setMediaStatus("Image order updated.");
 		} catch (err) {
 			console.error(err);
-			setError("Unable to update image order.");
+			setMediaError("Unable to update image order.");
 		} finally {
 			mediaReordering = false;
 		}
 	}
 
 	async function searchRelatedProducts() {
-		if (!resolvedProductId || !relatedQuery.trim()) {
+		const query = relatedQuery.trim();
+		if (!resolvedProductId || !query) {
 			relatedOptions = [];
+			relatedLastSearchedQuery = "";
 			return;
 		}
 		relatedLoading = true;
+		relatedLastSearchedQuery = query;
 		try {
 			const page = await api.listProducts({
-				q: relatedQuery.trim(),
+				q: query,
 				page: 1,
 				limit: 10,
 			});
@@ -365,7 +415,7 @@
 			);
 		} catch (err) {
 			console.error(err);
-			setError("Unable to search related products.");
+			setRelatedError("Unable to search related products.");
 		} finally {
 			relatedLoading = false;
 		}
@@ -394,12 +444,20 @@
 		relatedSelected = relatedSelected.filter((item) => item.id !== productIdToRemove);
 	}
 
+	function discardRelatedChanges() {
+		relatedSelected = relatedBaseline;
+		relatedOptions = [];
+		relatedQuery = "";
+		relatedLastSearchedQuery = "";
+		clearRelatedMessages();
+	}
+
 	async function saveRelatedProducts() {
 		if (!resolvedProductId) {
 			return;
 		}
 		relatedSaving = true;
-		clearMessages();
+		clearRelatedMessages();
 		try {
 			const updated = await api.updateProductRelated(
 				resolvedProductId,
@@ -408,10 +466,10 @@
 			product = updated;
 			hydrateForm(updated);
 			onProductUpdated?.(updated);
-			setStatus("Related products updated.");
+			setRelatedStatus("Related products updated.");
 		} catch (err) {
 			console.error(err);
-			setError("Unable to update related products.");
+			setRelatedError("Unable to update related products.");
 		} finally {
 			relatedSaving = false;
 		}
@@ -421,7 +479,7 @@
 		productId = null;
 		product = null;
 		resetForm();
-		clearMessages();
+		clearAllMessages();
 	}
 
 	$effect(() => {
@@ -441,7 +499,7 @@
 			loading = false;
 			product = null;
 			resetForm();
-			clearMessages();
+			clearAllMessages();
 			lastLoadedId = null;
 		}
 	});
@@ -552,7 +610,8 @@
 {/snippet}
 
 {#snippet MediaGrid()}
-	<div class="grid grid-cols-2 gap-3">
+	<div class="max-h-64 overflow-y-auto pr-1">
+		<div class="grid grid-cols-2 gap-3">
 		{#each mediaOrderView as image, index (image)}
 			<div class="relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
 				<img
@@ -560,68 +619,96 @@
 					alt={product ? `${product.name} ${index + 1}` : `Product image ${index + 1}`}
 					class="h-28 w-full object-cover"
 				/>
-				<button
-					class="absolute top-2 right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm transition hover:bg-white dark:bg-gray-900/80 dark:text-gray-200 dark:hover:bg-gray-800"
-					type="button"
+				<IconButton
+					class="absolute top-2 right-2 bg-white/90 shadow-sm hover:bg-white dark:bg-gray-900/80 dark:hover:bg-gray-800"
+					size="sm"
 					disabled={mediaDeleting !== null || mediaReordering}
 					onclick={() => detachMedia(image)}
 					aria-label="Remove image"
+					title="Remove image"
+					variant="danger"
 				>
 					{#if mediaDeleting && extractMediaId(image) === mediaDeleting}
 						<i class="bi bi-arrow-repeat animate-spin"></i>
 					{:else}
 						<i class="bi bi-trash"></i>
 					{/if}
-				</button>
+				</IconButton>
 				<div class="absolute right-2 bottom-2 flex gap-1">
-					<button
-						class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-900/80 dark:text-gray-200 dark:hover:bg-gray-800"
-						type="button"
+					<IconButton
+						class="bg-white/90 shadow-sm hover:bg-white dark:bg-gray-900/80 dark:hover:bg-gray-800"
+						size="sm"
 						disabled={mediaReordering || index === 0}
 						onclick={() => moveMedia(index, -1)}
 						aria-label="Move image up"
+						title="Move image left"
 					>
 						<i class="bi bi-chevron-left"></i>
-					</button>
-					<button
-						class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-900/80 dark:text-gray-200 dark:hover:bg-gray-800"
-						type="button"
+					</IconButton>
+					<IconButton
+						class="bg-white/90 shadow-sm hover:bg-white dark:bg-gray-900/80 dark:hover:bg-gray-800"
+						size="sm"
 						disabled={mediaReordering || index === mediaOrderView.length - 1}
 						onclick={() => moveMedia(index, 1)}
 						aria-label="Move image down"
+						title="Move image right"
 					>
 						<i class="bi bi-chevron-right"></i>
-					</button>
+					</IconButton>
 				</div>
 			</div>
 		{/each}
+		</div>
 	</div>
 	{#if hasPendingMediaOrder}
-		<Button
-			variant="primary"
-			class="mt-3"
-			type="button"
-			disabled={mediaReordering}
-			onclick={saveMediaOrder}
-		>
-			<i class="bi bi-floppy-fill mr-1"></i>
-			{mediaReordering ? "Saving..." : "Save order"}
-		</Button>
+		<div class="mt-3 flex flex-wrap gap-2">
+			<Button
+				variant="primary"
+				type="button"
+				disabled={mediaReordering}
+				onclick={saveMediaOrder}
+			>
+				<i class="bi bi-floppy-fill mr-1"></i>
+				{mediaReordering ? "Saving..." : "Save order"}
+			</Button>
+			<Button
+				variant="regular"
+				type="button"
+				disabled={mediaReordering}
+				onclick={discardMediaOrderChanges}
+			>
+				<i class="bi bi-x-circle mr-1"></i>
+				Discard changes
+			</Button>
+		</div>
 	{/if}
 {/snippet}
 
 {#snippet RelatedProducts()}
 	<div class="flex items-center justify-between">
 		<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Related products</p>
-		<Button
-			variant="primary"
-			type="button"
-			disabled={!canEditProduct || relatedSaving}
-			onclick={saveRelatedProducts}
-		>
-			<i class="bi bi-floppy-fill mr-1"></i>
-			{relatedSaving ? "Saving..." : "Save related"}
-		</Button>
+		{#if hasPendingRelatedChanges}
+			<div class="flex items-center gap-2">
+				<Button
+					variant="regular"
+					type="button"
+					disabled={!canEditProduct || relatedSaving}
+					onclick={discardRelatedChanges}
+				>
+					<i class="bi bi-x-circle mr-1"></i>
+					Discard changes
+				</Button>
+				<Button
+					variant="primary"
+					type="button"
+					disabled={!canEditProduct || relatedSaving}
+					onclick={saveRelatedProducts}
+				>
+					<i class="bi bi-floppy-fill mr-1"></i>
+					{relatedSaving ? "Saving..." : "Save related"}
+				</Button>
+			</div>
+		{/if}
 	</div>
 	<form
 		class="mt-3 flex flex-nowrap items-center gap-2"
@@ -656,13 +743,19 @@
 						<p class="font-semibold text-gray-900 dark:text-gray-100">{option.name}</p>
 						<p class="text-xs text-gray-500 dark:text-gray-400">SKU {option.sku}</p>
 					</div>
-					<Button variant="regular" type="button" onclick={() => addRelatedProduct(option)}>
-						Add
-					</Button>
+					<IconButton
+						variant="primary"
+						type="button"
+						onclick={() => addRelatedProduct(option)}
+						aria-label={`Add ${option.name} as related product`}
+						title="Add related product"
+					>
+						<i class="bi bi-plus-lg"></i>
+					</IconButton>
 				</div>
 			{/each}
 		</div>
-	{:else if relatedQuery.trim()}
+	{:else if !relatedLoading && relatedLastSearchedQuery !== "" && relatedLastSearchedQuery === relatedQuery.trim()}
 		<p class="mt-3 text-xs text-gray-500 dark:text-gray-400">No matches.</p>
 	{/if}
 
@@ -676,50 +769,51 @@
 						<p class="font-semibold text-gray-900 dark:text-gray-100">{related.name}</p>
 						<p class="text-xs text-gray-500 dark:text-gray-400">SKU {related.sku}</p>
 					</div>
-					<Button
+					<IconButton
 						variant="danger"
 						type="button"
 						onclick={() => removeRelatedProduct(related.id)}
+						aria-label={`Remove ${related.name} from related products`}
+						title="Remove related product"
 					>
-						<i class="bi bi-dash-circle-fill mr-1"></i>
-						Remove
-					</Button>
+						<i class="bi bi-dash-lg"></i>
+					</IconButton>
 				</div>
 			{/each}
 		</div>
 	{:else}
 		<p class="mt-4 text-xs text-gray-500 dark:text-gray-400">No related products selected.</p>
 	{/if}
-{/snippet}
 
-{#if showMessages}
-	{#if errorMessage}
-		<div class="mt-6">
-			<Alert
-				message={errorMessage}
-				tone="error"
-				icon="bi-x-circle-fill"
-				onClose={() => {
-					errorMessage = "";
-					onErrorMessage?.("");
-				}}
-			/>
-		</div>
+	{#if showMessages}
+		{#if relatedErrorMessage}
+			<div class="mt-4">
+				<Alert
+					message={relatedErrorMessage}
+					tone="error"
+					icon="bi-x-circle-fill"
+					onClose={() => {
+						relatedErrorMessage = "";
+						onErrorMessage?.("");
+					}}
+				/>
+			</div>
+		{/if}
+		{#if relatedStatusMessage}
+			<div class="mt-4">
+				<Alert
+					message={relatedStatusMessage}
+					tone="success"
+					icon="bi-check-circle-fill"
+					onClose={() => {
+						relatedStatusMessage = "";
+						onStatusMessage?.("");
+					}}
+				/>
+			</div>
+		{/if}
 	{/if}
-	{#if statusMessage}
-		<div class="mt-6">
-			<Alert
-				message={statusMessage}
-				tone="success"
-				icon="bi-check-circle-fill"
-				onClose={() => {
-					statusMessage = "";
-					onStatusMessage?.("");
-				}}
-			/>
-		</div>
-	{/if}
-{/if}
+{/snippet}
 
 {#if loading && !hasProduct}
 	<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">Loading product…</p>
@@ -744,6 +838,34 @@
 					{deleting ? "Deleting..." : "Delete product"}
 				</Button>
 			</div>
+			{#if showMessages}
+				{#if productErrorMessage}
+					<div class="mt-4">
+						<Alert
+							message={productErrorMessage}
+							tone="error"
+							icon="bi-x-circle-fill"
+							onClose={() => {
+								productErrorMessage = "";
+								onErrorMessage?.("");
+							}}
+						/>
+					</div>
+				{/if}
+				{#if productStatusMessage}
+					<div class="mt-4">
+						<Alert
+							message={productStatusMessage}
+							tone="success"
+							icon="bi-check-circle-fill"
+							onClose={() => {
+								productStatusMessage = "";
+								onStatusMessage?.("");
+							}}
+						/>
+					</div>
+				{/if}
+			{/if}
 		</div>
 
 		<div
@@ -758,6 +880,34 @@
 			<div class="mt-6">
 				{@render MediaUpload(false)}
 			</div>
+			{#if showMessages}
+				{#if mediaErrorMessage}
+					<div class="mt-4">
+						<Alert
+							message={mediaErrorMessage}
+							tone="error"
+							icon="bi-x-circle-fill"
+							onClose={() => {
+								mediaErrorMessage = "";
+								onErrorMessage?.("");
+							}}
+						/>
+					</div>
+				{/if}
+				{#if mediaStatusMessage}
+					<div class="mt-4">
+						<Alert
+							message={mediaStatusMessage}
+							tone="success"
+							icon="bi-check-circle-fill"
+							onClose={() => {
+								mediaStatusMessage = "";
+								onStatusMessage?.("");
+							}}
+						/>
+					</div>
+				{/if}
+			{/if}
 		</div>
 	</div>
 
@@ -821,7 +971,63 @@
 					</Button>
 				{/if}
 			</div>
+			{#if showMessages}
+				{#if productErrorMessage}
+					<div class="mb-4">
+						<Alert
+							message={productErrorMessage}
+							tone="error"
+							icon="bi-x-circle-fill"
+							onClose={() => {
+								productErrorMessage = "";
+								onErrorMessage?.("");
+							}}
+						/>
+					</div>
+				{/if}
+				{#if productStatusMessage}
+					<div class="mb-4">
+						<Alert
+							message={productStatusMessage}
+							tone="success"
+							icon="bi-check-circle-fill"
+							onClose={() => {
+								productStatusMessage = "";
+								onStatusMessage?.("");
+							}}
+						/>
+					</div>
+				{/if}
+			{/if}
 			{@render MediaUpload(true)}
+			{#if showMessages}
+				{#if mediaErrorMessage}
+					<div class="mt-4">
+						<Alert
+							message={mediaErrorMessage}
+							tone="error"
+							icon="bi-x-circle-fill"
+							onClose={() => {
+								mediaErrorMessage = "";
+								onErrorMessage?.("");
+							}}
+						/>
+					</div>
+				{/if}
+				{#if mediaStatusMessage}
+					<div class="mt-4">
+						<Alert
+							message={mediaStatusMessage}
+							tone="success"
+							icon="bi-check-circle-fill"
+							onClose={() => {
+								mediaStatusMessage = "";
+								onStatusMessage?.("");
+							}}
+						/>
+					</div>
+				{/if}
+			{/if}
 		</div>
 
 		{#if mediaOrderView.length}

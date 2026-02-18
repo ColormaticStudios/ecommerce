@@ -88,6 +88,7 @@
 		/>
 		<Password bind:value={password} name="password" placeholder="Password" />
 		<Password bind:value={passwordMatcher} name="confirm_password" placeholder="Confirm Password" />
+		<Button variant="primary" size="large" type="submit">Create Account</Button>
 		{#if !doPasswordsMatch}
 			<div class="w-full">
 				<Alert
@@ -108,6 +109,5 @@
 				/>
 			</div>
 		{/if}
-		<Button variant="primary" size="large" type="submit">Create Account</Button>
 	</form>
 </div>

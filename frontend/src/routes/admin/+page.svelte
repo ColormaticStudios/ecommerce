@@ -3,10 +3,12 @@
 	import { checkAdminAccess } from "$lib/admin/auth";
 	import Alert from "$lib/components/alert.svelte";
 	import Button from "$lib/components/Button.svelte";
+	import IconButton from "$lib/components/IconButton.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
 	import { type OrderModel, type ProductModel, type UserModel } from "$lib/models";
 	import { formatPrice } from "$lib/utils";
 	import { getContext, onMount } from "svelte";
+	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import ProductEditor from "$lib/admin/ProductEditor.svelte";
 
@@ -166,12 +168,19 @@
 
 	onMount(async () => {
 		authChecked = true;
-		const result = await checkAdminAccess(api);
-		isAdmin = result.isAdmin;
-		if (isAdmin) {
-			await Promise.all([loadProducts(), loadOrders(), loadUsers()]);
+		try {
+			const result = await checkAdminAccess(api);
+			isAdmin = result.isAdmin;
+			if (isAdmin) {
+				await Promise.all([loadProducts(), loadOrders(), loadUsers()]);
+			}
+		} catch (err) {
+			console.error(err);
+			errorMessage = "Unable to check admin access.";
+			isAdmin = false;
+		} finally {
+			loading = false;
 		}
-		loading = false;
 	});
 
 	$effect(() => {
@@ -353,13 +362,15 @@
 											{product.stock} in stock
 										</span>
 									</button>
-									<a
-										href={resolve(`/admin/product/${product.id}`)}
-										class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-gray-200 text-gray-600 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:border-gray-600 dark:hover:bg-gray-700"
+									<IconButton
+										outlined={true}
+										size="md"
 										aria-label="Edit product"
+										title="Edit product"
+										onclick={() => goto(resolve(`/admin/product/${product.id}`))}
 									>
 										<i class="bi bi-wrench-adjustable"></i>
-									</a>
+									</IconButton>
 								</div>
 							{/each}
 							<div

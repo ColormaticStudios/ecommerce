@@ -65,8 +65,9 @@
 		} catch (err) {
 			console.error(err);
 			errorMessage = "Unable to load orders.";
+		} finally {
+			loading = false;
 		}
-		loading = false;
 	}
 
 	function applyFilters() {
@@ -281,10 +282,29 @@
 					</div>
 
 					<div class="mt-4 border-t border-gray-200 pt-4 dark:border-gray-800">
+						<div class="grid gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-800 dark:bg-gray-950/40 sm:grid-cols-2">
+							<div class="min-w-0">
+								<p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+									Payment
+								</p>
+								<p class="mt-1 text-gray-800 dark:text-gray-200 break-words [overflow-wrap:anywhere]">
+									{order.payment_method_display || "No payment method recorded"}
+								</p>
+							</div>
+							<div class="min-w-0">
+								<p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+									Shipping
+								</p>
+								<p class="mt-1 text-gray-800 dark:text-gray-200 break-words [overflow-wrap:anywhere]">
+									{order.shipping_address_pretty || "No shipping address recorded"}
+								</p>
+							</div>
+						</div>
+
 						{#if order.items.length === 0}
-							<p class="text-sm text-gray-500 dark:text-gray-400">No item details available.</p>
+							<p class="mt-4 text-sm text-gray-500 dark:text-gray-400">No item details available.</p>
 						{:else}
-							<ul class="space-y-3">
+							<ul class="mt-4 space-y-3">
 								{#each order.items as item (item.id)}
 									<li
 										class="flex flex-col gap-3 rounded-xl border border-gray-200 p-3 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800"

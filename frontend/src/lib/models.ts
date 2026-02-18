@@ -220,6 +220,8 @@ export interface OrderPayload extends Omit<
 	"created_at" | "updated_at" | "deleted_at" | "items"
 > {
 	items?: OrderItemPayload[];
+	payment_method_display: string | null;
+	shipping_address_pretty: string | null;
 	created_at: string | Date;
 	updated_at: string | Date;
 	deleted_at: string | Date | null;
@@ -231,6 +233,8 @@ export function parseOrder(order: OrderPayload): OrderModel {
 		user_id: order.user_id,
 		status: order.status,
 		total: order.total,
+		payment_method_display: order.payment_method_display || null,
+		shipping_address_pretty: order.shipping_address_pretty || null,
 		created_at: parseDate(order.created_at) ?? new Date(),
 		updated_at: parseDate(order.updated_at) ?? new Date(),
 		deleted_at: parseDate(order.deleted_at),
@@ -243,6 +247,8 @@ export interface OrderModel {
 	user_id: number;
 	status: "PENDING" | "PAID" | "FAILED";
 	total: number;
+	payment_method_display: string | null;
+	shipping_address_pretty: string | null;
 	created_at: Date;
 	updated_at: Date;
 	deleted_at: Date | null;
@@ -273,4 +279,93 @@ export interface OrderItemModel {
 	created_at: Date;
 	updated_at: Date;
 	deleted_at: Date | null;
+}
+
+interface SavedPaymentMethodPayload extends Omit<
+	SavedPaymentMethodModel,
+	"created_at" | "updated_at" | "deleted_at"
+> {
+	created_at: string | Date;
+	updated_at: string | Date;
+	deleted_at: string | Date | null;
+}
+
+export interface SavedPaymentMethodModel {
+	id: number;
+	user_id: number;
+	type: string;
+	brand: string;
+	last4: string;
+	exp_month: number;
+	exp_year: number;
+	cardholder_name: string;
+	nickname: string;
+	is_default: boolean;
+	created_at: Date;
+	updated_at: Date;
+	deleted_at: Date | null;
+}
+
+export function parseSavedPaymentMethod(
+	paymentMethod: SavedPaymentMethodPayload
+): SavedPaymentMethodModel {
+	return {
+		id: paymentMethod.id,
+		user_id: paymentMethod.user_id,
+		type: paymentMethod.type,
+		brand: paymentMethod.brand,
+		last4: paymentMethod.last4,
+		exp_month: paymentMethod.exp_month,
+		exp_year: paymentMethod.exp_year,
+		cardholder_name: paymentMethod.cardholder_name,
+		nickname: paymentMethod.nickname,
+		is_default: paymentMethod.is_default,
+		created_at: parseDate(paymentMethod.created_at) ?? new Date(),
+		updated_at: parseDate(paymentMethod.updated_at) ?? new Date(),
+		deleted_at: parseDate(paymentMethod.deleted_at),
+	};
+}
+
+interface SavedAddressPayload extends Omit<SavedAddressModel, "created_at" | "updated_at" | "deleted_at"> {
+	created_at: string | Date;
+	updated_at: string | Date;
+	deleted_at: string | Date | null;
+}
+
+export interface SavedAddressModel {
+	id: number;
+	user_id: number;
+	label: string;
+	full_name: string;
+	line1: string;
+	line2: string;
+	city: string;
+	state: string;
+	postal_code: string;
+	country: string;
+	phone: string;
+	is_default: boolean;
+	created_at: Date;
+	updated_at: Date;
+	deleted_at: Date | null;
+}
+
+export function parseSavedAddress(address: SavedAddressPayload): SavedAddressModel {
+	return {
+		id: address.id,
+		user_id: address.user_id,
+		label: address.label,
+		full_name: address.full_name,
+		line1: address.line1,
+		line2: address.line2,
+		city: address.city,
+		state: address.state,
+		postal_code: address.postal_code,
+		country: address.country,
+		phone: address.phone,
+		is_default: address.is_default,
+		created_at: parseDate(address.created_at) ?? new Date(),
+		updated_at: parseDate(address.updated_at) ?? new Date(),
+		deleted_at: parseDate(address.deleted_at),
+	};
 }

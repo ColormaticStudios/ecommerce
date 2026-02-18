@@ -7,11 +7,15 @@ import {
 	type CartItemModel,
 	type ProfileModel,
 	type OrderPayload,
+	type SavedPaymentMethodModel,
+	type SavedAddressModel,
 	parseProduct,
 	parseOrder,
 	parseCart,
 	parseCartItem,
 	parseProfile,
+	parseSavedPaymentMethod,
+	parseSavedAddress,
 } from "$lib/models";
 import { getCookie, setCookie } from "$lib/cookie";
 
@@ -117,10 +121,32 @@ export class API {
 		return parseOrder(response);
 	}
 
-	public async processPayment(orderId: number): Promise<OrderModel> {
+	public async processPayment(
+		orderId: number,
+		data?: {
+			payment_method_id?: number;
+			address_id?: number;
+			payment_method?: {
+				cardholder_name: string;
+				card_number: string;
+				exp_month: number;
+				exp_year: number;
+			};
+			address?: {
+				full_name: string;
+				line1: string;
+				line2?: string;
+				city: string;
+				state?: string;
+				postal_code: string;
+				country: string;
+			};
+		}
+	): Promise<OrderModel> {
 		const response = await this.request<{ order?: OrderPayload } | OrderPayload>(
 			"POST",
-			`/me/orders/${orderId}/pay`
+			`/me/orders/${orderId}/pay`,
+			data
 		);
 		const payload = "order" in response ? response.order : (response as OrderPayload);
 		if (!payload) {
@@ -264,6 +290,67 @@ export class API {
 
 	public async removeProfilePhoto(): Promise<{ message?: string }> {
 		return await this.request("DELETE", "/me/profile-photo");
+	}
+
+	// Saved Payment Methods
+	public async listSavedPaymentMethods(): Promise<SavedPaymentMethodModel[]> {
+		const response = await this.request<SavedPaymentMethodModel[]>("GET", "/me/payment-methods");
+		return response.map(parseSavedPaymentMethod);
+	}
+
+	public async createSavedPaymentMethod(data: {
+		cardholder_name: string;
+		card_number: string;
+		exp_month: number;
+		exp_year: number;
+		nickname?: string;
+		set_default?: boolean;
+	}): Promise<SavedPaymentMethodModel> {
+		const response = await this.request<SavedPaymentMethodModel>("POST", "/me/payment-methods", data);
+		return parseSavedPaymentMethod(response);
+	}
+
+	public async deleteSavedPaymentMethod(id: number): Promise<{ message?: string }> {
+		return await this.request("DELETE", `/me/payment-methods/${id}`);
+	}
+
+	public async setDefaultPaymentMethod(id: number): Promise<SavedPaymentMethodModel> {
+		const response = await this.request<SavedPaymentMethodModel>(
+			"PATCH",
+			`/me/payment-methods/${id}/default`
+		);
+		return parseSavedPaymentMethod(response);
+	}
+
+	// Saved Addresses
+	public async listSavedAddresses(): Promise<SavedAddressModel[]> {
+		const response = await this.request<SavedAddressModel[]>("GET", "/me/addresses");
+		return response.map(parseSavedAddress);
+	}
+
+	public async createSavedAddress(data: {
+		label?: string;
+		full_name: string;
+		line1: string;
+		line2?: string;
+		city: string;
+		state?: string;
+		postal_code: string;
+		country: string;
+		phone?: string;
+		set_default?: boolean;
+	}): Promise<SavedAddressModel> {
+		const response = await this.request<SavedAddressModel>("POST", "/me/addresses", data);
+		return parseSavedAddress(response);
+	}
+
+	public async deleteSavedAddress(id: number): Promise<{ message?: string }> {
+		return await this.request("DELETE", `/me/addresses/${id}`);
+	}
+
+	public async setDefaultAddress(id: number): Promise<SavedAddressModel> {
+		const response = await this.request<SavedAddressModel>("PATCH", `/me/addresses/${id}/default`);
+		return parseSavedAddress(response);
 	}
 
 	// Admin Operations

@@ -62,6 +62,7 @@
 			required
 		/>
 		<Password bind:value={password} name="password" placeholder="Password" />
+		<Button variant="primary" size="large" type="submit">Log In</Button>
 		{#if errorMessage}
 			<div class="w-full">
 				<Alert
@@ -72,6 +73,5 @@
 				/>
 			</div>
 		{/if}
-		<Button variant="primary" size="large" type="submit">Log In</Button>
 	</form>
 </div>

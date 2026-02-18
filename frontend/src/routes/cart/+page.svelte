@@ -2,9 +2,9 @@
 	import { type API } from "$lib/api";
 	import { type CartModel } from "$lib/models";
 	import Alert from "$lib/components/alert.svelte";
-	import Button from "$lib/components/Button.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
-	import NumberInput from "$lib/components/NumberInput.svelte";
+	import IconButton from "$lib/components/IconButton.svelte";
+	import QuantitySelector from "$lib/components/QuantitySelector.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
 	import { getContext, onMount } from "svelte";
@@ -40,9 +40,10 @@
 		} catch (err) {
 			console.error(err);
 			errorMessage = "Unable to load your cart.";
-		}
-		if (!options?.silent) {
-			loading = false;
+		} finally {
+			if (!options?.silent) {
+				loading = false;
+			}
 		}
 	}
 
@@ -59,8 +60,9 @@
 		} catch (err) {
 			console.error(err);
 			errorMessage = "Unable to update that item.";
+		} finally {
+			updatingItemId = null;
 		}
-		updatingItemId = null;
 	}
 
 	async function removeItem(itemId: number) {
@@ -72,8 +74,9 @@
 		} catch (err) {
 			console.error(err);
 			errorMessage = "Unable to remove that item.";
+		} finally {
+			updatingItemId = null;
 		}
-		updatingItemId = null;
 	}
 
 	function increaseQuantity(itemId: number, quantity: number) {
@@ -199,41 +202,25 @@
 						</div>
 
 						<div class="flex items-center gap-2">
-							<button
-								class="aspect-square h-8 w-8 rounded-full border border-gray-300 text-lg text-gray-600 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-								type="button"
+							<QuantitySelector
+								value={item.quantity}
+								min={1}
 								disabled={updatingItemId === item.id}
-								onclick={() => decreaseQuantity(item.id, item.quantity)}
-								aria-label="Decrease quantity"
-							>
-								<i class="bi bi-dash"></i>
-							</button>
-								<NumberInput
-									class="w-16 rounded-full border border-gray-300 p-1 text-center dark:border-gray-700"
-									full={false}
-									min="1"
-									value={item.quantity}
-									disabled={updatingItemId === item.id}
-									onchange={(event) =>
-										updateItemQuantity(item.id, Number((event.target as HTMLInputElement).value))}
-								/>
-							<button
-								class="aspect-square h-8 w-8 rounded-full border border-gray-300 text-lg text-gray-600 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-								type="button"
-								disabled={updatingItemId === item.id}
-								onclick={() => increaseQuantity(item.id, item.quantity)}
-								aria-label="Increase quantity"
-							>
-								<i class="bi bi-plus"></i>
-							</button>
-							<Button
-								variant="regular"
+								onDecrease={() => decreaseQuantity(item.id, item.quantity)}
+								onIncrease={() => increaseQuantity(item.id, item.quantity)}
+								onCommit={(next) => updateItemQuantity(item.id, next)}
+							/>
+							<IconButton
+								variant="danger"
+								size="lg"
 								type="button"
 								disabled={updatingItemId === item.id}
 								onclick={() => removeItem(item.id)}
+								aria-label="Remove item"
+								title="Remove item"
 							>
-								Remove
-							</Button>
+								<i class="bi bi-trash-fill"></i>
+							</IconButton>
 						</div>
 					</div>
 				{/each}
@@ -260,7 +247,7 @@
 						href={resolve("/checkout")}
 						variant="primary"
 						size="large"
-						class="m-0! block w-full text-center"
+						class="block w-full text-center"
 					>
 						Go to checkout
 						<i class="bi bi-arrow-right"></i>
