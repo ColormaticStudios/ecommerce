@@ -651,17 +651,53 @@ func UpdateOrderStatus(db *gorm.DB) gin.HandlerFunc {
 func GetAllOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
 	mediaService := resolveMediaService(mediaServices...)
 	return func(c *gin.Context) {
+		page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+		if page < 1 {
+			page = 1
+		}
+		if limit < 1 {
+			limit = 20
+		}
+		if limit > 100 {
+			limit = 100
+		}
+		offset := (page - 1) * limit
+
+		query := db.Model(&models.Order{})
+		var total int64
+		if err := query.Count(&total).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
+			return
+		}
+
 		var orders []models.Order
-		if err := db.Preload("Items.Product").
+		if err := query.
+			Preload("Items.Product").
 			Preload("User").
 			Order("created_at DESC").
+			Offset(offset).
+			Limit(limit).
 			Find(&orders).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
 			return
 		}
 		applyOrderMedia(orders, mediaService)
 
-		c.JSON(http.StatusOK, orders)
+		totalPages := int(total) / limit
+		if int(total)%limit > 0 {
+			totalPages++
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"data": orders,
+			"pagination": gin.H{
+				"page":        page,
+				"limit":       limit,
+				"total":       total,
+				"total_pages": totalPages,
+			},
+		})
 	}
 }
 

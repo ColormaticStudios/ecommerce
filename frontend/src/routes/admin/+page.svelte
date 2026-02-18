@@ -72,7 +72,8 @@
 		ordersLoading = true;
 		clearMessages();
 		try {
-			orders = await api.listAdminOrders({ page: 1, limit: 50 });
+			const response = await api.listAdminOrders({ page: 1, limit: 50 });
+			orders = response.data;
 		} catch (err) {
 			console.error(err);
 			errorMessage = "Unable to load orders.";
@@ -85,7 +86,8 @@
 		usersLoading = true;
 		clearMessages();
 		try {
-			users = await api.listUsers({ page: 1, limit: 50 });
+			const response = await api.listUsers({ page: 1, limit: 50 });
+			users = response.data;
 		} catch (err) {
 			console.error(err);
 			errorMessage = "Unable to load users.";

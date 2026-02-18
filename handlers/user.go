@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"ecommerce/internal/media"
 	"ecommerce/models"
@@ -104,13 +105,46 @@ func UpdateProfile(db *gorm.DB) gin.HandlerFunc {
 // GetAllUsers retrieves all users (admin only)
 func GetAllUsers(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var users []models.User
-		if err := db.Find(&users).Error; err != nil {
+		page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+		if page < 1 {
+			page = 1
+		}
+		if limit < 1 {
+			limit = 20
+		}
+		if limit > 100 {
+			limit = 100
+		}
+		offset := (page - 1) * limit
+
+		query := db.Model(&models.User{})
+		var total int64
+		if err := query.Count(&total).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
 			return
 		}
 
-		c.JSON(http.StatusOK, users)
+		var users []models.User
+		if err := query.Offset(offset).Limit(limit).Find(&users).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+			return
+		}
+
+		totalPages := int(total) / limit
+		if int(total)%limit > 0 {
+			totalPages++
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"data": users,
+			"pagination": gin.H{
+				"page":        page,
+				"limit":       limit,
+				"total":       total,
+				"total_pages": totalPages,
+			},
+		})
 	}
 }
 

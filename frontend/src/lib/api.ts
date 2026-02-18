@@ -31,6 +31,16 @@ interface OrderPageResponse {
 	};
 }
 
+interface PageResponse<T> {
+	data: T[];
+	pagination: {
+		limit: number;
+		page: number;
+		total: number;
+		total_pages: number;
+	};
+}
+
 export class API {
 	private baseUrl: string;
 	private accessToken: string | undefined;
@@ -439,9 +449,20 @@ export class API {
 	}
 
 	// Admin Order Management
-	public async listAdminOrders(params?: { page?: number; limit?: number }): Promise<OrderModel[]> {
-		const response = await this.request<OrderModel[]>("GET", "/admin/orders", undefined, params);
-		return response.map(parseOrder);
+	public async listAdminOrders(params?: {
+		page?: number;
+		limit?: number;
+	}): Promise<{ data: OrderModel[]; pagination: PageResponse<OrderPayload>["pagination"] }> {
+		const response = await this.request<PageResponse<OrderPayload>>(
+			"GET",
+			"/admin/orders",
+			undefined,
+			params
+		);
+		return {
+			data: response.data.map(parseOrder),
+			pagination: response.pagination,
+		};
 	}
 
 	public async getAdminOrderDetails(orderId: number): Promise<OrderModel> {
@@ -462,9 +483,20 @@ export class API {
 	}
 
 	// Admin User Management
-	public async listUsers(params?: { page?: number; limit?: number }): Promise<UserModel[]> {
-		const response = await this.request<ProfileModel[]>("GET", "/admin/users", undefined, params);
-		return response.map(parseProfile);
+	public async listUsers(params?: {
+		page?: number;
+		limit?: number;
+	}): Promise<{ data: UserModel[]; pagination: PageResponse<ProfileModel>["pagination"] }> {
+		const response = await this.request<PageResponse<ProfileModel>>(
+			"GET",
+			"/admin/users",
+			undefined,
+			params
+		);
+		return {
+			data: response.data.map(parseProfile),
+			pagination: response.pagination,
+		};
 	}
 
 	public async updateUserRole(userId: number, data: { role: string }): Promise<UserModel> {
