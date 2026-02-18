@@ -68,7 +68,7 @@ func newCreateProductCmd() *cobra.Command {
 				SKU:         sku,
 				Name:        name,
 				Description: description,
-				Price:       price,
+				Price:       models.MoneyFromFloat(price),
 				Stock:       stock,
 			}
 
@@ -80,7 +80,7 @@ func newCreateProductCmd() *cobra.Command {
 			fmt.Printf("  ID: %d\n", product.ID)
 			fmt.Printf("  SKU: %s\n", product.SKU)
 			fmt.Printf("  Name: %s\n", product.Name)
-			fmt.Printf("  Price: $%.2f\n", product.Price)
+			fmt.Printf("  Price: $%.2f\n", product.Price.Float64())
 			fmt.Printf("  Stock: %d\n", product.Stock)
 		},
 	}
@@ -160,7 +160,7 @@ func newEditProductCmd() *cobra.Command {
 				if price <= 0 {
 					log.Fatal("Price must be greater than 0")
 				}
-				product.Price = price
+				product.Price = models.MoneyFromFloat(price)
 			}
 
 			if cmd.Flags().Changed("stock") {
@@ -175,7 +175,7 @@ func newEditProductCmd() *cobra.Command {
 			fmt.Printf("  ID: %d\n", product.ID)
 			fmt.Printf("  SKU: %s\n", product.SKU)
 			fmt.Printf("  Name: %s\n", product.Name)
-			fmt.Printf("  Price: $%.2f\n", product.Price)
+			fmt.Printf("  Price: $%.2f\n", product.Price.Float64())
 			fmt.Printf("  Stock: %d\n", product.Stock)
 		},
 	}
@@ -226,7 +226,7 @@ func newListProductsCmd() *cobra.Command {
 			fmt.Println("--------------------------------------------------------------------------------")
 			for _, product := range products {
 				fmt.Printf("%-5d %-15s %-30s $%-9.2f %-10d\n",
-					product.ID, product.SKU, product.Name, product.Price, product.Stock)
+					product.ID, product.SKU, product.Name, product.Price.Float64(), product.Stock)
 			}
 		},
 	}

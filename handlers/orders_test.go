@@ -140,15 +140,15 @@ func TestOrderItemPriceSnapshot(t *testing.T) {
 
 	orderItem := models.OrderItem{
 		Quantity: quantity,
-		Price:    float64(productPrice), // Snapshot price
+		Price:    models.MoneyFromFloat(productPrice), // Snapshot price
 	}
 
 	// Even if product price changes later, order item should keep original price
-	assert.Equal(t, float64(productPrice), orderItem.Price)
+	assert.InDelta(t, productPrice, orderItem.Price.Float64(), 0.01)
 	assert.Equal(t, quantity, orderItem.Quantity)
 
 	// Calculate item total from snapshot
-	itemTotal := orderItem.Price * float64(orderItem.Quantity)
+	itemTotal := orderItem.Price.Mul(orderItem.Quantity).Float64()
 	expectedTotal := 29.99 * 2
 	assert.InDelta(t, expectedTotal, itemTotal, 0.01)
 }

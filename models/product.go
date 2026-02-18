@@ -5,7 +5,7 @@ type Product struct {
 	SKU         string   `json:"sku" gorm:"unique;not null"`
 	Name        string   `json:"name" gorm:"not null"`
 	Description string   `json:"description"`
-	Price       float64  `json:"price" gorm:"not null"`
+	Price       Money    `json:"price" gorm:"type:numeric(12,2);not null"`
 	Stock       int      `json:"stock" gorm:"default:0"`
 	Images      []string `json:"images" gorm:"type:text[]"`
 	CoverImage  *string  `json:"cover_image,omitempty" gorm:"-"`

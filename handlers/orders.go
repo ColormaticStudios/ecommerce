@@ -115,7 +115,7 @@ func CreateOrder(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
 		}
 
 		// Calculate total and validate products
-		var total float64
+		var total models.Money
 		var orderItems []models.OrderItem
 
 		for _, itemReq := range req.Items {
@@ -139,8 +139,7 @@ func CreateOrder(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
 			}
 
 			// Calculate item total
-			itemTotal := product.Price * float64(itemReq.Quantity)
-			total += itemTotal
+			total += product.Price.Mul(itemReq.Quantity)
 
 			// Create order item
 			orderItem := models.OrderItem{

@@ -10,7 +10,7 @@ type Order struct {
 	BaseModel
 	UserID                uint        `json:"user_id"`
 	User                  User        `json:"user" gorm:"foreignKey:UserID"`
-	Total                 float64     `json:"total"`
+	Total                 Money       `json:"total" gorm:"type:numeric(12,2);not null"`
 	Status                string      `json:"status"` // PENDING, PAID, FAILED
 	PaymentMethodDisplay  string      `json:"payment_method_display"`
 	ShippingAddressPretty string      `json:"shipping_address_pretty"`
@@ -24,5 +24,5 @@ type OrderItem struct {
 	ProductID uint    `json:"product_id"`
 	Product   Product `json:"product" gorm:"foreignKey:ProductID"`
 	Quantity  int     `json:"quantity"`
-	Price     float64 `json:"price"` // Price at time of order (snapshot)
+	Price     Money   `json:"price" gorm:"type:numeric(12,2);not null"` // Price at time of order (snapshot)
 }
