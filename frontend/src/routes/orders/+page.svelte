@@ -202,7 +202,7 @@
 		</div>
 	{/if}
 
-	{#if !authChecked}
+	{#if !authChecked || loading}
 		<div class="mt-6 space-y-4">
 			{#each skeletonRows as index (index)}
 				<div
@@ -225,21 +225,6 @@
 			</a>
 			to view your orders.
 		</p>
-	{:else if loading}
-		<div class="mt-6 space-y-4">
-			{#each skeletonRows as index (index)}
-				<div
-					class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-				>
-					<div class="flex items-center justify-between">
-						<div class="h-4 w-28 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-						<div class="h-6 w-20 animate-pulse rounded-full bg-gray-200 dark:bg-gray-800"></div>
-					</div>
-					<div class="mt-4 h-5 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-					<div class="mt-2 h-4 w-40 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-				</div>
-			{/each}
-		</div>
 	{:else if errorMessage}
 		<div class="mt-4">
 			<Alert

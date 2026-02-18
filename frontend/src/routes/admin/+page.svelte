@@ -198,75 +198,76 @@
 </script>
 
 <section class="mx-auto max-w-6xl px-4 py-10">
-	<div class="flex flex-wrap items-start justify-between gap-6">
-		<div>
-			<h1 class="mt-2 text-3xl font-semibold text-gray-900 dark:text-gray-100">Admin</h1>
-		</div>
+	{#if !authChecked || loading}
 		<div
-			class="relative rounded-full border border-gray-200 bg-white p-1 text-xs font-semibold tracking-[0.2em] text-gray-500 uppercase shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400"
+			class="mt-6 rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300"
 		>
-			<div
-				class="pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-full bg-gray-900 transition-transform duration-300 ease-out dark:bg-gray-100"
-				style={`transform: translateX(${tabIndex * 100}%);`}
-			></div>
-			<div class="relative grid grid-cols-3 items-center gap-0">
-				<button
-					type="button"
-					class={`cursor-pointer rounded-full px-4 py-2 transition ${
-						activeTab === "products"
-							? "text-white dark:text-gray-900"
-							: "hover:text-gray-900 dark:hover:text-gray-200"
-					}`}
-					onclick={() => (activeTab = "products")}
-				>
-					Products
-				</button>
-				<button
-					type="button"
-					class={`cursor-pointer rounded-full px-4 py-2 transition ${
-						activeTab === "orders"
-							? "text-white dark:text-gray-900"
-							: "hover:text-gray-900 dark:hover:text-gray-200"
-					}`}
-					onclick={() => (activeTab = "orders")}
-				>
-					Orders
-				</button>
-				<button
-					type="button"
-					class={`cursor-pointer rounded-full px-4 py-2 transition ${
-						activeTab === "users"
-							? "text-white dark:text-gray-900"
-							: "hover:text-gray-900 dark:hover:text-gray-200"
-					}`}
-					onclick={() => (activeTab = "users")}
-				>
-					Users
-				</button>
-			</div>
+			Loading admin console...
 		</div>
-	</div>
-
-	{#if !authChecked}
-		<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">Checking your access…</p>
 	{:else if !isAuthenticated}
-		<p class="mt-6 text-gray-600 dark:text-gray-300">
-			Please
-			<a href={resolve("/login")} class="text-blue-600 hover:underline dark:text-blue-400">
-				log in
-			</a>
-			to access the admin console.
-		</p>
-	{:else if loading}
-		<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">Loading admin data…</p>
+		<div
+			class="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white p-6 text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300"
+		>
+			<p class="text-lg font-medium">Access denied.</p>
+			<p class="mt-2 text-sm">You must be signed in to an admin account to access the admin console.</p>
+		</div>
 	{:else if !isAdmin}
 		<div
 			class="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white p-6 text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300"
 		>
-			<p class="text-lg font-medium">You do not have access to the admin console.</p>
+			<p class="text-lg font-medium">Access denied.</p>
 			<p class="mt-2 text-sm">Contact an administrator if you need access.</p>
 		</div>
 	{:else}
+		<div class="flex flex-wrap items-start justify-between gap-6">
+			<div>
+				<h1 class="mt-2 text-3xl font-semibold text-gray-900 dark:text-gray-100">Admin</h1>
+			</div>
+			<div
+				class="relative rounded-full border border-gray-200 bg-white p-1 text-xs font-semibold tracking-[0.2em] text-gray-500 uppercase shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400"
+			>
+				<div
+					class="pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-full bg-gray-900 transition-transform duration-300 ease-out dark:bg-gray-100"
+					style={`transform: translateX(${tabIndex * 100}%);`}
+				></div>
+				<div class="relative grid grid-cols-3 items-center gap-0">
+					<button
+						type="button"
+						class={`cursor-pointer rounded-full px-4 py-2 transition ${
+							activeTab === "products"
+								? "text-white dark:text-gray-900"
+								: "hover:text-gray-900 dark:hover:text-gray-200"
+						}`}
+						onclick={() => (activeTab = "products")}
+					>
+						Products
+					</button>
+					<button
+						type="button"
+						class={`cursor-pointer rounded-full px-4 py-2 transition ${
+							activeTab === "orders"
+								? "text-white dark:text-gray-900"
+								: "hover:text-gray-900 dark:hover:text-gray-200"
+						}`}
+						onclick={() => (activeTab = "orders")}
+					>
+						Orders
+					</button>
+					<button
+						type="button"
+						class={`cursor-pointer rounded-full px-4 py-2 transition ${
+							activeTab === "users"
+								? "text-white dark:text-gray-900"
+								: "hover:text-gray-900 dark:hover:text-gray-200"
+						}`}
+						onclick={() => (activeTab = "users")}
+					>
+						Users
+					</button>
+				</div>
+			</div>
+		</div>
+
 		{#if errorMessage}
 			<div class="mt-6">
 				<Alert

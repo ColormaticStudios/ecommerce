@@ -10,6 +10,7 @@
 	let products = $state<ProductModel[]>([]);
 	let loading = $state(true);
 	let errorMessage = $state("");
+	const skeletonCards = [0, 1, 2, 3, 4, 5, 6, 7];
 
 	onMount(async () => {
 		loading = true;
@@ -35,7 +36,18 @@
 	<h1 class="mb-6 text-2xl font-semibold text-gray-900 dark:text-gray-100">Catalog</h1>
 
 	{#if loading}
-		<div class="text-sm text-gray-500 dark:text-gray-400">Loading products…</div>
+		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+			{#each skeletonCards as index (index)}
+				<div
+					class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+				>
+					<div class="aspect-[4/3] animate-pulse rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+					<div class="mt-4 h-5 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
+					<div class="mt-2 h-4 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
+					<div class="mt-4 h-9 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-800"></div>
+				</div>
+			{/each}
+		</div>
 	{:else if errorMessage}
 		<Alert
 			message={errorMessage}

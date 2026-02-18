@@ -21,6 +21,7 @@
 	let cart = $state<CartModel | null>(null);
 	let order = $state<OrderModel | null>(null);
 	let loading = $state(true);
+	let checkoutDataResolved = $state(false);
 	let errorMessage = $state("");
 	let statusMessage = $state("");
 	let processing = $state(false);
@@ -82,14 +83,20 @@
 	}
 
 	async function loadCart() {
+		loading = true;
+		checkoutDataResolved = false;
+		cart = null;
+		savedPaymentMethods = [];
+		savedAddresses = [];
+
 		authChecked = true;
 		isAuthenticated = await api.refreshAuthState();
 		if (!isAuthenticated) {
 			loading = false;
+			checkoutDataResolved = true;
 			return;
 		}
 
-		loading = true;
 		errorMessage = "";
 		try {
 			await loadCheckoutData();
@@ -98,6 +105,7 @@
 			errorMessage = "Unable to load your checkout data.";
 		} finally {
 			loading = false;
+			checkoutDataResolved = true;
 		}
 	}
 
@@ -279,21 +287,91 @@
 		{/if}
 	</div>
 
-	{#if !authChecked}
-		<div class="mt-6 grid gap-6 lg:grid-cols-[1.6fr_0.8fr]">
-			<div class="space-y-4">
-				{#each skeletonRows as index (index)}
-					<div
-						class="flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-					>
-						<div class="h-4 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-						<div class="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-					</div>
-				{/each}
-			</div>
+	{#if !authChecked || loading || !checkoutDataResolved}
+		<div class="mt-6 space-y-6">
 			<div
-				class="h-64 animate-pulse rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-gray-900"
-			></div>
+				class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+			>
+				<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Payment and shipping</h3>
+				<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+					Mock checkout: no real provider integration yet.
+				</p>
+				<div class="mt-5 grid gap-6 lg:grid-cols-2">
+					<div class="space-y-3">
+						<h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Payment method</h4>
+						<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+							<input type="checkbox" disabled />
+							Use a new payment method
+						</label>
+						<select
+							class="w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+							disabled
+						>
+							<option>Loading saved methods...</option>
+						</select>
+						<div class="grid gap-3">
+							<input
+								type="text"
+								placeholder="Cardholder name"
+								class="w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+								disabled
+							/>
+							<input
+								type="text"
+								placeholder="Card number"
+								class="w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+								disabled
+							/>
+						</div>
+					</div>
+					<div
+						class="space-y-3 border-t border-gray-200 pt-5 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6 dark:border-gray-800"
+					>
+						<h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Shipping address</h4>
+						<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+							<input type="checkbox" disabled />
+							Use a new shipping address
+						</label>
+						<select
+							class="w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+							disabled
+						>
+							<option>Loading saved addresses...</option>
+						</select>
+						<input
+							type="text"
+							placeholder="Address line 1"
+							class="w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+							disabled
+						/>
+					</div>
+				</div>
+			</div>
+			<div class="grid items-start gap-6 lg:grid-cols-[1.6fr_0.8fr]">
+				<div class="space-y-4">
+					{#each skeletonRows as index (index)}
+						<div
+							class="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-4 text-sm shadow-sm dark:border-gray-800 dark:bg-gray-900"
+						>
+							<div class="space-y-2">
+								<div class="h-4 w-44 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
+								<div class="h-4 w-28 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
+							</div>
+							<div class="h-5 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
+						</div>
+					{/each}
+				</div>
+				<div
+					class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+				>
+					<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Order summary</h3>
+					<div class="mt-4 h-4 w-28 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
+					<Button variant="primary" size="large" class="mt-6! w-full" type="button" disabled={true}>
+						<i class="bi bi-cart-check-fill mr-1"></i>
+						Place order
+					</Button>
+				</div>
+			</div>
 		</div>
 	{:else if !isAuthenticated}
 		<p class="mt-4 text-gray-600 dark:text-gray-300">
@@ -303,22 +381,6 @@
 			</a>
 			to continue to checkout.
 		</p>
-	{:else if loading}
-		<div class="mt-6 grid gap-6 lg:grid-cols-[1.6fr_0.8fr]">
-			<div class="space-y-4">
-				{#each skeletonRows as index (index)}
-					<div
-						class="flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-					>
-						<div class="h-4 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-						<div class="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-					</div>
-				{/each}
-			</div>
-			<div
-				class="h-64 animate-pulse rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-gray-900"
-			></div>
-		</div>
 	{:else if !cart || cart.items.length === 0}
 		<p class="mt-4 text-gray-600 dark:text-gray-300">
 			Your cart is empty. Visit the

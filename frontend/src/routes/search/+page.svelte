@@ -24,6 +24,7 @@
 	let sortBy = $state<"created_at" | "price" | "name">("created_at");
 	let sortOrder = $state<"asc" | "desc">("desc");
 	let hasLoaded = $state(false);
+	const skeletonCards = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 	const pageSizeOptions = [8, 12, 24, 36];
 	const sortOptions: Array<{ value: "created_at" | "price" | "name"; label: string }> = [
@@ -252,7 +253,25 @@
 		</div>
 	</div>
 
-	{#if !loading && !errorMessage && results.length === 0}
+	{#if loading}
+		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+			{#each skeletonCards as index (index)}
+				<div
+					class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+				>
+					<div class="aspect-[4/3] animate-pulse rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+					<div class="mt-4 h-5 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
+					<div class="mt-2 h-4 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
+					<div class="mt-4 h-9 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-800"></div>
+				</div>
+			{/each}
+		</div>
+		<div class="flex items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-400">
+			<div class="h-6 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
+			<div class="h-5 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
+			<div class="h-8 w-36 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
+		</div>
+	{:else if !errorMessage && results.length === 0}
 		<div
 			class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center sm:px-10 dark:border-gray-700 dark:bg-gray-900"
 		>

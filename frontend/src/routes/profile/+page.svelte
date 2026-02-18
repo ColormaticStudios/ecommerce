@@ -329,14 +329,116 @@
 	<div class="mx-auto max-w-5xl px-4 py-10">
 		<h1 class="text-3xl font-semibold text-gray-900 dark:text-gray-100">Profile</h1>
 
-		{#if !authChecked}
-			<div class="mt-6 grid gap-6 md:grid-cols-[280px_1fr]">
+		{#if !authChecked || loading}
+			<div class="mt-8 grid items-start gap-6 md:grid-cols-[280px_1fr]">
 				<div
-					class="h-64 animate-pulse rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
-				></div>
-				<div
-					class="h-64 animate-pulse rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
-				></div>
+					class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+				>
+					<div class="flex flex-col items-center text-center">
+						<div
+							class="h-28 w-28 animate-pulse rounded-full border border-gray-200 bg-gray-100 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+						></div>
+						<div class="mt-4 h-5 w-28 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
+						<div class="mt-2 h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
+						<div class="mt-2 h-4 w-36 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
+					</div>
+
+					<div class="mt-6 space-y-3 text-sm text-gray-600 dark:text-gray-300">
+						<div
+							class="inline-flex w-full cursor-not-allowed items-center justify-between rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 dark:border-gray-700 dark:bg-gray-800"
+						>
+							<i class="bi bi-folder-fill"></i>
+							Choose photo
+							<span></span>
+						</div>
+						<Button type="button" variant="primary" class="w-full" disabled={true}>
+							<i class="bi bi-upload float-left"></i>
+							Upload photo
+						</Button>
+						<Button type="button" variant="warning" class="w-full" disabled={true}>
+							<i class="bi bi-trash-fill float-left"></i>
+							Remove photo
+						</Button>
+					</div>
+				</div>
+
+				<div class="space-y-6">
+					<div
+						class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+					>
+						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Account details</h3>
+						<div class="mt-6 space-y-4">
+							<div class="grid gap-4 md:grid-cols-2">
+								<input
+									type="text"
+									placeholder="Username"
+									class="w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+									disabled
+								/>
+								<input
+									type="email"
+									placeholder="Email"
+									class="w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+									disabled
+								/>
+							</div>
+							<div class="grid gap-4 md:grid-cols-2">
+								<input
+									type="text"
+									placeholder="Name"
+									class="w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+									disabled
+								/>
+								<input
+									type="text"
+									placeholder="Preferred currency"
+									class="w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+									disabled
+								/>
+							</div>
+							<div class="flex justify-end">
+								<Button variant="primary" size="large" type="button" disabled={true}>
+									<i class="bi bi-floppy-fill mr-1"></i>
+									Save changes
+								</Button>
+							</div>
+						</div>
+					</div>
+
+					<div class="grid items-start gap-6 xl:grid-cols-2">
+						<div
+							class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+						>
+							<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+								Saved payment methods
+							</h3>
+							<div class="mt-4 space-y-3">
+								<div class="h-10 animate-pulse rounded bg-gray-100 dark:bg-gray-800"></div>
+								<div class="h-10 animate-pulse rounded bg-gray-100 dark:bg-gray-800"></div>
+								<Button type="button" variant="primary" disabled={true}>
+									<i class="bi bi-plus-lg mr-1"></i>
+									Save payment method
+								</Button>
+							</div>
+						</div>
+
+						<div
+							class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+						>
+							<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+								Saved addresses
+							</h3>
+							<div class="mt-4 space-y-3">
+								<div class="h-10 animate-pulse rounded bg-gray-100 dark:bg-gray-800"></div>
+								<div class="h-10 animate-pulse rounded bg-gray-100 dark:bg-gray-800"></div>
+								<Button type="button" variant="primary" disabled={true}>
+									<i class="bi bi-plus-lg mr-1"></i>
+									Save address
+								</Button>
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 		{:else if !isAuthenticated}
 			<p class="mt-4 text-gray-600 dark:text-gray-300">
@@ -346,15 +448,6 @@
 				</a>
 				to view your profile.
 			</p>
-		{:else if loading}
-			<div class="mt-6 grid gap-6 md:grid-cols-[280px_1fr]">
-				<div
-					class="h-64 animate-pulse rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
-				></div>
-				<div
-					class="h-64 animate-pulse rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
-				></div>
-			</div>
 		{:else}
 			<div class="mt-8 grid items-start gap-6 md:grid-cols-[280px_1fr]">
 				<div
