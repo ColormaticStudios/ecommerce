@@ -2,6 +2,8 @@
 	import { type API } from "$lib/api";
 	import { checkAdminAccess } from "$lib/admin/auth";
 	import Alert from "$lib/components/alert.svelte";
+	import Button from "$lib/components/Button.svelte";
+	import TextInput from "$lib/components/TextInput.svelte";
 	import { type OrderModel, type ProductModel, type UserModel } from "$lib/models";
 	import { formatPrice } from "$lib/utils";
 	import { getContext, onMount } from "svelte";
@@ -287,8 +289,7 @@
 								applyProductSearch();
 							}}
 						>
-							<input
-								class="textinput"
+							<TextInput
 								type="search"
 								placeholder="Search products"
 								bind:value={productQuery}
@@ -380,22 +381,22 @@
 									Page {productPage} of {productTotalPages}
 								</span>
 								<div class="flex items-center gap-2">
-									<button
-										class="btn btn-regular"
+									<Button
+										variant="regular"
 										type="button"
 										disabled={productPage <= 1}
 										onclick={() => changeProductPage(productPage - 1)}
 									>
 										Prev
-									</button>
-									<button
-										class="btn btn-regular"
+									</Button>
+									<Button
+										variant="regular"
 										type="button"
 										disabled={productPage >= productTotalPages}
 										onclick={() => changeProductPage(productPage + 1)}
 									>
 										Next
-									</button>
+									</Button>
 								</div>
 							</div>
 						</div>
@@ -424,14 +425,14 @@
 			>
 				<div class="flex items-center justify-between">
 					<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Orders</h2>
-					<button
-						class="btn btn-regular"
+					<Button
+						variant="regular"
 						type="button"
 						onclick={loadOrders}
 						disabled={ordersLoading}
 					>
 						Refresh
-					</button>
+					</Button>
 				</div>
 				{#if ordersLoading}
 					<div class="mt-6 space-y-3">
@@ -468,27 +469,27 @@
 											{order.status}
 										</span>
 										<div class="flex gap-2">
-											<button
-												class="btn btn-regular"
+											<Button
+												variant="regular"
 												type="button"
 												onclick={() => updateOrder(order.id, "PENDING")}
 											>
 												Pending
-											</button>
-											<button
-												class="btn btn-regular"
+											</Button>
+											<Button
+												variant="regular"
 												type="button"
 												onclick={() => updateOrder(order.id, "PAID")}
 											>
 												Paid
-											</button>
-											<button
-												class="btn btn-regular"
+											</Button>
+											<Button
+												variant="regular"
 												type="button"
 												onclick={() => updateOrder(order.id, "FAILED")}
 											>
 												Failed
-											</button>
+											</Button>
 										</div>
 									</div>
 								</div>
@@ -505,9 +506,9 @@
 			>
 				<div class="flex items-center justify-between">
 					<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Users</h2>
-					<button class="btn btn-regular" type="button" onclick={loadUsers} disabled={usersLoading}>
+					<Button variant="regular" type="button" onclick={loadUsers} disabled={usersLoading}>
 						Refresh
-					</button>
+					</Button>
 				</div>
 				{#if usersLoading}
 					<div class="mt-6 space-y-3">

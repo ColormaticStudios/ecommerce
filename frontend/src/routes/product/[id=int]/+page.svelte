@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { type ProductModel } from "$lib/models";
 	import { type API } from "$lib/api";
+	import NumberInput from "$lib/components/NumberInput.svelte";
 	import { formatPrice } from "$lib/utils";
 	import ProductCard from "$lib/components/ProductCard.svelte";
 	import { userStore } from "$lib/user";
@@ -228,13 +229,13 @@
 						>
 							-
 						</button>
-						<input
-							class="w-12 text-center text-base font-medium text-gray-900 outline-none sm:w-14 sm:text-lg dark:bg-gray-900 dark:text-gray-100"
-							type="number"
-							min="1"
-							max={product.stock}
-							bind:value={quantity}
-						/>
+							<NumberInput
+								class="w-12 text-center text-base font-medium text-gray-900 outline-none sm:w-14 sm:text-lg dark:bg-gray-900 dark:text-gray-100"
+								full={false}
+								min="1"
+								max={product.stock}
+								bind:value={quantity}
+							/>
 						<button
 							type="button"
 							class="h-8 w-8 rounded-full border border-gray-300 text-base text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 sm:h-9 sm:w-9 sm:text-lg dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"

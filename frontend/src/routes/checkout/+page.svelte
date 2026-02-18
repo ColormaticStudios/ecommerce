@@ -2,6 +2,7 @@
 	import { type API } from "$lib/api";
 	import { type CartModel, type OrderModel } from "$lib/models";
 	import Alert from "$lib/components/alert.svelte";
+	import Button from "$lib/components/Button.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
 	import { getContext, onMount } from "svelte";
@@ -211,15 +212,17 @@
 					</div>
 					<!-- TODO: Tax and shipping -->
 				</div>
-				<button
-					class="btn btn-large btn-primary mt-6! w-full"
+				<Button
+					variant="primary"
+					size="large"
+					class="mt-6! w-full"
 					type="button"
 					disabled={processing || orderPlaced}
 					onclick={placeOrder}
 				>
 					<i class="bi bi-cart-check-fill mr-1"></i>
 					{processing ? "Processing..." : orderPlaced ? "Order placed" : "Place order"}
-				</button>
+				</Button>
 
 				{#if statusMessage}
 					<div class="mt-4">

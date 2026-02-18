@@ -2,8 +2,10 @@
 	import { type API } from "$lib/api";
 	import type { UserModel } from "$lib/models";
 	import Alert from "$lib/components/alert.svelte";
+	import Button from "$lib/components/Button.svelte";
 	import { getProfile, userStore } from "$lib/user";
 	import Password from "$lib/components/password.svelte";
+	import TextInput from "$lib/components/TextInput.svelte";
 	import { getContext } from "svelte";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
@@ -52,9 +54,8 @@
 		class="m-4 flex w-sm flex-col items-center justify-center gap-2 rounded-lg border border-gray-300 bg-gray-100 p-4 dark:border-gray-800 dark:bg-gray-900"
 		onsubmit={submit}
 	>
-		<input
+		<TextInput
 			bind:value={email}
-			class="textinput"
 			type="email"
 			name="email"
 			placeholder="Email"
@@ -71,6 +72,6 @@
 				/>
 			</div>
 		{/if}
-		<input class="btn btn-large btn-primary" type="submit" value="Log In" />
+		<Button variant="primary" size="large" type="submit">Log In</Button>
 	</form>
 </div>

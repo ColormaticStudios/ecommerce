@@ -2,6 +2,9 @@
 	import { type API } from "$lib/api";
 	import { type CartModel } from "$lib/models";
 	import Alert from "$lib/components/alert.svelte";
+	import Button from "$lib/components/Button.svelte";
+	import ButtonLink from "$lib/components/ButtonLink.svelte";
+	import NumberInput from "$lib/components/NumberInput.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
 	import { getContext, onMount } from "svelte";
@@ -162,7 +165,7 @@
 		>
 			<p class="text-2xl font-medium">Your cart is empty.</p>
 			<div class="mt-6">
-				<a href={resolve("/")} class="btn btn-large btn-primary">Continue shopping</a>
+				<ButtonLink href={resolve("/")} variant="primary" size="large">Continue shopping</ButtonLink>
 			</div>
 		</div>
 	{:else}
@@ -205,15 +208,15 @@
 							>
 								<i class="bi bi-dash"></i>
 							</button>
-							<input
-								class="w-16 rounded-full border border-gray-300 p-1 text-center dark:border-gray-700"
-								type="number"
-								min="1"
-								value={item.quantity}
-								disabled={updatingItemId === item.id}
-								onchange={(event) =>
-									updateItemQuantity(item.id, Number((event.target as HTMLInputElement).value))}
-							/>
+								<NumberInput
+									class="w-16 rounded-full border border-gray-300 p-1 text-center dark:border-gray-700"
+									full={false}
+									min="1"
+									value={item.quantity}
+									disabled={updatingItemId === item.id}
+									onchange={(event) =>
+										updateItemQuantity(item.id, Number((event.target as HTMLInputElement).value))}
+								/>
 							<button
 								class="aspect-square h-8 w-8 rounded-full border border-gray-300 text-lg text-gray-600 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
 								type="button"
@@ -223,14 +226,14 @@
 							>
 								<i class="bi bi-plus"></i>
 							</button>
-							<button
-								class="btn btn-regular"
+							<Button
+								variant="regular"
 								type="button"
 								disabled={updatingItemId === item.id}
 								onclick={() => removeItem(item.id)}
 							>
 								Remove
-							</button>
+							</Button>
 						</div>
 					</div>
 				{/each}
@@ -253,13 +256,15 @@
 					</div>
 				</div>
 				<div class="mt-6 border-t border-gray-200 pt-4 dark:border-gray-800">
-					<a
+					<ButtonLink
 						href={resolve("/checkout")}
-						class="btn btn-large btn-primary m-0! block w-full text-center"
+						variant="primary"
+						size="large"
+						class="m-0! block w-full text-center"
 					>
 						Go to checkout
 						<i class="bi bi-arrow-right"></i>
-					</a>
+					</ButtonLink>
 					<a
 						href={resolve("/")}
 						class="mt-3 block text-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"

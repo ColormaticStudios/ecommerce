@@ -1,20 +1,5 @@
 @import "tailwindcss";
 
-@import "./button.css";
-@import "./input.css";
-
 body {
 	@apply dark:bg-gray-950 dark:text-white;
-}
-
-@layer base {
-	input[type="number"]::-webkit-inner-spin-button,
-	input[type="number"]::-webkit-outer-spin-button {
-		-webkit-appearance: none;
-		margin: 0;
-	}
-
-	input[type="number"] {
-		-moz-appearance: textfield;
-	}
 }

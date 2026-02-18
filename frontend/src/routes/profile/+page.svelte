@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
 	import Alert from "$lib/components/alert.svelte";
+	import Button from "$lib/components/Button.svelte";
+	import TextInput from "$lib/components/TextInput.svelte";
 	import { uploadMediaFiles } from "$lib/media";
 	import { getProfile, userStore } from "$lib/user";
 	import { getContext, onDestroy, onMount } from "svelte";
@@ -206,30 +208,34 @@
 					</div>
 
 					<div class="mt-6 space-y-3 text-sm text-gray-600 dark:text-gray-300">
-						<label class="btn btn-regular inline-flex w-full items-center justify-between">
+						<label
+							class="inline-flex w-full cursor-pointer items-center justify-between rounded-lg border border-gray-300 bg-gray-200 px-4 py-2 transition-[background-color,border-color] duration-200 hover:border-gray-200 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 hover:dark:border-gray-700 hover:dark:bg-gray-800"
+						>
 							<input type="file" accept="image/*" class="hidden" onchange={handleFileChange} />
 							<i class="bi bi-folder-fill"></i>
 							Choose photo
 							<span></span>
 						</label>
-						<button
+						<Button
 							type="button"
-							class="btn btn-primary w-full"
+							variant="primary"
+							class="w-full"
 							disabled={!selectedFile || uploading}
 							onclick={uploadPhoto}
 						>
 							<i class="bi bi-upload float-left"></i>
 							{uploading ? "Uploading..." : "Upload photo"}
-						</button>
-						<button
+						</Button>
+						<Button
 							type="button"
-							class="btn btn-warning w-full"
+							variant="warning"
+							class="w-full"
 							disabled={!profilePhotoUrl || removing}
 							onclick={removePhoto}
 						>
 							<i class="bi bi-trash-fill float-left"></i>
 							{removing ? "Removing..." : "Remove photo"}
-						</button>
+						</Button>
 						<p class="text-xs text-gray-500 dark:text-gray-400">
 							Recommended square image, up to 5MB.
 						</p>
@@ -246,13 +252,13 @@
 								<label for="username" class="text-sm font-medium text-gray-600 dark:text-gray-300">
 									Username
 								</label>
-								<input id="username" class="textinput mt-1" type="text" value={username} readonly />
+								<TextInput id="username" class="mt-1" type="text" value={username} readonly />
 							</div>
 							<div>
 								<label for="email" class="text-sm font-medium text-gray-600 dark:text-gray-300">
 									Email
 								</label>
-								<input id="email" class="textinput mt-1" type="email" value={email} readonly />
+								<TextInput id="email" class="mt-1" type="email" value={email} readonly />
 							</div>
 						</div>
 
@@ -261,9 +267,9 @@
 								<label for="name" class="text-sm font-medium text-gray-600 dark:text-gray-300">
 									Name
 								</label>
-								<input
+								<TextInput
 									id="name"
-									class="textinput mt-1"
+									class="mt-1"
 									type="text"
 									bind:value={name}
 									placeholder="Your name"
@@ -273,9 +279,9 @@
 								<label for="currency" class="text-sm font-medium text-gray-600 dark:text-gray-300">
 									Preferred currency
 								</label>
-								<input
+								<TextInput
 									id="currency"
-									class="textinput mt-1"
+									class="mt-1"
 									type="text"
 									bind:value={currency}
 									placeholder="USD"
@@ -300,10 +306,10 @@
 							/>
 						{/if}
 
-						<button class="btn btn-large btn-primary float-right" type="submit">
+						<Button variant="primary" size="large" class="float-right" type="submit">
 							<i class="bi bi-floppy-fill mr-1"></i>
 							Save changes
-						</button>
+						</Button>
 					</form>
 				</div>
 			</div>

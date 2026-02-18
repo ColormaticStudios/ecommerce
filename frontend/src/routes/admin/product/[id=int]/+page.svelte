@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
 	import { checkAdminAccess } from "$lib/admin/auth";
+	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import ProductEditor from "$lib/admin/ProductEditor.svelte";
 	import { getContext, onMount } from "svelte";
 	import { page } from "$app/state";
@@ -25,9 +26,9 @@
 			<h1 class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">Product editor</h1>
 		</div>
 		<div class="flex items-center gap-2">
-			<a href={resolve("/admin")} class="btn btn-regular"> Back to admin </a>
+			<ButtonLink href={resolve("/admin")} variant="regular">Back to admin</ButtonLink>
 			{#if hasProductId}
-				<a href={resolve(`/product/${productId}`)} class="btn btn-regular"> View live </a>
+				<ButtonLink href={resolve(`/product/${productId}`)} variant="regular">View live</ButtonLink>
 			{/if}
 		</div>
 	</div>

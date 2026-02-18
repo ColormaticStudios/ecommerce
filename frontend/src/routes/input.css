@@ -1,9 +1,0 @@
-.textinput {
-	@apply w-full px-3 py-2;
-	@apply rounded-md border border-gray-300 bg-gray-200;
-	@apply dark:border-gray-700 dark:bg-gray-800;
-}
-
-.textinput.not-full {
-	@apply w-min;
-}

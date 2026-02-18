@@ -4,6 +4,8 @@
 	import { page } from "$app/stores";
 	import { resolve } from "$app/paths";
 	import { type API } from "$lib/api";
+	import Button from "$lib/components/Button.svelte";
+	import TextInput from "$lib/components/TextInput.svelte";
 	import { type ProductModel } from "$lib/models";
 	import ProductCard from "$lib/components/ProductCard.svelte";
 	import { SvelteURLSearchParams } from "svelte/reactivity";
@@ -172,16 +174,16 @@
 				}}
 			>
 				<div class="flex flex-row flex-wrap items-center gap-3">
-					<input
+					<TextInput
 						type="search"
 						placeholder="Search products"
-						class="textinput min-w-[16rem] flex-1"
+						class="min-w-[16rem] flex-1"
 						bind:value={draftQuery}
 					/>
-					<button type="submit" class="btn btn-primary flex items-center gap-2">
+					<Button type="submit" variant="primary" class="flex items-center gap-2">
 						<i class="bi bi-search mr-1"></i>
 						Search
-					</button>
+					</Button>
 				</div>
 				<div
 					class="flex flex-wrap items-center justify-between text-sm text-gray-600 dark:text-gray-300"
@@ -199,24 +201,25 @@
 								<option value={option.value}>{option.label}</option>
 							{/each}
 						</select>
-						<button
+						<Button
 							type="button"
-							class="btn btn-regular flex items-center gap-2"
+							variant="regular"
+							class="flex items-center gap-2"
 							onclick={() => updateUrl({ order: sortOrder === "asc" ? "desc" : "asc", page: 1 })}
 						>
 							<i class={sortOrder === "asc" ? "bi bi-sort-up" : "bi bi-sort-down"}></i>
 							{sortOrder === "asc" ? "Ascending" : "Descending"}
-						</button>
+						</Button>
 					</div>
 					{#if searchQuery}
-						<button
+						<Button
 							type="button"
-							class="btn btn-regular"
+							variant="regular"
 							onclick={() => updateUrl({ query: "", page: 1 })}
 						>
 							<i class="bi bi-x-circle mr-1"></i>
 							Clear search
-						</button>
+						</Button>
 					{/if}
 				</div>
 			</form>
@@ -258,13 +261,13 @@
 				Try a different keyword or clear filters.
 			</p>
 			<div class="mt-4">
-				<button
+				<Button
 					type="button"
-					class="btn btn-primary"
+					variant="primary"
 					onclick={() => updateUrl({ query: "", page: 1 })}
 				>
 					Browse all products
-				</button>
+				</Button>
 			</div>
 		</div>
 	{:else}
@@ -303,24 +306,26 @@
 			</div>
 			<span>Page {currentPage} of {totalPages}</span>
 			<div class="flex items-center gap-2">
-				<button
-					class="btn btn-regular flex items-center gap-2"
+				<Button
+					variant="regular"
+					class="flex items-center gap-2"
 					type="button"
 					disabled={currentPage <= 1}
 					onclick={() => updateUrl({ page: currentPage - 1 })}
 				>
 					<i class="bi bi-arrow-left"></i>
 					Prev
-				</button>
-				<button
-					class="btn btn-regular flex items-center gap-2"
+				</Button>
+				<Button
+					variant="regular"
+					class="flex items-center gap-2"
 					type="button"
 					disabled={currentPage >= totalPages}
 					onclick={() => updateUrl({ page: currentPage + 1 })}
 				>
 					Next
 					<i class="bi bi-arrow-right"></i>
-				</button>
+				</Button>
 			</div>
 		</div>
 	{/if}

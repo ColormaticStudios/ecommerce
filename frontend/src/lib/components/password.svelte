@@ -1,4 +1,7 @@
 <script lang="ts">
+	import Button from "$lib/components/Button.svelte";
+	import TextInput from "$lib/components/TextInput.svelte";
+
 	interface Props {
 		value: string;
 		name: string;
@@ -10,16 +13,16 @@
 </script>
 
 <div class="flex w-full">
-	<input
-		class="textinput"
+	<TextInput
 		bind:value
 		type={hidden ? "password" : "text"}
 		{name}
 		{placeholder}
 		required
 	/>
-	<button
-		class="textinput not-full ml-2 cursor-pointer"
+	<Button
+		variant="regular"
+		class="ml-2 px-3"
 		type="button"
 		onclick={() => {
 			hidden = !hidden;
@@ -27,5 +30,5 @@
 		aria-label="Show/hide password"
 	>
 		<i class="bi {hidden ? 'bi-eye-fill' : 'bi-eye-slash-fill'}"></i>
-	</button>
+	</Button>
 </div>

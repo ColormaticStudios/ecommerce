@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
 	import Alert from "$lib/components/alert.svelte";
+	import Button from "$lib/components/Button.svelte";
+	import NumberInput from "$lib/components/NumberInput.svelte";
+	import TextInput from "$lib/components/TextInput.svelte";
 	import { type ProductModel, type RelatedProductModel } from "$lib/models";
 	import { uploadMediaFiles } from "$lib/media";
 	import { getContext } from "svelte";
@@ -449,10 +452,10 @@
 		<label for="admin-product-name" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
 			Name
 		</label>
-		<input
+		<TextInput
 			id="admin-product-name"
 			name="name"
-			class="textinput mt-1"
+			class="mt-1"
 			type="text"
 			bind:value={name}
 		/>
@@ -461,7 +464,7 @@
 		<label for="admin-product-sku" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
 			SKU
 		</label>
-		<input id="admin-product-sku" name="sku" class="textinput mt-1" type="text" bind:value={sku} />
+		<TextInput id="admin-product-sku" name="sku" class="mt-1" type="text" bind:value={sku} />
 	</div>
 	<div>
 		<label for="admin-product-description" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
@@ -480,28 +483,26 @@
 			<label for="admin-product-price" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
 				Price
 			</label>
-			<input
-				id="admin-product-price"
-				name="price"
-				class="textinput mt-1"
-				type="number"
-				min="0"
-				step="0.01"
-				bind:value={price}
-			/>
+				<NumberInput
+					id="admin-product-price"
+					name="price"
+					class="mt-1"
+					allowDecimal={true}
+					min="0"
+					bind:value={price}
+				/>
 		</div>
 		<div>
 			<label for="admin-product-stock" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
 				Stock
 			</label>
-			<input
-				id="admin-product-stock"
-				name="stock"
-				class="textinput mt-1"
-				type="number"
-				min="0"
-				bind:value={stock}
-			/>
+				<NumberInput
+					id="admin-product-stock"
+					name="stock"
+					class="mt-1"
+					min="0"
+					bind:value={stock}
+				/>
 		</div>
 	</div>
 {/snippet}
@@ -522,22 +523,22 @@
 			disabled={!canEditProduct}
 		/>
 		<div class="mt-3 flex flex-wrap items-center gap-2">
-			<button
-				class="btn btn-regular"
+			<Button
+				variant="regular"
 				type="button"
 				disabled={!canEditProduct || uploading}
 				onclick={() => mediaInputRef?.click()}
 			>
 				Choose files
-			</button>
-			<button
-				class="btn btn-primary"
+			</Button>
+			<Button
+				variant="primary"
 				type="button"
 				disabled={!canEditProduct || uploading || !mediaFilesCount}
 				onclick={uploadMedia}
 			>
 				{uploading ? "Uploading..." : "Attach uploads"}
-			</button>
+			</Button>
 			{#if mediaFilesCount}
 				<span class="text-xs text-gray-500 dark:text-gray-400">{mediaFilesCount} selected</span>
 			{/if}
@@ -596,30 +597,31 @@
 		{/each}
 	</div>
 	{#if hasPendingMediaOrder}
-		<button
-			class="btn btn-primary mt-3"
+		<Button
+			variant="primary"
+			class="mt-3"
 			type="button"
 			disabled={mediaReordering}
 			onclick={saveMediaOrder}
 		>
 			<i class="bi bi-floppy-fill mr-1"></i>
 			{mediaReordering ? "Saving..." : "Save order"}
-		</button>
+		</Button>
 	{/if}
 {/snippet}
 
 {#snippet RelatedProducts()}
 	<div class="flex items-center justify-between">
 		<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Related products</p>
-		<button
-			class="btn btn-primary"
+		<Button
+			variant="primary"
 			type="button"
 			disabled={!canEditProduct || relatedSaving}
 			onclick={saveRelatedProducts}
 		>
 			<i class="bi bi-floppy-fill mr-1"></i>
 			{relatedSaving ? "Saving..." : "Save related"}
-		</button>
+		</Button>
 	</div>
 	<form
 		class="mt-3 flex flex-nowrap items-center gap-2"
@@ -628,8 +630,8 @@
 			searchRelatedProducts();
 		}}
 	>
-		<input
-			class="textinput min-w-0 flex-1"
+		<TextInput
+			class="min-w-0 flex-1"
 			type="search"
 			placeholder="Search products"
 			bind:value={relatedQuery}
@@ -654,9 +656,9 @@
 						<p class="font-semibold text-gray-900 dark:text-gray-100">{option.name}</p>
 						<p class="text-xs text-gray-500 dark:text-gray-400">SKU {option.sku}</p>
 					</div>
-					<button class="btn btn-regular" type="button" onclick={() => addRelatedProduct(option)}>
+					<Button variant="regular" type="button" onclick={() => addRelatedProduct(option)}>
 						Add
-					</button>
+					</Button>
 				</div>
 			{/each}
 		</div>
@@ -674,14 +676,14 @@
 						<p class="font-semibold text-gray-900 dark:text-gray-100">{related.name}</p>
 						<p class="text-xs text-gray-500 dark:text-gray-400">SKU {related.sku}</p>
 					</div>
-					<button
-						class="btn btn-danger"
+					<Button
+						variant="danger"
 						type="button"
 						onclick={() => removeRelatedProduct(related.id)}
 					>
 						<i class="bi bi-dash-circle-fill mr-1"></i>
 						Remove
-					</button>
+					</Button>
 				</div>
 			{/each}
 		</div>
@@ -733,14 +735,14 @@
 			</div>
 
 			<div class="mt-6 flex flex-wrap justify-between">
-				<button class="btn btn-primary" type="button" onclick={saveProduct} disabled={saving}>
+				<Button variant="primary" type="button" onclick={saveProduct} disabled={saving}>
 					<i class="bi bi-floppy-fill mr-1"></i>
 					{saving ? "Saving..." : "Save changes"}
-				</button>
-				<button class="btn btn-danger" type="button" disabled={deleting} onclick={deleteProduct}>
+				</Button>
+				<Button variant="danger" type="button" disabled={deleting} onclick={deleteProduct}>
 					<i class="bi bi-trash-fill mr-1"></i>
 					{deleting ? "Deleting..." : "Delete product"}
-				</button>
+				</Button>
 			</div>
 		</div>
 
@@ -790,8 +792,10 @@
 			<div
 				class="mt-2 mb-6 flex flex-wrap justify-between border-b border-gray-200 pb-6 text-base dark:border-gray-800"
 			>
-				<button
-					class="btn btn-primary btn-large grow"
+				<Button
+					variant="primary"
+					size="large"
+					class="grow"
 					type="button"
 					onclick={saveProduct}
 					disabled={saving}
@@ -802,17 +806,19 @@
 						} mr-1`}
 					></i>
 					{saving ? "Saving..." : canEditProduct ? "Save changes" : "Create product"}
-				</button>
+				</Button>
 				{#if canEditProduct}
-					<button
-						class="btn btn-danger btn-large grow"
+					<Button
+						variant="danger"
+						size="large"
+						class="grow"
 						type="button"
 						disabled={deleting}
 						onclick={deleteProduct}
 					>
 						<i class="bi bi-trash-fill"></i>
 						{deleting ? "Deleting..." : "Delete product"}
-					</button>
+					</Button>
 				{/if}
 			</div>
 			{@render MediaUpload(true)}

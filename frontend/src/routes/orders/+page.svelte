@@ -2,6 +2,7 @@
 	import { type API } from "$lib/api";
 	import { type OrderModel } from "$lib/models";
 	import Alert from "$lib/components/alert.svelte";
+	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
 	import { getContext, onMount } from "svelte";
@@ -104,11 +105,13 @@
 		</div>
 	{:else if orders.length === 0}
 		<div
-			class="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+			class="mt-6 flex flex-col items-center rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
 		>
 			<p class="text-lg font-medium">No orders yet.</p>
 			<p class="mt-2 text-sm">Your future purchases will show up here.</p>
-			<a href={resolve("/")} class="btn btn-large btn-primary mt-4">Start shopping</a>
+			<ButtonLink href={resolve("/")} variant="primary" size="large" class="mt-4 block">
+				Start shopping
+			</ButtonLink>
 		</div>
 	{:else}
 		<div class="mt-6 space-y-4">
