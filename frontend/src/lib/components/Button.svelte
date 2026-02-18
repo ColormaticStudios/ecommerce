@@ -39,6 +39,6 @@
 	});
 </script>
 
-<button type={type} class={`${baseClasses} ${sizeClasses} ${variantClasses} ${className}`} {...rest}>
+<button {type} class={`${baseClasses} ${sizeClasses} ${variantClasses} ${className}`} {...rest}>
 	{@render children?.()}
 </button>

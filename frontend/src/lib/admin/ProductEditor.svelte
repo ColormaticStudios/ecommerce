@@ -510,13 +510,7 @@
 		<label for="admin-product-name" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
 			Name
 		</label>
-		<TextInput
-			id="admin-product-name"
-			name="name"
-			class="mt-1"
-			type="text"
-			bind:value={name}
-		/>
+		<TextInput id="admin-product-name" name="name" class="mt-1" type="text" bind:value={name} />
 	</div>
 	<div>
 		<label for="admin-product-sku" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
@@ -541,26 +535,20 @@
 			<label for="admin-product-price" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
 				Price
 			</label>
-				<NumberInput
-					id="admin-product-price"
-					name="price"
-					class="mt-1"
-					allowDecimal={true}
-					min="0"
-					bind:value={price}
-				/>
+			<NumberInput
+				id="admin-product-price"
+				name="price"
+				class="mt-1"
+				allowDecimal={true}
+				min="0"
+				bind:value={price}
+			/>
 		</div>
 		<div>
 			<label for="admin-product-stock" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
 				Stock
 			</label>
-				<NumberInput
-					id="admin-product-stock"
-					name="stock"
-					class="mt-1"
-					min="0"
-					bind:value={stock}
-				/>
+			<NumberInput id="admin-product-stock" name="stock" class="mt-1" min="0" bind:value={stock} />
 		</div>
 	</div>
 {/snippet}
@@ -612,62 +600,59 @@
 {#snippet MediaGrid()}
 	<div class="max-h-64 overflow-y-auto pr-1">
 		<div class="grid grid-cols-2 gap-3">
-		{#each mediaOrderView as image, index (image)}
-			<div class="relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
-				<img
-					src={image}
-					alt={product ? `${product.name} ${index + 1}` : `Product image ${index + 1}`}
-					class="h-28 w-full object-cover"
-				/>
-				<IconButton
-					class="absolute top-2 right-2 bg-white/90 shadow-sm hover:bg-white dark:bg-gray-900/80 dark:hover:bg-gray-800"
-					size="sm"
-					disabled={mediaDeleting !== null || mediaReordering}
-					onclick={() => detachMedia(image)}
-					aria-label="Remove image"
-					title="Remove image"
-					variant="danger"
+			{#each mediaOrderView as image, index (image)}
+				<div
+					class="relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800"
 				>
-					{#if mediaDeleting && extractMediaId(image) === mediaDeleting}
-						<i class="bi bi-arrow-repeat animate-spin"></i>
-					{:else}
-						<i class="bi bi-trash"></i>
-					{/if}
-				</IconButton>
-				<div class="absolute right-2 bottom-2 flex gap-1">
+					<img
+						src={image}
+						alt={product ? `${product.name} ${index + 1}` : `Product image ${index + 1}`}
+						class="h-28 w-full object-cover"
+					/>
 					<IconButton
-						class="bg-white/90 shadow-sm hover:bg-white dark:bg-gray-900/80 dark:hover:bg-gray-800"
+						class="absolute top-2 right-2 bg-white/90 shadow-sm hover:bg-white dark:bg-gray-900/80 dark:hover:bg-gray-800"
 						size="sm"
-						disabled={mediaReordering || index === 0}
-						onclick={() => moveMedia(index, -1)}
-						aria-label="Move image up"
-						title="Move image left"
+						disabled={mediaDeleting !== null || mediaReordering}
+						onclick={() => detachMedia(image)}
+						aria-label="Remove image"
+						title="Remove image"
+						variant="danger"
 					>
-						<i class="bi bi-chevron-left"></i>
+						{#if mediaDeleting && extractMediaId(image) === mediaDeleting}
+							<i class="bi bi-arrow-repeat animate-spin"></i>
+						{:else}
+							<i class="bi bi-trash"></i>
+						{/if}
 					</IconButton>
-					<IconButton
-						class="bg-white/90 shadow-sm hover:bg-white dark:bg-gray-900/80 dark:hover:bg-gray-800"
-						size="sm"
-						disabled={mediaReordering || index === mediaOrderView.length - 1}
-						onclick={() => moveMedia(index, 1)}
-						aria-label="Move image down"
-						title="Move image right"
-					>
-						<i class="bi bi-chevron-right"></i>
-					</IconButton>
+					<div class="absolute right-2 bottom-2 flex gap-1">
+						<IconButton
+							class="bg-white/90 shadow-sm hover:bg-white dark:bg-gray-900/80 dark:hover:bg-gray-800"
+							size="sm"
+							disabled={mediaReordering || index === 0}
+							onclick={() => moveMedia(index, -1)}
+							aria-label="Move image up"
+							title="Move image left"
+						>
+							<i class="bi bi-chevron-left"></i>
+						</IconButton>
+						<IconButton
+							class="bg-white/90 shadow-sm hover:bg-white dark:bg-gray-900/80 dark:hover:bg-gray-800"
+							size="sm"
+							disabled={mediaReordering || index === mediaOrderView.length - 1}
+							onclick={() => moveMedia(index, 1)}
+							aria-label="Move image down"
+							title="Move image right"
+						>
+							<i class="bi bi-chevron-right"></i>
+						</IconButton>
+					</div>
 				</div>
-			</div>
-		{/each}
+			{/each}
 		</div>
 	</div>
 	{#if hasPendingMediaOrder}
 		<div class="mt-3 flex flex-wrap gap-2">
-			<Button
-				variant="primary"
-				type="button"
-				disabled={mediaReordering}
-				onclick={saveMediaOrder}
-			>
+			<Button variant="primary" type="button" disabled={mediaReordering} onclick={saveMediaOrder}>
 				<i class="bi bi-floppy-fill mr-1"></i>
 				{mediaReordering ? "Saving..." : "Save order"}
 			</Button>

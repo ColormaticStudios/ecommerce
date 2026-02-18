@@ -169,11 +169,12 @@
 		>
 			<p class="text-2xl font-medium">Your cart is empty.</p>
 			<div class="mt-6">
-				<ButtonLink href={resolve("/")} variant="primary" size="large">Continue shopping</ButtonLink>
+				<ButtonLink href={resolve("/")} variant="primary" size="large">Continue shopping</ButtonLink
+				>
 			</div>
 		</div>
-		{:else}
-			<div class="mt-6 grid items-start gap-6 lg:grid-cols-[1.6fr_0.8fr]">
+	{:else}
+		<div class="mt-6 grid items-start gap-6 lg:grid-cols-[1.6fr_0.8fr]">
 			<div class="space-y-4">
 				{#each cart.items as item (item.id)}
 					<div

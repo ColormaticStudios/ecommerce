@@ -6,6 +6,7 @@
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
 	import { getContext, onMount } from "svelte";
+	import { SvelteMap } from "svelte/reactivity";
 	import { resolve } from "$app/paths";
 
 	const api: API = getContext("api");
@@ -51,7 +52,7 @@
 				const detailResults = await Promise.allSettled(
 					missingItems.map((order) => api.getOrderDetails(order.id))
 				);
-				const detailsById = new Map<number, OrderModel>();
+				const detailsById = new SvelteMap<number, OrderModel>();
 
 				for (const result of detailResults) {
 					if (result.status === "fulfilled") {
@@ -124,7 +125,9 @@
 	</div>
 
 	{#if authChecked && isAuthenticated}
-		<div class="mt-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+		<div
+			class="mt-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+		>
 			<div class="grid gap-3 sm:grid-cols-4">
 				<div class="sm:col-span-1">
 					<label for="statusFilter" class="mb-1 block text-sm text-gray-600 dark:text-gray-300">
@@ -164,7 +167,9 @@
 					/>
 				</div>
 				<div class="sm:col-span-1">
-					<label for="limit" class="mb-1 block text-sm text-gray-600 dark:text-gray-300">Per page</label>
+					<label for="limit" class="mb-1 block text-sm text-gray-600 dark:text-gray-300"
+						>Per page</label
+					>
 					<select
 						id="limit"
 						class="w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
@@ -283,27 +288,39 @@
 					</div>
 
 					<div class="mt-4 border-t border-gray-200 pt-4 dark:border-gray-800">
-						<div class="grid gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-800 dark:bg-gray-950/40 sm:grid-cols-2">
+						<div
+							class="grid gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm sm:grid-cols-2 dark:border-gray-800 dark:bg-gray-950/40"
+						>
 							<div class="min-w-0">
-								<p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+								<p
+									class="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400"
+								>
 									Payment
 								</p>
-								<p class="mt-1 text-gray-800 dark:text-gray-200 break-words [overflow-wrap:anywhere]">
+								<p
+									class="mt-1 wrap-break-word text-gray-800 dark:text-gray-200"
+								>
 									{order.payment_method_display || "No payment method recorded"}
 								</p>
 							</div>
 							<div class="min-w-0">
-								<p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+								<p
+									class="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400"
+								>
 									Shipping
 								</p>
-								<p class="mt-1 text-gray-800 dark:text-gray-200 break-words [overflow-wrap:anywhere]">
+								<p
+									class="mt-1 wrap-break-word text-gray-800 dark:text-gray-200"
+								>
 									{order.shipping_address_pretty || "No shipping address recorded"}
 								</p>
 							</div>
 						</div>
 
 						{#if order.items.length === 0}
-							<p class="mt-4 text-sm text-gray-500 dark:text-gray-400">No item details available.</p>
+							<p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+								No item details available.
+							</p>
 						{:else}
 							<ul class="mt-4 space-y-3">
 								{#each order.items as item (item.id)}

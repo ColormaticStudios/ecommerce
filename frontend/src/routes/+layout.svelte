@@ -166,7 +166,7 @@
 						</a>
 						<button
 							type="button"
-							class="menu-item text-left cursor-pointer"
+							class="menu-item cursor-pointer text-left"
 							onclick={() => {
 								menuOpen = false;
 								void $userStore.logOut();

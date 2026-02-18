@@ -47,13 +47,7 @@
 		class="m-4 flex w-sm flex-col items-center justify-center gap-2 rounded-lg border border-gray-300 bg-gray-100 p-4 dark:border-gray-800 dark:bg-gray-900"
 		onsubmit={submit}
 	>
-		<TextInput
-			bind:value={email}
-			type="email"
-			name="email"
-			placeholder="Email"
-			required
-		/>
+		<TextInput bind:value={email} type="email" name="email" placeholder="Email" required />
 		<Password bind:value={password} name="password" placeholder="Password" />
 		<Button variant="primary" size="large" type="submit">Log In</Button>
 		{#if errorMessage}

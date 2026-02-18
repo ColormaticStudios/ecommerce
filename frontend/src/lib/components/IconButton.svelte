@@ -63,7 +63,7 @@
 </script>
 
 <button
-	type={type}
+	{type}
 	class={`${baseClasses} ${sizeClasses} ${outlineClasses} ${variantClasses} ${className}`}
 	{...rest}
 >

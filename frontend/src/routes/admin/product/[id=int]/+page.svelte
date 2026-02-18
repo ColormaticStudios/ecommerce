@@ -11,9 +11,9 @@
 	const productId = $derived(Number(page.params.id));
 	const hasProductId = $derived(Number.isFinite(productId) && productId > 0);
 
-let authChecked = $state(false);
-let isAuthenticated = $state(false);
-let isAdmin = $state(false);
+	let authChecked = $state(false);
+	let isAuthenticated = $state(false);
+	let isAdmin = $state(false);
 	let accessError = $state("");
 	onMount(async () => {
 		authChecked = true;

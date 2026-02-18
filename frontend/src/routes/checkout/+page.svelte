@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
-	import { type CartModel, type OrderModel, type SavedAddressModel, type SavedPaymentMethodModel } from "$lib/models";
+	import {
+		type CartModel,
+		type OrderModel,
+		type SavedAddressModel,
+		type SavedPaymentMethodModel,
+	} from "$lib/models";
 	import Alert from "$lib/components/Alert.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
@@ -65,11 +70,13 @@
 		savedPaymentMethods = paymentMethodsResponse;
 		savedAddresses = addressesResponse;
 
-		const defaultPayment = savedPaymentMethods.find((method) => method.is_default) ?? savedPaymentMethods[0];
+		const defaultPayment =
+			savedPaymentMethods.find((method) => method.is_default) ?? savedPaymentMethods[0];
 		selectedPaymentMethodId = defaultPayment?.id ?? null;
 		useNewPaymentMethod = !defaultPayment;
 
-		const defaultAddress = savedAddresses.find((address) => address.is_default) ?? savedAddresses[0];
+		const defaultAddress =
+			savedAddresses.find((address) => address.is_default) ?? savedAddresses[0];
 		selectedAddressId = defaultAddress?.id ?? null;
 		useNewAddress = !defaultAddress;
 	}
@@ -104,7 +111,13 @@
 			return "Please select a saved payment method or enter a new one.";
 		}
 		if (useNewAddress) {
-			if (!fullName.trim() || !line1.trim() || !city.trim() || !postalCode.trim() || !country.trim()) {
+			if (
+				!fullName.trim() ||
+				!line1.trim() ||
+				!city.trim() ||
+				!postalCode.trim() ||
+				!country.trim()
+			) {
 				return "Please complete the shipping address fields.";
 			}
 		}
@@ -317,9 +330,7 @@
 			<div
 				class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 			>
-				<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-					Payment and shipping
-				</h3>
+				<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Payment and shipping</h3>
 				<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
 					Mock checkout: no real provider integration yet.
 				</p>
@@ -363,7 +374,9 @@
 						{/if}
 					</div>
 
-					<div class="space-y-3 border-t border-gray-200 pt-5 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6 dark:border-gray-800">
+					<div
+						class="space-y-3 border-t border-gray-200 pt-5 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6 dark:border-gray-800"
+					>
 						<h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Shipping address</h4>
 						<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
 							<input type="checkbox" bind:checked={useNewAddress} />

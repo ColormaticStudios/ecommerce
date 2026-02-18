@@ -13,13 +13,7 @@
 </script>
 
 <div class="flex w-full">
-	<TextInput
-		bind:value
-		type={hidden ? "password" : "text"}
-		{name}
-		{placeholder}
-		required
-	/>
+	<TextInput bind:value type={hidden ? "password" : "text"} {name} {placeholder} required />
 	<Button
 		variant="regular"
 		class="ml-2 px-3!"

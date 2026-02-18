@@ -302,11 +302,7 @@
 								applyProductSearch();
 							}}
 						>
-							<TextInput
-								type="search"
-								placeholder="Search products"
-								bind:value={productQuery}
-							/>
+							<TextInput type="search" placeholder="Search products" bind:value={productQuery} />
 							<button
 								class="aspect-square cursor-pointer rounded-md border border-gray-200 p-2 dark:border-gray-700"
 								type="submit"
@@ -440,12 +436,7 @@
 			>
 				<div class="flex items-center justify-between">
 					<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Orders</h2>
-					<Button
-						variant="regular"
-						type="button"
-						onclick={loadOrders}
-						disabled={ordersLoading}
-					>
+					<Button variant="regular" type="button" onclick={loadOrders} disabled={ordersLoading}>
 						Refresh
 					</Button>
 				</div>

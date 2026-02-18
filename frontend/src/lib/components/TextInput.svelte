@@ -7,12 +7,7 @@
 		value?: string | number | undefined;
 	}
 
-	let {
-		full = true,
-		class: className = "",
-		value = $bindable(),
-		...rest
-	}: Props = $props();
+	let { full = true, class: className = "", value = $bindable(), ...rest }: Props = $props();
 
 	const baseClasses =
 		"px-3 py-2 rounded-md border border-gray-300 bg-gray-200 dark:border-gray-700 dark:bg-gray-800";

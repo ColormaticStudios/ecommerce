@@ -19,7 +19,8 @@
 		...rest
 	}: Props = $props();
 
-	const baseClasses = "cursor-pointer rounded-lg px-4 py-2 transition-[background-color,border-color] duration-200";
+	const baseClasses =
+		"cursor-pointer rounded-lg px-4 py-2 transition-[background-color,border-color] duration-200";
 	const sizeClasses = $derived(size === "large" ? "text-lg" : "");
 
 	const variantClasses = $derived.by(() => {

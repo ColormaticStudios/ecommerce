@@ -447,7 +447,10 @@
 						<form class="mt-6 space-y-4" onsubmit={submit}>
 							<div class="grid gap-4 md:grid-cols-2">
 								<div>
-									<label for="username" class="text-sm font-medium text-gray-600 dark:text-gray-300">
+									<label
+										for="username"
+										class="text-sm font-medium text-gray-600 dark:text-gray-300"
+									>
 										Username
 									</label>
 									<TextInput id="username" class="mt-1" type="text" value={username} readonly />
@@ -474,7 +477,10 @@
 									/>
 								</div>
 								<div>
-									<label for="currency" class="text-sm font-medium text-gray-600 dark:text-gray-300">
+									<label
+										for="currency"
+										class="text-sm font-medium text-gray-600 dark:text-gray-300"
+									>
 										Preferred currency
 									</label>
 									<TextInput
@@ -517,7 +523,9 @@
 							class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 						>
 							<div class="flex items-center justify-between">
-								<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Saved payment methods</h3>
+								<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+									Saved payment methods
+								</h3>
 							</div>
 							<form class="mt-4 grid gap-3" onsubmit={addPaymentMethod}>
 								<TextInput bind:value={cardholderName} placeholder="Cardholder name" />
@@ -603,7 +611,9 @@
 						<div
 							class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 						>
-							<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Saved addresses</h3>
+							<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+								Saved addresses
+							</h3>
 							<form class="mt-4 grid gap-3" onsubmit={addAddress}>
 								<TextInput bind:value={addressLabel} placeholder="Label (optional, e.g. Home)" />
 								<TextInput bind:value={fullName} placeholder="Full name" />
@@ -656,7 +666,9 @@
 														{address.label || address.line1}{address.is_default ? " (Default)" : ""}
 													</p>
 													<p class="text-xs text-gray-500 dark:text-gray-400">
-														{address.full_name}, {address.line1}{address.line2 ? `, ${address.line2}` : ""}, {address.city}, {address.state}, {address.postal_code}, {address.country}
+														{address.full_name}, {address.line1}{address.line2
+															? `, ${address.line2}`
+															: ""}, {address.city}, {address.state}, {address.postal_code}, {address.country}
 													</p>
 												</div>
 												<div class="flex gap-2">
@@ -692,7 +704,6 @@
 					</div>
 				</div>
 			</div>
-
 		{/if}
 	</div>
 </section>

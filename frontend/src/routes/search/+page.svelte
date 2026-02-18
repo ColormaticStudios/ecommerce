@@ -261,19 +261,13 @@
 				Try a different keyword or clear filters.
 			</p>
 			<div class="mt-4">
-				<Button
-					type="button"
-					variant="primary"
-					onclick={() => updateUrl({ query: "", page: 1 })}
-				>
+				<Button type="button" variant="primary" onclick={() => updateUrl({ query: "", page: 1 })}>
 					Browse all products
 				</Button>
 			</div>
 		</div>
 	{:else}
-		<div
-			class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-		>
+		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 			{#each results as product (product.sku)}
 				<ProductCard
 					href={resolve(`/product/${product.id}`)}

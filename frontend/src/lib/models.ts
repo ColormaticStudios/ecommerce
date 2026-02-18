@@ -326,7 +326,10 @@ export function parseSavedPaymentMethod(
 	};
 }
 
-interface SavedAddressPayload extends Omit<SavedAddressModel, "created_at" | "updated_at" | "deleted_at"> {
+interface SavedAddressPayload extends Omit<
+	SavedAddressModel,
+	"created_at" | "updated_at" | "deleted_at"
+> {
 	created_at: string | Date;
 	updated_at: string | Date;
 	deleted_at: string | Date | null;

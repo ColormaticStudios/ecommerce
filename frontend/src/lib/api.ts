@@ -136,10 +136,7 @@ export class API {
 		return response;
 	}
 
-	public async login(data: {
-		email: string;
-		password: string;
-	}): Promise<{ user: ProfileModel }> {
+	public async login(data: { email: string; password: string }): Promise<{ user: ProfileModel }> {
 		const response = await this.request<{ user: ProfileModel }>("POST", "/auth/login", data);
 		this.authenticated = true;
 		this.authStateResolved = true;
@@ -280,9 +277,7 @@ export class API {
 				"Tus-Resumable": "1.0.0",
 				"Upload-Length": String(file.size),
 				"Upload-Metadata": metadata,
-				...(this.readCookie("csrf_token")
-					? { "X-CSRF-Token": this.readCookie("csrf_token") }
-					: {}),
+				...(this.readCookie("csrf_token") ? { "X-CSRF-Token": this.readCookie("csrf_token") } : {}),
 			},
 			credentials: "include",
 		});
@@ -304,9 +299,7 @@ export class API {
 				"Tus-Resumable": "1.0.0",
 				"Upload-Offset": "0",
 				"Content-Type": "application/offset+octet-stream",
-				...(this.readCookie("csrf_token")
-					? { "X-CSRF-Token": this.readCookie("csrf_token") }
-					: {}),
+				...(this.readCookie("csrf_token") ? { "X-CSRF-Token": this.readCookie("csrf_token") } : {}),
 			},
 			body: file,
 			credentials: "include",
@@ -348,7 +341,11 @@ export class API {
 		nickname?: string;
 		set_default?: boolean;
 	}): Promise<SavedPaymentMethodModel> {
-		const response = await this.request<SavedPaymentMethodModel>("POST", "/me/payment-methods", data);
+		const response = await this.request<SavedPaymentMethodModel>(
+			"POST",
+			"/me/payment-methods",
+			data
+		);
 		return parseSavedPaymentMethod(response);
 	}
 

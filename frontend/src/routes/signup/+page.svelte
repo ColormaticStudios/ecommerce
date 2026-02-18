@@ -59,26 +59,9 @@
 		class="m-4 flex w-sm flex-col items-center justify-center gap-2 rounded-lg border border-gray-300 bg-gray-100 p-4 dark:border-gray-800 dark:bg-gray-900"
 		onsubmit={submit}
 	>
-		<TextInput
-			bind:value={username}
-			type="text"
-			name="username"
-			placeholder="Username"
-			required
-		/>
-		<TextInput
-			bind:value={email}
-			type="email"
-			name="email"
-			placeholder="Email"
-			required
-		/>
-		<TextInput
-			bind:value={name}
-			type="text"
-			name="name"
-			placeholder="Name (optional)"
-		/>
+		<TextInput bind:value={username} type="text" name="username" placeholder="Username" required />
+		<TextInput bind:value={email} type="email" name="email" placeholder="Email" required />
+		<TextInput bind:value={name} type="text" name="name" placeholder="Name (optional)" />
 		<Password bind:value={password} name="password" placeholder="Password" />
 		<Password bind:value={passwordMatcher} name="confirm_password" placeholder="Confirm Password" />
 		<Button variant="primary" size="large" type="submit">Create Account</Button>
