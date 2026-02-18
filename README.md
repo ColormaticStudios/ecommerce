@@ -76,6 +76,13 @@ A RESTful ecommerce API built with Go, Gin, GORM, and PostgreSQL.
    # Edit .env with your configuration
    ```
 
+   Optional non-secret defaults via TOML:
+
+   ```bash
+   cp config/config.example.toml config.toml
+   # Edit config.toml with non-secret settings
+   ```
+
 4. **Run a temporary database**
 
    ```bash
@@ -114,6 +121,13 @@ A RESTful ecommerce API built with Go, Gin, GORM, and PostgreSQL.
 ## Environment Variables
 
 See `.env.example` for all required environment variables.
+
+You can also provide non-secret defaults in `config.toml` (see
+`config/config.example.toml`). Config precedence is:
+
+1. Environment variables (highest priority)
+2. `.env`
+3. `config.toml` (lowest priority)
 
 - `DATABASE_URL`: PostgreSQL connection string
 - `PORT`: Server port (default: 3000)
