@@ -19,6 +19,7 @@ import (
 )
 
 const SessionCookieName = "session_token"
+const csrfCookieName = "csrf_token"
 const oidcStateCookieName = "oidc_state"
 
 type AuthCookieConfig struct {
@@ -67,6 +68,33 @@ func clearSessionCookie(c *gin.Context, cfg AuthCookieConfig) {
 		cfg.Domain,
 		cfg.Secure,
 		true,
+	)
+}
+
+func setCSRFCookie(c *gin.Context, token string, cfg AuthCookieConfig) {
+	maxAge := int((7 * 24 * time.Hour).Seconds())
+	c.SetSameSite(cfg.SameSite)
+	c.SetCookie(
+		csrfCookieName,
+		token,
+		maxAge,
+		"/",
+		cfg.Domain,
+		cfg.Secure,
+		false,
+	)
+}
+
+func clearCSRFCookie(c *gin.Context, cfg AuthCookieConfig) {
+	c.SetSameSite(cfg.SameSite)
+	c.SetCookie(
+		csrfCookieName,
+		"",
+		-1,
+		"/",
+		cfg.Domain,
+		cfg.Secure,
+		false,
 	)
 }
 
@@ -155,6 +183,7 @@ func Register(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConfig) gin.Han
 		user.PasswordHash = ""
 
 		setSessionCookie(c, token, cookieCfg)
+		setCSRFCookie(c, uuid.NewString(), cookieCfg)
 		c.JSON(http.StatusCreated, AuthResponse{User: user})
 	}
 }
@@ -198,6 +227,7 @@ func Login(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConfig) gin.Handle
 		user.PasswordHash = ""
 
 		setSessionCookie(c, token, cookieCfg)
+		setCSRFCookie(c, uuid.NewString(), cookieCfg)
 		c.JSON(http.StatusOK, AuthResponse{User: user})
 	}
 }
@@ -341,6 +371,7 @@ func OIDCCallback(db *gorm.DB, jwtSecret string, oidcProvider string, clientID s
 		}
 
 		setSessionCookie(c, tokenString, cookieCfg)
+		setCSRFCookie(c, uuid.NewString(), cookieCfg)
 		c.JSON(http.StatusOK, AuthResponse{User: user})
 	}
 }
@@ -348,6 +379,7 @@ func OIDCCallback(db *gorm.DB, jwtSecret string, oidcProvider string, clientID s
 func Logout(cookieCfg AuthCookieConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clearSessionCookie(c, cookieCfg)
+		clearCSRFCookie(c, cookieCfg)
 		c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
 	}
 }

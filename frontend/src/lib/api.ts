@@ -51,6 +51,21 @@ export class API {
 		this.authStateResolved = false;
 	}
 
+	private readCookie(name: string): string {
+		if (typeof document === "undefined") {
+			return "";
+		}
+		const prefix = `${name}=`;
+		const decoded = decodeURIComponent(document.cookie);
+		for (const part of decoded.split(";")) {
+			const cookie = part.trim();
+			if (cookie.startsWith(prefix)) {
+				return cookie.slice(prefix.length);
+			}
+		}
+		return "";
+	}
+
 	private async request<T>(
 		method: string,
 		path: string,
@@ -59,6 +74,12 @@ export class API {
 	): Promise<T> {
 		const headers = new Headers();
 		headers.append("Content-Type", "application/json");
+		if (method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
+			const csrfToken = this.readCookie("csrf_token");
+			if (csrfToken) {
+				headers.set("X-CSRF-Token", csrfToken);
+			}
+		}
 
 		const url = new URL(`${this.baseUrl}${API_ROUTE}${path}`);
 		if (params) {
@@ -259,6 +280,9 @@ export class API {
 				"Tus-Resumable": "1.0.0",
 				"Upload-Length": String(file.size),
 				"Upload-Metadata": metadata,
+				...(this.readCookie("csrf_token")
+					? { "X-CSRF-Token": this.readCookie("csrf_token") }
+					: {}),
 			},
 			credentials: "include",
 		});
@@ -280,6 +304,9 @@ export class API {
 				"Tus-Resumable": "1.0.0",
 				"Upload-Offset": "0",
 				"Content-Type": "application/offset+octet-stream",
+				...(this.readCookie("csrf_token")
+					? { "X-CSRF-Token": this.readCookie("csrf_token") }
+					: {}),
 			},
 			body: file,
 			credentials: "include",

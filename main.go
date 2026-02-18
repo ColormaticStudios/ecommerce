@@ -123,6 +123,7 @@ func main() {
 				"Origin",
 				"Content-Type",
 				"Authorization",
+				"X-CSRF-Token",
 				"Tus-Resumable",
 				"Upload-Length",
 				"Upload-Metadata",
@@ -195,6 +196,7 @@ func main() {
 
 			mediaRoutes := apiv1.Group("/media")
 			mediaRoutes.Use(middleware.AuthMiddleware(jwtSecret, ""))
+			mediaRoutes.Use(middleware.CSRFMiddleware())
 			{
 				composer := tusdhandler.NewStoreComposer()
 				store := tusdfilestore.New(mediaService.TusDir())
@@ -224,6 +226,7 @@ func main() {
 			// PROTECTED USER ROUTES
 			userRoutes := apiv1.Group("/me")
 			userRoutes.Use(middleware.AuthMiddleware(jwtSecret, ""))
+			userRoutes.Use(middleware.CSRFMiddleware())
 			{
 				userRoutes.GET("/", handlers.GetProfile(db, mediaService))
 				userRoutes.PATCH("/", handlers.UpdateProfile(db))
@@ -250,6 +253,7 @@ func main() {
 			// ADMIN ROUTES
 			adminRoutes := apiv1.Group("/admin")
 			adminRoutes.Use(middleware.AuthMiddleware(jwtSecret, "admin"))
+			adminRoutes.Use(middleware.CSRFMiddleware())
 			{
 				adminRoutes.POST("/products", handlers.CreateProduct(db))
 				adminRoutes.PATCH("/products/:id", handlers.UpdateProduct(db))
