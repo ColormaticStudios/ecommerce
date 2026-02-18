@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
 	import { type OrderModel } from "$lib/models";
-	import Alert from "$lib/components/alert.svelte";
+	import Alert from "$lib/components/Alert.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";

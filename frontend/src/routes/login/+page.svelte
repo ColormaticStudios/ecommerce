@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
-	import Alert from "$lib/components/alert.svelte";
+	import Alert from "$lib/components/Alert.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import { getProfile, userStore } from "$lib/user";
-	import Password from "$lib/components/password.svelte";
+	import Password from "$lib/components/Password.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
 	import { getContext } from "svelte";
 	import { goto } from "$app/navigation";

@@ -22,7 +22,7 @@
 	/>
 	<Button
 		variant="regular"
-		class="ml-2 px-3"
+		class="ml-2 px-3!"
 		type="button"
 		onclick={() => {
 			hidden = !hidden;

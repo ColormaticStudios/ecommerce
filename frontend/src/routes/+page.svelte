@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { type ProductModel } from "$lib/models";
-	import Alert from "$lib/components/alert.svelte";
+	import Alert from "$lib/components/Alert.svelte";
 	import ProductCard from "$lib/components/ProductCard.svelte";
 	import { type API } from "$lib/api";
 	import { onMount, getContext } from "svelte";

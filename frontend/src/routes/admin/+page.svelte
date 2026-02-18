@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
 	import { checkAdminAccess } from "$lib/admin/auth";
-	import Alert from "$lib/components/alert.svelte";
+	import Alert from "$lib/components/Alert.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";

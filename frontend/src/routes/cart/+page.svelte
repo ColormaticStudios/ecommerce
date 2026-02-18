@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
 	import { type CartModel } from "$lib/models";
-	import Alert from "$lib/components/alert.svelte";
+	import Alert from "$lib/components/Alert.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import QuantitySelector from "$lib/components/QuantitySelector.svelte";
