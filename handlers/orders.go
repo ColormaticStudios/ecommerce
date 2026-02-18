@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type CreateOrderRequest struct {
@@ -328,6 +329,42 @@ type UpdateOrderStatusRequest struct {
 	Status string `json:"status" binding:"required,oneof=PENDING PAID FAILED"`
 }
 
+type insufficientStockError struct {
+	ProductID   uint
+	ProductName string
+	Requested   int
+	Available   int
+}
+
+func (e *insufficientStockError) Error() string {
+	return "insufficient stock"
+}
+
+func deductStockForItems(tx *gorm.DB, items []models.OrderItem) error {
+	for _, item := range items {
+		var product models.Product
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&product, item.ProductID).Error; err != nil {
+			return err
+		}
+
+		if product.Stock < item.Quantity {
+			return &insufficientStockError{
+				ProductID:   item.ProductID,
+				ProductName: product.Name,
+				Requested:   item.Quantity,
+				Available:   product.Stock,
+			}
+		}
+
+		if err := tx.Model(&models.Product{}).
+			Where("id = ? AND stock >= ?", item.ProductID, item.Quantity).
+			Update("stock", gorm.Expr("stock - ?", item.Quantity)).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 type ProcessPaymentInputMethod struct {
 	CardholderName string `json:"cardholder_name" binding:"required"`
 	CardNumber     string `json:"card_number" binding:"required"`
@@ -422,35 +459,21 @@ func ProcessPayment(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFun
 			return
 		}
 
-		// Deduct stock from products
-		for _, item := range order.Items {
-			var product models.Product
-			if err := tx.First(&product, item.ProductID).Error; err != nil {
-				tx.Rollback()
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product stock"})
-				return
-			}
-
-			// Check if stock is still available
-			if product.Stock < item.Quantity {
-				tx.Rollback()
+		if err := deductStockForItems(tx, order.Items); err != nil {
+			tx.Rollback()
+			var stockErr *insufficientStockError
+			if errors.As(err, &stockErr) {
 				c.JSON(http.StatusBadRequest, gin.H{
 					"error":        "Insufficient stock",
-					"product_id":   item.ProductID,
-					"product_name": product.Name,
-					"requested":    item.Quantity,
-					"available":    product.Stock,
+					"product_id":   stockErr.ProductID,
+					"product_name": stockErr.ProductName,
+					"requested":    stockErr.Requested,
+					"available":    stockErr.Available,
 				})
 				return
 			}
-
-			// Deduct stock
-			product.Stock -= item.Quantity
-			if err := tx.Save(&product).Error; err != nil {
-				tx.Rollback()
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product stock"})
-				return
-			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product stock"})
+			return
 		}
 
 		// Clear user's cart after successful payment
@@ -569,6 +592,8 @@ func UpdateOrderStatus(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		previousStatus := order.Status
+
 		// Update status
 		order.Status = req.Status
 		if err := db.Save(&order).Error; err != nil {
@@ -576,8 +601,8 @@ func UpdateOrderStatus(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// If status is PAID, deduct stock
-		if req.Status == models.StatusPaid && order.Status != models.StatusPaid {
+		// If status transitioned to PAID, deduct stock
+		if req.Status == models.StatusPaid && previousStatus != models.StatusPaid {
 			tx := db.Begin()
 			defer func() {
 				if r := recover(); r != nil {
@@ -592,23 +617,21 @@ func UpdateOrderStatus(db *gorm.DB) gin.HandlerFunc {
 				return
 			}
 
-			// Deduct stock
-			for _, item := range order.Items {
-				var product models.Product
-				if err := tx.First(&product, item.ProductID).Error; err != nil {
-					tx.Rollback()
-					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product stock"})
+			if err := deductStockForItems(tx, order.Items); err != nil {
+				tx.Rollback()
+				var stockErr *insufficientStockError
+				if errors.As(err, &stockErr) {
+					c.JSON(http.StatusBadRequest, gin.H{
+						"error":        "Insufficient stock",
+						"product_id":   stockErr.ProductID,
+						"product_name": stockErr.ProductName,
+						"requested":    stockErr.Requested,
+						"available":    stockErr.Available,
+					})
 					return
 				}
-
-				if product.Stock >= item.Quantity {
-					product.Stock -= item.Quantity
-					if err := tx.Save(&product).Error; err != nil {
-						tx.Rollback()
-						c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product stock"})
-						return
-					}
-				}
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product stock"})
+				return
 			}
 
 			if err := tx.Commit().Error; err != nil {
