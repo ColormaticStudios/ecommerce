@@ -5,11 +5,14 @@ import (
 	"ecommerce/models"
 	"fmt"
 	"log"
+	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func NewUserCmd() *cobra.Command {
@@ -255,6 +258,30 @@ func getDB() *gorm.DB {
 	db, err := gorm.Open(postgres.Open(cfg.DBURL), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	gormLogger := logger.New(
+		log.New(os.Stdout, "", log.LstdFlags),
+		logger.Config{
+			SlowThreshold:             200 * time.Millisecond,
+			LogLevel:                  logger.Warn,
+			IgnoreRecordNotFoundError: true,
+		},
+	)
+	db = db.Session(&gorm.Session{Logger: gormLogger})
+
+	if err := db.AutoMigrate(
+		&models.User{},
+		&models.Product{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.MediaObject{},
+		&models.MediaVariant{},
+		&models.MediaReference{},
+	); err != nil {
+		log.Fatalf("Failed to migrate database schema: %v", err)
 	}
 
 	return db
