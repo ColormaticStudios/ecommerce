@@ -1,4 +1,4 @@
-.PHONY: all api cli run test clean release
+.PHONY: all api cli run test clean release openapi-gen openapi-check openapi-docs
 
 # Build the API server and the CLI tool
 all: api cli
@@ -20,6 +20,23 @@ run: api
 # Run tests
 test:
 	@go test ./...
+
+# Generate backend + frontend API contract types from OpenAPI
+openapi-gen:
+	@./scripts/generate-api-contracts.sh
+
+# Ensure generated contract files are up to date
+openapi-check:
+	@./scripts/generate-api-contracts.sh
+	@if [ -n "$$(git status --porcelain -- internal/apicontract/openapi.gen.go frontend/src/lib/api/generated/openapi.ts)" ]; then \
+		echo "Generated API contract files are out of date."; \
+		git --no-pager diff -- internal/apicontract/openapi.gen.go frontend/src/lib/api/generated/openapi.ts; \
+		exit 1; \
+	fi
+
+# Generate API documentation from OpenAPI
+openapi-docs:
+	@./scripts/generate-api-docs.sh
 
 # Clean build artifacts
 clean:

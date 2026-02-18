@@ -17,28 +17,35 @@ import {
 	parseSavedPaymentMethod,
 	parseSavedAddress,
 } from "$lib/models";
+import { fetchProduct, fetchProducts, type ListProductsQuery } from "$lib/api/openapi-client";
+import type { components, paths } from "$lib/api/generated/openapi";
 
 const API_ROUTE = "/api/v1";
 
-interface OrderPageResponse {
-	data: OrderPayload[];
-	pagination: {
-		limit: number;
-		page: number;
-		total: number;
-		total_pages: number;
-	};
-}
-
-interface PageResponse<T> {
-	data: T[];
-	pagination: {
-		limit: number;
-		page: number;
-		total: number;
-		total_pages: number;
-	};
-}
+type RegisterRequest = components["schemas"]["RegisterRequest"];
+type LoginRequest = components["schemas"]["LoginRequest"];
+type AuthResponse = components["schemas"]["AuthResponse"];
+type UpdateProfileRequest = components["schemas"]["UpdateProfileRequest"];
+type CreateOrderRequest = components["schemas"]["CreateOrderRequest"];
+type ProcessPaymentRequest = components["schemas"]["ProcessPaymentRequest"];
+type ProcessPaymentResponse = components["schemas"]["ProcessPaymentResponse"];
+type MessageResponse = components["schemas"]["MessageResponse"];
+type CartPayload = components["schemas"]["Cart"];
+type CartItemPayload = components["schemas"]["CartItem"];
+type ProductInput = components["schemas"]["ProductInput"];
+type MediaIDsRequest = components["schemas"]["MediaIDsRequest"];
+type UpdateRelatedRequest = components["schemas"]["UpdateRelatedRequest"];
+type OrderPagePayload = components["schemas"]["OrderPage"];
+type UserPagePayload = components["schemas"]["UserPage"];
+type UpdateOrderStatusRequest = components["schemas"]["UpdateOrderStatusRequest"];
+type CreateSavedPaymentMethodRequest = components["schemas"]["CreateSavedPaymentMethodRequest"];
+type CreateSavedAddressRequest = components["schemas"]["CreateSavedAddressRequest"];
+type ListUserOrdersQuery = paths["/api/v1/me/orders"]["get"]["parameters"]["query"];
+type ListAdminOrdersQuery = paths["/api/v1/admin/orders"]["get"]["parameters"]["query"];
+type ListUsersQuery = paths["/api/v1/admin/users"]["get"]["parameters"]["query"];
+type ListOrdersParams = Omit<NonNullable<ListUserOrdersQuery>, "status"> & {
+	status?: NonNullable<ListUserOrdersQuery>["status"] | "";
+};
 
 export class API {
 	private baseUrl: string;
@@ -113,6 +120,7 @@ export class API {
 				this.authenticated = false;
 				this.authStateResolved = true;
 			}
+			this.handleCsrfForbidden(response.status, body);
 			throw {
 				status: response.status,
 				statusText: response.statusText,
@@ -123,21 +131,42 @@ export class API {
 		return body as T;
 	}
 
+	private isCsrfForbidden(status: number, body: unknown): boolean {
+		if (status !== 403 || typeof body !== "object" || body === null || !("error" in body)) {
+			return false;
+		}
+
+		const message = String((body as { error?: unknown }).error ?? "").toLowerCase();
+		return message.includes("csrf token");
+	}
+
+	private handleCsrfForbidden(status: number, body: unknown): void {
+		if (!this.isCsrfForbidden(status, body)) {
+			return;
+		}
+
+		this.authenticated = false;
+		this.authStateResolved = true;
+
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		if (!window.location.pathname.startsWith("/login")) {
+			window.location.assign("/login?reason=reauth");
+		}
+	}
+
 	// Authentication
-	public async register(data: {
-		username: string;
-		email: string;
-		password: string;
-		name?: string;
-	}): Promise<{ user: ProfileModel }> {
-		const response = await this.request<{ user: ProfileModel }>("POST", "/auth/register", data);
+	public async register(data: RegisterRequest): Promise<AuthResponse> {
+		const response = await this.request<AuthResponse>("POST", "/auth/register", data);
 		this.authenticated = true;
 		this.authStateResolved = true;
 		return response;
 	}
 
-	public async login(data: { email: string; password: string }): Promise<{ user: ProfileModel }> {
-		const response = await this.request<{ user: ProfileModel }>("POST", "/auth/login", data);
+	public async login(data: LoginRequest): Promise<AuthResponse> {
+		const response = await this.request<AuthResponse>("POST", "/auth/login", data);
 		this.authenticated = true;
 		this.authStateResolved = true;
 		return response;
@@ -149,58 +178,27 @@ export class API {
 		this.authStateResolved = true;
 	}
 
-	public async createOrder(data: {
-		items: Array<{ product_id: number; quantity: number }>;
-	}): Promise<OrderModel> {
-		const response = await this.request<OrderModel>("POST", "/me/orders", data);
+	public async createOrder(data: CreateOrderRequest): Promise<OrderModel> {
+		const response = await this.request<OrderPayload>("POST", "/me/orders", data);
 		return parseOrder(response);
 	}
 
-	public async processPayment(
-		orderId: number,
-		data?: {
-			payment_method_id?: number;
-			address_id?: number;
-			payment_method?: {
-				cardholder_name: string;
-				card_number: string;
-				exp_month: number;
-				exp_year: number;
-			};
-			address?: {
-				full_name: string;
-				line1: string;
-				line2?: string;
-				city: string;
-				state?: string;
-				postal_code: string;
-				country: string;
-			};
-		}
-	): Promise<OrderModel> {
-		const response = await this.request<{ order?: OrderPayload } | OrderPayload>(
-			"POST",
-			`/me/orders/${orderId}/pay`,
-			data
-		);
-		const payload = "order" in response ? response.order : (response as OrderPayload);
-		if (!payload) {
-			throw new Error("Missing order payload");
-		}
-		return parseOrder(payload);
+	public async processPayment(orderId: number, data?: ProcessPaymentRequest): Promise<OrderModel> {
+		const response = await this.request<ProcessPaymentResponse>("POST", `/me/orders/${orderId}/pay`, data);
+		return parseOrder(response.order);
 	}
 
 	// Product Management
-	public async listProducts(params?: {
-		q?: string;
-		min_price?: number;
-		max_price?: number;
-		sort?: "price" | "name" | "created_at";
-		order?: "asc" | "desc";
-		page?: number;
-		limit?: number;
-	}): Promise<PageModel> {
-		const response = await this.request<PageModel>("GET", "/products", undefined, params);
+	public async listProducts(params?: ListProductsQuery): Promise<PageModel> {
+		const { data: response, error, response: rawResponse } = await fetchProducts(this.baseUrl, params);
+
+		if (error || !response) {
+			throw {
+				status: rawResponse.status,
+				statusText: rawResponse.statusText,
+				body: error,
+			};
+		}
 
 		const data = response.data.map(parseProduct).map((product) => {
 			return {
@@ -217,7 +215,15 @@ export class API {
 	}
 
 	public async getProduct(id: number): Promise<ProductModel> {
-		const response = await this.request<ProductModel>("GET", `/products/${id}`);
+		const { data: response, error, response: rawResponse } = await fetchProduct(this.baseUrl, id);
+		if (error || !response) {
+			throw {
+				status: rawResponse.status,
+				statusText: rawResponse.statusText,
+				body: error,
+			};
+		}
+
 		const Product: ProductModel = parseProduct(response);
 
 		return Product;
@@ -225,27 +231,27 @@ export class API {
 
 	// Cart Operations
 	public async viewCart(): Promise<CartModel> {
-		const response = await this.request<CartModel>("GET", "/me/cart");
+		const response = await this.request<CartPayload>("GET", "/me/cart");
 		const cart = parseCart(response);
 
 		return cart;
 	}
 
-	public async addToCart(data: { product_id: number; quantity: number }): Promise<CartModel> {
-		const response = await this.request<CartModel>("POST", "/me/cart", data);
+	public async addToCart(data: components["schemas"]["AddCartItemRequest"]): Promise<CartModel> {
+		const response = await this.request<CartPayload>("POST", "/me/cart", data);
 		const cart = parseCart(response);
 
 		return cart;
 	}
 
-	public async updateCartItem(itemId: number, data: { quantity: number }): Promise<CartItemModel> {
-		const response = await this.request<CartItemModel>("PATCH", `/me/cart/${itemId}`, data);
+	public async updateCartItem(itemId: number, data: components["schemas"]["UpdateCartItemRequest"]): Promise<CartItemModel> {
+		const response = await this.request<CartItemPayload>("PATCH", `/me/cart/${itemId}`, data);
 		const cartItem = parseCartItem(response);
 
 		return cartItem;
 	}
 
-	public async removeCartItem(itemId: number): Promise<{ message?: string }> {
+	public async removeCartItem(itemId: number): Promise<MessageResponse> {
 		return await this.request("DELETE", `/me/cart/${itemId}`);
 	}
 
@@ -258,11 +264,7 @@ export class API {
 		return parseProfile(response);
 	}
 
-	public async updateProfile(data: {
-		name?: string;
-		currency?: string;
-		profile_photo_url?: string;
-	}): Promise<UserModel> {
+	public async updateProfile(data: UpdateProfileRequest): Promise<UserModel> {
 		const response = await this.request<ProfileModel>("PATCH", "/me/", data);
 		return parseProfile(response);
 	}
@@ -283,6 +285,14 @@ export class API {
 		});
 
 		if (!createResponse.ok) {
+			const createText = await createResponse.text();
+			let createBody: unknown = createText;
+			try {
+				createBody = createText ? JSON.parse(createText) : null;
+			} catch {
+				createBody = createText;
+			}
+			this.handleCsrfForbidden(createResponse.status, createBody);
 			throw new Error(`Failed to create upload: ${createResponse.statusText}`);
 		}
 
@@ -306,6 +316,14 @@ export class API {
 		});
 
 		if (!patchResponse.ok) {
+			const patchText = await patchResponse.text();
+			let patchBody: unknown = patchText;
+			try {
+				patchBody = patchText ? JSON.parse(patchText) : null;
+			} catch {
+				patchBody = patchText;
+			}
+			this.handleCsrfForbidden(patchResponse.status, patchBody);
 			throw new Error(`Failed to upload media: ${patchResponse.statusText}`);
 		}
 
@@ -319,29 +337,29 @@ export class API {
 		return mediaId;
 	}
 
-	public async attachProfilePhoto(mediaId: string): Promise<{ message?: string }> {
-		return await this.request("POST", "/me/profile-photo", { media_id: mediaId });
+	public async attachProfilePhoto(mediaId: string): Promise<UserModel> {
+		const response = await this.request<ProfileModel>("POST", "/me/profile-photo", { media_id: mediaId });
+		return parseProfile(response);
 	}
 
-	public async removeProfilePhoto(): Promise<{ message?: string }> {
-		return await this.request("DELETE", "/me/profile-photo");
+	public async removeProfilePhoto(): Promise<UserModel> {
+		const response = await this.request<ProfileModel>("DELETE", "/me/profile-photo");
+		return parseProfile(response);
 	}
 
 	// Saved Payment Methods
 	public async listSavedPaymentMethods(): Promise<SavedPaymentMethodModel[]> {
-		const response = await this.request<SavedPaymentMethodModel[]>("GET", "/me/payment-methods");
+		const response = await this.request<components["schemas"]["SavedPaymentMethod"][]>(
+			"GET",
+			"/me/payment-methods"
+		);
 		return response.map(parseSavedPaymentMethod);
 	}
 
-	public async createSavedPaymentMethod(data: {
-		cardholder_name: string;
-		card_number: string;
-		exp_month: number;
-		exp_year: number;
-		nickname?: string;
-		set_default?: boolean;
-	}): Promise<SavedPaymentMethodModel> {
-		const response = await this.request<SavedPaymentMethodModel>(
+	public async createSavedPaymentMethod(
+		data: CreateSavedPaymentMethodRequest
+	): Promise<SavedPaymentMethodModel> {
+		const response = await this.request<components["schemas"]["SavedPaymentMethod"]>(
 			"POST",
 			"/me/payment-methods",
 			data
@@ -349,12 +367,12 @@ export class API {
 		return parseSavedPaymentMethod(response);
 	}
 
-	public async deleteSavedPaymentMethod(id: number): Promise<{ message?: string }> {
+	public async deleteSavedPaymentMethod(id: number): Promise<MessageResponse> {
 		return await this.request("DELETE", `/me/payment-methods/${id}`);
 	}
 
 	public async setDefaultPaymentMethod(id: number): Promise<SavedPaymentMethodModel> {
-		const response = await this.request<SavedPaymentMethodModel>(
+		const response = await this.request<components["schemas"]["SavedPaymentMethod"]>(
 			"PATCH",
 			`/me/payment-methods/${id}/default`
 		);
@@ -363,76 +381,69 @@ export class API {
 
 	// Saved Addresses
 	public async listSavedAddresses(): Promise<SavedAddressModel[]> {
-		const response = await this.request<SavedAddressModel[]>("GET", "/me/addresses");
+		const response = await this.request<components["schemas"]["SavedAddress"][]>(
+			"GET",
+			"/me/addresses"
+		);
 		return response.map(parseSavedAddress);
 	}
 
-	public async createSavedAddress(data: {
-		label?: string;
-		full_name: string;
-		line1: string;
-		line2?: string;
-		city: string;
-		state?: string;
-		postal_code: string;
-		country: string;
-		phone?: string;
-		set_default?: boolean;
-	}): Promise<SavedAddressModel> {
-		const response = await this.request<SavedAddressModel>("POST", "/me/addresses", data);
+	public async createSavedAddress(data: CreateSavedAddressRequest): Promise<SavedAddressModel> {
+		const response = await this.request<components["schemas"]["SavedAddress"]>(
+			"POST",
+			"/me/addresses",
+			data
+		);
 		return parseSavedAddress(response);
 	}
 
-	public async deleteSavedAddress(id: number): Promise<{ message?: string }> {
+	public async deleteSavedAddress(id: number): Promise<MessageResponse> {
 		return await this.request("DELETE", `/me/addresses/${id}`);
 	}
 
 	public async setDefaultAddress(id: number): Promise<SavedAddressModel> {
-		const response = await this.request<SavedAddressModel>("PATCH", `/me/addresses/${id}/default`);
+		const response = await this.request<components["schemas"]["SavedAddress"]>(
+			"PATCH",
+			`/me/addresses/${id}/default`
+		);
 		return parseSavedAddress(response);
 	}
 
 	// Admin Operations
-	public async createProduct(data: {
-		sku: string;
-		name: string;
-		description?: string;
-		price: number;
-		stock?: number;
-		images?: string[];
-	}): Promise<ProductModel> {
-		const response = await this.request<ProductModel>("POST", "/admin/products", data);
+	public async createProduct(data: ProductInput): Promise<ProductModel> {
+		const response = await this.request<components["schemas"]["Product"]>(
+			"POST",
+			"/admin/products",
+			data
+		);
 		return parseProduct(response);
 	}
 
-	public async updateProduct(
-		id: number,
-		data: {
-			sku?: string;
-			name?: string;
-			description?: string;
-			price?: number;
-			stock?: number;
-			images?: string[];
-		}
-	): Promise<ProductModel> {
-		const response = await this.request<ProductModel>("PATCH", `/admin/products/${id}`, data);
+	public async updateProduct(id: number, data: ProductInput): Promise<ProductModel> {
+		const response = await this.request<components["schemas"]["Product"]>(
+			"PATCH",
+			`/admin/products/${id}`,
+			data
+		);
 		return parseProduct(response);
 	}
 
-	public async deleteProduct(id: number): Promise<{ message?: string }> {
+	public async deleteProduct(id: number): Promise<MessageResponse> {
 		return await this.request("DELETE", `/admin/products/${id}`);
 	}
 
 	public async attachProductMedia(id: number, mediaIds: string[]): Promise<ProductModel> {
-		const response = await this.request<ProductModel>("POST", `/admin/products/${id}/media`, {
-			media_ids: mediaIds,
-		});
+		const payload: MediaIDsRequest = { media_ids: mediaIds };
+		const response = await this.request<components["schemas"]["Product"]>(
+			"POST",
+			`/admin/products/${id}/media`,
+			payload
+		);
 		return parseProduct(response);
 	}
 
 	public async detachProductMedia(id: number, mediaId: string): Promise<ProductModel> {
-		const response = await this.request<ProductModel>(
+		const response = await this.request<components["schemas"]["Product"]>(
 			"DELETE",
 			`/admin/products/${id}/media/${mediaId}`
 		);
@@ -440,32 +451,34 @@ export class API {
 	}
 
 	public async updateProductMediaOrder(id: number, mediaIds: string[]): Promise<ProductModel> {
-		const response = await this.request<ProductModel>(
+		const payload: MediaIDsRequest = { media_ids: mediaIds };
+		const response = await this.request<components["schemas"]["Product"]>(
 			"PATCH",
 			`/admin/products/${id}/media/order`,
-			{
-				media_ids: mediaIds,
-			}
+			payload
 		);
 		return parseProduct(response);
 	}
 
 	public async updateProductRelated(id: number, relatedIds: number[]): Promise<ProductModel> {
-		const response = await this.request<ProductModel>("PATCH", `/admin/products/${id}/related`, {
-			related_ids: relatedIds,
-		});
+		const payload: UpdateRelatedRequest = { related_ids: relatedIds };
+		const response = await this.request<components["schemas"]["Product"]>(
+			"PATCH",
+			`/admin/products/${id}/related`,
+			payload
+		);
 		return parseProduct(response);
 	}
 
 	// Order Management
-	public async listOrders(params?: {
-		page?: number;
-		limit?: number;
-		status?: OrderModel["status"] | "";
-		start_date?: string;
-		end_date?: string;
-	}): Promise<{ data: OrderModel[]; pagination: OrderPageResponse["pagination"] }> {
-		const response = await this.request<OrderPageResponse>("GET", "/me/orders", undefined, params);
+	public async listOrders(
+		params?: ListOrdersParams
+	): Promise<{ data: OrderModel[]; pagination: OrderPagePayload["pagination"] }> {
+		const query = {
+			...params,
+			status: params?.status === "" ? undefined : params?.status,
+		};
+		const response = await this.request<OrderPagePayload>("GET", "/me/orders", undefined, query);
 		return {
 			data: response.data.map(parseOrder),
 			pagination: response.pagination,
@@ -473,16 +486,15 @@ export class API {
 	}
 
 	public async getOrderDetails(orderId: number): Promise<OrderModel> {
-		const response = await this.request<OrderModel>("GET", `/me/orders/${orderId}`);
+		const response = await this.request<OrderPayload>("GET", `/me/orders/${orderId}`);
 		return parseOrder(response);
 	}
 
 	// Admin Order Management
-	public async listAdminOrders(params?: {
-		page?: number;
-		limit?: number;
-	}): Promise<{ data: OrderModel[]; pagination: PageResponse<OrderPayload>["pagination"] }> {
-		const response = await this.request<PageResponse<OrderPayload>>(
+	public async listAdminOrders(
+		params?: ListAdminOrdersQuery
+	): Promise<{ data: OrderModel[]; pagination: OrderPagePayload["pagination"] }> {
+		const response = await this.request<OrderPagePayload>(
 			"GET",
 			"/admin/orders",
 			undefined,
@@ -495,15 +507,15 @@ export class API {
 	}
 
 	public async getAdminOrderDetails(orderId: number): Promise<OrderModel> {
-		const response = await this.request<OrderModel>("GET", `/admin/orders/${orderId}`);
+		const response = await this.request<OrderPayload>("GET", `/admin/orders/${orderId}`);
 		return parseOrder(response);
 	}
 
 	public async updateOrderStatus(
 		orderId: number,
-		data: { status: OrderModel["status"] }
+		data: UpdateOrderStatusRequest
 	): Promise<OrderModel> {
-		const response = await this.request<OrderModel>(
+		const response = await this.request<OrderPayload>(
 			"PATCH",
 			`/admin/orders/${orderId}/status`,
 			data
@@ -512,11 +524,10 @@ export class API {
 	}
 
 	// Admin User Management
-	public async listUsers(params?: {
-		page?: number;
-		limit?: number;
-	}): Promise<{ data: UserModel[]; pagination: PageResponse<ProfileModel>["pagination"] }> {
-		const response = await this.request<PageResponse<ProfileModel>>(
+	public async listUsers(
+		params?: ListUsersQuery
+	): Promise<{ data: UserModel[]; pagination: UserPagePayload["pagination"] }> {
+		const response = await this.request<UserPagePayload>(
 			"GET",
 			"/admin/users",
 			undefined,

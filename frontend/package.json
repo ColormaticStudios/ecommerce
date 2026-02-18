@@ -7,6 +7,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
+		"gen:api": "bunx openapi-typescript ../api/openapi.yaml -o src/lib/api/generated/openapi.ts",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --diagnostic-sources svelte,ts,js",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --diagnostic-sources svelte,ts,js --watch",
 		"format": "prettier --write .",
@@ -24,6 +25,7 @@
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.13.1",
 		"globals": "^16.5.0",
+		"openapi-typescript": "^7.10.1",
 		"prettier": "^3.7.4",
 		"prettier-plugin-svelte": "^3.4.0",
 		"prettier-plugin-tailwindcss": "^0.7.2",
@@ -35,6 +37,7 @@
 		"vite": "^7.2.6"
 	},
 	"dependencies": {
-		"bootstrap-icons": "^1.13.1"
+		"bootstrap-icons": "^1.13.1",
+		"openapi-fetch": "^0.15.0"
 	}
 }

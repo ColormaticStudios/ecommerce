@@ -1,10 +1,12 @@
+import type { components } from "$lib/api/generated/openapi";
+
 export interface UserModel {
 	id: number;
 	subject: string;
 	username: string;
 	email: string;
 	name: string | null;
-	role: string;
+	role: "admin" | "customer";
 	currency: string;
 	profile_photo_url: string | null;
 	created_at: Date;
@@ -12,19 +14,7 @@ export interface UserModel {
 	deleted_at: Date | null;
 }
 
-export interface ProfileModel {
-	id: number;
-	subject: string;
-	username: string;
-	email: string;
-	name: string | null;
-	role: string;
-	currency: string;
-	profile_photo_url: string | null;
-	created_at: string | Date;
-	updated_at: string | Date;
-	deleted_at: string | Date | null;
-}
+export type ProfileModel = components["schemas"]["User"];
 
 export function parseProfile(profile: ProfileModel): UserModel {
 	return {
@@ -52,27 +42,8 @@ export interface PageModel {
 	};
 }
 
-interface RelatedProductPayload {
-	id: number;
-	sku: string;
-	name: string;
-	description?: string | null;
-	price?: number;
-	cover_image?: string | null;
-	stock?: number;
-}
-
-interface ProductPayload extends Omit<
-	ProductModel,
-	"created_at" | "updated_at" | "deleted_at" | "related_products" | "images"
-> {
-	created_at: string | Date;
-	updated_at: string | Date;
-	deleted_at: string | Date | null;
-	related_products?: RelatedProductPayload[];
-	images?: string[];
-	cover_image?: string;
-}
+type RelatedProductPayload = components["schemas"]["RelatedProduct"];
+type ProductPayload = components["schemas"]["Product"];
 
 function parseRelatedProduct(product: RelatedProductPayload): RelatedProductModel {
 	return {
@@ -141,25 +112,8 @@ export interface RelatedProductModel {
 	stock: number;
 }
 
-interface CartItemPayload extends Omit<
-	CartItemModel,
-	"created_at" | "updated_at" | "deleted_at" | "product"
-> {
-	product: ProductPayload;
-	created_at: string | Date;
-	updated_at: string | Date;
-	deleted_at: string | Date | null;
-}
-
-interface CartPayload extends Omit<
-	CartModel,
-	"created_at" | "updated_at" | "deleted_at" | "items"
-> {
-	items?: CartItemPayload[];
-	created_at: string | Date;
-	updated_at: string | Date;
-	deleted_at: string | Date | null;
-}
+type CartItemPayload = components["schemas"]["CartItem"];
+type CartPayload = components["schemas"]["Cart"];
 
 export function parseCart(cart: CartPayload): CartModel {
 	return {
@@ -205,27 +159,8 @@ export interface CartItemModel {
 	deleted_at: Date | null;
 }
 
-interface OrderItemPayload extends Omit<
-	OrderItemModel,
-	"created_at" | "updated_at" | "deleted_at" | "product"
-> {
-	product: ProductPayload;
-	created_at: string | Date;
-	updated_at: string | Date;
-	deleted_at: string | Date | null;
-}
-
-export interface OrderPayload extends Omit<
-	OrderModel,
-	"created_at" | "updated_at" | "deleted_at" | "items"
-> {
-	items?: OrderItemPayload[];
-	payment_method_display: string | null;
-	shipping_address_pretty: string | null;
-	created_at: string | Date;
-	updated_at: string | Date;
-	deleted_at: string | Date | null;
-}
+type OrderItemPayload = components["schemas"]["OrderItem"];
+export type OrderPayload = components["schemas"]["Order"];
 
 export function parseOrder(order: OrderPayload): OrderModel {
 	return {
@@ -281,14 +216,7 @@ export interface OrderItemModel {
 	deleted_at: Date | null;
 }
 
-interface SavedPaymentMethodPayload extends Omit<
-	SavedPaymentMethodModel,
-	"created_at" | "updated_at" | "deleted_at"
-> {
-	created_at: string | Date;
-	updated_at: string | Date;
-	deleted_at: string | Date | null;
-}
+type SavedPaymentMethodPayload = components["schemas"]["SavedPaymentMethod"];
 
 export interface SavedPaymentMethodModel {
 	id: number;
@@ -326,14 +254,7 @@ export function parseSavedPaymentMethod(
 	};
 }
 
-interface SavedAddressPayload extends Omit<
-	SavedAddressModel,
-	"created_at" | "updated_at" | "deleted_at"
-> {
-	created_at: string | Date;
-	updated_at: string | Date;
-	deleted_at: string | Date | null;
-}
+type SavedAddressPayload = components["schemas"]["SavedAddress"];
 
 export interface SavedAddressModel {
 	id: number;

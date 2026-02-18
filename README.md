@@ -136,6 +136,29 @@ See `.env.example` for all required environment variables.
 
 See [API.md](API.md) for documentation on the API.
 
+### OpenAPI Contract and Type Generation
+
+The repository now includes an OpenAPI contract at `api/openapi.yaml` used to
+generate shared backend and frontend types.
+
+- Generate all contract artifacts:
+
+  ```bash
+  make openapi-gen
+  ```
+
+- Validate generated files are up to date (CI-friendly):
+
+  ```bash
+  make openapi-check
+  ```
+
+- Generate API documentation from the OpenAPI contract:
+
+  ```bash
+  make openapi-docs
+  ```
+
 ## CLI Tool
 
 The project includes a command-line tool for administrative tasks.

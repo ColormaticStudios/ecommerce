@@ -7,18 +7,36 @@
 - Frontend (SvelteKit + TypeScript) is in `frontend/`:
   - routes: `frontend/src/routes/`
   - reusable UI/API code: `frontend/src/lib/`
-- Documentation: `README.md` (setup), `API.md` (contract). Keep both in sync with behavior changes.
+- API contract source: `api/openapi.yaml` (single source of truth for generated API types).
+- Documentation: `README.md` (setup), `API.md` (endpoint docs). Keep docs and OpenAPI in sync with behavior changes.
 
 ## Build, Test, and Development Commands
 - Backend build: `make api` (builds `bin/ecommerce-api`)
 - CLI build: `make cli` (builds `bin/ecommerce-cli`)
 - Run backend locally: `make run`
 - Run backend tests: `make test` (executes `go test ./...`)
+- Generate backend + frontend API contract types: `make openapi-gen`
+- Verify generated API contract files are current: `make openapi-check`
+- Generate API docs from OpenAPI: `make openapi-docs`
 - Start dev database: `scripts/run-dev-db-docker.sh` or `scripts/run-dev-db-podman.sh`
 - Seed test data: `scripts/populate-test-database.sh`
 - Frontend dev: `cd frontend && bun run dev`
 - Frontend checks: `cd frontend && bun run check && bun run lint`
+- Frontend API type generation only: `cd frontend && bun run gen:api`
+
+## Formatting Commands
+- Backend format: `gofmt -w .` (or target specific paths, e.g. `gofmt -w handlers models internal`).
+- Optional backend import cleanup + formatting: `go fmt ./...`
 - Frontend format: `cd frontend && bun run format`
+
+## OpenAPI Contract Workflow
+- Update `api/openapi.yaml` first whenever request/response shapes change.
+- Regenerate contract artifacts with `make openapi-gen`.
+- Commit generated files:
+  - `internal/apicontract/openapi.gen.go`
+  - `frontend/src/lib/api/generated/openapi.ts`
+- Run `make openapi-check` before opening a PR to ensure generated files are up to date.
+- Prefer generated types in backend/frontend code over hand-written duplicate API payload interfaces.
 
 ## Coding Style & Naming Conventions
 - Go: follow `gofmt` formatting, idiomatic package names (short/lowercase), exported identifiers in `PascalCase`.

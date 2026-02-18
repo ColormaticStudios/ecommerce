@@ -3,13 +3,62 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"time"
 
+	"ecommerce/internal/apicontract"
 	"ecommerce/internal/media"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
+
+func toContractDeletedAt(deletedAt gorm.DeletedAt) *time.Time {
+	if !deletedAt.Valid {
+		return nil
+	}
+	value := deletedAt.Time
+	return &value
+}
+
+func toContractRelatedProduct(product models.Product) apicontract.RelatedProduct {
+	var price *float64
+	priceValue := product.Price.Float64()
+	price = &priceValue
+
+	description := product.Description
+	return apicontract.RelatedProduct{
+		Id:          int(product.ID),
+		Sku:         product.SKU,
+		Name:        product.Name,
+		Description: &description,
+		Price:       price,
+		CoverImage:  product.CoverImage,
+		Stock:       product.Stock,
+	}
+}
+
+func toContractProduct(product models.Product) apicontract.Product {
+	related := make([]apicontract.RelatedProduct, 0, len(product.Related))
+	for _, relatedProduct := range product.Related {
+		related = append(related, toContractRelatedProduct(relatedProduct))
+	}
+
+	return apicontract.Product{
+		Id:              int(product.ID),
+		Sku:             product.SKU,
+		Name:            product.Name,
+		Description:     product.Description,
+		Price:           product.Price.Float64(),
+		Stock:           product.Stock,
+		Images:          product.Images,
+		CoverImage:      product.CoverImage,
+		RelatedProducts: related,
+		CreatedAt:       product.CreatedAt,
+		UpdatedAt:       product.UpdatedAt,
+		DeletedAt:       toContractDeletedAt(product.DeletedAt),
+	}
+}
 
 // GetProducts handles search, filtering, sorting, and pagination
 // Query parameters:
@@ -107,13 +156,18 @@ func GetProducts(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 			}
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"data": products,
-			"pagination": gin.H{
-				"page":        page,
-				"limit":       limit,
-				"total":       total,
-				"total_pages": totalPages,
+		contractProducts := make([]apicontract.Product, 0, len(products))
+		for _, product := range products {
+			contractProducts = append(contractProducts, toContractProduct(product))
+		}
+
+		c.JSON(http.StatusOK, apicontract.ProductPage{
+			Data: contractProducts,
+			Pagination: apicontract.Pagination{
+				Page:       page,
+				Limit:      limit,
+				Total:      int(total),
+				TotalPages: totalPages,
 			},
 		})
 	}
@@ -156,6 +210,6 @@ func GetProductByID(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 			}
 		}
 
-		c.JSON(http.StatusOK, product)
+		c.JSON(http.StatusOK, toContractProduct(product))
 	}
 }

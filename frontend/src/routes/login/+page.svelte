@@ -8,12 +8,18 @@
 	import { getContext } from "svelte";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
+	import { page } from "$app/stores";
 
 	let api: API = getContext("api");
 
 	let email = $state("");
 	let password = $state("");
 	let errorMessage = $state("");
+	let reauthMessage = $derived(
+		$page.url.searchParams.get("reason") === "reauth"
+			? "Your session expired. Please sign in again."
+			: ""
+	);
 
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
@@ -43,6 +49,11 @@
 
 <div class="mt-[10%] flex flex-col items-center justify-center">
 	<h1 class="text-4xl font-bold">Log In</h1>
+	{#if reauthMessage}
+		<div class="m-4 w-sm">
+			<Alert message={reauthMessage} tone="error" icon="bi-shield-exclamation" onClose={undefined} />
+		</div>
+	{/if}
 	<form
 		class="m-4 flex w-sm flex-col items-center justify-center gap-2 rounded-lg border border-gray-300 bg-gray-100 p-4 dark:border-gray-800 dark:bg-gray-900"
 		onsubmit={submit}

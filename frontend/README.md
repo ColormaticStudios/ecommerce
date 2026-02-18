@@ -58,3 +58,4 @@ This will create a production-ready build in the `build/` directory.
 - `bun run format`: Format code with Prettier
 - `bun run lint`: Lint code with ESLint
 - `bun run check`: Run type checks with TypeScript
+- `bun run gen:api`: Generate TypeScript API types from `../api/openapi.yaml`

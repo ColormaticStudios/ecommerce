@@ -1,874 +1,2310 @@
-# Ecommerce API Documentation
+<!-- Generator: Widdershins v4.0.1 -->
 
-## 1. Overview
+<h1 id="ecommerce-api">Ecommerce API v0.2.0</h1>
 
-This API powers the ecommerce backend server.
+> Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.
 
-Base URL:
+API contract for backend and frontend type generation.
 
-- Development: `http://localhost:3000/api/v1`
-- Production: `https://api.example.com/api/v1` (replace with your deployment URL)
+Base URLs:
 
-Authentication:
+* <a href="http://localhost:3000">http://localhost:3000</a>
 
-- **Public** endpoints require no auth.
-- **User/Admin** endpoints use an HttpOnly session cookie (`session_token`) set by auth endpoints.
-- Frontends must send requests with credentials enabled (`fetch(..., { credentials: "include" })`).
-- Non-browser clients may still use `Authorization: Bearer <jwt>`.
-- **Admin** endpoints require role `admin`.
+# Authentication
 
-All responses use JSON. Errors are returned as `{ "error": "message" }` with an HTTP status code.
+* API Key (cookieAuth)
+    - Parameter Name: **session_token**, in: cookie. 
 
-### 1.1 Conventions
+- HTTP Authentication, scheme: bearer 
 
-- IDs are numeric and use `id`.
-- Timestamps use `created_at`, `updated_at`, `deleted_at` (RFC3339 strings or `null`).
-- All field names are `snake_case`.
+<h1 id="ecommerce-api-auth">auth</h1>
 
-### 1.2 Core Object Shapes
+## register
 
-**User**
+<a id="opIdregister"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "username": "string",
+  "email": "string",
+  "password": "string",
+  "name": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/auth/register',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/auth/register`
+
+> Body parameter
 
 ```json
 {
-	"id": 1,
-	"subject": "abc123",
-	"username": "johndoe",
-	"email": "john@example.com",
-	"name": "John Doe",
-	"profile_photo_url": "https://.../media/...",
-	"role": "customer",
-	"currency": "USD",
-	"created_at": "2024-01-01T12:00:00Z",
-	"updated_at": "2024-01-01T12:00:00Z",
-	"deleted_at": null
+  "username": "string",
+  "email": "string",
+  "password": "string",
+  "name": "string"
 }
 ```
 
-**Product**
+<h3 id="register-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|RegisterRequest|true|none|
+
+<h3 id="register-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Registered|AuthResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|Conflict|Error|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## login
+
+<a id="opIdlogin"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "email": "string",
+  "password": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/auth/login',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/auth/login`
+
+> Body parameter
 
 ```json
 {
-	"id": 1,
-	"sku": "PROD-001",
-	"name": "Product Name",
-	"description": "Product description",
-	"price": 29.99,
-	"stock": 100,
-	"images": ["https://.../media/..."],
-	"cover_image": "https://.../media/...",
-	"related_products": [
-		{
-			"id": 2,
-			"sku": "PROD-002",
-			"name": "Related",
-			"description": "Related product description",
-			"price": 19.99,
-			"stock": 12,
-			"cover_image": "https://.../media/..."
-		}
-	],
-	"created_at": "2024-01-01T12:00:00Z",
-	"updated_at": "2024-01-01T12:00:00Z",
-	"deleted_at": null
+  "email": "string",
+  "password": "string"
 }
 ```
 
-**Cart**
+<h3 id="login-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|LoginRequest|true|none|
+
+<h3 id="login-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Authenticated|AuthResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Unauthorized|Error|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## logout
+
+<a id="opIdlogout"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/auth/logout',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/auth/logout`
+
+<h3 id="logout-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Logged out|MessageResponse|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## oidcLogin
+
+<a id="opIdoidcLogin"></a>
+
+> Code samples
+
+```javascript
+
+fetch('http://localhost:3000/api/v1/auth/oidc/login',
+{
+  method: 'GET'
+
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/auth/oidc/login`
+
+<h3 id="oidclogin-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|redirect|query|string|false|none|
+
+<h3 id="oidclogin-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Redirect to provider|None|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## oidcCallback
+
+<a id="opIdoidcCallback"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/auth/oidc/callback',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/auth/oidc/callback`
+
+<h3 id="oidccallback-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|code|query|string|false|none|
+|state|query|string|false|none|
+|format|query|string|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|format|json|
+
+<h3 id="oidccallback-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Callback as JSON|AuthResponse|
+|302|[Found](https://tools.ietf.org/html/rfc7231#section-6.4.3)|Callback as redirect|None|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Unauthorized|Error|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+<h1 id="ecommerce-api-products">products</h1>
+
+## List products
+
+<a id="opIdlistProducts"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/products',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/products`
+
+<h3 id="list-products-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|q|query|string|false|none|
+|min_price|query|number(double)|false|none|
+|max_price|query|number(double)|false|none|
+|sort|query|string|false|none|
+|order|query|string|false|none|
+|page|query|integer|false|none|
+|limit|query|integer|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|sort|price|
+|sort|name|
+|sort|created_at|
+|order|asc|
+|order|desc|
+
+<h3 id="list-products-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Paginated products|ProductPage|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Internal server error|Error|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## Get product by id
+
+<a id="opIdgetProduct"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/products/{id}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/products/{id}`
+
+<h3 id="get-product-by-id-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="get-product-by-id-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Product|Product|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+<h1 id="ecommerce-api-profile">profile</h1>
+
+## getProfile
+
+<a id="opIdgetProfile"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/me/`
+
+<h3 id="getprofile-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Profile|User|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Unauthorized|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateProfile
+
+<a id="opIdupdateProfile"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "currency": "str",
+  "profile_photo_url": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/me/`
+
+> Body parameter
 
 ```json
 {
-	"id": 1,
-	"user_id": 1,
-	"items": [
-		{
-			"id": 1,
-			"cart_id": 1,
-			"product_id": 1,
-			"quantity": 2,
-			"product": {
-				"id": 1,
-				"sku": "PROD-001",
-				"name": "Product Name",
-				"price": 29.99,
-				"stock": 100,
-				"images": [],
-				"cover_image": "https://.../media/..."
-			}
-		}
-	],
-	"created_at": "2024-01-01T12:00:00Z",
-	"updated_at": "2024-01-01T12:00:00Z",
-	"deleted_at": null
+  "name": "string",
+  "currency": "str",
+  "profile_photo_url": "string"
 }
 ```
 
-**Order**
+<h3 id="updateprofile-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|UpdateProfileRequest|true|none|
+
+<h3 id="updateprofile-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated profile|User|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listSavedPaymentMethods
+
+<a id="opIdlistSavedPaymentMethods"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/payment-methods',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/me/payment-methods`
+
+<h3 id="listsavedpaymentmethods-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Saved payment methods|Inline|
+
+<h3 id="listsavedpaymentmethods-responseschema">Response Schema</h3>
+
+Status Code **200**
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|[SavedPaymentMethod]|false|none|none|
+|» id|integer|true|none|none|
+|» user_id|integer|true|none|none|
+|» type|string|true|none|none|
+|» brand|string|true|none|none|
+|» last4|string|true|none|none|
+|» exp_month|integer|true|none|none|
+|» exp_year|integer|true|none|none|
+|» cardholder_name|string|true|none|none|
+|» nickname|string|true|none|none|
+|» is_default|boolean|true|none|none|
+|» created_at|string(date-time)|true|none|none|
+|» updated_at|string(date-time)|true|none|none|
+|» deleted_at|string(date-time)¦null|false|none|none|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createSavedPaymentMethod
+
+<a id="opIdcreateSavedPaymentMethod"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "cardholder_name": "string",
+  "card_number": "string",
+  "exp_month": 1,
+  "exp_year": 0,
+  "nickname": "string",
+  "set_default": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/payment-methods',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/me/payment-methods`
+
+> Body parameter
 
 ```json
 {
-	"id": 1,
-	"user_id": 1,
-	"status": "PENDING",
-	"total": 59.98,
-	"payment_method_display": "Visa •••• 4242",
-	"shipping_address_pretty": "123 Main St, Portland, OR, 97201, US",
-	"items": [
-		{
-			"id": 1,
-			"order_id": 1,
-			"product_id": 1,
-			"quantity": 2,
-			"price": 29.99,
-			"product": {
-				"id": 1,
-				"sku": "PROD-001",
-				"name": "Product Name",
-				"price": 29.99,
-				"stock": 100,
-				"images": []
-			}
-		}
-	],
-	"created_at": "2024-01-01T12:00:00Z",
-	"updated_at": "2024-01-01T12:00:00Z",
-	"deleted_at": null
+  "cardholder_name": "string",
+  "card_number": "string",
+  "exp_month": 1,
+  "exp_year": 0,
+  "nickname": "string",
+  "set_default": true
 }
 ```
 
----
+<h3 id="createsavedpaymentmethod-parameters">Parameters</h3>
 
-## 2. Authentication
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|CreateSavedPaymentMethodRequest|true|none|
 
-Note: `/auth/register` and `/auth/login` can be disabled by setting `DISABLE_LOCAL_SIGN_IN` to `true`.
+<h3 id="createsavedpaymentmethod-responses">Responses</h3>
 
-### 2.1 Register
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created payment method|SavedPaymentMethod|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
 
-**POST** `/auth/register`
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
 
-Creates a new user account and sets an HttpOnly session cookie.
+## deleteSavedPaymentMethod
 
-**Request**
+<a id="opIddeleteSavedPaymentMethod"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/payment-methods/{id}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`DELETE /api/v1/me/payment-methods/{id}`
+
+<h3 id="deletesavedpaymentmethod-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="deletesavedpaymentmethod-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Deleted|MessageResponse|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## setDefaultPaymentMethod
+
+<a id="opIdsetDefaultPaymentMethod"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/payment-methods/{id}/default',
+{
+  method: 'PATCH',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/me/payment-methods/{id}/default`
+
+<h3 id="setdefaultpaymentmethod-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="setdefaultpaymentmethod-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated payment method|SavedPaymentMethod|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listSavedAddresses
+
+<a id="opIdlistSavedAddresses"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/addresses',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/me/addresses`
+
+<h3 id="listsavedaddresses-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Saved addresses|Inline|
+
+<h3 id="listsavedaddresses-responseschema">Response Schema</h3>
+
+Status Code **200**
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|[SavedAddress]|false|none|none|
+|» id|integer|true|none|none|
+|» user_id|integer|true|none|none|
+|» label|string|true|none|none|
+|» full_name|string|true|none|none|
+|» line1|string|true|none|none|
+|» line2|string|true|none|none|
+|» city|string|true|none|none|
+|» state|string|true|none|none|
+|» postal_code|string|true|none|none|
+|» country|string|true|none|none|
+|» phone|string|true|none|none|
+|» is_default|boolean|true|none|none|
+|» created_at|string(date-time)|true|none|none|
+|» updated_at|string(date-time)|true|none|none|
+|» deleted_at|string(date-time)¦null|false|none|none|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createSavedAddress
+
+<a id="opIdcreateSavedAddress"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "label": "string",
+  "full_name": "string",
+  "line1": "string",
+  "line2": "string",
+  "city": "string",
+  "state": "string",
+  "postal_code": "string",
+  "country": "string",
+  "phone": "string",
+  "set_default": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/addresses',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/me/addresses`
+
+> Body parameter
 
 ```json
 {
-	"username": "johndoe",
-	"email": "john@example.com",
-	"password": "password123",
-	"name": "John Doe"
+  "label": "string",
+  "full_name": "string",
+  "line1": "string",
+  "line2": "string",
+  "city": "string",
+  "state": "string",
+  "postal_code": "string",
+  "country": "string",
+  "phone": "string",
+  "set_default": true
 }
 ```
 
-**Success Response** – HTTP 201
+<h3 id="createsavedaddress-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|CreateSavedAddressRequest|true|none|
+
+<h3 id="createsavedaddress-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created address|SavedAddress|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## deleteSavedAddress
+
+<a id="opIddeleteSavedAddress"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/addresses/{id}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`DELETE /api/v1/me/addresses/{id}`
+
+<h3 id="deletesavedaddress-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="deletesavedaddress-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Deleted|MessageResponse|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## setDefaultAddress
+
+<a id="opIdsetDefaultAddress"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/addresses/{id}/default',
+{
+  method: 'PATCH',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/me/addresses/{id}/default`
+
+<h3 id="setdefaultaddress-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="setdefaultaddress-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated address|SavedAddress|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+<h1 id="ecommerce-api-cart">cart</h1>
+
+## getCart
+
+<a id="opIdgetCart"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/cart',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/me/cart`
+
+<h3 id="getcart-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Cart|Cart|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## addCartItem
+
+<a id="opIdaddCartItem"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "product_id": 1,
+  "quantity": 1
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/cart',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/me/cart`
+
+> Body parameter
 
 ```json
 {
-	"user": {
-		"id": 1,
-		"username": "johndoe",
-		"email": "john@example.com",
-		"role": "customer",
-		"currency": "USD"
-	}
+  "product_id": 1,
+  "quantity": 1
 }
 ```
 
-Also returns `Set-Cookie: session_token=...; HttpOnly; ...`.
+<h3 id="addcartitem-parameters">Parameters</h3>
 
-**Error Responses**
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|AddCartItemRequest|true|none|
 
-- HTTP 400 – Validation error
-- HTTP 409 – Email or username already taken
+<h3 id="addcartitem-responses">Responses</h3>
 
-### 2.2 Login
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Cart|Cart|
 
-**POST** `/auth/login`
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
 
-**Request**
+## updateCartItem
 
-```json
-{ "email": "john@example.com", "password": "password123" }
+<a id="opIdupdateCartItem"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "quantity": 1
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/cart/{itemId}',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
 ```
 
-**Success Response** – HTTP 200
+`PATCH /api/v1/me/cart/{itemId}`
 
-```json
-{ "user": { "id": 1, "username": "johndoe" } }
-```
-
-Also returns `Set-Cookie: session_token=...; HttpOnly; ...`.
-
-**Error Responses**
-
-- HTTP 400 – Validation error
-- HTTP 401 – Invalid credentials
-
-### 2.3 OpenID Connect Login
-
-**GET** `/auth/oidc/login`
-
-**Query Params**
-
-- `redirect` (optional) relative frontend path to return to after successful login (for example `/orders`)
-
-**Success Response** – HTTP 302
-
-### 2.4 OIDC Callback
-
-**GET** `/auth/oidc/callback`
-
-**Query Params**
-
-- `code` (required)
-- `state` (required)
-
-**Success Response** – HTTP 200
-
-```json
-{ "user": { "id": 1, "username": "johndoe" } }
-```
-
-Also returns `Set-Cookie: session_token=...; HttpOnly; ...`.
-
-By default browser requests are redirected (HTTP 302) to the saved post-login path (or `/`).
-To force JSON for API/mobile clients, send `Accept: application/json` or `?format=json`.
-
-### 2.5 Logout
-
-**POST** `/auth/logout`
-
-Clears the session cookie.
-
-**Success Response** – HTTP 200
-
-```json
-{ "message": "Logged out" }
-```
-
----
-
-## 3. Products (Public)
-
-### 3.1 List Products
-
-**GET** `/products`
-
-**Query Params**
-
-- `q` (string) search by name
-- `min_price` (number)
-- `max_price` (number)
-- `sort` (`price` | `name` | `created_at`)
-- `order` (`asc` | `desc`)
-- `page` (number, default 1)
-- `limit` (number, default 20, max 100)
-
-**Success Response** – HTTP 200
+> Body parameter
 
 ```json
 {
-	"data": [
-		{
-			"id": 1,
-			"sku": "PROD-001",
-			"name": "Product Name",
-			"price": 29.99,
-			"stock": 100,
-			"images": []
-		}
-	],
-	"pagination": { "page": 1, "limit": 20, "total": 1, "total_pages": 1 }
+  "quantity": 1
 }
 ```
 
-### 3.2 Get Product
+<h3 id="updatecartitem-parameters">Parameters</h3>
 
-**GET** `/products/{id}`
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|itemId|path|integer|true|none|
+|body|body|UpdateCartItemRequest|true|none|
 
-**Success Response** – HTTP 200
+<h3 id="updatecartitem-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated item|CartItem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## deleteCartItem
+
+<a id="opIddeleteCartItem"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/cart/{itemId}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`DELETE /api/v1/me/cart/{itemId}`
+
+<h3 id="deletecartitem-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|itemId|path|integer|true|none|
+
+<h3 id="deletecartitem-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Deleted|MessageResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+<h1 id="ecommerce-api-orders">orders</h1>
+
+## listUserOrders
+
+<a id="opIdlistUserOrders"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/orders',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/me/orders`
+
+<h3 id="listuserorders-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|status|query|string|false|none|
+|start_date|query|string|false|none|
+|end_date|query|string|false|none|
+|page|query|integer|false|none|
+|limit|query|integer|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|status|PENDING|
+|status|PAID|
+|status|FAILED|
+
+<h3 id="listuserorders-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Orders page|OrderPage|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createOrder
+
+<a id="opIdcreateOrder"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "items": [
+    {
+      "product_id": 1,
+      "quantity": 1
+    }
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/orders',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/me/orders`
+
+> Body parameter
 
 ```json
 {
-	"id": 1,
-	"sku": "PROD-001",
-	"name": "Product Name",
-	"price": 29.99,
-	"stock": 100,
-	"images": []
+  "items": [
+    {
+      "product_id": 1,
+      "quantity": 1
+    }
+  ]
 }
 ```
 
----
+<h3 id="createorder-parameters">Parameters</h3>
 
-## 4. Profile (User)
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|CreateOrderRequest|true|none|
 
-### 4.1 Get Profile
+<h3 id="createorder-responses">Responses</h3>
 
-**GET** `/me/`
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created order|Order|
 
-**Success Response** – HTTP 200
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
 
-```json
-{ "id": 1, "username": "johndoe", "email": "john@example.com" }
+## getUserOrder
+
+<a id="opIdgetUserOrder"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/orders/{id}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
 ```
 
-### 4.2 Update Profile
+`GET /api/v1/me/orders/{id}`
 
-**PATCH** `/me/`
+<h3 id="getuserorder-parameters">Parameters</h3>
 
-**Request**
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="getuserorder-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Order|Order|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## processPayment
+
+<a id="opIdprocessPayment"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "payment_method_id": 0,
+  "address_id": 0,
+  "payment_method": {
+    "cardholder_name": "string",
+    "card_number": "string",
+    "exp_month": 1,
+    "exp_year": 0
+  },
+  "address": {
+    "full_name": "string",
+    "line1": "string",
+    "line2": "string",
+    "city": "string",
+    "state": "string",
+    "postal_code": "string",
+    "country": "string"
+  }
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/orders/{id}/pay',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/me/orders/{id}/pay`
+
+> Body parameter
 
 ```json
 {
-	"name": "John Doe",
-	"currency": "USD",
-	"profile_photo_url": "https://.../media/..."
+  "payment_method_id": 0,
+  "address_id": 0,
+  "payment_method": {
+    "cardholder_name": "string",
+    "card_number": "string",
+    "exp_month": 1,
+    "exp_year": 0
+  },
+  "address": {
+    "full_name": "string",
+    "line1": "string",
+    "line2": "string",
+    "city": "string",
+    "state": "string",
+    "postal_code": "string",
+    "country": "string"
+  }
 }
 ```
 
-**Success Response** – HTTP 200
+<h3 id="processpayment-parameters">Parameters</h3>
 
-```json
-{ "id": 1, "name": "John Doe", "currency": "USD" }
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|ProcessPaymentRequest|false|none|
+
+<h3 id="processpayment-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Payment result|ProcessPaymentResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+<h1 id="ecommerce-api-admin">admin</h1>
+
+## createProduct
+
+<a id="opIdcreateProduct"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "sku": "string",
+  "name": "string",
+  "description": "string",
+  "price": 0.1,
+  "stock": 0,
+  "images": [
+    "string"
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/products',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
 ```
 
-### 4.3 Saved Payment Methods
+`POST /api/v1/admin/products`
 
-**GET** `/me/payment-methods`
-
-Lists saved payment methods for the authenticated user.
-
-**POST** `/me/payment-methods`
-
-Creates a saved payment method (dummy, stores card metadata only).
-
-**Request**
+> Body parameter
 
 ```json
 {
-	"cardholder_name": "Jane Doe",
-	"card_number": "4242 4242 4242 4242",
-	"exp_month": 12,
-	"exp_year": 2030,
-	"nickname": "Personal Visa",
-	"set_default": true
+  "sku": "string",
+  "name": "string",
+  "description": "string",
+  "price": 0.1,
+  "stock": 0,
+  "images": [
+    "string"
+  ]
 }
 ```
 
-**PATCH** `/me/payment-methods/{id}/default`
+<h3 id="createproduct-parameters">Parameters</h3>
 
-Sets the selected method as default.
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|ProductInput|true|none|
 
-**DELETE** `/me/payment-methods/{id}`
+<h3 id="createproduct-responses">Responses</h3>
 
-Deletes a saved payment method.
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created product|Product|
 
-### 4.4 Saved Addresses
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
 
-**GET** `/me/addresses`
+## updateProduct
 
-Lists saved addresses for the authenticated user.
+<a id="opIdupdateProduct"></a>
 
-**POST** `/me/addresses`
+> Code samples
 
-Creates a saved address.
+```javascript
+const inputBody = '{
+  "sku": "string",
+  "name": "string",
+  "description": "string",
+  "price": 0.1,
+  "stock": 0,
+  "images": [
+    "string"
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
 
-**Request**
+fetch('http://localhost:3000/api/v1/admin/products/{id}',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/products/{id}`
+
+> Body parameter
 
 ```json
 {
-	"label": "Home",
-	"full_name": "Jane Doe",
-	"line1": "123 Main St",
-	"line2": "Apt 4",
-	"city": "Portland",
-	"state": "OR",
-	"postal_code": "97201",
-	"country": "US",
-	"phone": "+1-555-555-0100",
-	"set_default": true
+  "sku": "string",
+  "name": "string",
+  "description": "string",
+  "price": 0.1,
+  "stock": 0,
+  "images": [
+    "string"
+  ]
 }
 ```
 
-**PATCH** `/me/addresses/{id}/default`
+<h3 id="updateproduct-parameters">Parameters</h3>
 
-Sets the selected address as default.
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|ProductInput|true|none|
 
-**DELETE** `/me/addresses/{id}`
+<h3 id="updateproduct-responses">Responses</h3>
 
-Deletes a saved address.
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated product|Product|
 
----
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
 
-## 5. Cart (User)
+## deleteProduct
 
-### 5.1 View Cart
+<a id="opIddeleteProduct"></a>
 
-**GET** `/me/cart`
+> Code samples
 
-**Success Response** – HTTP 200
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/products/{id}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`DELETE /api/v1/admin/products/{id}`
+
+<h3 id="deleteproduct-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="deleteproduct-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Deleted|MessageResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## attachProductMedia
+
+<a id="opIdattachProductMedia"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "media_ids": [
+    "string"
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/products/{id}/media',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/products/{id}/media`
+
+> Body parameter
 
 ```json
 {
-	"id": 1,
-	"user_id": 1,
-	"items": [
-		{
-			"id": 10,
-			"cart_id": 1,
-			"product_id": 2,
-			"quantity": 2,
-			"product": {
-				"id": 2,
-				"sku": "PROD-002",
-				"name": "Product Name",
-				"price": 29.99,
-				"stock": 100,
-				"images": []
-			}
-		}
-	],
-	"created_at": "2024-01-01T12:00:00Z",
-	"updated_at": "2024-01-01T12:00:00Z",
-	"deleted_at": null
+  "media_ids": [
+    "string"
+  ]
 }
 ```
 
-### 5.2 Add Cart Item
+<h3 id="attachproductmedia-parameters">Parameters</h3>
 
-**POST** `/me/cart`
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|MediaIDsRequest|true|none|
 
-**Request**
+<h3 id="attachproductmedia-responses">Responses</h3>
 
-```json
-{ "product_id": 1, "quantity": 2 }
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated product|Product|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateProductMediaOrder
+
+<a id="opIdupdateProductMediaOrder"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "media_ids": [
+    "string"
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/products/{id}/media/order',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
 ```
 
-**Success Response** – HTTP 200
+`PATCH /api/v1/admin/products/{id}/media/order`
+
+> Body parameter
 
 ```json
 {
-	"id": 1,
-	"user_id": 1,
-	"items": [
-		{
-			"id": 10,
-			"cart_id": 1,
-			"product_id": 1,
-			"quantity": 2,
-			"product": {
-				"id": 1,
-				"sku": "PROD-001",
-				"name": "Product Name",
-				"price": 29.99,
-				"stock": 100,
-				"images": []
-			}
-		}
-	],
-	"created_at": "2024-01-01T12:00:00Z",
-	"updated_at": "2024-01-01T12:00:00Z",
-	"deleted_at": null
+  "media_ids": [
+    "string"
+  ]
 }
 ```
 
-### 5.3 Update Cart Item
+<h3 id="updateproductmediaorder-parameters">Parameters</h3>
 
-**PATCH** `/me/cart/{itemId}`
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|MediaIDsRequest|true|none|
 
-**Request**
+<h3 id="updateproductmediaorder-responses">Responses</h3>
 
-```json
-{ "quantity": 3 }
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated product|Product|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## detachProductMedia
+
+<a id="opIddetachProductMedia"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/products/{id}/media/{mediaId}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
 ```
 
-**Success Response** – HTTP 200
+`DELETE /api/v1/admin/products/{id}/media/{mediaId}`
+
+<h3 id="detachproductmedia-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|mediaId|path|string|true|none|
+
+<h3 id="detachproductmedia-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated product|Product|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateProductRelated
+
+<a id="opIdupdateProductRelated"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "related_ids": [
+    1
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/products/{id}/related',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/products/{id}/related`
+
+> Body parameter
 
 ```json
 {
-	"id": 10,
-	"cart_id": 1,
-	"product_id": 1,
-	"quantity": 3,
-	"product": {
-		"id": 1,
-		"sku": "PROD-001",
-		"name": "Product Name",
-		"price": 29.99,
-		"stock": 100,
-		"images": []
-	},
-	"created_at": "2024-01-01T12:00:00Z",
-	"updated_at": "2024-01-01T12:00:00Z",
-	"deleted_at": null
+  "related_ids": [
+    1
+  ]
 }
 ```
 
-### 5.4 Remove Cart Item
+<h3 id="updateproductrelated-parameters">Parameters</h3>
 
-**DELETE** `/me/cart/{itemId}`
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|UpdateRelatedRequest|true|none|
 
----
+<h3 id="updateproductrelated-responses">Responses</h3>
 
-## 6. Orders (User)
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated product|Product|
 
-### 6.1 List Orders
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
 
-**GET** `/me/orders`
+## listAdminOrders
 
-**Query Params**
+<a id="opIdlistAdminOrders"></a>
 
-- `status` (`PENDING` | `PAID` | `FAILED`) optional
-- `start_date` (`YYYY-MM-DD`) optional
-- `end_date` (`YYYY-MM-DD`) optional (inclusive)
-- `page` (number, default 1)
-- `limit` (number, default 20, max 100)
+> Code samples
 
-**Success Response** – HTTP 200
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/orders',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/orders`
+
+<h3 id="listadminorders-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|page|query|integer|false|none|
+|limit|query|integer|false|none|
+
+<h3 id="listadminorders-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Orders page|OrderPage|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminOrder
+
+<a id="opIdgetAdminOrder"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/orders/{id}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/orders/{id}`
+
+<h3 id="getadminorder-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="getadminorder-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Order|Order|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateOrderStatus
+
+<a id="opIdupdateOrderStatus"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "status": "PENDING"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/orders/{id}/status',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/orders/{id}/status`
+
+> Body parameter
 
 ```json
 {
-	"data": [
-		{
-			"id": 1,
-			"user_id": 1,
-			"status": "PENDING",
-			"total": 59.98,
-			"payment_method_display": "Visa •••• 4242",
-			"shipping_address_pretty": "123 Main St, Portland, OR, 97201, US",
-			"items": [
-				{
-					"id": 1,
-					"order_id": 1,
-					"product_id": 1,
-					"quantity": 2,
-					"price": 29.99,
-					"product": {
-						"id": 1,
-						"sku": "PROD-001",
-						"name": "Product Name",
-						"price": 29.99,
-						"stock": 100,
-						"images": [],
-						"cover_image": "https://.../media/..."
-					}
-				}
-			],
-			"created_at": "2024-01-01T12:00:00Z",
-			"updated_at": "2024-01-01T12:00:00Z",
-			"deleted_at": null
-		}
-	],
-	"pagination": { "page": 1, "limit": 20, "total": 1, "total_pages": 1 }
+  "status": "PENDING"
 }
 ```
 
-### 6.2 Get Order
+<h3 id="updateorderstatus-parameters">Parameters</h3>
 
-**GET** `/me/orders/{id}`
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|UpdateOrderStatusRequest|true|none|
 
-**Success Response** – HTTP 200
+<h3 id="updateorderstatus-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated order|Order|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listUsers
+
+<a id="opIdlistUsers"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/users',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/users`
+
+<h3 id="listusers-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|page|query|integer|false|none|
+|limit|query|integer|false|none|
+
+<h3 id="listusers-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Users page|UserPage|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateUserRole
+
+<a id="opIdupdateUserRole"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "role": "admin"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/users/{id}/role',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/users/{id}/role`
+
+> Body parameter
 
 ```json
 {
-	"id": 1,
-	"user_id": 1,
-	"status": "PENDING",
-	"total": 59.98,
-	"payment_method_display": "Visa •••• 4242",
-	"shipping_address_pretty": "123 Main St, Portland, OR, 97201, US",
-	"items": [
-		{
-			"id": 1,
-			"order_id": 1,
-			"product_id": 1,
-			"quantity": 2,
-			"price": 29.99,
-			"product": {
-				"id": 1,
-				"sku": "PROD-001",
-				"name": "Product Name",
-				"price": 29.99,
-				"stock": 100,
-				"images": [],
-				"cover_image": "https://.../media/..."
-			}
-		}
-	],
-	"created_at": "2024-01-01T12:00:00Z",
-	"updated_at": "2024-01-01T12:00:00Z",
-	"deleted_at": null
+  "role": "admin"
 }
 ```
 
-### 6.3 Create Order
+<h3 id="updateuserrole-parameters">Parameters</h3>
 
-**POST** `/me/orders`
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|UpdateUserRoleRequest|true|none|
 
-**Request**
+<h3 id="updateuserrole-responses">Responses</h3>
 
-```json
-{ "items": [{ "product_id": 1, "quantity": 2 }] }
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated user|User|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+<h1 id="ecommerce-api-media">media</h1>
+
+## setProfilePhoto
+
+<a id="opIdsetProfilePhoto"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "media_id": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/profile-photo',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
 ```
 
-**Success Response** – HTTP 201
+`POST /api/v1/me/profile-photo`
+
+> Body parameter
 
 ```json
 {
-	"id": 1,
-	"user_id": 1,
-	"status": "PENDING",
-	"total": 59.98,
-	"payment_method_display": null,
-	"shipping_address_pretty": null,
-	"items": [
-		{
-			"id": 1,
-			"order_id": 1,
-			"product_id": 1,
-			"quantity": 2,
-			"price": 29.99,
-			"product": {
-				"id": 1,
-				"sku": "PROD-001",
-				"name": "Product Name",
-				"price": 29.99,
-				"stock": 100,
-				"images": [],
-				"cover_image": "https://.../media/..."
-			}
-		}
-	],
-	"created_at": "2024-01-01T12:00:00Z",
-	"updated_at": "2024-01-01T12:00:00Z",
-	"deleted_at": null
+  "media_id": "string"
 }
 ```
 
-### 6.4 Process Payment (Mock)
+<h3 id="setprofilephoto-parameters">Parameters</h3>
 
-**POST** `/me/orders/{id}/pay`
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|object|true|none|
+|» media_id|body|string|true|none|
 
-You can pay with:
-- saved IDs (`payment_method_id`, `address_id`)
-- inline one-time values (`payment_method`, `address`)
-- omitted fields if defaults exist on account.
+<h3 id="setprofilephoto-responses">Responses</h3>
 
-**Request (saved values)**
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated profile|User|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|Conflict|Error|
+|413|[Payload Too Large](https://tools.ietf.org/html/rfc7231#section-6.5.11)|Too large|Error|
 
-```json
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## deleteProfilePhoto
+
+<a id="opIddeleteProfilePhoto"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/profile-photo',
 {
-	"payment_method_id": 3,
-	"address_id": 7
-}
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
 ```
 
-**Request (one-time values)**
+`DELETE /api/v1/me/profile-photo`
 
-```json
+<h3 id="deleteprofilephoto-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated profile|User|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createMediaUpload
+
+<a id="opIdcreateMediaUpload"></a>
+
+> Code samples
+
+```javascript
+const inputBody = 'string';
+const headers = {
+  'Content-Type':'application/offset+octet-stream',
+  'Tus-Resumable':'string',
+  'Upload-Length':'0',
+  'Upload-Metadata':'string'
+};
+
+fetch('http://localhost:3000/api/v1/media/uploads',
 {
-	"payment_method": {
-		"cardholder_name": "Jane Doe",
-		"card_number": "4242424242424242",
-		"exp_month": 12,
-		"exp_year": 2030
-	},
-	"address": {
-		"full_name": "Jane Doe",
-		"line1": "123 Main St",
-		"line2": "Apt 4",
-		"city": "Portland",
-		"state": "OR",
-		"postal_code": "97201",
-		"country": "US"
-	}
-}
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
 ```
 
-**Success Response** – HTTP 200
+`POST /api/v1/media/uploads`
 
-```json
+> Body parameter
+
+<h3 id="createmediaupload-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|Tus-Resumable|header|string|false|none|
+|Upload-Length|header|integer|false|none|
+|Upload-Metadata|header|string|false|none|
+|body|body|string(binary)|false|none|
+
+<h3 id="createmediaupload-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Upload created|None|
+
+### Response Headers
+
+|Status|Header|Type|Format|Description|
+|---|---|---|---|---|
+|201|Location|string||none|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## patchMediaUpload
+
+<a id="opIdpatchMediaUpload"></a>
+
+> Code samples
+
+```javascript
+const inputBody = 'string';
+const headers = {
+  'Content-Type':'application/offset+octet-stream'
+};
+
+fetch('http://localhost:3000/api/v1/media/uploads/{path}',
 {
-	"message": "Payment processed successfully",
-	"order": {
-		"id": 1,
-		"user_id": 1,
-		"status": "PAID",
-		"total": 59.98,
-		"payment_method_display": "Visa •••• 4242",
-		"shipping_address_pretty": "123 Main St, Apt 4, Portland, OR, 97201, US",
-		"items": [
-			{
-				"id": 1,
-				"order_id": 1,
-				"product_id": 1,
-				"quantity": 2,
-				"price": 29.99,
-				"product": {
-					"id": 1,
-					"sku": "PROD-001",
-					"name": "Product Name",
-					"price": 29.99,
-					"stock": 100,
-					"images": [],
-					"cover_image": "https://.../media/..."
-				}
-			}
-		],
-		"created_at": "2024-01-01T12:00:00Z",
-		"updated_at": "2024-01-01T12:00:00Z",
-		"deleted_at": null
-	}
-}
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
 ```
 
----
+`PATCH /api/v1/media/uploads/{path}`
 
-## 7. Admin: Products
+> Body parameter
 
-### 7.1 Create Product
+<h3 id="patchmediaupload-parameters">Parameters</h3>
 
-**POST** `/admin/products`
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|path|path|string|true|none|
+|body|body|string(binary)|true|none|
 
-### 7.2 Update Product
+<h3 id="patchmediaupload-responses">Responses</h3>
 
-**PATCH** `/admin/products/{id}`
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|Upload chunk accepted|None|
 
-### 7.3 Delete Product
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
 
-**DELETE** `/admin/products/{id}`
+## headMediaUpload
 
-### 7.4 Reorder Product Media
+<a id="opIdheadMediaUpload"></a>
 
-**PATCH** `/admin/products/{id}/media/order`
+> Code samples
 
-**Request**
+```javascript
 
-```json
-{ "media_ids": ["<media-id-1>", "<media-id-2>"] }
-```
-
-### 7.5 Update Related Products
-
-**PATCH** `/admin/products/{id}/related`
-
-**Request**
-
-```json
-{ "related_ids": [2, 3, 4] }
-```
-
----
-
-## 8. Admin: Orders
-
-### 8.1 List Orders
-
-**GET** `/admin/orders`
-
-**Query Params**
-
-- `page` (number, default 1)
-- `limit` (number, default 20, max 100)
-
-**Success Response** – HTTP 200
-
-```json
+fetch('http://localhost:3000/api/v1/media/uploads/{path}',
 {
-	"data": [],
-	"pagination": { "page": 1, "limit": 20, "total": 0, "total_pages": 0 }
-}
+  method: 'HEAD'
+
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
 ```
 
-### 8.2 Get Order
+`HEAD /api/v1/media/uploads/{path}`
 
-**GET** `/admin/orders/{id}`
+<h3 id="headmediaupload-parameters">Parameters</h3>
 
-### 8.3 Update Order Status
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|path|path|string|true|none|
 
-**PATCH** `/admin/orders/{id}/status`
+<h3 id="headmediaupload-responses">Responses</h3>
 
----
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Upload status|None|
 
-## 9. Admin: Users
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
 
-### 9.1 List Users
-
-**GET** `/admin/users`
-
-**Query Params**
-
-- `page` (number, default 1)
-- `limit` (number, default 20, max 100)
-
-**Success Response** – HTTP 200
-
-```json
-{
-	"data": [],
-	"pagination": { "page": 1, "limit": 20, "total": 0, "total_pages": 0 }
-}
-```
-
-### 9.2 Update User Role
-
-**PATCH** `/admin/users/{id}/role`
-
-**Request**
-
-```json
-{ "role": "admin" }
-```
-
----
-
-## 10. Media Uploads
-
-Uploads use the TUS resumable protocol at `/media/uploads`. Authenticated browser clients should send credentials (session cookie) on all requests.
-
-### 10.1 Create Upload (TUS)
-
-**POST** `/media/uploads`
-
-Headers:
-
-- `Tus-Resumable: 1.0.0`
-- `Upload-Length: <bytes>`
-- `Upload-Metadata: filename <base64>`
-
-**Success Response** – HTTP 201
-`Location` header includes the upload URL. The upload ID is the last path segment.
-
-### 10.2 Attach Profile Photo
-
-**POST** `/me/profile-photo`
-
-**Request**
-
-```json
-{ "media_id": "<tus-upload-id>" }
-```
-
-**Error Responses**
-
-- HTTP 400 – Media is not an image
-- HTTP 409 – Media is still processing
-- HTTP 413 – Profile photo too large
-
-### 10.3 Remove Profile Photo
-
-**DELETE** `/me/profile-photo`
-
-### 10.4 Attach Product Media (Admin)
-
-**POST** `/admin/products/{id}/media`
-
-**Request**
-
-```json
-{ "media_ids": ["<tus-upload-id>"] }
-```
-
-### 10.5 Detach Product Media (Admin)
-
-**DELETE** `/admin/products/{id}/media/{mediaId}`

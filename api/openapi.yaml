@@ -1,0 +1,1674 @@
+openapi: 3.0.3
+info:
+  title: Ecommerce API
+  version: 0.2.0
+  description: API contract for backend and frontend type generation.
+servers:
+  - url: http://localhost:3000
+security:
+  - cookieAuth: []
+  - bearerAuth: []
+tags:
+  - name: auth
+  - name: products
+  - name: profile
+  - name: cart
+  - name: orders
+  - name: admin
+  - name: media
+paths:
+  /api/v1/auth/register:
+    post:
+      tags: [auth]
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/auth/login:
+    post:
+      tags: [auth]
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/auth/logout:
+    post:
+      tags: [auth]
+      operationId: logout
+      security: []
+      responses:
+        '200':
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /api/v1/auth/oidc/login:
+    get:
+      tags: [auth]
+      operationId: oidcLogin
+      security: []
+      parameters:
+        - in: query
+          name: redirect
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to provider
+
+  /api/v1/auth/oidc/callback:
+    get:
+      tags: [auth]
+      operationId: oidcCallback
+      security: []
+      parameters:
+        - in: query
+          name: code
+          schema:
+            type: string
+        - in: query
+          name: state
+          schema:
+            type: string
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [json]
+      responses:
+        '200':
+          description: Callback as JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '302':
+          description: Callback as redirect
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/products:
+    get:
+      tags: [products]
+      operationId: listProducts
+      security: []
+      summary: List products
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: min_price
+          schema:
+            type: number
+            format: double
+        - in: query
+          name: max_price
+          schema:
+            type: number
+            format: double
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [price, name, created_at]
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/products/{id}:
+    get:
+      tags: [products]
+      operationId: getProduct
+      security: []
+      summary: Get product by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/me/:
+    get:
+      tags: [profile]
+      operationId: getProfile
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags: [profile]
+      operationId: updateProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/me/profile-photo:
+    post:
+      tags: [media]
+      operationId: setProfilePhoto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [media_id]
+              properties:
+                media_id:
+                  type: string
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags: [media]
+      operationId: deleteProfilePhoto
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /api/v1/me/payment-methods:
+    get:
+      tags: [profile]
+      operationId: listSavedPaymentMethods
+      responses:
+        '200':
+          description: Saved payment methods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SavedPaymentMethod'
+    post:
+      tags: [profile]
+      operationId: createSavedPaymentMethod
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSavedPaymentMethodRequest'
+      responses:
+        '201':
+          description: Created payment method
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedPaymentMethod'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/me/payment-methods/{id}:
+    delete:
+      tags: [profile]
+      operationId: deleteSavedPaymentMethod
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/me/payment-methods/{id}/default:
+    patch:
+      tags: [profile]
+      operationId: setDefaultPaymentMethod
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Updated payment method
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedPaymentMethod'
+
+  /api/v1/me/addresses:
+    get:
+      tags: [profile]
+      operationId: listSavedAddresses
+      responses:
+        '200':
+          description: Saved addresses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SavedAddress'
+    post:
+      tags: [profile]
+      operationId: createSavedAddress
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSavedAddressRequest'
+      responses:
+        '201':
+          description: Created address
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedAddress'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/me/addresses/{id}:
+    delete:
+      tags: [profile]
+      operationId: deleteSavedAddress
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/me/addresses/{id}/default:
+    patch:
+      tags: [profile]
+      operationId: setDefaultAddress
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Updated address
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedAddress'
+
+  /api/v1/me/cart:
+    get:
+      tags: [cart]
+      operationId: getCart
+      responses:
+        '200':
+          description: Cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+    post:
+      tags: [cart]
+      operationId: addCartItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCartItemRequest'
+      responses:
+        '200':
+          description: Cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+
+  /api/v1/me/cart/{itemId}:
+    patch:
+      tags: [cart]
+      operationId: updateCartItem
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCartItemRequest'
+      responses:
+        '200':
+          description: Updated item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartItem'
+    delete:
+      tags: [cart]
+      operationId: deleteCartItem
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /api/v1/me/orders:
+    get:
+      tags: [orders]
+      operationId: listUserOrders
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [PENDING, PAID, FAILED]
+        - in: query
+          name: start_date
+          schema:
+            type: string
+        - in: query
+          name: end_date
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Orders page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPage'
+    post:
+      tags: [orders]
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Created order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+  /api/v1/me/orders/{id}:
+    get:
+      tags: [orders]
+      operationId: getUserOrder
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/me/orders/{id}/pay:
+    post:
+      tags: [orders]
+      operationId: processPayment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessPaymentRequest'
+      responses:
+        '200':
+          description: Payment result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessPaymentResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/admin/products:
+    post:
+      tags: [admin]
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '201':
+          description: Created product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /api/v1/admin/products/{id}:
+    patch:
+      tags: [admin]
+      operationId: updateProduct
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '200':
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+    delete:
+      tags: [admin]
+      operationId: deleteProduct
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /api/v1/admin/products/{id}/media:
+    post:
+      tags: [admin, media]
+      operationId: attachProductMedia
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MediaIDsRequest'
+      responses:
+        '200':
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /api/v1/admin/products/{id}/media/order:
+    patch:
+      tags: [admin, media]
+      operationId: updateProductMediaOrder
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MediaIDsRequest'
+      responses:
+        '200':
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /api/v1/admin/products/{id}/media/{mediaId}:
+    delete:
+      tags: [admin, media]
+      operationId: detachProductMedia
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - in: path
+          name: mediaId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /api/v1/admin/products/{id}/related:
+    patch:
+      tags: [admin]
+      operationId: updateProductRelated
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRelatedRequest'
+      responses:
+        '200':
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /api/v1/admin/orders:
+    get:
+      tags: [admin]
+      operationId: listAdminOrders
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Orders page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPage'
+
+  /api/v1/admin/orders/{id}:
+    get:
+      tags: [admin]
+      operationId: getAdminOrder
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+  /api/v1/admin/orders/{id}/status:
+    patch:
+      tags: [admin]
+      operationId: updateOrderStatus
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderStatusRequest'
+      responses:
+        '200':
+          description: Updated order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+  /api/v1/admin/users:
+    get:
+      tags: [admin]
+      operationId: listUsers
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Users page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPage'
+
+  /api/v1/admin/users/{id}/role:
+    patch:
+      tags: [admin]
+      operationId: updateUserRole
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRoleRequest'
+      responses:
+        '200':
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /api/v1/media/uploads:
+    post:
+      tags: [media]
+      operationId: createMediaUpload
+      parameters:
+        - in: header
+          name: Tus-Resumable
+          schema:
+            type: string
+        - in: header
+          name: Upload-Length
+          schema:
+            type: integer
+            minimum: 0
+        - in: header
+          name: Upload-Metadata
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/offset+octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '201':
+          description: Upload created
+          headers:
+            Location:
+              schema:
+                type: string
+
+  /api/v1/media/uploads/{path}:
+    patch:
+      tags: [media]
+      operationId: patchMediaUpload
+      parameters:
+        - in: path
+          name: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/offset+octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '204':
+          description: Upload chunk accepted
+    head:
+      tags: [media]
+      operationId: headMediaUpload
+      parameters:
+        - in: path
+          name: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Upload status
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session_token
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    MessageResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+
+    Pagination:
+      type: object
+      required: [page, limit, total, total_pages]
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+        total_pages:
+          type: integer
+          minimum: 0
+
+    User:
+      type: object
+      required:
+        - id
+        - subject
+        - username
+        - email
+        - name
+        - profile_photo_url
+        - role
+        - currency
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        subject:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+          nullable: true
+        profile_photo_url:
+          type: string
+          nullable: true
+        role:
+          type: string
+          enum: [admin, customer]
+        currency:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    RegisterRequest:
+      type: object
+      required: [username, email, password]
+      properties:
+        username:
+          type: string
+          minLength: 3
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 6
+        name:
+          type: string
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        profile_photo_url:
+          type: string
+
+    Product:
+      type: object
+      required:
+        - id
+        - sku
+        - name
+        - description
+        - price
+        - stock
+        - images
+        - related_products
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        sku:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: double
+        stock:
+          type: integer
+          minimum: 0
+        images:
+          type: array
+          items:
+            type: string
+        cover_image:
+          type: string
+          nullable: true
+        related_products:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelatedProduct'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    RelatedProduct:
+      type: object
+      required:
+        - id
+        - sku
+        - name
+        - description
+        - stock
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        sku:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        price:
+          type: number
+          format: double
+        stock:
+          type: integer
+          minimum: 0
+        cover_image:
+          type: string
+          nullable: true
+
+    ProductInput:
+      type: object
+      properties:
+        sku:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: double
+        stock:
+          type: integer
+        images:
+          type: array
+          items:
+            type: string
+
+    ProductPage:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CartItem:
+      type: object
+      required:
+        - id
+        - cart_id
+        - product_id
+        - quantity
+        - product
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+        cart_id:
+          type: integer
+        product_id:
+          type: integer
+        quantity:
+          type: integer
+        product:
+          $ref: '#/components/schemas/Product'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Cart:
+      type: object
+      required: [id, user_id, items, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    AddCartItemRequest:
+      type: object
+      required: [product_id, quantity]
+      properties:
+        product_id:
+          type: integer
+          minimum: 1
+        quantity:
+          type: integer
+          minimum: 1
+
+    UpdateCartItemRequest:
+      type: object
+      required: [quantity]
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+
+    OrderItem:
+      type: object
+      required:
+        - id
+        - order_id
+        - product_id
+        - quantity
+        - price
+        - product
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+        order_id:
+          type: integer
+        product_id:
+          type: integer
+        quantity:
+          type: integer
+        price:
+          type: number
+          format: double
+        product:
+          $ref: '#/components/schemas/Product'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Order:
+      type: object
+      required:
+        - id
+        - user_id
+        - status
+        - total
+        - payment_method_display
+        - shipping_address_pretty
+        - items
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        status:
+          type: string
+          enum: [PENDING, PAID, FAILED]
+        total:
+          type: number
+          format: double
+        payment_method_display:
+          type: string
+          nullable: true
+        shipping_address_pretty:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    OrderPage:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CreateOrderItemRequest:
+      type: object
+      required: [product_id, quantity]
+      properties:
+        product_id:
+          type: integer
+          minimum: 1
+        quantity:
+          type: integer
+          minimum: 1
+
+    CreateOrderRequest:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CreateOrderItemRequest'
+
+    ProcessPaymentInputMethod:
+      type: object
+      required: [cardholder_name, card_number, exp_month, exp_year]
+      properties:
+        cardholder_name:
+          type: string
+        card_number:
+          type: string
+        exp_month:
+          type: integer
+          minimum: 1
+          maximum: 12
+        exp_year:
+          type: integer
+
+    ProcessPaymentInputAddress:
+      type: object
+      required: [full_name, line1, city, postal_code, country]
+      properties:
+        full_name:
+          type: string
+        line1:
+          type: string
+        line2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postal_code:
+          type: string
+        country:
+          type: string
+
+    ProcessPaymentRequest:
+      type: object
+      properties:
+        payment_method_id:
+          type: integer
+        address_id:
+          type: integer
+        payment_method:
+          $ref: '#/components/schemas/ProcessPaymentInputMethod'
+        address:
+          $ref: '#/components/schemas/ProcessPaymentInputAddress'
+
+    ProcessPaymentResponse:
+      type: object
+      required: [message, order]
+      properties:
+        message:
+          type: string
+        order:
+          $ref: '#/components/schemas/Order'
+
+    UpdateOrderStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [PENDING, PAID, FAILED]
+
+    SavedPaymentMethod:
+      type: object
+      required:
+        - id
+        - user_id
+        - type
+        - brand
+        - last4
+        - exp_month
+        - exp_year
+        - cardholder_name
+        - nickname
+        - is_default
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        type:
+          type: string
+        brand:
+          type: string
+        last4:
+          type: string
+        exp_month:
+          type: integer
+        exp_year:
+          type: integer
+        cardholder_name:
+          type: string
+        nickname:
+          type: string
+        is_default:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    CreateSavedPaymentMethodRequest:
+      type: object
+      required: [cardholder_name, card_number, exp_month, exp_year]
+      properties:
+        cardholder_name:
+          type: string
+        card_number:
+          type: string
+        exp_month:
+          type: integer
+          minimum: 1
+          maximum: 12
+        exp_year:
+          type: integer
+        nickname:
+          type: string
+        set_default:
+          type: boolean
+
+    SavedAddress:
+      type: object
+      required:
+        - id
+        - user_id
+        - label
+        - full_name
+        - line1
+        - line2
+        - city
+        - state
+        - postal_code
+        - country
+        - phone
+        - is_default
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        label:
+          type: string
+        full_name:
+          type: string
+        line1:
+          type: string
+        line2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postal_code:
+          type: string
+        country:
+          type: string
+        phone:
+          type: string
+        is_default:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    CreateSavedAddressRequest:
+      type: object
+      required: [full_name, line1, city, postal_code, country]
+      properties:
+        label:
+          type: string
+        full_name:
+          type: string
+        line1:
+          type: string
+        line2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postal_code:
+          type: string
+        country:
+          type: string
+        phone:
+          type: string
+        set_default:
+          type: boolean
+
+    UserPage:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    UpdateUserRoleRequest:
+      type: object
+      required: [role]
+      properties:
+        role:
+          type: string
+          enum: [admin, customer]
+
+    UpdateRelatedRequest:
+      type: object
+      required: [related_ids]
+      properties:
+        related_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+
+    MediaIDsRequest:
+      type: object
+      required: [media_ids]
+      properties:
+        media_ids:
+          type: array
+          items:
+            type: string
