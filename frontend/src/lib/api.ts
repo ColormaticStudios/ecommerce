@@ -17,6 +17,16 @@ import { getCookie, setCookie } from "$lib/cookie";
 
 const API_ROUTE = "/api/v1";
 
+interface OrderPageResponse {
+	data: OrderPayload[];
+	pagination: {
+		limit: number;
+		page: number;
+		total: number;
+		total_pages: number;
+	};
+}
+
 export class API {
 	private baseUrl: string;
 	private accessToken: string | undefined;
@@ -322,11 +332,18 @@ export class API {
 	}
 
 	// Order Management
-	public async listOrders(params?: { page?: number; limit?: number }): Promise<OrderModel[]> {
-		const response = await this.request<OrderModel[]>("GET", "/me/orders", undefined, params);
-		const orders = response.map(parseOrder);
-
-		return orders;
+	public async listOrders(params?: {
+		page?: number;
+		limit?: number;
+		status?: OrderModel["status"] | "";
+		start_date?: string;
+		end_date?: string;
+	}): Promise<{ data: OrderModel[]; pagination: OrderPageResponse["pagination"] }> {
+		const response = await this.request<OrderPageResponse>("GET", "/me/orders", undefined, params);
+		return {
+			data: response.data.map(parseOrder),
+			pagination: response.pagination,
+		};
 	}
 
 	public async getOrderDetails(orderId: number): Promise<OrderModel> {

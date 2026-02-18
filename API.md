@@ -90,7 +90,8 @@ All responses use JSON. Errors are returned as `{ "error": "message" }` with an 
 				"name": "Product Name",
 				"price": 29.99,
 				"stock": 100,
-				"images": []
+				"images": [],
+				"cover_image": "https://.../media/..."
 			}
 		}
 	],
@@ -425,37 +426,49 @@ Creates a new user account and returns a JWT.
 
 **GET** `/me/orders`
 
+**Query Params**
+
+- `status` (`PENDING` | `PAID` | `FAILED`) optional
+- `start_date` (`YYYY-MM-DD`) optional
+- `end_date` (`YYYY-MM-DD`) optional (inclusive)
+- `page` (number, default 1)
+- `limit` (number, default 20, max 100)
+
 **Success Response** – HTTP 200
 
 ```json
-[
-	{
-		"id": 1,
-		"user_id": 1,
-		"status": "PENDING",
-		"total": 59.98,
-		"items": [
-			{
-				"id": 1,
-				"order_id": 1,
-				"product_id": 1,
-				"quantity": 2,
-				"price": 29.99,
-				"product": {
+{
+	"data": [
+		{
+			"id": 1,
+			"user_id": 1,
+			"status": "PENDING",
+			"total": 59.98,
+			"items": [
+				{
 					"id": 1,
-					"sku": "PROD-001",
-					"name": "Product Name",
+					"order_id": 1,
+					"product_id": 1,
+					"quantity": 2,
 					"price": 29.99,
-					"stock": 100,
-					"images": []
+					"product": {
+						"id": 1,
+						"sku": "PROD-001",
+						"name": "Product Name",
+						"price": 29.99,
+						"stock": 100,
+						"images": [],
+						"cover_image": "https://.../media/..."
+					}
 				}
-			}
-		],
-		"created_at": "2024-01-01T12:00:00Z",
-		"updated_at": "2024-01-01T12:00:00Z",
-		"deleted_at": null
-	}
-]
+			],
+			"created_at": "2024-01-01T12:00:00Z",
+			"updated_at": "2024-01-01T12:00:00Z",
+			"deleted_at": null
+		}
+	],
+	"pagination": { "page": 1, "limit": 20, "total": 1, "total_pages": 1 }
+}
 ```
 
 ### 6.2 Get Order
@@ -483,7 +496,8 @@ Creates a new user account and returns a JWT.
 				"name": "Product Name",
 				"price": 29.99,
 				"stock": 100,
-				"images": []
+				"images": [],
+				"cover_image": "https://.../media/..."
 			}
 		}
 	],
@@ -524,7 +538,8 @@ Creates a new user account and returns a JWT.
 				"name": "Product Name",
 				"price": 29.99,
 				"stock": 100,
-				"images": []
+				"images": [],
+				"cover_image": "https://.../media/..."
 			}
 		}
 	],
@@ -561,7 +576,8 @@ Creates a new user account and returns a JWT.
 					"name": "Product Name",
 					"price": 29.99,
 					"stock": 100,
-					"images": []
+					"images": [],
+					"cover_image": "https://.../media/..."
 				}
 			}
 		],

@@ -218,10 +218,10 @@ func main() {
 				userRoutes.POST("/cart", handlers.AddCartItem(db, mediaService))
 				userRoutes.PATCH("/cart/:itemId", handlers.UpdateCartItem(db, mediaService))
 				userRoutes.DELETE("/cart/:itemId", handlers.DeleteCartItem(db))
-				userRoutes.GET("/orders", handlers.GetUserOrders(db))
-				userRoutes.GET("/orders/:id", handlers.GetOrderByID(db))
-				userRoutes.POST("/orders", handlers.CreateOrder(db))
-				userRoutes.POST("/orders/:id/pay", handlers.ProcessPayment(db))
+				userRoutes.GET("/orders", handlers.GetUserOrders(db, mediaService))
+				userRoutes.GET("/orders/:id", handlers.GetOrderByID(db, mediaService))
+				userRoutes.POST("/orders", handlers.CreateOrder(db, mediaService))
+				userRoutes.POST("/orders/:id/pay", handlers.ProcessPayment(db, mediaService))
 			}
 
 			// ADMIN ROUTES
@@ -235,8 +235,8 @@ func main() {
 				adminRoutes.PATCH("/products/:id/media/order", handlers.UpdateProductMediaOrder(db, mediaService))
 				adminRoutes.DELETE("/products/:id/media/:mediaId", handlers.DetachProductMedia(db, mediaService))
 				adminRoutes.PATCH("/products/:id/related", handlers.UpdateProductRelated(db, mediaService))
-				adminRoutes.GET("/orders", handlers.GetAllOrders(db))
-				adminRoutes.GET("/orders/:id", handlers.GetAdminOrderByID(db))
+				adminRoutes.GET("/orders", handlers.GetAllOrders(db, mediaService))
+				adminRoutes.GET("/orders/:id", handlers.GetAdminOrderByID(db, mediaService))
 				adminRoutes.PATCH("/orders/:id/status", handlers.UpdateOrderStatus(db))
 				adminRoutes.GET("/users", handlers.GetAllUsers(db))
 				adminRoutes.PATCH("/users/:id/role", handlers.UpdateUserRole(db))

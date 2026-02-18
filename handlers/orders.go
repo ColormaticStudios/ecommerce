@@ -4,7 +4,10 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
+	"ecommerce/internal/media"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -20,8 +23,67 @@ type OrderItemRequest struct {
 	Quantity  int  `json:"quantity" binding:"required,min=1"`
 }
 
+func resolveMediaService(mediaServices ...*media.Service) *media.Service {
+	if len(mediaServices) == 0 {
+		return nil
+	}
+	return mediaServices[0]
+}
+
+func applyOrderMedia(orders []models.Order, mediaService *media.Service) {
+	if mediaService == nil || len(orders) == 0 {
+		return
+	}
+
+	productIDs := make([]uint, 0)
+	seen := map[uint]struct{}{}
+	for i := range orders {
+		for j := range orders[i].Items {
+			productID := orders[i].Items[j].ProductID
+			if productID == 0 {
+				continue
+			}
+			if _, ok := seen[productID]; ok {
+				continue
+			}
+			seen[productID] = struct{}{}
+			productIDs = append(productIDs, productID)
+		}
+	}
+
+	mediaByProduct, err := mediaService.ProductMediaURLsByProductIDs(productIDs)
+	if err != nil {
+		return
+	}
+
+	for i := range orders {
+		for j := range orders[i].Items {
+			product := &orders[i].Items[j].Product
+			if len(product.Images) > 0 && product.CoverImage == nil {
+				product.CoverImage = &product.Images[0]
+			}
+
+			mediaURLs := mediaByProduct[orders[i].Items[j].ProductID]
+			if len(mediaURLs) > 0 {
+				product.Images = mediaURLs
+				product.CoverImage = &mediaURLs[0]
+			}
+		}
+	}
+}
+
+func applyOrderMediaToOrder(order *models.Order, mediaService *media.Service) {
+	if order == nil {
+		return
+	}
+	orders := []models.Order{*order}
+	applyOrderMedia(orders, mediaService)
+	*order = orders[0]
+}
+
 // CreateOrder creates a new order for the authenticated user
-func CreateOrder(db *gorm.DB) gin.HandlerFunc {
+func CreateOrder(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
+	mediaService := resolveMediaService(mediaServices...)
 	return func(c *gin.Context) {
 		// Get user subject from middleware
 		subject := c.GetString("userID")
@@ -101,13 +163,15 @@ func CreateOrder(db *gorm.DB) gin.HandlerFunc {
 
 		// Preload related data for response
 		db.Preload("Items.Product").First(&order, order.ID)
+		applyOrderMediaToOrder(&order, mediaService)
 
 		c.JSON(http.StatusCreated, order)
 	}
 }
 
 // GetUserOrders retrieves all orders for the authenticated user
-func GetUserOrders(db *gorm.DB) gin.HandlerFunc {
+func GetUserOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
+	mediaService := resolveMediaService(mediaServices...)
 	return func(c *gin.Context) {
 		// Get user subject from middleware
 		subject := c.GetString("userID")
@@ -123,22 +187,105 @@ func GetUserOrders(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Get orders
-		var orders []models.Order
-		if err := db.Where("user_id = ?", user.ID).
-			Preload("Items.Product").
-			Order("created_at DESC").
-			Find(&orders).Error; err != nil {
+		status := strings.ToUpper(c.Query("status"))
+		validStatuses := map[string]bool{
+			models.StatusPending: true,
+			models.StatusPaid:    true,
+			models.StatusFailed:  true,
+		}
+		if status != "" && !validStatuses[status] {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status filter"})
+			return
+		}
+
+		startDateStr := c.Query("start_date")
+		endDateStr := c.Query("end_date")
+		var startDate, endDate time.Time
+		var err error
+
+		if startDateStr != "" {
+			startDate, err = time.Parse("2006-01-02", startDateStr)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start_date, expected YYYY-MM-DD"})
+				return
+			}
+		}
+		if endDateStr != "" {
+			endDate, err = time.Parse("2006-01-02", endDateStr)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end_date, expected YYYY-MM-DD"})
+				return
+			}
+			// Make end date inclusive.
+			endDate = endDate.Add(24*time.Hour - time.Nanosecond)
+		}
+		if !startDate.IsZero() && !endDate.IsZero() && endDate.Before(startDate) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "end_date must be on or after start_date"})
+			return
+		}
+
+		page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+		if page < 1 {
+			page = 1
+		}
+		if limit < 1 {
+			limit = 20
+		}
+		if limit > 100 {
+			limit = 100
+		}
+		offset := (page - 1) * limit
+
+		query := db.Model(&models.Order{}).Where("user_id = ?", user.ID)
+		if status != "" {
+			query = query.Where("status = ?", status)
+		}
+		if !startDate.IsZero() {
+			query = query.Where("created_at >= ?", startDate)
+		}
+		if !endDate.IsZero() {
+			query = query.Where("created_at <= ?", endDate)
+		}
+
+		var total int64
+		if err := query.Count(&total).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
 			return
 		}
 
-		c.JSON(http.StatusOK, orders)
+		var orders []models.Order
+		if err := query.
+			Preload("Items.Product").
+			Order("created_at DESC").
+			Offset(offset).
+			Limit(limit).
+			Find(&orders).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
+			return
+		}
+		applyOrderMedia(orders, mediaService)
+
+		totalPages := int(total) / limit
+		if int(total)%limit > 0 {
+			totalPages++
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"data": orders,
+			"pagination": gin.H{
+				"page":        page,
+				"limit":       limit,
+				"total":       total,
+				"total_pages": totalPages,
+			},
+		})
 	}
 }
 
 // GetOrderByID retrieves a specific order by ID (only if it belongs to the user)
-func GetOrderByID(db *gorm.DB) gin.HandlerFunc {
+func GetOrderByID(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
+	mediaService := resolveMediaService(mediaServices...)
 	return func(c *gin.Context) {
 		// Get user subject from middleware
 		subject := c.GetString("userID")
@@ -169,6 +316,7 @@ func GetOrderByID(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 			return
 		}
+		applyOrderMediaToOrder(&order, mediaService)
 
 		c.JSON(http.StatusOK, order)
 	}
@@ -179,7 +327,8 @@ type UpdateOrderStatusRequest struct {
 }
 
 // ProcessPayment processes payment for an order (mock implementation)
-func ProcessPayment(db *gorm.DB) gin.HandlerFunc {
+func ProcessPayment(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
+	mediaService := resolveMediaService(mediaServices...)
 	return func(c *gin.Context) {
 		// Get user subject from middleware
 		subject := c.GetString("userID")
@@ -290,6 +439,7 @@ func ProcessPayment(db *gorm.DB) gin.HandlerFunc {
 
 		// Reload order
 		db.Preload("Items.Product").First(&order, order.ID)
+		applyOrderMediaToOrder(&order, mediaService)
 
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Payment processed successfully",
@@ -378,7 +528,8 @@ func UpdateOrderStatus(db *gorm.DB) gin.HandlerFunc {
 }
 
 // GetAllOrders retrieves all orders (admin only)
-func GetAllOrders(db *gorm.DB) gin.HandlerFunc {
+func GetAllOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
+	mediaService := resolveMediaService(mediaServices...)
 	return func(c *gin.Context) {
 		var orders []models.Order
 		if err := db.Preload("Items.Product").
@@ -388,13 +539,15 @@ func GetAllOrders(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
 			return
 		}
+		applyOrderMedia(orders, mediaService)
 
 		c.JSON(http.StatusOK, orders)
 	}
 }
 
 // GetAdminOrderByID retrieves any order by ID (admin only)
-func GetAdminOrderByID(db *gorm.DB) gin.HandlerFunc {
+func GetAdminOrderByID(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
+	mediaService := resolveMediaService(mediaServices...)
 	return func(c *gin.Context) {
 		// Get order ID from URL
 		orderID, err := strconv.ParseUint(c.Param("id"), 10, 32)
@@ -411,6 +564,7 @@ func GetAdminOrderByID(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 			return
 		}
+		applyOrderMediaToOrder(&order, mediaService)
 
 		c.JSON(http.StatusOK, order)
 	}
