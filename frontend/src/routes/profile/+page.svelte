@@ -662,10 +662,18 @@
 										<div class="rounded-xl border border-gray-200 p-3 dark:border-gray-800">
 											<div class="flex items-center justify-between gap-3">
 												<div>
-													<p class="font-medium text-gray-900 dark:text-gray-100">
-														{method.nickname || `${method.brand} •••• ${method.last4}`}
-														{method.is_default ? " (Default)" : ""}
-													</p>
+													<div class="flex items-center gap-2">
+														<p class="font-medium text-gray-900 dark:text-gray-100">
+															{method.nickname || `${method.brand} •••• ${method.last4}`}
+														</p>
+														{#if method.is_default}
+															<span
+																class="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700 dark:bg-green-900/40 dark:text-green-300"
+															>
+																Default
+															</span>
+														{/if}
+													</div>
 													<p class="text-xs text-gray-500 dark:text-gray-400">
 														{method.brand} •••• {method.last4} · Expires {method.exp_month}/{method.exp_year}
 													</p>
@@ -755,9 +763,18 @@
 										<div class="rounded-xl border border-gray-200 p-3 dark:border-gray-800">
 											<div class="flex items-center justify-between gap-3">
 												<div>
-													<p class="font-medium text-gray-900 dark:text-gray-100">
-														{address.label || address.line1}{address.is_default ? " (Default)" : ""}
-													</p>
+													<div class="flex items-center gap-2">
+														<p class="font-medium text-gray-900 dark:text-gray-100">
+															{address.label || address.line1}
+														</p>
+														{#if address.is_default}
+															<span
+																class="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700 dark:bg-green-900/40 dark:text-green-300"
+															>
+																Default
+															</span>
+														{/if}
+													</div>
 													<p class="text-xs text-gray-500 dark:text-gray-400">
 														{address.full_name}, {address.line1}{address.line2
 															? `, ${address.line2}`
