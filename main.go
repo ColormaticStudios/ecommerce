@@ -10,8 +10,8 @@ import (
 
 	"ecommerce/config"
 	"ecommerce/handlers"
+	"ecommerce/internal/apicontract"
 	"ecommerce/internal/media"
-	"ecommerce/middleware"
 	"ecommerce/models"
 
 	"github.com/didip/tollbooth/v7"
@@ -177,103 +177,37 @@ func main() {
 	}
 	mediaService.StartProcessor()
 
-	api := r.Group("/api")
-	{
-		apiv1 := api.Group("/v1")
-		{
-			// PUBLIC ROUTES
-			if !disableLocalSignIn {
-				// Only allow these routes if they are enabled
-				apiv1.POST("/auth/register", handlers.Register(db, jwtSecret, authCookieCfg))
-				apiv1.POST("/auth/login", handlers.Login(db, jwtSecret, authCookieCfg))
-			}
-			apiv1.POST("/auth/logout", handlers.Logout(authCookieCfg))
+	composer := tusdhandler.NewStoreComposer()
+	store := tusdfilestore.New(mediaService.TusDir())
+	store.UseIn(composer)
 
-			apiv1.GET("/auth/oidc/login", handlers.OIDCLogin(cfg.OIDCProvider, cfg.OIDCClientID, cfg.OIDCRedirectURI, authCookieCfg))
-			apiv1.GET("/auth/oidc/callback", handlers.OIDCCallback(db, cfg.JWTSecret, cfg.OIDCProvider, cfg.OIDCClientID, cfg.OIDCRedirectURI, authCookieCfg))
+	tusd, err := tusdhandler.NewHandler(tusdhandler.Config{
+		BasePath:              "/api/v1/media/uploads",
+		StoreComposer:         composer,
+		NotifyCompleteUploads: true,
+	})
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to initialize tusd: %v", err)
+	}
 
-			apiv1.GET("/products", handlers.GetProducts(db, mediaService))
-			apiv1.GET("/products/:id", handlers.GetProductByID(db, mediaService))
-			apiv1.GET("/storefront", handlers.GetStorefrontSettings(db, mediaService))
-
-			mediaRoutes := apiv1.Group("/media")
-			mediaRoutes.Use(middleware.AuthMiddleware(jwtSecret, ""))
-			mediaRoutes.Use(middleware.CSRFMiddleware())
-			{
-				composer := tusdhandler.NewStoreComposer()
-				store := tusdfilestore.New(mediaService.TusDir())
-				store.UseIn(composer)
-
-				tusd, err := tusdhandler.NewHandler(tusdhandler.Config{
-					BasePath:              "/api/v1/media/uploads",
-					StoreComposer:         composer,
-					NotifyCompleteUploads: true,
-				})
-				if err != nil {
-					log.Fatalf("[ERROR] Failed to initialize tusd: %v", err)
-				}
-
-				go func() {
-					for event := range tusd.CompleteUploads {
-						if err := mediaService.HandleTusdComplete(event.Upload); err != nil {
-							log.Printf("[ERROR] Media upload completion failed: %v", err)
-						}
-					}
-				}()
-
-				mediaRoutes.Any("/uploads", gin.WrapH(http.StripPrefix("/api/v1/media/uploads", tusd)))
-				mediaRoutes.Any("/uploads/*path", gin.WrapH(http.StripPrefix("/api/v1/media/uploads", tusd)))
-			}
-
-			// PROTECTED USER ROUTES
-			userRoutes := apiv1.Group("/me")
-			userRoutes.Use(middleware.AuthMiddleware(jwtSecret, ""))
-			userRoutes.Use(middleware.CSRFMiddleware())
-			{
-				userRoutes.GET("/", handlers.GetProfile(db, mediaService))
-				userRoutes.PATCH("/", handlers.UpdateProfile(db))
-				userRoutes.POST("/profile-photo", handlers.SetProfilePhoto(db, mediaService))
-				userRoutes.DELETE("/profile-photo", handlers.DeleteProfilePhoto(db, mediaService))
-				userRoutes.GET("/cart", handlers.GetCart(db, mediaService))
-				userRoutes.POST("/cart", handlers.AddCartItem(db, mediaService))
-				userRoutes.PATCH("/cart/:itemId", handlers.UpdateCartItem(db, mediaService))
-				userRoutes.DELETE("/cart/:itemId", handlers.DeleteCartItem(db))
-				userRoutes.GET("/orders", handlers.GetUserOrders(db, mediaService))
-				userRoutes.GET("/orders/:id", handlers.GetOrderByID(db, mediaService))
-				userRoutes.POST("/orders", handlers.CreateOrder(db, mediaService))
-				userRoutes.POST("/orders/:id/pay", handlers.ProcessPayment(db, mediaService))
-				userRoutes.GET("/payment-methods", handlers.GetSavedPaymentMethods(db))
-				userRoutes.POST("/payment-methods", handlers.CreateSavedPaymentMethod(db))
-				userRoutes.DELETE("/payment-methods/:id", handlers.DeleteSavedPaymentMethod(db))
-				userRoutes.PATCH("/payment-methods/:id/default", handlers.SetDefaultPaymentMethod(db))
-				userRoutes.GET("/addresses", handlers.GetSavedAddresses(db))
-				userRoutes.POST("/addresses", handlers.CreateSavedAddress(db))
-				userRoutes.DELETE("/addresses/:id", handlers.DeleteSavedAddress(db))
-				userRoutes.PATCH("/addresses/:id/default", handlers.SetDefaultAddress(db))
-			}
-
-			// ADMIN ROUTES
-			adminRoutes := apiv1.Group("/admin")
-			adminRoutes.Use(middleware.AuthMiddleware(jwtSecret, "admin"))
-			adminRoutes.Use(middleware.CSRFMiddleware())
-			{
-				adminRoutes.POST("/products", handlers.CreateProduct(db))
-				adminRoutes.PATCH("/products/:id", handlers.UpdateProduct(db))
-				adminRoutes.DELETE("/products/:id", handlers.DeleteProduct(db, mediaService))
-				adminRoutes.POST("/products/:id/media", handlers.AttachProductMedia(db, mediaService))
-				adminRoutes.PATCH("/products/:id/media/order", handlers.UpdateProductMediaOrder(db, mediaService))
-				adminRoutes.DELETE("/products/:id/media/:mediaId", handlers.DetachProductMedia(db, mediaService))
-				adminRoutes.PATCH("/products/:id/related", handlers.UpdateProductRelated(db, mediaService))
-				adminRoutes.GET("/orders", handlers.GetAllOrders(db, mediaService))
-				adminRoutes.GET("/orders/:id", handlers.GetAdminOrderByID(db, mediaService))
-				adminRoutes.PATCH("/orders/:id/status", handlers.UpdateOrderStatus(db))
-				adminRoutes.GET("/users", handlers.GetAllUsers(db))
-				adminRoutes.PATCH("/users/:id/role", handlers.UpdateUserRole(db))
-				adminRoutes.GET("/storefront", handlers.GetAdminStorefrontSettings(db, mediaService))
-				adminRoutes.PUT("/storefront", handlers.UpsertStorefrontSettings(db, mediaService))
+	go func() {
+		for event := range tusd.CompleteUploads {
+			if err := mediaService.HandleTusdComplete(event.Upload); err != nil {
+				log.Printf("[ERROR] Media upload completion failed: %v", err)
 			}
 		}
-	}
+	}()
+
+	apiServer := handlers.NewGeneratedAPIServer(db, mediaService, handlers.GeneratedAPIServerConfig{
+		JWTSecret:          jwtSecret,
+		DisableLocalSignIn: disableLocalSignIn,
+		AuthCookieConfig:   authCookieCfg,
+		OIDCProvider:       cfg.OIDCProvider,
+		OIDCClientID:       cfg.OIDCClientID,
+		OIDCRedirectURI:    cfg.OIDCRedirectURI,
+		MediaUploads:       http.StripPrefix("/api/v1/media/uploads", tusd),
+	})
+	apicontract.RegisterHandlers(r, apiServer)
 
 	log.Printf("[INFO] Server starting on port %s", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {
