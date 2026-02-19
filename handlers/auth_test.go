@@ -1,11 +1,14 @@
 package handlers
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"ecommerce/models"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -126,4 +129,70 @@ func TestPasswordHashing_DifferentPasswords(t *testing.T) {
 	assert.Error(t, bcrypt.CompareHashAndPassword(hash1, []byte(password2)))
 	assert.NoError(t, bcrypt.CompareHashAndPassword(hash2, []byte(password2)))
 	assert.Error(t, bcrypt.CompareHashAndPassword(hash2, []byte(password1)))
+}
+
+func TestSanitizeRedirectPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{name: "empty defaults to root", input: "", expected: "/"},
+		{name: "whitespace defaults to root", input: "   ", expected: "/"},
+		{name: "valid relative path", input: "/orders", expected: "/orders"},
+		{name: "double slash rejected", input: "//evil.example", expected: "/"},
+		{name: "absolute url rejected", input: "https://evil.example", expected: "/"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, sanitizeRedirectPath(tc.input))
+		})
+	}
+}
+
+func TestWantsJSONResponse(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	t.Run("format query wins", func(t *testing.T) {
+		c, _ := gin.CreateTestContext(httptest.NewRecorder())
+		req := httptest.NewRequest(http.MethodGet, "/auth/callback?format=json", nil)
+		req.Header.Set("Accept", "text/html")
+		c.Request = req
+		assert.True(t, wantsJSONResponse(c))
+	})
+
+	t.Run("accept header application/json", func(t *testing.T) {
+		c, _ := gin.CreateTestContext(httptest.NewRecorder())
+		req := httptest.NewRequest(http.MethodGet, "/auth/callback", nil)
+		req.Header.Set("Accept", "application/json")
+		c.Request = req
+		assert.True(t, wantsJSONResponse(c))
+	})
+
+	t.Run("default false", func(t *testing.T) {
+		c, _ := gin.CreateTestContext(httptest.NewRecorder())
+		req := httptest.NewRequest(http.MethodGet, "/auth/callback", nil)
+		req.Header.Set("Accept", "text/html")
+		c.Request = req
+		assert.False(t, wantsJSONResponse(c))
+	})
+}
+
+func TestOIDCHandlersInvalidProvider(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+
+	r.GET("/oidc/login", OIDCLogin("http://127.0.0.1:1", "client", "http://127.0.0.1/cb", AuthCookieConfig{}))
+	r.GET("/oidc/callback", OIDCCallback(newTestDB(t), "secret", "http://127.0.0.1:1", "client", "http://127.0.0.1/cb", AuthCookieConfig{}))
+
+	loginReq := httptest.NewRequest(http.MethodGet, "/oidc/login", nil)
+	loginW := httptest.NewRecorder()
+	r.ServeHTTP(loginW, loginReq)
+	assert.Equal(t, http.StatusInternalServerError, loginW.Code)
+
+	callbackReq := httptest.NewRequest(http.MethodGet, "/oidc/callback?state=x&code=y", nil)
+	callbackW := httptest.NewRecorder()
+	r.ServeHTTP(callbackW, callbackReq)
+	assert.Equal(t, http.StatusInternalServerError, callbackW.Code)
 }

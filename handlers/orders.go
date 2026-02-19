@@ -584,64 +584,47 @@ func UpdateOrderStatus(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Get order
 		var order models.Order
-		if err := db.First(&order, orderID).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
-			return
-		}
+		err = db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Preload("Items").First(&order, orderID).Error; err != nil {
+				return err
+			}
 
-		previousStatus := order.Status
+			previousStatus := order.Status
+			if req.Status == models.StatusPaid && previousStatus != models.StatusPaid {
+				if err := deductStockForItems(tx, order.Items); err != nil {
+					return err
+				}
+			}
 
-		// Update status
-		order.Status = req.Status
-		if err := db.Save(&order).Error; err != nil {
+			order.Status = req.Status
+			if err := tx.Save(&order).Error; err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
+				return
+			}
+			var stockErr *insufficientStockError
+			if errors.As(err, &stockErr) {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error":        "Insufficient stock",
+					"product_id":   stockErr.ProductID,
+					"product_name": stockErr.ProductName,
+					"requested":    stockErr.Requested,
+					"available":    stockErr.Available,
+				})
+				return
+			}
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update order status"})
 			return
 		}
 
-		// If status transitioned to PAID, deduct stock
-		if req.Status == models.StatusPaid && previousStatus != models.StatusPaid {
-			tx := db.Begin()
-			defer func() {
-				if r := recover(); r != nil {
-					tx.Rollback()
-				}
-			}()
-
-			// Load order items
-			if err := tx.Preload("Items").First(&order, orderID).Error; err != nil {
-				tx.Rollback()
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load order items"})
-				return
-			}
-
-			if err := deductStockForItems(tx, order.Items); err != nil {
-				tx.Rollback()
-				var stockErr *insufficientStockError
-				if errors.As(err, &stockErr) {
-					c.JSON(http.StatusBadRequest, gin.H{
-						"error":        "Insufficient stock",
-						"product_id":   stockErr.ProductID,
-						"product_name": stockErr.ProductName,
-						"requested":    stockErr.Requested,
-						"available":    stockErr.Available,
-					})
-					return
-				}
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product stock"})
-				return
-			}
-
-			if err := tx.Commit().Error; err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process stock update"})
-				return
-			}
-		}
-
-		// Reload order
+		// Reload order with product details for response shape consistency.
 		db.Preload("Items.Product").First(&order, order.ID)
-
 		c.JSON(http.StatusOK, order)
 	}
 }

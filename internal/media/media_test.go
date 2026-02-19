@@ -7,7 +7,9 @@ import (
 
 	"ecommerce/models"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	tusdhandler "github.com/tus/tusd/v2/pkg/handler"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -108,4 +110,43 @@ func TestDeleteIfOrphanKeepsReferencedMedia(t *testing.T) {
 	var count int64
 	require.NoError(t, db.Model(&models.MediaObject{}).Where("id = ?", "linked").Count(&count).Error)
 	require.Equal(t, int64(1), count)
+}
+
+func TestHandleTusdCompleteQueuesJobAndPersistsProcessingRecord(t *testing.T) {
+	service, db, _ := setupMediaService(t)
+
+	uploadID := "upload-123"
+	sourcePath := filepath.Join(service.TusDir(), uploadID)
+	require.NoError(t, os.WriteFile(sourcePath, []byte("hello"), 0o644))
+	require.NoError(t, os.WriteFile(sourcePath+".info", []byte("meta"), 0o644))
+
+	err := service.HandleTusdComplete(tusdhandler.FileInfo{
+		ID:   uploadID,
+		Size: 5,
+		MetaData: map[string]string{
+			"filename": "photo.jpg",
+		},
+	})
+	require.NoError(t, err)
+
+	incomingPath := filepath.Join(service.IncomingDir(), uploadID)
+	_, statErr := os.Stat(incomingPath)
+	require.NoError(t, statErr)
+
+	var objCount int64
+	require.NoError(t, db.Table("media_objects").Where("id = ?", uploadID).Count(&objCount).Error)
+	assert.EqualValues(t, 1, objCount)
+
+	job := <-service.Queue
+	assert.Equal(t, uploadID, job.ID)
+	assert.Equal(t, incomingPath, job.Source)
+	assert.Equal(t, "photo.jpg", job.Filename)
+	assert.EqualValues(t, 5, job.SizeBytes)
+}
+
+func TestHandleTusdCompleteRequiresUploadID(t *testing.T) {
+	service, _, _ := setupMediaService(t)
+	err := service.HandleTusdComplete(tusdhandler.FileInfo{})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "missing upload id")
 }

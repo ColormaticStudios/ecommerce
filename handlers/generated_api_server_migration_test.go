@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"ecommerce/internal/apicontract"
+	"ecommerce/internal/media"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -335,4 +337,395 @@ func TestGeneratedSmokeRegisterCartOrderFlow(t *testing.T) {
 	var orderCount int64
 	require.NoError(t, db.Model(&models.Order{}).Count(&orderCount).Error)
 	assert.EqualValues(t, 1, orderCount)
+}
+
+func setupGeneratedRouterForAccountData(t *testing.T) (*gin.Engine, *models.User) {
+	t.Helper()
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.SavedPaymentMethod{},
+		&models.SavedAddress{},
+	)
+	user := seedUser(t, db, "sub-account", "account-user", "account@example.com", "customer")
+	return r, &user
+}
+
+func TestSavedPaymentMethodDefaultTransitions(t *testing.T) {
+	r, user := setupGeneratedRouterForAccountData(t)
+	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, user.Subject, user.Role)
+
+	firstResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/payment-methods", map[string]any{
+		"cardholder_name": "User One",
+		"card_number":     "4111111111111111",
+		"exp_month":       12,
+		"exp_year":        2040,
+	}, token)
+	require.Equal(t, http.StatusCreated, firstResp.Code)
+	first := decodeJSON[models.SavedPaymentMethod](t, firstResp)
+	assert.True(t, first.IsDefault)
+
+	secondResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/payment-methods", map[string]any{
+		"cardholder_name": "User One",
+		"card_number":     "5555555555554444",
+		"exp_month":       10,
+		"exp_year":        2039,
+		"set_default":     true,
+	}, token)
+	require.Equal(t, http.StatusCreated, secondResp.Code)
+	second := decodeJSON[models.SavedPaymentMethod](t, secondResp)
+	assert.True(t, second.IsDefault)
+
+	listResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/payment-methods", nil, token)
+	require.Equal(t, http.StatusOK, listResp.Code)
+	methods := decodeJSON[[]models.SavedPaymentMethod](t, listResp)
+	require.Len(t, methods, 2)
+	assert.Equal(t, second.ID, methods[0].ID)
+	assert.True(t, methods[0].IsDefault)
+
+	setDefaultResp := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/me/payment-methods/%d/default", first.ID), nil, token)
+	require.Equal(t, http.StatusOK, setDefaultResp.Code)
+	setDefaultBody := decodeJSON[models.SavedPaymentMethod](t, setDefaultResp)
+	assert.True(t, setDefaultBody.IsDefault)
+
+	deleteResp := performJSONRequest(t, r, http.MethodDelete, fmt.Sprintf("/api/v1/me/payment-methods/%d", first.ID), nil, token)
+	require.Equal(t, http.StatusOK, deleteResp.Code)
+
+	listAfterDeleteResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/payment-methods", nil, token)
+	require.Equal(t, http.StatusOK, listAfterDeleteResp.Code)
+	remaining := decodeJSON[[]models.SavedPaymentMethod](t, listAfterDeleteResp)
+	require.Len(t, remaining, 1)
+	assert.Equal(t, second.ID, remaining[0].ID)
+	assert.True(t, remaining[0].IsDefault)
+}
+
+func TestSavedAddressDefaultTransitions(t *testing.T) {
+	r, user := setupGeneratedRouterForAccountData(t)
+	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, user.Subject, user.Role)
+
+	firstResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/addresses", map[string]any{
+		"full_name":   "Address User",
+		"line1":       "100 Main",
+		"city":        "Austin",
+		"postal_code": "78701",
+		"country":     "US",
+	}, token)
+	require.Equal(t, http.StatusCreated, firstResp.Code)
+	first := decodeJSON[models.SavedAddress](t, firstResp)
+	assert.True(t, first.IsDefault)
+
+	secondResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/addresses", map[string]any{
+		"full_name":   "Address User",
+		"line1":       "200 Main",
+		"city":        "Austin",
+		"postal_code": "78702",
+		"country":     "US",
+		"set_default": true,
+	}, token)
+	require.Equal(t, http.StatusCreated, secondResp.Code)
+	second := decodeJSON[models.SavedAddress](t, secondResp)
+	assert.True(t, second.IsDefault)
+
+	listResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/addresses", nil, token)
+	require.Equal(t, http.StatusOK, listResp.Code)
+	addresses := decodeJSON[[]models.SavedAddress](t, listResp)
+	require.Len(t, addresses, 2)
+	assert.Equal(t, second.ID, addresses[0].ID)
+	assert.True(t, addresses[0].IsDefault)
+
+	setDefaultResp := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/me/addresses/%d/default", first.ID), nil, token)
+	require.Equal(t, http.StatusOK, setDefaultResp.Code)
+	setDefaultBody := decodeJSON[models.SavedAddress](t, setDefaultResp)
+	assert.True(t, setDefaultBody.IsDefault)
+
+	deleteResp := performJSONRequest(t, r, http.MethodDelete, fmt.Sprintf("/api/v1/me/addresses/%d", first.ID), nil, token)
+	require.Equal(t, http.StatusOK, deleteResp.Code)
+
+	listAfterDeleteResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/addresses", nil, token)
+	require.Equal(t, http.StatusOK, listAfterDeleteResp.Code)
+	remaining := decodeJSON[[]models.SavedAddress](t, listAfterDeleteResp)
+	require.Len(t, remaining, 1)
+	assert.Equal(t, second.ID, remaining[0].ID)
+	assert.True(t, remaining[0].IsDefault)
+}
+
+func TestProfileEndpointsAndUserList(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{})
+	admin := seedUser(t, db, "sub-admin-profile", "admin-profile", "admin-profile@example.com", "admin")
+	customer := seedUser(t, db, "sub-customer-profile", "customer-profile", "customer-profile@example.com", "customer")
+
+	customerToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, customer.Subject, customer.Role)
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	getProfileResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/", nil, customerToken)
+	require.Equal(t, http.StatusOK, getProfileResp.Code)
+	profile := decodeJSON[models.User](t, getProfileResp)
+	assert.Equal(t, customer.Subject, profile.Subject)
+
+	badUpdateResp := performJSONRequest(t, r, http.MethodPatch, "/api/v1/me/", map[string]any{"currency": "XYZ"}, customerToken)
+	require.Equal(t, http.StatusBadRequest, badUpdateResp.Code)
+
+	goodUpdateResp := performJSONRequest(t, r, http.MethodPatch, "/api/v1/me/", map[string]any{"name": "Updated Name", "currency": "EUR"}, customerToken)
+	require.Equal(t, http.StatusOK, goodUpdateResp.Code)
+	updated := decodeJSON[models.User](t, goodUpdateResp)
+	assert.Equal(t, "Updated Name", updated.Name)
+	assert.Equal(t, "EUR", updated.Currency)
+
+	listUsersResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/admin/users?page=1&limit=1", nil, adminToken)
+	require.Equal(t, http.StatusOK, listUsersResp.Code)
+	page := decodeJSON[apicontract.UserPage](t, listUsersResp)
+	assert.Equal(t, 1, page.Pagination.Page)
+	assert.Equal(t, 1, page.Pagination.Limit)
+	assert.GreaterOrEqual(t, page.Pagination.Total, 2)
+}
+
+func setupMediaRouter(t *testing.T, customerSubject, adminSubject string) (*gin.Engine, *models.User, *models.User, *models.Product, *models.MediaObject, *models.MediaObject, *models.MediaObject, *models.MediaObject, *models.MediaObject, *models.MediaObject, *gorm.DB) {
+	t.Helper()
+	db := newTestDB(t, &models.User{}, &models.Product{}, &models.MediaObject{}, &models.MediaVariant{}, &models.MediaReference{})
+	mediaService := media.NewService(db, t.TempDir(), "http://localhost:3000/media", nil)
+	require.NoError(t, mediaService.EnsureDirs())
+
+	customer := seedUser(t, db, customerSubject, "media-customer", "media-customer@example.com", "customer")
+	admin := seedUser(t, db, adminSubject, "media-admin", "media-admin@example.com", "admin")
+	product := seedProduct(t, db, "media-prod-1", "Media Product", 19.99, 9)
+
+	nonImage := models.MediaObject{ID: "profile-non-image", OriginalPath: "files/non-image.pdf", MimeType: "application/pdf", SizeBytes: 120, Status: media.StatusReady}
+	image := models.MediaObject{ID: "profile-image", OriginalPath: "images/profile.webp", MimeType: "image/webp", SizeBytes: 120, Status: media.StatusReady}
+	prodA := models.MediaObject{ID: "product-media-a", OriginalPath: "a/original.webp", MimeType: "image/webp", SizeBytes: 10, Status: media.StatusReady}
+	prodB := models.MediaObject{ID: "product-media-b", OriginalPath: "b/original.webp", MimeType: "image/webp", SizeBytes: 10, Status: media.StatusReady}
+	processing := models.MediaObject{ID: "processing-media", OriginalPath: "proc/file.webp", MimeType: "image/webp", SizeBytes: 10, Status: media.StatusProcessing}
+	failed := models.MediaObject{ID: "failed-media", OriginalPath: "failed/file.webp", MimeType: "image/webp", SizeBytes: 10, Status: media.StatusFailed}
+
+	for _, obj := range []models.MediaObject{nonImage, image, prodA, prodB, processing, failed} {
+		require.NoError(t, db.Create(&obj).Error)
+	}
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	server := NewGeneratedAPIServer(db, mediaService, GeneratedAPIServerConfig{JWTSecret: generatedTestJWTSecret})
+	apicontract.RegisterHandlers(r, server)
+
+	return r, &customer, &admin, &product, &nonImage, &image, &prodA, &prodB, &processing, &failed, db
+}
+
+func TestProfilePhotoLifecycleAndValidation(t *testing.T) {
+	r, customer, _, _, nonImage, image, _, _, _, _, db := setupMediaRouter(t, "sub-media-customer-1", "sub-media-admin-1")
+	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, customer.Subject, customer.Role)
+
+	badResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/profile-photo", map[string]any{"media_id": nonImage.ID}, token)
+	require.Equal(t, http.StatusBadRequest, badResp.Code)
+
+	setResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/profile-photo", map[string]any{"media_id": image.ID}, token)
+	require.Equal(t, http.StatusOK, setResp.Code)
+	setBody := decodeJSON[models.User](t, setResp)
+	assert.Contains(t, setBody.ProfilePhoto, "images/profile.webp")
+
+	deleteResp := performJSONRequest(t, r, http.MethodDelete, "/api/v1/me/profile-photo", nil, token)
+	require.Equal(t, http.StatusOK, deleteResp.Code)
+	deleted := decodeJSON[models.User](t, deleteResp)
+	assert.Equal(t, "", deleted.ProfilePhoto)
+
+	var refs int64
+	require.NoError(t, db.Model(&models.MediaReference{}).Where("owner_type = ? AND role = ?", media.OwnerTypeUser, media.RoleProfilePhoto).Count(&refs).Error)
+	assert.EqualValues(t, 0, refs)
+}
+
+func TestAdminProductMediaAttachReorderDetachAndProcessingRejection(t *testing.T) {
+	r, _, admin, product, _, _, prodA, prodB, processing, failed, db := setupMediaRouter(t, "sub-media-customer-2", "sub-media-admin-2")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	attachResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/admin/products/%d/media", product.ID), map[string]any{"media_ids": []string{prodA.ID, prodB.ID}}, adminToken)
+	require.Equal(t, http.StatusOK, attachResp.Code)
+
+	processingResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/admin/products/%d/media", product.ID), map[string]any{"media_ids": []string{processing.ID}}, adminToken)
+	require.Equal(t, http.StatusConflict, processingResp.Code)
+
+	failedResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/admin/products/%d/media", product.ID), map[string]any{"media_ids": []string{failed.ID}}, adminToken)
+	require.Equal(t, http.StatusUnprocessableEntity, failedResp.Code)
+
+	badOrderResp := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/products/%d/media/order", product.ID), map[string]any{"media_ids": []string{"missing-id"}}, adminToken)
+	require.Equal(t, http.StatusBadRequest, badOrderResp.Code)
+
+	goodOrderResp := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/products/%d/media/order", product.ID), map[string]any{"media_ids": []string{prodB.ID, prodA.ID}}, adminToken)
+	require.Equal(t, http.StatusOK, goodOrderResp.Code)
+
+	var refs []models.MediaReference
+	require.NoError(t, db.Where("owner_type = ? AND owner_id = ? AND role = ?", media.OwnerTypeProduct, product.ID, media.RoleProductImage).Order("position asc").Find(&refs).Error)
+	require.Len(t, refs, 2)
+	assert.Equal(t, prodB.ID, refs[0].MediaID)
+	assert.Equal(t, prodA.ID, refs[1].MediaID)
+
+	detachResp := performJSONRequest(t, r, http.MethodDelete, fmt.Sprintf("/api/v1/admin/products/%d/media/%s", product.ID, prodA.ID), nil, adminToken)
+	require.Equal(t, http.StatusOK, detachResp.Code)
+
+	var count int64
+	require.NoError(t, db.Model(&models.MediaReference{}).Where("owner_type = ? AND owner_id = ? AND role = ?", media.OwnerTypeProduct, product.ID, media.RoleProductImage).Count(&count).Error)
+	assert.EqualValues(t, 1, count)
+}
+
+func TestCartUpdateDeleteOwnershipIsolation(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.Cart{}, &models.CartItem{})
+	owner := seedUser(t, db, "sub-owner", "owner", "owner@example.com", "customer")
+	other := seedUser(t, db, "sub-other", "other", "other@example.com", "customer")
+	product := seedProduct(t, db, "sku-cart-gap", "Cart Gap Product", 10, 5)
+
+	ownerToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, owner.Subject, owner.Role)
+	otherToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, other.Subject, other.Role)
+
+	addResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/cart", map[string]any{"product_id": product.ID, "quantity": 1}, ownerToken)
+	require.Equal(t, http.StatusOK, addResp.Code)
+	cart := decodeJSON[models.Cart](t, addResp)
+	require.Len(t, cart.Items, 1)
+	itemID := cart.Items[0].ID
+
+	patchOther := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/me/cart/%d", itemID), map[string]any{"quantity": 2}, otherToken)
+	require.Equal(t, http.StatusNotFound, patchOther.Code)
+
+	deleteOther := performJSONRequest(t, r, http.MethodDelete, fmt.Sprintf("/api/v1/me/cart/%d", itemID), nil, otherToken)
+	require.Equal(t, http.StatusNotFound, deleteOther.Code)
+
+	patchOwnerBad := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/me/cart/%d", itemID), map[string]any{"quantity": 10}, ownerToken)
+	require.Equal(t, http.StatusBadRequest, patchOwnerBad.Code)
+
+	patchOwnerGood := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/me/cart/%d", itemID), map[string]any{"quantity": 2}, ownerToken)
+	require.Equal(t, http.StatusOK, patchOwnerGood.Code)
+
+	deleteOwner := performJSONRequest(t, r, http.MethodDelete, fmt.Sprintf("/api/v1/me/cart/%d", itemID), nil, ownerToken)
+	require.Equal(t, http.StatusOK, deleteOwner.Code)
+}
+
+func TestOrdersDateFilterAndGetOrderValidation(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.Order{}, &models.OrderItem{})
+	user := seedUser(t, db, "sub-order-gap", "order-gap", "order-gap@example.com", "customer")
+	product := seedProduct(t, db, "sku-order-gap", "Order Gap Product", 30, 8)
+	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, user.Subject, user.Role)
+
+	createOrderResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/orders", map[string]any{
+		"items": []map[string]any{{"product_id": product.ID, "quantity": 1}},
+	}, token)
+	require.Equal(t, http.StatusCreated, createOrderResp.Code)
+	createdOrder := decodeJSON[models.Order](t, createOrderResp)
+
+	badStart := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/orders?start_date=nope", nil, token)
+	require.Equal(t, http.StatusBadRequest, badStart.Code)
+
+	badRange := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/orders?start_date=2024-01-02&end_date=2024-01-01", nil, token)
+	require.Equal(t, http.StatusBadRequest, badRange.Code)
+
+	badStatus := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/orders?status=INVALID", nil, token)
+	require.Equal(t, http.StatusBadRequest, badStatus.Code)
+
+	invalidIDReq := httptest.NewRequest(http.MethodGet, "/api/v1/me/orders/not-an-int", nil)
+	invalidIDReq.Header.Set("Authorization", "Bearer "+token)
+	invalidIDW := httptest.NewRecorder()
+	r.ServeHTTP(invalidIDW, invalidIDReq)
+	require.Equal(t, http.StatusBadRequest, invalidIDW.Code)
+
+	missingResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/orders/999999", nil, token)
+	require.Equal(t, http.StatusNotFound, missingResp.Code)
+
+	getOrderResp := performJSONRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/me/orders/%d", createdOrder.ID), nil, token)
+	require.Equal(t, http.StatusOK, getOrderResp.Code)
+}
+
+func TestAdminUpdateOrderStatusDeductsStockOnceAndRollbackOnFailure(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.Order{}, &models.OrderItem{})
+	admin := seedUser(t, db, "sub-admin-order", "admin-order", "admin-order@example.com", "admin")
+	customer := seedUser(t, db, "sub-customer-order", "customer-order", "customer-order@example.com", "customer")
+	product := seedProduct(t, db, "sku-stock-gap", "Stock Gap Product", 12.5, 5)
+
+	order := models.Order{UserID: customer.ID, Status: models.StatusPending, Total: models.MoneyFromFloat(25)}
+	require.NoError(t, db.Create(&order).Error)
+	require.NoError(t, db.Create(&models.OrderItem{OrderID: order.ID, ProductID: product.ID, Quantity: 2, Price: models.MoneyFromFloat(12.5)}).Error)
+
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	firstPay := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/orders/%d/status", order.ID), map[string]any{"status": models.StatusPaid}, adminToken)
+	require.Equal(t, http.StatusOK, firstPay.Code)
+
+	var reloaded models.Product
+	require.NoError(t, db.First(&reloaded, product.ID).Error)
+	assert.Equal(t, 3, reloaded.Stock)
+
+	secondPay := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/orders/%d/status", order.ID), map[string]any{"status": models.StatusPaid}, adminToken)
+	require.Equal(t, http.StatusOK, secondPay.Code)
+	require.NoError(t, db.First(&reloaded, product.ID).Error)
+	assert.Equal(t, 3, reloaded.Stock)
+
+	lowStockProduct := seedProduct(t, db, "sku-low-stock", "Low Stock Product", 9.99, 1)
+	failingOrder := models.Order{UserID: customer.ID, Status: models.StatusPending, Total: models.MoneyFromFloat(29.97)}
+	require.NoError(t, db.Create(&failingOrder).Error)
+	require.NoError(t, db.Create(&models.OrderItem{OrderID: failingOrder.ID, ProductID: lowStockProduct.ID, Quantity: 2, Price: models.MoneyFromFloat(9.99)}).Error)
+
+	failPay := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/orders/%d/status", failingOrder.ID), map[string]any{"status": models.StatusPaid}, adminToken)
+	require.Equal(t, http.StatusBadRequest, failPay.Code)
+	assert.Contains(t, strings.ToLower(failPay.Body.String()), "insufficient stock")
+
+	var orderAfter models.Order
+	require.NoError(t, db.First(&orderAfter, failingOrder.ID).Error)
+	assert.Equal(t, models.StatusPending, orderAfter.Status)
+}
+
+func TestStorefrontDisabledSectionsAndHeroMediaValidation(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := newTestDB(t, &models.StorefrontSettings{}, &models.MediaObject{}, &models.MediaReference{})
+	mediaService := media.NewService(db, t.TempDir(), "http://localhost:3000/media", nil)
+	require.NoError(t, mediaService.EnsureDirs())
+
+	settings := defaultStorefrontSettings()
+	require.NotEmpty(t, settings.HomepageSections)
+	disabledID := settings.HomepageSections[0].ID
+	settings.HomepageSections[0].Enabled = false
+
+	raw, err := json.Marshal(settings)
+	require.NoError(t, err)
+	require.NoError(t, db.Create(&models.StorefrontSettings{ID: models.StorefrontSettingsSingletonID, ConfigJSON: string(raw)}).Error)
+
+	r := gin.New()
+	r.GET("/public", GetStorefrontSettings(db, mediaService))
+	r.GET("/admin", GetAdminStorefrontSettings(db, mediaService))
+	r.PUT("/admin", UpsertStorefrontSettings(db, mediaService))
+
+	publicReq := httptest.NewRequest(http.MethodGet, "/public", nil)
+	publicW := httptest.NewRecorder()
+	r.ServeHTTP(publicW, publicReq)
+	require.Equal(t, http.StatusOK, publicW.Code)
+	publicResp := decodeJSON[StorefrontSettingsResponse](t, publicW)
+	for _, section := range publicResp.Settings.HomepageSections {
+		assert.NotEqual(t, disabledID, section.ID)
+	}
+
+	adminReq := httptest.NewRequest(http.MethodGet, "/admin", nil)
+	adminW := httptest.NewRecorder()
+	r.ServeHTTP(adminW, adminReq)
+	require.Equal(t, http.StatusOK, adminW.Code)
+	adminResp := decodeJSON[StorefrontSettingsResponse](t, adminW)
+	foundDisabled := false
+	for _, section := range adminResp.Settings.HomepageSections {
+		if section.ID == disabledID {
+			foundDisabled = true
+			break
+		}
+	}
+	assert.True(t, foundDisabled)
+
+	require.NoError(t, db.Create(&models.MediaObject{ID: "hero-not-image", OriginalPath: "hero/file.pdf", MimeType: "application/pdf", SizeBytes: 12, Status: media.StatusReady}).Error)
+	updated := defaultStorefrontSettings()
+	for i := range updated.HomepageSections {
+		if updated.HomepageSections[i].Type == "hero" && updated.HomepageSections[i].Hero != nil {
+			updated.HomepageSections[i].Hero.BackgroundImageMediaID = "hero-not-image"
+			updated.HomepageSections[i].Hero.BackgroundImageUrl = ""
+			break
+		}
+	}
+	body, err := json.Marshal(UpsertStorefrontSettingsRequest{Settings: updated})
+	require.NoError(t, err)
+
+	upsertReq := httptest.NewRequest(http.MethodPut, "/admin", strings.NewReader(string(body)))
+	upsertReq.Header.Set("Content-Type", "application/json")
+	upsertW := httptest.NewRecorder()
+	r.ServeHTTP(upsertW, upsertReq)
+	require.Equal(t, http.StatusBadRequest, upsertW.Code)
+	assert.Contains(t, strings.ToLower(upsertW.Body.String()), "media must be an image")
 }
