@@ -11,7 +11,9 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --diagnostic-sources svelte,ts,js",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --diagnostic-sources svelte,ts,js --watch",
 		"format": "prettier --write .",
-		"lint": "eslint ."
+		"lint": "eslint .",
+		"test:e2e": "playwright test",
+		"test:e2e:headed": "playwright test --headed"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",
@@ -34,7 +36,8 @@
 		"tailwindcss": "^4.1.17",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.48.1",
-		"vite": "^7.2.6"
+		"vite": "^7.2.6",
+		"@playwright/test": "^1.56.1"
 	},
 	"dependencies": {
 		"bootstrap-icons": "^1.13.1",

@@ -175,6 +175,19 @@ generate shared backend and frontend types.
   make openapi-docs
   ```
 
+### Testing-Only Components
+
+The following files/routes are intentionally for testing only and are not production runtime features:
+
+- `cmd/e2e-server/main.go`: dedicated local/CI E2E backend server using SQLite test data.
+- `GET /__test/summary` (from `cmd/e2e-server/main.go`): test-only DB summary assertions.
+- `GET /__test/login` (from `cmd/e2e-server/main.go`): test-only session bootstrap helper.
+- `POST /__test/cart-item` (from `cmd/e2e-server/main.go`): test-only cart seeding helper.
+- `POST /__test/saved-checkout-data` (from `cmd/e2e-server/main.go`): test-only checkout-data seeding helper.
+- `handlers/critical_journeys_integration_test.go`: backend critical-journey integration tests.
+- `frontend/playwright.config.ts`: Playwright test runner config.
+- `frontend/e2e/critical-journeys.spec.ts`: browser E2E specs for critical user journeys.
+
 ## CLI Tool
 
 The project includes a command-line tool for administrative tasks.
@@ -301,16 +314,49 @@ bin/ecommerce-cli user set-admin --help
 ### Running Tests
 
 ```bash
-# Run all tests
+# Backend: run all Go tests (unit + integration tests)
 make test
 ```
 
-The test suite includes:
+You can also run targeted suites:
 
-- **Authentication tests** - JWT generation, password hashing, subject ID generation
-- **Validation tests** - Currency validation, product validation, input validation
-- **Business logic tests** - Order total calculation, stock validation, pagination
-- **Middleware tests** - Auth middleware with various scenarios (valid/invalid tokens, role requirements, expired tokens)
+```bash
+# Backend: critical journey integration tests only
+GOCACHE=/tmp/go-build-cache go test ./handlers -run TestCriticalJourney -count=1
+```
+
+```bash
+# Backend: generated API migration/parity tests
+go test ./handlers -run TestGenerated -count=1
+```
+
+```bash
+# Frontend: type checking + linting (static test gates)
+cd frontend
+bun run check
+bun run lint
+```
+
+```bash
+# Frontend + backend: browser E2E tests (Playwright)
+cd frontend
+bun run test:e2e
+```
+
+```bash
+# Frontend + backend: browser E2E tests (headed mode)
+cd frontend
+bun run test:e2e:headed
+```
+
+Current automated test coverage in this repository includes:
+
+- Backend unit tests (handler logic, auth helpers, middleware behavior, config/model helpers).
+- Backend integration tests against in-memory SQLite (`handlers/*_test.go` integration-focused suites).
+- Backend critical journey integration tests (`handlers/critical_journeys_integration_test.go`).
+- Generated OpenAPI router parity/migration tests (`handlers/generated_api_server*_test.go`).
+- Frontend static quality gates (`bun run check`, `bun run lint`).
+- Frontend browser E2E critical journeys (`frontend/e2e/critical-journeys.spec.ts`) using the test-only server in `cmd/e2e-server/main.go`.
 
 ### Building for Production
 
