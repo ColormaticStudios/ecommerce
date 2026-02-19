@@ -104,7 +104,7 @@ func CreateOrder(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
 
 		// Parse request
 		var req CreateOrderRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -398,7 +398,7 @@ func ProcessPayment(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFun
 		}
 
 		var req ProcessPaymentRequest
-		if err := c.ShouldBindJSON(&req); err != nil && !errors.Is(err, io.EOF) {
+		if err := bindStrictJSON(c, &req); err != nil && !errors.Is(err, io.EOF) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -579,7 +579,7 @@ func UpdateOrderStatus(db *gorm.DB) gin.HandlerFunc {
 
 		// Parse request
 		var req UpdateOrderStatusRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

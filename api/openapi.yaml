@@ -16,6 +16,7 @@ tags:
   - name: orders
   - name: admin
   - name: media
+  - name: storefront
 paths:
   /api/v1/auth/register:
     post:
@@ -225,6 +226,25 @@ paths:
                 $ref: '#/components/schemas/Product'
         '404':
           description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/storefront:
+    get:
+      tags: [storefront]
+      operationId: getStorefrontSettings
+      security: []
+      responses:
+        '200':
+          description: Storefront settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorefrontSettingsResponse'
+        '500':
+          description: Internal server error
           content:
             application/json:
               schema:
@@ -934,6 +954,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+
+  /api/v1/admin/storefront:
+    get:
+      tags: [admin, storefront]
+      operationId: getAdminStorefrontSettings
+      responses:
+        '200':
+          description: Storefront settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorefrontSettingsResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags: [admin, storefront]
+      operationId: updateStorefrontSettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StorefrontSettingsRequest'
+      responses:
+        '200':
+          description: Updated storefront settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorefrontSettingsResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/v1/media/uploads:
     post:
@@ -1672,3 +1732,189 @@ components:
           type: array
           items:
             type: string
+
+    StorefrontLink:
+      type: object
+      required: [label, url]
+      properties:
+        label:
+          type: string
+        url:
+          type: string
+
+    StorefrontHero:
+      type: object
+      required:
+        - eyebrow
+        - title
+        - subtitle
+        - background_image_url
+        - primary_cta
+        - secondary_cta
+      properties:
+        eyebrow:
+          type: string
+        title:
+          type: string
+        subtitle:
+          type: string
+        background_image_url:
+          type: string
+        background_image_media_id:
+          type: string
+        primary_cta:
+          $ref: '#/components/schemas/StorefrontLink'
+        secondary_cta:
+          $ref: '#/components/schemas/StorefrontLink'
+
+    StorefrontProductSection:
+      type: object
+      required:
+        - title
+        - subtitle
+        - source
+        - query
+        - product_ids
+        - sort
+        - order
+        - limit
+        - show_stock
+        - show_description
+        - image_aspect
+      properties:
+        title:
+          type: string
+        subtitle:
+          type: string
+        source:
+          type: string
+          enum: [manual, newest, search]
+        query:
+          type: string
+        product_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        sort:
+          type: string
+          enum: [created_at, price, name]
+        order:
+          type: string
+          enum: [asc, desc]
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 24
+        show_stock:
+          type: boolean
+        show_description:
+          type: boolean
+        image_aspect:
+          type: string
+          enum: [square, wide]
+
+    StorefrontHomepageSection:
+      type: object
+      required: [id, type, enabled]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [hero, products, promo_cards, badges]
+        enabled:
+          type: boolean
+        hero:
+          $ref: '#/components/schemas/StorefrontHero'
+        product_section:
+          $ref: '#/components/schemas/StorefrontProductSection'
+        promo_cards:
+          type: array
+          items:
+            $ref: '#/components/schemas/StorefrontPromoCard'
+        promo_card_limit:
+          type: integer
+          minimum: 1
+          maximum: 12
+        badges:
+          type: array
+          items:
+            type: string
+
+    StorefrontPromoCard:
+      type: object
+      required: [kicker, title, description, image_url, link]
+      properties:
+        kicker:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        image_url:
+          type: string
+        link:
+          $ref: '#/components/schemas/StorefrontLink'
+
+    StorefrontFooterColumn:
+      type: object
+      required: [title, links]
+      properties:
+        title:
+          type: string
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/StorefrontLink'
+
+    StorefrontFooter:
+      type: object
+      required: [brand_name, tagline, copyright, columns, social_links, bottom_notice]
+      properties:
+        brand_name:
+          type: string
+        tagline:
+          type: string
+        copyright:
+          type: string
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/StorefrontFooterColumn'
+        social_links:
+          type: array
+          items:
+            $ref: '#/components/schemas/StorefrontLink'
+        bottom_notice:
+          type: string
+
+    StorefrontSettings:
+      type: object
+      required: [site_title, homepage_sections, footer]
+      properties:
+        site_title:
+          type: string
+        homepage_sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/StorefrontHomepageSection'
+        footer:
+          $ref: '#/components/schemas/StorefrontFooter'
+
+    StorefrontSettingsRequest:
+      type: object
+      required: [settings]
+      properties:
+        settings:
+          $ref: '#/components/schemas/StorefrontSettings'
+
+    StorefrontSettingsResponse:
+      type: object
+      required: [settings, updated_at]
+      properties:
+        settings:
+          $ref: '#/components/schemas/StorefrontSettings'
+        updated_at:
+          type: string
+          format: date-time

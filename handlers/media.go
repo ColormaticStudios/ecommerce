@@ -40,7 +40,7 @@ func SetProfilePhoto(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 		}
 
 		var req MediaAttachRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -186,7 +186,7 @@ func AttachProductMedia(db *gorm.DB, mediaService *media.Service) gin.HandlerFun
 		}
 
 		var req MediaAttachManyRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -280,7 +280,7 @@ func UpdateProductMediaOrder(db *gorm.DB, mediaService *media.Service) gin.Handl
 		}
 
 		var req MediaOrderRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

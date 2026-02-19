@@ -2,11 +2,13 @@
 	import type { HTMLButtonAttributes } from "svelte/elements";
 
 	type ButtonVariant = "regular" | "primary" | "warning" | "danger";
-	type ButtonSize = "regular" | "large";
+	type ButtonSize = "small" | "regular" | "large";
+	type ButtonStyle = "regular" | "pill";
 
 	interface Props extends HTMLButtonAttributes {
 		variant?: ButtonVariant;
 		size?: ButtonSize;
+		style?: ButtonStyle;
 		class?: string;
 		children?: import("svelte").Snippet;
 	}
@@ -14,6 +16,7 @@
 	let {
 		variant = "regular",
 		size = "regular",
+		style = "regular",
 		class: className = "",
 		type = "button",
 		children,
@@ -21,9 +24,19 @@
 	}: Props = $props();
 
 	const baseClasses =
-		"cursor-pointer rounded-lg px-4 py-2 transition-[background-color,border-color] duration-200 disabled:cursor-auto";
+		"cursor-pointer transition-[background-color,border-color] duration-200 disabled:cursor-auto";
+	const shapeClasses = $derived(style === "pill" ? "rounded-full" : "rounded-lg");
 
-	const sizeClasses = $derived(size === "large" ? "text-lg" : "");
+	const sizeClasses = $derived.by(() => {
+		switch (size) {
+			case "small":
+				return "px-2.5 py-1.5 text-xs";
+			case "large":
+				return "px-4 py-2 text-lg";
+			default:
+				return "px-4 py-2";
+		}
+	});
 
 	const variantClasses = $derived.by(() => {
 		switch (variant) {
@@ -39,6 +52,10 @@
 	});
 </script>
 
-<button {type} class={`${baseClasses} ${sizeClasses} ${variantClasses} ${className}`} {...rest}>
+<button
+	{type}
+	class={`${baseClasses} ${shapeClasses} ${sizeClasses} ${variantClasses} ${className}`}
+	{...rest}
+>
 	{@render children?.()}
 </button>

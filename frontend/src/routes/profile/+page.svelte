@@ -3,6 +3,7 @@
 	import { type SavedAddressModel, type SavedPaymentMethodModel } from "$lib/models";
 	import Alert from "$lib/components/Alert.svelte";
 	import Button from "$lib/components/Button.svelte";
+	import ButtonInput from "$lib/components/ButtonInput.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
@@ -344,13 +345,10 @@
 					</div>
 
 					<div class="mt-6 space-y-3 text-sm text-gray-600 dark:text-gray-300">
-						<div
-							class="inline-flex w-full cursor-not-allowed items-center justify-between rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 dark:border-gray-700 dark:bg-gray-800"
-						>
+						<Button type="button" variant="regular" class="w-full" disabled={true}>
 							<i class="bi bi-folder-fill"></i>
 							Choose photo
-							<span></span>
-						</div>
+						</Button>
 						<Button type="button" variant="primary" class="w-full" disabled={true}>
 							<i class="bi bi-upload float-left"></i>
 							Upload photo
@@ -477,14 +475,16 @@
 					</div>
 
 					<div class="mt-6 space-y-3 text-sm text-gray-600 dark:text-gray-300">
-						<label
-							class="inline-flex w-full cursor-pointer items-center justify-between rounded-lg border border-gray-300 bg-gray-200 px-4 py-2 transition-[background-color,border-color] duration-200 hover:border-gray-200 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 hover:dark:border-gray-700 hover:dark:bg-gray-800"
+						<ButtonInput
+							class="w-full"
+							type="file"
+							accept="image/*"
+							onchange={handleFileChange}
+							variant="regular"
 						>
-							<input type="file" accept="image/*" class="hidden" onchange={handleFileChange} />
-							<i class="bi bi-folder-fill"></i>
+							<i class="bi bi-folder-fill mr-2"></i>
 							Choose photo
-							<span></span>
-						</label>
+						</ButtonInput>
 						<Button
 							type="button"
 							variant="primary"
@@ -492,7 +492,7 @@
 							disabled={!selectedFile || uploading}
 							onclick={uploadPhoto}
 						>
-							<i class="bi bi-upload float-left"></i>
+							<i class="bi bi-upload mr-2"></i>
 							{uploading ? "Uploading..." : "Upload photo"}
 						</Button>
 						<Button
@@ -502,7 +502,7 @@
 							disabled={!profilePhotoUrl || removing}
 							onclick={removePhoto}
 						>
-							<i class="bi bi-trash-fill float-left"></i>
+							<i class="bi bi-trash-fill mr-2"></i>
 							{removing ? "Removing..." : "Remove photo"}
 						</Button>
 						{#if photoError}
@@ -668,7 +668,7 @@
 														</p>
 														{#if method.is_default}
 															<span
-																class="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700 dark:bg-green-900/40 dark:text-green-300"
+																class="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-green-700 uppercase dark:bg-green-900/40 dark:text-green-300"
 															>
 																Default
 															</span>
@@ -769,7 +769,7 @@
 														</p>
 														{#if address.is_default}
 															<span
-																class="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700 dark:bg-green-900/40 dark:text-green-300"
+																class="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-green-700 uppercase dark:bg-green-900/40 dark:text-green-300"
 															>
 																Default
 															</span>

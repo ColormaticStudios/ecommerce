@@ -13,7 +13,7 @@ import (
 func CreateProduct(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var product models.Product
-		if err := c.ShouldBindJSON(&product); err != nil {
+		if err := bindStrictJSON(c, &product); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -69,7 +69,7 @@ func UpdateProduct(db *gorm.DB) gin.HandlerFunc {
 
 		// Bind update data
 		var updateData models.Product
-		if err := c.ShouldBindJSON(&updateData); err != nil {
+		if err := bindStrictJSON(c, &updateData); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -105,7 +105,7 @@ func UpdateProductRelated(db *gorm.DB, mediaService *media.Service) gin.HandlerF
 		}
 
 		var req UpdateRelatedRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

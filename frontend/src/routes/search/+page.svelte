@@ -190,7 +190,7 @@
 					class="flex flex-wrap items-center justify-between text-sm text-gray-600 dark:text-gray-300"
 				>
 					<div class="flex items-center gap-2">
-						<span class="text-xs tracking-[0.2em] text-gray-400 uppercase dark:text-gray-500">
+						<span class="text-xs text-gray-600 dark:text-gray-400">
 							Sort by
 						</span>
 						<select
@@ -247,7 +247,7 @@
 			{/if}
 		</div>
 		<div
-			class="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold tracking-[0.2em] text-gray-500 uppercase shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400"
+			class="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-500 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400"
 		>
 			Page {currentPage} of {totalPages}
 		</div>
@@ -321,6 +321,7 @@
 			<div class="flex items-center gap-2">
 				<Button
 					variant="regular"
+					size="small"
 					class="flex items-center gap-2"
 					type="button"
 					disabled={currentPage <= 1}
@@ -331,6 +332,7 @@
 				</Button>
 				<Button
 					variant="regular"
+					size="small"
 					class="flex items-center gap-2"
 					type="button"
 					disabled={currentPage >= totalPages}

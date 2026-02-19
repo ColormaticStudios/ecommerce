@@ -41,7 +41,7 @@
 		{#if actionHref && actionLabel}
 			<a
 				href={actionHref}
-				class="ml-1 font-semibold text-blue-700 hover:underline underline-offset-2 dark:text-blue-300"
+				class="ml-1 font-semibold text-blue-700 underline-offset-2 hover:underline dark:text-blue-300"
 			>
 				{actionLabel}
 			</a>

@@ -4,6 +4,7 @@
 	import Alert from "$lib/components/Alert.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import Toast from "$lib/components/Toast.svelte";
+	import Button from "$lib/components/Button.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
 	import { getContext, onDestroy, onMount } from "svelte";
@@ -238,22 +239,18 @@
 				</div>
 			</div>
 			<div class="mt-3 flex flex-wrap gap-2">
-				<button
-					type="button"
-					class="cursor-pointer rounded-lg border border-blue-400 bg-blue-500 px-4 py-2 text-white transition-[background-color,border-color] duration-200 hover:border-blue-500 hover:bg-blue-600"
-					onclick={applyFilters}
-					disabled={loading}
-				>
+				<Button type="button" variant="primary" onclick={applyFilters} disabled={loading}>
 					Apply filters
-				</button>
-				<button
+				</Button>
+				<Button
 					type="button"
+					variant="regular"
 					class="cursor-pointer rounded-lg border border-gray-300 bg-gray-200 px-4 py-2 transition-[background-color,border-color] duration-200 hover:border-gray-200 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700"
 					onclick={clearFilters}
 					disabled={loading}
 				>
 					Clear
-				</button>
+				</Button>
 			</div>
 		</div>
 	{/if}
@@ -338,9 +335,7 @@
 								>
 									Payment
 								</p>
-								<p
-									class="mt-1 wrap-break-word text-gray-800 dark:text-gray-200"
-								>
+								<p class="mt-1 wrap-break-word text-gray-800 dark:text-gray-200">
 									{order.payment_method_display || "No payment method recorded"}
 								</p>
 							</div>
@@ -350,9 +345,7 @@
 								>
 									Shipping
 								</p>
-								<p
-									class="mt-1 wrap-break-word text-gray-800 dark:text-gray-200"
-								>
+								<p class="mt-1 wrap-break-word text-gray-800 dark:text-gray-200">
 									{order.shipping_address_pretty || "No shipping address recorded"}
 								</p>
 							</div>
@@ -416,22 +409,14 @@
 		</div>
 
 		<div class="mt-6 flex items-center justify-end gap-2">
-			<button
-				type="button"
-				class="cursor-pointer rounded-lg border border-gray-300 bg-gray-200 px-4 py-2 text-sm transition-[background-color,border-color] duration-200 hover:border-gray-200 hover:bg-gray-100 disabled:cursor-auto disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 hover:dark:border-gray-700 hover:dark:bg-gray-800"
-				onclick={() => goToPage(page - 1)}
-				disabled={page <= 1 || loading}
-			>
+			<Button size="small" onclick={() => goToPage(page - 1)} disabled={page <= 1 || loading}>
+				<i class="bi bi-arrow-left"></i>
 				Previous
-			</button>
-			<button
-				type="button"
-				class="cursor-pointer rounded-lg border border-gray-300 bg-gray-200 px-4 py-2 text-sm transition-[background-color,border-color] duration-200 hover:border-gray-200 hover:bg-gray-100 disabled:cursor-auto disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 hover:dark:border-gray-700 hover:dark:bg-gray-800"
-				onclick={() => goToPage(page + 1)}
-				disabled={page >= totalPages || loading}
-			>
+			</Button>
+			<Button size="small" onclick={() => goToPage(page + 1)} disabled={page >= totalPages || loading}>
 				Next
-			</button>
+				<i class="bi bi-arrow-right"></i>
+			</Button>
 		</div>
 	{/if}
 </section>

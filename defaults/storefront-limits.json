@@ -1,0 +1,11 @@
+{
+  "max_homepage_sections": 16,
+  "max_manual_product_ids": 24,
+  "max_section_promo_cards": 12,
+  "max_section_badges": 20,
+  "max_footer_columns": 4,
+  "max_footer_links_per_column": 8,
+  "max_social_links": 10,
+  "default_product_section_limit": 8,
+  "max_product_section_limit": 24
+}

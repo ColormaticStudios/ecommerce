@@ -15,13 +15,15 @@ const (
 	StatusReady      = "ready"
 	StatusFailed     = "failed"
 
-	OwnerTypeProduct = "product"
-	OwnerTypeUser    = "user"
+	OwnerTypeProduct    = "product"
+	OwnerTypeUser       = "user"
+	OwnerTypeStorefront = "storefront"
 
-	RoleProductImage  = "product_image"
-	RoleProfilePhoto  = "profile_photo"
-	DefaultMediaRoot  = "media"
-	DefaultPublicPath = "/media"
+	RoleProductImage   = "product_image"
+	RoleProfilePhoto   = "profile_photo"
+	RoleStorefrontHero = "storefront_hero"
+	DefaultMediaRoot   = "media"
+	DefaultPublicPath  = "/media"
 )
 
 type Service struct {

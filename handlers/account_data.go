@@ -177,7 +177,7 @@ func CreateSavedPaymentMethod(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var req CreateSavedPaymentMethodRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": friendlyValidationError(err, map[string]string{
 				"CardholderName": "Cardholder name",
 				"CardNumber":     "Card number",
@@ -342,7 +342,7 @@ func CreateSavedAddress(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var req CreateSavedAddressRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": friendlyValidationError(err, map[string]string{
 				"FullName":   "Full name",
 				"Line1":      "Address line 1",

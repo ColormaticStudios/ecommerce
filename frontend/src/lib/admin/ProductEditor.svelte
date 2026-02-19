@@ -7,7 +7,7 @@
 	import TextInput from "$lib/components/TextInput.svelte";
 	import { type ProductModel, type RelatedProductModel } from "$lib/models";
 	import { uploadMediaFiles } from "$lib/media";
-	import { getContext } from "svelte";
+	import { getContext, onDestroy, untrack } from "svelte";
 
 	interface Props {
 		productId: number | null;
@@ -23,6 +23,8 @@
 		onProductDeleted?: (productId: number) => void;
 		onErrorMessage?: (message: string) => void;
 		onStatusMessage?: (message: string) => void;
+		onDirtyChange?: (dirty: boolean) => void;
+		onSaveRequestChange?: (saveAction: (() => Promise<void>) | null) => void;
 	}
 
 	let {
@@ -39,6 +41,8 @@
 		onProductDeleted,
 		onErrorMessage,
 		onStatusMessage,
+		onDirtyChange,
+		onSaveRequestChange,
 	}: Props = $props();
 
 	const api: API = getContext("api");
@@ -71,6 +75,7 @@
 	let relatedOptions = $state<ProductModel[]>([]);
 	let relatedSelected = $state<RelatedProductModel[]>([]);
 	let relatedLastSearchedQuery = $state("");
+	let savedSnapshot = $state("");
 
 	const mediaFilesCount = $derived(mediaFiles ? mediaFiles.length : 0);
 	const mediaOrderView = $derived(pendingMediaOrder ?? product?.images ?? []);
@@ -90,9 +95,81 @@
 		const baselineIds = [...relatedBaseline.map((item) => item.id)].sort((a, b) => a - b).join("|");
 		return selectedIds !== baselineIds;
 	});
+	const hasPendingUploadSelection = $derived(mediaFilesCount > 0);
+	const hasPendingProductChanges = $derived.by(() => {
+		if (!product) {
+			if (!allowCreate) {
+				return false;
+			}
+			const skuValue = asTrimmedString(sku);
+			const nameValue = asTrimmedString(name);
+			const descriptionValue = asTrimmedString(description);
+			const priceValue = asTrimmedString(price);
+			const stockValue = asTrimmedString(stock);
+			return (
+				skuValue !== "" ||
+				nameValue !== "" ||
+				descriptionValue !== "" ||
+				priceValue !== "" ||
+				stockValue !== ""
+			);
+		}
+
+		const skuValue = asTrimmedString(sku);
+		const nameValue = asTrimmedString(name);
+		const descriptionValue = asTrimmedString(description);
+		const priceValue = Number(price);
+		const stockTrimmed = asTrimmedString(stock);
+		const stockValue = stockTrimmed === "" ? undefined : Number(stockTrimmed);
+		return (
+			skuValue !== product.sku ||
+			nameValue !== product.name ||
+			(descriptionValue || "") !== (product.description ?? "") ||
+			Number.isNaN(priceValue) ||
+			priceValue !== product.price ||
+			stockValue !== product.stock
+		);
+	});
+	const currentSnapshot = $derived(buildDraftSnapshot());
+	const hasUnsavedChanges = $derived(currentSnapshot !== savedSnapshot);
 
 	let loadSequence = 0;
 	let lastLoadedId = $state<number | null>(null);
+
+	function normalizedNumber(value: string): number | null | "invalid" {
+		const trimmed = String(value ?? "").trim();
+		if (trimmed === "") {
+			return null;
+		}
+		const parsed = Number(trimmed);
+		return Number.isNaN(parsed) ? "invalid" : parsed;
+	}
+
+	function asTrimmedString(value: unknown): string {
+		return String(value ?? "").trim();
+	}
+
+	function buildDraftSnapshot(): string {
+		const relatedIDs = [...relatedSelected.map((item) => item.id)].sort((a, b) => a - b);
+		const mediaOrder = pendingMediaOrder ?? product?.images ?? [];
+		return JSON.stringify({
+			product_id: resolvedProductId,
+			fields: {
+				sku: asTrimmedString(sku),
+				name: asTrimmedString(name),
+				description: asTrimmedString(description),
+				price: normalizedNumber(price),
+				stock: normalizedNumber(stock),
+			},
+			media_order: mediaOrder,
+			pending_upload_count: mediaFilesCount,
+			related_product_ids: relatedIDs,
+		});
+	}
+
+	function captureSavedSnapshot() {
+		savedSnapshot = untrack(() => buildDraftSnapshot());
+	}
 
 	function clearProductMessages() {
 		productErrorMessage = "";
@@ -159,6 +236,7 @@
 		relatedOptions = [];
 		relatedSelected = [];
 		relatedLastSearchedQuery = "";
+		captureSavedSnapshot();
 	}
 
 	function hydrateForm(value: ProductModel) {
@@ -201,6 +279,7 @@
 			}
 			product = fetched;
 			hydrateForm(fetched);
+			captureSavedSnapshot();
 			onProductUpdated?.(fetched);
 		} catch (err) {
 			console.error(err);
@@ -218,11 +297,11 @@
 		clearProductMessages();
 		saving = true;
 		try {
-			const trimmedStock = String(stock ?? "").trim();
+			const trimmedStock = asTrimmedString(stock);
 			const payload = {
-				sku: sku.trim(),
-				name: name.trim(),
-				description: description.trim() || undefined,
+				sku: asTrimmedString(sku),
+				name: asTrimmedString(name),
+				description: asTrimmedString(description) || undefined,
 				price: Number(price),
 				stock: trimmedStock === "" ? undefined : Number(trimmedStock),
 			};
@@ -243,6 +322,7 @@
 				product = merged;
 				updated = merged;
 				hydrateForm(merged);
+				captureSavedSnapshot();
 				onProductUpdated?.(merged);
 				setProductStatus("Product updated.");
 			} else if (allowCreate) {
@@ -250,6 +330,7 @@
 				product = updated;
 				productId = updated.id;
 				hydrateForm(updated);
+				captureSavedSnapshot();
 				onProductCreated?.(updated);
 				onProductUpdated?.(updated);
 				setProductStatus("Product created.");
@@ -302,6 +383,7 @@
 			const updated = await api.attachProductMedia(resolvedProductId, mediaIds);
 			product = updated;
 			hydrateForm(updated);
+			captureSavedSnapshot();
 			onProductUpdated?.(updated);
 			setMediaStatus("Media attached.");
 		} catch (err) {
@@ -335,6 +417,7 @@
 			const updated = await api.detachProductMedia(resolvedProductId, mediaId);
 			product = updated;
 			hydrateForm(updated);
+			captureSavedSnapshot();
 			onProductUpdated?.(updated);
 			setMediaStatus("Media removed.");
 		} catch (err) {
@@ -383,6 +466,7 @@
 			const updated = await api.updateProductMediaOrder(resolvedProductId, mediaIds);
 			product = updated;
 			pendingMediaOrder = null;
+			captureSavedSnapshot();
 			onProductUpdated?.(updated);
 			setMediaStatus("Image order updated.");
 		} catch (err) {
@@ -465,6 +549,7 @@
 			);
 			product = updated;
 			hydrateForm(updated);
+			captureSavedSnapshot();
 			onProductUpdated?.(updated);
 			setRelatedStatus("Related products updated.");
 		} catch (err) {
@@ -480,7 +565,36 @@
 		product = null;
 		resetForm();
 		clearAllMessages();
+		captureSavedSnapshot();
 	}
+
+	async function saveAllPendingChanges() {
+		if (hasPendingProductChanges) {
+			await saveProduct();
+		}
+		if (hasPendingUploadSelection) {
+			await uploadMedia();
+		}
+		if (hasPendingMediaOrder) {
+			await saveMediaOrder();
+		}
+		if (hasPendingRelatedChanges) {
+			await saveRelatedProducts();
+		}
+	}
+
+	$effect(() => {
+		onDirtyChange?.(hasUnsavedChanges);
+	});
+
+	$effect(() => {
+		onSaveRequestChange?.(hasUnsavedChanges ? saveAllPendingChanges : null);
+	});
+
+	onDestroy(() => {
+		onDirtyChange?.(false);
+		onSaveRequestChange?.(null);
+	});
 
 	$effect(() => {
 		if (resolvedProductId) {
@@ -489,6 +603,7 @@
 			if (seed && (!product || product.id !== seed.id)) {
 				product = seed;
 				hydrateForm(seed);
+				captureSavedSnapshot();
 			}
 			if (resolvedProductId !== lastLoadedId) {
 				lastLoadedId = resolvedProductId;
@@ -501,6 +616,7 @@
 			resetForm();
 			clearAllMessages();
 			lastLoadedId = null;
+			captureSavedSnapshot();
 		}
 	});
 </script>
@@ -748,7 +864,7 @@
 		<div class="mt-4 space-y-2">
 			{#each relatedSelected as related (related.id)}
 				<div
-					class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-gray-800 dark:bg-gray-800"
+					class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
 				>
 					<div>
 						<p class="font-semibold text-gray-900 dark:text-gray-100">{related.name}</p>
@@ -824,7 +940,7 @@
 				{@render ProductFields()}
 			</div>
 
-			<div class="mt-6 flex flex-wrap justify-between">
+			<div class="mt-6 flex flex-wrap items-center justify-between gap-2">
 				<Button variant="primary" type="button" onclick={saveProduct} disabled={saving}>
 					<i class="bi bi-floppy-fill mr-1"></i>
 					{saving ? "Saving..." : "Save changes"}
@@ -935,9 +1051,7 @@
 
 		<div class="mt-4 space-y-4 text-sm">
 			{@render ProductFields()}
-			<div
-				class="mt-2 mb-6 flex flex-wrap justify-between border-b border-gray-200 pb-6 text-base dark:border-gray-800"
-			>
+				<div class="mt-2 mb-6 flex flex-wrap gap-2 border-b border-gray-200 pb-6 text-base dark:border-gray-800">
 				<Button
 					variant="primary"
 					size="large"

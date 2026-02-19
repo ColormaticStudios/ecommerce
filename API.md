@@ -2060,6 +2060,259 @@ To perform this operation, you must be authenticated by means of one of the foll
 cookieAuth, bearerAuth
 </aside>
 
+## getAdminStorefrontSettings
+
+<a id="opIdgetAdminStorefrontSettings"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/storefront',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/storefront`
+
+<h3 id="getadminstorefrontsettings-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Storefront settings|StorefrontSettingsResponse|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Internal server error|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateStorefrontSettings
+
+<a id="opIdupdateStorefrontSettings"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "settings": {
+    "site_title": "string",
+    "homepage_sections": [
+      {
+        "id": "string",
+        "type": "hero",
+        "enabled": true,
+        "hero": {
+          "eyebrow": "string",
+          "title": "string",
+          "subtitle": "string",
+          "background_image_url": "string",
+          "background_image_media_id": "string",
+          "primary_cta": {
+            "label": "string",
+            "url": "string"
+          },
+          "secondary_cta": {
+            "label": "string",
+            "url": "string"
+          }
+        },
+        "product_section": {
+          "title": "string",
+          "subtitle": "string",
+          "source": "manual",
+          "query": "string",
+          "product_ids": [
+            1
+          ],
+          "sort": "created_at",
+          "order": "asc",
+          "limit": 1,
+          "show_stock": true,
+          "show_description": true,
+          "image_aspect": "square"
+        },
+        "promo_cards": [
+          {
+            "kicker": "string",
+            "title": "string",
+            "description": "string",
+            "image_url": "string",
+            "link": {
+              "label": "string",
+              "url": "string"
+            }
+          }
+        ],
+        "promo_card_limit": 1,
+        "badges": [
+          "string"
+        ]
+      }
+    ],
+    "footer": {
+      "brand_name": "string",
+      "tagline": "string",
+      "copyright": "string",
+      "columns": [
+        {
+          "title": "string",
+          "links": [
+            {
+              "label": "string",
+              "url": "string"
+            }
+          ]
+        }
+      ],
+      "social_links": [
+        {
+          "label": "string",
+          "url": "string"
+        }
+      ],
+      "bottom_notice": "string"
+    }
+  }
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/storefront',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/storefront`
+
+> Body parameter
+
+```json
+{
+  "settings": {
+    "site_title": "string",
+    "homepage_sections": [
+      {
+        "id": "string",
+        "type": "hero",
+        "enabled": true,
+        "hero": {
+          "eyebrow": "string",
+          "title": "string",
+          "subtitle": "string",
+          "background_image_url": "string",
+          "background_image_media_id": "string",
+          "primary_cta": {
+            "label": "string",
+            "url": "string"
+          },
+          "secondary_cta": {
+            "label": "string",
+            "url": "string"
+          }
+        },
+        "product_section": {
+          "title": "string",
+          "subtitle": "string",
+          "source": "manual",
+          "query": "string",
+          "product_ids": [
+            1
+          ],
+          "sort": "created_at",
+          "order": "asc",
+          "limit": 1,
+          "show_stock": true,
+          "show_description": true,
+          "image_aspect": "square"
+        },
+        "promo_cards": [
+          {
+            "kicker": "string",
+            "title": "string",
+            "description": "string",
+            "image_url": "string",
+            "link": {
+              "label": "string",
+              "url": "string"
+            }
+          }
+        ],
+        "promo_card_limit": 1,
+        "badges": [
+          "string"
+        ]
+      }
+    ],
+    "footer": {
+      "brand_name": "string",
+      "tagline": "string",
+      "copyright": "string",
+      "columns": [
+        {
+          "title": "string",
+          "links": [
+            {
+              "label": "string",
+              "url": "string"
+            }
+          ]
+        }
+      ],
+      "social_links": [
+        {
+          "label": "string",
+          "url": "string"
+        }
+      ],
+      "bottom_notice": "string"
+    }
+  }
+}
+```
+
+<h3 id="updatestorefrontsettings-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|StorefrontSettingsRequest|true|none|
+
+<h3 id="updatestorefrontsettings-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated storefront settings|StorefrontSettingsResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
 <h1 id="ecommerce-api-media">media</h1>
 
 ## setProfilePhoto
@@ -2306,5 +2559,46 @@ fetch('http://localhost:3000/api/v1/media/uploads/{path}',
 <aside class="warning">
 To perform this operation, you must be authenticated by means of one of the following methods:
 cookieAuth, bearerAuth
+</aside>
+
+<h1 id="ecommerce-api-storefront">storefront</h1>
+
+## getStorefrontSettings
+
+<a id="opIdgetStorefrontSettings"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/storefront',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/storefront`
+
+<h3 id="getstorefrontsettings-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Storefront settings|StorefrontSettingsResponse|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Internal server error|Error|
+
+<aside class="success">
+This operation does not require authentication
 </aside>
 

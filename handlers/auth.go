@@ -174,7 +174,7 @@ func wantsJSONResponse(c *gin.Context) bool {
 func Register(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req RegisterRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -238,7 +238,7 @@ func Register(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConfig) gin.Han
 func Login(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req LoginRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

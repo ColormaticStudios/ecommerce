@@ -1,0 +1,170 @@
+{
+  "site_title": "Ecommerce",
+  "homepage_sections": [
+    {
+      "id": "hero",
+      "type": "hero",
+      "enabled": true,
+      "hero": {
+        "eyebrow": "Spring Collection",
+        "title": "Refresh your everyday essentials.",
+        "subtitle": "Limited releases, fast shipping, and curated picks for every room.",
+        "background_image_url": "",
+        "background_image_media_id": "",
+        "primary_cta": {
+          "label": "Browse catalog",
+          "url": "/search"
+        },
+        "secondary_cta": {
+          "label": "Track orders",
+          "url": "/orders"
+        }
+      }
+    },
+    {
+      "id": "new-arrivals",
+      "type": "products",
+      "enabled": true,
+      "product_section": {
+        "title": "New arrivals",
+        "subtitle": "",
+        "source": "newest",
+        "query": "",
+        "product_ids": [],
+        "sort": "created_at",
+        "order": "desc",
+        "limit": 8,
+        "show_stock": true,
+        "show_description": true,
+        "image_aspect": "square"
+      }
+    },
+    {
+      "id": "featured",
+      "type": "products",
+      "enabled": true,
+      "product_section": {
+        "title": "Featured picks",
+        "subtitle": "Hand-selected products worth a closer look.",
+        "source": "manual",
+        "query": "",
+        "product_ids": [],
+        "sort": "created_at",
+        "order": "desc",
+        "limit": 4,
+        "show_stock": true,
+        "show_description": true,
+        "image_aspect": "square"
+      }
+    },
+    {
+      "id": "promo",
+      "type": "promo_cards",
+      "enabled": true,
+      "promo_card_limit": 3,
+      "promo_cards": [
+        {
+          "kicker": "Member Perk",
+          "title": "Exclusive launch pricing",
+          "description": "Sign in to unlock members-only pricing on selected releases.",
+          "image_url": "",
+          "link": {
+            "label": "Create account",
+            "url": "/signup"
+          }
+        },
+        {
+          "kicker": "Fast Delivery",
+          "title": "2-day shipping options",
+          "description": "Get your essentials quickly with expedited fulfillment.",
+          "image_url": "",
+          "link": {
+            "label": "View shipping",
+            "url": "/checkout"
+          }
+        },
+        {
+          "kicker": "Gift Ready",
+          "title": "Find thoughtful gifts",
+          "description": "Curated products for birthdays, holidays, and milestones.",
+          "image_url": "",
+          "link": {
+            "label": "Browse gifts",
+            "url": "/search"
+          }
+        }
+      ]
+    },
+    {
+      "id": "badges",
+      "type": "badges",
+      "enabled": true,
+      "badges": ["Secure checkout", "Easy returns", "Tracked shipping", "Dedicated support"]
+    }
+  ],
+  "footer": {
+    "brand_name": "Ecommerce",
+    "tagline": "Modern essentials for everyday living.",
+    "copyright": "© Ecommerce. All rights reserved.",
+    "columns": [
+      {
+        "title": "Shop",
+        "links": [
+          {
+            "label": "New arrivals",
+            "url": "/search?sort=created_at&order=desc"
+          },
+          {
+            "label": "Catalog",
+            "url": "/search"
+          },
+          {
+            "label": "Cart",
+            "url": "/cart"
+          }
+        ]
+      },
+      {
+        "title": "Account",
+        "links": [
+          {
+            "label": "Login",
+            "url": "/login"
+          },
+          {
+            "label": "Sign up",
+            "url": "/signup"
+          },
+          {
+            "label": "Orders",
+            "url": "/orders"
+          }
+        ]
+      },
+      {
+        "title": "Support",
+        "links": [
+          {
+            "label": "Checkout",
+            "url": "/checkout"
+          },
+          {
+            "label": "Profile",
+            "url": "/profile"
+          }
+        ]
+      }
+    ],
+    "social_links": [
+      {
+        "label": "Instagram",
+        "url": "https://instagram.com"
+      },
+      {
+        "label": "X",
+        "url": "https://x.com"
+      }
+    ],
+    "bottom_notice": "Prices and availability are subject to change."
+  }
+}

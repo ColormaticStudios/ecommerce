@@ -35,6 +35,40 @@ const (
 	OrderStatusPENDING OrderStatus = "PENDING"
 )
 
+// Defines values for StorefrontHomepageSectionType.
+const (
+	Badges     StorefrontHomepageSectionType = "badges"
+	Hero       StorefrontHomepageSectionType = "hero"
+	Products   StorefrontHomepageSectionType = "products"
+	PromoCards StorefrontHomepageSectionType = "promo_cards"
+)
+
+// Defines values for StorefrontProductSectionImageAspect.
+const (
+	Square StorefrontProductSectionImageAspect = "square"
+	Wide   StorefrontProductSectionImageAspect = "wide"
+)
+
+// Defines values for StorefrontProductSectionOrder.
+const (
+	StorefrontProductSectionOrderAsc  StorefrontProductSectionOrder = "asc"
+	StorefrontProductSectionOrderDesc StorefrontProductSectionOrder = "desc"
+)
+
+// Defines values for StorefrontProductSectionSort.
+const (
+	StorefrontProductSectionSortCreatedAt StorefrontProductSectionSort = "created_at"
+	StorefrontProductSectionSortName      StorefrontProductSectionSort = "name"
+	StorefrontProductSectionSortPrice     StorefrontProductSectionSort = "price"
+)
+
+// Defines values for StorefrontProductSectionSource.
+const (
+	Manual StorefrontProductSectionSource = "manual"
+	Newest StorefrontProductSectionSource = "newest"
+	Search StorefrontProductSectionSource = "search"
+)
+
 // Defines values for UpdateOrderStatusRequestStatus.
 const (
 	UpdateOrderStatusRequestStatusFAILED  UpdateOrderStatusRequestStatus = "FAILED"
@@ -68,15 +102,15 @@ const (
 
 // Defines values for ListProductsParamsSort.
 const (
-	CreatedAt ListProductsParamsSort = "created_at"
-	Name      ListProductsParamsSort = "name"
-	Price     ListProductsParamsSort = "price"
+	ListProductsParamsSortCreatedAt ListProductsParamsSort = "created_at"
+	ListProductsParamsSortName      ListProductsParamsSort = "name"
+	ListProductsParamsSortPrice     ListProductsParamsSort = "price"
 )
 
 // Defines values for ListProductsParamsOrder.
 const (
-	Asc  ListProductsParamsOrder = "asc"
-	Desc ListProductsParamsOrder = "desc"
+	ListProductsParamsOrderAsc  ListProductsParamsOrder = "asc"
+	ListProductsParamsOrderDesc ListProductsParamsOrder = "desc"
 )
 
 // AddCartItemRequest defines model for AddCartItemRequest.
@@ -332,6 +366,108 @@ type SavedPaymentMethod struct {
 	UserId         int        `json:"user_id"`
 }
 
+// StorefrontFooter defines model for StorefrontFooter.
+type StorefrontFooter struct {
+	BottomNotice string                   `json:"bottom_notice"`
+	BrandName    string                   `json:"brand_name"`
+	Columns      []StorefrontFooterColumn `json:"columns"`
+	Copyright    string                   `json:"copyright"`
+	SocialLinks  []StorefrontLink         `json:"social_links"`
+	Tagline      string                   `json:"tagline"`
+}
+
+// StorefrontFooterColumn defines model for StorefrontFooterColumn.
+type StorefrontFooterColumn struct {
+	Links []StorefrontLink `json:"links"`
+	Title string           `json:"title"`
+}
+
+// StorefrontHero defines model for StorefrontHero.
+type StorefrontHero struct {
+	BackgroundImageMediaId *string        `json:"background_image_media_id,omitempty"`
+	BackgroundImageUrl     string         `json:"background_image_url"`
+	Eyebrow                string         `json:"eyebrow"`
+	PrimaryCta             StorefrontLink `json:"primary_cta"`
+	SecondaryCta           StorefrontLink `json:"secondary_cta"`
+	Subtitle               string         `json:"subtitle"`
+	Title                  string         `json:"title"`
+}
+
+// StorefrontHomepageSection defines model for StorefrontHomepageSection.
+type StorefrontHomepageSection struct {
+	Badges         *[]string                     `json:"badges,omitempty"`
+	Enabled        bool                          `json:"enabled"`
+	Hero           *StorefrontHero               `json:"hero,omitempty"`
+	Id             string                        `json:"id"`
+	ProductSection *StorefrontProductSection     `json:"product_section,omitempty"`
+	PromoCardLimit *int                          `json:"promo_card_limit,omitempty"`
+	PromoCards     *[]StorefrontPromoCard        `json:"promo_cards,omitempty"`
+	Type           StorefrontHomepageSectionType `json:"type"`
+}
+
+// StorefrontHomepageSectionType defines model for StorefrontHomepageSection.Type.
+type StorefrontHomepageSectionType string
+
+// StorefrontLink defines model for StorefrontLink.
+type StorefrontLink struct {
+	Label string `json:"label"`
+	Url   string `json:"url"`
+}
+
+// StorefrontProductSection defines model for StorefrontProductSection.
+type StorefrontProductSection struct {
+	ImageAspect     StorefrontProductSectionImageAspect `json:"image_aspect"`
+	Limit           int                                 `json:"limit"`
+	Order           StorefrontProductSectionOrder       `json:"order"`
+	ProductIds      []int                               `json:"product_ids"`
+	Query           string                              `json:"query"`
+	ShowDescription bool                                `json:"show_description"`
+	ShowStock       bool                                `json:"show_stock"`
+	Sort            StorefrontProductSectionSort        `json:"sort"`
+	Source          StorefrontProductSectionSource      `json:"source"`
+	Subtitle        string                              `json:"subtitle"`
+	Title           string                              `json:"title"`
+}
+
+// StorefrontProductSectionImageAspect defines model for StorefrontProductSection.ImageAspect.
+type StorefrontProductSectionImageAspect string
+
+// StorefrontProductSectionOrder defines model for StorefrontProductSection.Order.
+type StorefrontProductSectionOrder string
+
+// StorefrontProductSectionSort defines model for StorefrontProductSection.Sort.
+type StorefrontProductSectionSort string
+
+// StorefrontProductSectionSource defines model for StorefrontProductSection.Source.
+type StorefrontProductSectionSource string
+
+// StorefrontPromoCard defines model for StorefrontPromoCard.
+type StorefrontPromoCard struct {
+	Description string         `json:"description"`
+	ImageUrl    string         `json:"image_url"`
+	Kicker      string         `json:"kicker"`
+	Link        StorefrontLink `json:"link"`
+	Title       string         `json:"title"`
+}
+
+// StorefrontSettings defines model for StorefrontSettings.
+type StorefrontSettings struct {
+	Footer           StorefrontFooter            `json:"footer"`
+	HomepageSections []StorefrontHomepageSection `json:"homepage_sections"`
+	SiteTitle        string                      `json:"site_title"`
+}
+
+// StorefrontSettingsRequest defines model for StorefrontSettingsRequest.
+type StorefrontSettingsRequest struct {
+	Settings StorefrontSettings `json:"settings"`
+}
+
+// StorefrontSettingsResponse defines model for StorefrontSettingsResponse.
+type StorefrontSettingsResponse struct {
+	Settings  StorefrontSettings `json:"settings"`
+	UpdatedAt time.Time          `json:"updated_at"`
+}
+
 // UpdateCartItemRequest defines model for UpdateCartItemRequest.
 type UpdateCartItemRequest struct {
 	Quantity int `json:"quantity"`
@@ -475,6 +611,9 @@ type UpdateProductMediaOrderJSONRequestBody = MediaIDsRequest
 // UpdateProductRelatedJSONRequestBody defines body for UpdateProductRelated for application/json ContentType.
 type UpdateProductRelatedJSONRequestBody = UpdateRelatedRequest
 
+// UpdateStorefrontSettingsJSONRequestBody defines body for UpdateStorefrontSettings for application/json ContentType.
+type UpdateStorefrontSettingsJSONRequestBody = StorefrontSettingsRequest
+
 // UpdateUserRoleJSONRequestBody defines body for UpdateUserRole for application/json ContentType.
 type UpdateUserRoleJSONRequestBody = UpdateUserRoleRequest
 
@@ -540,6 +679,12 @@ type ServerInterface interface {
 
 	// (PATCH /api/v1/admin/products/{id}/related)
 	UpdateProductRelated(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/storefront)
+	GetAdminStorefrontSettings(c *gin.Context)
+
+	// (PUT /api/v1/admin/storefront)
+	UpdateStorefrontSettings(c *gin.Context)
 
 	// (GET /api/v1/admin/users)
 	ListUsers(c *gin.Context, params ListUsersParams)
@@ -636,6 +781,9 @@ type ServerInterface interface {
 	// Get product by id
 	// (GET /api/v1/products/{id})
 	GetProduct(c *gin.Context, id int)
+
+	// (GET /api/v1/storefront)
+	GetStorefrontSettings(c *gin.Context)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -933,6 +1081,40 @@ func (siw *ServerInterfaceWrapper) UpdateProductRelated(c *gin.Context) {
 	}
 
 	siw.Handler.UpdateProductRelated(c, id)
+}
+
+// GetAdminStorefrontSettings operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminStorefrontSettings(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminStorefrontSettings(c)
+}
+
+// UpdateStorefrontSettings operation middleware
+func (siw *ServerInterfaceWrapper) UpdateStorefrontSettings(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateStorefrontSettings(c)
 }
 
 // ListUsers operation middleware
@@ -1816,6 +1998,19 @@ func (siw *ServerInterfaceWrapper) GetProduct(c *gin.Context) {
 	siw.Handler.GetProduct(c, id)
 }
 
+// GetStorefrontSettings operation middleware
+func (siw *ServerInterfaceWrapper) GetStorefrontSettings(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetStorefrontSettings(c)
+}
+
 // GinServerOptions provides options for the Gin server.
 type GinServerOptions struct {
 	BaseURL      string
@@ -1853,6 +2048,8 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.PATCH(options.BaseURL+"/api/v1/admin/products/:id/media/order", wrapper.UpdateProductMediaOrder)
 	router.DELETE(options.BaseURL+"/api/v1/admin/products/:id/media/:mediaId", wrapper.DetachProductMedia)
 	router.PATCH(options.BaseURL+"/api/v1/admin/products/:id/related", wrapper.UpdateProductRelated)
+	router.GET(options.BaseURL+"/api/v1/admin/storefront", wrapper.GetAdminStorefrontSettings)
+	router.PUT(options.BaseURL+"/api/v1/admin/storefront", wrapper.UpdateStorefrontSettings)
 	router.GET(options.BaseURL+"/api/v1/admin/users", wrapper.ListUsers)
 	router.PATCH(options.BaseURL+"/api/v1/admin/users/:id/role", wrapper.UpdateUserRole)
 	router.POST(options.BaseURL+"/api/v1/auth/login", wrapper.Login)
@@ -1885,6 +2082,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.PATCH(options.BaseURL+"/api/v1/media/uploads/:path", wrapper.PatchMediaUpload)
 	router.GET(options.BaseURL+"/api/v1/products", wrapper.ListProducts)
 	router.GET(options.BaseURL+"/api/v1/products/:id", wrapper.GetProduct)
+	router.GET(options.BaseURL+"/api/v1/storefront", wrapper.GetStorefrontSettings)
 }
 
 type ListAdminOrdersRequestObject struct {
@@ -2059,6 +2257,57 @@ type UpdateProductRelated200JSONResponse Product
 func (response UpdateProductRelated200JSONResponse) VisitUpdateProductRelatedResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminStorefrontSettingsRequestObject struct {
+}
+
+type GetAdminStorefrontSettingsResponseObject interface {
+	VisitGetAdminStorefrontSettingsResponse(w http.ResponseWriter) error
+}
+
+type GetAdminStorefrontSettings200JSONResponse StorefrontSettingsResponse
+
+func (response GetAdminStorefrontSettings200JSONResponse) VisitGetAdminStorefrontSettingsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminStorefrontSettings500JSONResponse Error
+
+func (response GetAdminStorefrontSettings500JSONResponse) VisitGetAdminStorefrontSettingsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateStorefrontSettingsRequestObject struct {
+	Body *UpdateStorefrontSettingsJSONRequestBody
+}
+
+type UpdateStorefrontSettingsResponseObject interface {
+	VisitUpdateStorefrontSettingsResponse(w http.ResponseWriter) error
+}
+
+type UpdateStorefrontSettings200JSONResponse StorefrontSettingsResponse
+
+func (response UpdateStorefrontSettings200JSONResponse) VisitUpdateStorefrontSettingsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateStorefrontSettings400JSONResponse Error
+
+func (response UpdateStorefrontSettings400JSONResponse) VisitUpdateStorefrontSettingsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -2787,6 +3036,31 @@ func (response GetProduct404JSONResponse) VisitGetProductResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetStorefrontSettingsRequestObject struct {
+}
+
+type GetStorefrontSettingsResponseObject interface {
+	VisitGetStorefrontSettingsResponse(w http.ResponseWriter) error
+}
+
+type GetStorefrontSettings200JSONResponse StorefrontSettingsResponse
+
+func (response GetStorefrontSettings200JSONResponse) VisitGetStorefrontSettingsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetStorefrontSettings500JSONResponse Error
+
+func (response GetStorefrontSettings500JSONResponse) VisitGetStorefrontSettingsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
@@ -2819,6 +3093,12 @@ type StrictServerInterface interface {
 
 	// (PATCH /api/v1/admin/products/{id}/related)
 	UpdateProductRelated(ctx context.Context, request UpdateProductRelatedRequestObject) (UpdateProductRelatedResponseObject, error)
+
+	// (GET /api/v1/admin/storefront)
+	GetAdminStorefrontSettings(ctx context.Context, request GetAdminStorefrontSettingsRequestObject) (GetAdminStorefrontSettingsResponseObject, error)
+
+	// (PUT /api/v1/admin/storefront)
+	UpdateStorefrontSettings(ctx context.Context, request UpdateStorefrontSettingsRequestObject) (UpdateStorefrontSettingsResponseObject, error)
 
 	// (GET /api/v1/admin/users)
 	ListUsers(ctx context.Context, request ListUsersRequestObject) (ListUsersResponseObject, error)
@@ -2915,6 +3195,9 @@ type StrictServerInterface interface {
 	// Get product by id
 	// (GET /api/v1/products/{id})
 	GetProduct(ctx context.Context, request GetProductRequestObject) (GetProductResponseObject, error)
+
+	// (GET /api/v1/storefront)
+	GetStorefrontSettings(ctx context.Context, request GetStorefrontSettingsRequestObject) (GetStorefrontSettingsResponseObject, error)
 }
 
 type StrictHandlerFunc = strictgin.StrictGinHandlerFunc
@@ -3239,6 +3522,64 @@ func (sh *strictHandler) UpdateProductRelated(ctx *gin.Context, id int) {
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(UpdateProductRelatedResponseObject); ok {
 		if err := validResponse.VisitUpdateProductRelatedResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminStorefrontSettings operation middleware
+func (sh *strictHandler) GetAdminStorefrontSettings(ctx *gin.Context) {
+	var request GetAdminStorefrontSettingsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminStorefrontSettings(ctx, request.(GetAdminStorefrontSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminStorefrontSettings")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminStorefrontSettingsResponseObject); ok {
+		if err := validResponse.VisitGetAdminStorefrontSettingsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateStorefrontSettings operation middleware
+func (sh *strictHandler) UpdateStorefrontSettings(ctx *gin.Context) {
+	var request UpdateStorefrontSettingsRequestObject
+
+	var body UpdateStorefrontSettingsJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateStorefrontSettings(ctx, request.(UpdateStorefrontSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateStorefrontSettings")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateStorefrontSettingsResponseObject); ok {
+		if err := validResponse.VisitUpdateStorefrontSettingsResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -4174,62 +4515,97 @@ func (sh *strictHandler) GetProduct(ctx *gin.Context, id int) {
 	}
 }
 
+// GetStorefrontSettings operation middleware
+func (sh *strictHandler) GetStorefrontSettings(ctx *gin.Context) {
+	var request GetStorefrontSettingsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetStorefrontSettings(ctx, request.(GetStorefrontSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetStorefrontSettings")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetStorefrontSettingsResponseObject); ok {
+		if err := validResponse.VisitGetStorefrontSettingsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

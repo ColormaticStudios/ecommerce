@@ -148,3 +148,21 @@ func (s *Service) UserProfilePhotoURL(userID uint) (string, error) {
 
 	return s.PublicURLFor(mediaObj.OriginalPath), nil
 }
+
+func (s *Service) StorefrontHeroImage(storefrontID uint) (string, string, error) {
+	var ref models.MediaReference
+	if err := s.DB.Where("owner_type = ? AND owner_id = ? AND role = ?",
+		OwnerTypeStorefront, storefrontID, RoleStorefrontHero).First(&ref).Error; err != nil {
+		return "", "", err
+	}
+
+	var mediaObj models.MediaObject
+	if err := s.DB.Where("id = ?", ref.MediaID).First(&mediaObj).Error; err != nil {
+		return "", "", err
+	}
+	if mediaObj.Status != StatusReady || mediaObj.OriginalPath == "" {
+		return "", "", errors.New("media not ready")
+	}
+
+	return ref.MediaID, s.PublicURLFor(mediaObj.OriginalPath), nil
+}

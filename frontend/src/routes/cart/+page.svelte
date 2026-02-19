@@ -144,7 +144,7 @@
 							<span>Calculated at checkout</span>
 						</div>
 					</div>
-					<div class="border-l border-gray-200 pl-4 dark:border-gray-800 sm:border-l-0 sm:pl-0">
+					<div class="border-l border-gray-200 pl-4 sm:border-l-0 sm:pl-0 dark:border-gray-800">
 						<button
 							type="button"
 							disabled
@@ -238,7 +238,7 @@
 								aria-label="Remove item"
 								title="Remove item"
 							>
-								<i class="bi bi-trash-fill"></i>
+								<i class="bi bi-dash-lg"></i>
 							</IconButton>
 						</div>
 					</div>
@@ -262,7 +262,7 @@
 							<span>Calculated at checkout</span>
 						</div>
 					</div>
-					<div class="border-l border-gray-200 pl-4 dark:border-gray-800 sm:border-l-0 sm:pl-0">
+					<div class="border-l border-gray-200 pl-4 sm:border-l-0 sm:pl-0 dark:border-gray-800">
 						<ButtonLink
 							href={resolve("/checkout")}
 							variant="primary"

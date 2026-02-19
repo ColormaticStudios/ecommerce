@@ -82,7 +82,7 @@ func AddCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 
 		// Parse request
 		var req AddCartItemRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -213,7 +213,7 @@ func UpdateCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 
 		// Parse request
 		var req UpdateCartItemRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

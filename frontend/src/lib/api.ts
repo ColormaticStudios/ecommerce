@@ -17,7 +17,14 @@ import {
 	parseSavedPaymentMethod,
 	parseSavedAddress,
 } from "$lib/models";
+import { API_BASE_URL } from "$lib/config";
 import { fetchProduct, fetchProducts, type ListProductsQuery } from "$lib/api/openapi-client";
+import {
+	type StorefrontSettingsModel,
+	type StorefrontSettingsResponseModel,
+	parseStorefrontSettingsResponse,
+} from "$lib/storefront";
+import { appendQueryParams } from "$lib/api/http";
 import type { components, paths } from "$lib/api/generated/openapi";
 
 const API_ROUTE = "/api/v1";
@@ -40,6 +47,8 @@ type UserPagePayload = components["schemas"]["UserPage"];
 type UpdateOrderStatusRequest = components["schemas"]["UpdateOrderStatusRequest"];
 type CreateSavedPaymentMethodRequest = components["schemas"]["CreateSavedPaymentMethodRequest"];
 type CreateSavedAddressRequest = components["schemas"]["CreateSavedAddressRequest"];
+type StorefrontSettingsRequest = components["schemas"]["StorefrontSettingsRequest"];
+type StorefrontSettingsResponse = components["schemas"]["StorefrontSettingsResponse"];
 type ListUserOrdersQuery = paths["/api/v1/me/orders"]["get"]["parameters"]["query"];
 type ListAdminOrdersQuery = paths["/api/v1/admin/orders"]["get"]["parameters"]["query"];
 type ListUsersQuery = paths["/api/v1/admin/users"]["get"]["parameters"]["query"];
@@ -52,7 +61,7 @@ export class API {
 	private authenticated: boolean;
 	private authStateResolved: boolean;
 
-	constructor(baseUrl = "http://localhost:3000") {
+	constructor(baseUrl = API_BASE_URL) {
 		this.baseUrl = baseUrl;
 		this.authenticated = false;
 		this.authStateResolved = false;
@@ -89,14 +98,7 @@ export class API {
 		}
 
 		const url = new URL(`${this.baseUrl}${API_ROUTE}${path}`);
-		if (params) {
-			Object.entries(params).forEach(([key, value]) => {
-				if (value === undefined || value === null || value === "") {
-					return;
-				}
-				url.searchParams.append(key, String(value));
-			});
-		}
+		appendQueryParams(url, params);
 
 		const response = await fetch(url.toString(), {
 			method,
@@ -184,13 +186,21 @@ export class API {
 	}
 
 	public async processPayment(orderId: number, data?: ProcessPaymentRequest): Promise<OrderModel> {
-		const response = await this.request<ProcessPaymentResponse>("POST", `/me/orders/${orderId}/pay`, data);
+		const response = await this.request<ProcessPaymentResponse>(
+			"POST",
+			`/me/orders/${orderId}/pay`,
+			data
+		);
 		return parseOrder(response.order);
 	}
 
 	// Product Management
 	public async listProducts(params?: ListProductsQuery): Promise<PageModel> {
-		const { data: response, error, response: rawResponse } = await fetchProducts(this.baseUrl, params);
+		const {
+			data: response,
+			error,
+			response: rawResponse,
+		} = await fetchProducts(this.baseUrl, params);
 
 		if (error || !response) {
 			throw {
@@ -244,7 +254,10 @@ export class API {
 		return cart;
 	}
 
-	public async updateCartItem(itemId: number, data: components["schemas"]["UpdateCartItemRequest"]): Promise<CartItemModel> {
+	public async updateCartItem(
+		itemId: number,
+		data: components["schemas"]["UpdateCartItemRequest"]
+	): Promise<CartItemModel> {
 		const response = await this.request<CartItemPayload>("PATCH", `/me/cart/${itemId}`, data);
 		const cartItem = parseCartItem(response);
 
@@ -338,7 +351,9 @@ export class API {
 	}
 
 	public async attachProfilePhoto(mediaId: string): Promise<UserModel> {
-		const response = await this.request<ProfileModel>("POST", "/me/profile-photo", { media_id: mediaId });
+		const response = await this.request<ProfileModel>("POST", "/me/profile-photo", {
+			media_id: mediaId,
+		});
 		return parseProfile(response);
 	}
 
@@ -470,6 +485,28 @@ export class API {
 		return parseProduct(response);
 	}
 
+	public async getStorefrontSettings(): Promise<StorefrontSettingsResponseModel> {
+		const response = await this.request<StorefrontSettingsResponse>("GET", "/storefront");
+		return parseStorefrontSettingsResponse(response);
+	}
+
+	public async getAdminStorefrontSettings(): Promise<StorefrontSettingsResponseModel> {
+		const response = await this.request<StorefrontSettingsResponse>("GET", "/admin/storefront");
+		return parseStorefrontSettingsResponse(response);
+	}
+
+	public async updateStorefrontSettings(
+		settings: StorefrontSettingsModel
+	): Promise<StorefrontSettingsResponseModel> {
+		const payload: StorefrontSettingsRequest = { settings };
+		const response = await this.request<StorefrontSettingsResponse>(
+			"PUT",
+			"/admin/storefront",
+			payload
+		);
+		return parseStorefrontSettingsResponse(response);
+	}
+
 	// Order Management
 	public async listOrders(
 		params?: ListOrdersParams
@@ -527,12 +564,7 @@ export class API {
 	public async listUsers(
 		params?: ListUsersQuery
 	): Promise<{ data: UserModel[]; pagination: UserPagePayload["pagination"] }> {
-		const response = await this.request<UserPagePayload>(
-			"GET",
-			"/admin/users",
-			undefined,
-			params
-		);
+		const response = await this.request<UserPagePayload>("GET", "/admin/users", undefined, params);
 		return {
 			data: response.data.map(parseProfile),
 			pagination: response.pagination,

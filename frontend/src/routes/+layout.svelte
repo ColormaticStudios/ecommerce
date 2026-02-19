@@ -2,9 +2,11 @@
 	import "./main.css";
 	import "bootstrap-icons/font/bootstrap-icons.css";
 	import { API } from "$lib/api";
+	import StorefrontFooter from "$lib/components/StorefrontFooter.svelte";
 	import { userStore } from "$lib/user";
 	import { onMount, setContext } from "svelte";
 	import { resolve } from "$app/paths";
+	import type { LayoutData } from "./$types";
 
 	const api = new API();
 	setContext("api", api);
@@ -76,118 +78,126 @@
 	});
 
 	interface Props {
+		data: LayoutData;
 		children?: import("svelte").Snippet;
 	}
-	let { children }: Props = $props();
+	let { data, children }: Props = $props();
 </script>
 
 <svelte:head>
 	<!-- <link rel="icon" href="" /> -->
 </svelte:head>
 
-<nav class="flex items-center justify-between bg-gray-100 px-3 py-2 dark:bg-gray-900">
-	<div class="flex items-center gap-2">
-		<a href={resolve("/")} class="navlink text-2xl">Home</a>
-	</div>
-	<div class="flex items-center gap-3">
-		<a href={resolve("/search")} class="navlink text-lg" aria-label="search">
-			<i class="bi bi-search"></i>
-		</a>
-		{#if $userStore}
-			<a
-				href={resolve("/cart")}
-				class="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:border-gray-600 dark:hover:bg-gray-700"
-				aria-label="View cart"
+<div class="flex min-h-screen flex-col">
+	<nav class="flex items-center justify-between bg-gray-100 px-3 py-2 dark:bg-gray-900">
+		<div class="flex items-center gap-2">
+			<a href={resolve("/")} class="navlink text-2xl">{data.storefront.site_title || "Ecommerce"}</a
 			>
-				<i class="bi bi-cart text-lg"></i>
-				{#if cartCountLoading}
-					<span
-						class="absolute -top-1 -right-1 rounded-full bg-gray-200 px-1 text-[10px] font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-100"
-					>
-						...
-					</span>
-				{:else if cartCount != null && cartCount > 0}
-					<span
-						class="absolute -top-1 -right-1 min-w-[1.15rem] rounded-full bg-blue-200 px-1 text-center text-[10px] font-semibold text-blue-700 dark:bg-blue-800/60 dark:text-blue-200"
-					>
-						{cartCount}
-					</span>
-				{/if}
+		</div>
+		<div class="flex items-center gap-3">
+			<a href={resolve("/search")} class="navlink text-lg" aria-label="search">
+				<i class="bi bi-search"></i>
 			</a>
-
-			<div class="relative" bind:this={menuRef}>
-				<button
-					type="button"
-					class="flex cursor-pointer items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-gray-900 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:border-gray-600 dark:hover:bg-gray-700"
-					onclick={(event) => {
-						event.stopPropagation();
-						menuOpen = !menuOpen;
-					}}
+			{#if $userStore}
+				<a
+					href={resolve("/cart")}
+					class="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:border-gray-600 dark:hover:bg-gray-700"
+					aria-label="View cart"
 				>
-					{#if $userStore.profile_photo_url}
-						<img
-							src={$userStore.profile_photo_url}
-							alt="Profile"
-							class="h-7 w-7 rounded-full object-cover"
-						/>
-					{:else}
+					<i class="bi bi-cart text-lg"></i>
+					{#if cartCountLoading}
 						<span
-							class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-200"
+							class="absolute -top-1 -right-1 rounded-full bg-gray-200 px-1 text-[10px] font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-100"
 						>
-							{($userStore.name || $userStore.username || "?").slice(0, 1).toUpperCase()}
+							...
+						</span>
+					{:else if cartCount != null && cartCount > 0}
+						<span
+							class="absolute -top-1 -right-1 min-w-[1.15rem] rounded-full bg-blue-200 px-1 text-center text-[10px] font-semibold text-blue-700 dark:bg-blue-800/60 dark:text-blue-200"
+						>
+							{cartCount}
 						</span>
 					{/if}
-					<span class="max-w-35 truncate">
-						{$userStore.name || $userStore.username}
-					</span>
-					<i class="bi bi-chevron-down text-xs"></i>
-				</button>
-				{#if menuOpen}
-					<div
-						class="absolute right-0 mt-2 w-44 rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-900"
-					>
-						{#if $userStore.role === "admin"}
-							<a href={resolve("/admin")} class="menu-item" onclick={() => (menuOpen = false)}>
-								Admin
-								<i class="bi bi-shield-lock"></i>
-							</a>
-						{/if}
-						<a href={resolve("/checkout")} class="menu-item" onclick={() => (menuOpen = false)}>
-							Checkout
-							<i class="bi bi-credit-card"></i>
-						</a>
-						<a href={resolve("/profile")} class="menu-item" onclick={() => (menuOpen = false)}>
-							Edit profile
-							<i class="bi bi-person"></i>
-						</a>
-						<a href={resolve("/orders")} class="menu-item" onclick={() => (menuOpen = false)}>
-							Orders
-							<i class="bi bi-receipt"></i>
-						</a>
-						<button
-							type="button"
-							class="menu-item cursor-pointer text-left"
-							onclick={() => {
-								menuOpen = false;
-								void $userStore.logOut();
-							}}
-						>
-							Sign out
-							<i class="bi bi-box-arrow-right"></i>
-						</button>
-					</div>
-				{/if}
-			</div>
-		{:else}
-			<div>
-				<a href={resolve("/login")} class="navlink text-xl">Log In</a>
-				<a href={resolve("/signup")} class="navlink text-xl">Sign Up</a>
-			</div>
-		{/if}
-	</div>
-</nav>
+				</a>
 
-{@render children?.()}
+				<div class="relative" bind:this={menuRef}>
+					<button
+						type="button"
+						class="flex cursor-pointer items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-gray-900 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:border-gray-600 dark:hover:bg-gray-700"
+						onclick={(event) => {
+							event.stopPropagation();
+							menuOpen = !menuOpen;
+						}}
+					>
+						{#if $userStore.profile_photo_url}
+							<img
+								src={$userStore.profile_photo_url}
+								alt="Profile"
+								class="h-7 w-7 rounded-full object-cover"
+							/>
+						{:else}
+							<span
+								class="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-200"
+							>
+								{($userStore.name || $userStore.username || "?").slice(0, 1).toUpperCase()}
+							</span>
+						{/if}
+						<span class="max-w-35 truncate">
+							{$userStore.name || $userStore.username}
+						</span>
+						<i class="bi bi-chevron-down text-xs"></i>
+					</button>
+					{#if menuOpen}
+						<div
+							class="absolute right-0 mt-2 w-44 rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-900"
+						>
+							{#if $userStore.role === "admin"}
+								<a href={resolve("/admin")} class="menu-item" onclick={() => (menuOpen = false)}>
+									Admin
+									<i class="bi bi-shield-lock"></i>
+								</a>
+							{/if}
+							<a href={resolve("/checkout")} class="menu-item" onclick={() => (menuOpen = false)}>
+								Checkout
+								<i class="bi bi-credit-card"></i>
+							</a>
+							<a href={resolve("/profile")} class="menu-item" onclick={() => (menuOpen = false)}>
+								Edit profile
+								<i class="bi bi-person"></i>
+							</a>
+							<a href={resolve("/orders")} class="menu-item" onclick={() => (menuOpen = false)}>
+								Orders
+								<i class="bi bi-receipt"></i>
+							</a>
+							<button
+								type="button"
+								class="menu-item cursor-pointer text-left"
+								onclick={() => {
+									menuOpen = false;
+									void $userStore.logOut();
+								}}
+							>
+								Sign out
+								<i class="bi bi-box-arrow-right"></i>
+							</button>
+						</div>
+					{/if}
+				</div>
+			{:else}
+				<div>
+					<a href={resolve("/login")} class="navlink text-xl">Log In</a>
+					<a href={resolve("/signup")} class="navlink text-xl">Sign Up</a>
+				</div>
+			{/if}
+		</div>
+	</nav>
+
+	<main class="flex-1">
+		{@render children?.()}
+	</main>
+
+	<StorefrontFooter footer={data.storefront.footer} />
+</div>
 
 <style>
 	@reference "tailwindcss";

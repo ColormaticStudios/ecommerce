@@ -73,6 +73,7 @@ func main() {
 		&models.MediaReference{},
 		&models.SavedPaymentMethod{},
 		&models.SavedAddress{},
+		&models.StorefrontSettings{},
 	); err != nil {
 		log.Fatalf("[ERROR] Failed to migrate database: %v", err)
 	}
@@ -193,6 +194,7 @@ func main() {
 
 			apiv1.GET("/products", handlers.GetProducts(db, mediaService))
 			apiv1.GET("/products/:id", handlers.GetProductByID(db, mediaService))
+			apiv1.GET("/storefront", handlers.GetStorefrontSettings(db, mediaService))
 
 			mediaRoutes := apiv1.Group("/media")
 			mediaRoutes.Use(middleware.AuthMiddleware(jwtSecret, ""))
@@ -267,6 +269,8 @@ func main() {
 				adminRoutes.PATCH("/orders/:id/status", handlers.UpdateOrderStatus(db))
 				adminRoutes.GET("/users", handlers.GetAllUsers(db))
 				adminRoutes.PATCH("/users/:id/role", handlers.UpdateUserRole(db))
+				adminRoutes.GET("/storefront", handlers.GetAdminStorefrontSettings(db, mediaService))
+				adminRoutes.PUT("/storefront", handlers.UpsertStorefrontSettings(db, mediaService))
 			}
 		}
 	}

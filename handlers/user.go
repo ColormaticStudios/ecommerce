@@ -66,7 +66,7 @@ func UpdateProfile(db *gorm.DB) gin.HandlerFunc {
 
 		// Parse request
 		var req UpdateProfileRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -166,7 +166,7 @@ func UpdateUserRole(db *gorm.DB) gin.HandlerFunc {
 
 		// Parse request
 		var req UpdateUserRoleRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

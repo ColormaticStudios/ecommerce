@@ -1,15 +1,16 @@
 <script lang="ts">
-	import type { HTMLAnchorAttributes } from "svelte/elements";
+	import type { HTMLInputAttributes } from "svelte/elements";
 
 	type ButtonVariant = "regular" | "primary" | "warning" | "danger";
 	type ButtonSize = "small" | "regular" | "large";
 	type ButtonStyle = "regular" | "pill";
 
-	interface Props extends HTMLAnchorAttributes {
+	interface Props extends Omit<HTMLInputAttributes, "size"> {
 		variant?: ButtonVariant;
 		size?: ButtonSize;
 		style?: ButtonStyle;
 		class?: string;
+		inputClass?: string;
 		children?: import("svelte").Snippet;
 	}
 
@@ -18,12 +19,16 @@
 		size = "regular",
 		style = "regular",
 		class: className = "",
+		inputClass = "hidden",
+		disabled = false,
 		children,
 		...rest
 	}: Props = $props();
 
-	const baseClasses = "cursor-pointer transition-[background-color,border-color] duration-200";
+	const baseClasses =
+		"inline-flex cursor-pointer items-center justify-center transition-[background-color,border-color] duration-200";
 	const shapeClasses = $derived(style === "pill" ? "rounded-full" : "rounded-lg");
+
 	const sizeClasses = $derived.by(() => {
 		switch (size) {
 			case "small":
@@ -34,6 +39,9 @@
 				return "px-4 py-2";
 		}
 	});
+	const disabledClasses = $derived(
+		disabled ? "cursor-auto opacity-60 pointer-events-none select-none" : ""
+	);
 
 	const variantClasses = $derived.by(() => {
 		switch (variant) {
@@ -49,6 +57,9 @@
 	});
 </script>
 
-<a class={`${baseClasses} ${shapeClasses} ${sizeClasses} ${variantClasses} ${className}`} {...rest}>
+<label
+	class={`${baseClasses} ${shapeClasses} ${sizeClasses} ${variantClasses} ${disabledClasses} ${className}`}
+>
+	<input class={inputClass} {disabled} {...rest} />
 	{@render children?.()}
-</a>
+</label>

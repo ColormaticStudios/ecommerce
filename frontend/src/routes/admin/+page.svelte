@@ -1,27 +1,48 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
 	import { checkAdminAccess } from "$lib/admin/auth";
-	import Alert from "$lib/components/Alert.svelte";
+	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
 	import { type OrderModel, type ProductModel, type UserModel } from "$lib/models";
 	import { formatPrice } from "$lib/utils";
 	import { getContext, onMount } from "svelte";
-	import { goto } from "$app/navigation";
+	import { goto, replaceState } from "$app/navigation";
 	import { resolve } from "$app/paths";
+	import { page } from "$app/state";
 	import ProductEditor from "$lib/admin/ProductEditor.svelte";
+	import StorefrontEditor from "$lib/admin/StorefrontEditor.svelte";
 
 	const api: API = getContext("api");
+	type AdminTab = "products" | "orders" | "users" | "storefront";
+	type NoticeTone = "success" | "error" | null;
+	type SaveAction = (() => Promise<void>) | null;
 
-	let activeTab = $state<"products" | "orders" | "users">("products");
+	let activeTab = $state<AdminTab>("products");
 	let authChecked = $state(false);
 	let loading = $state(true);
 	let isAuthenticated = $state(false);
 	let isAdmin = $state(false);
-	let errorMessage = $state("");
-	let statusMessage = $state("");
-	const tabIndex = $derived(activeTab === "products" ? 0 : activeTab === "orders" ? 1 : 2);
+	let noticeMessage = $state("");
+	let noticeTone = $state<NoticeTone>(null);
+	let noticeSaving = $state(false);
+	let productDirty = $state(false);
+	let storefrontDirty = $state(false);
+	let productSaveAction = $state<SaveAction>(null);
+	let storefrontSaveAction = $state<SaveAction>(null);
+	const tabIndex = $derived.by(() => {
+		switch (activeTab) {
+			case "products":
+				return 0;
+			case "orders":
+				return 1;
+			case "users":
+				return 2;
+			default:
+				return 3;
+		}
+	});
 
 	let productQuery = $state("");
 	let products = $state<ProductModel[]>([]);
@@ -42,10 +63,80 @@
 		selectedProductId ? (products.find((item) => item.id === selectedProductId) ?? null) : null
 	);
 	const hasProductSearch = $derived(productQuery.trim().length > 0);
+	const unsavedContexts = $derived.by(() => {
+		const contexts: string[] = [];
+		if (productDirty) {
+			contexts.push("products");
+		}
+		if (storefrontDirty) {
+			contexts.push("storefront");
+		}
+		return contexts;
+	});
+	const hasUnsavedChanges = $derived(unsavedContexts.length > 0);
+	const unsavedMessage = $derived.by(() => {
+		if (unsavedContexts.length === 0) {
+			return "You have unsaved changes.";
+		}
+		if (unsavedContexts.length === 1) {
+			return `You have unsaved ${unsavedContexts[0]} changes.`;
+		}
+		return "You have unsaved product and storefront changes.";
+	});
+	const activeSaveAction = $derived.by(() => {
+		if (activeTab === "products" && productDirty && productSaveAction) {
+			return productSaveAction;
+		}
+		if (activeTab === "storefront" && storefrontDirty && storefrontSaveAction) {
+			return storefrontSaveAction;
+		}
+		if (productDirty && productSaveAction) {
+			return productSaveAction;
+		}
+		if (storefrontDirty && storefrontSaveAction) {
+			return storefrontSaveAction;
+		}
+		return null;
+	});
+	const canSaveUnsaved = $derived(activeSaveAction !== null && !noticeSaving);
+
+	function isAdminTab(value: string | null): value is AdminTab {
+		return (
+			value === "products" || value === "orders" || value === "users" || value === "storefront"
+		);
+	}
+
+	function tabFromURL(): AdminTab | null {
+		if (typeof window === "undefined") {
+			return null;
+		}
+		const value = new URL(window.location.href).searchParams.get("tab");
+		return isAdminTab(value) ? value : null;
+	}
+
+	function syncTabToURL(tab: AdminTab) {
+		if (typeof window === "undefined") {
+			return;
+		}
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		replaceState(`${resolve("/admin")}?tab=${tab}`, page.state);
+	}
+
+	function setActiveTab(tab: AdminTab, syncURL = true) {
+		activeTab = tab;
+		if (syncURL) {
+			syncTabToURL(tab);
+		}
+	}
 
 	function clearMessages() {
-		errorMessage = "";
-		statusMessage = "";
+		noticeMessage = "";
+		noticeTone = null;
+	}
+
+	function setNotice(tone: Exclude<NoticeTone, null>, message: string) {
+		noticeTone = tone;
+		noticeMessage = message;
 	}
 
 	async function loadProducts() {
@@ -62,7 +153,7 @@
 			productTotalPages = Math.max(1, page.pagination.total_pages);
 		} catch (err) {
 			console.error(err);
-			errorMessage = "Unable to load products.";
+			setNotice("error", "Unable to load products.");
 		} finally {
 			productsLoaded = true;
 			productsLoading = false;
@@ -77,7 +168,7 @@
 			orders = response.data;
 		} catch (err) {
 			console.error(err);
-			errorMessage = "Unable to load orders.";
+			setNotice("error", "Unable to load orders.");
 		} finally {
 			ordersLoading = false;
 		}
@@ -91,7 +182,7 @@
 			users = response.data;
 		} catch (err) {
 			console.error(err);
-			errorMessage = "Unable to load users.";
+			setNotice("error", "Unable to load users.");
 		} finally {
 			usersLoading = false;
 		}
@@ -138,11 +229,48 @@
 	}
 
 	function setErrorMessage(message: string) {
-		errorMessage = message;
+		if (!message.trim()) {
+			return;
+		}
+		setNotice("error", message);
 	}
 
 	function setStatusMessage(message: string) {
-		statusMessage = message;
+		if (!message.trim()) {
+			return;
+		}
+		setNotice("success", message);
+	}
+
+	function setProductDirty(dirty: boolean) {
+		productDirty = dirty;
+	}
+
+	function setStorefrontDirty(dirty: boolean) {
+		storefrontDirty = dirty;
+	}
+
+	function setProductSaveRequest(action: SaveAction) {
+		productSaveAction = action;
+	}
+
+	function setStorefrontSaveRequest(action: SaveAction) {
+		storefrontSaveAction = action;
+	}
+
+	async function saveUnsavedChanges() {
+		if (!activeSaveAction || noticeSaving) {
+			return;
+		}
+		noticeSaving = true;
+		try {
+			await activeSaveAction();
+		} catch (err) {
+			console.error(err);
+			setNotice("error", "Unable to save pending changes.");
+		} finally {
+			noticeSaving = false;
+		}
 	}
 
 	async function updateOrder(orderId: number, status: OrderModel["status"]) {
@@ -150,10 +278,10 @@
 		try {
 			const updated = await api.updateOrderStatus(orderId, { status });
 			orders = orders.map((order) => (order.id === updated.id ? updated : order));
-			statusMessage = "Order status updated.";
+			setNotice("success", "Order status updated.");
 		} catch (err) {
 			console.error(err);
-			errorMessage = "Unable to update order.";
+			setNotice("error", "Unable to update order.");
 		}
 	}
 
@@ -162,29 +290,50 @@
 		try {
 			const updated = await api.updateUserRole(userId, { role });
 			users = users.map((user) => (user.id === updated.id ? updated : user));
-			statusMessage = "User role updated.";
+			setNotice("success", "User role updated.");
 		} catch (err) {
 			console.error(err);
-			errorMessage = "Unable to update role.";
+			setNotice("error", "Unable to update role.");
 		}
 	}
 
-	onMount(async () => {
-		authChecked = true;
-		try {
-			const result = await checkAdminAccess(api);
-			isAuthenticated = result.isAuthenticated;
-			isAdmin = result.isAdmin;
-			if (isAdmin) {
-				await Promise.all([loadProducts(), loadOrders(), loadUsers()]);
-			}
-		} catch (err) {
-			console.error(err);
-			errorMessage = "Unable to check admin access.";
-			isAdmin = false;
-		} finally {
-			loading = false;
+	onMount(() => {
+		const initialTab = tabFromURL();
+		if (initialTab) {
+			setActiveTab(initialTab, false);
+		} else {
+			syncTabToURL(activeTab);
 		}
+
+		const handlePopState = () => {
+			const nextTab = tabFromURL();
+			if (nextTab) {
+				setActiveTab(nextTab, false);
+			}
+		};
+		window.addEventListener("popstate", handlePopState);
+
+		void (async () => {
+			authChecked = true;
+			try {
+				const result = await checkAdminAccess(api);
+				isAuthenticated = result.isAuthenticated;
+				isAdmin = result.isAdmin;
+				if (isAdmin) {
+					await Promise.all([loadProducts(), loadOrders(), loadUsers()]);
+				}
+			} catch (err) {
+				console.error(err);
+				setNotice("error", "Unable to check admin access.");
+				isAdmin = false;
+			} finally {
+				loading = false;
+			}
+		})();
+
+		return () => {
+			window.removeEventListener("popstate", handlePopState);
+		};
 	});
 
 	$effect(() => {
@@ -209,7 +358,9 @@
 			class="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white p-6 text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300"
 		>
 			<p class="text-lg font-medium">Access denied.</p>
-			<p class="mt-2 text-sm">You must be signed in to an admin account to access the admin console.</p>
+			<p class="mt-2 text-sm">
+				You must be signed in to an admin account to access the admin console.
+			</p>
 		</div>
 	{:else if !isAdmin}
 		<div
@@ -227,10 +378,10 @@
 				class="relative rounded-full border border-gray-200 bg-white p-1 text-xs font-semibold tracking-[0.2em] text-gray-500 uppercase shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400"
 			>
 				<div
-					class="pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-full bg-gray-900 transition-transform duration-300 ease-out dark:bg-gray-100"
+					class="pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/4)] rounded-full bg-gray-900 transition-transform duration-300 ease-out dark:bg-gray-100"
 					style={`transform: translateX(${tabIndex * 100}%);`}
 				></div>
-				<div class="relative grid grid-cols-3 items-center gap-0">
+				<div class="relative grid grid-cols-4 items-center gap-0">
 					<button
 						type="button"
 						class={`cursor-pointer rounded-full px-4 py-2 transition ${
@@ -238,7 +389,7 @@
 								? "text-white dark:text-gray-900"
 								: "hover:text-gray-900 dark:hover:text-gray-200"
 						}`}
-						onclick={() => (activeTab = "products")}
+						onclick={() => setActiveTab("products")}
 					>
 						Products
 					</button>
@@ -249,7 +400,7 @@
 								? "text-white dark:text-gray-900"
 								: "hover:text-gray-900 dark:hover:text-gray-200"
 						}`}
-						onclick={() => (activeTab = "orders")}
+						onclick={() => setActiveTab("orders")}
 					>
 						Orders
 					</button>
@@ -260,34 +411,24 @@
 								? "text-white dark:text-gray-900"
 								: "hover:text-gray-900 dark:hover:text-gray-200"
 						}`}
-						onclick={() => (activeTab = "users")}
+						onclick={() => setActiveTab("users")}
 					>
 						Users
+					</button>
+					<button
+						type="button"
+						class={`cursor-pointer rounded-full px-4 py-2 transition ${
+							activeTab === "storefront"
+								? "text-white dark:text-gray-900"
+								: "hover:text-gray-900 dark:hover:text-gray-200"
+						}`}
+						onclick={() => setActiveTab("storefront")}
+					>
+						Storefront
 					</button>
 				</div>
 			</div>
 		</div>
-
-		{#if errorMessage}
-			<div class="mt-6">
-				<Alert
-					message={errorMessage}
-					tone="error"
-					icon="bi-x-circle-fill"
-					onClose={() => (errorMessage = "")}
-				/>
-			</div>
-		{/if}
-		{#if statusMessage}
-			<div class="mt-6">
-				<Alert
-					message={statusMessage}
-					tone="success"
-					icon="bi-check-circle-fill"
-					onClose={() => (statusMessage = "")}
-				/>
-			</div>
-		{/if}
 
 		{#if activeTab === "products"}
 			<div class="mt-6 grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
@@ -424,6 +565,8 @@
 					showMessages={false}
 					onErrorMessage={setErrorMessage}
 					onStatusMessage={setStatusMessage}
+					onDirtyChange={setProductDirty}
+					onSaveRequestChange={setProductSaveRequest}
 					onProductCreated={handleProductCreated}
 					onProductUpdated={handleProductUpdated}
 					onProductDeleted={handleProductDeleted}
@@ -557,5 +700,27 @@
 				{/if}
 			</div>
 		{/if}
+
+		{#if activeTab === "storefront"}
+			<StorefrontEditor
+				showInlineMessages={false}
+				showInlineUnsavedNotice={false}
+				onErrorMessage={setErrorMessage}
+				onStatusMessage={setStatusMessage}
+				onDirtyChange={setStorefrontDirty}
+				onSaveRequestChange={setStorefrontSaveRequest}
+			/>
+		{/if}
 	{/if}
 </section>
+
+<AdminFloatingNotices
+	showUnsaved={hasUnsavedChanges}
+	{unsavedMessage}
+	{canSaveUnsaved}
+	onSaveUnsaved={saveUnsavedChanges}
+	savingUnsaved={noticeSaving}
+	statusMessage={noticeMessage}
+	statusTone={noticeTone}
+	onDismissStatus={clearMessages}
+/>

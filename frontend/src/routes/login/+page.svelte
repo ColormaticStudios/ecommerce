@@ -51,7 +51,12 @@
 	<h1 class="text-4xl font-bold">Log In</h1>
 	{#if reauthMessage}
 		<div class="m-4 w-sm">
-			<Alert message={reauthMessage} tone="error" icon="bi-shield-exclamation" onClose={undefined} />
+			<Alert
+				message={reauthMessage}
+				tone="error"
+				icon="bi-shield-exclamation"
+				onClose={undefined}
+			/>
 		</div>
 	{/if}
 	<form

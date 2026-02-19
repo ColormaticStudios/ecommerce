@@ -1,12 +1,15 @@
 import type { components } from "$lib/api/generated/openapi";
 
+type UserRole = components["schemas"]["User"]["role"];
+type OrderStatus = components["schemas"]["Order"]["status"];
+
 export interface UserModel {
 	id: number;
 	subject: string;
 	username: string;
 	email: string;
 	name: string | null;
-	role: "admin" | "customer";
+	role: UserRole;
 	currency: string;
 	profile_photo_url: string | null;
 	created_at: Date;
@@ -180,7 +183,7 @@ export function parseOrder(order: OrderPayload): OrderModel {
 export interface OrderModel {
 	id: number;
 	user_id: number;
-	status: "PENDING" | "PAID" | "FAILED";
+	status: OrderStatus;
 	total: number;
 	payment_method_display: string | null;
 	shipping_address_pretty: string | null;

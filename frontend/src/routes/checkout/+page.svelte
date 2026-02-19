@@ -375,7 +375,7 @@
 								<div class="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
 							</div>
 						</div>
-						<div class="border-l border-gray-200 pl-4 dark:border-gray-800 sm:border-l-0 sm:pl-0">
+						<div class="border-l border-gray-200 pl-4 sm:border-l-0 sm:pl-0 dark:border-gray-800">
 							<Button variant="primary" size="large" class="w-full" type="button" disabled={true}>
 								<i class="bi bi-cart-check-fill mr-1"></i>
 								Place order
@@ -533,7 +533,7 @@
 								</span>
 							</div>
 						</div>
-						<div class="border-l border-gray-200 pl-4 dark:border-gray-800 sm:border-l-0 sm:pl-0">
+						<div class="border-l border-gray-200 pl-4 sm:border-l-0 sm:pl-0 dark:border-gray-800">
 							<Button
 								variant="primary"
 								size="large"
