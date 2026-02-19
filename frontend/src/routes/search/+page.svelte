@@ -190,9 +190,7 @@
 					class="flex flex-wrap items-center justify-between text-sm text-gray-600 dark:text-gray-300"
 				>
 					<div class="flex items-center gap-2">
-						<span class="text-xs text-gray-600 dark:text-gray-400">
-							Sort by
-						</span>
+						<span class="text-xs text-gray-600 dark:text-gray-400"> Sort by </span>
 						<select
 							class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
 							bind:value={sortBy}

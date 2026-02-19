@@ -62,9 +62,7 @@
 			<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
 				{#each footer.columns as column, index (index)}
 					<div>
-						<p
-							class="text-xs font-semibold text-gray-500 dark:text-gray-400"
-						>
+						<p class="text-xs font-semibold text-gray-500 dark:text-gray-400">
 							{column.title}
 						</p>
 						<div class="mt-3 space-y-2">

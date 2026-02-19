@@ -119,6 +119,8 @@ var (
 	defaultSectionPromoOnce sync.Once
 	defaultSectionPromo     []StorefrontPromoCard
 	defaultSectionBadges    []string
+
+	errInvalidStorefrontMedia = errors.New("invalid storefront media")
 )
 
 func loadStorefrontLimits() {
@@ -647,21 +649,24 @@ func waitForReadyImage(db *gorm.DB, mediaID string) (models.MediaObject, error) 
 				time.Sleep(150 * time.Millisecond)
 				continue
 			}
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return models.MediaObject{}, fmt.Errorf("%w: media not found", errInvalidStorefrontMedia)
+			}
 			return models.MediaObject{}, err
 		}
 		if mediaObj.Status == media.StatusReady && mediaObj.OriginalPath != "" {
 			break
 		}
 		if mediaObj.Status == media.StatusFailed {
-			return models.MediaObject{}, errors.New("media processing failed")
+			return models.MediaObject{}, fmt.Errorf("%w: media processing failed", errInvalidStorefrontMedia)
 		}
 		if time.Now().After(deadline) {
-			return models.MediaObject{}, errors.New("media is still processing")
+			return models.MediaObject{}, fmt.Errorf("%w: media is still processing", errInvalidStorefrontMedia)
 		}
 		time.Sleep(150 * time.Millisecond)
 	}
 	if !strings.HasPrefix(mediaObj.MimeType, "image/") {
-		return models.MediaObject{}, errors.New("media must be an image")
+		return models.MediaObject{}, fmt.Errorf("%w: media must be an image", errInvalidStorefrontMedia)
 	}
 	return mediaObj, nil
 }
@@ -700,27 +705,22 @@ func syncStorefrontHeroMedia(db *gorm.DB, mediaService *media.Service, mediaIDs 
 		}
 	}
 
-	if err := db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("owner_type = ? AND owner_id = ? AND role = ?",
-			media.OwnerTypeStorefront, models.StorefrontSettingsSingletonID, media.RoleStorefrontHero).
-			Delete(&models.MediaReference{}).Error; err != nil {
+	if err := db.Where("owner_type = ? AND owner_id = ? AND role = ?",
+		media.OwnerTypeStorefront, models.StorefrontSettingsSingletonID, media.RoleStorefrontHero).
+		Delete(&models.MediaReference{}).Error; err != nil {
+		return err
+	}
+
+	for position, mediaID := range mediaIDs {
+		if err := db.Create(&models.MediaReference{
+			MediaID:   mediaID,
+			OwnerType: media.OwnerTypeStorefront,
+			OwnerID:   models.StorefrontSettingsSingletonID,
+			Role:      media.RoleStorefrontHero,
+			Position:  position,
+		}).Error; err != nil {
 			return err
 		}
-
-		for position, mediaID := range mediaIDs {
-			if err := tx.Create(&models.MediaReference{
-				MediaID:   mediaID,
-				OwnerType: media.OwnerTypeStorefront,
-				OwnerID:   models.StorefrontSettingsSingletonID,
-				Role:      media.RoleStorefrontHero,
-				Position:  position,
-			}).Error; err != nil {
-				return err
-			}
-		}
-		return nil
-	}); err != nil {
-		return err
 	}
 
 	if mediaService != nil {
@@ -736,6 +736,55 @@ func syncStorefrontHeroMedia(db *gorm.DB, mediaService *media.Service, mediaIDs 
 		}
 	}
 	return nil
+}
+
+func UpsertStorefrontSettings(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req UpsertStorefrontSettingsRequest
+		if err := bindStrictJSON(c, &req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		normalized := normalizeStorefrontSettings(req.Settings)
+		payload, marshalErr := json.Marshal(normalized)
+		if marshalErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to encode storefront settings"})
+			return
+		}
+
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			record, _, err := loadOrCreateStorefrontSettings(tx, nil)
+			if err != nil {
+				return err
+			}
+
+			if err := syncStorefrontHeroMedia(tx, mediaService, collectHeroMediaIDs(normalized)); err != nil {
+				return err
+			}
+
+			record.ConfigJSON = string(payload)
+			if err := tx.Save(&record).Error; err != nil {
+				return err
+			}
+			return nil
+		}); err != nil {
+			// Media readiness/type errors should remain 400s for clients.
+			if errors.Is(err, errInvalidStorefrontMedia) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save storefront settings"})
+			return
+		}
+
+		record, loaded, err := loadOrCreateStorefrontSettings(db, mediaService)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load storefront settings"})
+			return
+		}
+		c.JSON(http.StatusOK, StorefrontSettingsResponse{Settings: loaded, UpdatedAt: record.UpdatedAt})
+	}
 }
 
 func applyHeroBackgroundURLs(settings *StorefrontSettingsPayload, mediaService *media.Service) {
@@ -856,45 +905,5 @@ func GetAdminStorefrontSettings(db *gorm.DB, mediaService *media.Service) gin.Ha
 			return
 		}
 		c.JSON(http.StatusOK, StorefrontSettingsResponse{Settings: settings, UpdatedAt: record.UpdatedAt})
-	}
-}
-
-func UpsertStorefrontSettings(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var req UpsertStorefrontSettingsRequest
-		if err := bindStrictJSON(c, &req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		normalized := normalizeStorefrontSettings(req.Settings)
-		if err := syncStorefrontHeroMedia(db, mediaService, collectHeroMediaIDs(normalized)); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		record, _, err := loadOrCreateStorefrontSettings(db, mediaService)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load storefront settings"})
-			return
-		}
-
-		payload, marshalErr := json.Marshal(normalized)
-		if marshalErr != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to encode storefront settings"})
-			return
-		}
-		record.ConfigJSON = string(payload)
-		if err := db.Save(&record).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save storefront settings"})
-			return
-		}
-
-		_, loaded, err := loadOrCreateStorefrontSettings(db, mediaService)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load storefront settings"})
-			return
-		}
-		c.JSON(http.StatusOK, StorefrontSettingsResponse{Settings: loaded, UpdatedAt: record.UpdatedAt})
 	}
 }

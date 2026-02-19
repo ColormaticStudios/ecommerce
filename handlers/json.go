@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 func bindStrictJSON(c *gin.Context, target any) error {
@@ -26,6 +27,10 @@ func bindStrictJSON(c *gin.Context, target any) error {
 
 	if err := decoder.Decode(&struct{}{}); err != nil && !errors.Is(err, io.EOF) {
 		return errors.New("request body must contain a single JSON object")
+	}
+
+	if err := binding.Validator.ValidateStruct(target); err != nil {
+		return err
 	}
 	return nil
 }

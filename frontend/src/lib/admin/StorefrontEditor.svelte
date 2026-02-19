@@ -206,7 +206,9 @@
 		ensureSettingsShape(draft);
 	}
 
-	function buildPersistedStorefrontPayload(source: StorefrontSettingsModel): StorefrontSettingsModel {
+	function buildPersistedStorefrontPayload(
+		source: StorefrontSettingsModel
+	): StorefrontSettingsModel {
 		const payload = cloneStorefrontSettings(source);
 		ensureSettingsShape(payload);
 		payload.footer.columns = payload.footer.columns.map((column) => ({
@@ -735,10 +737,8 @@
 									{#if section.product_section.source === "manual"}
 										<TextInput
 											placeholder="Manual product IDs (comma-separated)"
-											value={
-												manualProductIdsInputBySection[section.id] ??
-												section.product_section.product_ids.join(", ")
-											}
+											value={manualProductIdsInputBySection[section.id] ??
+												section.product_section.product_ids.join(", ")}
 											oninput={(event) => {
 												const target = event.target as HTMLInputElement;
 												setManualProductIDsInput(section, target.value);

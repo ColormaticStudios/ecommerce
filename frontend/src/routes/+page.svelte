@@ -70,9 +70,7 @@
 					/>
 				{/if}
 				<div class="px-6 py-18 sm:px-10">
-					<p
-						class="text-xs font-semibold text-gray-500 dark:text-gray-300"
-					>
+					<p class="text-xs font-semibold text-gray-500 dark:text-gray-300">
 						{section.hero.eyebrow}
 					</p>
 					<h1
@@ -163,9 +161,7 @@
 							/>
 						{/if}
 						<div class="relative">
-							<p
-								class="text-xs font-semibold text-gray-500 dark:text-gray-400"
-							>
+							<p class="text-xs font-semibold text-gray-500 dark:text-gray-400">
 								{card.kicker}
 							</p>
 							<h3 class="mt-2 text-xl font-semibold text-gray-900 dark:text-gray-100">

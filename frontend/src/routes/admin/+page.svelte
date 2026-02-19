@@ -230,6 +230,9 @@
 
 	function setErrorMessage(message: string) {
 		if (!message.trim()) {
+			if (noticeTone === "error") {
+				clearMessages();
+			}
 			return;
 		}
 		setNotice("error", message);
@@ -237,6 +240,9 @@
 
 	function setStatusMessage(message: string) {
 		if (!message.trim()) {
+			if (noticeTone === "success") {
+				clearMessages();
+			}
 			return;
 		}
 		setNotice("success", message);

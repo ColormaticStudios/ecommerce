@@ -413,7 +413,11 @@
 				<i class="bi bi-arrow-left"></i>
 				Previous
 			</Button>
-			<Button size="small" onclick={() => goToPage(page + 1)} disabled={page >= totalPages || loading}>
+			<Button
+				size="small"
+				onclick={() => goToPage(page + 1)}
+				disabled={page >= totalPages || loading}
+			>
 				Next
 				<i class="bi bi-arrow-right"></i>
 			</Button>

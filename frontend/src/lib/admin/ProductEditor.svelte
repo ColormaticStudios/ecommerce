@@ -1051,7 +1051,9 @@
 
 		<div class="mt-4 space-y-4 text-sm">
 			{@render ProductFields()}
-				<div class="mt-2 mb-6 flex flex-wrap gap-2 border-b border-gray-200 pb-6 text-base dark:border-gray-800">
+			<div
+				class="mt-2 mb-6 flex flex-wrap gap-2 border-b border-gray-200 pb-6 text-base dark:border-gray-800"
+			>
 				<Button
 					variant="primary"
 					size="large"
