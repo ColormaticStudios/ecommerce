@@ -1,5 +1,12 @@
 import type { PageServerLoad } from "./$types";
-import { parseOrder, parseProduct, parseProfile, type OrderModel, type ProductModel, type UserModel } from "$lib/models";
+import {
+	parseOrder,
+	parseProduct,
+	parseProfile,
+	type OrderModel,
+	type ProductModel,
+	type UserModel,
+} from "$lib/models";
 import type { components } from "$lib/api/generated/openapi";
 import { serverRequest, type ServerAPIError } from "$lib/server/api";
 

@@ -61,12 +61,8 @@
 		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.product.price, 0) : 0
 	);
 
-	function syncDefaults(
-		paymentMethods: SavedPaymentMethodModel[],
-		addresses: SavedAddressModel[]
-	) {
-		const defaultPayment =
-			paymentMethods.find((method) => method.is_default) ?? paymentMethods[0];
+	function syncDefaults(paymentMethods: SavedPaymentMethodModel[], addresses: SavedAddressModel[]) {
+		const defaultPayment = paymentMethods.find((method) => method.is_default) ?? paymentMethods[0];
 		selectedPaymentMethodId = defaultPayment?.id ?? null;
 		useNewPaymentMethod = !defaultPayment;
 
