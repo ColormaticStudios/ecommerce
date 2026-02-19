@@ -1,6 +1,7 @@
 import type { PageServerLoad } from "./$types";
 import { API } from "$lib/api";
 import type { ProductModel } from "$lib/models";
+import { setPublicPageCacheHeaders } from "$lib/server/cache";
 import type {
 	StorefrontHomepageSectionModel,
 	StorefrontProductSectionModel,
@@ -51,7 +52,9 @@ async function loadProductSection(
 	return page.data;
 }
 
-export const load: PageServerLoad = async ({ parent }) => {
+export const load: PageServerLoad = async (event) => {
+	setPublicPageCacheHeaders(event);
+	const { parent } = event;
 	const { storefront } = await parent();
 	const api = new API();
 	let errorMessage = "";

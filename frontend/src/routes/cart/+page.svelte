@@ -7,53 +7,24 @@
 	import QuantitySelector from "$lib/components/QuantitySelector.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
-	import { getContext, onMount } from "svelte";
+	import { getContext } from "svelte";
 	import { resolve } from "$app/paths";
+	import type { PageData } from "./$types";
 
 	const api: API = getContext("api");
+	interface Props {
+		data: PageData;
+	}
+	let { data }: Props = $props();
 
 	let cart = $state<CartModel | null>(null);
-	let loading = $state(true);
-	let cartResolved = $state(false);
 	let errorMessage = $state("");
 	let updatingItemId = $state<number | null>(null);
-	let authChecked = $state(false);
 	let isAuthenticated = $state(false);
-	const skeletonRows = [0, 1, 2];
 
 	const total = $derived(
 		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.product.price, 0) : 0
 	);
-
-	async function loadCart(options?: { silent?: boolean }) {
-		if (!options?.silent) {
-			loading = true;
-			cartResolved = false;
-			cart = null;
-		}
-
-		authChecked = true;
-		isAuthenticated = await api.refreshAuthState();
-		if (!isAuthenticated) {
-			cart = null;
-			loading = false;
-			cartResolved = true;
-			return;
-		}
-
-		errorMessage = "";
-		try {
-			cart = await api.viewCart();
-		} catch (err) {
-			console.error(err);
-			errorMessage = "Unable to load your cart.";
-		} finally {
-			if (!options?.silent) {
-				loading = false;
-				cartResolved = true;
-			}
-		}
-	}
 
 	async function updateItemQuantity(itemId: number, quantity: number) {
 		if (quantity < 1) {
@@ -63,7 +34,7 @@
 		updatingItemId = itemId;
 		try {
 			await api.updateCartItem(itemId, { quantity });
-			await loadCart({ silent: true });
+			cart = await api.viewCart();
 			window.dispatchEvent(new CustomEvent("cart:updated"));
 		} catch (err) {
 			console.error(err);
@@ -77,7 +48,7 @@
 		updatingItemId = itemId;
 		try {
 			await api.removeCartItem(itemId);
-			await loadCart({ silent: true });
+			cart = await api.viewCart();
 			window.dispatchEvent(new CustomEvent("cart:updated"));
 		} catch (err) {
 			console.error(err);
@@ -98,7 +69,11 @@
 		updateItemQuantity(itemId, quantity - 1);
 	}
 
-	onMount(loadCart);
+	$effect(() => {
+		cart = data.cart;
+		errorMessage = data.errorMessage;
+		isAuthenticated = data.isAuthenticated;
+	});
 </script>
 
 <section class="mx-auto max-w-6xl px-4 py-10">
@@ -113,57 +88,7 @@
 		{/if}
 	</div>
 
-	{#if !authChecked || loading || !cartResolved}
-		<div class="mt-6 grid gap-6 lg:grid-cols-[1.6fr_0.8fr]">
-			<div class="space-y-4">
-				{#each skeletonRows as index (index)}
-					<div
-						class="flex gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-					>
-						<div class="h-20 w-20 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-800"></div>
-						<div class="flex-1 space-y-3">
-							<div class="h-4 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-							<div class="h-3 w-1/3 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-							<div class="h-8 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-						</div>
-					</div>
-				{/each}
-			</div>
-			<div
-				class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-			>
-				<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Order summary</h3>
-				<div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-1">
-					<div class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-						<div class="flex items-center justify-between">
-							<span>Subtotal</span>
-							<div class="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-						</div>
-						<div class="flex items-center justify-between">
-							<span>Shipping</span>
-							<span>Calculated at checkout</span>
-						</div>
-					</div>
-					<div class="border-l border-gray-200 pl-4 sm:border-l-0 sm:pl-0 dark:border-gray-800">
-						<button
-							type="button"
-							disabled
-							class="block w-full cursor-not-allowed rounded-lg bg-gray-300 px-4 py-3 text-center font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-						>
-							Go to checkout
-							<i class="bi bi-arrow-right"></i>
-						</button>
-						<a
-							href={resolve("/")}
-							class="mt-3 block text-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-						>
-							Continue shopping
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	{:else if !isAuthenticated}
+	{#if !isAuthenticated}
 		<p class="mt-4 text-gray-600 dark:text-gray-300">
 			Please
 			<a href={resolve("/login")} class="text-blue-600 hover:underline dark:text-blue-400">

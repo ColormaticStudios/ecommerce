@@ -1,19 +1,19 @@
 <script lang="ts">
-	import { type API } from "$lib/api";
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
-	import { checkAdminAccess } from "$lib/admin/auth";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import ProductEditor from "$lib/admin/ProductEditor.svelte";
-	import { getContext, onMount } from "svelte";
 	import { page } from "$app/state";
 	import { resolve } from "$app/paths";
+	import type { PageData } from "./$types";
 
-	const api: API = getContext("api");
+	interface Props {
+		data: PageData;
+	}
+	let { data }: Props = $props();
+
 	const productId = $derived(Number(page.params.id));
 	const hasProductId = $derived(Number.isFinite(productId) && productId > 0);
 
-	let authChecked = $state(false);
-	let loading = $state(true);
 	let isAuthenticated = $state(false);
 	let isAdmin = $state(false);
 	let accessError = $state("");
@@ -72,34 +72,15 @@
 		}
 	}
 
-	onMount(async () => {
-		loading = true;
-		authChecked = false;
-		accessError = "";
-		clearMessages();
-		try {
-			const result = await checkAdminAccess(api);
-			isAuthenticated = result.isAuthenticated;
-			isAdmin = result.isAdmin;
-		} catch (err) {
-			console.error(err);
-			isAdmin = false;
-			accessError = "Unable to check admin access.";
-		} finally {
-			authChecked = true;
-			loading = false;
-		}
+	$effect(() => {
+		isAuthenticated = data.isAuthenticated;
+		isAdmin = data.isAdmin;
+		accessError = data.accessError;
 	});
 </script>
 
 <section class="mx-auto max-w-5xl px-4 py-10">
-	{#if !authChecked || loading}
-		<div
-			class="mt-6 rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300"
-		>
-			Loading admin console...
-		</div>
-	{:else if !isAuthenticated}
+	{#if !isAuthenticated}
 		<div
 			class="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white p-6 text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300"
 		>
@@ -135,6 +116,7 @@
 		</div>
 		<ProductEditor
 			{productId}
+			initialProduct={data.initialProduct}
 			layout="split"
 			showHeader={false}
 			showClear={false}

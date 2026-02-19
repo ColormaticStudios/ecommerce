@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { type ProductModel } from "$lib/models";
 	import { type API } from "$lib/api";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import QuantitySelector from "$lib/components/QuantitySelector.svelte";
@@ -9,22 +8,24 @@
 	import { userStore } from "$lib/user";
 	import { getContext, onDestroy } from "svelte";
 	import { goto } from "$app/navigation";
-	import { page } from "$app/state";
 	import { resolve } from "$app/paths";
+	import type { PageData } from "./$types";
 
 	const api: API = getContext("api");
-	const productId = $derived(Number(page.params.id));
+	interface Props {
+		data: PageData;
+	}
+	let { data }: Props = $props();
 
-	let product = $state<ProductModel | null>(null);
+	const product = $derived(data.product);
 	let selectedImage = $state(0);
-	let loading = $state(true);
+	let lastProductId = $state<number | null>(null);
 	let adding = $state(false);
 	let quantity = $state(1);
 	let toastMessage = $state("");
 	let toastVisible = $state(false);
 	let toastTimeout: ReturnType<typeof setTimeout> | null = null;
 	let toastHideTimeout: ReturnType<typeof setTimeout> | null = null;
-	let loadSequence = 0;
 
 	function clearToast() {
 		if (toastTimeout) {
@@ -84,37 +85,12 @@
 	}
 
 	$effect(() => {
-		const id = productId;
-		if (!Number.isFinite(id) || id <= 0) {
-			product = null;
-			loading = false;
-			return;
+		const nextProductId = data.product?.id ?? null;
+		if (nextProductId !== lastProductId) {
+			lastProductId = nextProductId;
+			selectedImage = 0;
+			quantity = 1;
 		}
-
-		const sequence = ++loadSequence;
-		loading = true;
-		product = null;
-		selectedImage = 0;
-		quantity = 1;
-
-		(async () => {
-			try {
-				const fetched = await api.getProduct(id);
-				if (sequence !== loadSequence) {
-					return;
-				}
-				product = fetched;
-			} catch (err) {
-				console.error(err);
-				if (sequence === loadSequence) {
-					product = null;
-				}
-			} finally {
-				if (sequence === loadSequence) {
-					loading = false;
-				}
-			}
-		})();
 	});
 
 	onDestroy(() => {
@@ -133,23 +109,7 @@
 />
 
 <section class="mx-auto max-w-7xl px-4 py-8">
-	{#if loading}
-		<div class="grid animate-pulse grid-cols-1 gap-8 md:grid-cols-2">
-			<!-- Image skeleton -->
-			<div class="aspect-square rounded-xl bg-gray-200 dark:bg-gray-700"></div>
-
-			<!-- Details skeleton -->
-			<div class="space-y-4">
-				<div class="h-6 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
-				<div class="h-4 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
-				<div class="h-4 w-5/6 rounded bg-gray-200 dark:bg-gray-700"></div>
-
-				<div class="h-8 w-1/3 rounded bg-gray-200 dark:bg-gray-700"></div>
-
-				<div class="h-12 flex-1 rounded bg-gray-200 dark:bg-gray-700"></div>
-			</div>
-		</div>
-	{:else if product}
+	{#if product}
 		<div class="grid grid-cols-1 gap-8 md:grid-cols-2">
 			<!-- Image gallery -->
 			<div class="flex flex-col gap-4">
@@ -283,6 +243,6 @@
 			</div>
 		{/if}
 	{:else}
-		<div class="text-red-500">Product not found.</div>
+		<div class="text-red-500">{data.errorMessage || "Product not found."}</div>
 	{/if}
 </section>

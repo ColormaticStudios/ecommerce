@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { type API } from "$lib/api";
 	import { type OrderModel } from "$lib/models";
 	import Alert from "$lib/components/Alert.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
@@ -7,18 +6,22 @@
 	import Button from "$lib/components/Button.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
-	import { getContext, onDestroy, onMount } from "svelte";
-	import { SvelteMap } from "svelte/reactivity";
+	import { onDestroy, onMount } from "svelte";
+	import { navigating } from "$app/state";
+	import { goto } from "$app/navigation";
+	import { SvelteURLSearchParams } from "svelte/reactivity";
 	import { resolve } from "$app/paths";
+	import type { PageData } from "./$types";
 
-	const api: API = getContext("api");
+	interface Props {
+		data: PageData;
+	}
+	let { data }: Props = $props();
 
 	let orders = $state<OrderModel[]>([]);
-	let loading = $state(true);
 	let errorMessage = $state("");
-	let authChecked = $state(false);
 	let isAuthenticated = $state(false);
-	const skeletonRows = [0, 1, 2];
+	const loading = $derived(Boolean(navigating.to));
 	const currency = $derived($userStore?.currency ?? "USD");
 	let page = $state(1);
 	let limit = $state("10");
@@ -62,71 +65,67 @@
 		}, 3600);
 	}
 
-	async function loadOrders() {
-		authChecked = true;
-		isAuthenticated = await api.refreshAuthState();
-		if (!isAuthenticated) {
-			loading = false;
-			return;
+	function buildSearchParams(next: {
+		page?: number;
+		limit?: string;
+		status?: "" | OrderModel["status"];
+		startDate?: string;
+		endDate?: string;
+	}) {
+		const params = new SvelteURLSearchParams();
+		const resolvedPage = next.page ?? page;
+		const resolvedLimit = next.limit ?? limit;
+		const resolvedStatus = next.status ?? statusFilter;
+		const resolvedStartDate = next.startDate ?? startDate;
+		const resolvedEndDate = next.endDate ?? endDate;
+
+		if (resolvedPage > 1) {
+			params.set("page", String(resolvedPage));
+		}
+		if (resolvedLimit !== "10") {
+			params.set("limit", resolvedLimit);
+		}
+		if (resolvedStatus) {
+			params.set("status", resolvedStatus);
+		}
+		if (resolvedStartDate) {
+			params.set("start_date", resolvedStartDate);
+		}
+		if (resolvedEndDate) {
+			params.set("end_date", resolvedEndDate);
 		}
 
-		loading = true;
-		errorMessage = "";
-		try {
-			const response = await api.listOrders({
-				page,
-				limit: Number(limit),
-				status: statusFilter,
-				start_date: startDate || undefined,
-				end_date: endDate || undefined,
-			});
-			totalPages = Math.max(1, response.pagination.total_pages);
-			totalOrders = response.pagination.total;
-			const missingItems = response.data.filter((order) => order.items.length === 0);
+		return params;
+	}
 
-			if (missingItems.length > 0) {
-				const detailResults = await Promise.allSettled(
-					missingItems.map((order) => api.getOrderDetails(order.id))
-				);
-				const detailsById = new SvelteMap<number, OrderModel>();
-
-				for (const result of detailResults) {
-					if (result.status === "fulfilled") {
-						detailsById.set(result.value.id, result.value);
-					}
-				}
-
-				orders = response.data.map((order) => detailsById.get(order.id) ?? order);
-			} else {
-				orders = response.data;
-			}
-		} catch (err) {
-			console.error(err);
-			errorMessage = "Unable to load orders.";
-		} finally {
-			loading = false;
-		}
+	function updateUrl(next: {
+		page?: number;
+		limit?: string;
+		status?: "" | OrderModel["status"];
+		startDate?: string;
+		endDate?: string;
+	}) {
+		const params = buildSearchParams(next);
+		const path = resolve("/orders");
+		const queryString = params.toString();
+		const nextUrl = queryString ? `${path}?${queryString}` : path;
+		// @ts-expect-error Svelte's routing requirements are strict for resolved URLs with queries
+		void goto(resolve(nextUrl), { replaceState: false, noScroll: true, keepFocus: true });
 	}
 
 	function applyFilters() {
-		page = 1;
-		loadOrders();
+		updateUrl({ page: 1, limit, status: statusFilter, startDate, endDate });
 	}
 
 	function clearFilters() {
-		statusFilter = "";
-		startDate = "";
-		endDate = "";
-		page = 1;
-		loadOrders();
+		updateUrl({ page: 1, status: "", startDate: "", endDate: "" });
 	}
 
 	function goToPage(nextPage: number) {
 		if (nextPage < 1 || nextPage > totalPages || loading) {
 			return;
 		}
-		page = nextPage;
-		loadOrders();
+		updateUrl({ page: nextPage });
 	}
 
 	function statusBadge(status: OrderModel["status"]) {
@@ -158,11 +157,23 @@
 				showToast("Order placed successfully.");
 			}
 		}
-		void loadOrders();
 	});
 
 	onDestroy(() => {
 		clearToast();
+	});
+
+	$effect(() => {
+		orders = data.orders;
+		errorMessage = data.errorMessage;
+		isAuthenticated = data.isAuthenticated;
+		page = data.page;
+		limit = data.limit;
+		totalPages = data.totalPages;
+		totalOrders = data.totalOrders;
+		statusFilter = data.statusFilter;
+		startDate = data.startDate;
+		endDate = data.endDate;
 	});
 </script>
 
@@ -181,7 +192,7 @@
 		</div>
 	</div>
 
-	{#if authChecked && isAuthenticated}
+	{#if isAuthenticated}
 		<div
 			class="mt-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 		>
@@ -255,22 +266,7 @@
 		</div>
 	{/if}
 
-	{#if !authChecked || loading}
-		<div class="mt-6 space-y-4">
-			{#each skeletonRows as index (index)}
-				<div
-					class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-				>
-					<div class="flex items-center justify-between">
-						<div class="h-4 w-28 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-						<div class="h-6 w-20 animate-pulse rounded-full bg-gray-200 dark:bg-gray-800"></div>
-					</div>
-					<div class="mt-4 h-5 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-					<div class="mt-2 h-4 w-40 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-				</div>
-			{/each}
-		</div>
-	{:else if !isAuthenticated}
+	{#if !isAuthenticated}
 		<p class="mt-4 text-gray-600 dark:text-gray-300">
 			Please
 			<a href={resolve("/login")} class="text-blue-600 hover:underline dark:text-blue-400">

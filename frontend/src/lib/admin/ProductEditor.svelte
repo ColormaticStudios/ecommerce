@@ -920,14 +920,7 @@
 	<div
 		class="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 	>
-		<div class="h-7 w-36 animate-pulse rounded bg-gray-200 dark:bg-gray-800"></div>
-		<div class="mt-6 grid gap-4">
-			<div class="h-11 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
-			<div class="h-11 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
-			<div class="h-11 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
-			<div class="h-24 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
-			<div class="h-32 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
-		</div>
+		<p class="text-sm text-gray-500 dark:text-gray-400">Loading product details...</p>
 	</div>
 {:else if !allowCreate && !hasProduct}
 	<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">Product not found.</p>

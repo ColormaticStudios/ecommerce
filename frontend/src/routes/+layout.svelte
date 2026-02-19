@@ -6,6 +6,7 @@
 	import { userStore } from "$lib/user";
 	import { onMount, setContext } from "svelte";
 	import { resolve } from "$app/paths";
+	import { navigating } from "$app/state";
 	import type { LayoutData } from "./$types";
 
 	const api = new API();
@@ -16,6 +17,7 @@
 	let cartCount = $state<number | null>(null);
 	let cartCountLoading = $state(false);
 	let cartCountLoaded = $state(false);
+	const showNavigationSpinner = $derived(Boolean(navigating.to));
 
 	async function refreshCartCount() {
 		const authenticated = await api.refreshAuthState();
@@ -89,6 +91,19 @@
 </svelte:head>
 
 <div class="flex min-h-screen flex-col">
+	{#if showNavigationSpinner}
+		<div
+			class="pointer-events-none fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-full border border-gray-200 bg-white/95 px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-900/95 dark:text-gray-200"
+			role="status"
+			aria-live="polite"
+			aria-label="Page loading"
+		>
+			<span class="inline-flex items-center gap-2">
+				<i class="bi bi-arrow-repeat animate-spin"></i>
+				Loading...
+			</span>
+		</div>
+	{/if}
 	<nav class="flex items-center justify-between bg-gray-100 px-3 py-2 dark:bg-gray-900">
 		<div class="flex items-center gap-2">
 			<a href={resolve("/")} class="navlink text-2xl">{data.storefront.site_title || "Ecommerce"}</a

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
-	import { checkAdminAccess } from "$lib/admin/auth";
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
@@ -13,17 +12,21 @@
 	import { page } from "$app/state";
 	import ProductEditor from "$lib/admin/ProductEditor.svelte";
 	import StorefrontEditor from "$lib/admin/StorefrontEditor.svelte";
+	import type { PageData } from "./$types";
 
 	const api: API = getContext("api");
 	type AdminTab = "products" | "orders" | "users" | "storefront";
 	type NoticeTone = "success" | "error" | null;
 	type SaveAction = (() => Promise<void>) | null;
+	interface Props {
+		data: PageData;
+	}
+	let { data }: Props = $props();
 
 	let activeTab = $state<AdminTab>("products");
-	let authChecked = $state(false);
-	let loading = $state(true);
 	let isAuthenticated = $state(false);
 	let isAdmin = $state(false);
+	let accessError = $state("");
 	let noticeMessage = $state("");
 	let noticeTone = $state<NoticeTone>(null);
 	let noticeSaving = $state(false);
@@ -46,7 +49,6 @@
 
 	let productQuery = $state("");
 	let products = $state<ProductModel[]>([]);
-	let productsLoaded = $state(false);
 	let productPage = $state(1);
 	let productTotalPages = $state(1);
 	let productLimit = $state(20);
@@ -141,7 +143,6 @@
 
 	async function loadProducts() {
 		productsLoading = true;
-		productsLoaded = false;
 		clearMessages();
 		try {
 			const page = await api.listProducts({
@@ -155,7 +156,6 @@
 			console.error(err);
 			setNotice("error", "Unable to load products.");
 		} finally {
-			productsLoaded = true;
 			productsLoading = false;
 		}
 	}
@@ -307,8 +307,6 @@
 		const initialTab = tabFromURL();
 		if (initialTab) {
 			setActiveTab(initialTab, false);
-		} else {
-			syncTabToURL(activeTab);
 		}
 
 		const handlePopState = () => {
@@ -319,47 +317,31 @@
 		};
 		window.addEventListener("popstate", handlePopState);
 
-		void (async () => {
-			authChecked = true;
-			try {
-				const result = await checkAdminAccess(api);
-				isAuthenticated = result.isAuthenticated;
-				isAdmin = result.isAdmin;
-				if (isAdmin) {
-					await Promise.all([loadProducts(), loadOrders(), loadUsers()]);
-				}
-			} catch (err) {
-				console.error(err);
-				setNotice("error", "Unable to check admin access.");
-				isAdmin = false;
-			} finally {
-				loading = false;
-			}
-		})();
-
 		return () => {
 			window.removeEventListener("popstate", handlePopState);
 		};
 	});
 
 	$effect(() => {
-		if (!isAdmin) {
-			return;
-		}
-		if (activeTab === "products" && !productsLoaded && !productsLoading) {
-			void loadProducts();
+		activeTab = data.initialTab;
+		isAuthenticated = data.isAuthenticated;
+		isAdmin = data.isAdmin;
+		accessError = data.accessError;
+		products = data.products;
+		productPage = data.productPage;
+		productTotalPages = data.productTotalPages;
+		productLimit = data.productLimit;
+		orders = data.orders;
+		users = data.users;
+		if (data.errorMessage) {
+			noticeTone = "error";
+			noticeMessage = data.errorMessage;
 		}
 	});
 </script>
 
 <section class="mx-auto max-w-6xl px-4 py-10">
-	{#if !authChecked || loading}
-		<div
-			class="mt-6 rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300"
-		>
-			Loading admin console...
-		</div>
-	{:else if !isAuthenticated}
+	{#if !isAuthenticated}
 		<div
 			class="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white p-6 text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300"
 		>
@@ -373,7 +355,9 @@
 			class="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white p-6 text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300"
 		>
 			<p class="text-lg font-medium">Access denied.</p>
-			<p class="mt-2 text-sm">Contact an administrator if you need access.</p>
+			<p class="mt-2 text-sm">
+				{accessError || "Contact an administrator if you need access."}
+			</p>
 		</div>
 	{:else}
 		<div class="flex flex-wrap items-start justify-between gap-6">
@@ -461,13 +445,7 @@
 						</form>
 					</div>
 
-					{#if productsLoading}
-						<div class="mt-6 space-y-3">
-							<div class="h-10 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
-							<div class="h-10 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
-							<div class="h-10 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
-						</div>
-					{:else if products.length === 0 && hasProductSearch}
+					{#if products.length === 0 && hasProductSearch}
 						<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">
 							Your search didn't match any products.
 						</p>
@@ -524,6 +502,9 @@
 							<div
 								class="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-gray-500 dark:text-gray-400"
 							>
+								{#if productsLoading}
+									<span class="text-xs text-gray-500 dark:text-gray-400">Refreshing...</span>
+								{/if}
 								<div class="flex items-center gap-2">
 									<span>Per page</span>
 									<select
@@ -587,16 +568,10 @@
 				<div class="flex items-center justify-between">
 					<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Orders</h2>
 					<Button variant="regular" type="button" onclick={loadOrders} disabled={ordersLoading}>
-						Refresh
+						{ordersLoading ? "Refreshing..." : "Refresh"}
 					</Button>
 				</div>
-				{#if ordersLoading}
-					<div class="mt-6 space-y-3">
-						<div class="h-10 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
-						<div class="h-10 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
-						<div class="h-10 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
-					</div>
-				{:else if orders.length === 0}
+				{#if orders.length === 0}
 					<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">No orders yet.</p>
 				{:else}
 					<div class="mt-6 space-y-4">
@@ -663,16 +638,10 @@
 				<div class="flex items-center justify-between">
 					<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Users</h2>
 					<Button variant="regular" type="button" onclick={loadUsers} disabled={usersLoading}>
-						Refresh
+						{usersLoading ? "Refreshing..." : "Refresh"}
 					</Button>
 				</div>
-				{#if usersLoading}
-					<div class="mt-6 space-y-3">
-						<div class="h-10 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
-						<div class="h-10 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
-						<div class="h-10 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"></div>
-					</div>
-				{:else if users.length === 0}
+				{#if users.length === 0}
 					<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">No users found.</p>
 				{:else}
 					<div class="mt-6 space-y-4">
