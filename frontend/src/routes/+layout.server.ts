@@ -1,25 +1,34 @@
 import type { LayoutServerLoad } from "./$types";
-import { API_BASE_URL } from "$lib/config";
-import { fetchStorefrontSettings } from "$lib/api/openapi-client";
 import { createDefaultStorefrontSettings, parseStorefrontSettingsResponse } from "$lib/storefront";
+import { serverRequest, type ServerAPIError } from "$lib/server/api";
+import type { components } from "$lib/api/generated/openapi";
 
-export const load: LayoutServerLoad = async () => {
+type StorefrontSettingsPayload = components["schemas"]["StorefrontSettingsResponse"];
+type DraftPreviewSessionPayload = components["schemas"]["DraftPreviewSessionResponse"];
+
+export const load: LayoutServerLoad = async (event) => {
+	let storefront = createDefaultStorefrontSettings();
+	let draftPreview: DraftPreviewSessionPayload = { active: false };
+
 	try {
-		const { data, error } = await fetchStorefrontSettings(API_BASE_URL);
-		if (!data || error) {
-			return {
-				storefront: createDefaultStorefrontSettings(),
-			};
-		}
-
-		const parsed = parseStorefrontSettingsResponse(data);
-		return {
-			storefront: parsed.settings,
-		};
+		const storefrontPayload = await serverRequest<StorefrontSettingsPayload>(event, "/storefront");
+		const parsed = parseStorefrontSettingsResponse(storefrontPayload);
+		storefront = parsed.settings;
 	} catch (err) {
 		console.error("Failed to load storefront settings in layout", err);
-		return {
-			storefront: createDefaultStorefrontSettings(),
-		};
 	}
+
+	try {
+		draftPreview = await serverRequest<DraftPreviewSessionPayload>(event, "/admin/preview");
+	} catch (err) {
+		const error = err as ServerAPIError;
+		if (error.status !== 401 && error.status !== 403) {
+			console.error("Failed to load draft preview state in layout", err);
+		}
+	}
+
+	return {
+		storefront,
+		draftPreview,
+	};
 };

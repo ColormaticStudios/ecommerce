@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { HTMLInputAttributes } from "svelte/elements";
 
-	type ButtonVariant = "regular" | "primary" | "warning" | "danger";
+	type ButtonVariant = "regular" | "primary" | "success" | "warning" | "danger";
 	type ButtonSize = "small" | "regular" | "large";
 	type ButtonStyle = "regular" | "pill";
 
@@ -47,6 +47,8 @@
 		switch (variant) {
 			case "primary":
 				return "text-white border border-blue-400 bg-blue-500 hover:border-blue-500 hover:bg-blue-600";
+			case "success":
+				return "text-white border border-emerald-400 bg-emerald-500 hover:border-emerald-500 hover:bg-emerald-600";
 			case "warning":
 				return "text-white border border-orange-400 bg-orange-500 hover:border-orange-300 hover:bg-orange-400";
 			case "danger":

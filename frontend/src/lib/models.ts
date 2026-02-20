@@ -78,6 +78,9 @@ export function parseProduct(product: ProductPayload): ProductModel {
 		created_at: parseDate(product.created_at) ?? new Date(),
 		deleted_at: parseDate(product.deleted_at),
 		updated_at: parseDate(product.updated_at) ?? new Date(),
+		draft_updated_at: parseDate(product.draft_updated_at),
+		is_published: product.is_published ?? true,
+		has_draft_changes: product.has_draft_changes ?? false,
 		id: product.id,
 		sku: product.sku,
 		name: product.name,
@@ -94,6 +97,9 @@ export interface ProductModel {
 	created_at: Date;
 	deleted_at: Date | null;
 	updated_at: Date;
+	draft_updated_at: Date | null;
+	is_published: boolean;
+	has_draft_changes: boolean;
 	id: number;
 	sku: string;
 	name: string;

@@ -97,6 +97,9 @@ export interface StorefrontSettingsModel {
 export interface StorefrontSettingsResponseModel {
 	settings: StorefrontSettingsModel;
 	updated_at: Date | null;
+	has_draft_changes: boolean;
+	draft_updated_at: Date | null;
+	published_updated_at: Date | null;
 }
 
 type JsonRecord = Record<string, unknown>;
@@ -718,5 +721,8 @@ export function parseStorefrontSettingsResponse(
 	return {
 		settings: parseStorefrontSettings(response.settings),
 		updated_at: parseDate(response.updated_at),
+		has_draft_changes: response.has_draft_changes ?? false,
+		draft_updated_at: parseDate(response.draft_updated_at),
+		published_updated_at: parseDate(response.published_updated_at),
 	};
 }

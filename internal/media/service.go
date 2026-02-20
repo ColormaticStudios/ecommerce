@@ -19,11 +19,13 @@ const (
 	OwnerTypeUser       = "user"
 	OwnerTypeStorefront = "storefront"
 
-	RoleProductImage   = "product_image"
-	RoleProfilePhoto   = "profile_photo"
-	RoleStorefrontHero = "storefront_hero"
-	DefaultMediaRoot   = "media"
-	DefaultPublicPath  = "/media"
+	RoleProductImage        = "product_image"
+	RoleProductDraftImage   = "product_draft_image"
+	RoleProfilePhoto        = "profile_photo"
+	RoleStorefrontHero      = "storefront_hero"
+	RoleStorefrontHeroDraft = "storefront_hero_draft"
+	DefaultMediaRoot        = "media"
+	DefaultPublicPath       = "/media"
 )
 
 type Service struct {

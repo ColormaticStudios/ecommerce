@@ -1,19 +1,23 @@
 import type { PageServerLoad } from "./$types";
-import { API } from "$lib/api";
-import type { ProductModel } from "$lib/models";
+import { parseProduct, type ProductModel } from "$lib/models";
 import { setPublicPageCacheHeaders } from "$lib/server/cache";
 import type {
 	StorefrontHomepageSectionModel,
 	StorefrontProductSectionModel,
 } from "$lib/storefront";
 import { STOREFRONT_LIMITS } from "$lib/storefront";
+import { serverRequest } from "$lib/server/api";
+import type { components } from "$lib/api/generated/openapi";
+
+type ProductPagePayload = components["schemas"]["ProductPage"];
+type ProductPayload = components["schemas"]["Product"];
 
 interface HomepageSectionData extends StorefrontHomepageSectionModel {
 	products: ProductModel[];
 }
 
 async function loadManualProducts(
-	api: API,
+	event: Parameters<PageServerLoad>[0],
 	productIds: number[],
 	limit: number
 ): Promise<ProductModel[]> {
@@ -22,16 +26,18 @@ async function loadManualProducts(
 		return [];
 	}
 
-	const results = await Promise.allSettled(ids.map((id) => api.getProduct(id)));
+	const results = await Promise.allSettled(
+		ids.map((id) => serverRequest<ProductPayload>(event, `/products/${id}`))
+	);
 	return results
 		.filter(
-			(result): result is PromiseFulfilledResult<ProductModel> => result.status === "fulfilled"
+			(result): result is PromiseFulfilledResult<ProductPayload> => result.status === "fulfilled"
 		)
-		.map((result) => result.value);
+		.map((result) => parseProduct(result.value));
 }
 
 async function loadProductSection(
-	api: API,
+	event: Parameters<PageServerLoad>[0],
 	config: StorefrontProductSectionModel
 ): Promise<ProductModel[]> {
 	const limit = Math.min(
@@ -39,24 +45,23 @@ async function loadProductSection(
 		Math.max(1, config.limit || STOREFRONT_LIMITS.default_product_section_limit)
 	);
 	if (config.source === "manual") {
-		return loadManualProducts(api, config.product_ids, limit);
+		return loadManualProducts(event, config.product_ids, limit);
 	}
 
-	const page = await api.listProducts({
+	const page = await serverRequest<ProductPagePayload>(event, "/products", {
 		q: config.source === "search" ? config.query.trim() || undefined : undefined,
 		sort: config.sort,
 		order: config.order,
 		page: 1,
 		limit,
 	});
-	return page.data;
+	return page.data.map(parseProduct);
 }
 
 export const load: PageServerLoad = async (event) => {
 	setPublicPageCacheHeaders(event);
 	const { parent } = event;
 	const { storefront } = await parent();
-	const api = new API();
 	let errorMessage = "";
 
 	const homepageSections: HomepageSectionData[] = [];
@@ -70,7 +75,7 @@ export const load: PageServerLoad = async (event) => {
 		}
 
 		try {
-			const products = await loadProductSection(api, section.product_section);
+			const products = await loadProductSection(event, section.product_section);
 			homepageSections.push({ ...section, products });
 		} catch (err) {
 			console.error(err);

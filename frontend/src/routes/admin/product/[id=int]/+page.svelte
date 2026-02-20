@@ -13,6 +13,7 @@
 
 	const productId = $derived(Number(page.params.id));
 	const hasProductId = $derived(Number.isFinite(productId) && productId > 0);
+	const canViewLive = $derived(Boolean(data.initialProduct?.is_published));
 
 	let isAuthenticated = $state(false);
 	let isAdmin = $state(false);
@@ -107,7 +108,7 @@
 			</div>
 			<div class="flex items-center gap-2">
 				<ButtonLink href={resolve("/admin")} variant="regular">Back to admin</ButtonLink>
-				{#if hasProductId}
+				{#if hasProductId && canViewLive}
 					<ButtonLink href={resolve(`/product/${productId}`)} variant="regular"
 						>View live</ButtonLink
 					>

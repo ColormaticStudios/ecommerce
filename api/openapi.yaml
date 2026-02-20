@@ -680,6 +680,52 @@ paths:
                 $ref: '#/components/schemas/Error'
 
   /api/v1/admin/products:
+    get:
+      tags: [admin]
+      operationId: listAdminProducts
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: min_price
+          schema:
+            type: number
+            format: double
+        - in: query
+          name: max_price
+          schema:
+            type: number
+            format: double
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [price, name, created_at]
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated admin products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPage'
     post:
       tags: [admin]
       operationId: createProduct
@@ -698,6 +744,29 @@ paths:
                 $ref: '#/components/schemas/Product'
 
   /api/v1/admin/products/{id}:
+    get:
+      tags: [admin]
+      operationId: getAdminProduct
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Admin product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     patch:
       tags: [admin]
       operationId: updateProduct
@@ -763,6 +832,81 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
+
+  /api/v1/admin/products/{id}/publish:
+    post:
+      tags: [admin]
+      operationId: publishProduct
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Published product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/admin/products/{id}/unpublish:
+    post:
+      tags: [admin]
+      operationId: unpublishProduct
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Unpublished product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/admin/products/{id}/draft:
+    delete:
+      tags: [admin]
+      operationId: discardProductDraft
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Product after draft discard
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/v1/admin/products/{id}/media/order:
     patch:
@@ -1003,6 +1147,72 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/v1/admin/storefront/publish:
+    post:
+      tags: [admin, storefront]
+      operationId: publishStorefrontSettings
+      responses:
+        '200':
+          description: Published storefront settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorefrontSettingsResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/admin/storefront/draft:
+    delete:
+      tags: [admin, storefront]
+      operationId: discardStorefrontDraft
+      responses:
+        '200':
+          description: Storefront settings after draft discard
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorefrontSettingsResponse'
+
+  /api/v1/admin/preview:
+    get:
+      tags: [admin]
+      operationId: getAdminPreview
+      responses:
+        '200':
+          description: Current preview session state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftPreviewSessionResponse'
+
+  /api/v1/admin/preview/start:
+    post:
+      tags: [admin]
+      operationId: startAdminPreview
+      responses:
+        '200':
+          description: Preview session started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftPreviewSessionResponse'
+
+  /api/v1/admin/preview/stop:
+    post:
+      tags: [admin]
+      operationId: stopAdminPreview
+      responses:
+        '200':
+          description: Preview session stopped
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftPreviewSessionResponse'
+
   /api/v1/media/uploads:
     post:
       tags: [media]
@@ -1094,6 +1304,17 @@ components:
       properties:
         message:
           type: string
+
+    DraftPreviewSessionResponse:
+      type: object
+      required: [active]
+      properties:
+        active:
+          type: boolean
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
 
     Pagination:
       type: object
@@ -1247,6 +1468,14 @@ components:
           type: string
           format: date-time
         deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_published:
+          type: boolean
+        has_draft_changes:
+          type: boolean
+        draft_updated_at:
           type: string
           format: date-time
           nullable: true
@@ -1919,10 +2148,19 @@ components:
 
     StorefrontSettingsResponse:
       type: object
-      required: [settings, updated_at]
+      required: [settings, updated_at, has_draft_changes, published_updated_at]
       properties:
         settings:
           $ref: '#/components/schemas/StorefrontSettings'
         updated_at:
+          type: string
+          format: date-time
+        has_draft_changes:
+          type: boolean
+        draft_updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        published_updated_at:
           type: string
           format: date-time

@@ -28,6 +28,10 @@ import { appendQueryParams } from "$lib/api/http";
 import type { components, paths } from "$lib/api/generated/openapi";
 
 const API_ROUTE = "/api/v1";
+export const DRAFT_PREVIEW_SYNC_EVENT = "draft-preview:changed";
+export const DRAFT_PREVIEW_SYNC_STORAGE_KEY = "draft-preview:state";
+export const STOREFRONT_SYNC_EVENT = "storefront:changed";
+export const STOREFRONT_SYNC_STORAGE_KEY = "storefront:state";
 
 type RegisterRequest = components["schemas"]["RegisterRequest"];
 type LoginRequest = components["schemas"]["LoginRequest"];
@@ -49,12 +53,70 @@ type CreateSavedPaymentMethodRequest = components["schemas"]["CreateSavedPayment
 type CreateSavedAddressRequest = components["schemas"]["CreateSavedAddressRequest"];
 type StorefrontSettingsRequest = components["schemas"]["StorefrontSettingsRequest"];
 type StorefrontSettingsResponse = components["schemas"]["StorefrontSettingsResponse"];
+type DraftPreviewSessionResponse = components["schemas"]["DraftPreviewSessionResponse"];
 type ListUserOrdersQuery = paths["/api/v1/me/orders"]["get"]["parameters"]["query"];
 type ListAdminOrdersQuery = paths["/api/v1/admin/orders"]["get"]["parameters"]["query"];
+type ListAdminProductsQuery = paths["/api/v1/admin/products"]["get"]["parameters"]["query"];
 type ListUsersQuery = paths["/api/v1/admin/users"]["get"]["parameters"]["query"];
 type ListOrdersParams = Omit<NonNullable<ListUserOrdersQuery>, "status"> & {
 	status?: NonNullable<ListUserOrdersQuery>["status"] | "";
 };
+
+export interface DraftPreviewSessionModel {
+	active: boolean;
+	expires_at: Date | null;
+}
+
+function parseDraftPreviewSession(response: DraftPreviewSessionResponse): DraftPreviewSessionModel {
+	return {
+		active: response.active,
+		expires_at: response.expires_at ? new Date(response.expires_at) : null,
+	};
+}
+
+function broadcastDraftPreviewState(session: DraftPreviewSessionModel): void {
+	if (typeof window === "undefined") {
+		return;
+	}
+
+	window.dispatchEvent(
+		new CustomEvent(DRAFT_PREVIEW_SYNC_EVENT, {
+			detail: { active: session.active, expires_at: session.expires_at?.toISOString() ?? null },
+		})
+	);
+
+	try {
+		window.localStorage.setItem(
+			DRAFT_PREVIEW_SYNC_STORAGE_KEY,
+			JSON.stringify({
+				active: session.active,
+				expires_at: session.expires_at?.toISOString() ?? null,
+				ts: Date.now(),
+			})
+		);
+	} catch {
+		// ignore storage sync failures
+	}
+}
+
+function broadcastStorefrontStateChange(): void {
+	if (typeof window === "undefined") {
+		return;
+	}
+
+	window.dispatchEvent(new CustomEvent(STOREFRONT_SYNC_EVENT));
+
+	try {
+		window.localStorage.setItem(
+			STOREFRONT_SYNC_STORAGE_KEY,
+			JSON.stringify({
+				ts: Date.now(),
+			})
+		);
+	} catch {
+		// ignore storage sync failures
+	}
+}
 
 export class API {
 	private baseUrl: string;
@@ -443,6 +505,27 @@ export class API {
 		return parseProduct(response);
 	}
 
+	public async listAdminProducts(params?: ListAdminProductsQuery): Promise<PageModel> {
+		const response = await this.request<components["schemas"]["ProductPage"]>(
+			"GET",
+			"/admin/products",
+			undefined,
+			params as Record<string, unknown>
+		);
+		return {
+			data: response.data.map(parseProduct),
+			pagination: response.pagination,
+		};
+	}
+
+	public async getAdminProduct(id: number): Promise<ProductModel> {
+		const response = await this.request<components["schemas"]["Product"]>(
+			"GET",
+			`/admin/products/${id}`
+		);
+		return parseProduct(response);
+	}
+
 	public async deleteProduct(id: number): Promise<MessageResponse> {
 		return await this.request("DELETE", `/admin/products/${id}`);
 	}
@@ -485,6 +568,30 @@ export class API {
 		return parseProduct(response);
 	}
 
+	public async publishProduct(id: number): Promise<ProductModel> {
+		const response = await this.request<components["schemas"]["Product"]>(
+			"POST",
+			`/admin/products/${id}/publish`
+		);
+		return parseProduct(response);
+	}
+
+	public async unpublishProduct(id: number): Promise<ProductModel> {
+		const response = await this.request<components["schemas"]["Product"]>(
+			"POST",
+			`/admin/products/${id}/unpublish`
+		);
+		return parseProduct(response);
+	}
+
+	public async discardProductDraft(id: number): Promise<ProductModel> {
+		const response = await this.request<components["schemas"]["Product"]>(
+			"DELETE",
+			`/admin/products/${id}/draft`
+		);
+		return parseProduct(response);
+	}
+
 	public async getStorefrontSettings(): Promise<StorefrontSettingsResponseModel> {
 		const response = await this.request<StorefrontSettingsResponse>("GET", "/storefront");
 		return parseStorefrontSettingsResponse(response);
@@ -504,7 +611,51 @@ export class API {
 			"/admin/storefront",
 			payload
 		);
-		return parseStorefrontSettingsResponse(response);
+		const parsed = parseStorefrontSettingsResponse(response);
+		broadcastStorefrontStateChange();
+		return parsed;
+	}
+
+	public async publishStorefrontSettings(): Promise<StorefrontSettingsResponseModel> {
+		const response = await this.request<StorefrontSettingsResponse>(
+			"POST",
+			"/admin/storefront/publish"
+		);
+		const parsed = parseStorefrontSettingsResponse(response);
+		broadcastStorefrontStateChange();
+		return parsed;
+	}
+
+	public async discardStorefrontDraft(): Promise<StorefrontSettingsResponseModel> {
+		const response = await this.request<StorefrontSettingsResponse>(
+			"DELETE",
+			"/admin/storefront/draft"
+		);
+		const parsed = parseStorefrontSettingsResponse(response);
+		broadcastStorefrontStateChange();
+		return parsed;
+	}
+
+	public async getAdminPreviewSession(): Promise<DraftPreviewSessionModel> {
+		const response = await this.request<DraftPreviewSessionResponse>("GET", "/admin/preview");
+		return parseDraftPreviewSession(response);
+	}
+
+	public async startAdminPreview(): Promise<DraftPreviewSessionModel> {
+		const response = await this.request<DraftPreviewSessionResponse>(
+			"POST",
+			"/admin/preview/start"
+		);
+		const session = parseDraftPreviewSession(response);
+		broadcastDraftPreviewState(session);
+		return session;
+	}
+
+	public async stopAdminPreview(): Promise<DraftPreviewSessionModel> {
+		const response = await this.request<DraftPreviewSessionResponse>("POST", "/admin/preview/stop");
+		const session = parseDraftPreviewSession(response);
+		broadcastDraftPreviewState(session);
+		return session;
 	}
 
 	// Order Management

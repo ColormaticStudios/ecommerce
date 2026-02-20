@@ -77,6 +77,12 @@ func main() {
 	); err != nil {
 		log.Fatalf("[ERROR] Failed to migrate database: %v", err)
 	}
+
+	if err := db.Model(&models.Product{}).
+		Where("is_published = ? AND (draft_data IS NULL OR draft_data = '')", false).
+		Update("is_published", true).Error; err != nil {
+		log.Fatalf("[ERROR] Failed to backfill product publish state: %v", err)
+	}
 	log.Println("[INFO] Database migration completed")
 
 	// Setup Gin router

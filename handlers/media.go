@@ -180,7 +180,7 @@ func AttachProductMedia(db *gorm.DB, mediaService *media.Service) gin.HandlerFun
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var product models.Product
-		if err := db.First(&product, id).Error; err != nil {
+		if err := db.Preload("Related").First(&product, id).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}
@@ -191,10 +191,18 @@ func AttachProductMedia(db *gorm.DB, mediaService *media.Service) gin.HandlerFun
 			return
 		}
 
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			_, _, err := ensureProductDraft(tx, &product)
+			return err
+		}); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize product draft"})
+			return
+		}
+
 		var maxPosition int
 		if err := db.Model(&models.MediaReference{}).
 			Where("owner_type = ? AND owner_id = ? AND role = ?",
-				media.OwnerTypeProduct, product.ID, media.RoleProductImage).
+				media.OwnerTypeProduct, product.ID, media.RoleProductDraftImage).
 			Select("COALESCE(MAX(position), 0)").
 			Scan(&maxPosition).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load media order"})
@@ -252,7 +260,7 @@ func AttachProductMedia(db *gorm.DB, mediaService *media.Service) gin.HandlerFun
 				MediaID:   mediaID,
 				OwnerType: media.OwnerTypeProduct,
 				OwnerID:   product.ID,
-				Role:      media.RoleProductImage,
+				Role:      media.RoleProductDraftImage,
 				Position:  maxPosition,
 			}
 			if err := db.Where("media_id = ? AND owner_type = ? AND owner_id = ? AND role = ?",
@@ -262,11 +270,12 @@ func AttachProductMedia(db *gorm.DB, mediaService *media.Service) gin.HandlerFun
 			}
 		}
 
-		if mediaService != nil {
-			productImages, _ := mediaService.ProductMediaURLs(product.ID)
-			product.Images = productImages
+		view, err := materializeAdminProduct(db, mediaService, product, true)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load updated product"})
+			return
 		}
-		c.JSON(http.StatusOK, product)
+		c.JSON(http.StatusOK, toContractProduct(view))
 	}
 }
 
@@ -274,7 +283,7 @@ func UpdateProductMediaOrder(db *gorm.DB, mediaService *media.Service) gin.Handl
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var product models.Product
-		if err := db.First(&product, id).Error; err != nil {
+		if err := db.Preload("Related").First(&product, id).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}
@@ -290,9 +299,17 @@ func UpdateProductMediaOrder(db *gorm.DB, mediaService *media.Service) gin.Handl
 			return
 		}
 
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			_, _, err := ensureProductDraft(tx, &product)
+			return err
+		}); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize product draft"})
+			return
+		}
+
 		var refs []models.MediaReference
 		if err := db.Where("owner_type = ? AND owner_id = ? AND role = ?",
-			media.OwnerTypeProduct, product.ID, media.RoleProductImage).
+			media.OwnerTypeProduct, product.ID, media.RoleProductDraftImage).
 			Find(&refs).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load product media"})
 			return
@@ -314,7 +331,7 @@ func UpdateProductMediaOrder(db *gorm.DB, mediaService *media.Service) gin.Handl
 			for index, mediaID := range req.MediaIDs {
 				if err := tx.Model(&models.MediaReference{}).
 					Where("media_id = ? AND owner_type = ? AND owner_id = ? AND role = ?",
-						mediaID, media.OwnerTypeProduct, product.ID, media.RoleProductImage).
+						mediaID, media.OwnerTypeProduct, product.ID, media.RoleProductDraftImage).
 					Update("position", index+1).Error; err != nil {
 					return err
 				}
@@ -325,9 +342,12 @@ func UpdateProductMediaOrder(db *gorm.DB, mediaService *media.Service) gin.Handl
 			return
 		}
 
-		productImages, _ := mediaService.ProductMediaURLs(product.ID)
-		product.Images = productImages
-		c.JSON(http.StatusOK, product)
+		view, err := materializeAdminProduct(db, mediaService, product, true)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load updated product"})
+			return
+		}
+		c.JSON(http.StatusOK, toContractProduct(view))
 	}
 }
 
@@ -337,20 +357,31 @@ func DetachProductMedia(db *gorm.DB, mediaService *media.Service) gin.HandlerFun
 		mediaID := c.Param("mediaId")
 
 		var product models.Product
-		if err := db.First(&product, id).Error; err != nil {
+		if err := db.Preload("Related").First(&product, id).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}
 
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			_, _, err := ensureProductDraft(tx, &product)
+			return err
+		}); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize product draft"})
+			return
+		}
+
 		if err := db.Where("media_id = ? AND owner_type = ? AND owner_id = ? AND role = ?",
-			mediaID, media.OwnerTypeProduct, product.ID, media.RoleProductImage).Delete(&models.MediaReference{}).Error; err != nil {
+			mediaID, media.OwnerTypeProduct, product.ID, media.RoleProductDraftImage).Delete(&models.MediaReference{}).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to detach media"})
 			return
 		}
 
 		_ = mediaService.DeleteIfOrphan(mediaID)
-		productImages, _ := mediaService.ProductMediaURLs(product.ID)
-		product.Images = productImages
-		c.JSON(http.StatusOK, product)
+		view, err := materializeAdminProduct(db, mediaService, product, true)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load updated product"})
+			return
+		}
+		c.JSON(http.StatusOK, toContractProduct(view))
 	}
 }

@@ -1,7 +1,10 @@
 import type { PageServerLoad } from "./$types";
-import { API } from "$lib/api";
-import type { ProductModel } from "$lib/models";
+import { parseProduct, type ProductModel } from "$lib/models";
 import { setPublicPageCacheHeaders } from "$lib/server/cache";
+import { serverRequest } from "$lib/server/api";
+import type { components } from "$lib/api/generated/openapi";
+
+type ProductPagePayload = components["schemas"]["ProductPage"];
 
 const pageSizeOptions = [8, 12, 24, 36] as const;
 
@@ -35,21 +38,20 @@ export const load: PageServerLoad = async (event) => {
 	const sortBy = normalizeSort(url.searchParams.get("sort"));
 	const sortOrder = normalizeOrder(url.searchParams.get("order"));
 
-	const api = new API();
 	let results: ProductModel[] = [];
 	let totalPages = 1;
 	let totalResults = 0;
 	let errorMessage = "";
 
 	try {
-		const response = await api.listProducts({
+		const response = await serverRequest<ProductPagePayload>(event, "/products", {
 			q: searchQuery.trim() || undefined,
 			page: currentPage,
 			limit: pageSize,
 			sort: sortBy,
 			order: sortOrder,
 		});
-		results = response.data;
+		results = response.data.map(parseProduct);
 		totalPages = Math.max(1, response.pagination.total_pages);
 		totalResults = response.pagination.total;
 	} catch (err) {

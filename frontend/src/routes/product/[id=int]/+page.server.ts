@@ -1,7 +1,10 @@
 import type { PageServerLoad } from "./$types";
-import { API } from "$lib/api";
-import type { ProductModel } from "$lib/models";
+import { parseProduct, type ProductModel } from "$lib/models";
 import { setPublicPageCacheHeaders } from "$lib/server/cache";
+import { serverRequest } from "$lib/server/api";
+import type { components } from "$lib/api/generated/openapi";
+
+type ProductPayload = components["schemas"]["Product"];
 
 export const load: PageServerLoad = async (event) => {
 	setPublicPageCacheHeaders(event);
@@ -14,10 +17,9 @@ export const load: PageServerLoad = async (event) => {
 		};
 	}
 
-	const api = new API();
 	try {
 		return {
-			product: await api.getProduct(id),
+			product: parseProduct(await serverRequest<ProductPayload>(event, `/products/${id}`)),
 			errorMessage: "",
 		};
 	} catch (err) {

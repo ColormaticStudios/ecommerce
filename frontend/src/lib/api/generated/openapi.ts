@@ -349,7 +349,7 @@ export interface paths {
 			path?: never;
 			cookie?: never;
 		};
-		get?: never;
+		get: operations["listAdminProducts"];
 		put?: never;
 		post: operations["createProduct"];
 		delete?: never;
@@ -365,7 +365,7 @@ export interface paths {
 			path?: never;
 			cookie?: never;
 		};
-		get?: never;
+		get: operations["getAdminProduct"];
 		put?: never;
 		post?: never;
 		delete: operations["deleteProduct"];
@@ -385,6 +385,54 @@ export interface paths {
 		put?: never;
 		post: operations["attachProductMedia"];
 		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/products/{id}/publish": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["publishProduct"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/products/{id}/unpublish": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["unpublishProduct"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/products/{id}/draft": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete: operations["discardProductDraft"];
 		options?: never;
 		head?: never;
 		patch?: never;
@@ -534,6 +582,86 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/admin/storefront/publish": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["publishStorefrontSettings"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/storefront/draft": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete: operations["discardStorefrontDraft"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/preview": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminPreview"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/preview/start": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["startAdminPreview"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/preview/stop": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["stopAdminPreview"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/media/uploads": {
 		parameters: {
 			query?: never;
@@ -575,6 +703,11 @@ export interface components {
 		};
 		MessageResponse: {
 			message: string;
+		};
+		DraftPreviewSessionResponse: {
+			active: boolean;
+			/** Format: date-time */
+			expires_at?: string | null;
 		};
 		Pagination: {
 			page: number;
@@ -634,6 +767,10 @@ export interface components {
 			updated_at: string;
 			/** Format: date-time */
 			deleted_at?: string | null;
+			is_published?: boolean;
+			has_draft_changes?: boolean;
+			/** Format: date-time */
+			draft_updated_at?: string | null;
 		};
 		RelatedProduct: {
 			id: number;
@@ -905,6 +1042,11 @@ export interface components {
 			settings: components["schemas"]["StorefrontSettings"];
 			/** Format: date-time */
 			updated_at: string;
+			has_draft_changes: boolean;
+			/** Format: date-time */
+			draft_updated_at?: string | null;
+			/** Format: date-time */
+			published_updated_at: string;
 		};
 	};
 	responses: never;
@@ -1740,6 +1882,34 @@ export interface operations {
 			};
 		};
 	};
+	listAdminProducts: {
+		parameters: {
+			query?: {
+				q?: string;
+				min_price?: number;
+				max_price?: number;
+				sort?: "price" | "name" | "created_at";
+				order?: "asc" | "desc";
+				page?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Paginated admin products */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProductPage"];
+				};
+			};
+		};
+	};
 	createProduct: {
 		parameters: {
 			query?: never;
@@ -1760,6 +1930,37 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["Product"];
+				};
+			};
+		};
+	};
+	getAdminProduct: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Admin product */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Product"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
 				};
 			};
 		};
@@ -1834,6 +2035,99 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["Product"];
+				};
+			};
+		};
+	};
+	publishProduct: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Published product */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Product"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	unpublishProduct: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Unpublished product */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Product"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	discardProductDraft: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Product after draft discard */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Product"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
 				};
 			};
 		};
@@ -2093,6 +2387,115 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	publishStorefrontSettings: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Published storefront settings */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["StorefrontSettingsResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	discardStorefrontDraft: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Storefront settings after draft discard */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["StorefrontSettingsResponse"];
+				};
+			};
+		};
+	};
+	getAdminPreview: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Current preview session state */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DraftPreviewSessionResponse"];
+				};
+			};
+		};
+	};
+	startAdminPreview: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Preview session started */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DraftPreviewSessionResponse"];
+				};
+			};
+		};
+	};
+	stopAdminPreview: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Preview session stopped */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DraftPreviewSessionResponse"];
 				};
 			};
 		};

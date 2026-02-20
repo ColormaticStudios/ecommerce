@@ -551,7 +551,7 @@ func TestAdminProductMediaAttachReorderDetachAndProcessingRejection(t *testing.T
 	require.Equal(t, http.StatusOK, goodOrderResp.Code)
 
 	var refs []models.MediaReference
-	require.NoError(t, db.Where("owner_type = ? AND owner_id = ? AND role = ?", media.OwnerTypeProduct, product.ID, media.RoleProductImage).Order("position asc").Find(&refs).Error)
+	require.NoError(t, db.Where("owner_type = ? AND owner_id = ? AND role = ?", media.OwnerTypeProduct, product.ID, media.RoleProductDraftImage).Order("position asc").Find(&refs).Error)
 	require.Len(t, refs, 2)
 	assert.Equal(t, prodB.ID, refs[0].MediaID)
 	assert.Equal(t, prodA.ID, refs[1].MediaID)
@@ -560,8 +560,172 @@ func TestAdminProductMediaAttachReorderDetachAndProcessingRejection(t *testing.T
 	require.Equal(t, http.StatusOK, detachResp.Code)
 
 	var count int64
-	require.NoError(t, db.Model(&models.MediaReference{}).Where("owner_type = ? AND owner_id = ? AND role = ?", media.OwnerTypeProduct, product.ID, media.RoleProductImage).Count(&count).Error)
+	require.NoError(t, db.Model(&models.MediaReference{}).Where("owner_type = ? AND owner_id = ? AND role = ?", media.OwnerTypeProduct, product.ID, media.RoleProductDraftImage).Count(&count).Error)
 	assert.EqualValues(t, 1, count)
+}
+
+func TestAdminProductDraftIsolationAndPublish(t *testing.T) {
+	r, _, admin, product, _, _, _, _, _, _, _ := setupMediaRouter(t, "sub-media-customer-iso", "sub-media-admin-iso")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	updateResp := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/products/%d", product.ID), map[string]any{
+		"name":  "Draft Name",
+		"stock": 0,
+	}, adminToken)
+	require.Equal(t, http.StatusOK, updateResp.Code)
+	updated := decodeJSON[apicontract.Product](t, updateResp)
+	assert.Equal(t, "Draft Name", updated.Name)
+	assert.Equal(t, 0, updated.Stock)
+	require.NotNil(t, updated.HasDraftChanges)
+	assert.True(t, *updated.HasDraftChanges)
+
+	publicBefore := performJSONRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/products/%d", product.ID), nil, "")
+	require.Equal(t, http.StatusOK, publicBefore.Code)
+	publicProductBefore := decodeJSON[apicontract.Product](t, publicBefore)
+	assert.Equal(t, "Media Product", publicProductBefore.Name)
+	assert.Equal(t, 9, publicProductBefore.Stock)
+
+	adminView := performJSONRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/admin/products/%d", product.ID), nil, adminToken)
+	require.Equal(t, http.StatusOK, adminView.Code)
+	adminProduct := decodeJSON[apicontract.Product](t, adminView)
+	assert.Equal(t, "Draft Name", adminProduct.Name)
+	assert.Equal(t, 0, adminProduct.Stock)
+
+	publishResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/admin/products/%d/publish", product.ID), nil, adminToken)
+	require.Equal(t, http.StatusOK, publishResp.Code)
+
+	publicAfter := performJSONRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/products/%d", product.ID), nil, "")
+	require.Equal(t, http.StatusOK, publicAfter.Code)
+	publicProductAfter := decodeJSON[apicontract.Product](t, publicAfter)
+	assert.Equal(t, "Draft Name", publicProductAfter.Name)
+	assert.Equal(t, 0, publicProductAfter.Stock)
+}
+
+func TestAdminCreateProductStaysUnpublishedUntilPublish(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.Product{})
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, "sub-admin-create-draft", "admin")
+
+	createResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/admin/products", map[string]any{
+		"sku":   "draft-create-sku",
+		"name":  "Draft Create Product",
+		"price": 19.99,
+		"stock": 7,
+	}, adminToken)
+	require.Equal(t, http.StatusCreated, createResp.Code)
+
+	created := decodeJSON[apicontract.Product](t, createResp)
+	require.NotNil(t, created.IsPublished)
+	assert.False(t, *created.IsPublished)
+	require.NotNil(t, created.HasDraftChanges)
+	assert.True(t, *created.HasDraftChanges)
+
+	publicByIDResp := performJSONRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/products/%d", created.Id), nil, "")
+	assert.Equal(t, http.StatusNotFound, publicByIDResp.Code)
+
+	publicListResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/products", nil, "")
+	require.Equal(t, http.StatusOK, publicListResp.Code)
+	publicList := decodeJSON[apicontract.ProductPage](t, publicListResp)
+	for _, product := range publicList.Data {
+		assert.NotEqual(t, created.Id, product.Id)
+	}
+
+	publishResp := performJSONRequest(
+		t,
+		r,
+		http.MethodPost,
+		fmt.Sprintf("/api/v1/admin/products/%d/publish", created.Id),
+		nil,
+		adminToken,
+	)
+	require.Equal(t, http.StatusOK, publishResp.Code)
+
+	var stored models.Product
+	require.NoError(t, db.First(&stored, created.Id).Error)
+	assert.True(t, stored.IsPublished)
+
+	publicAfterResp := performJSONRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/products/%d", created.Id), nil, "")
+	assert.Equal(t, http.StatusOK, publicAfterResp.Code)
+}
+
+func TestAdminCanUnpublishProductWithoutDeleting(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.Product{})
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, "sub-admin-unpublish", "admin")
+
+	product := seedProduct(t, db, "unpublish-sku", "Unpublish Product", 29.99, 5)
+
+	publicBefore := performJSONRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/products/%d", product.ID), nil, "")
+	require.Equal(t, http.StatusOK, publicBefore.Code)
+
+	unpublishResp := performJSONRequest(
+		t,
+		r,
+		http.MethodPost,
+		fmt.Sprintf("/api/v1/admin/products/%d/unpublish", product.ID),
+		nil,
+		adminToken,
+	)
+	require.Equal(t, http.StatusOK, unpublishResp.Code)
+	unpublished := decodeJSON[apicontract.Product](t, unpublishResp)
+	require.NotNil(t, unpublished.IsPublished)
+	assert.False(t, *unpublished.IsPublished)
+	require.NotNil(t, unpublished.HasDraftChanges)
+	assert.True(t, *unpublished.HasDraftChanges)
+
+	var stored models.Product
+	require.NoError(t, db.First(&stored, product.ID).Error)
+	assert.False(t, stored.IsPublished)
+	assert.NotEmpty(t, strings.TrimSpace(stored.DraftData))
+
+	publicAfter := performJSONRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/products/%d", product.ID), nil, "")
+	assert.Equal(t, http.StatusNotFound, publicAfter.Code)
+
+	adminView := performJSONRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/admin/products/%d", product.ID), nil, adminToken)
+	assert.Equal(t, http.StatusOK, adminView.Code)
+}
+
+func TestAdminProductDraftMediaPromotesOnPublish(t *testing.T) {
+	r, _, admin, product, _, _, prodA, prodB, _, _, db := setupMediaRouter(t, "sub-media-customer-publish", "sub-media-admin-publish")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	require.NoError(t, db.Create(&models.MediaReference{
+		MediaID:   prodA.ID,
+		OwnerType: media.OwnerTypeProduct,
+		OwnerID:   product.ID,
+		Role:      media.RoleProductImage,
+		Position:  0,
+	}).Error)
+
+	attachResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/admin/products/%d/media", product.ID), map[string]any{
+		"media_ids": []string{prodB.ID},
+	}, adminToken)
+	require.Equal(t, http.StatusOK, attachResp.Code)
+
+	var liveRefsBefore []models.MediaReference
+	require.NoError(t, db.Where("owner_type = ? AND owner_id = ? AND role = ?",
+		media.OwnerTypeProduct, product.ID, media.RoleProductImage).
+		Order("position asc").Find(&liveRefsBefore).Error)
+	require.Len(t, liveRefsBefore, 1)
+	assert.Equal(t, prodA.ID, liveRefsBefore[0].MediaID)
+
+	var draftRefsBefore []models.MediaReference
+	require.NoError(t, db.Where("owner_type = ? AND owner_id = ? AND role = ?",
+		media.OwnerTypeProduct, product.ID, media.RoleProductDraftImage).
+		Order("position asc").Find(&draftRefsBefore).Error)
+	require.Len(t, draftRefsBefore, 2)
+
+	publishResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/admin/products/%d/publish", product.ID), nil, adminToken)
+	require.Equal(t, http.StatusOK, publishResp.Code)
+
+	var liveRefsAfter []models.MediaReference
+	require.NoError(t, db.Where("owner_type = ? AND owner_id = ? AND role = ?",
+		media.OwnerTypeProduct, product.ID, media.RoleProductImage).
+		Order("position asc").Find(&liveRefsAfter).Error)
+	require.Len(t, liveRefsAfter, 2)
+
+	var draftCount int64
+	require.NoError(t, db.Model(&models.MediaReference{}).Where("owner_type = ? AND owner_id = ? AND role = ?",
+		media.OwnerTypeProduct, product.ID, media.RoleProductDraftImage).Count(&draftCount).Error)
+	assert.EqualValues(t, 0, draftCount)
 }
 
 func TestCartUpdateDeleteOwnershipIsolation(t *testing.T) {
@@ -740,6 +904,279 @@ func TestStorefrontDisabledSectionsAndHeroMediaValidation(t *testing.T) {
 	assert.Contains(t, strings.ToLower(upsertW.Body.String()), "media must be an image")
 }
 
+func TestAdminPreviewSessionAndPublicDraftRendering(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := newTestDB(t, &models.User{}, &models.Product{}, &models.StorefrontSettings{}, &models.MediaObject{}, &models.MediaReference{})
+	mediaService := media.NewService(db, t.TempDir(), "http://localhost:3000/media", nil)
+	require.NoError(t, mediaService.EnsureDirs())
+
+	admin := seedUser(t, db, "sub-preview-admin", "preview-admin", "preview-admin@example.com", "admin")
+	customer := seedUser(t, db, "sub-preview-customer", "preview-customer", "preview-customer@example.com", "customer")
+
+	require.NoError(t, db.Create(&models.MediaObject{
+		ID:           "hero-live",
+		OriginalPath: "hero/live.jpg",
+		MimeType:     "image/jpeg",
+		SizeBytes:    12,
+		Status:       media.StatusReady,
+	}).Error)
+	require.NoError(t, db.Create(&models.MediaObject{
+		ID:           "hero-draft",
+		OriginalPath: "hero/draft.jpg",
+		MimeType:     "image/jpeg",
+		SizeBytes:    12,
+		Status:       media.StatusReady,
+	}).Error)
+	require.NoError(t, db.Create(&models.MediaObject{
+		ID:           "product-live",
+		OriginalPath: "products/live.jpg",
+		MimeType:     "image/jpeg",
+		SizeBytes:    12,
+		Status:       media.StatusReady,
+	}).Error)
+	require.NoError(t, db.Create(&models.MediaObject{
+		ID:           "product-draft",
+		OriginalPath: "products/draft.jpg",
+		MimeType:     "image/jpeg",
+		SizeBytes:    12,
+		Status:       media.StatusReady,
+	}).Error)
+
+	publishedProduct := seedProduct(t, db, "sku-preview-live", "Live Product", 9.99, 4)
+	publishedDraftPayload, err := encodeProductDraftData(productDraftFromPublished(publishedProduct))
+	require.NoError(t, err)
+	require.NoError(t, db.Model(&publishedProduct).Updates(map[string]any{
+		"draft_data":       publishedDraftPayload,
+		"draft_updated_at": ptrTimeNow(),
+	}).Error)
+	require.NoError(t, db.Create(&models.MediaReference{
+		MediaID:   "product-live",
+		OwnerType: media.OwnerTypeProduct,
+		OwnerID:   publishedProduct.ID,
+		Role:      media.RoleProductImage,
+		Position:  0,
+	}).Error)
+	require.NoError(t, db.Create(&models.MediaReference{
+		MediaID:   "product-draft",
+		OwnerType: media.OwnerTypeProduct,
+		OwnerID:   publishedProduct.ID,
+		Role:      media.RoleProductDraftImage,
+		Position:  0,
+	}).Error)
+
+	unpublishedDraft := models.Product{
+		SKU:         "sku-preview-draft",
+		Name:        "Draft Product Base",
+		Description: "draft base",
+		Price:       models.MoneyFromFloat(11.50),
+		Stock:       3,
+		IsPublished: false,
+	}
+	draftPayload, err := encodeProductDraftData(productDraftData{
+		SKU:         "sku-preview-draft",
+		Name:        "Draft Product",
+		Description: "draft description",
+		Price:       13.25,
+		Stock:       2,
+	})
+	require.NoError(t, err)
+	unpublishedDraft.DraftData = draftPayload
+	require.NoError(t, db.Select("*").Create(&unpublishedDraft).Error)
+	require.NoError(t, db.Model(&unpublishedDraft).Updates(map[string]any{
+		"is_published": false,
+		"draft_data":   draftPayload,
+	}).Error)
+
+	publishedStorefront := defaultStorefrontSettings()
+	draftStorefront := defaultStorefrontSettings()
+	publishedStorefront.SiteTitle = "Live Storefront"
+	draftStorefront.SiteTitle = "Draft Storefront"
+	for i := range publishedStorefront.HomepageSections {
+		if publishedStorefront.HomepageSections[i].Type == "hero" && publishedStorefront.HomepageSections[i].Hero != nil {
+			publishedStorefront.HomepageSections[i].Hero.BackgroundImageMediaID = "hero-live"
+			publishedStorefront.HomepageSections[i].Hero.BackgroundImageUrl = ""
+			break
+		}
+	}
+	for i := range draftStorefront.HomepageSections {
+		if draftStorefront.HomepageSections[i].Type == "hero" && draftStorefront.HomepageSections[i].Hero != nil {
+			draftStorefront.HomepageSections[i].Hero.BackgroundImageMediaID = "hero-draft"
+			draftStorefront.HomepageSections[i].Hero.BackgroundImageUrl = ""
+			break
+		}
+	}
+	publishedStorefrontRaw, err := json.Marshal(publishedStorefront)
+	require.NoError(t, err)
+	draftStorefrontRaw, err := json.Marshal(draftStorefront)
+	require.NoError(t, err)
+	require.NoError(t, db.Create(&models.StorefrontSettings{
+		ID:               models.StorefrontSettingsSingletonID,
+		ConfigJSON:       string(publishedStorefrontRaw),
+		DraftConfigJSON:  string(draftStorefrontRaw),
+		DraftUpdatedAt:   ptrTimeNow(),
+		PublishedUpdated: time.Now(),
+	}).Error)
+	require.NoError(t, db.Create(&models.MediaReference{
+		MediaID:   "hero-live",
+		OwnerType: media.OwnerTypeStorefront,
+		OwnerID:   models.StorefrontSettingsSingletonID,
+		Role:      media.RoleStorefrontHero,
+		Position:  0,
+	}).Error)
+	require.NoError(t, db.Create(&models.MediaReference{
+		MediaID:   "hero-draft",
+		OwnerType: media.OwnerTypeStorefront,
+		OwnerID:   models.StorefrontSettingsSingletonID,
+		Role:      media.RoleStorefrontHeroDraft,
+		Position:  0,
+	}).Error)
+
+	r := gin.New()
+	server := NewGeneratedAPIServer(db, mediaService, GeneratedAPIServerConfig{
+		JWTSecret: generatedTestJWTSecret,
+	})
+	apicontract.RegisterHandlers(r, server)
+
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+	customerToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, customer.Subject, customer.Role)
+
+	statusBeforeReq := httptest.NewRequest(http.MethodGet, "/api/v1/admin/preview", nil)
+	statusBeforeReq.Header.Set("Authorization", "Bearer "+adminToken)
+	statusBeforeW := httptest.NewRecorder()
+	r.ServeHTTP(statusBeforeW, statusBeforeReq)
+	require.Equal(t, http.StatusOK, statusBeforeW.Code)
+	statusBefore := decodeJSON[DraftPreviewSessionResponse](t, statusBeforeW)
+	assert.False(t, statusBefore.Active)
+
+	unauthStartReq := httptest.NewRequest(http.MethodPost, "/api/v1/admin/preview/start", nil)
+	unauthStartW := httptest.NewRecorder()
+	r.ServeHTTP(unauthStartW, unauthStartReq)
+	assert.Equal(t, http.StatusUnauthorized, unauthStartW.Code)
+
+	customerStartReq := httptest.NewRequest(http.MethodPost, "/api/v1/admin/preview/start", nil)
+	customerStartReq.Header.Set("Authorization", "Bearer "+customerToken)
+	customerStartW := httptest.NewRecorder()
+	r.ServeHTTP(customerStartW, customerStartReq)
+	assert.Equal(t, http.StatusForbidden, customerStartW.Code)
+
+	startReq := httptest.NewRequest(http.MethodPost, "/api/v1/admin/preview/start", nil)
+	startReq.Header.Set("Authorization", "Bearer "+adminToken)
+	startW := httptest.NewRecorder()
+	r.ServeHTTP(startW, startReq)
+	require.Equal(t, http.StatusOK, startW.Code)
+	startBody := decodeJSON[DraftPreviewSessionResponse](t, startW)
+	require.True(t, startBody.Active)
+	require.NotNil(t, startBody.ExpiresAt)
+
+	var previewCookie *http.Cookie
+	for _, cookie := range startW.Result().Cookies() {
+		if cookie.Name == draftPreviewCookieName {
+			previewCookie = cookie
+			break
+		}
+	}
+	require.NotNil(t, previewCookie)
+	require.NotEmpty(t, previewCookie.Value)
+
+	statusReq := httptest.NewRequest(http.MethodGet, "/api/v1/admin/preview", nil)
+	statusReq.Header.Set("Authorization", "Bearer "+adminToken)
+	statusReq.AddCookie(previewCookie)
+	statusW := httptest.NewRecorder()
+	r.ServeHTTP(statusW, statusReq)
+	require.Equal(t, http.StatusOK, statusW.Code)
+	statusBody := decodeJSON[DraftPreviewSessionResponse](t, statusW)
+	assert.True(t, statusBody.Active)
+	require.NotNil(t, statusBody.ExpiresAt)
+
+	publicLiveReq := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/products/%d", unpublishedDraft.ID), nil)
+	publicLiveW := httptest.NewRecorder()
+	r.ServeHTTP(publicLiveW, publicLiveReq)
+	require.Equal(t, http.StatusNotFound, publicLiveW.Code)
+
+	previewProductReq := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/products/%d", unpublishedDraft.ID), nil)
+	previewProductReq.AddCookie(previewCookie)
+	previewProductW := httptest.NewRecorder()
+	r.ServeHTTP(previewProductW, previewProductReq)
+	require.Equal(t, http.StatusOK, previewProductW.Code)
+	previewProductBody := decodeJSON[apicontract.Product](t, previewProductW)
+	assert.Equal(t, "Draft Product", previewProductBody.Name)
+	assert.Equal(t, "private, no-store", previewProductW.Header().Get("Cache-Control"))
+	assert.Equal(t, "noindex", previewProductW.Header().Get("X-Robots-Tag"))
+	assert.Contains(t, strings.ToLower(previewProductW.Header().Get("Vary")), "cookie")
+
+	previewPublishedReq := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/products/%d", publishedProduct.ID), nil)
+	previewPublishedReq.AddCookie(previewCookie)
+	previewPublishedW := httptest.NewRecorder()
+	r.ServeHTTP(previewPublishedW, previewPublishedReq)
+	require.Equal(t, http.StatusOK, previewPublishedW.Code)
+	previewPublishedBody := decodeJSON[apicontract.Product](t, previewPublishedW)
+	require.NotEmpty(t, previewPublishedBody.Images)
+	assert.Contains(t, previewPublishedBody.Images[0], "products/draft.jpg")
+
+	storefrontPreviewReq := httptest.NewRequest(http.MethodGet, "/api/v1/storefront", nil)
+	storefrontPreviewReq.AddCookie(previewCookie)
+	storefrontPreviewW := httptest.NewRecorder()
+	r.ServeHTTP(storefrontPreviewW, storefrontPreviewReq)
+	require.Equal(t, http.StatusOK, storefrontPreviewW.Code)
+	storefrontPreviewBody := decodeJSON[StorefrontSettingsResponse](t, storefrontPreviewW)
+	assert.Equal(t, "Draft Storefront", storefrontPreviewBody.Settings.SiteTitle)
+	foundDraftHero := false
+	for _, section := range storefrontPreviewBody.Settings.HomepageSections {
+		if section.Type == "hero" && section.Hero != nil {
+			assert.Contains(t, section.Hero.BackgroundImageUrl, "hero/draft.jpg")
+			foundDraftHero = true
+			break
+		}
+	}
+	assert.True(t, foundDraftHero)
+	assert.Equal(t, "private, no-store", storefrontPreviewW.Header().Get("Cache-Control"))
+	assert.Equal(t, "noindex", storefrontPreviewW.Header().Get("X-Robots-Tag"))
+
+	stopReq := httptest.NewRequest(http.MethodPost, "/api/v1/admin/preview/stop", nil)
+	stopReq.Header.Set("Authorization", "Bearer "+adminToken)
+	stopReq.AddCookie(previewCookie)
+	stopW := httptest.NewRecorder()
+	r.ServeHTTP(stopW, stopReq)
+	require.Equal(t, http.StatusOK, stopW.Code)
+	stopBody := decodeJSON[DraftPreviewSessionResponse](t, stopW)
+	assert.False(t, stopBody.Active)
+
+	postStopReq := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/products/%d", unpublishedDraft.ID), nil)
+	postStopW := httptest.NewRecorder()
+	r.ServeHTTP(postStopW, postStopReq)
+	require.Equal(t, http.StatusNotFound, postStopW.Code)
+}
+
+func TestPublicEndpointsDoNotExposeDraftMetadataWithoutPreview(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.Product{},
+		&models.StorefrontSettings{},
+	)
+	product := seedProduct(t, db, "sku-public-meta", "Public Product", 19.99, 8)
+
+	productResp := performJSONRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/products/%d", product.ID), nil, "")
+	require.Equal(t, http.StatusOK, productResp.Code)
+	var productBody map[string]any
+	require.NoError(t, json.Unmarshal(productResp.Body.Bytes(), &productBody))
+	_, hasProductDraftFlag := productBody["has_draft_changes"]
+	_, hasProductDraftUpdated := productBody["draft_updated_at"]
+	assert.False(t, hasProductDraftFlag)
+	assert.False(t, hasProductDraftUpdated)
+
+	storefrontReq := httptest.NewRequest(http.MethodGet, "/api/v1/storefront", nil)
+	storefrontW := httptest.NewRecorder()
+	r.ServeHTTP(storefrontW, storefrontReq)
+	require.Equal(t, http.StatusOK, storefrontW.Code)
+	var storefrontBody map[string]any
+	require.NoError(t, json.Unmarshal(storefrontW.Body.Bytes(), &storefrontBody))
+	_, hasStorefrontDraftFlag := storefrontBody["has_draft_changes"]
+	_, hasStorefrontDraftUpdated := storefrontBody["draft_updated_at"]
+	assert.False(t, hasStorefrontDraftFlag)
+	assert.False(t, hasStorefrontDraftUpdated)
+}
+
 func TestProcessPaymentRemovesOnlyOrderedCartQuantities(t *testing.T) {
 	r, db := setupGeneratedRouterWithConfig(
 		t,
@@ -832,10 +1269,18 @@ func TestAdminUpdateProductAllowsZeroValues(t *testing.T) {
 	}, adminToken)
 	require.Equal(t, http.StatusOK, updateResp.Code)
 
-	updated := decodeJSON[models.Product](t, updateResp)
+	updated := decodeJSON[apicontract.Product](t, updateResp)
 	assert.Equal(t, 0, updated.Stock)
+	assert.Equal(t, true, *updated.IsPublished)
+	assert.Equal(t, true, *updated.HasDraftChanges)
 
 	var reloaded models.Product
+	require.NoError(t, db.First(&reloaded, product.ID).Error)
+	assert.Equal(t, 4, reloaded.Stock)
+
+	publishResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/admin/products/%d/publish", product.ID), nil, adminToken)
+	require.Equal(t, http.StatusOK, publishResp.Code)
+
 	require.NoError(t, db.First(&reloaded, product.ID).Error)
 	assert.Equal(t, 0, reloaded.Stock)
 }

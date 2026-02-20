@@ -88,6 +88,14 @@ type StorefrontSettingsPayload struct {
 }
 
 type StorefrontSettingsResponse struct {
+	Settings         StorefrontSettingsPayload `json:"settings"`
+	UpdatedAt        time.Time                 `json:"updated_at"`
+	HasDraftChanges  bool                      `json:"has_draft_changes"`
+	DraftUpdatedAt   *time.Time                `json:"draft_updated_at,omitempty"`
+	PublishedUpdated time.Time                 `json:"published_updated_at"`
+}
+
+type PublicStorefrontSettingsResponse struct {
 	Settings  StorefrontSettingsPayload `json:"settings"`
 	UpdatedAt time.Time                 `json:"updated_at"`
 }
@@ -691,10 +699,10 @@ func collectHeroMediaIDs(settings StorefrontSettingsPayload) []string {
 	return ids
 }
 
-func syncStorefrontHeroMedia(db *gorm.DB, mediaService *media.Service, mediaIDs []string) error {
+func syncStorefrontHeroMedia(db *gorm.DB, mediaService *media.Service, mediaIDs []string, role string) error {
 	var existing []models.MediaReference
 	if err := db.Where("owner_type = ? AND owner_id = ? AND role = ?",
-		media.OwnerTypeStorefront, models.StorefrontSettingsSingletonID, media.RoleStorefrontHero).
+		media.OwnerTypeStorefront, models.StorefrontSettingsSingletonID, role).
 		Order("position asc").Order("id asc").Find(&existing).Error; err != nil {
 		return err
 	}
@@ -706,7 +714,7 @@ func syncStorefrontHeroMedia(db *gorm.DB, mediaService *media.Service, mediaIDs 
 	}
 
 	if err := db.Where("owner_type = ? AND owner_id = ? AND role = ?",
-		media.OwnerTypeStorefront, models.StorefrontSettingsSingletonID, media.RoleStorefrontHero).
+		media.OwnerTypeStorefront, models.StorefrontSettingsSingletonID, role).
 		Delete(&models.MediaReference{}).Error; err != nil {
 		return err
 	}
@@ -716,7 +724,7 @@ func syncStorefrontHeroMedia(db *gorm.DB, mediaService *media.Service, mediaIDs 
 			MediaID:   mediaID,
 			OwnerType: media.OwnerTypeStorefront,
 			OwnerID:   models.StorefrontSettingsSingletonID,
-			Role:      media.RoleStorefrontHero,
+			Role:      role,
 			Position:  position,
 		}).Error; err != nil {
 			return err
@@ -754,17 +762,20 @@ func UpsertStorefrontSettings(db *gorm.DB, mediaService *media.Service) gin.Hand
 		}
 
 		if err := db.Transaction(func(tx *gorm.DB) error {
-			record, _, err := loadOrCreateStorefrontSettings(tx, nil)
+			record, err := loadOrCreateStorefrontRecord(tx)
 			if err != nil {
 				return err
 			}
 
-			if err := syncStorefrontHeroMedia(tx, mediaService, collectHeroMediaIDs(normalized)); err != nil {
+			if err := syncStorefrontHeroMedia(tx, mediaService, collectHeroMediaIDs(normalized), media.RoleStorefrontHeroDraft); err != nil {
 				return err
 			}
 
-			record.ConfigJSON = string(payload)
-			if err := tx.Save(&record).Error; err != nil {
+			now := time.Now()
+			if err := tx.Model(&record).Updates(map[string]any{
+				"draft_config_json": string(payload),
+				"draft_updated_at":  now,
+			}).Error; err != nil {
 				return err
 			}
 			return nil
@@ -778,16 +789,17 @@ func UpsertStorefrontSettings(db *gorm.DB, mediaService *media.Service) gin.Hand
 			return
 		}
 
-		record, loaded, err := loadOrCreateStorefrontSettings(db, mediaService)
+		record, err := loadOrCreateStorefrontRecord(db)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load storefront settings"})
 			return
 		}
-		c.JSON(http.StatusOK, StorefrontSettingsResponse{Settings: loaded, UpdatedAt: record.UpdatedAt})
+		loaded := storefrontSettingsForRecord(record, mediaService, true)
+		c.JSON(http.StatusOK, storefrontResponse(record, loaded, true))
 	}
 }
 
-func applyHeroBackgroundURLs(settings *StorefrontSettingsPayload, mediaService *media.Service) {
+func applyHeroBackgroundURLs(settings *StorefrontSettingsPayload, mediaService *media.Service, role string) {
 	if settings == nil || mediaService == nil {
 		return
 	}
@@ -803,7 +815,34 @@ func applyHeroBackgroundURLs(settings *StorefrontSettingsPayload, mediaService *
 	}
 
 	var mediaObjs []models.MediaObject
-	if err := mediaService.DB.Where("id IN ?", ids).Find(&mediaObjs).Error; err != nil {
+	var refs []models.MediaReference
+	if err := mediaService.DB.Where("owner_type = ? AND owner_id = ? AND role = ?",
+		media.OwnerTypeStorefront, models.StorefrontSettingsSingletonID, role).
+		Find(&refs).Error; err != nil {
+		return
+	}
+	active := make(map[string]struct{}, len(refs))
+	for _, ref := range refs {
+		active[ref.MediaID] = struct{}{}
+	}
+
+	filteredIDs := make([]string, 0, len(ids))
+	for _, id := range ids {
+		if _, exists := active[id]; !exists {
+			continue
+		}
+		filteredIDs = append(filteredIDs, id)
+	}
+	if len(filteredIDs) == 0 {
+		for i := range settings.HomepageSections {
+			if settings.HomepageSections[i].Type == string(apicontract.Hero) && settings.HomepageSections[i].Hero != nil {
+				settings.HomepageSections[i].Hero.BackgroundImageUrl = ""
+			}
+		}
+		return
+	}
+
+	if err := mediaService.DB.Where("id IN ?", filteredIDs).Find(&mediaObjs).Error; err != nil {
 		return
 	}
 	mediaByID := make(map[string]models.MediaObject, len(mediaObjs))
@@ -825,34 +864,15 @@ func applyHeroBackgroundURLs(settings *StorefrontSettingsPayload, mediaService *
 	}
 }
 
-func loadOrCreateStorefrontSettings(db *gorm.DB, mediaService *media.Service) (models.StorefrontSettings, StorefrontSettingsPayload, error) {
-	var record models.StorefrontSettings
-	err := db.First(&record, models.StorefrontSettingsSingletonID).Error
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return models.StorefrontSettings{}, StorefrontSettingsPayload{}, err
-	}
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		settings := defaultStorefrontSettings()
-		payload, marshalErr := json.Marshal(settings)
-		if marshalErr != nil {
-			return models.StorefrontSettings{}, StorefrontSettingsPayload{}, marshalErr
-		}
-		record = models.StorefrontSettings{ID: models.StorefrontSettingsSingletonID, ConfigJSON: string(payload)}
-		if createErr := db.Create(&record).Error; createErr != nil {
-			return models.StorefrontSettings{}, StorefrontSettingsPayload{}, createErr
-		}
-		return record, settings, nil
-	}
-
+func decodeStorefrontConfig(configJSON string) StorefrontSettingsPayload {
 	settings := defaultStorefrontSettings()
-	if strings.TrimSpace(record.ConfigJSON) != "" {
+	if strings.TrimSpace(configJSON) != "" {
 		var legacy struct {
 			Hero *StorefrontHero `json:"hero"`
 		}
-		_ = json.Unmarshal([]byte(record.ConfigJSON), &legacy)
+		_ = json.Unmarshal([]byte(configJSON), &legacy)
 
-		if unmarshalErr := json.Unmarshal([]byte(record.ConfigJSON), &settings); unmarshalErr != nil {
+		if unmarshalErr := json.Unmarshal([]byte(configJSON), &settings); unmarshalErr != nil {
 			settings = defaultStorefrontSettings()
 		}
 		if legacy.Hero != nil {
@@ -864,11 +884,84 @@ func loadOrCreateStorefrontSettings(db *gorm.DB, mediaService *media.Service) (m
 			}
 		}
 	}
-	settings = normalizeStorefrontSettings(settings)
+	return normalizeStorefrontSettings(settings)
+}
 
-	applyHeroBackgroundURLs(&settings, mediaService)
+func hasStorefrontDraft(record models.StorefrontSettings) bool {
+	return strings.TrimSpace(record.DraftConfigJSON) != ""
+}
 
-	return record, settings, nil
+func loadOrCreateStorefrontRecord(db *gorm.DB) (models.StorefrontSettings, error) {
+	var record models.StorefrontSettings
+	err := db.First(&record, models.StorefrontSettingsSingletonID).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return models.StorefrontSettings{}, err
+	}
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		settings := defaultStorefrontSettings()
+		payload, marshalErr := json.Marshal(settings)
+		if marshalErr != nil {
+			return models.StorefrontSettings{}, marshalErr
+		}
+		record = models.StorefrontSettings{
+			ID:               models.StorefrontSettingsSingletonID,
+			ConfigJSON:       string(payload),
+			PublishedUpdated: time.Now(),
+		}
+		if createErr := db.Create(&record).Error; createErr != nil {
+			return models.StorefrontSettings{}, createErr
+		}
+		return record, nil
+	}
+
+	if record.PublishedUpdated.IsZero() {
+		published := record.UpdatedAt
+		if published.IsZero() {
+			published = time.Now()
+		}
+		if err := db.Model(&record).Update("published_updated", published).Error; err == nil {
+			record.PublishedUpdated = published
+		}
+	}
+	return record, nil
+}
+
+func storefrontSettingsForRecord(record models.StorefrontSettings, mediaService *media.Service, preferDraft bool) StorefrontSettingsPayload {
+	config := record.ConfigJSON
+	role := media.RoleStorefrontHero
+	if preferDraft && hasStorefrontDraft(record) {
+		config = record.DraftConfigJSON
+		role = media.RoleStorefrontHeroDraft
+	}
+	settings := decodeStorefrontConfig(config)
+	applyHeroBackgroundURLs(&settings, mediaService, role)
+	return settings
+}
+
+func storefrontResponse(record models.StorefrontSettings, settings StorefrontSettingsPayload, admin bool) StorefrontSettingsResponse {
+	updatedAt := record.PublishedUpdated
+	if updatedAt.IsZero() {
+		updatedAt = record.UpdatedAt
+	}
+	if admin && hasStorefrontDraft(record) && record.DraftUpdatedAt != nil {
+		updatedAt = *record.DraftUpdatedAt
+	}
+	return StorefrontSettingsResponse{
+		Settings:         settings,
+		UpdatedAt:        updatedAt,
+		HasDraftChanges:  hasStorefrontDraft(record),
+		DraftUpdatedAt:   record.DraftUpdatedAt,
+		PublishedUpdated: record.PublishedUpdated,
+	}
+}
+
+func loadOrCreateStorefrontSettings(db *gorm.DB, mediaService *media.Service, preferDraft bool) (models.StorefrontSettings, StorefrontSettingsPayload, error) {
+	record, err := loadOrCreateStorefrontRecord(db)
+	if err != nil {
+		return models.StorefrontSettings{}, StorefrontSettingsPayload{}, err
+	}
+	return record, storefrontSettingsForRecord(record, mediaService, preferDraft), nil
 }
 
 func filterEnabledHomepageSections(settings StorefrontSettingsPayload) StorefrontSettingsPayload {
@@ -885,25 +978,141 @@ func filterEnabledHomepageSections(settings StorefrontSettingsPayload) Storefron
 
 func GetStorefrontSettings(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		record, settings, err := loadOrCreateStorefrontSettings(db, mediaService)
+		preview := isDraftPreviewActive(c)
+		record, settings, err := loadOrCreateStorefrontSettings(db, mediaService, preview)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load storefront settings"})
 			return
 		}
-		c.JSON(http.StatusOK, StorefrontSettingsResponse{
-			Settings:  filterEnabledHomepageSections(settings),
-			UpdatedAt: record.UpdatedAt,
-		})
+		filtered := filterEnabledHomepageSections(settings)
+		if !preview {
+			updatedAt := record.PublishedUpdated
+			if updatedAt.IsZero() {
+				updatedAt = record.UpdatedAt
+			}
+			c.JSON(http.StatusOK, PublicStorefrontSettingsResponse{
+				Settings:  filtered,
+				UpdatedAt: updatedAt,
+			})
+			return
+		}
+		c.JSON(http.StatusOK, storefrontResponse(record, filtered, preview))
 	}
 }
 
 func GetAdminStorefrontSettings(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		record, settings, err := loadOrCreateStorefrontSettings(db, mediaService)
+		record, err := loadOrCreateStorefrontRecord(db)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load storefront settings"})
 			return
 		}
-		c.JSON(http.StatusOK, StorefrontSettingsResponse{Settings: settings, UpdatedAt: record.UpdatedAt})
+		settings := storefrontSettingsForRecord(record, mediaService, true)
+		c.JSON(http.StatusOK, storefrontResponse(record, settings, true))
+	}
+}
+
+func PublishStorefrontSettings(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cleanupIDs := []string{}
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			record, err := loadOrCreateStorefrontRecord(tx)
+			if err != nil {
+				return err
+			}
+			if !hasStorefrontDraft(record) {
+				return nil
+			}
+
+			draftSettings := decodeStorefrontConfig(record.DraftConfigJSON)
+			if err := syncStorefrontHeroMedia(tx, mediaService, collectHeroMediaIDs(draftSettings), media.RoleStorefrontHero); err != nil {
+				return err
+			}
+
+			var draftRefs []models.MediaReference
+			if err := tx.Where("owner_type = ? AND owner_id = ? AND role = ?",
+				media.OwnerTypeStorefront, models.StorefrontSettingsSingletonID, media.RoleStorefrontHeroDraft).
+				Find(&draftRefs).Error; err != nil {
+				return err
+			}
+			cleanupIDs = append(cleanupIDs, mediaIDsFromRefs(draftRefs)...)
+
+			now := time.Now()
+			if err := tx.Model(&record).Updates(map[string]any{
+				"config_json":       record.DraftConfigJSON,
+				"draft_config_json": nil,
+				"draft_updated_at":  nil,
+				"published_updated": now,
+			}).Error; err != nil {
+				return err
+			}
+
+			return tx.Where("owner_type = ? AND owner_id = ? AND role = ?",
+				media.OwnerTypeStorefront, models.StorefrontSettingsSingletonID, media.RoleStorefrontHeroDraft).
+				Delete(&models.MediaReference{}).Error
+		}); err != nil {
+			if errors.Is(err, errInvalidStorefrontMedia) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to publish storefront draft"})
+			return
+		}
+
+		cleanupMediaIDs(mediaService, cleanupIDs)
+
+		record, err := loadOrCreateStorefrontRecord(db)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load storefront settings"})
+			return
+		}
+		settings := storefrontSettingsForRecord(record, mediaService, true)
+		c.JSON(http.StatusOK, storefrontResponse(record, settings, true))
+	}
+}
+
+func DiscardStorefrontDraft(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cleanupIDs := []string{}
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			record, err := loadOrCreateStorefrontRecord(tx)
+			if err != nil {
+				return err
+			}
+			if !hasStorefrontDraft(record) {
+				return nil
+			}
+
+			var draftRefs []models.MediaReference
+			if err := tx.Where("owner_type = ? AND owner_id = ? AND role = ?",
+				media.OwnerTypeStorefront, models.StorefrontSettingsSingletonID, media.RoleStorefrontHeroDraft).
+				Find(&draftRefs).Error; err != nil {
+				return err
+			}
+			cleanupIDs = append(cleanupIDs, mediaIDsFromRefs(draftRefs)...)
+
+			if err := tx.Model(&record).Updates(map[string]any{
+				"draft_config_json": nil,
+				"draft_updated_at":  nil,
+			}).Error; err != nil {
+				return err
+			}
+			return tx.Where("owner_type = ? AND owner_id = ? AND role = ?",
+				media.OwnerTypeStorefront, models.StorefrontSettingsSingletonID, media.RoleStorefrontHeroDraft).
+				Delete(&models.MediaReference{}).Error
+		}); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to discard storefront draft"})
+			return
+		}
+
+		cleanupMediaIDs(mediaService, cleanupIDs)
+
+		record, err := loadOrCreateStorefrontRecord(db)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load storefront settings"})
+			return
+		}
+		settings := storefrontSettingsForRecord(record, mediaService, true)
+		c.JSON(http.StatusOK, storefrontResponse(record, settings, true))
 	}
 }

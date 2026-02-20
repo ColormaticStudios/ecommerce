@@ -32,7 +32,7 @@ export const load: PageServerLoad = async (event) => {
 	}
 
 	try {
-		const payload = await serverRequest<ProductPayload>(event, `/products/${id}`);
+		const payload = await serverRequest<ProductPayload>(event, `/admin/products/${id}`);
 		initialProduct = parseProduct(payload);
 	} catch (err) {
 		console.error(err);

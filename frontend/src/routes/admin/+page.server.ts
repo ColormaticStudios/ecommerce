@@ -106,7 +106,7 @@ export const load: PageServerLoad = async (event) => {
 
 	try {
 		const [productsPayload, ordersPayload, usersPayload] = await Promise.all([
-			serverRequest<ProductPagePayload>(event, "/products", {
+			serverRequest<ProductPagePayload>(event, "/admin/products", {
 				page: productPage,
 				limit: productLimit,
 			}),

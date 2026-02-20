@@ -83,7 +83,7 @@
 	const unsavedContexts = $derived.by(() => {
 		const contexts: string[] = [];
 		if (productDirty) {
-			contexts.push("products");
+			contexts.push("product");
 		}
 		if (storefrontDirty) {
 			contexts.push("storefront");
@@ -230,7 +230,7 @@
 		productsLoading = true;
 		clearMessages();
 		try {
-			const page = await api.listProducts({
+			const page = await api.listAdminProducts({
 				q: productQuery.trim() || undefined,
 				page: productPage,
 				limit: productLimit,
@@ -648,6 +648,24 @@
 											<p class="text-xs text-gray-500 dark:text-gray-400">
 												SKU {product.sku} · {formatPrice(product.price)}
 											</p>
+											<div class="mt-1 flex flex-wrap items-center gap-1 text-[10px] font-semibold">
+												<span
+													class={`rounded-full px-2 py-0.5 ${
+														product.is_published
+															? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
+															: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200"
+													}`}
+												>
+													{product.is_published ? "Published" : "Unpublished"}
+												</span>
+												{#if product.has_draft_changes}
+													<span
+														class="rounded-full bg-blue-100 px-2 py-0.5 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200"
+													>
+														Draft
+													</span>
+												{/if}
+											</div>
 										</div>
 										<span
 											class={`rounded-full px-3 py-1 text-xs font-semibold ${

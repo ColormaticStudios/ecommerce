@@ -98,6 +98,10 @@ func AddCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}
+		if !productIsPubliclyVisible(product) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+			return
+		}
 
 		// Check stock availability
 		if product.Stock < req.Quantity {
@@ -235,6 +239,10 @@ func UpdateCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 		// Check product stock
 		var product models.Product
 		if err := db.First(&product, cartItem.ProductID).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+			return
+		}
+		if !productIsPubliclyVisible(product) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}

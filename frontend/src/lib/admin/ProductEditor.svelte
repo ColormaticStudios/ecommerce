@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { type API } from "$lib/api";
+	import { resolve } from "$app/paths";
+	import { DRAFT_PREVIEW_SYNC_EVENT, DRAFT_PREVIEW_SYNC_STORAGE_KEY, type API } from "$lib/api";
 	import Alert from "$lib/components/Alert.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
@@ -7,7 +8,7 @@
 	import TextInput from "$lib/components/TextInput.svelte";
 	import { type ProductModel, type RelatedProductModel } from "$lib/models";
 	import { uploadMediaFiles } from "$lib/media";
-	import { getContext, onDestroy, untrack } from "svelte";
+	import { getContext, onDestroy, onMount, untrack } from "svelte";
 
 	interface Props {
 		productId: number | null;
@@ -50,6 +51,11 @@
 	let product = $state<ProductModel | null>(null);
 	let loading = $state(false);
 	let saving = $state(false);
+	let publishing = $state(false);
+	let unpublishing = $state(false);
+	let discardingDraft = $state(false);
+	let previewingDraft = $state(false);
+	let previewActive = $state(false);
 	let deleting = $state(false);
 	let uploading = $state(false);
 	let mediaDeleting = $state<string | null>(null);
@@ -89,6 +95,8 @@
 	);
 	const hasProduct = $derived(Boolean(product));
 	const canEditProduct = $derived(resolvedProductId != null);
+	const isPublished = $derived(product?.is_published ?? false);
+	const hasDraftChanges = $derived(product?.has_draft_changes ?? false);
 	const relatedBaseline = $derived(product?.related_products ?? []);
 	const hasPendingRelatedChanges = $derived.by(() => {
 		const selectedIds = [...relatedSelected.map((item) => item.id)].sort((a, b) => a - b).join("|");
@@ -230,6 +238,53 @@
 		onStatusMessage?.(message);
 	}
 
+	function readableActionError(err: unknown, fallback: string): string {
+		const error = err as { body?: { error?: string } };
+		const apiMessage = error?.body?.error;
+		if (typeof apiMessage === "string" && apiMessage.trim() !== "") {
+			return apiMessage;
+		}
+		return fallback;
+	}
+
+	async function loadPreviewState() {
+		try {
+			const session = await api.getAdminPreviewSession();
+			previewActive = session.active;
+		} catch {
+			previewActive = false;
+		}
+	}
+
+	function handlePreviewSyncEvent(event: Event) {
+		const syncEvent = event as CustomEvent<{ active?: unknown }>;
+		if (typeof syncEvent.detail?.active === "boolean") {
+			previewActive = syncEvent.detail.active;
+			return;
+		}
+		void loadPreviewState();
+	}
+
+	function handlePreviewStorageEvent(event: StorageEvent) {
+		if (event.key !== DRAFT_PREVIEW_SYNC_STORAGE_KEY) {
+			return;
+		}
+		if (!event.newValue) {
+			void loadPreviewState();
+			return;
+		}
+		try {
+			const parsed = JSON.parse(event.newValue) as { active?: unknown };
+			if (typeof parsed.active === "boolean") {
+				previewActive = parsed.active;
+				return;
+			}
+		} catch {
+			// ignore malformed storage payloads
+		}
+		void loadPreviewState();
+	}
+
 	function resetForm() {
 		sku = "";
 		name = "";
@@ -279,7 +334,7 @@
 			resetForm();
 		}
 		try {
-			const fetched = await api.getProduct(id);
+			const fetched = await api.getAdminProduct(id);
 			if (sequence !== loadSequence) {
 				return;
 			}
@@ -330,7 +385,7 @@
 				hydrateForm(merged);
 				captureSavedSnapshot();
 				onProductUpdated?.(merged);
-				setProductStatus("Product updated.");
+				setProductStatus("Product draft saved.");
 			} else if (allowCreate) {
 				updated = await api.createProduct(payload);
 				product = updated;
@@ -339,7 +394,7 @@
 				captureSavedSnapshot();
 				onProductCreated?.(updated);
 				onProductUpdated?.(updated);
-				setProductStatus("Product created.");
+				setProductStatus("Product draft created.");
 			} else {
 				setProductError("Please select a product to edit.");
 			}
@@ -348,6 +403,123 @@
 			setProductError("Unable to save product.");
 		} finally {
 			saving = false;
+		}
+	}
+
+	async function publishProduct() {
+		if (!resolvedProductId) {
+			return;
+		}
+		clearProductMessages();
+		publishing = true;
+		try {
+			if (hasUnsavedChanges) {
+				await saveAllPendingChanges();
+				if (hasUnsavedChanges) {
+					return;
+				}
+			}
+			const updated = await api.publishProduct(resolvedProductId);
+			product = updated;
+			hydrateForm(updated);
+			captureSavedSnapshot();
+			onProductUpdated?.(updated);
+			setProductStatus("Product draft published.");
+		} catch (err) {
+			console.error(err);
+			setProductError(readableActionError(err, "Unable to publish product draft."));
+		} finally {
+			publishing = false;
+		}
+	}
+
+	async function discardDraft() {
+		if (!resolvedProductId) {
+			return;
+		}
+		if (!confirm("Discard all unpublished draft changes for this product?")) {
+			return;
+		}
+		clearProductMessages();
+		discardingDraft = true;
+		try {
+			const updated = await api.discardProductDraft(resolvedProductId);
+			product = updated;
+			hydrateForm(updated);
+			captureSavedSnapshot();
+			onProductUpdated?.(updated);
+			setProductStatus("Product draft discarded.");
+		} catch (err) {
+			console.error(err);
+			setProductError(readableActionError(err, "Unable to discard product draft."));
+		} finally {
+			discardingDraft = false;
+		}
+	}
+
+	async function unpublishProduct() {
+		if (!resolvedProductId || !isPublished) {
+			return;
+		}
+		if (!confirm("Unpublish this product? It will be hidden from the public storefront.")) {
+			return;
+		}
+		clearProductMessages();
+		unpublishing = true;
+		try {
+			if (hasUnsavedChanges) {
+				await saveAllPendingChanges();
+				if (hasUnsavedChanges) {
+					return;
+				}
+			}
+			const updated = await api.unpublishProduct(resolvedProductId);
+			product = updated;
+			hydrateForm(updated);
+			captureSavedSnapshot();
+			onProductUpdated?.(updated);
+			setProductStatus("Product unpublished.");
+		} catch (err) {
+			console.error(err);
+			setProductError(readableActionError(err, "Unable to unpublish product."));
+		} finally {
+			unpublishing = false;
+		}
+	}
+
+	async function previewDraft() {
+		if (!resolvedProductId) {
+			return;
+		}
+		clearProductMessages();
+		previewingDraft = true;
+		let previewWindow: Window | null = null;
+		try {
+			if (previewActive) {
+				await api.stopAdminPreview();
+				previewActive = false;
+				setProductStatus("Exited draft preview.");
+				return;
+			}
+
+			previewWindow = window.open("", "_blank");
+			if (!previewWindow) {
+				setProductError("Preview popup was blocked by the browser.");
+				return;
+			}
+			await api.startAdminPreview();
+			previewActive = true;
+			previewWindow.location.href = resolve(`/product/${resolvedProductId}`);
+			setProductStatus("Opened draft preview in a new tab.");
+		} catch (err) {
+			console.error(err);
+			if (previewWindow && !previewWindow.closed) {
+				previewWindow.close();
+			}
+			setProductError(readableActionError(err, "Unable to open product draft preview."));
+			void loadPreviewState();
+		} finally {
+			previewingDraft = false;
 		}
 	}
 
@@ -493,7 +665,7 @@
 		relatedLoading = true;
 		relatedLastSearchedQuery = query;
 		try {
-			const page = await api.listProducts({
+			const page = await api.listAdminProducts({
 				q: query,
 				page: 1,
 				limit: 10,
@@ -604,8 +776,16 @@
 	});
 
 	onDestroy(() => {
+		window.removeEventListener(DRAFT_PREVIEW_SYNC_EVENT, handlePreviewSyncEvent as EventListener);
+		window.removeEventListener("storage", handlePreviewStorageEvent);
 		onDirtyChange?.(false);
 		onSaveRequestChange?.(null);
+	});
+
+	onMount(() => {
+		window.addEventListener(DRAFT_PREVIEW_SYNC_EVENT, handlePreviewSyncEvent as EventListener);
+		window.addEventListener("storage", handlePreviewStorageEvent);
+		void loadPreviewState();
 	});
 
 	$effect(() => {
@@ -955,15 +1135,81 @@
 				{@render ProductFields()}
 			</div>
 
-			<div class="mt-6 flex flex-wrap items-center justify-between gap-2">
-				<Button variant="primary" type="button" onclick={saveProduct} disabled={saving}>
+			{#if canEditProduct}
+				<div class="mt-4 flex flex-wrap items-center gap-2 text-xs">
+					<span
+						class={`rounded-full px-2 py-1 font-semibold ${
+							isPublished
+								? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
+								: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200"
+						}`}
+					>
+						{isPublished ? "Published" : "Unpublished"}
+					</span>
+					{#if hasDraftChanges}
+						<span
+							class="rounded-full bg-blue-100 px-2 py-1 font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-200"
+						>
+							Draft changes
+						</span>
+					{/if}
+				</div>
+			{/if}
+
+			<div class="mt-6 flex flex-wrap items-center gap-2">
+				<Button
+					variant="primary"
+					type="button"
+					class="min-w-40"
+					onclick={saveProduct}
+					disabled={saving}
+				>
 					<i class="bi bi-floppy-fill mr-1"></i>
-					{saving ? "Saving..." : "Save changes"}
+					{saving ? "Saving..." : "Save draft"}
 				</Button>
-				<Button variant="danger" type="button" disabled={deleting} onclick={deleteProduct}>
-					<i class="bi bi-trash-fill mr-1"></i>
-					{deleting ? "Deleting..." : "Delete product"}
-				</Button>
+				{#if canEditProduct}
+					<Button variant="regular" type="button" disabled={previewingDraft} onclick={previewDraft}>
+						<i class={`bi ${previewActive ? "bi-eye-slash-fill" : "bi-eye-fill"} mr-1`}></i>
+						{previewingDraft
+							? previewActive
+								? "Exiting..."
+								: "Opening..."
+							: previewActive
+								? "Exit preview"
+								: "Preview"}
+					</Button>
+					<Button
+						variant="success"
+						type="button"
+						disabled={publishing || (!hasDraftChanges && !hasUnsavedChanges)}
+						onclick={publishProduct}
+					>
+						<i class="bi bi-send-check-fill mr-1"></i>
+						{publishing ? "Publishing..." : "Publish"}
+					</Button>
+					<Button
+						variant="warning"
+						type="button"
+						disabled={unpublishing || !isPublished}
+						onclick={unpublishProduct}
+					>
+						<i class="bi bi-eye-slash-fill mr-1"></i>
+						{unpublishing ? "Unpublishing..." : "Unpublish"}
+					</Button>
+					<Button
+						variant="warning"
+						type="button"
+						disabled={discardingDraft || (!hasDraftChanges && !hasUnsavedChanges)}
+						onclick={discardDraft}
+					>
+						<i class="bi bi-arrow-counterclockwise mr-1"></i>
+						{discardingDraft ? "Discarding..." : "Discard draft"}
+					</Button>
+					<Button variant="danger" type="button" disabled={deleting} onclick={deleteProduct}>
+						<i class="bi bi-trash-fill mr-1"></i>
+						{deleting ? "Deleting..." : "Delete product"}
+					</Button>
+				{/if}
 			</div>
 			{#if showMessages}
 				{#if productErrorMessage}
@@ -1066,13 +1312,33 @@
 
 		<div class="mt-4 space-y-4 text-sm">
 			{@render ProductFields()}
+			{#if canEditProduct}
+				<div class="mt-1 flex flex-wrap items-center gap-2 text-xs">
+					<span
+						class={`rounded-full px-2 py-1 font-semibold ${
+							isPublished
+								? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
+								: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200"
+						}`}
+					>
+						{isPublished ? "Published" : "Unpublished"}
+					</span>
+					{#if hasDraftChanges}
+						<span
+							class="rounded-full bg-blue-100 px-2 py-1 font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-200"
+						>
+							Draft changes
+						</span>
+					{/if}
+				</div>
+			{/if}
 			<div
-				class="mt-2 mb-6 flex flex-wrap gap-2 border-b border-gray-200 pb-6 text-base dark:border-gray-800"
+				class="mt-2 mb-6 grid grid-cols-1 gap-2 border-b border-gray-200 pb-6 text-base sm:grid-cols-2 dark:border-gray-800"
 			>
 				<Button
 					variant="primary"
 					size="large"
-					class="grow"
+					class={`w-full ${canEditProduct ? "" : "sm:col-span-2"}`}
 					type="button"
 					onclick={saveProduct}
 					disabled={saving}
@@ -1082,13 +1348,63 @@
 							saving ? "bi-floppy-fill" : canEditProduct ? "bi-floppy-fill" : "bi-patch-plus-fill"
 						} mr-1`}
 					></i>
-					{saving ? "Saving..." : canEditProduct ? "Save changes" : "Create product"}
+					{saving ? "Saving..." : canEditProduct ? "Save draft" : "Create draft"}
 				</Button>
 				{#if canEditProduct}
 					<Button
+						variant="regular"
+						size="large"
+						class="w-full"
+						type="button"
+						disabled={previewingDraft}
+						onclick={previewDraft}
+					>
+						<i class={`bi ${previewActive ? "bi-eye-slash-fill" : "bi-eye-fill"}`}></i>
+						{previewingDraft
+							? previewActive
+								? "Exiting..."
+								: "Opening..."
+							: previewActive
+								? "Exit preview"
+								: "Preview"}
+					</Button>
+					<Button
+						variant="success"
+						size="large"
+						class="w-full"
+						type="button"
+						disabled={publishing || (!hasDraftChanges && !hasUnsavedChanges)}
+						onclick={publishProduct}
+					>
+						<i class="bi bi-send-check-fill"></i>
+						{publishing ? "Publishing..." : "Publish"}
+					</Button>
+					<Button
+						variant="warning"
+						size="large"
+						class="w-full"
+						type="button"
+						disabled={unpublishing || !isPublished}
+						onclick={unpublishProduct}
+					>
+						<i class="bi bi-eye-slash-fill"></i>
+						{unpublishing ? "Unpublishing..." : "Unpublish"}
+					</Button>
+					<Button
+						variant="warning"
+						size="large"
+						class="w-full"
+						type="button"
+						disabled={discardingDraft || (!hasDraftChanges && !hasUnsavedChanges)}
+						onclick={discardDraft}
+					>
+						<i class="bi bi-arrow-counterclockwise"></i>
+						{discardingDraft ? "Discarding..." : "Discard draft"}
+					</Button>
+					<Button
 						variant="danger"
 						size="large"
-						class="grow"
+						class="w-full"
 						type="button"
 						disabled={deleting}
 						onclick={deleteProduct}

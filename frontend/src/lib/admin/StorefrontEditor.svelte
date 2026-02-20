@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { resolve } from "$app/paths";
 	import { getContext, onDestroy, onMount } from "svelte";
-	import { type API } from "$lib/api";
+	import { DRAFT_PREVIEW_SYNC_EVENT, DRAFT_PREVIEW_SYNC_STORAGE_KEY, type API } from "$lib/api";
 	import Alert from "$lib/components/Alert.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import ButtonInput from "$lib/components/ButtonInput.svelte";
@@ -49,10 +50,17 @@
 
 	let loading = $state(true);
 	let saving = $state(false);
+	let publishing = $state(false);
+	let discardingDraft = $state(false);
+	let previewingDraft = $state(false);
+	let previewActive = $state(false);
 	let uploadingHero = $state(false);
 	let errorMessage = $state("");
 	let statusMessage = $state("");
 	let lastUpdated = $state<Date | null>(null);
+	let hasSavedDraft = $state(false);
+	let draftUpdatedAt = $state<Date | null>(null);
+	let publishedUpdatedAt = $state<Date | null>(null);
 	let heroPreviewUrls = $state<Record<string, string>>({});
 	let savedSnapshot = $state("");
 	let newSectionType = $state<StorefrontHomepageSectionModel["type"]>("products");
@@ -458,6 +466,9 @@
 		try {
 			const response = await api.getAdminStorefrontSettings();
 			lastUpdated = response.updated_at;
+			hasSavedDraft = response.has_draft_changes;
+			draftUpdatedAt = response.draft_updated_at;
+			publishedUpdatedAt = response.published_updated_at;
 			clearAllHeroPreviews();
 			hydrateDraft(response.settings);
 		} catch (err) {
@@ -465,11 +476,52 @@
 			errorMessage = "Unable to load storefront settings.";
 			onErrorMessage?.(errorMessage);
 			lastUpdated = null;
+			hasSavedDraft = false;
+			draftUpdatedAt = null;
+			publishedUpdatedAt = null;
 			clearAllHeroPreviews();
 			hydrateDraft(createDefaultStorefrontSettings());
 		} finally {
 			loading = false;
 		}
+	}
+
+	async function loadPreviewState() {
+		try {
+			const session = await api.getAdminPreviewSession();
+			previewActive = session.active;
+		} catch {
+			previewActive = false;
+		}
+	}
+
+	function handlePreviewSyncEvent(event: Event) {
+		const syncEvent = event as CustomEvent<{ active?: unknown }>;
+		if (typeof syncEvent.detail?.active === "boolean") {
+			previewActive = syncEvent.detail.active;
+			return;
+		}
+		void loadPreviewState();
+	}
+
+	function handlePreviewStorageEvent(event: StorageEvent) {
+		if (event.key !== DRAFT_PREVIEW_SYNC_STORAGE_KEY) {
+			return;
+		}
+		if (!event.newValue) {
+			void loadPreviewState();
+			return;
+		}
+		try {
+			const parsed = JSON.parse(event.newValue) as { active?: unknown };
+			if (typeof parsed.active === "boolean") {
+				previewActive = parsed.active;
+				return;
+			}
+		} catch {
+			// ignore malformed storage payloads
+		}
+		void loadPreviewState();
 	}
 
 	async function saveStorefrontSettings() {
@@ -491,9 +543,12 @@
 
 			const response = await api.updateStorefrontSettings(payload);
 			lastUpdated = response.updated_at;
+			hasSavedDraft = response.has_draft_changes;
+			draftUpdatedAt = response.draft_updated_at;
+			publishedUpdatedAt = response.published_updated_at;
 			clearAllHeroPreviews();
 			hydrateDraft(response.settings);
-			statusMessage = "Storefront settings saved.";
+			statusMessage = "Storefront draft saved.";
 			onStatusMessage?.(statusMessage);
 		} catch (err) {
 			console.error(err);
@@ -504,11 +559,124 @@
 		}
 	}
 
+	async function publishStorefrontDraft() {
+		publishing = true;
+		errorMessage = "";
+		statusMessage = "";
+		onErrorMessage?.("");
+		onStatusMessage?.("");
+		try {
+			if (hasUnsavedChanges) {
+				await saveStorefrontSettings();
+				if (hasUnsavedChanges) {
+					return;
+				}
+			}
+			const response = await api.publishStorefrontSettings();
+			lastUpdated = response.updated_at;
+			hasSavedDraft = response.has_draft_changes;
+			draftUpdatedAt = response.draft_updated_at;
+			publishedUpdatedAt = response.published_updated_at;
+			clearAllHeroPreviews();
+			hydrateDraft(response.settings);
+			statusMessage = "Storefront draft published.";
+			onStatusMessage?.(statusMessage);
+		} catch (err) {
+			console.error(err);
+			errorMessage = `Unable to publish storefront draft: ${getReadableSaveError(err)}.`;
+			onErrorMessage?.(errorMessage);
+		} finally {
+			publishing = false;
+		}
+	}
+
+	async function discardStorefrontDraft() {
+		if (!confirm("Discard unpublished storefront draft changes?")) {
+			return;
+		}
+		discardingDraft = true;
+		errorMessage = "";
+		statusMessage = "";
+		onErrorMessage?.("");
+		onStatusMessage?.("");
+		try {
+			const response = await api.discardStorefrontDraft();
+			lastUpdated = response.updated_at;
+			hasSavedDraft = response.has_draft_changes;
+			draftUpdatedAt = response.draft_updated_at;
+			publishedUpdatedAt = response.published_updated_at;
+			clearAllHeroPreviews();
+			hydrateDraft(response.settings);
+			statusMessage = "Storefront draft discarded.";
+			onStatusMessage?.(statusMessage);
+		} catch (err) {
+			console.error(err);
+			errorMessage = `Unable to discard storefront draft: ${getReadableSaveError(err)}.`;
+			onErrorMessage?.(errorMessage);
+		} finally {
+			discardingDraft = false;
+		}
+	}
+
+	async function previewStorefrontDraft() {
+		previewingDraft = true;
+		errorMessage = "";
+		statusMessage = "";
+		onErrorMessage?.("");
+		onStatusMessage?.("");
+		let previewWindow: Window | null = null;
+		try {
+			if (previewActive) {
+				await api.stopAdminPreview();
+				previewActive = false;
+				statusMessage = "Exited draft preview.";
+				onStatusMessage?.(statusMessage);
+				return;
+			}
+
+			previewWindow = window.open("", "_blank");
+			if (!previewWindow) {
+				errorMessage = "Preview popup was blocked by the browser.";
+				onErrorMessage?.(errorMessage);
+				return;
+			}
+			if (hasUnsavedChanges) {
+				await saveStorefrontSettings();
+				if (hasUnsavedChanges) {
+					if (!previewWindow.closed) {
+						previewWindow.close();
+					}
+					return;
+				}
+			}
+			await api.startAdminPreview();
+			previewActive = true;
+			previewWindow.location.href = resolve("/");
+			statusMessage = "Opened storefront draft preview in a new tab.";
+			onStatusMessage?.(statusMessage);
+		} catch (err) {
+			console.error(err);
+			if (previewWindow && !previewWindow.closed) {
+				previewWindow.close();
+			}
+			errorMessage = `Unable to open storefront draft preview: ${getReadableSaveError(err)}.`;
+			onErrorMessage?.(errorMessage);
+			void loadPreviewState();
+		} finally {
+			previewingDraft = false;
+		}
+	}
+
 	onMount(() => {
+		window.addEventListener(DRAFT_PREVIEW_SYNC_EVENT, handlePreviewSyncEvent as EventListener);
+		window.addEventListener("storage", handlePreviewStorageEvent);
 		void loadStorefrontSettings();
+		void loadPreviewState();
 	});
 
 	onDestroy(() => {
+		window.removeEventListener(DRAFT_PREVIEW_SYNC_EVENT, handlePreviewSyncEvent as EventListener);
+		window.removeEventListener("storage", handlePreviewStorageEvent);
 		clearAllHeroPreviews();
 		onDirtyChange?.(false);
 		onSaveRequestChange?.(null);
@@ -521,18 +689,44 @@
 	<div class="flex flex-wrap items-start justify-between gap-4">
 		<div>
 			<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Storefront</h2>
+			<div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+				<span
+					class={`rounded-full px-2 py-1 font-semibold ${
+						hasSavedDraft
+							? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200"
+							: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
+					}`}
+				>
+					{hasSavedDraft ? "Draft saved" : "No saved draft"}
+				</span>
+			</div>
 			{#if lastUpdated}
 				<p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-					Last saved {lastUpdated.toLocaleString()}
+					Last change {lastUpdated.toLocaleString()}
+				</p>
+			{/if}
+			{#if publishedUpdatedAt}
+				<p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+					Published {publishedUpdatedAt.toLocaleString()}
+				</p>
+			{/if}
+			{#if draftUpdatedAt}
+				<p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+					Draft updated {draftUpdatedAt.toLocaleString()}
 				</p>
 			{/if}
 		</div>
-		<div class="flex items-center gap-2">
+		<div class="flex flex-wrap items-center justify-end gap-2">
 			<Button
 				variant="regular"
 				type="button"
 				onclick={loadStorefrontSettings}
-				disabled={loading || saving || uploadingHero}
+				disabled={loading ||
+					saving ||
+					uploadingHero ||
+					publishing ||
+					discardingDraft ||
+					previewingDraft}
 			>
 				<i class="bi bi-arrow-clockwise mr-1"></i>
 				Refresh
@@ -541,10 +735,65 @@
 				variant="primary"
 				type="button"
 				onclick={saveStorefrontSettings}
-				disabled={loading || saving || uploadingHero}
+				disabled={loading ||
+					saving ||
+					uploadingHero ||
+					publishing ||
+					discardingDraft ||
+					previewingDraft}
 			>
 				<i class="bi bi-floppy-fill mr-1"></i>
-				{saving ? "Saving..." : "Save storefront"}
+				{saving ? "Saving..." : "Save draft"}
+			</Button>
+			<Button
+				variant="regular"
+				type="button"
+				onclick={previewStorefrontDraft}
+				disabled={loading ||
+					saving ||
+					uploadingHero ||
+					publishing ||
+					discardingDraft ||
+					previewingDraft}
+			>
+				<i class={`bi ${previewActive ? "bi-eye-slash-fill" : "bi-eye-fill"} mr-1`}></i>
+				{previewingDraft
+					? previewActive
+						? "Exiting..."
+						: "Opening..."
+					: previewActive
+						? "Exit preview"
+						: "Preview"}
+			</Button>
+			<Button
+				variant="success"
+				type="button"
+				onclick={publishStorefrontDraft}
+				disabled={loading ||
+					saving ||
+					uploadingHero ||
+					publishing ||
+					discardingDraft ||
+					previewingDraft ||
+					(!hasSavedDraft && !hasUnsavedChanges)}
+			>
+				<i class="bi bi-send-check-fill mr-1"></i>
+				{publishing ? "Publishing..." : "Publish"}
+			</Button>
+			<Button
+				variant="warning"
+				type="button"
+				onclick={discardStorefrontDraft}
+				disabled={loading ||
+					saving ||
+					uploadingHero ||
+					publishing ||
+					discardingDraft ||
+					previewingDraft ||
+					(!hasSavedDraft && !hasUnsavedChanges)}
+			>
+				<i class="bi bi-trash-fill mr-1"></i>
+				{discardingDraft ? "Discarding..." : "Discard draft"}
 			</Button>
 		</div>
 	</div>
@@ -1176,10 +1425,10 @@
 				style="pill"
 				type="button"
 				onclick={saveStorefrontSettings}
-				disabled={saving || uploadingHero}
+				disabled={saving || uploadingHero || publishing || discardingDraft || previewingDraft}
 			>
 				<i class="bi bi-floppy-fill"></i>
-				{saving ? "Saving..." : "Save"}
+				{saving ? "Saving..." : "Save draft"}
 			</Button>
 		</div>
 	</div>

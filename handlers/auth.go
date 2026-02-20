@@ -440,6 +440,7 @@ func Logout(cookieCfg AuthCookieConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clearSessionCookie(c, cookieCfg)
 		clearCSRFCookie(c, cookieCfg)
+		clearDraftPreviewCookie(c, cookieCfg)
 		c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
 	}
 }

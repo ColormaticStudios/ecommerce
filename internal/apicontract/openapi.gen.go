@@ -88,6 +88,19 @@ const (
 	UserRoleCustomer UserRole = "customer"
 )
 
+// Defines values for ListAdminProductsParamsSort.
+const (
+	ListAdminProductsParamsSortCreatedAt ListAdminProductsParamsSort = "created_at"
+	ListAdminProductsParamsSortName      ListAdminProductsParamsSort = "name"
+	ListAdminProductsParamsSortPrice     ListAdminProductsParamsSort = "price"
+)
+
+// Defines values for ListAdminProductsParamsOrder.
+const (
+	ListAdminProductsParamsOrderAsc  ListAdminProductsParamsOrder = "asc"
+	ListAdminProductsParamsOrderDesc ListAdminProductsParamsOrder = "desc"
+)
+
 // Defines values for OidcCallbackParamsFormat.
 const (
 	Json OidcCallbackParamsFormat = "json"
@@ -102,15 +115,15 @@ const (
 
 // Defines values for ListProductsParamsSort.
 const (
-	ListProductsParamsSortCreatedAt ListProductsParamsSort = "created_at"
-	ListProductsParamsSortName      ListProductsParamsSort = "name"
-	ListProductsParamsSortPrice     ListProductsParamsSort = "price"
+	CreatedAt ListProductsParamsSort = "created_at"
+	Name      ListProductsParamsSort = "name"
+	Price     ListProductsParamsSort = "price"
 )
 
 // Defines values for ListProductsParamsOrder.
 const (
-	ListProductsParamsOrderAsc  ListProductsParamsOrder = "asc"
-	ListProductsParamsOrderDesc ListProductsParamsOrder = "desc"
+	Asc  ListProductsParamsOrder = "asc"
+	Desc ListProductsParamsOrder = "desc"
 )
 
 // AddCartItemRequest defines model for AddCartItemRequest.
@@ -179,6 +192,12 @@ type CreateSavedPaymentMethodRequest struct {
 	ExpYear        int     `json:"exp_year"`
 	Nickname       *string `json:"nickname,omitempty"`
 	SetDefault     *bool   `json:"set_default,omitempty"`
+}
+
+// DraftPreviewSessionResponse defines model for DraftPreviewSessionResponse.
+type DraftPreviewSessionResponse struct {
+	Active    bool       `json:"active"`
+	ExpiresAt *time.Time `json:"expires_at"`
 }
 
 // Error defines model for Error.
@@ -285,8 +304,11 @@ type Product struct {
 	CreatedAt       time.Time        `json:"created_at"`
 	DeletedAt       *time.Time       `json:"deleted_at"`
 	Description     string           `json:"description"`
+	DraftUpdatedAt  *time.Time       `json:"draft_updated_at"`
+	HasDraftChanges *bool            `json:"has_draft_changes,omitempty"`
 	Id              int              `json:"id"`
 	Images          []string         `json:"images"`
+	IsPublished     *bool            `json:"is_published,omitempty"`
 	Name            string           `json:"name"`
 	Price           float64          `json:"price"`
 	RelatedProducts []RelatedProduct `json:"related_products"`
@@ -464,8 +486,11 @@ type StorefrontSettingsRequest struct {
 
 // StorefrontSettingsResponse defines model for StorefrontSettingsResponse.
 type StorefrontSettingsResponse struct {
-	Settings  StorefrontSettings `json:"settings"`
-	UpdatedAt time.Time          `json:"updated_at"`
+	DraftUpdatedAt     *time.Time         `json:"draft_updated_at"`
+	HasDraftChanges    bool               `json:"has_draft_changes"`
+	PublishedUpdatedAt time.Time          `json:"published_updated_at"`
+	Settings           StorefrontSettings `json:"settings"`
+	UpdatedAt          time.Time          `json:"updated_at"`
 }
 
 // UpdateCartItemRequest defines model for UpdateCartItemRequest.
@@ -531,6 +556,23 @@ type ListAdminOrdersParams struct {
 	Limit *int    `form:"limit,omitempty" json:"limit,omitempty"`
 	Q     *string `form:"q,omitempty" json:"q,omitempty"`
 }
+
+// ListAdminProductsParams defines parameters for ListAdminProducts.
+type ListAdminProductsParams struct {
+	Q        *string                       `form:"q,omitempty" json:"q,omitempty"`
+	MinPrice *float64                      `form:"min_price,omitempty" json:"min_price,omitempty"`
+	MaxPrice *float64                      `form:"max_price,omitempty" json:"max_price,omitempty"`
+	Sort     *ListAdminProductsParamsSort  `form:"sort,omitempty" json:"sort,omitempty"`
+	Order    *ListAdminProductsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
+	Page     *int                          `form:"page,omitempty" json:"page,omitempty"`
+	Limit    *int                          `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ListAdminProductsParamsSort defines parameters for ListAdminProducts.
+type ListAdminProductsParamsSort string
+
+// ListAdminProductsParamsOrder defines parameters for ListAdminProducts.
+type ListAdminProductsParamsOrder string
 
 // ListUsersParams defines parameters for ListUsers.
 type ListUsersParams struct {
@@ -661,14 +703,32 @@ type ServerInterface interface {
 	// (PATCH /api/v1/admin/orders/{id}/status)
 	UpdateOrderStatus(c *gin.Context, id int)
 
+	// (GET /api/v1/admin/preview)
+	GetAdminPreview(c *gin.Context)
+
+	// (POST /api/v1/admin/preview/start)
+	StartAdminPreview(c *gin.Context)
+
+	// (POST /api/v1/admin/preview/stop)
+	StopAdminPreview(c *gin.Context)
+
+	// (GET /api/v1/admin/products)
+	ListAdminProducts(c *gin.Context, params ListAdminProductsParams)
+
 	// (POST /api/v1/admin/products)
 	CreateProduct(c *gin.Context)
 
 	// (DELETE /api/v1/admin/products/{id})
 	DeleteProduct(c *gin.Context, id int)
 
+	// (GET /api/v1/admin/products/{id})
+	GetAdminProduct(c *gin.Context, id int)
+
 	// (PATCH /api/v1/admin/products/{id})
 	UpdateProduct(c *gin.Context, id int)
+
+	// (DELETE /api/v1/admin/products/{id}/draft)
+	DiscardProductDraft(c *gin.Context, id int)
 
 	// (POST /api/v1/admin/products/{id}/media)
 	AttachProductMedia(c *gin.Context, id int)
@@ -679,14 +739,26 @@ type ServerInterface interface {
 	// (DELETE /api/v1/admin/products/{id}/media/{mediaId})
 	DetachProductMedia(c *gin.Context, id int, mediaId string)
 
+	// (POST /api/v1/admin/products/{id}/publish)
+	PublishProduct(c *gin.Context, id int)
+
 	// (PATCH /api/v1/admin/products/{id}/related)
 	UpdateProductRelated(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/products/{id}/unpublish)
+	UnpublishProduct(c *gin.Context, id int)
 
 	// (GET /api/v1/admin/storefront)
 	GetAdminStorefrontSettings(c *gin.Context)
 
 	// (PUT /api/v1/admin/storefront)
 	UpdateStorefrontSettings(c *gin.Context)
+
+	// (DELETE /api/v1/admin/storefront/draft)
+	DiscardStorefrontDraft(c *gin.Context)
+
+	// (POST /api/v1/admin/storefront/publish)
+	PublishStorefrontSettings(c *gin.Context)
 
 	// (GET /api/v1/admin/users)
 	ListUsers(c *gin.Context, params ListUsersParams)
@@ -899,6 +971,135 @@ func (siw *ServerInterfaceWrapper) UpdateOrderStatus(c *gin.Context) {
 	siw.Handler.UpdateOrderStatus(c, id)
 }
 
+// GetAdminPreview operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminPreview(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminPreview(c)
+}
+
+// StartAdminPreview operation middleware
+func (siw *ServerInterfaceWrapper) StartAdminPreview(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.StartAdminPreview(c)
+}
+
+// StopAdminPreview operation middleware
+func (siw *ServerInterfaceWrapper) StopAdminPreview(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.StopAdminPreview(c)
+}
+
+// ListAdminProducts operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminProducts(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminProductsParams
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "q", c.Request.URL.Query(), &params.Q)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "min_price" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "min_price", c.Request.URL.Query(), &params.MinPrice)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter min_price: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "max_price" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "max_price", c.Request.URL.Query(), &params.MaxPrice)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter max_price: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "sort" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "sort", c.Request.URL.Query(), &params.Sort)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter sort: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "order" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "order", c.Request.URL.Query(), &params.Order)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter order: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminProducts(c, params)
+}
+
 // CreateProduct operation middleware
 func (siw *ServerInterfaceWrapper) CreateProduct(c *gin.Context) {
 
@@ -944,6 +1145,34 @@ func (siw *ServerInterfaceWrapper) DeleteProduct(c *gin.Context) {
 	siw.Handler.DeleteProduct(c, id)
 }
 
+// GetAdminProduct operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminProduct(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminProduct(c, id)
+}
+
 // UpdateProduct operation middleware
 func (siw *ServerInterfaceWrapper) UpdateProduct(c *gin.Context) {
 
@@ -970,6 +1199,34 @@ func (siw *ServerInterfaceWrapper) UpdateProduct(c *gin.Context) {
 	}
 
 	siw.Handler.UpdateProduct(c, id)
+}
+
+// DiscardProductDraft operation middleware
+func (siw *ServerInterfaceWrapper) DiscardProductDraft(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DiscardProductDraft(c, id)
 }
 
 // AttachProductMedia operation middleware
@@ -1065,6 +1322,34 @@ func (siw *ServerInterfaceWrapper) DetachProductMedia(c *gin.Context) {
 	siw.Handler.DetachProductMedia(c, id, mediaId)
 }
 
+// PublishProduct operation middleware
+func (siw *ServerInterfaceWrapper) PublishProduct(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PublishProduct(c, id)
+}
+
 // UpdateProductRelated operation middleware
 func (siw *ServerInterfaceWrapper) UpdateProductRelated(c *gin.Context) {
 
@@ -1091,6 +1376,34 @@ func (siw *ServerInterfaceWrapper) UpdateProductRelated(c *gin.Context) {
 	}
 
 	siw.Handler.UpdateProductRelated(c, id)
+}
+
+// UnpublishProduct operation middleware
+func (siw *ServerInterfaceWrapper) UnpublishProduct(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UnpublishProduct(c, id)
 }
 
 // GetAdminStorefrontSettings operation middleware
@@ -1125,6 +1438,40 @@ func (siw *ServerInterfaceWrapper) UpdateStorefrontSettings(c *gin.Context) {
 	}
 
 	siw.Handler.UpdateStorefrontSettings(c)
+}
+
+// DiscardStorefrontDraft operation middleware
+func (siw *ServerInterfaceWrapper) DiscardStorefrontDraft(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DiscardStorefrontDraft(c)
+}
+
+// PublishStorefrontSettings operation middleware
+func (siw *ServerInterfaceWrapper) PublishStorefrontSettings(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PublishStorefrontSettings(c)
 }
 
 // ListUsers operation middleware
@@ -2059,15 +2406,25 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/api/v1/admin/orders", wrapper.ListAdminOrders)
 	router.GET(options.BaseURL+"/api/v1/admin/orders/:id", wrapper.GetAdminOrder)
 	router.PATCH(options.BaseURL+"/api/v1/admin/orders/:id/status", wrapper.UpdateOrderStatus)
+	router.GET(options.BaseURL+"/api/v1/admin/preview", wrapper.GetAdminPreview)
+	router.POST(options.BaseURL+"/api/v1/admin/preview/start", wrapper.StartAdminPreview)
+	router.POST(options.BaseURL+"/api/v1/admin/preview/stop", wrapper.StopAdminPreview)
+	router.GET(options.BaseURL+"/api/v1/admin/products", wrapper.ListAdminProducts)
 	router.POST(options.BaseURL+"/api/v1/admin/products", wrapper.CreateProduct)
 	router.DELETE(options.BaseURL+"/api/v1/admin/products/:id", wrapper.DeleteProduct)
+	router.GET(options.BaseURL+"/api/v1/admin/products/:id", wrapper.GetAdminProduct)
 	router.PATCH(options.BaseURL+"/api/v1/admin/products/:id", wrapper.UpdateProduct)
+	router.DELETE(options.BaseURL+"/api/v1/admin/products/:id/draft", wrapper.DiscardProductDraft)
 	router.POST(options.BaseURL+"/api/v1/admin/products/:id/media", wrapper.AttachProductMedia)
 	router.PATCH(options.BaseURL+"/api/v1/admin/products/:id/media/order", wrapper.UpdateProductMediaOrder)
 	router.DELETE(options.BaseURL+"/api/v1/admin/products/:id/media/:mediaId", wrapper.DetachProductMedia)
+	router.POST(options.BaseURL+"/api/v1/admin/products/:id/publish", wrapper.PublishProduct)
 	router.PATCH(options.BaseURL+"/api/v1/admin/products/:id/related", wrapper.UpdateProductRelated)
+	router.POST(options.BaseURL+"/api/v1/admin/products/:id/unpublish", wrapper.UnpublishProduct)
 	router.GET(options.BaseURL+"/api/v1/admin/storefront", wrapper.GetAdminStorefrontSettings)
 	router.PUT(options.BaseURL+"/api/v1/admin/storefront", wrapper.UpdateStorefrontSettings)
+	router.DELETE(options.BaseURL+"/api/v1/admin/storefront/draft", wrapper.DiscardStorefrontDraft)
+	router.POST(options.BaseURL+"/api/v1/admin/storefront/publish", wrapper.PublishStorefrontSettings)
 	router.GET(options.BaseURL+"/api/v1/admin/users", wrapper.ListUsers)
 	router.PATCH(options.BaseURL+"/api/v1/admin/users/:id/role", wrapper.UpdateUserRole)
 	router.POST(options.BaseURL+"/api/v1/auth/login", wrapper.Login)
@@ -2155,6 +2512,71 @@ func (response UpdateOrderStatus200JSONResponse) VisitUpdateOrderStatusResponse(
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetAdminPreviewRequestObject struct {
+}
+
+type GetAdminPreviewResponseObject interface {
+	VisitGetAdminPreviewResponse(w http.ResponseWriter) error
+}
+
+type GetAdminPreview200JSONResponse DraftPreviewSessionResponse
+
+func (response GetAdminPreview200JSONResponse) VisitGetAdminPreviewResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type StartAdminPreviewRequestObject struct {
+}
+
+type StartAdminPreviewResponseObject interface {
+	VisitStartAdminPreviewResponse(w http.ResponseWriter) error
+}
+
+type StartAdminPreview200JSONResponse DraftPreviewSessionResponse
+
+func (response StartAdminPreview200JSONResponse) VisitStartAdminPreviewResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type StopAdminPreviewRequestObject struct {
+}
+
+type StopAdminPreviewResponseObject interface {
+	VisitStopAdminPreviewResponse(w http.ResponseWriter) error
+}
+
+type StopAdminPreview200JSONResponse DraftPreviewSessionResponse
+
+func (response StopAdminPreview200JSONResponse) VisitStopAdminPreviewResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminProductsRequestObject struct {
+	Params ListAdminProductsParams
+}
+
+type ListAdminProductsResponseObject interface {
+	VisitListAdminProductsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminProducts200JSONResponse ProductPage
+
+func (response ListAdminProducts200JSONResponse) VisitListAdminProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type CreateProductRequestObject struct {
 	Body *CreateProductJSONRequestBody
 }
@@ -2189,6 +2611,32 @@ func (response DeleteProduct200JSONResponse) VisitDeleteProductResponse(w http.R
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetAdminProductRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetAdminProductResponseObject interface {
+	VisitGetAdminProductResponse(w http.ResponseWriter) error
+}
+
+type GetAdminProduct200JSONResponse Product
+
+func (response GetAdminProduct200JSONResponse) VisitGetAdminProductResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminProduct404JSONResponse Error
+
+func (response GetAdminProduct404JSONResponse) VisitGetAdminProductResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type UpdateProductRequestObject struct {
 	Id   int `json:"id"`
 	Body *UpdateProductJSONRequestBody
@@ -2203,6 +2651,32 @@ type UpdateProduct200JSONResponse Product
 func (response UpdateProduct200JSONResponse) VisitUpdateProductResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DiscardProductDraftRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DiscardProductDraftResponseObject interface {
+	VisitDiscardProductDraftResponse(w http.ResponseWriter) error
+}
+
+type DiscardProductDraft200JSONResponse Product
+
+func (response DiscardProductDraft200JSONResponse) VisitDiscardProductDraftResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DiscardProductDraft404JSONResponse Error
+
+func (response DiscardProductDraft404JSONResponse) VisitDiscardProductDraftResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -2261,6 +2735,32 @@ func (response DetachProductMedia200JSONResponse) VisitDetachProductMediaRespons
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PublishProductRequestObject struct {
+	Id int `json:"id"`
+}
+
+type PublishProductResponseObject interface {
+	VisitPublishProductResponse(w http.ResponseWriter) error
+}
+
+type PublishProduct200JSONResponse Product
+
+func (response PublishProduct200JSONResponse) VisitPublishProductResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishProduct404JSONResponse Error
+
+func (response PublishProduct404JSONResponse) VisitPublishProductResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type UpdateProductRelatedRequestObject struct {
 	Id   int `json:"id"`
 	Body *UpdateProductRelatedJSONRequestBody
@@ -2275,6 +2775,32 @@ type UpdateProductRelated200JSONResponse Product
 func (response UpdateProductRelated200JSONResponse) VisitUpdateProductRelatedResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UnpublishProductRequestObject struct {
+	Id int `json:"id"`
+}
+
+type UnpublishProductResponseObject interface {
+	VisitUnpublishProductResponse(w http.ResponseWriter) error
+}
+
+type UnpublishProduct200JSONResponse Product
+
+func (response UnpublishProduct200JSONResponse) VisitUnpublishProductResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UnpublishProduct404JSONResponse Error
+
+func (response UnpublishProduct404JSONResponse) VisitUnpublishProductResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -2324,6 +2850,47 @@ func (response UpdateStorefrontSettings200JSONResponse) VisitUpdateStorefrontSet
 type UpdateStorefrontSettings400JSONResponse Error
 
 func (response UpdateStorefrontSettings400JSONResponse) VisitUpdateStorefrontSettingsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DiscardStorefrontDraftRequestObject struct {
+}
+
+type DiscardStorefrontDraftResponseObject interface {
+	VisitDiscardStorefrontDraftResponse(w http.ResponseWriter) error
+}
+
+type DiscardStorefrontDraft200JSONResponse StorefrontSettingsResponse
+
+func (response DiscardStorefrontDraft200JSONResponse) VisitDiscardStorefrontDraftResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishStorefrontSettingsRequestObject struct {
+}
+
+type PublishStorefrontSettingsResponseObject interface {
+	VisitPublishStorefrontSettingsResponse(w http.ResponseWriter) error
+}
+
+type PublishStorefrontSettings200JSONResponse StorefrontSettingsResponse
+
+func (response PublishStorefrontSettings200JSONResponse) VisitPublishStorefrontSettingsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishStorefrontSettings400JSONResponse Error
+
+func (response PublishStorefrontSettings400JSONResponse) VisitPublishStorefrontSettingsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
 
@@ -3091,14 +3658,32 @@ type StrictServerInterface interface {
 	// (PATCH /api/v1/admin/orders/{id}/status)
 	UpdateOrderStatus(ctx context.Context, request UpdateOrderStatusRequestObject) (UpdateOrderStatusResponseObject, error)
 
+	// (GET /api/v1/admin/preview)
+	GetAdminPreview(ctx context.Context, request GetAdminPreviewRequestObject) (GetAdminPreviewResponseObject, error)
+
+	// (POST /api/v1/admin/preview/start)
+	StartAdminPreview(ctx context.Context, request StartAdminPreviewRequestObject) (StartAdminPreviewResponseObject, error)
+
+	// (POST /api/v1/admin/preview/stop)
+	StopAdminPreview(ctx context.Context, request StopAdminPreviewRequestObject) (StopAdminPreviewResponseObject, error)
+
+	// (GET /api/v1/admin/products)
+	ListAdminProducts(ctx context.Context, request ListAdminProductsRequestObject) (ListAdminProductsResponseObject, error)
+
 	// (POST /api/v1/admin/products)
 	CreateProduct(ctx context.Context, request CreateProductRequestObject) (CreateProductResponseObject, error)
 
 	// (DELETE /api/v1/admin/products/{id})
 	DeleteProduct(ctx context.Context, request DeleteProductRequestObject) (DeleteProductResponseObject, error)
 
+	// (GET /api/v1/admin/products/{id})
+	GetAdminProduct(ctx context.Context, request GetAdminProductRequestObject) (GetAdminProductResponseObject, error)
+
 	// (PATCH /api/v1/admin/products/{id})
 	UpdateProduct(ctx context.Context, request UpdateProductRequestObject) (UpdateProductResponseObject, error)
+
+	// (DELETE /api/v1/admin/products/{id}/draft)
+	DiscardProductDraft(ctx context.Context, request DiscardProductDraftRequestObject) (DiscardProductDraftResponseObject, error)
 
 	// (POST /api/v1/admin/products/{id}/media)
 	AttachProductMedia(ctx context.Context, request AttachProductMediaRequestObject) (AttachProductMediaResponseObject, error)
@@ -3109,14 +3694,26 @@ type StrictServerInterface interface {
 	// (DELETE /api/v1/admin/products/{id}/media/{mediaId})
 	DetachProductMedia(ctx context.Context, request DetachProductMediaRequestObject) (DetachProductMediaResponseObject, error)
 
+	// (POST /api/v1/admin/products/{id}/publish)
+	PublishProduct(ctx context.Context, request PublishProductRequestObject) (PublishProductResponseObject, error)
+
 	// (PATCH /api/v1/admin/products/{id}/related)
 	UpdateProductRelated(ctx context.Context, request UpdateProductRelatedRequestObject) (UpdateProductRelatedResponseObject, error)
+
+	// (POST /api/v1/admin/products/{id}/unpublish)
+	UnpublishProduct(ctx context.Context, request UnpublishProductRequestObject) (UnpublishProductResponseObject, error)
 
 	// (GET /api/v1/admin/storefront)
 	GetAdminStorefrontSettings(ctx context.Context, request GetAdminStorefrontSettingsRequestObject) (GetAdminStorefrontSettingsResponseObject, error)
 
 	// (PUT /api/v1/admin/storefront)
 	UpdateStorefrontSettings(ctx context.Context, request UpdateStorefrontSettingsRequestObject) (UpdateStorefrontSettingsResponseObject, error)
+
+	// (DELETE /api/v1/admin/storefront/draft)
+	DiscardStorefrontDraft(ctx context.Context, request DiscardStorefrontDraftRequestObject) (DiscardStorefrontDraftResponseObject, error)
+
+	// (POST /api/v1/admin/storefront/publish)
+	PublishStorefrontSettings(ctx context.Context, request PublishStorefrontSettingsRequestObject) (PublishStorefrontSettingsResponseObject, error)
 
 	// (GET /api/v1/admin/users)
 	ListUsers(ctx context.Context, request ListUsersRequestObject) (ListUsersResponseObject, error)
@@ -3319,6 +3916,108 @@ func (sh *strictHandler) UpdateOrderStatus(ctx *gin.Context, id int) {
 	}
 }
 
+// GetAdminPreview operation middleware
+func (sh *strictHandler) GetAdminPreview(ctx *gin.Context) {
+	var request GetAdminPreviewRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminPreview(ctx, request.(GetAdminPreviewRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminPreview")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminPreviewResponseObject); ok {
+		if err := validResponse.VisitGetAdminPreviewResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// StartAdminPreview operation middleware
+func (sh *strictHandler) StartAdminPreview(ctx *gin.Context) {
+	var request StartAdminPreviewRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.StartAdminPreview(ctx, request.(StartAdminPreviewRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "StartAdminPreview")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(StartAdminPreviewResponseObject); ok {
+		if err := validResponse.VisitStartAdminPreviewResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// StopAdminPreview operation middleware
+func (sh *strictHandler) StopAdminPreview(ctx *gin.Context) {
+	var request StopAdminPreviewRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.StopAdminPreview(ctx, request.(StopAdminPreviewRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "StopAdminPreview")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(StopAdminPreviewResponseObject); ok {
+		if err := validResponse.VisitStopAdminPreviewResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminProducts operation middleware
+func (sh *strictHandler) ListAdminProducts(ctx *gin.Context, params ListAdminProductsParams) {
+	var request ListAdminProductsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminProducts(ctx, request.(ListAdminProductsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminProducts")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminProductsResponseObject); ok {
+		if err := validResponse.VisitListAdminProductsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // CreateProduct operation middleware
 func (sh *strictHandler) CreateProduct(ctx *gin.Context) {
 	var request CreateProductRequestObject
@@ -3379,6 +4078,33 @@ func (sh *strictHandler) DeleteProduct(ctx *gin.Context, id int) {
 	}
 }
 
+// GetAdminProduct operation middleware
+func (sh *strictHandler) GetAdminProduct(ctx *gin.Context, id int) {
+	var request GetAdminProductRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminProduct(ctx, request.(GetAdminProductRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminProduct")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminProductResponseObject); ok {
+		if err := validResponse.VisitGetAdminProductResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // UpdateProduct operation middleware
 func (sh *strictHandler) UpdateProduct(ctx *gin.Context, id int) {
 	var request UpdateProductRequestObject
@@ -3407,6 +4133,33 @@ func (sh *strictHandler) UpdateProduct(ctx *gin.Context, id int) {
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(UpdateProductResponseObject); ok {
 		if err := validResponse.VisitUpdateProductResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DiscardProductDraft operation middleware
+func (sh *strictHandler) DiscardProductDraft(ctx *gin.Context, id int) {
+	var request DiscardProductDraftRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DiscardProductDraft(ctx, request.(DiscardProductDraftRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DiscardProductDraft")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DiscardProductDraftResponseObject); ok {
+		if err := validResponse.VisitDiscardProductDraftResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -3512,6 +4265,33 @@ func (sh *strictHandler) DetachProductMedia(ctx *gin.Context, id int, mediaId st
 	}
 }
 
+// PublishProduct operation middleware
+func (sh *strictHandler) PublishProduct(ctx *gin.Context, id int) {
+	var request PublishProductRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PublishProduct(ctx, request.(PublishProductRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PublishProduct")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PublishProductResponseObject); ok {
+		if err := validResponse.VisitPublishProductResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // UpdateProductRelated operation middleware
 func (sh *strictHandler) UpdateProductRelated(ctx *gin.Context, id int) {
 	var request UpdateProductRelatedRequestObject
@@ -3540,6 +4320,33 @@ func (sh *strictHandler) UpdateProductRelated(ctx *gin.Context, id int) {
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(UpdateProductRelatedResponseObject); ok {
 		if err := validResponse.VisitUpdateProductRelatedResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UnpublishProduct operation middleware
+func (sh *strictHandler) UnpublishProduct(ctx *gin.Context, id int) {
+	var request UnpublishProductRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UnpublishProduct(ctx, request.(UnpublishProductRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UnpublishProduct")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UnpublishProductResponseObject); ok {
+		if err := validResponse.VisitUnpublishProductResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -3598,6 +4405,56 @@ func (sh *strictHandler) UpdateStorefrontSettings(ctx *gin.Context) {
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(UpdateStorefrontSettingsResponseObject); ok {
 		if err := validResponse.VisitUpdateStorefrontSettingsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DiscardStorefrontDraft operation middleware
+func (sh *strictHandler) DiscardStorefrontDraft(ctx *gin.Context) {
+	var request DiscardStorefrontDraftRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DiscardStorefrontDraft(ctx, request.(DiscardStorefrontDraftRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DiscardStorefrontDraft")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DiscardStorefrontDraftResponseObject); ok {
+		if err := validResponse.VisitDiscardStorefrontDraftResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PublishStorefrontSettings operation middleware
+func (sh *strictHandler) PublishStorefrontSettings(ctx *gin.Context) {
+	var request PublishStorefrontSettingsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PublishStorefrontSettings(ctx, request.(PublishStorefrontSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PublishStorefrontSettings")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PublishStorefrontSettingsResponseObject); ok {
+		if err := validResponse.VisitPublishStorefrontSettingsResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -4561,69 +5418,74 @@ func (sh *strictHandler) GetStorefrontSettings(ctx *gin.Context) {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

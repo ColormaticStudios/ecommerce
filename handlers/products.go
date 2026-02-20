@@ -38,13 +38,60 @@ func toContractRelatedProduct(product models.Product) apicontract.RelatedProduct
 	}
 }
 
+type PublicProduct struct {
+	Id              int                          `json:"id"`
+	Sku             string                       `json:"sku"`
+	Name            string                       `json:"name"`
+	Description     string                       `json:"description"`
+	Price           float64                      `json:"price"`
+	Stock           int                          `json:"stock"`
+	Images          []string                     `json:"images"`
+	CoverImage      *string                      `json:"cover_image,omitempty"`
+	RelatedProducts []apicontract.RelatedProduct `json:"related_products,omitempty"`
+	CreatedAt       time.Time                    `json:"created_at"`
+	UpdatedAt       time.Time                    `json:"updated_at"`
+	DeletedAt       *time.Time                   `json:"deleted_at,omitempty"`
+}
+
+type PublicProductPage struct {
+	Data       []PublicProduct        `json:"data"`
+	Pagination apicontract.Pagination `json:"pagination"`
+}
+
 func toContractProduct(product models.Product) apicontract.Product {
 	related := make([]apicontract.RelatedProduct, 0, len(product.Related))
 	for _, relatedProduct := range product.Related {
 		related = append(related, toContractRelatedProduct(relatedProduct))
 	}
 
+	hasDraft := productHasDraft(product)
+	published := productIsPubliclyVisible(product)
+
 	return apicontract.Product{
+		Id:              int(product.ID),
+		Sku:             product.SKU,
+		Name:            product.Name,
+		Description:     product.Description,
+		Price:           product.Price.Float64(),
+		Stock:           product.Stock,
+		Images:          product.Images,
+		CoverImage:      product.CoverImage,
+		RelatedProducts: related,
+		CreatedAt:       product.CreatedAt,
+		UpdatedAt:       product.UpdatedAt,
+		DeletedAt:       toContractDeletedAt(product.DeletedAt),
+		IsPublished:     &published,
+		HasDraftChanges: &hasDraft,
+		DraftUpdatedAt:  product.DraftUpdatedAt,
+	}
+}
+
+func toPublicProduct(product models.Product) PublicProduct {
+	related := make([]apicontract.RelatedProduct, 0, len(product.Related))
+	for _, relatedProduct := range product.Related {
+		related = append(related, toContractRelatedProduct(relatedProduct))
+	}
+	return PublicProduct{
 		Id:              int(product.ID),
 		Sku:             product.SKU,
 		Name:            product.Name,
@@ -71,7 +118,13 @@ func toContractProduct(product models.Product) apicontract.Product {
 //   - limit: items per page (default: 20, max: 100)
 func GetProducts(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		preview := isDraftPreviewActive(c)
 		query := db.Model(&models.Product{})
+		if preview {
+			query = query.Where("is_published = ? OR (draft_data IS NOT NULL AND draft_data <> '')", true)
+		} else {
+			query = query.Where("is_published = ?", true)
+		}
 
 		// Search by name if query parameter 'q' is present
 		if searchTerm := c.Query("q"); searchTerm != "" {
@@ -143,6 +196,16 @@ func GetProducts(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 		}
 
 		for i := range products {
+			if preview {
+				view, err := materializeAdminProduct(db, mediaService, products[i], false)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product draft"})
+					return
+				}
+				products[i] = view
+				continue
+			}
+
 			if mediaService != nil {
 				mediaURLs, err := mediaService.ProductMediaURLs(products[i].ID)
 				if err == nil && len(mediaURLs) > 0 {
@@ -157,8 +220,26 @@ func GetProducts(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 		}
 
 		contractProducts := make([]apicontract.Product, 0, len(products))
+		publicProducts := make([]PublicProduct, 0, len(products))
 		for _, product := range products {
-			contractProducts = append(contractProducts, toContractProduct(product))
+			if preview {
+				contractProducts = append(contractProducts, toContractProduct(product))
+				continue
+			}
+			publicProducts = append(publicProducts, toPublicProduct(product))
+		}
+
+		if !preview {
+			c.JSON(http.StatusOK, PublicProductPage{
+				Data: publicProducts,
+				Pagination: apicontract.Pagination{
+					Page:       page,
+					Limit:      limit,
+					Total:      int(total),
+					TotalPages: totalPages,
+				},
+			})
+			return
 		}
 
 		c.JSON(http.StatusOK, apicontract.ProductPage{
@@ -178,9 +259,32 @@ func GetProductByID(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var product models.Product
+		preview := isDraftPreviewActive(c)
+
+		if preview {
+			if err := db.Preload("Related").First(&product, id).Error; err != nil {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+				return
+			}
+			if !productIsPubliclyVisible(product) && !productHasDraft(product) {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+				return
+			}
+			view, err := materializeAdminProduct(db, mediaService, product, true)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product draft"})
+				return
+			}
+			c.JSON(http.StatusOK, toContractProduct(view))
+			return
+		}
 
 		// Preload "Related" items to populate the related_products field
-		if err := db.Preload("Related").First(&product, id).Error; err != nil {
+		if err := db.Preload("Related", "is_published = ?", true).First(&product, id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+			return
+		}
+		if !productIsPubliclyVisible(product) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}
@@ -210,6 +314,6 @@ func GetProductByID(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 			}
 		}
 
-		c.JSON(http.StatusOK, toContractProduct(product))
+		c.JSON(http.StatusOK, toPublicProduct(product))
 	}
 }

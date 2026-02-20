@@ -135,6 +135,10 @@ func CreateOrder(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Product not found", "product_id": productID})
 				return
 			}
+			if !productIsPubliclyVisible(product) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Product not found", "product_id": productID})
+				return
+			}
 
 			// Check stock availability
 			if product.Stock < quantity {

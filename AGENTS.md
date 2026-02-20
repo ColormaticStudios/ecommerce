@@ -25,9 +25,11 @@
 - Frontend API type generation only: `cd frontend && bun run gen:api`
 
 ## Formatting Commands
+- Note: always format after editing a source code file
 - Backend format: `gofmt -w .` (or target specific paths, e.g. `gofmt -w handlers models internal`).
 - Optional backend import cleanup + formatting: `go fmt ./...`
 - Frontend format: `cd frontend && bun run format`
+- Format a specific frontend file: `cd frontend && bun x prettier -w <file path>`
 
 ## OpenAPI Contract Workflow
 - Update `api/openapi.yaml` first whenever request/response shapes change.

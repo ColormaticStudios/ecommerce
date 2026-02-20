@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { HTMLButtonAttributes } from "svelte/elements";
 
-	type IconButtonVariant = "neutral" | "danger" | "primary";
+	type IconButtonVariant = "neutral" | "danger" | "primary" | "success";
 	type IconButtonSize = "sm" | "md" | "lg";
 
 	interface Props extends HTMLButtonAttributes {
@@ -45,6 +45,8 @@
 				return "border border-red-300 dark:border-red-700";
 			case "primary":
 				return "border border-blue-300 dark:border-blue-700";
+			case "success":
+				return "border border-emerald-300 dark:border-emerald-700";
 			default:
 				return "border border-gray-300 dark:border-gray-700";
 		}
@@ -56,6 +58,8 @@
 				return "text-red-600 hover:bg-red-100 focus-visible:outline-red-500 dark:text-red-300 dark:hover:bg-red-900/50";
 			case "primary":
 				return "text-blue-600 hover:bg-blue-100 focus-visible:outline-blue-500 dark:text-blue-300 dark:hover:bg-blue-900/50";
+			case "success":
+				return "text-emerald-600 hover:bg-emerald-100 focus-visible:outline-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-900/50";
 			default:
 				return "text-gray-700 hover:bg-gray-100 focus-visible:outline-gray-500 dark:text-gray-200 dark:hover:bg-gray-800";
 		}

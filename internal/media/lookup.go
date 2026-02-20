@@ -7,9 +7,13 @@ import (
 )
 
 func (s *Service) ProductMediaURLs(productID uint) ([]string, error) {
+	return s.ProductMediaURLsByRole(productID, RoleProductImage)
+}
+
+func (s *Service) ProductMediaURLsByRole(productID uint, role string) ([]string, error) {
 	var refs []models.MediaReference
 	if err := s.DB.Where("owner_type = ? AND owner_id = ? AND role = ?",
-		OwnerTypeProduct, productID, RoleProductImage).
+		OwnerTypeProduct, productID, role).
 		Order("position asc").
 		Order("created_at asc").
 		Order("id asc").

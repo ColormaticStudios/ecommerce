@@ -10,7 +10,7 @@ function hasAuthenticatedContext(event: Pick<RequestEvent, "request">): boolean 
 	}
 
 	const cookieHeader = event.request.headers.get("cookie") ?? "";
-	return cookieHeader.includes("session_token=");
+	return cookieHeader.includes("session_token=") || cookieHeader.includes("draft_preview_token=");
 }
 
 export function setPublicPageCacheHeaders(

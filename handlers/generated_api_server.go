@@ -69,6 +69,10 @@ func (s *GeneratedAPIServer) runProtected(c *gin.Context, requiredRole string, h
 	handler(c)
 }
 
+func (s *GeneratedAPIServer) applyDraftPreview(c *gin.Context) {
+	_ = enableDraftPreviewContext(c, s.jwtSecret)
+}
+
 func (s *GeneratedAPIServer) ListAdminOrders(c *gin.Context, params apicontract.ListAdminOrdersParams) {
 	_ = params
 	s.runProtected(c, "admin", GetAllOrders(s.db, s.mediaService))
@@ -86,6 +90,16 @@ func (s *GeneratedAPIServer) UpdateOrderStatus(c *gin.Context, id int) {
 
 func (s *GeneratedAPIServer) CreateProduct(c *gin.Context) {
 	s.runProtected(c, "admin", CreateProduct(s.db))
+}
+
+func (s *GeneratedAPIServer) ListAdminProducts(c *gin.Context, params apicontract.ListAdminProductsParams) {
+	_ = params
+	s.runProtected(c, "admin", ListAdminProducts(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) GetAdminProduct(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", GetAdminProductByID(s.db, s.mediaService))
 }
 
 func (s *GeneratedAPIServer) DeleteProduct(c *gin.Context, id int) {
@@ -119,12 +133,47 @@ func (s *GeneratedAPIServer) UpdateProductRelated(c *gin.Context, id int) {
 	s.runProtected(c, "admin", UpdateProductRelated(s.db, s.mediaService))
 }
 
+func (s *GeneratedAPIServer) PublishProduct(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", PublishProduct(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) UnpublishProduct(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", UnpublishProduct(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) DiscardProductDraft(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", DiscardProductDraft(s.db, s.mediaService))
+}
+
 func (s *GeneratedAPIServer) GetAdminStorefrontSettings(c *gin.Context) {
 	s.runProtected(c, "admin", GetAdminStorefrontSettings(s.db, s.mediaService))
 }
 
 func (s *GeneratedAPIServer) UpdateStorefrontSettings(c *gin.Context) {
 	s.runProtected(c, "admin", UpsertStorefrontSettings(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) PublishStorefrontSettings(c *gin.Context) {
+	s.runProtected(c, "admin", PublishStorefrontSettings(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) DiscardStorefrontDraft(c *gin.Context) {
+	s.runProtected(c, "admin", DiscardStorefrontDraft(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) GetAdminPreview(c *gin.Context) {
+	s.runProtected(c, "admin", GetDraftPreviewSessionStatus(s.jwtSecret, s.authCookieCfg))
+}
+
+func (s *GeneratedAPIServer) StartAdminPreview(c *gin.Context) {
+	s.runProtected(c, "admin", StartDraftPreviewSession(s.jwtSecret, s.authCookieCfg, defaultDraftPreviewTTL))
+}
+
+func (s *GeneratedAPIServer) StopAdminPreview(c *gin.Context) {
+	s.runProtected(c, "admin", StopDraftPreviewSession(s.authCookieCfg))
 }
 
 func (s *GeneratedAPIServer) ListUsers(c *gin.Context, params apicontract.ListUsersParams) {
@@ -291,14 +340,17 @@ func (s *GeneratedAPIServer) PatchMediaUpload(c *gin.Context, path string) {
 
 func (s *GeneratedAPIServer) ListProducts(c *gin.Context, params apicontract.ListProductsParams) {
 	_ = params
+	s.applyDraftPreview(c)
 	GetProducts(s.db, s.mediaService)(c)
 }
 
 func (s *GeneratedAPIServer) GetProduct(c *gin.Context, id int) {
 	_ = id
+	s.applyDraftPreview(c)
 	GetProductByID(s.db, s.mediaService)(c)
 }
 
 func (s *GeneratedAPIServer) GetStorefrontSettings(c *gin.Context) {
+	s.applyDraftPreview(c)
 	GetStorefrontSettings(s.db, s.mediaService)(c)
 }
