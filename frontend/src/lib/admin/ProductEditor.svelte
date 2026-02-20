@@ -134,7 +134,13 @@
 	const hasUnsavedChanges = $derived(currentSnapshot !== savedSnapshot);
 
 	let loadSequence = 0;
-	let lastLoadedId = $state<number | null>(null);
+	let lastLoadedId: number | null = null;
+	let activeSelectionId: number | null = null;
+	let lastSeedSignature = "";
+	let lastDirtyNotification: boolean | null = null;
+	let lastSaveActionDirty: boolean | null = null;
+	let lastDirtyHandler: Props["onDirtyChange"] = undefined;
+	let lastSaveHandler: Props["onSaveRequestChange"] = undefined;
 
 	function normalizedNumber(value: string): number | null | "invalid" {
 		const trimmed = String(value ?? "").trim();
@@ -584,11 +590,17 @@
 	}
 
 	$effect(() => {
-		onDirtyChange?.(hasUnsavedChanges);
-	});
-
-	$effect(() => {
-		onSaveRequestChange?.(hasUnsavedChanges ? saveAllPendingChanges : null);
+		const dirty = hasUnsavedChanges;
+		if (onDirtyChange !== lastDirtyHandler || dirty !== lastDirtyNotification) {
+			lastDirtyHandler = onDirtyChange;
+			lastDirtyNotification = dirty;
+			onDirtyChange?.(dirty);
+		}
+		if (onSaveRequestChange !== lastSaveHandler || dirty !== lastSaveActionDirty) {
+			lastSaveHandler = onSaveRequestChange;
+			lastSaveActionDirty = dirty;
+			onSaveRequestChange?.(dirty ? saveAllPendingChanges : null);
+		}
 	});
 
 	onDestroy(() => {
@@ -600,23 +612,33 @@
 		if (resolvedProductId) {
 			const seed =
 				initialProduct && initialProduct.id === resolvedProductId ? initialProduct : null;
-			if (seed && (!product || product.id !== seed.id)) {
+			const seedSignature = seed ? `${seed.id}:${seed.updated_at.getTime()}` : "";
+			if (resolvedProductId !== activeSelectionId) {
+				activeSelectionId = resolvedProductId;
+				lastSeedSignature = "";
+			}
+			if (seed && seedSignature !== lastSeedSignature) {
 				product = seed;
 				hydrateForm(seed);
 				captureSavedSnapshot();
+				lastSeedSignature = seedSignature;
 			}
 			if (resolvedProductId !== lastLoadedId) {
 				lastLoadedId = resolvedProductId;
 				void loadProduct(resolvedProductId, seed);
 			}
 		} else {
-			loadSequence += 1;
-			loading = false;
-			product = null;
-			resetForm();
-			clearAllMessages();
-			lastLoadedId = null;
-			captureSavedSnapshot();
+			if (activeSelectionId !== null || savedSnapshot === "") {
+				loadSequence += 1;
+				loading = false;
+				product = null;
+				resetForm();
+				clearAllMessages();
+				lastLoadedId = null;
+				lastSeedSignature = "";
+				activeSelectionId = null;
+				captureSavedSnapshot();
+			}
 		}
 	});
 </script>

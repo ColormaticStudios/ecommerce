@@ -43,6 +43,13 @@
 - Svelte/TS: use Prettier + ESLint defaults; component files in `PascalCase` (e.g., `NumberInput.svelte`), utility modules in lowercase (`api.ts`, `utils.ts`).
 - Keep handlers thin where possible; shared logic should move to reusable helpers/services.
 
+## Svelte Effect Safety
+- Keep `$effect` blocks as pure state synchronization whenever possible: derive from reactive inputs and avoid side effects.
+- Do not call async functions from `$effect` if they can write to state the same effect reads (directly or indirectly).
+- Prefer triggering async work from explicit events (`onMount`, user actions, dedicated loader functions) instead of effect bodies.
+- Avoid helper calls inside `$effect` when those helpers mutate state that contributes to the same effect dependency graph.
+- If an effect must write state, ensure the writes target state that does not feed back into that same effect’s dependencies.
+
 ## Testing Guidelines
 - Backend tests use Go’s `testing` package and live next to source (`*_test.go`), e.g., `handlers/orders_test.go`.
 - Prioritize handler behavior, auth/middleware paths, and media edge cases.

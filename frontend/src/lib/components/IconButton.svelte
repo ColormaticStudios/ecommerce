@@ -23,7 +23,7 @@
 	}: Props = $props();
 
 	const baseClasses =
-		"inline-flex cursor-pointer items-center justify-center rounded-full bg-transparent transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+		"inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full bg-transparent transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
 	const sizeClasses = $derived.by(() => {
 		switch (size) {

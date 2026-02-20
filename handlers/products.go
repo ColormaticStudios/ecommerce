@@ -111,7 +111,7 @@ func GetProducts(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 
 		// Pagination
 		page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 
 		if page < 1 {
 			page = 1

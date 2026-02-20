@@ -17,6 +17,7 @@
 	let cartCount = $state<number | null>(null);
 	let cartCountLoading = $state(false);
 	let cartCountLoaded = $state(false);
+	let lastCartUserId = $state<number | null>(null);
 	const showNavigationSpinner = $derived(Boolean(navigating.to));
 
 	async function refreshCartCount() {
@@ -24,6 +25,7 @@
 		if (!authenticated) {
 			cartCount = null;
 			cartCountLoaded = true;
+			lastCartUserId = null;
 			return;
 		}
 		cartCountLoading = true;
@@ -39,8 +41,21 @@
 		}
 	}
 
-	onMount(() => {
+		onMount(() => {
 		void userStore.load(api);
+		const unsubscribeUser = userStore.subscribe((user) => {
+			if (!user) {
+				cartCount = null;
+				cartCountLoaded = false;
+				cartCountLoading = false;
+				lastCartUserId = null;
+				return;
+			}
+			if ((!cartCountLoaded && !cartCountLoading) || lastCartUserId !== user.id) {
+				lastCartUserId = user.id;
+				void refreshCartCount();
+			}
+		});
 
 		const handleClick = (event: MouseEvent) => {
 			if (!menuOpen || !menuRef) {
@@ -62,21 +77,11 @@
 		window.addEventListener("cart:updated", refreshCartCount);
 
 		return () => {
+			unsubscribeUser();
 			window.removeEventListener("click", handleClick);
 			window.removeEventListener("keydown", handleKeydown);
 			window.removeEventListener("cart:updated", refreshCartCount);
 		};
-	});
-
-	$effect(() => {
-		if ($userStore) {
-			if (!cartCountLoaded && !cartCountLoading) {
-				void refreshCartCount();
-			}
-		} else {
-			cartCount = null;
-			cartCountLoaded = false;
-		}
 	});
 
 	interface Props {

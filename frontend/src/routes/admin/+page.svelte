@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
+	import AdminPaginationControls from "$lib/admin/AdminPaginationControls.svelte";
+	import AdminSearchForm from "$lib/admin/AdminSearchForm.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
-	import TextInput from "$lib/components/TextInput.svelte";
 	import { type OrderModel, type ProductModel, type UserModel } from "$lib/models";
 	import { formatPrice } from "$lib/utils";
 	import { getContext, onMount } from "svelte";
@@ -51,10 +52,22 @@
 	let products = $state<ProductModel[]>([]);
 	let productPage = $state(1);
 	let productTotalPages = $state(1);
-	let productLimit = $state(20);
-	const productLimitOptions = [10, 20, 50, 100];
+	let productLimit = $state(10);
+	let orderLimit = $state(10);
+	let userLimit = $state(10);
+	const limitOptions = [10, 20, 50, 100];
+	let orderQuery = $state("");
+	let orderPage = $state(1);
+	let orderTotalPages = $state(1);
+	let orderTotal = $state(0);
+	let userQuery = $state("");
+	let userPage = $state(1);
+	let userTotalPages = $state(1);
+	let userTotal = $state(0);
 	let orders = $state<OrderModel[]>([]);
 	let users = $state<UserModel[]>([]);
+	let orderUsersById = $state<Record<number, UserModel>>({});
+	let unresolvedOrderUserIds = $state<Record<number, true>>({});
 
 	let productsLoading = $state(false);
 	let ordersLoading = $state(false);
@@ -65,6 +78,8 @@
 		selectedProductId ? (products.find((item) => item.id === selectedProductId) ?? null) : null
 	);
 	const hasProductSearch = $derived(productQuery.trim().length > 0);
+	const hasOrderSearch = $derived(orderQuery.trim().length > 0);
+	const hasUserSearch = $derived(userQuery.trim().length > 0);
 	const unsavedContexts = $derived.by(() => {
 		const contexts: string[] = [];
 		if (productDirty) {
@@ -141,6 +156,76 @@
 		noticeMessage = message;
 	}
 
+	function toUserDirectory(usersToIndex: UserModel[]): Record<number, UserModel> {
+		const index: Record<number, UserModel> = {};
+		for (const user of usersToIndex) {
+			index[user.id] = user;
+		}
+		return index;
+	}
+
+	function mergeOrderUsers(usersToMerge: UserModel[]) {
+		if (usersToMerge.length === 0) {
+			return;
+		}
+		const next = { ...orderUsersById };
+		for (const user of usersToMerge) {
+			next[user.id] = user;
+		}
+		orderUsersById = next;
+	}
+
+	function getOrderCustomerLabel(order: OrderModel): string {
+		const user = orderUsersById[order.user_id];
+		if (!user) {
+			return `Customer #${order.user_id}`;
+		}
+		if (user.name && user.name.trim().length > 0) {
+			return `${user.name} (@${user.username})`;
+		}
+		return `@${user.username}`;
+	}
+
+	async function hydrateOrderUsers(orderList: OrderModel[]) {
+		let missing: number[] = [];
+		for (const order of orderList) {
+			if (
+				!orderUsersById[order.user_id] &&
+				!unresolvedOrderUserIds[order.user_id] &&
+				!missing.includes(order.user_id)
+			) {
+				missing = [...missing, order.user_id];
+			}
+		}
+		if (missing.length === 0) {
+			return;
+		}
+
+		let scanPage = 1;
+		let scanTotalPages = 1;
+		const scanLimit = 100;
+		try {
+			while (missing.length > 0 && scanPage <= scanTotalPages) {
+				const response = await api.listUsers({ page: scanPage, limit: scanLimit });
+				mergeOrderUsers(response.data);
+				for (const user of response.data) {
+					missing = missing.filter((id) => id !== user.id);
+				}
+				scanTotalPages = Math.max(1, response.pagination.total_pages);
+				scanPage += 1;
+			}
+			if (missing.length > 0) {
+				const unresolved = { ...unresolvedOrderUserIds };
+				for (const id of missing) {
+					unresolved[id] = true;
+				}
+				unresolvedOrderUserIds = unresolved;
+			}
+		} catch (err) {
+			console.error(err);
+		}
+	}
+
 	async function loadProducts() {
 		productsLoading = true;
 		clearMessages();
@@ -161,11 +246,21 @@
 	}
 
 	async function loadOrders() {
+		const nextPage = orderPage;
+		const nextLimit = orderLimit;
 		ordersLoading = true;
 		clearMessages();
 		try {
-			const response = await api.listAdminOrders({ page: 1, limit: 50 });
+			const response = await api.listAdminOrders({
+				page: nextPage,
+				limit: nextLimit,
+				q: orderQuery.trim() || undefined,
+			});
 			orders = response.data;
+			orderPage = Math.max(1, response.pagination.page);
+			orderTotalPages = Math.max(1, response.pagination.total_pages);
+			orderTotal = response.pagination.total;
+			await hydrateOrderUsers(response.data);
 		} catch (err) {
 			console.error(err);
 			setNotice("error", "Unable to load orders.");
@@ -175,11 +270,21 @@
 	}
 
 	async function loadUsers() {
+		const nextPage = userPage;
+		const nextLimit = userLimit;
 		usersLoading = true;
 		clearMessages();
 		try {
-			const response = await api.listUsers({ page: 1, limit: 50 });
+			const response = await api.listUsers({
+				page: nextPage,
+				limit: nextLimit,
+				q: userQuery.trim() || undefined,
+			});
 			users = response.data;
+			mergeOrderUsers(response.data);
+			userPage = Math.max(1, response.pagination.page);
+			userTotalPages = Math.max(1, response.pagination.total_pages);
+			userTotal = response.pagination.total;
 		} catch (err) {
 			console.error(err);
 			setNotice("error", "Unable to load users.");
@@ -201,12 +306,52 @@
 		void loadProducts();
 	}
 
-	function updateProductLimit(event: Event) {
-		const target = event.target as HTMLSelectElement;
-		const nextLimit = Number(target.value);
+	function updateProductLimit(nextLimit: number) {
 		productLimit = Number.isNaN(nextLimit) ? 20 : nextLimit;
 		productPage = 1;
 		void loadProducts();
+	}
+
+	async function changeOrderPage(nextPage: number) {
+		if (nextPage < 1 || nextPage > orderTotalPages || nextPage === orderPage) {
+			return;
+		}
+		orderPage = nextPage;
+		await loadOrders();
+	}
+
+	function updateOrderLimit(nextLimit: number) {
+		orderLimit = Number.isNaN(nextLimit) ? 20 : nextLimit;
+		orderPage = 1;
+		void loadOrders();
+	}
+
+	function applyOrderSearch() {
+		orderPage = 1;
+		void loadOrders();
+	}
+
+	async function changeUserPage(nextPage: number) {
+		if (nextPage < 1 || nextPage > userTotalPages || nextPage === userPage) {
+			return;
+		}
+		userPage = nextPage;
+		await loadUsers();
+	}
+
+	function updateUserLimit(nextLimit: number) {
+		userLimit = Number.isNaN(nextLimit) ? 20 : nextLimit;
+		userPage = 1;
+		void loadUsers();
+	}
+
+	function applyUserSearch() {
+		userPage = 1;
+		void loadUsers();
+	}
+
+	function formatDateTime(value: Date) {
+		return value.toLocaleString();
 	}
 
 	function handleProductCreated(product: ProductModel) {
@@ -287,6 +432,29 @@
 			setNotice("success", "Order status updated.");
 		} catch (err) {
 			console.error(err);
+			const error = err as {
+				status?: number;
+				body?: {
+					error?: string;
+					product_name?: string;
+					available?: number;
+					requested?: number;
+				};
+			};
+			if (error.status === 400 && error.body?.error === "Insufficient stock") {
+				const productName = error.body.product_name || "A product";
+				const available = error.body.available ?? 0;
+				const requested = error.body.requested ?? 0;
+				setNotice(
+					"error",
+					`Cannot mark as PAID: ${productName} has ${available} in stock (requested ${requested}).`
+				);
+				return;
+			}
+			if (error.status === 400 && error.body?.error) {
+				setNotice("error", error.body.error);
+				return;
+			}
 			setNotice("error", "Unable to update order.");
 		}
 	}
@@ -296,6 +464,7 @@
 		try {
 			const updated = await api.updateUserRole(userId, { role });
 			users = users.map((user) => (user.id === updated.id ? updated : user));
+			mergeOrderUsers([updated]);
 			setNotice("success", "User role updated.");
 		} catch (err) {
 			console.error(err);
@@ -308,6 +477,7 @@
 		if (initialTab) {
 			setActiveTab(initialTab, false);
 		}
+		void hydrateOrderUsers(data.orders);
 
 		const handlePopState = () => {
 			const nextTab = tabFromURL();
@@ -332,7 +502,16 @@
 		productTotalPages = data.productTotalPages;
 		productLimit = data.productLimit;
 		orders = data.orders;
+		orderPage = data.orderPage;
+		orderTotalPages = data.orderTotalPages;
+		orderLimit = data.orderLimit;
+		orderTotal = data.orderTotal;
 		users = data.users;
+		orderUsersById = toUserDirectory(data.users);
+		userPage = data.userPage;
+		userTotalPages = data.userTotalPages;
+		userLimit = data.userLimit;
+		userTotal = data.userTotal;
 		if (data.errorMessage) {
 			noticeTone = "error";
 			noticeMessage = data.errorMessage;
@@ -427,22 +606,16 @@
 				>
 					<div class="flex flex-wrap items-center justify-between gap-3">
 						<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Catalog</h2>
-						<form
-							class="flex flex-1 items-center gap-2 sm:max-w-xs"
-							onsubmit={(event) => {
-								event.preventDefault();
-								applyProductSearch();
-							}}
-						>
-							<TextInput type="search" placeholder="Search products" bind:value={productQuery} />
-							<button
-								class="aspect-square cursor-pointer rounded-md border border-gray-200 p-2 dark:border-gray-700"
-								type="submit"
-								aria-label="Search"
-							>
-								<i class="bi bi-search"></i>
-							</button>
-						</form>
+						<AdminSearchForm
+							fullWidth={true}
+							class="sm:max-w-xs"
+							placeholder="Search products"
+							bind:value={productQuery}
+							onSearch={applyProductSearch}
+							onRefresh={loadProducts}
+							refreshing={productsLoading}
+							disabled={productsLoading}
+						/>
 					</div>
 
 					{#if products.length === 0 && hasProductSearch}
@@ -499,46 +672,16 @@
 									</IconButton>
 								</div>
 							{/each}
-							<div
-								class="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-gray-500 dark:text-gray-400"
-							>
-								{#if productsLoading}
-									<span class="text-xs text-gray-500 dark:text-gray-400">Refreshing...</span>
-								{/if}
-								<div class="flex items-center gap-2">
-									<span>Per page</span>
-									<select
-										class="cursor-pointer rounded-md border border-gray-300 bg-gray-100 px-2 py-1 text-xs dark:border-gray-700 dark:bg-gray-800"
-										value={productLimit}
-										onchange={updateProductLimit}
-									>
-										{#each productLimitOptions as option, i (i)}
-											<option value={option}>{option}</option>
-										{/each}
-									</select>
-								</div>
-								<span>
-									Page {productPage} of {productTotalPages}
-								</span>
-								<div class="flex items-center gap-2">
-									<Button
-										variant="regular"
-										type="button"
-										disabled={productPage <= 1}
-										onclick={() => changeProductPage(productPage - 1)}
-									>
-										Prev
-									</Button>
-									<Button
-										variant="regular"
-										type="button"
-										disabled={productPage >= productTotalPages}
-										onclick={() => changeProductPage(productPage + 1)}
-									>
-										Next
-									</Button>
-								</div>
-							</div>
+							<AdminPaginationControls
+								page={productPage}
+								totalPages={productTotalPages}
+								limit={productLimit}
+								limitOptions={limitOptions}
+								loading={productsLoading}
+								onLimitChange={updateProductLimit}
+								onPrev={() => void changeProductPage(productPage - 1)}
+								onNext={() => void changeProductPage(productPage + 1)}
+							/>
 						</div>
 					{/if}
 				</div>
@@ -565,26 +708,49 @@
 			<div
 				class="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 			>
-				<div class="flex items-center justify-between">
+				<div class="flex flex-wrap items-center justify-between gap-3">
 					<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Orders</h2>
-					<Button variant="regular" type="button" onclick={loadOrders} disabled={ordersLoading}>
-						{ordersLoading ? "Refreshing..." : "Refresh"}
-					</Button>
+					<div class="flex items-center gap-2">
+						<AdminSearchForm
+							placeholder="Search ID, user, status, address, item..."
+							inputClass="w-72"
+							bind:value={orderQuery}
+							onSearch={applyOrderSearch}
+							onRefresh={loadOrders}
+							refreshing={ordersLoading}
+							disabled={ordersLoading}
+						/>
+					</div>
 				</div>
-				{#if orders.length === 0}
+				{#if orders.length === 0 && hasOrderSearch}
+					<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">
+						No orders match "{orderQuery}".
+					</p>
+				{:else if orders.length === 0}
 					<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">No orders yet.</p>
 				{:else}
 					<div class="mt-6 space-y-4">
 						{#each orders as order (order.id)}
 							<div class="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
 								<div class="flex flex-wrap items-start justify-between gap-4">
-									<div>
+									<div class="space-y-1">
 										<p class="text-sm text-gray-500 dark:text-gray-400">Order #{order.id}</p>
 										<p class="text-lg font-semibold text-gray-900 dark:text-gray-100">
 											{formatPrice(order.total)}
 										</p>
 										<p class="text-xs text-gray-500 dark:text-gray-400">
-											{order.created_at.toLocaleDateString()}
+											Placed {formatDateTime(order.created_at)}
+										</p>
+										<p class="text-xs text-gray-500 dark:text-gray-400">
+											{getOrderCustomerLabel(order)} · {order.items.length} item{order.items.length === 1
+												? ""
+												: "s"}
+										</p>
+										<p class="text-xs text-gray-500 dark:text-gray-400">
+											Payment {order.payment_method_display || "N/A"}
+										</p>
+										<p class="text-xs text-gray-500 dark:text-gray-400">
+											Updated {formatDateTime(order.updated_at)}
 										</p>
 									</div>
 									<div class="flex flex-col items-end gap-2">
@@ -602,6 +768,7 @@
 										<div class="flex gap-2">
 											<Button
 												variant="regular"
+												size="small"
 												type="button"
 												onclick={() => updateOrder(order.id, "PENDING")}
 											>
@@ -609,6 +776,7 @@
 											</Button>
 											<Button
 												variant="regular"
+												size="small"
 												type="button"
 												onclick={() => updateOrder(order.id, "PAID")}
 											>
@@ -616,6 +784,7 @@
 											</Button>
 											<Button
 												variant="regular"
+												size="small"
 												type="button"
 												onclick={() => updateOrder(order.id, "FAILED")}
 											>
@@ -624,8 +793,40 @@
 										</div>
 									</div>
 								</div>
+								{#if order.shipping_address_pretty}
+									<p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+										Ship to: {order.shipping_address_pretty}
+									</p>
+								{/if}
+								<details class="mt-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-800/50">
+									<summary class="cursor-pointer text-xs font-semibold tracking-[0.08em] text-gray-600 uppercase dark:text-gray-300">
+										Order items
+									</summary>
+									<div class="mt-2 space-y-2">
+										{#each order.items as item (item.id)}
+											<div
+												class="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-700 dark:text-gray-200"
+											>
+												<p>
+													{item.product.name} ({item.product.sku}) x {item.quantity}
+												</p>
+												<p class="font-semibold">{formatPrice(item.price)}</p>
+											</div>
+										{/each}
+									</div>
+								</details>
 							</div>
 						{/each}
+						<AdminPaginationControls
+							page={orderPage}
+							totalPages={orderTotalPages}
+							totalItems={orderTotal}
+							limit={orderLimit}
+							limitOptions={limitOptions}
+							onLimitChange={updateOrderLimit}
+							onPrev={() => void changeOrderPage(orderPage - 1)}
+							onNext={() => void changeOrderPage(orderPage + 1)}
+						/>
 					</div>
 				{/if}
 			</div>
@@ -635,27 +836,63 @@
 			<div
 				class="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 			>
-				<div class="flex items-center justify-between">
+				<div class="flex flex-wrap items-center justify-between gap-3">
 					<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Users</h2>
-					<Button variant="regular" type="button" onclick={loadUsers} disabled={usersLoading}>
-						{usersLoading ? "Refreshing..." : "Refresh"}
-					</Button>
+					<div class="flex items-center gap-2">
+						<AdminSearchForm
+							placeholder="Search ID, username, email, role..."
+							inputClass="w-72"
+							bind:value={userQuery}
+							onSearch={applyUserSearch}
+							onRefresh={loadUsers}
+							refreshing={usersLoading}
+							disabled={usersLoading}
+						/>
+					</div>
 				</div>
-				{#if users.length === 0}
+				{#if users.length === 0 && hasUserSearch}
+					<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">
+						No users match "{userQuery}".
+					</p>
+				{:else if users.length === 0}
 					<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">No users found.</p>
 				{:else}
 					<div class="mt-6 space-y-4">
 						{#each users as user (user.id)}
 							<div
-								class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 text-sm dark:border-gray-800"
+								class="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-gray-200 p-4 text-sm dark:border-gray-800"
 							>
-								<div>
-									<p class="font-semibold text-gray-900 dark:text-gray-100">
-										{user.name || user.username}
+								<div class="space-y-1">
+									<p class="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
+										<span>{user.name || user.username}</span>
+										{#if user.role === "admin"}
+											<span
+												class="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold tracking-[0.08em] text-sky-700 uppercase dark:bg-sky-900/40 dark:text-sky-200"
+												title="Admin"
+												aria-label="Admin user"
+											>
+												<i class="bi bi-shield-fill-check mr-1"></i>
+												Admin
+											</span>
+										{/if}
 									</p>
 									<p class="text-xs text-gray-500 dark:text-gray-400">
 										@{user.username} · {user.email}
 									</p>
+									<p class="text-xs text-gray-500 dark:text-gray-400">
+										ID {user.id} · Currency {user.currency}
+									</p>
+									<p class="text-xs text-gray-500 dark:text-gray-400">
+										Created {formatDateTime(user.created_at)} · Updated {formatDateTime(user.updated_at)}
+									</p>
+									<p class="break-all text-xs text-gray-500 dark:text-gray-400">
+										Subject {user.subject}
+									</p>
+									{#if user.deleted_at}
+										<p class="text-xs font-semibold text-red-600 dark:text-red-300">
+											Deleted {formatDateTime(user.deleted_at)}
+										</p>
+									{/if}
 								</div>
 								<div class="flex items-center gap-3">
 									<span class="text-xs tracking-[0.2em] text-gray-500 uppercase">Role</span>
@@ -671,6 +908,16 @@
 								</div>
 							</div>
 						{/each}
+						<AdminPaginationControls
+							page={userPage}
+							totalPages={userTotalPages}
+							totalItems={userTotal}
+							limit={userLimit}
+							limitOptions={limitOptions}
+							onLimitChange={updateUserLimit}
+							onPrev={() => void changeUserPage(userPage - 1)}
+							onNext={() => void changeUserPage(userPage + 1)}
+						/>
 					</div>
 				{/if}
 			</div>

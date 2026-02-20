@@ -854,6 +854,10 @@ paths:
             type: integer
             minimum: 1
             maximum: 100
+        - in: query
+          name: q
+          schema:
+            type: string
       responses:
         '200':
           description: Orders page
@@ -922,6 +926,10 @@ paths:
             type: integer
             minimum: 1
             maximum: 100
+        - in: query
+          name: q
+          schema:
+            type: string
       responses:
         '200':
           description: Users page

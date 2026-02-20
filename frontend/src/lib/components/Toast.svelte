@@ -11,7 +11,7 @@
 
 	const toneClasses = {
 		neutral:
-			"border-slate-300 bg-slate-100 text-slate-900 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-100",
+			"border-gray-300 bg-gray-100 text-gray-900 dark:border-gray-700 dark:bg-gray-900/90 dark:text-gray-100",
 		success:
 			"border-emerald-300 bg-emerald-100 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-900/80 dark:text-emerald-100",
 		error:

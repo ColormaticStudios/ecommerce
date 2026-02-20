@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"ecommerce/internal/media"
 	"ecommerce/models"
@@ -106,7 +107,8 @@ func UpdateProfile(db *gorm.DB) gin.HandlerFunc {
 func GetAllUsers(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+		searchTerm := strings.TrimSpace(c.Query("q"))
 		if page < 1 {
 			page = 1
 		}
@@ -119,6 +121,18 @@ func GetAllUsers(db *gorm.DB) gin.HandlerFunc {
 		offset := (page - 1) * limit
 
 		query := db.Model(&models.User{})
+		if searchTerm != "" {
+			like := "%" + strings.ToLower(searchTerm) + "%"
+			query = query.Where(
+				`CAST(id AS TEXT) LIKE ? OR
+				 LOWER(username) LIKE ? OR
+				 LOWER(email) LIKE ? OR
+				 LOWER(COALESCE(name, '')) LIKE ? OR
+				 LOWER(subject) LIKE ? OR
+				 LOWER(role) LIKE ?`,
+				like, like, like, like, like, like,
+			)
+		}
 		var total int64
 		if err := query.Count(&total).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
@@ -126,7 +140,7 @@ func GetAllUsers(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var users []models.User
-		if err := query.Offset(offset).Limit(limit).Find(&users).Error; err != nil {
+		if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&users).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
 			return
 		}

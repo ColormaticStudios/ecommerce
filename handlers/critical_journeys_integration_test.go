@@ -130,9 +130,16 @@ func TestCriticalJourney_RegisterCartOrderAndPayPersistsState(t *testing.T) {
 	}, customerToken)
 	require.Equal(t, http.StatusOK, payResp.Code)
 	payBody := decodeJSON[map[string]any](t, payResp)
-	assert.Equal(t, "Payment processed successfully", payBody["message"])
+	assert.Equal(t, "Order submitted and pending confirmation", payBody["message"])
+	repeatPayResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/me/orders/%d/pay", order.ID), map[string]any{
+		"payment_method_id": savedPayment.ID,
+		"address_id":        savedAddress.ID,
+	}, customerToken)
+	require.Equal(t, http.StatusBadRequest, repeatPayResp.Code)
+	repeatPayBody := decodeJSON[map[string]any](t, repeatPayResp)
+	assert.Equal(t, "Order payment already submitted", repeatPayBody["error"])
 
-	ordersResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/orders?status=PAID&page=1&limit=20", nil, customerToken)
+	ordersResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/orders?status=PENDING&page=1&limit=20", nil, customerToken)
 	require.Equal(t, http.StatusOK, ordersResp.Code)
 	ordersBody := decodeJSON[map[string]any](t, ordersResp)
 	ordersRaw, ok := ordersBody["data"].([]any)
@@ -141,13 +148,13 @@ func TestCriticalJourney_RegisterCartOrderAndPayPersistsState(t *testing.T) {
 
 	var reloadedOrder models.Order
 	require.NoError(t, db.Preload("Items").First(&reloadedOrder, order.ID).Error)
-	assert.Equal(t, models.StatusPaid, reloadedOrder.Status)
+	assert.Equal(t, models.StatusPending, reloadedOrder.Status)
 	assert.Contains(t, reloadedOrder.PaymentMethodDisplay, "1111")
 	assert.Contains(t, reloadedOrder.ShippingAddressPretty, "Austin")
 
 	var reloadedProduct models.Product
 	require.NoError(t, db.First(&reloadedProduct, product.ID).Error)
-	assert.Equal(t, 6, reloadedProduct.Stock)
+	assert.Equal(t, 8, reloadedProduct.Stock)
 
 	var cartItems int64
 	require.NoError(t, db.Model(&models.CartItem{}).Count(&cartItems).Error)

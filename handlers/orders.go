@@ -424,6 +424,12 @@ func ProcessPayment(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFun
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Order is already paid"})
 			return
 		}
+		// Prevent duplicate checkout submissions for orders that already captured
+		// payment/address details while still in pending confirmation flow.
+		if strings.TrimSpace(order.PaymentMethodDisplay) != "" || strings.TrimSpace(order.ShippingAddressPretty) != "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Order payment already submitted"})
+			return
+		}
 
 		paymentDisplay, err := resolvePaymentDisplayForOrder(db, user.ID, req)
 		if err != nil {
@@ -448,30 +454,13 @@ func ProcessPayment(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFun
 			}
 		}()
 
-		// Update order status
-		order.Status = models.StatusPaid
+		// Keep checkout orders pending; admin/webhook flow is responsible for final PAID transition.
+		order.Status = models.StatusPending
 		order.PaymentMethodDisplay = paymentDisplay
 		order.ShippingAddressPretty = shippingAddress
 		if err := tx.Save(&order).Error; err != nil {
 			tx.Rollback()
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update order status"})
-			return
-		}
-
-		if err := deductStockForItems(tx, order.Items); err != nil {
-			tx.Rollback()
-			var stockErr *insufficientStockError
-			if errors.As(err, &stockErr) {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error":        "Insufficient stock",
-					"product_id":   stockErr.ProductID,
-					"product_name": stockErr.ProductName,
-					"requested":    stockErr.Requested,
-					"available":    stockErr.Available,
-				})
-				return
-			}
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product stock"})
 			return
 		}
 
@@ -500,7 +489,7 @@ func ProcessPayment(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFun
 		applyOrderMediaToOrder(&order, mediaService)
 
 		c.JSON(http.StatusOK, gin.H{
-			"message": "Payment processed successfully",
+			"message": "Order submitted and pending confirmation",
 			"order":   order,
 		})
 	}
@@ -634,7 +623,8 @@ func GetAllOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc 
 	mediaService := resolveMediaService(mediaServices...)
 	return func(c *gin.Context) {
 		page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+		searchTerm := strings.TrimSpace(c.Query("q"))
 		if page < 1 {
 			page = 1
 		}
@@ -646,7 +636,31 @@ func GetAllOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc 
 		}
 		offset := (page - 1) * limit
 
-		query := db.Model(&models.Order{})
+		query := db.Model(&models.Order{}).Joins("LEFT JOIN users ON users.id = orders.user_id")
+		if searchTerm != "" {
+			like := "%" + strings.ToLower(searchTerm) + "%"
+			query = query.Where(
+				`CAST(orders.id AS TEXT) LIKE ? OR
+				 CAST(orders.user_id AS TEXT) LIKE ? OR
+				 LOWER(orders.status) LIKE ? OR
+				 LOWER(COALESCE(orders.payment_method_display, '')) LIKE ? OR
+				 LOWER(COALESCE(orders.shipping_address_pretty, '')) LIKE ? OR
+				 LOWER(COALESCE(users.username, '')) LIKE ? OR
+				 LOWER(COALESCE(users.name, '')) LIKE ? OR
+				 LOWER(COALESCE(users.email, '')) LIKE ? OR
+				 EXISTS (
+				 	SELECT 1
+				 	FROM order_items
+				 	JOIN products ON products.id = order_items.product_id
+				 	WHERE order_items.order_id = orders.id
+				 	  AND (
+				 		LOWER(COALESCE(products.name, '')) LIKE ? OR
+				 		LOWER(COALESCE(products.sku, '')) LIKE ?
+				 	  )
+				 )`,
+				like, like, like, like, like, like, like, like, like, like,
+			)
+		}
 		var total int64
 		if err := query.Count(&total).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
@@ -657,7 +671,7 @@ func GetAllOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc 
 		if err := query.
 			Preload("Items.Product").
 			Preload("User").
-			Order("created_at DESC").
+			Order("orders.created_at DESC").
 			Offset(offset).
 			Limit(limit).
 			Find(&orders).Error; err != nil {
