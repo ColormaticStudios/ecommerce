@@ -41,7 +41,7 @@
 		}
 	}
 
-		onMount(() => {
+	onMount(() => {
 		void userStore.load(api);
 		const unsubscribeUser = userStore.subscribe((user) => {
 			if (!user) {

@@ -114,37 +114,47 @@ func CreateOrder(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
 			return
 		}
 
+		// Aggregate requested quantities by product so duplicate entries are validated correctly.
+		requestedByProduct := make(map[uint]int, len(req.Items))
+		orderedProductIDs := make([]uint, 0, len(req.Items))
+		for _, itemReq := range req.Items {
+			if _, exists := requestedByProduct[itemReq.ProductID]; !exists {
+				orderedProductIDs = append(orderedProductIDs, itemReq.ProductID)
+			}
+			requestedByProduct[itemReq.ProductID] += itemReq.Quantity
+		}
+
 		// Calculate total and validate products
 		var total models.Money
-		var orderItems []models.OrderItem
-
-		for _, itemReq := range req.Items {
+		orderItems := make([]models.OrderItem, 0, len(orderedProductIDs))
+		for _, productID := range orderedProductIDs {
+			quantity := requestedByProduct[productID]
 			// Get product
 			var product models.Product
-			if err := db.First(&product, itemReq.ProductID).Error; err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Product not found", "product_id": itemReq.ProductID})
+			if err := db.First(&product, productID).Error; err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Product not found", "product_id": productID})
 				return
 			}
 
 			// Check stock availability
-			if product.Stock < itemReq.Quantity {
+			if product.Stock < quantity {
 				c.JSON(http.StatusBadRequest, gin.H{
 					"error":        "Insufficient stock",
-					"product_id":   itemReq.ProductID,
+					"product_id":   productID,
 					"product_name": product.Name,
-					"requested":    itemReq.Quantity,
+					"requested":    quantity,
 					"available":    product.Stock,
 				})
 				return
 			}
 
 			// Calculate item total
-			total += product.Price.Mul(itemReq.Quantity)
+			total += product.Price.Mul(quantity)
 
 			// Create order item
 			orderItem := models.OrderItem{
-				ProductID: itemReq.ProductID,
-				Quantity:  itemReq.Quantity,
+				ProductID: productID,
+				Quantity:  quantity,
 				Price:     product.Price, // Snapshot price at time of order
 			}
 			orderItems = append(orderItems, orderItem)
@@ -364,6 +374,22 @@ func deductStockForItems(tx *gorm.DB, items []models.OrderItem) error {
 	return nil
 }
 
+func replenishStockForItems(tx *gorm.DB, items []models.OrderItem) error {
+	for _, item := range items {
+		var product models.Product
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&product, item.ProductID).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Model(&models.Product{}).
+			Where("id = ?", item.ProductID).
+			Update("stock", gorm.Expr("stock + ?", item.Quantity)).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 type ProcessPaymentInputMethod struct {
 	CardholderName string `json:"cardholder_name" binding:"required"`
 	CardNumber     string `json:"card_number" binding:"required"`
@@ -464,13 +490,46 @@ func ProcessPayment(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFun
 			return
 		}
 
-		// Clear user's cart after successful payment
+		// Remove only quantities that were ordered from the user's cart.
 		var cart models.Cart
 		if err := tx.Where("user_id = ?", user.ID).First(&cart).Error; err == nil {
-			if err := tx.Where("cart_id = ?", cart.ID).Delete(&models.CartItem{}).Error; err != nil {
-				tx.Rollback()
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear cart"})
-				return
+			orderedQtyByProduct := make(map[uint]int, len(order.Items))
+			for _, item := range order.Items {
+				if item.Quantity <= 0 {
+					continue
+				}
+				orderedQtyByProduct[item.ProductID] += item.Quantity
+			}
+			if len(orderedQtyByProduct) > 0 {
+				productIDs := make([]uint, 0, len(orderedQtyByProduct))
+				for productID := range orderedQtyByProduct {
+					productIDs = append(productIDs, productID)
+				}
+
+				var cartItems []models.CartItem
+				if err := tx.Where("cart_id = ? AND product_id IN ?", cart.ID, productIDs).Find(&cartItems).Error; err != nil {
+					tx.Rollback()
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load cart items"})
+					return
+				}
+
+				for _, cartItem := range cartItems {
+					remaining := cartItem.Quantity - orderedQtyByProduct[cartItem.ProductID]
+					if remaining <= 0 {
+						if err := tx.Delete(&cartItem).Error; err != nil {
+							tx.Rollback()
+							c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear cart"})
+							return
+						}
+						continue
+					}
+
+					if err := tx.Model(&cartItem).Update("quantity", remaining).Error; err != nil {
+						tx.Rollback()
+						c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update cart"})
+						return
+					}
+				}
 			}
 		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 			tx.Rollback()
@@ -575,13 +634,20 @@ func UpdateOrderStatus(db *gorm.DB) gin.HandlerFunc {
 
 		var order models.Order
 		err = db.Transaction(func(tx *gorm.DB) error {
-			if err := tx.Preload("Items").First(&order, orderID).Error; err != nil {
+			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&order, orderID).Error; err != nil {
+				return err
+			}
+			if err := tx.Where("order_id = ?", order.ID).Find(&order.Items).Error; err != nil {
 				return err
 			}
 
 			previousStatus := order.Status
 			if req.Status == models.StatusPaid && previousStatus != models.StatusPaid {
 				if err := deductStockForItems(tx, order.Items); err != nil {
+					return err
+				}
+			} else if req.Status != models.StatusPaid && previousStatus == models.StatusPaid {
+				if err := replenishStockForItems(tx, order.Items); err != nil {
 					return err
 				}
 			}

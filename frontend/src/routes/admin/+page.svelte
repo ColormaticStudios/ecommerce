@@ -676,7 +676,7 @@
 								page={productPage}
 								totalPages={productTotalPages}
 								limit={productLimit}
-								limitOptions={limitOptions}
+								{limitOptions}
 								loading={productsLoading}
 								onLimitChange={updateProductLimit}
 								onPrev={() => void changeProductPage(productPage - 1)}
@@ -742,7 +742,8 @@
 											Placed {formatDateTime(order.created_at)}
 										</p>
 										<p class="text-xs text-gray-500 dark:text-gray-400">
-											{getOrderCustomerLabel(order)} · {order.items.length} item{order.items.length === 1
+											{getOrderCustomerLabel(order)} · {order.items.length} item{order.items
+												.length === 1
 												? ""
 												: "s"}
 										</p>
@@ -799,7 +800,9 @@
 									</p>
 								{/if}
 								<details class="mt-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-800/50">
-									<summary class="cursor-pointer text-xs font-semibold tracking-[0.08em] text-gray-600 uppercase dark:text-gray-300">
+									<summary
+										class="cursor-pointer text-xs font-semibold tracking-[0.08em] text-gray-600 uppercase dark:text-gray-300"
+									>
 										Order items
 									</summary>
 									<div class="mt-2 space-y-2">
@@ -822,7 +825,7 @@
 							totalPages={orderTotalPages}
 							totalItems={orderTotal}
 							limit={orderLimit}
-							limitOptions={limitOptions}
+							{limitOptions}
 							onLimitChange={updateOrderLimit}
 							onPrev={() => void changeOrderPage(orderPage - 1)}
 							onNext={() => void changeOrderPage(orderPage + 1)}
@@ -883,9 +886,11 @@
 										ID {user.id} · Currency {user.currency}
 									</p>
 									<p class="text-xs text-gray-500 dark:text-gray-400">
-										Created {formatDateTime(user.created_at)} · Updated {formatDateTime(user.updated_at)}
+										Created {formatDateTime(user.created_at)} · Updated {formatDateTime(
+											user.updated_at
+										)}
 									</p>
-									<p class="break-all text-xs text-gray-500 dark:text-gray-400">
+									<p class="text-xs break-all text-gray-500 dark:text-gray-400">
 										Subject {user.subject}
 									</p>
 									{#if user.deleted_at}
@@ -913,7 +918,7 @@
 							totalPages={userTotalPages}
 							totalItems={userTotal}
 							limit={userLimit}
-							limitOptions={limitOptions}
+							{limitOptions}
 							onLimitChange={updateUserLimit}
 							onPrev={() => void changeUserPage(userPage - 1)}
 							onNext={() => void changeUserPage(userPage + 1)}

@@ -653,6 +653,16 @@ func TestAdminUpdateOrderStatusDeductsStockOnceAndRollbackOnFailure(t *testing.T
 	require.NoError(t, db.First(&reloaded, product.ID).Error)
 	assert.Equal(t, 3, reloaded.Stock)
 
+	reverseToFailed := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/orders/%d/status", order.ID), map[string]any{"status": models.StatusFailed}, adminToken)
+	require.Equal(t, http.StatusOK, reverseToFailed.Code)
+	require.NoError(t, db.First(&reloaded, product.ID).Error)
+	assert.Equal(t, 5, reloaded.Stock)
+
+	reapplyPaid := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/orders/%d/status", order.ID), map[string]any{"status": models.StatusPaid}, adminToken)
+	require.Equal(t, http.StatusOK, reapplyPaid.Code)
+	require.NoError(t, db.First(&reloaded, product.ID).Error)
+	assert.Equal(t, 3, reloaded.Stock)
+
 	lowStockProduct := seedProduct(t, db, "sku-low-stock", "Low Stock Product", 9.99, 1)
 	failingOrder := models.Order{UserID: customer.ID, Status: models.StatusPending, Total: models.MoneyFromFloat(29.97)}
 	require.NoError(t, db.Create(&failingOrder).Error)
@@ -728,4 +738,113 @@ func TestStorefrontDisabledSectionsAndHeroMediaValidation(t *testing.T) {
 	r.ServeHTTP(upsertW, upsertReq)
 	require.Equal(t, http.StatusBadRequest, upsertW.Code)
 	assert.Contains(t, strings.ToLower(upsertW.Body.String()), "media must be an image")
+}
+
+func TestProcessPaymentRemovesOnlyOrderedCartQuantities(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.Product{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.Order{},
+		&models.OrderItem{},
+	)
+
+	user := seedUser(t, db, "sub-partial-checkout", "partial-checkout", "partial-checkout@example.com", "customer")
+	productA := seedProduct(t, db, "sku-partial-a", "Partial A", 10, 20)
+	productB := seedProduct(t, db, "sku-partial-b", "Partial B", 12, 20)
+	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, user.Subject, user.Role)
+
+	cart := models.Cart{UserID: user.ID}
+	require.NoError(t, db.Create(&cart).Error)
+	require.NoError(t, db.Create(&models.CartItem{CartID: cart.ID, ProductID: productA.ID, Quantity: 3}).Error)
+	require.NoError(t, db.Create(&models.CartItem{CartID: cart.ID, ProductID: productB.ID, Quantity: 4}).Error)
+
+	createOrderResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/orders", map[string]any{
+		"items": []map[string]any{{"product_id": productA.ID, "quantity": 2}},
+	}, token)
+	require.Equal(t, http.StatusCreated, createOrderResp.Code)
+	order := decodeJSON[models.Order](t, createOrderResp)
+
+	payResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/me/orders/%d/pay", order.ID), map[string]any{
+		"payment_method": map[string]any{
+			"cardholder_name": "Partial Checkout",
+			"card_number":     "4111111111111111",
+			"exp_month":       12,
+			"exp_year":        2035,
+		},
+		"address": map[string]any{
+			"full_name":   "Partial Checkout",
+			"line1":       "100 Main St",
+			"city":        "Austin",
+			"postal_code": "78701",
+			"country":     "US",
+		},
+	}, token)
+	require.Equal(t, http.StatusOK, payResp.Code)
+
+	var remaining []models.CartItem
+	require.NoError(t, db.Where("cart_id = ?", cart.ID).Order("product_id asc").Find(&remaining).Error)
+	require.Len(t, remaining, 2)
+	assert.Equal(t, productA.ID, remaining[0].ProductID)
+	assert.Equal(t, 1, remaining[0].Quantity)
+	assert.Equal(t, productB.ID, remaining[1].ProductID)
+	assert.Equal(t, 4, remaining[1].Quantity)
+}
+
+func TestCreateOrderDuplicateItemsAggregateStockValidation(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.Product{},
+		&models.Order{},
+		&models.OrderItem{},
+	)
+
+	user := seedUser(t, db, "sub-order-aggregate", "order-aggregate", "order-aggregate@example.com", "customer")
+	product := seedProduct(t, db, "sku-order-aggregate", "Aggregate Product", 25, 5)
+	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, user.Subject, user.Role)
+
+	resp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/orders", map[string]any{
+		"items": []map[string]any{
+			{"product_id": product.ID, "quantity": 3},
+			{"product_id": product.ID, "quantity": 3},
+		},
+	}, token)
+	require.Equal(t, http.StatusBadRequest, resp.Code)
+	body := decodeJSON[map[string]any](t, resp)
+	assert.Equal(t, "Insufficient stock", body["error"])
+	assert.EqualValues(t, 6, body["requested"])
+	assert.EqualValues(t, 5, body["available"])
+}
+
+func TestAdminUpdateProductAllowsZeroValues(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{})
+	admin := seedUser(t, db, "sub-admin-update-zero", "admin-update-zero", "admin-update-zero@example.com", "admin")
+	product := seedProduct(t, db, "sku-update-zero", "Update Zero Product", 15, 4)
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	updateResp := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/products/%d", product.ID), map[string]any{
+		"stock": 0,
+	}, adminToken)
+	require.Equal(t, http.StatusOK, updateResp.Code)
+
+	updated := decodeJSON[models.Product](t, updateResp)
+	assert.Equal(t, 0, updated.Stock)
+
+	var reloaded models.Product
+	require.NoError(t, db.First(&reloaded, product.ID).Error)
+	assert.Equal(t, 0, reloaded.Stock)
+}
+
+func TestCartModelEnforcesSingleCartPerUser(t *testing.T) {
+	db := newTestDB(t, &models.User{}, &models.Cart{})
+	user := seedUser(t, db, "sub-cart-unique", "cart-unique", "cart-unique@example.com", "customer")
+
+	require.NoError(t, db.Create(&models.Cart{UserID: user.ID}).Error)
+	err := db.Create(&models.Cart{UserID: user.ID}).Error
+	require.Error(t, err)
 }

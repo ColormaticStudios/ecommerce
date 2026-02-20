@@ -110,7 +110,10 @@ export const load: PageServerLoad = async (event) => {
 				page: productPage,
 				limit: productLimit,
 			}),
-			serverRequest<OrderPagePayload>(event, "/admin/orders", { page: orderPage, limit: orderLimit }),
+			serverRequest<OrderPagePayload>(event, "/admin/orders", {
+				page: orderPage,
+				limit: orderLimit,
+			}),
 			serverRequest<UserPagePayload>(event, "/admin/users", { page: userPage, limit: userLimit }),
 		]);
 

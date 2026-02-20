@@ -35,13 +35,7 @@
 	}}
 >
 	<TextInput type="search" bind:value {placeholder} class={inputClass} />
-	<IconButton
-		type="submit"
-		outlined={true}
-		aria-label="Search"
-		title="Search"
-		disabled={disabled}
-	>
+	<IconButton type="submit" outlined={true} aria-label="Search" title="Search" {disabled}>
 		<i class="bi bi-search"></i>
 	</IconButton>
 	<IconButton
@@ -49,7 +43,7 @@
 		outlined={true}
 		aria-label="Refresh"
 		title="Refresh"
-		disabled={disabled}
+		{disabled}
 		onclick={() => onRefresh?.()}
 	>
 		<i class={`bi ${refreshing ? "bi-arrow-repeat animate-spin" : "bi-arrow-clockwise"}`}></i>

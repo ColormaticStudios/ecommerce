@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
+	"strings"
 
 	"ecommerce/internal/media"
 	"ecommerce/models"
@@ -9,6 +11,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
+
+type UpdateProductRequest struct {
+	SKU         *string   `json:"sku"`
+	Name        *string   `json:"name"`
+	Description *string   `json:"description"`
+	Price       *float64  `json:"price"`
+	Stock       *int      `json:"stock"`
+	Images      *[]string `json:"images"`
+}
 
 func CreateProduct(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -68,21 +79,78 @@ func UpdateProduct(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		// Bind update data
-		var updateData models.Product
-		if err := bindStrictJSON(c, &updateData); err != nil {
+		var req UpdateProductRequest
+		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		// Validate price if provided
-		if updateData.Price != 0 && updateData.Price <= 0 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Product price must be greater than 0"})
+		updates := make(map[string]any)
+
+		if req.SKU != nil {
+			sku := strings.TrimSpace(*req.SKU)
+			if sku == "" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Product SKU is required"})
+				return
+			}
+			if sku != product.SKU {
+				var existingProduct models.Product
+				if err := db.Where("sku = ? AND id <> ?", sku, product.ID).First(&existingProduct).Error; err == nil {
+					c.JSON(http.StatusConflict, gin.H{"error": "Product with this SKU already exists"})
+					return
+				} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check SKU uniqueness"})
+					return
+				}
+			}
+			updates["sku"] = sku
+		}
+
+		if req.Name != nil {
+			name := strings.TrimSpace(*req.Name)
+			if name == "" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Product name is required"})
+				return
+			}
+			updates["name"] = name
+		}
+
+		if req.Description != nil {
+			updates["description"] = strings.TrimSpace(*req.Description)
+		}
+
+		if req.Price != nil {
+			if *req.Price <= 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Product price must be greater than 0"})
+				return
+			}
+			updates["price"] = models.MoneyFromFloat(*req.Price)
+		}
+
+		if req.Stock != nil {
+			stock := *req.Stock
+			if stock < 0 {
+				stock = 0
+			}
+			updates["stock"] = stock
+		}
+
+		if req.Images != nil {
+			updates["images"] = *req.Images
+		}
+
+		if len(updates) == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "No fields to update"})
 			return
 		}
 
 		// Update product
-		if err := db.Model(&product).Updates(updateData).Error; err != nil {
+		if err := db.Model(&product).Updates(updates).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product"})
+			return
+		}
+		if err := db.First(&product, id).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load updated product"})
 			return
 		}
 

@@ -2,7 +2,7 @@ package models
 
 type Cart struct {
 	BaseModel
-	UserID uint       `json:"user_id"`
+	UserID uint       `json:"user_id" gorm:"uniqueIndex"`
 	User   User       `json:"-" gorm:"foreignKey:UserID"`
 	Items  []CartItem `json:"items" gorm:"foreignKey:CartID"`
 }

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -25,10 +26,14 @@ func getOrCreateCart(db *gorm.DB, userID uint) (*models.Cart, error) {
 	var cart models.Cart
 	err := db.Where("user_id = ?", userID).Preload("Items.Product").First(&cart).Error
 
-	if err == gorm.ErrRecordNotFound {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// Create new cart
 		cart = models.Cart{UserID: userID}
 		if err := db.Create(&cart).Error; err != nil {
+			// Another request may have created the cart first.
+			if lookupErr := db.Where("user_id = ?", userID).Preload("Items.Product").First(&cart).Error; lookupErr == nil {
+				return &cart, nil
+			}
 			return nil, err
 		}
 		return &cart, nil
