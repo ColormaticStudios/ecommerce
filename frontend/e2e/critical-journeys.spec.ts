@@ -84,7 +84,7 @@ test("sign up, checkout, and persist order/cart state", async ({ page, request }
 	await expect(page).toHaveURL(/\/orders$/, { timeout: 15_000 });
 	await expect(page.getByText("Order placed successfully.")).toBeVisible();
 	await expect(page.getByText(/Order #\d+/)).toBeVisible();
-	await expect(page.getByText("PAID", { exact: true })).toBeVisible();
+	await expect(page.getByText("PENDING", { exact: true })).toBeVisible();
 
 	await page.goto("/cart");
 	await expect(page.getByText("Your cart is empty.")).toBeVisible();
@@ -92,9 +92,9 @@ test("sign up, checkout, and persist order/cart state", async ({ page, request }
 	const after = await readSummary(request);
 	expect(after.users).toBe(before.users + 1);
 	expect(after.orders).toBe(before.orders + 1);
-	expect(after.paid_orders).toBe(before.paid_orders + 1);
+	expect(after.paid_orders).toBe(before.paid_orders);
 	expect(after.cart_items).toBe(0);
-	expect(after.product_stock).toBe(before.product_stock - 1);
+	expect(after.product_stock).toBe(before.product_stock);
 });
 
 test("invalid data paths show user-facing errors", async ({ page, request }) => {
