@@ -45,6 +45,15 @@ type AuthResponse struct {
 	User models.User `json:"user"`
 }
 
+type oidcUserClaims struct {
+	Email             string `json:"email"`
+	Sub               string `json:"sub"`
+	Name              string `json:"name"`
+	Picture           string `json:"picture"`
+	Locale            string `json:"locale"`
+	PreferredUsername string `json:"preferred_username"`
+}
+
 func setSessionCookie(c *gin.Context, token string, cfg AuthCookieConfig) {
 	maxAge := int((7 * 24 * time.Hour).Seconds())
 	c.SetSameSite(cfg.SameSite)
@@ -168,6 +177,39 @@ func wantsJSONResponse(c *gin.Context) bool {
 	}
 	accept := strings.ToLower(c.GetHeader("Accept"))
 	return strings.Contains(accept, "application/json")
+}
+
+func resolveOIDCUsername(claims oidcUserClaims) string {
+	if preferred := strings.TrimSpace(claims.PreferredUsername); preferred != "" {
+		return preferred
+	}
+	if email := strings.TrimSpace(claims.Email); email != "" {
+		return email
+	}
+	return strings.TrimSpace(claims.Sub)
+}
+
+func syncOIDCUsernameIfAvailable(db *gorm.DB, user *models.User, claims oidcUserClaims) error {
+	candidate := strings.TrimSpace(claims.PreferredUsername)
+	if candidate == "" || candidate == user.Username {
+		return nil
+	}
+
+	var existingUser models.User
+	err := db.Where("username = ? AND id <> ?", candidate, user.ID).First(&existingUser).Error
+	if err == nil {
+		// Username is already used by another account; keep current username.
+		return nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+
+	if err := db.Model(user).Update("username", candidate).Error; err != nil {
+		return err
+	}
+	user.Username = candidate
+	return nil
 }
 
 // Register creates a new user account
@@ -378,13 +420,7 @@ func OIDCCallback(db *gorm.DB, jwtSecret string, oidcProvider string, clientID s
 			return
 		}
 
-		var claims struct {
-			Email   string `json:"email"`
-			Sub     string `json:"sub"`
-			Name    string `json:"name"`
-			Picture string `json:"picture"`
-			Locale  string `json:"locale"`
-		}
+		var claims oidcUserClaims
 		if err := idToken.Claims(&claims); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse id_token claims"})
 			return
@@ -398,7 +434,7 @@ func OIDCCallback(db *gorm.DB, jwtSecret string, oidcProvider string, clientID s
 					Subject:  claims.Sub,
 					Email:    claims.Email,
 					Name:     claims.Name,
-					Username: claims.Email, // fallback
+					Username: resolveOIDCUsername(claims),
 					Role:     "customer",
 				}
 				if err := db.Create(&user).Error; err != nil {
@@ -409,6 +445,9 @@ func OIDCCallback(db *gorm.DB, jwtSecret string, oidcProvider string, clientID s
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "db query failed"})
 				return
 			}
+		} else if err := syncOIDCUsernameIfAvailable(db, &user, claims); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to sync OIDC username"})
+			return
 		}
 
 		// Generate JWT for API

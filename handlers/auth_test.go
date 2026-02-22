@@ -196,3 +196,73 @@ func TestOIDCHandlersInvalidProvider(t *testing.T) {
 	r.ServeHTTP(callbackW, callbackReq)
 	assert.Equal(t, http.StatusInternalServerError, callbackW.Code)
 }
+
+func TestResolveOIDCUsername(t *testing.T) {
+	t.Run("uses preferred username when available", func(t *testing.T) {
+		claims := oidcUserClaims{
+			Sub:               "sub-1",
+			Email:             "email@example.com",
+			PreferredUsername: "preferred-name",
+		}
+		assert.Equal(t, "preferred-name", resolveOIDCUsername(claims))
+	})
+
+	t.Run("falls back to email", func(t *testing.T) {
+		claims := oidcUserClaims{
+			Sub:   "sub-1",
+			Email: "email@example.com",
+		}
+		assert.Equal(t, "email@example.com", resolveOIDCUsername(claims))
+	})
+
+	t.Run("falls back to subject", func(t *testing.T) {
+		claims := oidcUserClaims{
+			Sub: "sub-1",
+		}
+		assert.Equal(t, "sub-1", resolveOIDCUsername(claims))
+	})
+}
+
+func TestSyncOIDCUsernameIfAvailable(t *testing.T) {
+	db := newTestDB(t, &models.User{})
+
+	user := models.User{
+		Subject:  "sub-oidc-user",
+		Username: "old-name",
+		Email:    "oidc@example.com",
+		Role:     "customer",
+	}
+	require.NoError(t, db.Create(&user).Error)
+
+	t.Run("updates to available preferred username", func(t *testing.T) {
+		claims := oidcUserClaims{
+			PreferredUsername: "new-name",
+		}
+		require.NoError(t, syncOIDCUsernameIfAvailable(db, &user, claims))
+
+		var reloaded models.User
+		require.NoError(t, db.First(&reloaded, user.ID).Error)
+		assert.Equal(t, "new-name", reloaded.Username)
+		assert.Equal(t, "new-name", user.Username)
+	})
+
+	t.Run("keeps current username when preferred username is taken", func(t *testing.T) {
+		other := models.User{
+			Subject:  "sub-other-user",
+			Username: "taken-name",
+			Email:    "other@example.com",
+			Role:     "customer",
+		}
+		require.NoError(t, db.Create(&other).Error)
+
+		claims := oidcUserClaims{
+			PreferredUsername: "taken-name",
+		}
+		require.NoError(t, syncOIDCUsernameIfAvailable(db, &user, claims))
+
+		var reloaded models.User
+		require.NoError(t, db.First(&reloaded, user.ID).Error)
+		assert.Equal(t, "new-name", reloaded.Username)
+		assert.Equal(t, "new-name", user.Username)
+	})
+}
