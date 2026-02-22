@@ -118,7 +118,8 @@ A RESTful ecommerce API built with Go, Gin, GORM, and PostgreSQL.
    bun run dev --open
    ```
 
-Note: the placeholders that the AI generated are cringe but funny, so I left them in.
+Note: the storefront placeholders that the AI generated are cringe but funny, so I left them in.
+The example products are certified artisan humanslop.
 
 ## Environment Variables
 
