@@ -18,6 +18,7 @@ func main() {
 	// Add subcommands
 	rootCmd.AddCommand(commands.NewUserCmd())
 	rootCmd.AddCommand(commands.NewProductCmd())
+	rootCmd.AddCommand(commands.NewMigrateCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)

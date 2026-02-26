@@ -129,6 +129,7 @@
 	}
 
 	onMount(() => {
+		api.bootstrapAuthState(Boolean(data.isAuthenticated));
 		void userStore.load(api);
 		const unsubscribeUser = userStore.subscribe((user) => {
 			if (!user) {

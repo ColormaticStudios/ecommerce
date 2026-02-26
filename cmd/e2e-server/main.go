@@ -10,6 +10,7 @@ import (
 
 	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
+	"ecommerce/internal/migrations"
 	"ecommerce/models"
 
 	"github.com/gin-contrib/cors"
@@ -112,22 +113,15 @@ func main() {
 		log.Fatalf("failed to open e2e sqlite db: %v", err)
 	}
 
-	if err := db.AutoMigrate(
-		&models.User{},
-		&models.Product{},
-		&models.Order{},
-		&models.OrderItem{},
-		&models.Cart{},
-		&models.CartItem{},
-		&models.SavedPaymentMethod{},
-		&models.SavedAddress{},
-		&models.StorefrontSettings{},
-	); err != nil {
-		log.Fatalf("failed to migrate e2e sqlite db: %v", err)
+	if err := migrations.Run(db); err != nil {
+		log.Fatalf("failed to run e2e migrations: %v", err)
 	}
 
 	if err := ensureSeedData(db); err != nil {
 		log.Fatalf("failed to seed e2e data: %v", err)
+	}
+	if err := handlers.ValidateStartupDefaults(); err != nil {
+		log.Fatalf("failed startup defaults validation: %v", err)
 	}
 
 	r := gin.New()
@@ -143,7 +137,7 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	apiServer := handlers.NewGeneratedAPIServer(db, nil, handlers.GeneratedAPIServerConfig{
+	apiServer, err := handlers.NewGeneratedAPIServer(db, nil, handlers.GeneratedAPIServerConfig{
 		JWTSecret: e2eJWTSecret,
 		AuthCookieConfig: handlers.AuthCookieConfig{
 			Secure:   false,
@@ -151,6 +145,9 @@ func main() {
 			SameSite: http.SameSiteLaxMode,
 		},
 	})
+	if err != nil {
+		log.Fatalf("failed to initialize e2e api server: %v", err)
+	}
 	apicontract.RegisterHandlers(r, apiServer)
 
 	// Test-only helper endpoints consumed by Playwright E2E tests.

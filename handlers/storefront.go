@@ -13,6 +13,7 @@ import (
 	"ecommerce/defaults"
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/media"
+	storefrontservice "ecommerce/internal/services/storefront"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -169,13 +170,13 @@ func loadStorefrontLimits() {
 		}
 		storefrontLimitsData = parsed
 	})
-	if storefrontLimitsErr != nil {
-		panic(storefrontLimitsErr)
-	}
 }
 
 func limits() storefrontLimits {
 	loadStorefrontLimits()
+	if storefrontLimitsErr != nil {
+		panic(storefrontLimitsErr)
+	}
 	return storefrontLimitsData
 }
 
@@ -324,11 +325,11 @@ func decodeDefaultStorefrontSettingsStrict() (StorefrontSettingsPayload, error) 
 func cloneStorefrontSettings(input StorefrontSettingsPayload) StorefrontSettingsPayload {
 	payload, err := json.Marshal(input)
 	if err != nil {
-		panic(fmt.Sprintf("failed to clone storefront defaults: %v", err))
+		return input
 	}
 	var cloned StorefrontSettingsPayload
 	if err := json.Unmarshal(payload, &cloned); err != nil {
-		panic(fmt.Sprintf("failed to decode cloned storefront defaults: %v", err))
+		return input
 	}
 	return cloned
 }
@@ -338,7 +339,27 @@ func defaultStorefrontSettings() StorefrontSettingsPayload {
 		defaultStorefront, defaultStorefrontErr = decodeDefaultStorefrontSettingsStrict()
 	})
 	if defaultStorefrontErr != nil {
-		panic(fmt.Sprintf("invalid defaults/storefront.json: %v", defaultStorefrontErr))
+		return StorefrontSettingsPayload{
+			SiteTitle: "Storefront",
+			HomepageSections: []StorefrontHomepageSection{
+				{
+					ID:      "fallback-products",
+					Type:    string(apicontract.Products),
+					Enabled: true,
+					ProductSection: &StorefrontProductSection{
+						Title:           "Products",
+						Source:          string(apicontract.Newest),
+						Sort:            string(apicontract.StorefrontProductSectionSortCreatedAt),
+						Order:           string(apicontract.StorefrontProductSectionOrderDesc),
+						Limit:           limits().DefaultProductLimit,
+						ShowStock:       true,
+						ShowDescription: true,
+						ImageAspect:     string(apicontract.Square),
+					},
+				},
+			},
+			Footer: StorefrontFooter{BrandName: "Storefront"},
+		}
 	}
 	return cloneStorefrontSettings(defaultStorefront)
 }
@@ -772,10 +793,7 @@ func UpsertStorefrontSettings(db *gorm.DB, mediaService *media.Service) gin.Hand
 			}
 
 			now := time.Now()
-			if err := tx.Model(&record).Updates(map[string]any{
-				"draft_config_json": string(payload),
-				"draft_updated_at":  now,
-			}).Error; err != nil {
+			if err := storefrontservice.SaveDraft(tx, &record, string(payload), now); err != nil {
 				return err
 			}
 			return nil
@@ -888,50 +906,20 @@ func decodeStorefrontConfig(configJSON string) StorefrontSettingsPayload {
 }
 
 func hasStorefrontDraft(record models.StorefrontSettings) bool {
-	return record.DraftConfigJSON != nil && strings.TrimSpace(*record.DraftConfigJSON) != ""
+	return storefrontservice.HasDraft(record) && strings.TrimSpace(storefrontservice.DraftJSON(record)) != ""
 }
 
 func storefrontDraftJSON(record models.StorefrontSettings) string {
-	if record.DraftConfigJSON == nil {
-		return ""
-	}
-	return *record.DraftConfigJSON
+	return storefrontservice.DraftJSON(record)
 }
 
 func loadOrCreateStorefrontRecord(db *gorm.DB) (models.StorefrontSettings, error) {
-	var record models.StorefrontSettings
-	err := db.First(&record, models.StorefrontSettingsSingletonID).Error
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return models.StorefrontSettings{}, err
+	settings := defaultStorefrontSettings()
+	payload, marshalErr := json.Marshal(settings)
+	if marshalErr != nil {
+		return models.StorefrontSettings{}, marshalErr
 	}
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		settings := defaultStorefrontSettings()
-		payload, marshalErr := json.Marshal(settings)
-		if marshalErr != nil {
-			return models.StorefrontSettings{}, marshalErr
-		}
-		record = models.StorefrontSettings{
-			ID:               models.StorefrontSettingsSingletonID,
-			ConfigJSON:       string(payload),
-			PublishedUpdated: time.Now(),
-		}
-		if createErr := db.Create(&record).Error; createErr != nil {
-			return models.StorefrontSettings{}, createErr
-		}
-		return record, nil
-	}
-
-	if record.PublishedUpdated.IsZero() {
-		published := record.UpdatedAt
-		if published.IsZero() {
-			published = time.Now()
-		}
-		if err := db.Model(&record).Update("published_updated", published).Error; err == nil {
-			record.PublishedUpdated = published
-		}
-	}
-	return record, nil
+	return storefrontservice.LoadOrCreateRecord(db, string(payload))
 }
 
 func storefrontSettingsForRecord(record models.StorefrontSettings, mediaService *media.Service, preferDraft bool) StorefrontSettingsPayload {
@@ -1045,12 +1033,7 @@ func PublishStorefrontSettings(db *gorm.DB, mediaService *media.Service) gin.Han
 			cleanupIDs = append(cleanupIDs, mediaIDsFromRefs(draftRefs)...)
 
 			now := time.Now()
-			if err := tx.Model(&record).Updates(map[string]any{
-				"config_json":       storefrontDraftJSON(record),
-				"draft_config_json": nil,
-				"draft_updated_at":  nil,
-				"published_updated": now,
-			}).Error; err != nil {
+			if err := storefrontservice.PublishDraft(tx, &record, now); err != nil {
 				return err
 			}
 
@@ -1098,10 +1081,7 @@ func DiscardStorefrontDraft(db *gorm.DB, mediaService *media.Service) gin.Handle
 			}
 			cleanupIDs = append(cleanupIDs, mediaIDsFromRefs(draftRefs)...)
 
-			if err := tx.Model(&record).Updates(map[string]any{
-				"draft_config_json": nil,
-				"draft_updated_at":  nil,
-			}).Error; err != nil {
+			if err := storefrontservice.DiscardDraft(tx, &record); err != nil {
 				return err
 			}
 			return tx.Where("owner_type = ? AND owner_id = ? AND role = ?",

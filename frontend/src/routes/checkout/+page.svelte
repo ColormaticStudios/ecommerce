@@ -11,6 +11,15 @@
 	import NumberInput from "$lib/components/NumberInput.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
+	import {
+		initDataForProvider,
+		maskedCardDisplay,
+		providerLogoColor,
+		providerLogoMark,
+		providerUsesAddressFields,
+		providerUsesCardFields,
+		stateTone,
+	} from "$lib/checkout/providers";
 	import { getContext, untrack } from "svelte";
 	import { resolve } from "$app/paths";
 	import { goto } from "$app/navigation";
@@ -20,8 +29,6 @@
 	const api: API = getContext("api");
 
 	type CheckoutProvider = components["schemas"]["CheckoutPlugin"];
-	type CheckoutProviderField = components["schemas"]["CheckoutPluginField"];
-	type CheckoutProviderState = components["schemas"]["CheckoutPluginState"];
 	type CheckoutQuoteResponse = components["schemas"]["CheckoutQuoteResponse"];
 
 	interface Props {
@@ -88,76 +95,6 @@
 		return source.find((provider) => provider.id === providerId) ?? null;
 	}
 
-	function initDataForProvider(
-		fields: CheckoutProviderField[] | undefined,
-		dataMap: Record<string, string>
-	) {
-		for (const field of fields ?? []) {
-			if (dataMap[field.key] !== undefined) {
-				continue;
-			}
-			if (field.type === "checkbox") {
-				dataMap[field.key] = "false";
-				continue;
-			}
-			if (field.type === "select") {
-				dataMap[field.key] = field.options?.[0]?.value ?? "";
-				continue;
-			}
-			dataMap[field.key] = "";
-		}
-	}
-
-	function providerUsesCardFields(provider: CheckoutProvider | null): boolean {
-		if (!provider) {
-			return false;
-		}
-		const keys = new Set((provider.fields ?? []).map((field) => field.key));
-		return keys.has("card_number") || (keys.has("exp_month") && keys.has("exp_year"));
-	}
-
-	function providerUsesAddressFields(provider: CheckoutProvider | null): boolean {
-		if (!provider) {
-			return false;
-		}
-		const keys = new Set((provider.fields ?? []).map((field) => field.key));
-		return keys.has("line1") && keys.has("city") && keys.has("postal_code") && keys.has("country");
-	}
-
-	function providerLogoMark(provider: CheckoutProvider): string {
-		const words = provider.name
-			.split(/\s+/)
-			.map((value) => value.trim())
-			.filter(Boolean);
-		if (words.length === 0) {
-			return "PV";
-		}
-		if (words.length === 1) {
-			return words[0].slice(0, 2).toUpperCase();
-		}
-		return `${words[0][0] ?? "P"}${words[1][0] ?? "V"}`.toUpperCase();
-	}
-
-	function providerLogoColor(providerID: string): string {
-		switch (providerID) {
-			case "dummy-card":
-				return "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300";
-			case "dummy-wallet":
-				return "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300";
-			case "dummy-ground":
-				return "bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300";
-			case "dummy-pickup":
-				return "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300";
-			default:
-				return "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-200";
-		}
-	}
-
-	function maskedCardDisplay(last4: string | undefined): string {
-		const digits = (last4 ?? "").padStart(4, "0").slice(-4);
-		return `•••• •••• •••• ${digits}`;
-	}
-
 	function selectPaymentProvider(providerID: string) {
 		selectedPaymentProviderId = providerID;
 		selectedSavedPaymentMethodId = "";
@@ -220,6 +157,17 @@
 		}
 		autoTaxProviderId = taxProviders[0].id;
 		initDataForProvider(findProvider("tax", autoTaxProviderId)?.fields, taxData);
+	}
+
+	function toStringMap(input: Record<string, string>): Record<string, string> {
+		const output: Record<string, string> = {};
+		for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+			if (value === undefined || value === null) {
+				continue;
+			}
+			output[key] = String(value);
+		}
+		return output;
 	}
 
 	function syncPaymentProviderState() {
@@ -341,13 +289,16 @@
 		quoting = true;
 		errorMessage = "";
 		try {
+			const paymentPayload = toStringMap(paymentData);
+			const shippingPayload = toStringMap(shippingData);
+			const taxPayload = toStringMap(taxData);
 			quote = await api.quoteCheckout({
 				payment_provider_id: selectedPaymentProviderId,
 				shipping_provider_id: selectedShippingProviderId,
 				tax_provider_id: "",
-				payment_data: paymentData,
-				shipping_data: shippingData,
-				tax_data: taxData,
+				payment_data: paymentPayload,
+				shipping_data: shippingPayload,
+				tax_data: taxPayload,
 			});
 			if (!quote.valid) {
 				errorMessage = "Some checkout details are invalid. Review the messages below.";
@@ -392,9 +343,9 @@
 				payment_provider_id: selectedPaymentProviderId,
 				shipping_provider_id: selectedShippingProviderId,
 				tax_provider_id: "",
-				payment_data: paymentData,
-				shipping_data: shippingData,
-				tax_data: taxData,
+				payment_data: toStringMap(paymentData),
+				shipping_data: toStringMap(shippingData),
+				tax_data: toStringMap(taxData),
 			});
 
 			statusMessage = order?.status ? `Payment status: ${order.status}` : "Payment processed.";
@@ -409,19 +360,6 @@
 			errorMessage = error.body?.error ?? "Unable to place your order.";
 		} finally {
 			processing = false;
-		}
-	}
-
-	function stateTone(severity: CheckoutProviderState["severity"]) {
-		switch (severity) {
-			case "error":
-				return "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300";
-			case "warning":
-				return "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300";
-			case "success":
-				return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300";
-			default:
-				return "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300";
 		}
 	}
 

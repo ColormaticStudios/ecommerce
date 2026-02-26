@@ -12,7 +12,7 @@ import (
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/checkoutplugins"
 	"ecommerce/internal/media"
-	"ecommerce/models"
+	"ecommerce/internal/migrations"
 
 	"github.com/didip/tollbooth/v7"
 	"github.com/didip/tollbooth_gin"
@@ -42,6 +42,9 @@ func main() {
 	if err := media.CheckDependencies(); err != nil {
 		log.Fatalf("[ERROR] Dependency check failed: %v", err)
 	}
+	if err := handlers.ValidateStartupDefaults(); err != nil {
+		log.Fatalf("[ERROR] Startup defaults validation failed: %v", err)
+	}
 
 	// Connect to database
 	gormLogger := logger.New(
@@ -60,31 +63,11 @@ func main() {
 	}
 	log.Println("[INFO] Database connection established")
 
-	// Auto-migrate the schema
-	if err := db.AutoMigrate(
-		&models.User{},
-		&models.Product{},
-		&models.Order{},
-		&models.OrderItem{},
-		&models.Cart{},
-		&models.CartItem{},
-		&models.MediaObject{},
-		&models.MediaVariant{},
-		&models.MediaReference{},
-		&models.SavedPaymentMethod{},
-		&models.SavedAddress{},
-		&models.StorefrontSettings{},
-		&models.CheckoutProviderSetting{},
-	); err != nil {
-		log.Fatalf("[ERROR] Failed to migrate database: %v", err)
+	// Run explicit, versioned schema migrations.
+	if err := migrations.Run(db); err != nil {
+		log.Fatalf("[ERROR] Failed to apply migrations: %v", err)
 	}
-
-	if err := db.Model(&models.Product{}).
-		Where("is_published = ? AND (draft_data IS NULL OR draft_data = '')", false).
-		Update("is_published", true).Error; err != nil {
-		log.Fatalf("[ERROR] Failed to backfill product publish state: %v", err)
-	}
-	log.Println("[INFO] Database migration completed")
+	log.Printf("[INFO] Database migration completed (latest=%s)", migrations.LatestVersion())
 
 	// Setup Gin router
 	if os.Getenv("GIN_MODE") == "" {
@@ -209,7 +192,7 @@ func main() {
 		log.Printf("[INFO] Loaded %d external checkout plugins from %s", loaded, cfg.CheckoutPluginManifestsDir)
 	}
 
-	apiServer := handlers.NewGeneratedAPIServer(db, mediaService, handlers.GeneratedAPIServerConfig{
+	apiServer, err := handlers.NewGeneratedAPIServer(db, mediaService, handlers.GeneratedAPIServerConfig{
 		JWTSecret:          jwtSecret,
 		DisableLocalSignIn: cfg.DisableLocalSignIn,
 		AuthCookieConfig:   authCookieCfg,
@@ -219,6 +202,9 @@ func main() {
 		MediaUploads:       http.StripPrefix("/api/v1/media/uploads", tusd),
 		CheckoutPlugins:    pluginManager,
 	})
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to initialize API server: %v", err)
+	}
 	apicontract.RegisterHandlers(r, apiServer)
 
 	log.Printf("[INFO] Server starting on port %s", cfg.Port)

@@ -150,6 +150,9 @@
 	let lastDirtyHandler: Props["onDirtyChange"] = undefined;
 	let lastSaveHandler: Props["onSaveRequestChange"] = undefined;
 
+	type MessageScope = "product" | "media" | "related";
+	type MessageTone = "error" | "success";
+
 	function normalizedNumber(value: string): number | null | "invalid" {
 		const trimmed = String(value ?? "").trim();
 		if (trimmed === "") {
@@ -185,57 +188,98 @@
 		savedSnapshot = untrack(() => buildDraftSnapshot());
 	}
 
-	function clearProductMessages() {
-		productErrorMessage = "";
-		productStatusMessage = "";
+	function clearMessages(scope?: MessageScope) {
+		if (!scope || scope === "product") {
+			productErrorMessage = "";
+			productStatusMessage = "";
+		}
+		if (!scope || scope === "media") {
+			mediaErrorMessage = "";
+			mediaStatusMessage = "";
+		}
+		if (!scope || scope === "related") {
+			relatedErrorMessage = "";
+			relatedStatusMessage = "";
+		}
+		if (!scope) {
+			onErrorMessage?.("");
+			onStatusMessage?.("");
+		}
 	}
 
-	function clearMediaMessages() {
-		mediaErrorMessage = "";
-		mediaStatusMessage = "";
+	function clearMessage(scope: MessageScope, tone: MessageTone) {
+		if (scope === "product") {
+			if (tone === "error") {
+				productErrorMessage = "";
+				onErrorMessage?.("");
+			} else {
+				productStatusMessage = "";
+				onStatusMessage?.("");
+			}
+			return;
+		}
+		if (scope === "media") {
+			if (tone === "error") {
+				mediaErrorMessage = "";
+				onErrorMessage?.("");
+			} else {
+				mediaStatusMessage = "";
+				onStatusMessage?.("");
+			}
+			return;
+		}
+		if (tone === "error") {
+			relatedErrorMessage = "";
+			onErrorMessage?.("");
+		} else {
+			relatedStatusMessage = "";
+			onStatusMessage?.("");
+		}
 	}
 
-	function clearRelatedMessages() {
-		relatedErrorMessage = "";
-		relatedStatusMessage = "";
+	function setMessage(scope: MessageScope, tone: MessageTone, message: string) {
+		if (scope === "product") {
+			if (tone === "error") {
+				productErrorMessage = message;
+				onErrorMessage?.(message);
+			} else {
+				productStatusMessage = message;
+				onStatusMessage?.(message);
+			}
+			return;
+		}
+		if (scope === "media") {
+			if (tone === "error") {
+				mediaErrorMessage = message;
+				onErrorMessage?.(message);
+			} else {
+				mediaStatusMessage = message;
+				onStatusMessage?.(message);
+			}
+			return;
+		}
+		if (tone === "error") {
+			relatedErrorMessage = message;
+			onErrorMessage?.(message);
+		} else {
+			relatedStatusMessage = message;
+			onStatusMessage?.(message);
+		}
 	}
 
 	function clearAllMessages() {
-		clearProductMessages();
-		clearMediaMessages();
-		clearRelatedMessages();
+		clearMessages();
+	}
+
+	function applyUpdatedProduct(updated: ProductModel, options?: { hydrate?: boolean }) {
+		product = updated;
+		if (options?.hydrate ?? true) {
+			hydrateForm(updated);
+		}
+		captureSavedSnapshot();
+		onProductUpdated?.(updated);
 		onErrorMessage?.("");
 		onStatusMessage?.("");
-	}
-
-	function setProductError(message: string) {
-		productErrorMessage = message;
-		onErrorMessage?.(message);
-	}
-
-	function setProductStatus(message: string) {
-		productStatusMessage = message;
-		onStatusMessage?.(message);
-	}
-
-	function setMediaError(message: string) {
-		mediaErrorMessage = message;
-		onErrorMessage?.(message);
-	}
-
-	function setMediaStatus(message: string) {
-		mediaStatusMessage = message;
-		onStatusMessage?.(message);
-	}
-
-	function setRelatedError(message: string) {
-		relatedErrorMessage = message;
-		onErrorMessage?.(message);
-	}
-
-	function setRelatedStatus(message: string) {
-		relatedStatusMessage = message;
-		onStatusMessage?.(message);
 	}
 
 	function readableActionError(err: unknown, fallback: string): string {
@@ -328,7 +372,7 @@
 	async function loadProduct(id: number, seedProduct?: ProductModel | null) {
 		const sequence = ++loadSequence;
 		loading = true;
-		clearProductMessages();
+		clearMessages("product");
 		if (!seedProduct) {
 			product = null;
 			resetForm();
@@ -345,7 +389,7 @@
 		} catch (err) {
 			console.error(err);
 			if (sequence === loadSequence) {
-				setProductError("Unable to load product.");
+				setMessage("product", "error", "Unable to load product.");
 			}
 		} finally {
 			if (sequence === loadSequence) {
@@ -355,7 +399,7 @@
 	}
 
 	async function saveProduct() {
-		clearProductMessages();
+		clearMessages("product");
 		saving = true;
 		try {
 			const trimmedStock = asTrimmedString(stock);
@@ -368,7 +412,7 @@
 			};
 
 			if (!payload.sku || !payload.name || Number.isNaN(payload.price)) {
-				setProductError("Please provide SKU, name, and a valid price.");
+				setMessage("product", "error", "Please provide SKU, name, and a valid price.");
 				return;
 			}
 
@@ -380,27 +424,20 @@
 					images:
 						updated.images?.length || !product?.images?.length ? updated.images : product.images,
 				};
-				product = merged;
-				updated = merged;
-				hydrateForm(merged);
-				captureSavedSnapshot();
-				onProductUpdated?.(merged);
-				setProductStatus("Product draft saved.");
+				applyUpdatedProduct(merged);
+				setMessage("product", "success", "Product draft saved.");
 			} else if (allowCreate) {
 				updated = await api.createProduct(payload);
-				product = updated;
 				productId = updated.id;
-				hydrateForm(updated);
-				captureSavedSnapshot();
+				applyUpdatedProduct(updated);
 				onProductCreated?.(updated);
-				onProductUpdated?.(updated);
-				setProductStatus("Product draft created.");
+				setMessage("product", "success", "Product draft created.");
 			} else {
-				setProductError("Please select a product to edit.");
+				setMessage("product", "error", "Please select a product to edit.");
 			}
 		} catch (err) {
 			console.error(err);
-			setProductError("Unable to save product.");
+			setMessage("product", "error", "Unable to save product.");
 		} finally {
 			saving = false;
 		}
@@ -410,7 +447,7 @@
 		if (!resolvedProductId) {
 			return;
 		}
-		clearProductMessages();
+		clearMessages("product");
 		publishing = true;
 		try {
 			if (hasUnsavedChanges) {
@@ -420,14 +457,11 @@
 				}
 			}
 			const updated = await api.publishProduct(resolvedProductId);
-			product = updated;
-			hydrateForm(updated);
-			captureSavedSnapshot();
-			onProductUpdated?.(updated);
-			setProductStatus("Product draft published.");
+			applyUpdatedProduct(updated);
+			setMessage("product", "success", "Product draft published.");
 		} catch (err) {
 			console.error(err);
-			setProductError(readableActionError(err, "Unable to publish product draft."));
+			setMessage("product", "error", readableActionError(err, "Unable to publish product draft."));
 		} finally {
 			publishing = false;
 		}
@@ -440,18 +474,15 @@
 		if (!confirm("Discard all unpublished draft changes for this product?")) {
 			return;
 		}
-		clearProductMessages();
+		clearMessages("product");
 		discardingDraft = true;
 		try {
 			const updated = await api.discardProductDraft(resolvedProductId);
-			product = updated;
-			hydrateForm(updated);
-			captureSavedSnapshot();
-			onProductUpdated?.(updated);
-			setProductStatus("Product draft discarded.");
+			applyUpdatedProduct(updated);
+			setMessage("product", "success", "Product draft discarded.");
 		} catch (err) {
 			console.error(err);
-			setProductError(readableActionError(err, "Unable to discard product draft."));
+			setMessage("product", "error", readableActionError(err, "Unable to discard product draft."));
 		} finally {
 			discardingDraft = false;
 		}
@@ -464,7 +495,7 @@
 		if (!confirm("Unpublish this product? It will be hidden from the public storefront.")) {
 			return;
 		}
-		clearProductMessages();
+		clearMessages("product");
 		unpublishing = true;
 		try {
 			if (hasUnsavedChanges) {
@@ -474,14 +505,11 @@
 				}
 			}
 			const updated = await api.unpublishProduct(resolvedProductId);
-			product = updated;
-			hydrateForm(updated);
-			captureSavedSnapshot();
-			onProductUpdated?.(updated);
-			setProductStatus("Product unpublished.");
+			applyUpdatedProduct(updated);
+			setMessage("product", "success", "Product unpublished.");
 		} catch (err) {
 			console.error(err);
-			setProductError(readableActionError(err, "Unable to unpublish product."));
+			setMessage("product", "error", readableActionError(err, "Unable to unpublish product."));
 		} finally {
 			unpublishing = false;
 		}
@@ -491,32 +519,36 @@
 		if (!resolvedProductId) {
 			return;
 		}
-		clearProductMessages();
+		clearMessages("product");
 		previewingDraft = true;
 		let previewWindow: Window | null = null;
 		try {
 			if (previewActive) {
 				await api.stopAdminPreview();
 				previewActive = false;
-				setProductStatus("Exited draft preview.");
+				setMessage("product", "success", "Exited draft preview.");
 				return;
 			}
 
 			previewWindow = window.open("", "_blank");
 			if (!previewWindow) {
-				setProductError("Preview popup was blocked by the browser.");
+				setMessage("product", "error", "Preview popup was blocked by the browser.");
 				return;
 			}
 			await api.startAdminPreview();
 			previewActive = true;
 			previewWindow.location.href = resolve(`/product/${resolvedProductId}`);
-			setProductStatus("Opened draft preview in a new tab.");
+			setMessage("product", "success", "Opened draft preview in a new tab.");
 		} catch (err) {
 			console.error(err);
 			if (previewWindow && !previewWindow.closed) {
 				previewWindow.close();
 			}
-			setProductError(readableActionError(err, "Unable to open product draft preview."));
+			setMessage(
+				"product",
+				"error",
+				readableActionError(err, "Unable to open product draft preview.")
+			);
 			void loadPreviewState();
 		} finally {
 			previewingDraft = false;
@@ -530,7 +562,7 @@
 		if (!confirm("Delete this product? This cannot be undone.")) {
 			return;
 		}
-		clearProductMessages();
+		clearMessages("product");
 		deleting = true;
 		try {
 			const deletedId = resolvedProductId;
@@ -538,13 +570,13 @@
 			product = null;
 			resetForm();
 			onProductDeleted?.(deletedId);
-			setProductStatus("Product deleted.");
+			setMessage("product", "success", "Product deleted.");
 			if (clearOnDelete) {
 				productId = null;
 			}
 		} catch (err) {
 			console.error(err);
-			setProductError("Unable to delete product.");
+			setMessage("product", "error", "Unable to delete product.");
 		} finally {
 			deleting = false;
 		}
@@ -554,23 +586,20 @@
 		if (!resolvedProductId || !mediaFiles || mediaFiles.length === 0) {
 			return;
 		}
-		clearMediaMessages();
+		clearMessages("media");
 		uploading = true;
 		try {
 			const mediaIds = await uploadMediaFiles(api, mediaFiles);
 			const updated = await api.attachProductMedia(resolvedProductId, mediaIds);
-			product = updated;
-			hydrateForm(updated);
-			captureSavedSnapshot();
-			onProductUpdated?.(updated);
-			setMediaStatus("Media attached.");
+			applyUpdatedProduct(updated);
+			setMessage("media", "success", "Media attached.");
 		} catch (err) {
 			console.error(err);
 			const error = err as { status?: number; body?: { error?: string } };
 			if (error.status === 409 && error.body?.error) {
-				setMediaError(error.body.error);
+				setMessage("media", "error", error.body.error);
 			} else {
-				setMediaError("Unable to upload media.");
+				setMessage("media", "error", "Unable to upload media.");
 			}
 		} finally {
 			uploading = false;
@@ -583,24 +612,21 @@
 		}
 		const mediaId = extractMediaId(mediaUrl);
 		if (!mediaId) {
-			setMediaError("Unable to find media ID for deletion.");
+			setMessage("media", "error", "Unable to find media ID for deletion.");
 			return;
 		}
 		if (!confirm("Remove this image from the product?")) {
 			return;
 		}
-		clearMediaMessages();
+		clearMessages("media");
 		mediaDeleting = mediaId;
 		try {
 			const updated = await api.detachProductMedia(resolvedProductId, mediaId);
-			product = updated;
-			hydrateForm(updated);
-			captureSavedSnapshot();
-			onProductUpdated?.(updated);
-			setMediaStatus("Media removed.");
+			applyUpdatedProduct(updated);
+			setMessage("media", "success", "Media removed.");
 		} catch (err) {
 			console.error(err);
-			setMediaError("Unable to remove media.");
+			setMessage("media", "error", "Unable to remove media.");
 		} finally {
 			mediaDeleting = null;
 		}
@@ -634,22 +660,20 @@
 			.filter((id): id is string => Boolean(id));
 
 		if (mediaIds.length !== pendingMediaOrder.length) {
-			setMediaError("Unable to reorder media.");
+			setMessage("media", "error", "Unable to reorder media.");
 			return;
 		}
 
 		mediaReordering = true;
-		clearMediaMessages();
+		clearMessages("media");
 		try {
 			const updated = await api.updateProductMediaOrder(resolvedProductId, mediaIds);
-			product = updated;
+			applyUpdatedProduct(updated, { hydrate: false });
 			pendingMediaOrder = null;
-			captureSavedSnapshot();
-			onProductUpdated?.(updated);
-			setMediaStatus("Image order updated.");
+			setMessage("media", "success", "Image order updated.");
 		} catch (err) {
 			console.error(err);
-			setMediaError("Unable to update image order.");
+			setMessage("media", "error", "Unable to update image order.");
 		} finally {
 			mediaReordering = false;
 		}
@@ -677,7 +701,7 @@
 			);
 		} catch (err) {
 			console.error(err);
-			setRelatedError("Unable to search related products.");
+			setMessage("related", "error", "Unable to search related products.");
 		} finally {
 			relatedLoading = false;
 		}
@@ -711,7 +735,7 @@
 		relatedOptions = [];
 		relatedQuery = "";
 		relatedLastSearchedQuery = "";
-		clearRelatedMessages();
+		clearMessages("related");
 	}
 
 	async function saveRelatedProducts() {
@@ -719,20 +743,17 @@
 			return;
 		}
 		relatedSaving = true;
-		clearRelatedMessages();
+		clearMessages("related");
 		try {
 			const updated = await api.updateProductRelated(
 				resolvedProductId,
 				relatedSelected.map((item) => item.id)
 			);
-			product = updated;
-			hydrateForm(updated);
-			captureSavedSnapshot();
-			onProductUpdated?.(updated);
-			setRelatedStatus("Related products updated.");
+			applyUpdatedProduct(updated);
+			setMessage("related", "success", "Related products updated.");
 		} catch (err) {
 			console.error(err);
-			setRelatedError("Unable to update related products.");
+			setMessage("related", "error", "Unable to update related products.");
 		} finally {
 			relatedSaving = false;
 		}
@@ -869,6 +890,131 @@
 			<NumberInput id="admin-product-stock" name="stock" class="mt-1" min="0" bind:value={stock} />
 		</div>
 	</div>
+{/snippet}
+
+{#snippet ProductStateChips()}
+	{#if canEditProduct}
+		<div class="mt-1 flex flex-wrap items-center gap-2 text-xs">
+			<span
+				class={`rounded-full px-2 py-1 font-semibold ${
+					isPublished
+						? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
+						: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200"
+				}`}
+			>
+				{isPublished ? "Published" : "Unpublished"}
+			</span>
+			{#if hasDraftChanges}
+				<span
+					class="rounded-full bg-blue-100 px-2 py-1 font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-200"
+				>
+					Draft changes
+				</span>
+			{/if}
+		</div>
+	{/if}
+{/snippet}
+
+{#snippet DismissibleAlert(
+	scope: MessageScope,
+	tone: MessageTone,
+	message: string,
+	marginClass: string = "mt-4"
+)}
+	<div class={marginClass}>
+		<Alert
+			{message}
+			{tone}
+			icon={tone === "error" ? "bi-x-circle-fill" : "bi-check-circle-fill"}
+			onClose={() => clearMessage(scope, tone)}
+		/>
+	</div>
+{/snippet}
+
+{#snippet ProductActionButtons(layoutMode: "split" | "stacked")}
+	{@const isStacked = layoutMode === "stacked"}
+	<Button
+		variant="primary"
+		size={isStacked ? "large" : "regular"}
+		class={isStacked ? `w-full ${canEditProduct ? "" : "sm:col-span-2"}` : "min-w-40"}
+		type="button"
+		onclick={saveProduct}
+		disabled={saving}
+	>
+		<i
+			class={`bi ${
+				saving
+					? "bi-floppy-fill"
+					: isStacked && !canEditProduct
+						? "bi-patch-plus-fill"
+						: "bi-floppy-fill"
+			} mr-1`}
+		></i>
+		{saving ? "Saving..." : isStacked && !canEditProduct ? "Create draft" : "Save draft"}
+	</Button>
+	{#if canEditProduct}
+		<Button
+			variant="regular"
+			size={isStacked ? "large" : "regular"}
+			class={isStacked ? "w-full" : ""}
+			type="button"
+			disabled={previewingDraft}
+			onclick={previewDraft}
+		>
+			<i class={`bi ${previewActive ? "bi-eye-slash-fill" : "bi-eye-fill"} mr-1`}></i>
+			{previewingDraft
+				? previewActive
+					? "Exiting..."
+					: "Opening..."
+				: previewActive
+					? "Exit preview"
+					: "Preview"}
+		</Button>
+		<Button
+			variant="success"
+			size={isStacked ? "large" : "regular"}
+			class={isStacked ? "w-full" : ""}
+			type="button"
+			disabled={publishing || (!hasDraftChanges && !hasUnsavedChanges)}
+			onclick={publishProduct}
+		>
+			<i class="bi bi-send-check-fill mr-1"></i>
+			{publishing ? "Publishing..." : "Publish"}
+		</Button>
+		<Button
+			variant="warning"
+			size={isStacked ? "large" : "regular"}
+			class={isStacked ? "w-full" : ""}
+			type="button"
+			disabled={unpublishing || !isPublished}
+			onclick={unpublishProduct}
+		>
+			<i class="bi bi-eye-slash-fill mr-1"></i>
+			{unpublishing ? "Unpublishing..." : "Unpublish"}
+		</Button>
+		<Button
+			variant="warning"
+			size={isStacked ? "large" : "regular"}
+			class={isStacked ? "w-full" : ""}
+			type="button"
+			disabled={discardingDraft || (!hasDraftChanges && !hasUnsavedChanges)}
+			onclick={discardDraft}
+		>
+			<i class="bi bi-arrow-counterclockwise mr-1"></i>
+			{discardingDraft ? "Discarding..." : "Discard draft"}
+		</Button>
+		<Button
+			variant="danger"
+			size={isStacked ? "large" : "regular"}
+			class={isStacked ? "w-full" : ""}
+			type="button"
+			disabled={deleting}
+			onclick={deleteProduct}
+		>
+			<i class="bi bi-trash-fill mr-1"></i>
+			{deleting ? "Deleting..." : "Delete product"}
+		</Button>
+	{/if}
 {/snippet}
 
 {#snippet MediaUpload(showHint: boolean)}
@@ -1090,30 +1236,10 @@
 
 	{#if showMessages}
 		{#if relatedErrorMessage}
-			<div class="mt-4">
-				<Alert
-					message={relatedErrorMessage}
-					tone="error"
-					icon="bi-x-circle-fill"
-					onClose={() => {
-						relatedErrorMessage = "";
-						onErrorMessage?.("");
-					}}
-				/>
-			</div>
+			{@render DismissibleAlert("related", "error", relatedErrorMessage)}
 		{/if}
 		{#if relatedStatusMessage}
-			<div class="mt-4">
-				<Alert
-					message={relatedStatusMessage}
-					tone="success"
-					icon="bi-check-circle-fill"
-					onClose={() => {
-						relatedStatusMessage = "";
-						onStatusMessage?.("");
-					}}
-				/>
-			</div>
+			{@render DismissibleAlert("related", "success", relatedStatusMessage)}
 		{/if}
 	{/if}
 {/snippet}
@@ -1135,108 +1261,17 @@
 				{@render ProductFields()}
 			</div>
 
-			{#if canEditProduct}
-				<div class="mt-4 flex flex-wrap items-center gap-2 text-xs">
-					<span
-						class={`rounded-full px-2 py-1 font-semibold ${
-							isPublished
-								? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
-								: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200"
-						}`}
-					>
-						{isPublished ? "Published" : "Unpublished"}
-					</span>
-					{#if hasDraftChanges}
-						<span
-							class="rounded-full bg-blue-100 px-2 py-1 font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-200"
-						>
-							Draft changes
-						</span>
-					{/if}
-				</div>
-			{/if}
+			{@render ProductStateChips()}
 
 			<div class="mt-6 flex flex-wrap items-center gap-2">
-				<Button
-					variant="primary"
-					type="button"
-					class="min-w-40"
-					onclick={saveProduct}
-					disabled={saving}
-				>
-					<i class="bi bi-floppy-fill mr-1"></i>
-					{saving ? "Saving..." : "Save draft"}
-				</Button>
-				{#if canEditProduct}
-					<Button variant="regular" type="button" disabled={previewingDraft} onclick={previewDraft}>
-						<i class={`bi ${previewActive ? "bi-eye-slash-fill" : "bi-eye-fill"} mr-1`}></i>
-						{previewingDraft
-							? previewActive
-								? "Exiting..."
-								: "Opening..."
-							: previewActive
-								? "Exit preview"
-								: "Preview"}
-					</Button>
-					<Button
-						variant="success"
-						type="button"
-						disabled={publishing || (!hasDraftChanges && !hasUnsavedChanges)}
-						onclick={publishProduct}
-					>
-						<i class="bi bi-send-check-fill mr-1"></i>
-						{publishing ? "Publishing..." : "Publish"}
-					</Button>
-					<Button
-						variant="warning"
-						type="button"
-						disabled={unpublishing || !isPublished}
-						onclick={unpublishProduct}
-					>
-						<i class="bi bi-eye-slash-fill mr-1"></i>
-						{unpublishing ? "Unpublishing..." : "Unpublish"}
-					</Button>
-					<Button
-						variant="warning"
-						type="button"
-						disabled={discardingDraft || (!hasDraftChanges && !hasUnsavedChanges)}
-						onclick={discardDraft}
-					>
-						<i class="bi bi-arrow-counterclockwise mr-1"></i>
-						{discardingDraft ? "Discarding..." : "Discard draft"}
-					</Button>
-					<Button variant="danger" type="button" disabled={deleting} onclick={deleteProduct}>
-						<i class="bi bi-trash-fill mr-1"></i>
-						{deleting ? "Deleting..." : "Delete product"}
-					</Button>
-				{/if}
+				{@render ProductActionButtons("split")}
 			</div>
 			{#if showMessages}
 				{#if productErrorMessage}
-					<div class="mt-4">
-						<Alert
-							message={productErrorMessage}
-							tone="error"
-							icon="bi-x-circle-fill"
-							onClose={() => {
-								productErrorMessage = "";
-								onErrorMessage?.("");
-							}}
-						/>
-					</div>
+					{@render DismissibleAlert("product", "error", productErrorMessage)}
 				{/if}
 				{#if productStatusMessage}
-					<div class="mt-4">
-						<Alert
-							message={productStatusMessage}
-							tone="success"
-							icon="bi-check-circle-fill"
-							onClose={() => {
-								productStatusMessage = "";
-								onStatusMessage?.("");
-							}}
-						/>
-					</div>
+					{@render DismissibleAlert("product", "success", productStatusMessage)}
 				{/if}
 			{/if}
 		</div>
@@ -1255,30 +1290,10 @@
 			</div>
 			{#if showMessages}
 				{#if mediaErrorMessage}
-					<div class="mt-4">
-						<Alert
-							message={mediaErrorMessage}
-							tone="error"
-							icon="bi-x-circle-fill"
-							onClose={() => {
-								mediaErrorMessage = "";
-								onErrorMessage?.("");
-							}}
-						/>
-					</div>
+					{@render DismissibleAlert("media", "error", mediaErrorMessage)}
 				{/if}
 				{#if mediaStatusMessage}
-					<div class="mt-4">
-						<Alert
-							message={mediaStatusMessage}
-							tone="success"
-							icon="bi-check-circle-fill"
-							onClose={() => {
-								mediaStatusMessage = "";
-								onStatusMessage?.("");
-							}}
-						/>
-					</div>
+					{@render DismissibleAlert("media", "success", mediaStatusMessage)}
 				{/if}
 			{/if}
 		</div>
@@ -1312,163 +1327,27 @@
 
 		<div class="mt-4 space-y-4 text-sm">
 			{@render ProductFields()}
-			{#if canEditProduct}
-				<div class="mt-1 flex flex-wrap items-center gap-2 text-xs">
-					<span
-						class={`rounded-full px-2 py-1 font-semibold ${
-							isPublished
-								? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
-								: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200"
-						}`}
-					>
-						{isPublished ? "Published" : "Unpublished"}
-					</span>
-					{#if hasDraftChanges}
-						<span
-							class="rounded-full bg-blue-100 px-2 py-1 font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-200"
-						>
-							Draft changes
-						</span>
-					{/if}
-				</div>
-			{/if}
+			{@render ProductStateChips()}
 			<div
 				class="mt-2 mb-6 grid grid-cols-1 gap-2 border-b border-gray-200 pb-6 text-base sm:grid-cols-2 dark:border-gray-800"
 			>
-				<Button
-					variant="primary"
-					size="large"
-					class={`w-full ${canEditProduct ? "" : "sm:col-span-2"}`}
-					type="button"
-					onclick={saveProduct}
-					disabled={saving}
-				>
-					<i
-						class={`bi ${
-							saving ? "bi-floppy-fill" : canEditProduct ? "bi-floppy-fill" : "bi-patch-plus-fill"
-						} mr-1`}
-					></i>
-					{saving ? "Saving..." : canEditProduct ? "Save draft" : "Create draft"}
-				</Button>
-				{#if canEditProduct}
-					<Button
-						variant="regular"
-						size="large"
-						class="w-full"
-						type="button"
-						disabled={previewingDraft}
-						onclick={previewDraft}
-					>
-						<i class={`bi ${previewActive ? "bi-eye-slash-fill" : "bi-eye-fill"}`}></i>
-						{previewingDraft
-							? previewActive
-								? "Exiting..."
-								: "Opening..."
-							: previewActive
-								? "Exit preview"
-								: "Preview"}
-					</Button>
-					<Button
-						variant="success"
-						size="large"
-						class="w-full"
-						type="button"
-						disabled={publishing || (!hasDraftChanges && !hasUnsavedChanges)}
-						onclick={publishProduct}
-					>
-						<i class="bi bi-send-check-fill"></i>
-						{publishing ? "Publishing..." : "Publish"}
-					</Button>
-					<Button
-						variant="warning"
-						size="large"
-						class="w-full"
-						type="button"
-						disabled={unpublishing || !isPublished}
-						onclick={unpublishProduct}
-					>
-						<i class="bi bi-eye-slash-fill"></i>
-						{unpublishing ? "Unpublishing..." : "Unpublish"}
-					</Button>
-					<Button
-						variant="warning"
-						size="large"
-						class="w-full"
-						type="button"
-						disabled={discardingDraft || (!hasDraftChanges && !hasUnsavedChanges)}
-						onclick={discardDraft}
-					>
-						<i class="bi bi-arrow-counterclockwise"></i>
-						{discardingDraft ? "Discarding..." : "Discard draft"}
-					</Button>
-					<Button
-						variant="danger"
-						size="large"
-						class="w-full"
-						type="button"
-						disabled={deleting}
-						onclick={deleteProduct}
-					>
-						<i class="bi bi-trash-fill"></i>
-						{deleting ? "Deleting..." : "Delete product"}
-					</Button>
-				{/if}
+				{@render ProductActionButtons("stacked")}
 			</div>
 			{#if showMessages}
 				{#if productErrorMessage}
-					<div class="mb-4">
-						<Alert
-							message={productErrorMessage}
-							tone="error"
-							icon="bi-x-circle-fill"
-							onClose={() => {
-								productErrorMessage = "";
-								onErrorMessage?.("");
-							}}
-						/>
-					</div>
+					{@render DismissibleAlert("product", "error", productErrorMessage, "mb-4")}
 				{/if}
 				{#if productStatusMessage}
-					<div class="mb-4">
-						<Alert
-							message={productStatusMessage}
-							tone="success"
-							icon="bi-check-circle-fill"
-							onClose={() => {
-								productStatusMessage = "";
-								onStatusMessage?.("");
-							}}
-						/>
-					</div>
+					{@render DismissibleAlert("product", "success", productStatusMessage, "mb-4")}
 				{/if}
 			{/if}
 			{@render MediaUpload(true)}
 			{#if showMessages}
 				{#if mediaErrorMessage}
-					<div class="mt-4">
-						<Alert
-							message={mediaErrorMessage}
-							tone="error"
-							icon="bi-x-circle-fill"
-							onClose={() => {
-								mediaErrorMessage = "";
-								onErrorMessage?.("");
-							}}
-						/>
-					</div>
+					{@render DismissibleAlert("media", "error", mediaErrorMessage)}
 				{/if}
 				{#if mediaStatusMessage}
-					<div class="mt-4">
-						<Alert
-							message={mediaStatusMessage}
-							tone="success"
-							icon="bi-check-circle-fill"
-							onClose={() => {
-								mediaStatusMessage = "";
-								onStatusMessage?.("");
-							}}
-						/>
-					</div>
+					{@render DismissibleAlert("media", "success", mediaStatusMessage)}
 				{/if}
 			{/if}
 		</div>

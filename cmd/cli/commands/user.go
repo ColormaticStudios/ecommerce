@@ -2,6 +2,7 @@ package commands
 
 import (
 	"ecommerce/config"
+	"ecommerce/internal/migrations"
 	"ecommerce/models"
 	"fmt"
 	"log"
@@ -270,18 +271,8 @@ func getDB() *gorm.DB {
 	)
 	db = db.Session(&gorm.Session{Logger: gormLogger})
 
-	if err := db.AutoMigrate(
-		&models.User{},
-		&models.Product{},
-		&models.Order{},
-		&models.OrderItem{},
-		&models.Cart{},
-		&models.CartItem{},
-		&models.MediaObject{},
-		&models.MediaVariant{},
-		&models.MediaReference{},
-	); err != nil {
-		log.Fatalf("Failed to migrate database schema: %v", err)
+	if err := migrations.Run(db); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
 	}
 
 	return db

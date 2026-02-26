@@ -27,15 +27,8 @@ type MediaOrderRequest struct {
 
 func SetProfilePhoto(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		subject := c.GetString("userID")
-		if subject == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
-			return
-		}
-
-		var user models.User
-		if err := db.Where("subject = ?", subject).First(&user).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "User profile not found"})
+		user, ok := getAuthenticatedUserWithNotFound(db, c)
+		if !ok {
 			return
 		}
 
@@ -142,15 +135,8 @@ func SetProfilePhoto(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 
 func DeleteProfilePhoto(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		subject := c.GetString("userID")
-		if subject == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
-			return
-		}
-
-		var user models.User
-		if err := db.Where("subject = ?", subject).First(&user).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "User profile not found"})
+		user, ok := getAuthenticatedUserWithNotFound(db, c)
+		if !ok {
 			return
 		}
 

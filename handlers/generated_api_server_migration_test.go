@@ -32,7 +32,8 @@ func setupGeneratedRouterWithConfig(t *testing.T, cfg GeneratedAPIServerConfig, 
 	}
 
 	r := gin.New()
-	server := NewGeneratedAPIServer(db, nil, cfg)
+	server, err := NewGeneratedAPIServer(db, nil, cfg)
+	require.NoError(t, err)
 	apicontract.RegisterHandlers(r, server)
 	return r, db
 }
@@ -574,7 +575,8 @@ func setupMediaRouter(t *testing.T, customerSubject, adminSubject string) (*gin.
 
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	server := NewGeneratedAPIServer(db, mediaService, GeneratedAPIServerConfig{JWTSecret: generatedTestJWTSecret})
+	server, err := NewGeneratedAPIServer(db, mediaService, GeneratedAPIServerConfig{JWTSecret: generatedTestJWTSecret})
+	require.NoError(t, err)
 	apicontract.RegisterHandlers(r, server)
 
 	return r, &customer, &admin, &product, &nonImage, &image, &prodA, &prodB, &processing, &failed, db
@@ -1211,9 +1213,10 @@ func TestAdminPreviewSessionAndPublicDraftRendering(t *testing.T) {
 	}).Error)
 
 	r := gin.New()
-	server := NewGeneratedAPIServer(db, mediaService, GeneratedAPIServerConfig{
+	server, err := NewGeneratedAPIServer(db, mediaService, GeneratedAPIServerConfig{
 		JWTSecret: generatedTestJWTSecret,
 	})
+	require.NoError(t, err)
 	apicontract.RegisterHandlers(r, server)
 
 	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)

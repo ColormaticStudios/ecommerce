@@ -41,9 +41,10 @@ func setupGeneratedRouter(t *testing.T) *gin.Engine {
 	}).Error)
 
 	r := gin.New()
-	server := NewGeneratedAPIServer(db, nil, GeneratedAPIServerConfig{
+	server, err := NewGeneratedAPIServer(db, nil, GeneratedAPIServerConfig{
 		JWTSecret: generatedTestJWTSecret,
 	})
+	require.NoError(t, err)
 	apicontract.RegisterHandlers(r, server)
 	return r
 }
@@ -70,9 +71,10 @@ func setupGeneratedCartRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
 	}).Error)
 
 	r := gin.New()
-	server := NewGeneratedAPIServer(db, nil, GeneratedAPIServerConfig{
+	server, err := NewGeneratedAPIServer(db, nil, GeneratedAPIServerConfig{
 		JWTSecret: generatedTestJWTSecret,
 	})
+	require.NoError(t, err)
 	apicontract.RegisterHandlers(r, server)
 	return r, db
 }
@@ -125,6 +127,25 @@ func TestGeneratedQueryValidation(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestGeneratedProfileReturnsUnauthorizedWhenTokenSubjectMissing(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := newTestDB(t, &models.User{})
+	r := gin.New()
+	server, err := NewGeneratedAPIServer(db, nil, GeneratedAPIServerConfig{
+		JWTSecret: generatedTestJWTSecret,
+	})
+	require.NoError(t, err)
+	apicontract.RegisterHandlers(r, server)
+
+	token := issueBearerToken(t, "missing-subject")
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/me/", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
 func TestGeneratedGetProductSuccess(t *testing.T) {

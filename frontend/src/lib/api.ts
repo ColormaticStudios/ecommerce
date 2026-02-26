@@ -11,11 +11,7 @@ import {
 	type SavedAddressModel,
 	parseProduct,
 	parseOrder,
-	parseCart,
-	parseCartItem,
 	parseProfile,
-	parseSavedPaymentMethod,
-	parseSavedAddress,
 } from "$lib/models";
 import { API_BASE_URL } from "$lib/config";
 import { fetchProduct, fetchProducts, type ListProductsQuery } from "$lib/api/openapi-client";
@@ -26,6 +22,9 @@ import {
 } from "$lib/storefront";
 import { appendQueryParams } from "$lib/api/http";
 import type { components, paths } from "$lib/api/generated/openapi";
+import * as cartDomain from "$lib/api/domains/cart";
+import * as ordersDomain from "$lib/api/domains/orders";
+import * as profileDomain from "$lib/api/domains/profile";
 
 const API_ROUTE = "/api/v1";
 export const DRAFT_PREVIEW_SYNC_EVENT = "draft-preview:changed";
@@ -36,26 +35,16 @@ export const STOREFRONT_SYNC_STORAGE_KEY = "storefront:state";
 type RegisterRequest = components["schemas"]["RegisterRequest"];
 type LoginRequest = components["schemas"]["LoginRequest"];
 type AuthResponse = components["schemas"]["AuthResponse"];
-type UpdateProfileRequest = components["schemas"]["UpdateProfileRequest"];
-type CreateOrderRequest = components["schemas"]["CreateOrderRequest"];
-type ProcessPaymentRequest = components["schemas"]["ProcessPaymentRequest"];
-type ProcessPaymentResponse = components["schemas"]["ProcessPaymentResponse"];
 type CheckoutPluginCatalog = components["schemas"]["CheckoutPluginCatalog"];
 type CheckoutPluginType = components["schemas"]["CheckoutPlugin"]["type"];
-type CheckoutQuoteRequest = components["schemas"]["CheckoutQuoteRequest"];
-type CheckoutQuoteResponse = components["schemas"]["CheckoutQuoteResponse"];
 type UpdateCheckoutPluginRequest = components["schemas"]["UpdateCheckoutPluginRequest"];
 type MessageResponse = components["schemas"]["MessageResponse"];
-type CartPayload = components["schemas"]["Cart"];
-type CartItemPayload = components["schemas"]["CartItem"];
 type ProductInput = components["schemas"]["ProductInput"];
 type MediaIDsRequest = components["schemas"]["MediaIDsRequest"];
 type UpdateRelatedRequest = components["schemas"]["UpdateRelatedRequest"];
 type OrderPagePayload = components["schemas"]["OrderPage"];
 type UserPagePayload = components["schemas"]["UserPage"];
 type UpdateOrderStatusRequest = components["schemas"]["UpdateOrderStatusRequest"];
-type CreateSavedPaymentMethodRequest = components["schemas"]["CreateSavedPaymentMethodRequest"];
-type CreateSavedAddressRequest = components["schemas"]["CreateSavedAddressRequest"];
 type StorefrontSettingsRequest = components["schemas"]["StorefrontSettingsRequest"];
 type StorefrontSettingsResponse = components["schemas"]["StorefrontSettingsResponse"];
 type DraftPreviewSessionResponse = components["schemas"]["DraftPreviewSessionResponse"];
@@ -63,7 +52,7 @@ type ListUserOrdersQuery = paths["/api/v1/me/orders"]["get"]["parameters"]["quer
 type ListAdminOrdersQuery = paths["/api/v1/admin/orders"]["get"]["parameters"]["query"];
 type ListAdminProductsQuery = paths["/api/v1/admin/products"]["get"]["parameters"]["query"];
 type ListUsersQuery = paths["/api/v1/admin/users"]["get"]["parameters"]["query"];
-type ListOrdersParams = Omit<NonNullable<ListUserOrdersQuery>, "status"> & {
+export type ListOrdersParams = Omit<NonNullable<ListUserOrdersQuery>, "status"> & {
 	status?: NonNullable<ListUserOrdersQuery>["status"] | "";
 };
 
@@ -147,6 +136,11 @@ export class API {
 			}
 		}
 		return "";
+	}
+
+	public bootstrapAuthState(authenticated: boolean): void {
+		this.authenticated = authenticated;
+		this.authStateResolved = true;
 	}
 
 	private async request<T>(
@@ -247,26 +241,25 @@ export class API {
 		this.authStateResolved = true;
 	}
 
-	public async createOrder(data: CreateOrderRequest): Promise<OrderModel> {
-		const response = await this.request<OrderPayload>("POST", "/me/orders", data);
-		return parseOrder(response);
+	public async createOrder(data: components["schemas"]["CreateOrderRequest"]): Promise<OrderModel> {
+		return ordersDomain.createOrder(this.request.bind(this), data);
 	}
 
-	public async processPayment(orderId: number, data?: ProcessPaymentRequest): Promise<OrderModel> {
-		const response = await this.request<ProcessPaymentResponse>(
-			"POST",
-			`/me/orders/${orderId}/pay`,
-			data
-		);
-		return parseOrder(response.order);
+	public async processPayment(
+		orderId: number,
+		data?: components["schemas"]["ProcessPaymentRequest"]
+	): Promise<OrderModel> {
+		return ordersDomain.processPayment(this.request.bind(this), orderId, data);
 	}
 
-	public async listCheckoutPlugins(): Promise<CheckoutPluginCatalog> {
-		return await this.request<CheckoutPluginCatalog>("GET", "/me/checkout/plugins");
+	public async listCheckoutPlugins(): Promise<components["schemas"]["CheckoutPluginCatalog"]> {
+		return ordersDomain.listCheckoutPlugins(this.request.bind(this));
 	}
 
-	public async quoteCheckout(data: CheckoutQuoteRequest): Promise<CheckoutQuoteResponse> {
-		return await this.request<CheckoutQuoteResponse>("POST", "/me/checkout/quote", data);
+	public async quoteCheckout(
+		data: components["schemas"]["CheckoutQuoteRequest"]
+	): Promise<components["schemas"]["CheckoutQuoteResponse"]> {
+		return ordersDomain.quoteCheckout(this.request.bind(this), data);
 	}
 
 	// Product Management
@@ -315,46 +308,37 @@ export class API {
 	}
 
 	// Cart Operations
-	public async viewCart(): Promise<CartModel> {
-		const response = await this.request<CartPayload>("GET", "/me/cart");
-		const cart = parseCart(response);
-
-		return cart;
+	public async viewCart() {
+		return cartDomain.viewCart(this.request.bind(this));
 	}
 
 	public async addToCart(data: components["schemas"]["AddCartItemRequest"]): Promise<CartModel> {
-		const response = await this.request<CartPayload>("POST", "/me/cart", data);
-		const cart = parseCart(response);
-
-		return cart;
+		return cartDomain.addToCart(this.request.bind(this), data);
 	}
 
 	public async updateCartItem(
 		itemId: number,
 		data: components["schemas"]["UpdateCartItemRequest"]
 	): Promise<CartItemModel> {
-		const response = await this.request<CartItemPayload>("PATCH", `/me/cart/${itemId}`, data);
-		const cartItem = parseCartItem(response);
-
-		return cartItem;
+		return cartDomain.updateCartItem(this.request.bind(this), itemId, data);
 	}
 
 	public async removeCartItem(itemId: number): Promise<MessageResponse> {
-		return await this.request("DELETE", `/me/cart/${itemId}`);
+		return cartDomain.removeCartItem(this.request.bind(this), itemId);
 	}
 
 	// Profile Management
 	public async getProfile(): Promise<UserModel> {
-		// There's a weird quirk about how Gin handles the routing so we have to hit `/me/`, not `/me`
-		const response = await this.request<ProfileModel>("GET", "/me/");
+		const response = await profileDomain.getProfile(this.request.bind(this));
 		this.authenticated = true;
 		this.authStateResolved = true;
-		return parseProfile(response);
+		return response;
 	}
 
-	public async updateProfile(data: UpdateProfileRequest): Promise<UserModel> {
-		const response = await this.request<ProfileModel>("PATCH", "/me/", data);
-		return parseProfile(response);
+	public async updateProfile(
+		data: components["schemas"]["UpdateProfileRequest"]
+	): Promise<UserModel> {
+		return profileDomain.updateProfile(this.request.bind(this), data);
 	}
 
 	public async uploadMedia(file: File): Promise<string> {
@@ -426,77 +410,49 @@ export class API {
 	}
 
 	public async attachProfilePhoto(mediaId: string): Promise<UserModel> {
-		const response = await this.request<ProfileModel>("POST", "/me/profile-photo", {
-			media_id: mediaId,
-		});
-		return parseProfile(response);
+		return profileDomain.attachProfilePhoto(this.request.bind(this), mediaId);
 	}
 
 	public async removeProfilePhoto(): Promise<UserModel> {
-		const response = await this.request<ProfileModel>("DELETE", "/me/profile-photo");
-		return parseProfile(response);
+		return profileDomain.removeProfilePhoto(this.request.bind(this));
 	}
 
 	// Saved Payment Methods
 	public async listSavedPaymentMethods(): Promise<SavedPaymentMethodModel[]> {
-		const response = await this.request<components["schemas"]["SavedPaymentMethod"][]>(
-			"GET",
-			"/me/payment-methods"
-		);
-		return response.map(parseSavedPaymentMethod);
+		return profileDomain.listSavedPaymentMethods(this.request.bind(this));
 	}
 
 	public async createSavedPaymentMethod(
-		data: CreateSavedPaymentMethodRequest
+		data: components["schemas"]["CreateSavedPaymentMethodRequest"]
 	): Promise<SavedPaymentMethodModel> {
-		const response = await this.request<components["schemas"]["SavedPaymentMethod"]>(
-			"POST",
-			"/me/payment-methods",
-			data
-		);
-		return parseSavedPaymentMethod(response);
+		return profileDomain.createSavedPaymentMethod(this.request.bind(this), data);
 	}
 
 	public async deleteSavedPaymentMethod(id: number): Promise<MessageResponse> {
-		return await this.request("DELETE", `/me/payment-methods/${id}`);
+		return profileDomain.deleteSavedPaymentMethod(this.request.bind(this), id);
 	}
 
 	public async setDefaultPaymentMethod(id: number): Promise<SavedPaymentMethodModel> {
-		const response = await this.request<components["schemas"]["SavedPaymentMethod"]>(
-			"PATCH",
-			`/me/payment-methods/${id}/default`
-		);
-		return parseSavedPaymentMethod(response);
+		return profileDomain.setDefaultPaymentMethod(this.request.bind(this), id);
 	}
 
 	// Saved Addresses
 	public async listSavedAddresses(): Promise<SavedAddressModel[]> {
-		const response = await this.request<components["schemas"]["SavedAddress"][]>(
-			"GET",
-			"/me/addresses"
-		);
-		return response.map(parseSavedAddress);
+		return profileDomain.listSavedAddresses(this.request.bind(this));
 	}
 
-	public async createSavedAddress(data: CreateSavedAddressRequest): Promise<SavedAddressModel> {
-		const response = await this.request<components["schemas"]["SavedAddress"]>(
-			"POST",
-			"/me/addresses",
-			data
-		);
-		return parseSavedAddress(response);
+	public async createSavedAddress(
+		data: components["schemas"]["CreateSavedAddressRequest"]
+	): Promise<SavedAddressModel> {
+		return profileDomain.createSavedAddress(this.request.bind(this), data);
 	}
 
 	public async deleteSavedAddress(id: number): Promise<MessageResponse> {
-		return await this.request("DELETE", `/me/addresses/${id}`);
+		return profileDomain.deleteSavedAddress(this.request.bind(this), id);
 	}
 
 	public async setDefaultAddress(id: number): Promise<SavedAddressModel> {
-		const response = await this.request<components["schemas"]["SavedAddress"]>(
-			"PATCH",
-			`/me/addresses/${id}/default`
-		);
-		return parseSavedAddress(response);
+		return profileDomain.setDefaultAddress(this.request.bind(this), id);
 	}
 
 	// Admin Operations
@@ -691,25 +647,15 @@ export class API {
 	public async listOrders(
 		params?: ListOrdersParams
 	): Promise<{ data: OrderModel[]; pagination: OrderPagePayload["pagination"] }> {
-		const query = {
-			...params,
-			status: params?.status === "" ? undefined : params?.status,
-		};
-		const response = await this.request<OrderPagePayload>("GET", "/me/orders", undefined, query);
-		return {
-			data: response.data.map(parseOrder),
-			pagination: response.pagination,
-		};
+		return ordersDomain.listOrders(this.request.bind(this), params);
 	}
 
 	public async getOrderDetails(orderId: number): Promise<OrderModel> {
-		const response = await this.request<OrderPayload>("GET", `/me/orders/${orderId}`);
-		return parseOrder(response);
+		return ordersDomain.getOrderDetails(this.request.bind(this), orderId);
 	}
 
 	public async cancelOrder(orderId: number): Promise<OrderModel> {
-		const response = await this.request<OrderPayload>("POST", `/me/orders/${orderId}/cancel`);
-		return parseOrder(response);
+		return ordersDomain.cancelOrder(this.request.bind(this), orderId);
 	}
 
 	// Admin Order Management
@@ -771,7 +717,7 @@ export class API {
 			return true;
 		} catch (err) {
 			const error = err as { status?: number };
-			if (error.status === 401) {
+			if (error.status === 401 || error.status === 404) {
 				this.authenticated = false;
 				this.authStateResolved = true;
 				return false;

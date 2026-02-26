@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"ecommerce/internal/apicontract"
@@ -38,13 +39,13 @@ type GeneratedAPIServer struct {
 	mediaUploads       http.Handler
 }
 
-func NewGeneratedAPIServer(db *gorm.DB, mediaService *media.Service, cfg GeneratedAPIServerConfig) *GeneratedAPIServer {
+func NewGeneratedAPIServer(db *gorm.DB, mediaService *media.Service, cfg GeneratedAPIServerConfig) (*GeneratedAPIServer, error) {
 	pluginManager := cfg.CheckoutPlugins
 	if pluginManager == nil {
 		pluginManager = checkoutplugins.NewDefaultManager()
 	}
 	if err := syncCheckoutProviderSettings(db, pluginManager); err != nil {
-		panic(err)
+		return nil, fmt.Errorf("sync checkout provider settings: %w", err)
 	}
 
 	return &GeneratedAPIServer{
@@ -58,7 +59,7 @@ func NewGeneratedAPIServer(db *gorm.DB, mediaService *media.Service, cfg Generat
 		oidcClientID:       cfg.OIDCClientID,
 		oidcRedirectURI:    cfg.OIDCRedirectURI,
 		mediaUploads:       cfg.MediaUploads,
-	}
+	}, nil
 }
 
 func (s *GeneratedAPIServer) requireAuthenticatedUser(c *gin.Context, requiredRole string) bool {

@@ -128,3 +128,17 @@ test("invalid data paths show user-facing errors", async ({ page, request }) => 
 	});
 	expect(invalidLoginResponse.status()).toBe(401);
 });
+
+test("guest homepage does not probe profile endpoint", async ({ page }) => {
+	const profileRequests: string[] = [];
+	page.on("request", (request) => {
+		if (request.url().includes("/api/v1/me/")) {
+			profileRequests.push(request.url());
+		}
+	});
+
+	await page.goto("/");
+	await expect(page.getByRole("link", { name: "Log In", exact: true })).toBeVisible();
+	await expect(page.getByRole("link", { name: "Sign Up", exact: true })).toBeVisible();
+	expect(profileRequests).toHaveLength(0);
+});

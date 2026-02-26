@@ -1,4 +1,4 @@
-.PHONY: all api cli run test clean release openapi-gen openapi-check openapi-docs
+.PHONY: all api cli run test test-services test-handlers test-integration check clean release openapi-gen openapi-check openapi-docs migrate migrate-check
 
 # Build the API server and the CLI tool
 all: api cli
@@ -21,6 +21,27 @@ run: api
 test:
 	@go test ./...
 	@cd frontend && bun run test:e2e
+
+test-services:
+	@GOCACHE=/tmp/go-build go test ./internal/services/...
+
+test-handlers:
+	@GOCACHE=/tmp/go-build go test ./handlers
+
+test-integration:
+	@GOCACHE=/tmp/go-build go test ./handlers -run Integration
+
+check: openapi-check
+	@GOCACHE=/tmp/go-build go test ./internal/services/...
+	@GOCACHE=/tmp/go-build go test ./handlers
+
+# Apply database migrations
+migrate:
+	@go run ./cmd/migrate
+
+# Ensure database is at latest migration version
+migrate-check:
+	@go run ./cmd/migrate check
 
 # Generate backend + frontend API contract types from OpenAPI
 openapi-gen:

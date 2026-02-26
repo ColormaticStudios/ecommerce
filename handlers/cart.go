@@ -71,17 +71,8 @@ func applyCartMedia(cart *models.Cart, mediaService *media.Service) {
 // AddCartItem adds an item to the user's cart
 func AddCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get user subject from middleware
-		subject := c.GetString("userID")
-		if subject == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
-			return
-		}
-
-		// Find user by subject
-		var user models.User
-		if err := db.Where("subject = ?", subject).First(&user).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		user, ok := getAuthenticatedUser(db, c)
+		if !ok {
 			return
 		}
 
@@ -170,17 +161,8 @@ func AddCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 // GetCart retrieves the user's cart
 func GetCart(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get user subject from middleware
-		subject := c.GetString("userID")
-		if subject == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
-			return
-		}
-
-		// Find user by subject
-		var user models.User
-		if err := db.Where("subject = ?", subject).First(&user).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		user, ok := getAuthenticatedUser(db, c)
+		if !ok {
 			return
 		}
 
@@ -199,17 +181,8 @@ func GetCart(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 // UpdateCartItem updates the quantity of a cart item
 func UpdateCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get user subject from middleware
-		subject := c.GetString("userID")
-		if subject == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
-			return
-		}
-
-		// Find user by subject
-		var user models.User
-		if err := db.Where("subject = ?", subject).First(&user).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		user, ok := getAuthenticatedUser(db, c)
+		if !ok {
 			return
 		}
 
@@ -279,17 +252,8 @@ func UpdateCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 // DeleteCartItem removes an item from the cart
 func DeleteCartItem(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get user subject from middleware
-		subject := c.GetString("userID")
-		if subject == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
-			return
-		}
-
-		// Find user by subject
-		var user models.User
-		if err := db.Where("subject = ?", subject).First(&user).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		user, ok := getAuthenticatedUser(db, c)
+		if !ok {
 			return
 		}
 

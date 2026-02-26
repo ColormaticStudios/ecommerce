@@ -1,6 +1,6 @@
 import type { LayoutServerLoad } from "./$types";
 import { createDefaultStorefrontSettings, parseStorefrontSettingsResponse } from "$lib/storefront";
-import { serverRequest, type ServerAPIError } from "$lib/server/api";
+import { serverIsAuthenticated, serverRequest, type ServerAPIError } from "$lib/server/api";
 import type { components } from "$lib/api/generated/openapi";
 
 type StorefrontSettingsPayload = components["schemas"]["StorefrontSettingsResponse"];
@@ -9,6 +9,7 @@ type DraftPreviewSessionPayload = components["schemas"]["DraftPreviewSessionResp
 export const load: LayoutServerLoad = async (event) => {
 	let storefront = createDefaultStorefrontSettings();
 	let draftPreview: DraftPreviewSessionPayload = { active: false };
+	let isAuthenticated = false;
 
 	try {
 		const storefrontPayload = await serverRequest<StorefrontSettingsPayload>(event, "/storefront");
@@ -27,8 +28,15 @@ export const load: LayoutServerLoad = async (event) => {
 		}
 	}
 
+	try {
+		isAuthenticated = await serverIsAuthenticated(event);
+	} catch (err) {
+		console.error("Failed to resolve authentication state in layout", err);
+	}
+
 	return {
 		storefront,
 		draftPreview,
+		isAuthenticated,
 	};
 };

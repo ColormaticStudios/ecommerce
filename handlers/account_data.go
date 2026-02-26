@@ -36,7 +36,7 @@ type CreateSavedAddressRequest struct {
 	SetDefault bool   `json:"set_default"`
 }
 
-func getAuthenticatedUser(db *gorm.DB, c *gin.Context) (*models.User, bool) {
+func getAuthenticatedUserWithNotFound(db *gorm.DB, c *gin.Context) (*models.User, bool) {
 	subject := c.GetString("userID")
 	if subject == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
@@ -45,10 +45,18 @@ func getAuthenticatedUser(db *gorm.DB, c *gin.Context) (*models.User, bool) {
 
 	var user models.User
 	if err := db.Where("subject = ?", subject).First(&user).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired authentication token"})
+			return nil, false
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load authenticated user"})
 		return nil, false
 	}
 	return &user, true
+}
+
+func getAuthenticatedUser(db *gorm.DB, c *gin.Context) (*models.User, bool) {
+	return getAuthenticatedUserWithNotFound(db, c)
 }
 
 func digitsOnly(value string) string {

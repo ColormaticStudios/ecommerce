@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 	"time"
 
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/media"
+	catalogservice "ecommerce/internal/services/catalog"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -117,83 +117,29 @@ func toPublicProduct(product models.Product) PublicProduct {
 //   - page: page number (default: 1)
 //   - limit: items per page (default: 20, max: 100)
 func GetProducts(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
+	catalog := catalogservice.NewService(db, mediaService)
 	return func(c *gin.Context) {
 		preview := isDraftPreviewActive(c)
-		query := db.Model(&models.Product{})
-		if preview {
-			query = query.Where("is_published = ? OR (draft_data IS NOT NULL AND draft_data <> '')", true)
-		} else {
-			query = query.Where("is_published = ?", true)
-		}
+		page, limit, offset := parsePagination(c, 10)
+		_ = offset
 
-		// Search by name if query parameter 'q' is present
-		if searchTerm := c.Query("q"); searchTerm != "" {
-			query = query.Where("name ILIKE ?", "%"+searchTerm+"%")
-		}
-
-		// Price range filtering
-		if minPriceStr := c.Query("min_price"); minPriceStr != "" {
-			if minPrice, err := strconv.ParseFloat(minPriceStr, 64); err == nil {
-				query = query.Where("price >= ?", minPrice)
-			}
-		}
-		if maxPriceStr := c.Query("max_price"); maxPriceStr != "" {
-			if maxPrice, err := strconv.ParseFloat(maxPriceStr, 64); err == nil {
-				query = query.Where("price <= ?", maxPrice)
-			}
-		}
-
-		// Sorting
-		sortField := c.DefaultQuery("sort", "created_at")
-		sortOrder := c.DefaultQuery("order", "desc")
-
-		// Validate sort field
-		validSortFields := map[string]bool{
-			"price": true, "name": true, "created_at": true,
-		}
-		if !validSortFields[sortField] {
-			sortField = "created_at"
-		}
-
-		// Validate sort order
-		if sortOrder != "asc" && sortOrder != "desc" {
-			sortOrder = "desc"
-		}
-
-		query = query.Order(sortField + " " + sortOrder)
-
-		// Pagination
-		page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
-
-		if page < 1 {
-			page = 1
-		}
-		if limit < 1 {
-			limit = 20
-		}
-		if limit > 100 {
-			limit = 100
-		}
-
-		offset := (page - 1) * limit
-
-		// Get total count for pagination metadata
-		var total int64
-		query.Count(&total)
-
-		// Fetch products
-		var products []models.Product
-		if err := query.Offset(offset).Limit(limit).Find(&products).Error; err != nil {
+		minPrice, _ := catalogservice.ParsePrice(c.Query("min_price"))
+		maxPrice, _ := catalogservice.ParsePrice(c.Query("max_price"))
+		list, err := catalog.ListProducts(catalogservice.ListProductsInput{
+			SearchTerm: c.Query("q"),
+			MinPrice:   minPrice,
+			MaxPrice:   maxPrice,
+			SortField:  c.DefaultQuery("sort", "created_at"),
+			SortOrder:  c.DefaultQuery("order", "desc"),
+			Page:       page,
+			Limit:      limit,
+			Preview:    preview,
+		})
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch products"})
 			return
 		}
-
-		// Calculate pagination metadata
-		totalPages := int(total) / limit
-		if int(total)%limit > 0 {
-			totalPages++
-		}
+		products := list.Products
 
 		for i := range products {
 			if preview {
@@ -235,8 +181,8 @@ func GetProducts(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 				Pagination: apicontract.Pagination{
 					Page:       page,
 					Limit:      limit,
-					Total:      int(total),
-					TotalPages: totalPages,
+					Total:      int(list.Total),
+					TotalPages: list.TotalPages,
 				},
 			})
 			return
@@ -247,8 +193,8 @@ func GetProducts(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 			Pagination: apicontract.Pagination{
 				Page:       page,
 				Limit:      limit,
-				Total:      int(total),
-				TotalPages: totalPages,
+				Total:      int(list.Total),
+				TotalPages: list.TotalPages,
 			},
 		})
 	}
@@ -256,16 +202,21 @@ func GetProducts(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 
 // GetProductByID retrieves a specific product and its related items
 func GetProductByID(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
+	catalog := catalogservice.NewService(db, mediaService)
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		var product models.Product
 		preview := isDraftPreviewActive(c)
-
-		if preview {
-			if err := db.Preload("Related").First(&product, id).Error; err != nil {
+		product, err := catalog.GetProductByID(id, preview)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
 				c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 				return
 			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch product"})
+			return
+		}
+
+		if preview {
 			if !productIsPubliclyVisible(product) && !productHasDraft(product) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 				return
@@ -279,11 +230,6 @@ func GetProductByID(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 			return
 		}
 
-		// Preload "Related" items to populate the related_products field
-		if err := db.Preload("Related", "is_published = ?", true).First(&product, id).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
-			return
-		}
 		if !productIsPubliclyVisible(product) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return

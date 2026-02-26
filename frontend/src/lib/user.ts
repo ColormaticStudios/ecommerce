@@ -61,7 +61,7 @@ export async function getProfile(api: API): Promise<User | null> {
 		userData = await api.getProfile();
 	} catch (err) {
 		const error = err as { status?: number };
-		if (error.status !== 401) {
+		if (error.status !== 401 && error.status !== 404) {
 			console.error(err);
 		}
 		return null;
@@ -95,6 +95,11 @@ function createUserStore() {
 
 		// Called on app startup/layout init
 		async load(api: API) {
+			const authenticated = await api.refreshAuthState();
+			if (!authenticated) {
+				set(null);
+				return null;
+			}
 			const user = await getProfile(api);
 			set(user);
 			return user;

@@ -3,7 +3,6 @@ package handlers
 import (
 	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"ecommerce/internal/media"
@@ -16,16 +15,8 @@ import (
 // GetProfile retrieves the authenticated user's profile
 func GetProfile(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// The userID is the OIDC Subject claim stored in the middleware
-		subject := c.GetString("userID")
-		if subject == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
-			return
-		}
-
-		var user models.User
-		if err := db.Where("subject = ?", subject).First(&user).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "User profile not found"})
+		user, ok := getAuthenticatedUserWithNotFound(db, c)
+		if !ok {
 			return
 		}
 
@@ -51,17 +42,8 @@ type UpdateProfileRequest struct {
 // UpdateProfile updates the authenticated user's profile
 func UpdateProfile(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get user subject from middleware
-		subject := c.GetString("userID")
-		if subject == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
-			return
-		}
-
-		// Find user by subject
-		var user models.User
-		if err := db.Where("subject = ?", subject).First(&user).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "User profile not found"})
+		user, ok := getAuthenticatedUserWithNotFound(db, c)
+		if !ok {
 			return
 		}
 
@@ -94,7 +76,7 @@ func UpdateProfile(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		// Save changes
-		if err := db.Save(&user).Error; err != nil {
+		if err := db.Save(user).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
 			return
 		}
@@ -106,19 +88,8 @@ func UpdateProfile(db *gorm.DB) gin.HandlerFunc {
 // GetAllUsers retrieves all users (admin only)
 func GetAllUsers(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+		page, limit, offset := parsePagination(c, 10)
 		searchTerm := strings.TrimSpace(c.Query("q"))
-		if page < 1 {
-			page = 1
-		}
-		if limit < 1 {
-			limit = 20
-		}
-		if limit > 100 {
-			limit = 100
-		}
-		offset := (page - 1) * limit
 
 		query := db.Model(&models.User{})
 		if searchTerm != "" {
