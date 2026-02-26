@@ -1,0 +1,58 @@
+{
+  "id": "externalcarrier",
+  "type": "shipping",
+  "name": "External Carrier",
+  "description": "Runtime external shipping rating plugin.",
+  "status": "available",
+  "command": "go",
+  "args": ["run", "../provider/main.go", "shipping"],
+  "timeout_ms": 4000,
+  "fields": [
+    {
+      "key": "line1",
+      "label": "Address line 1",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "city",
+      "label": "City",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "country",
+      "label": "Country",
+      "type": "text",
+      "required": true,
+      "placeholder": "US"
+    },
+    {
+      "key": "zone",
+      "label": "Shipping zone",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "domestic", "label": "Domestic" },
+        { "value": "international", "label": "International" }
+      ]
+    },
+    {
+      "key": "speed",
+      "label": "Speed",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "standard", "label": "Standard" },
+        { "value": "overnight", "label": "Overnight" }
+      ]
+    }
+  ],
+  "states": [
+    {
+      "code": "external_runtime",
+      "severity": "info",
+      "message": "Handled by an external executable plugin"
+    }
+  ]
+}

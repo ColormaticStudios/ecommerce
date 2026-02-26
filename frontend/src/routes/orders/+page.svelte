@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { type API } from "$lib/api";
 	import { type OrderModel } from "$lib/models";
 	import Alert from "$lib/components/Alert.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
@@ -6,12 +7,15 @@
 	import Button from "$lib/components/Button.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
+	import { getContext } from "svelte";
 	import { onDestroy, onMount } from "svelte";
 	import { navigating } from "$app/state";
 	import { goto } from "$app/navigation";
 	import { SvelteURLSearchParams } from "svelte/reactivity";
 	import { resolve } from "$app/paths";
 	import type { PageData } from "./$types";
+
+	const api: API = getContext("api");
 
 	interface Props {
 		data: PageData;
@@ -32,6 +36,7 @@
 	let endDate = $state("");
 	let toastMessage = $state("");
 	let toastVisible = $state(false);
+	let cancellingOrderId = $state<number | null>(null);
 	let toastTimeout: ReturnType<typeof setTimeout> | null = null;
 	let toastHideTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -110,7 +115,7 @@
 		const queryString = params.toString();
 		const nextUrl = queryString ? `${path}?${queryString}` : path;
 		// @ts-expect-error Svelte's routing requirements are strict for resolved URLs with queries
-		void goto(resolve(nextUrl), { replaceState: false, noScroll: true, keepFocus: true });
+		void goto(resolve(nextUrl), { replaceState: false, noScroll: false, keepFocus: false });
 	}
 
 	function applyFilters() {
@@ -132,10 +137,45 @@
 		switch (status) {
 			case "PAID":
 				return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200";
+			case "SHIPPED":
+				return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200";
+			case "DELIVERED":
+				return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200";
+			case "REFUNDED":
+				return "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-200";
+			case "CANCELLED":
+				return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200";
 			case "FAILED":
 				return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200";
 			default:
 				return "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200";
+		}
+	}
+
+	async function cancelOrder(orderId: number) {
+		if (cancellingOrderId !== null) {
+			return;
+		}
+		if (typeof window !== "undefined") {
+			const confirmed = window.confirm(
+				"Cancel this order? This cannot be undone and eligible items will be restocked."
+			);
+			if (!confirmed) {
+				return;
+			}
+		}
+		cancellingOrderId = orderId;
+		errorMessage = "";
+		try {
+			const updated = await api.cancelOrder(orderId);
+			orders = orders.map((order) => (order.id === updated.id ? updated : order));
+			showToast("Order cancelled.");
+		} catch (err) {
+			console.error(err);
+			const error = err as { body?: { error?: string } };
+			errorMessage = error.body?.error ?? "Unable to cancel order.";
+		} finally {
+			cancellingOrderId = null;
 		}
 	}
 
@@ -209,6 +249,10 @@
 						<option value="">All statuses</option>
 						<option value="PENDING">Pending</option>
 						<option value="PAID">Paid</option>
+						<option value="SHIPPED">Shipped</option>
+						<option value="DELIVERED">Delivered</option>
+						<option value="CANCELLED">Cancelled</option>
+						<option value="REFUNDED">Refunded</option>
 						<option value="FAILED">Failed</option>
 					</select>
 				</div>
@@ -399,6 +443,19 @@
 								{formatPrice(order.total, currency)}
 							</span>
 						</div>
+						{#if order.can_cancel}
+							<div class="mt-3 flex justify-end">
+								<Button
+									size="small"
+									type="button"
+									variant="regular"
+									disabled={cancellingOrderId !== null}
+									onclick={() => cancelOrder(order.id)}
+								>
+									{cancellingOrderId === order.id ? "Cancelling..." : "Cancel order"}
+								</Button>
+							</div>
+						{/if}
 					</div>
 				</div>
 			{/each}

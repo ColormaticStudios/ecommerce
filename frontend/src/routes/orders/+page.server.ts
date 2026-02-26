@@ -8,7 +8,15 @@ type OrderPagePayload = components["schemas"]["OrderPage"];
 type OrderStatus = components["schemas"]["Order"]["status"];
 
 function normalizeStatus(value: string | null): "" | OrderStatus {
-	if (value === "PAID" || value === "PENDING" || value === "FAILED") {
+	if (
+		value === "PAID" ||
+		value === "PENDING" ||
+		value === "FAILED" ||
+		value === "SHIPPED" ||
+		value === "DELIVERED" ||
+		value === "CANCELLED" ||
+		value === "REFUNDED"
+	) {
 		return value;
 	}
 	return "";

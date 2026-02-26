@@ -5,12 +5,12 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"ecommerce/config"
 	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
+	"ecommerce/internal/checkoutplugins"
 	"ecommerce/internal/media"
 	"ecommerce/models"
 
@@ -74,6 +74,7 @@ func main() {
 		&models.SavedPaymentMethod{},
 		&models.SavedAddress{},
 		&models.StorefrontSettings{},
+		&models.CheckoutProviderSetting{},
 	); err != nil {
 		log.Fatalf("[ERROR] Failed to migrate database: %v", err)
 	}
@@ -160,11 +161,6 @@ func main() {
 	// Pass the secret key from your .env file
 	jwtSecret := cfg.JWTSecret
 
-	disableLocalSignIn, err := strconv.ParseBool(cfg.DisableLocalSignIn)
-	if err != nil {
-		log.Fatalf("Failed to parse variable DISABLE_LOCAL_SIGN_IN: %v", err)
-	}
-
 	cookieSameSite := http.SameSiteLaxMode
 	cookieSecure := false
 	if !cfg.DevMode {
@@ -204,14 +200,24 @@ func main() {
 		}
 	}()
 
+	pluginManager := checkoutplugins.NewDefaultManager()
+	if cfg.CheckoutPluginManifestsDir != "" {
+		loaded, loadErr := pluginManager.LoadExternalPluginsFromDir(cfg.CheckoutPluginManifestsDir)
+		if loadErr != nil {
+			log.Fatalf("[ERROR] Failed to load checkout plugins: %v", loadErr)
+		}
+		log.Printf("[INFO] Loaded %d external checkout plugins from %s", loaded, cfg.CheckoutPluginManifestsDir)
+	}
+
 	apiServer := handlers.NewGeneratedAPIServer(db, mediaService, handlers.GeneratedAPIServerConfig{
 		JWTSecret:          jwtSecret,
-		DisableLocalSignIn: disableLocalSignIn,
+		DisableLocalSignIn: cfg.DisableLocalSignIn,
 		AuthCookieConfig:   authCookieCfg,
 		OIDCProvider:       cfg.OIDCProvider,
 		OIDCClientID:       cfg.OIDCClientID,
 		OIDCRedirectURI:    cfg.OIDCRedirectURI,
 		MediaUploads:       http.StripPrefix("/api/v1/media/uploads", tusd),
+		CheckoutPlugins:    pluginManager,
 	})
 	apicontract.RegisterHandlers(r, apiServer)
 

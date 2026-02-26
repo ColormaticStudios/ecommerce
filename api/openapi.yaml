@@ -13,6 +13,7 @@ tags:
   - name: products
   - name: profile
   - name: cart
+  - name: checkout
   - name: orders
   - name: admin
   - name: media
@@ -570,6 +571,42 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
 
+  /api/v1/me/checkout/plugins:
+    get:
+      tags: [checkout]
+      operationId: listCheckoutPlugins
+      responses:
+        '200':
+          description: Available checkout provider plugins
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutPluginCatalog'
+
+  /api/v1/me/checkout/quote:
+    post:
+      tags: [checkout]
+      operationId: quoteCheckout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutQuoteRequest'
+      responses:
+        '200':
+          description: Quote
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutQuoteResponse'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /api/v1/me/orders:
     get:
       tags: [orders]
@@ -579,7 +616,7 @@ paths:
           name: status
           schema:
             type: string
-            enum: [PENDING, PAID, FAILED]
+            enum: [PENDING, PAID, FAILED, SHIPPED, DELIVERED, CANCELLED, REFUNDED]
         - in: query
           name: start_date
           schema:
@@ -674,6 +711,37 @@ paths:
                 $ref: '#/components/schemas/ProcessPaymentResponse'
         '400':
           description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/me/orders/{id}/cancel:
+    post:
+      tags: [orders]
+      operationId: cancelUserOrder
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Cancelled order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
           content:
             application/json:
               schema:
@@ -1106,6 +1174,54 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+
+  /api/v1/admin/checkout/plugins:
+    get:
+      tags: [admin, checkout]
+      operationId: listAdminCheckoutPlugins
+      responses:
+        '200':
+          description: Checkout providers including disabled ones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutPluginCatalog'
+
+  /api/v1/admin/checkout/plugins/{type}/{id}:
+    patch:
+      tags: [admin, checkout]
+      operationId: updateAdminCheckoutPlugin
+      parameters:
+        - in: path
+          name: type
+          required: true
+          schema:
+            type: string
+            enum: [payment, shipping, tax]
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCheckoutPluginRequest'
+      responses:
+        '200':
+          description: Updated checkout provider catalog
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutPluginCatalog'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/v1/admin/storefront:
     get:
@@ -1655,6 +1771,7 @@ components:
         - id
         - user_id
         - status
+        - can_cancel
         - total
         - payment_method_display
         - shipping_address_pretty
@@ -1668,7 +1785,9 @@ components:
           type: integer
         status:
           type: string
-          enum: [PENDING, PAID, FAILED]
+          enum: [PENDING, PAID, FAILED, SHIPPED, DELIVERED, CANCELLED, REFUNDED]
+        can_cancel:
+          type: boolean
         total:
           type: number
           format: double
@@ -1770,6 +1889,24 @@ components:
           $ref: '#/components/schemas/ProcessPaymentInputMethod'
         address:
           $ref: '#/components/schemas/ProcessPaymentInputAddress'
+        payment_provider_id:
+          type: string
+        shipping_provider_id:
+          type: string
+        tax_provider_id:
+          type: string
+        payment_data:
+          type: object
+          additionalProperties:
+            type: string
+        shipping_data:
+          type: object
+          additionalProperties:
+            type: string
+        tax_data:
+          type: object
+          additionalProperties:
+            type: string
 
     ProcessPaymentResponse:
       type: object
@@ -1780,13 +1917,171 @@ components:
         order:
           $ref: '#/components/schemas/Order'
 
+    CheckoutPluginFieldOption:
+      type: object
+      required: [value, label]
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+
+    CheckoutPluginField:
+      type: object
+      required: [key, label, type, required]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          enum: [text, number, checkbox, select]
+        required:
+          type: boolean
+        placeholder:
+          type: string
+        help_text:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckoutPluginFieldOption'
+
+    CheckoutPluginState:
+      type: object
+      required: [code, severity, message]
+      properties:
+        code:
+          type: string
+        severity:
+          type: string
+          enum: [info, success, warning, error]
+        message:
+          type: string
+
+    CheckoutPlugin:
+      type: object
+      required: [id, type, name, description, status, enabled, fields, states]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [payment, shipping, tax]
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        enabled:
+          type: boolean
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckoutPluginField'
+        states:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckoutPluginState'
+
+    CheckoutPluginCatalog:
+      type: object
+      required: [payment, shipping, tax]
+      properties:
+        payment:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckoutPlugin'
+        shipping:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckoutPlugin'
+        tax:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckoutPlugin'
+
+    CheckoutQuoteRequest:
+      type: object
+      required: [payment_provider_id, shipping_provider_id, tax_provider_id]
+      properties:
+        payment_provider_id:
+          type: string
+        shipping_provider_id:
+          type: string
+        tax_provider_id:
+          type: string
+        payment_data:
+          type: object
+          additionalProperties:
+            type: string
+        shipping_data:
+          type: object
+          additionalProperties:
+            type: string
+        tax_data:
+          type: object
+          additionalProperties:
+            type: string
+
+    CheckoutQuoteResponse:
+      type: object
+      required:
+        - currency
+        - subtotal
+        - shipping
+        - tax
+        - total
+        - valid
+        - payment_states
+        - shipping_states
+        - tax_states
+      properties:
+        currency:
+          type: string
+        subtotal:
+          type: number
+          format: double
+        shipping:
+          type: number
+          format: double
+        tax:
+          type: number
+          format: double
+        total:
+          type: number
+          format: double
+        valid:
+          type: boolean
+        payment_states:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckoutPluginState'
+        shipping_states:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckoutPluginState'
+        tax_states:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckoutPluginState'
+
+    UpdateCheckoutPluginRequest:
+      type: object
+      required: [enabled]
+      properties:
+        enabled:
+          type: boolean
+
     UpdateOrderStatusRequest:
       type: object
       required: [status]
       properties:
         status:
           type: string
-          enum: [PENDING, PAID, FAILED]
+          enum: [PENDING, PAID, FAILED, SHIPPED, DELIVERED, CANCELLED, REFUNDED]
 
     SavedPaymentMethod:
       type: object

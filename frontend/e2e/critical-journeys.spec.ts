@@ -76,8 +76,11 @@ test("sign up, checkout, and persist order/cart state", async ({ page, request }
 	await expect(page).toHaveURL(/\/cart$/);
 	await page.getByRole("link", { name: "Go to checkout" }).click();
 	await expect(page).toHaveURL(/\/checkout$/);
-	await page.getByRole("checkbox", { name: "Use a new payment method" }).uncheck();
-	await page.getByRole("checkbox", { name: "Use a new shipping address" }).uncheck();
+	await page.getByRole("button", { name: /Dummy Card Gateway/i }).click();
+	await page.getByLabel("Use a saved card").selectOption({ index: 1 });
+	await page.getByRole("button", { name: /Dummy Ground Carrier/i }).click();
+	await page.getByLabel("Use a saved address").selectOption({ index: 1 });
+	await page.getByLabel("State/Province").fill("TX");
 
 	await page.getByRole("button", { name: "Place order" }).click();
 
@@ -113,7 +116,9 @@ test("invalid data paths show user-facing errors", async ({ page, request }) => 
 	await expect(page).toHaveURL(/\/checkout$/);
 
 	await page.getByRole("button", { name: "Place order" }).click();
-	await expect(page.getByText("Please complete the payment method fields.")).toBeVisible();
+	await expect(
+		page.getByText("Select a payment and shipping option before requesting an estimate.")
+	).toBeVisible();
 
 	const invalidLoginResponse = await request.post(`${apiBaseURL}/api/v1/auth/login`, {
 		data: {

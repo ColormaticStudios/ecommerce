@@ -1131,6 +1131,132 @@ To perform this operation, you must be authenticated by means of one of the foll
 cookieAuth, bearerAuth
 </aside>
 
+<h1 id="ecommerce-api-checkout">checkout</h1>
+
+## listCheckoutPlugins
+
+<a id="opIdlistCheckoutPlugins"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/checkout/plugins',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/me/checkout/plugins`
+
+<h3 id="listcheckoutplugins-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Available checkout provider plugins|CheckoutPluginCatalog|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## quoteCheckout
+
+<a id="opIdquoteCheckout"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "payment_provider_id": "string",
+  "shipping_provider_id": "string",
+  "tax_provider_id": "string",
+  "payment_data": {
+    "property1": "string",
+    "property2": "string"
+  },
+  "shipping_data": {
+    "property1": "string",
+    "property2": "string"
+  },
+  "tax_data": {
+    "property1": "string",
+    "property2": "string"
+  }
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/checkout/quote',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/me/checkout/quote`
+
+> Body parameter
+
+```json
+{
+  "payment_provider_id": "string",
+  "shipping_provider_id": "string",
+  "tax_provider_id": "string",
+  "payment_data": {
+    "property1": "string",
+    "property2": "string"
+  },
+  "shipping_data": {
+    "property1": "string",
+    "property2": "string"
+  },
+  "tax_data": {
+    "property1": "string",
+    "property2": "string"
+  }
+}
+```
+
+<h3 id="quotecheckout-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|CheckoutQuoteRequest|true|none|
+
+<h3 id="quotecheckout-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Quote|CheckoutQuoteResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid request payload|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
 <h1 id="ecommerce-api-orders">orders</h1>
 
 ## listUserOrders
@@ -1326,6 +1452,21 @@ const inputBody = '{
     "state": "string",
     "postal_code": "string",
     "country": "string"
+  },
+  "payment_provider_id": "string",
+  "shipping_provider_id": "string",
+  "tax_provider_id": "string",
+  "payment_data": {
+    "property1": "string",
+    "property2": "string"
+  },
+  "shipping_data": {
+    "property1": "string",
+    "property2": "string"
+  },
+  "tax_data": {
+    "property1": "string",
+    "property2": "string"
   }
 }';
 const headers = {
@@ -1369,6 +1510,21 @@ fetch('http://localhost:3000/api/v1/me/orders/{id}/pay',
     "state": "string",
     "postal_code": "string",
     "country": "string"
+  },
+  "payment_provider_id": "string",
+  "shipping_provider_id": "string",
+  "tax_provider_id": "string",
+  "payment_data": {
+    "property1": "string",
+    "property2": "string"
+  },
+  "shipping_data": {
+    "property1": "string",
+    "property2": "string"
+  },
+  "tax_data": {
+    "property1": "string",
+    "property2": "string"
   }
 }
 ```
@@ -1787,6 +1943,52 @@ fetch('http://localhost:3000/api/v1/admin/products/{id}/publish',
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Published product|Product|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## unpublishProduct
+
+<a id="opIdunpublishProduct"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/products/{id}/unpublish',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/products/{id}/unpublish`
+
+<h3 id="unpublishproduct-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="unpublishproduct-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Unpublished product|Product|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
 
 <aside class="warning">

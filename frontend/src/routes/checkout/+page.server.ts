@@ -11,6 +11,7 @@ import type { components } from "$lib/api/generated/openapi";
 import { serverIsAuthenticated, serverRequest, type ServerAPIError } from "$lib/server/api";
 
 type CartPayload = components["schemas"]["Cart"];
+type CheckoutPluginCatalogPayload = components["schemas"]["CheckoutPluginCatalog"];
 type SavedAddressPayload = components["schemas"]["SavedAddress"];
 type SavedPaymentMethodPayload = components["schemas"]["SavedPaymentMethod"];
 
@@ -20,6 +21,7 @@ export const load: PageServerLoad = async (event) => {
 		return {
 			isAuthenticated,
 			cart: null as CartModel | null,
+			plugins: null as CheckoutPluginCatalogPayload | null,
 			savedPaymentMethods: [] as SavedPaymentMethodModel[],
 			savedAddresses: [] as SavedAddressModel[],
 			errorMessage: "",
@@ -27,17 +29,20 @@ export const load: PageServerLoad = async (event) => {
 	}
 
 	try {
-		const [cartPayload, paymentMethodsPayload, addressesPayload] = await Promise.all([
-			serverRequest<CartPayload>(event, "/me/cart"),
-			serverRequest<SavedPaymentMethodPayload[]>(event, "/me/payment-methods"),
-			serverRequest<SavedAddressPayload[]>(event, "/me/addresses"),
-		]);
+		const [cartPayload, pluginsPayload, savedPaymentMethodsPayload, savedAddressesPayload] =
+			await Promise.all([
+				serverRequest<CartPayload>(event, "/me/cart"),
+				serverRequest<CheckoutPluginCatalogPayload>(event, "/me/checkout/plugins"),
+				serverRequest<SavedPaymentMethodPayload[]>(event, "/me/payment-methods"),
+				serverRequest<SavedAddressPayload[]>(event, "/me/addresses"),
+			]);
 
 		return {
 			isAuthenticated,
 			cart: parseCart(cartPayload),
-			savedPaymentMethods: paymentMethodsPayload.map(parseSavedPaymentMethod),
-			savedAddresses: addressesPayload.map(parseSavedAddress),
+			plugins: pluginsPayload,
+			savedPaymentMethods: savedPaymentMethodsPayload.map(parseSavedPaymentMethod),
+			savedAddresses: savedAddressesPayload.map(parseSavedAddress),
 			errorMessage: "",
 		};
 	} catch (err) {
@@ -47,6 +52,7 @@ export const load: PageServerLoad = async (event) => {
 			return {
 				isAuthenticated: false,
 				cart: null as CartModel | null,
+				plugins: null as CheckoutPluginCatalogPayload | null,
 				savedPaymentMethods: [] as SavedPaymentMethodModel[],
 				savedAddresses: [] as SavedAddressModel[],
 				errorMessage: "",
@@ -55,6 +61,7 @@ export const load: PageServerLoad = async (event) => {
 		return {
 			isAuthenticated,
 			cart: null as CartModel | null,
+			plugins: null as CheckoutPluginCatalogPayload | null,
 			savedPaymentMethods: [] as SavedPaymentMethodModel[],
 			savedAddresses: [] as SavedAddressModel[],
 			errorMessage: "Unable to load your checkout data.",

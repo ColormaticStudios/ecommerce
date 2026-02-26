@@ -13,10 +13,14 @@
 	import { page } from "$app/state";
 	import ProductEditor from "$lib/admin/ProductEditor.svelte";
 	import StorefrontEditor from "$lib/admin/StorefrontEditor.svelte";
+	import type { components } from "$lib/api/generated/openapi";
 	import type { PageData } from "./$types";
 
 	const api: API = getContext("api");
-	type AdminTab = "products" | "orders" | "users" | "storefront";
+	type CheckoutPluginCatalog = components["schemas"]["CheckoutPluginCatalog"];
+	type CheckoutPlugin = components["schemas"]["CheckoutPlugin"];
+	type CheckoutPluginType = CheckoutPlugin["type"];
+	type AdminTab = "products" | "orders" | "users" | "providers" | "storefront";
 	type NoticeTone = "success" | "error" | null;
 	type SaveAction = (() => Promise<void>) | null;
 	interface Props {
@@ -43,8 +47,10 @@
 				return 1;
 			case "users":
 				return 2;
-			default:
+			case "providers":
 				return 3;
+			default:
+				return 4;
 		}
 	});
 
@@ -72,6 +78,12 @@
 	let productsLoading = $state(false);
 	let ordersLoading = $state(false);
 	let usersLoading = $state(false);
+	let providersSaving = $state(false);
+	let providerCatalog = $state<CheckoutPluginCatalog>({
+		payment: [],
+		shipping: [],
+		tax: [],
+	});
 
 	let selectedProductId = $state<number | null>(null);
 	const selectedProduct = $derived(
@@ -119,7 +131,11 @@
 
 	function isAdminTab(value: string | null): value is AdminTab {
 		return (
-			value === "products" || value === "orders" || value === "users" || value === "storefront"
+			value === "products" ||
+			value === "orders" ||
+			value === "users" ||
+			value === "providers" ||
+			value === "storefront"
 		);
 	}
 
@@ -290,6 +306,42 @@
 			setNotice("error", "Unable to load users.");
 		} finally {
 			usersLoading = false;
+		}
+	}
+
+	async function loadProviders() {
+		providersSaving = true;
+		clearMessages();
+		try {
+			providerCatalog = await api.listAdminCheckoutPlugins();
+		} catch (err) {
+			console.error(err);
+			setNotice("error", "Unable to load checkout providers.");
+		} finally {
+			providersSaving = false;
+		}
+	}
+
+	async function updateProviderEnabled(
+		type: CheckoutPluginType,
+		providerID: string,
+		enabled: boolean
+	) {
+		if (providersSaving) {
+			return;
+		}
+
+		providersSaving = true;
+		clearMessages();
+		try {
+			providerCatalog = await api.updateAdminCheckoutPlugin(type, providerID, { enabled });
+			setNotice("success", "Provider settings updated.");
+		} catch (err) {
+			console.error(err);
+			const error = err as { body?: { error?: string } };
+			setNotice("error", error.body?.error ?? "Unable to update provider settings.");
+		} finally {
+			providersSaving = false;
 		}
 	}
 
@@ -512,6 +564,7 @@
 		userTotalPages = data.userTotalPages;
 		userLimit = data.userLimit;
 		userTotal = data.userTotal;
+		providerCatalog = data.checkoutPlugins ?? { payment: [], shipping: [], tax: [] };
 		if (data.errorMessage) {
 			noticeTone = "error";
 			noticeMessage = data.errorMessage;
@@ -547,10 +600,10 @@
 				class="relative rounded-full border border-gray-200 bg-white p-1 text-xs font-semibold tracking-[0.2em] text-gray-500 uppercase shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400"
 			>
 				<div
-					class="pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/4)] rounded-full bg-gray-900 transition-transform duration-300 ease-out dark:bg-gray-100"
+					class="pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/5)] rounded-full bg-gray-900 transition-transform duration-300 ease-out dark:bg-gray-100"
 					style={`transform: translateX(${tabIndex * 100}%);`}
 				></div>
-				<div class="relative grid grid-cols-4 items-center gap-0">
+				<div class="relative grid grid-cols-5 items-center gap-0">
 					<button
 						type="button"
 						class={`cursor-pointer rounded-full px-4 py-2 transition ${
@@ -583,6 +636,17 @@
 						onclick={() => setActiveTab("users")}
 					>
 						Users
+					</button>
+					<button
+						type="button"
+						class={`cursor-pointer rounded-full px-4 py-2 transition ${
+							activeTab === "providers"
+								? "text-white dark:text-gray-900"
+								: "hover:text-gray-900 dark:hover:text-gray-200"
+						}`}
+						onclick={() => setActiveTab("providers")}
+					>
+						Providers
 					</button>
 					<button
 						type="button"
@@ -777,14 +841,22 @@
 											class={`rounded-full px-3 py-1 text-xs font-semibold ${
 												order.status === "PAID"
 													? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
-													: order.status === "FAILED"
-														? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200"
-														: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200"
+													: order.status === "SHIPPED"
+														? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200"
+														: order.status === "DELIVERED"
+															? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200"
+															: order.status === "CANCELLED"
+																? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+																: order.status === "REFUNDED"
+																	? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-200"
+																	: order.status === "FAILED"
+																		? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200"
+																		: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200"
 											}`}
 										>
 											{order.status}
 										</span>
-										<div class="flex gap-2">
+										<div class="flex flex-wrap justify-end gap-2">
 											<Button
 												variant="regular"
 												size="small"
@@ -808,6 +880,38 @@
 												onclick={() => updateOrder(order.id, "FAILED")}
 											>
 												Failed
+											</Button>
+											<Button
+												variant="regular"
+												size="small"
+												type="button"
+												onclick={() => updateOrder(order.id, "SHIPPED")}
+											>
+												Shipped
+											</Button>
+											<Button
+												variant="regular"
+												size="small"
+												type="button"
+												onclick={() => updateOrder(order.id, "DELIVERED")}
+											>
+												Delivered
+											</Button>
+											<Button
+												variant="regular"
+												size="small"
+												type="button"
+												onclick={() => updateOrder(order.id, "CANCELLED")}
+											>
+												Cancelled
+											</Button>
+											<Button
+												variant="regular"
+												size="small"
+												type="button"
+												onclick={() => updateOrder(order.id, "REFUNDED")}
+											>
+												Refunded
 											</Button>
 										</div>
 									</div>
@@ -943,6 +1047,102 @@
 						/>
 					</div>
 				{/if}
+			</div>
+		{/if}
+
+		{#if activeTab === "providers"}
+			<div
+				class="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+			>
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<div>
+						<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+							Checkout Providers
+						</h2>
+						<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+							Enable or disable providers. Tax providers allow only one active provider at a time.
+						</p>
+					</div>
+					<Button
+						type="button"
+						variant="regular"
+						size="small"
+						onclick={loadProviders}
+						disabled={providersSaving}
+					>
+						Refresh
+					</Button>
+				</div>
+
+				<div class="mt-6 grid gap-4 lg:grid-cols-3">
+					{#each [{ type: "payment" as const, title: "Payment", plugins: providerCatalog.payment }, { type: "shipping" as const, title: "Shipping", plugins: providerCatalog.shipping }, { type: "tax" as const, title: "Tax", plugins: providerCatalog.tax }] as section (section.type)}
+						<div class="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+							<div class="flex items-center justify-between gap-3">
+								<h3
+									class="text-sm font-semibold tracking-[0.08em] text-gray-700 uppercase dark:text-gray-200"
+								>
+									{section.title}
+								</h3>
+								<span class="text-xs text-gray-500 dark:text-gray-400">
+									{section.plugins.length} provider{section.plugins.length === 1 ? "" : "s"}
+								</span>
+							</div>
+							<div class="mt-3 space-y-3">
+								{#if section.plugins.length === 0}
+									<p class="text-xs text-gray-500 dark:text-gray-400">No providers found.</p>
+								{:else}
+									{#each section.plugins as provider (provider.id)}
+										<div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+											<div class="flex items-start justify-between gap-3">
+												<div>
+													<p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+														{provider.name}
+													</p>
+													<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+														{provider.description}
+													</p>
+												</div>
+												<span
+													class={`rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-[0.08em] uppercase ${
+														provider.enabled
+															? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
+															: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+													}`}
+												>
+													{provider.enabled ? "Enabled" : "Disabled"}
+												</span>
+											</div>
+											<div class="mt-3 flex justify-end">
+												{#if section.type === "tax"}
+													<Button
+														type="button"
+														variant="regular"
+														size="small"
+														onclick={() => updateProviderEnabled("tax", provider.id, true)}
+														disabled={providersSaving || provider.enabled}
+													>
+														{provider.enabled ? "Active Tax Provider" : "Set Active"}
+													</Button>
+												{:else}
+													<Button
+														type="button"
+														variant="regular"
+														size="small"
+														onclick={() =>
+															updateProviderEnabled(section.type, provider.id, !provider.enabled)}
+														disabled={providersSaving}
+													>
+														{provider.enabled ? "Disable" : "Enable"}
+													</Button>
+												{/if}
+											</div>
+										</div>
+									{/each}
+								{/if}
+							</div>
+						</div>
+					{/each}
+				</div>
 			</div>
 		{/if}
 

@@ -40,6 +40,11 @@ type UpdateProfileRequest = components["schemas"]["UpdateProfileRequest"];
 type CreateOrderRequest = components["schemas"]["CreateOrderRequest"];
 type ProcessPaymentRequest = components["schemas"]["ProcessPaymentRequest"];
 type ProcessPaymentResponse = components["schemas"]["ProcessPaymentResponse"];
+type CheckoutPluginCatalog = components["schemas"]["CheckoutPluginCatalog"];
+type CheckoutPluginType = components["schemas"]["CheckoutPlugin"]["type"];
+type CheckoutQuoteRequest = components["schemas"]["CheckoutQuoteRequest"];
+type CheckoutQuoteResponse = components["schemas"]["CheckoutQuoteResponse"];
+type UpdateCheckoutPluginRequest = components["schemas"]["UpdateCheckoutPluginRequest"];
 type MessageResponse = components["schemas"]["MessageResponse"];
 type CartPayload = components["schemas"]["Cart"];
 type CartItemPayload = components["schemas"]["CartItem"];
@@ -254,6 +259,14 @@ export class API {
 			data
 		);
 		return parseOrder(response.order);
+	}
+
+	public async listCheckoutPlugins(): Promise<CheckoutPluginCatalog> {
+		return await this.request<CheckoutPluginCatalog>("GET", "/me/checkout/plugins");
+	}
+
+	public async quoteCheckout(data: CheckoutQuoteRequest): Promise<CheckoutQuoteResponse> {
+		return await this.request<CheckoutQuoteResponse>("POST", "/me/checkout/quote", data);
 	}
 
 	// Product Management
@@ -487,6 +500,22 @@ export class API {
 	}
 
 	// Admin Operations
+	public async listAdminCheckoutPlugins(): Promise<CheckoutPluginCatalog> {
+		return await this.request<CheckoutPluginCatalog>("GET", "/admin/checkout/plugins");
+	}
+
+	public async updateAdminCheckoutPlugin(
+		type: CheckoutPluginType,
+		id: string,
+		data: UpdateCheckoutPluginRequest
+	): Promise<CheckoutPluginCatalog> {
+		return await this.request<CheckoutPluginCatalog>(
+			"PATCH",
+			`/admin/checkout/plugins/${type}/${id}`,
+			data
+		);
+	}
+
 	public async createProduct(data: ProductInput): Promise<ProductModel> {
 		const response = await this.request<components["schemas"]["Product"]>(
 			"POST",
@@ -675,6 +704,11 @@ export class API {
 
 	public async getOrderDetails(orderId: number): Promise<OrderModel> {
 		const response = await this.request<OrderPayload>("GET", `/me/orders/${orderId}`);
+		return parseOrder(response);
+	}
+
+	public async cancelOrder(orderId: number): Promise<OrderModel> {
+		const response = await this.request<OrderPayload>("POST", `/me/orders/${orderId}/cancel`);
 		return parseOrder(response);
 	}
 

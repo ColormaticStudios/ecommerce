@@ -3,7 +3,7 @@
 # Copy to ./config.toml and adjust values for your environment.
 
 PORT = "3000"
-DISABLE_LOCAL_SIGN_IN = "false"
+DISABLE_LOCAL_SIGN_IN = false
 OIDC_PROVIDER = ""
 OIDC_CLIENT_ID = ""
 OIDC_REDIRECT_URI = ""
@@ -12,3 +12,4 @@ PUBLIC_URL = "api.example.com"
 MEDIA_ROOT = "media"
 MEDIA_PUBLIC_URL = "http://localhost:3000/media"
 SERVE_MEDIA = true
+CHECKOUT_PLUGIN_MANIFESTS_DIR = ""

@@ -14,12 +14,13 @@ type ProfilePayload = components["schemas"]["User"];
 type ProductPagePayload = components["schemas"]["ProductPage"];
 type OrderPagePayload = components["schemas"]["OrderPage"];
 type UserPagePayload = components["schemas"]["UserPage"];
+type CheckoutPluginCatalogPayload = components["schemas"]["CheckoutPluginCatalog"];
 
-type AdminTab = "products" | "orders" | "users" | "storefront";
+type AdminTab = "products" | "orders" | "users" | "providers" | "storefront";
 const defaultAdminPageLimit = 10;
 
 function normalizeTab(value: string | null): AdminTab {
-	if (value === "orders" || value === "users" || value === "storefront") {
+	if (value === "orders" || value === "users" || value === "providers" || value === "storefront") {
 		return value;
 	}
 	return "products";
@@ -45,6 +46,7 @@ export const load: PageServerLoad = async (event) => {
 	let userTotal = 0;
 	let orders: OrderModel[] = [];
 	let users: UserModel[] = [];
+	let checkoutPlugins: CheckoutPluginCatalogPayload | null = null;
 	let errorMessage = "";
 
 	try {
@@ -76,6 +78,7 @@ export const load: PageServerLoad = async (event) => {
 			userTotal,
 			orders,
 			users,
+			checkoutPlugins,
 			errorMessage,
 		};
 	}
@@ -100,22 +103,25 @@ export const load: PageServerLoad = async (event) => {
 			userTotal,
 			orders,
 			users,
+			checkoutPlugins,
 			errorMessage,
 		};
 	}
 
 	try {
-		const [productsPayload, ordersPayload, usersPayload] = await Promise.all([
-			serverRequest<ProductPagePayload>(event, "/admin/products", {
-				page: productPage,
-				limit: productLimit,
-			}),
-			serverRequest<OrderPagePayload>(event, "/admin/orders", {
-				page: orderPage,
-				limit: orderLimit,
-			}),
-			serverRequest<UserPagePayload>(event, "/admin/users", { page: userPage, limit: userLimit }),
-		]);
+		const [productsPayload, ordersPayload, usersPayload, checkoutPluginsPayload] =
+			await Promise.all([
+				serverRequest<ProductPagePayload>(event, "/admin/products", {
+					page: productPage,
+					limit: productLimit,
+				}),
+				serverRequest<OrderPagePayload>(event, "/admin/orders", {
+					page: orderPage,
+					limit: orderLimit,
+				}),
+				serverRequest<UserPagePayload>(event, "/admin/users", { page: userPage, limit: userLimit }),
+				serverRequest<CheckoutPluginCatalogPayload>(event, "/admin/checkout/plugins"),
+			]);
 
 		products = productsPayload.data.map(parseProduct);
 		productTotalPages = Math.max(1, productsPayload.pagination.total_pages);
@@ -125,6 +131,7 @@ export const load: PageServerLoad = async (event) => {
 		orderTotal = ordersPayload.pagination.total;
 		userTotalPages = Math.max(1, usersPayload.pagination.total_pages);
 		userTotal = usersPayload.pagination.total;
+		checkoutPlugins = checkoutPluginsPayload;
 	} catch (err) {
 		console.error(err);
 		errorMessage = "Unable to load one or more admin data sections.";
@@ -149,6 +156,7 @@ export const load: PageServerLoad = async (event) => {
 		userTotal,
 		orders,
 		users,
+		checkoutPlugins,
 		errorMessage,
 	};
 };

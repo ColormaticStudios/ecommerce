@@ -20,6 +20,7 @@ run: api
 # Run tests
 test:
 	@go test ./...
+	@cd frontend && bun run test:e2e
 
 # Generate backend + frontend API contract types from OpenAPI
 openapi-gen:

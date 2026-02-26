@@ -7,7 +7,7 @@ const StorefrontSettingsSingletonID uint = 1
 type StorefrontSettings struct {
 	ID               uint       `json:"id" gorm:"primaryKey;autoIncrement:false"`
 	ConfigJSON       string     `json:"config_json" gorm:"type:jsonb;not null"`
-	DraftConfigJSON  string     `json:"draft_config_json" gorm:"type:jsonb"`
+	DraftConfigJSON  *string    `json:"draft_config_json" gorm:"type:jsonb"`
 	DraftUpdatedAt   *time.Time `json:"draft_updated_at"`
 	PublishedUpdated time.Time  `json:"published_updated"`
 	CreatedAt        time.Time  `json:"created_at"`

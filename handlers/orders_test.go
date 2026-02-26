@@ -157,4 +157,8 @@ func TestOrderStatusConstants(t *testing.T) {
 	assert.Equal(t, "PENDING", models.StatusPending)
 	assert.Equal(t, "PAID", models.StatusPaid)
 	assert.Equal(t, "FAILED", models.StatusFailed)
+	assert.Equal(t, "SHIPPED", models.StatusShipped)
+	assert.Equal(t, "DELIVERED", models.StatusDelivered)
+	assert.Equal(t, "CANCELLED", models.StatusCancelled)
+	assert.Equal(t, "REFUNDED", models.StatusRefunded)
 }

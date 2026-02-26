@@ -28,11 +28,38 @@ const (
 	CookieAuthScopes = "cookieAuth.Scopes"
 )
 
+// Defines values for CheckoutPluginType.
+const (
+	CheckoutPluginTypePayment  CheckoutPluginType = "payment"
+	CheckoutPluginTypeShipping CheckoutPluginType = "shipping"
+	CheckoutPluginTypeTax      CheckoutPluginType = "tax"
+)
+
+// Defines values for CheckoutPluginFieldType.
+const (
+	Checkbox CheckoutPluginFieldType = "checkbox"
+	Number   CheckoutPluginFieldType = "number"
+	Select   CheckoutPluginFieldType = "select"
+	Text     CheckoutPluginFieldType = "text"
+)
+
+// Defines values for CheckoutPluginStateSeverity.
+const (
+	CheckoutPluginStateSeverityError   CheckoutPluginStateSeverity = "error"
+	CheckoutPluginStateSeverityInfo    CheckoutPluginStateSeverity = "info"
+	CheckoutPluginStateSeveritySuccess CheckoutPluginStateSeverity = "success"
+	CheckoutPluginStateSeverityWarning CheckoutPluginStateSeverity = "warning"
+)
+
 // Defines values for OrderStatus.
 const (
-	OrderStatusFAILED  OrderStatus = "FAILED"
-	OrderStatusPAID    OrderStatus = "PAID"
-	OrderStatusPENDING OrderStatus = "PENDING"
+	OrderStatusCANCELLED OrderStatus = "CANCELLED"
+	OrderStatusDELIVERED OrderStatus = "DELIVERED"
+	OrderStatusFAILED    OrderStatus = "FAILED"
+	OrderStatusPAID      OrderStatus = "PAID"
+	OrderStatusPENDING   OrderStatus = "PENDING"
+	OrderStatusREFUNDED  OrderStatus = "REFUNDED"
+	OrderStatusSHIPPED   OrderStatus = "SHIPPED"
 )
 
 // Defines values for StorefrontHomepageSectionType.
@@ -71,9 +98,13 @@ const (
 
 // Defines values for UpdateOrderStatusRequestStatus.
 const (
-	UpdateOrderStatusRequestStatusFAILED  UpdateOrderStatusRequestStatus = "FAILED"
-	UpdateOrderStatusRequestStatusPAID    UpdateOrderStatusRequestStatus = "PAID"
-	UpdateOrderStatusRequestStatusPENDING UpdateOrderStatusRequestStatus = "PENDING"
+	UpdateOrderStatusRequestStatusCANCELLED UpdateOrderStatusRequestStatus = "CANCELLED"
+	UpdateOrderStatusRequestStatusDELIVERED UpdateOrderStatusRequestStatus = "DELIVERED"
+	UpdateOrderStatusRequestStatusFAILED    UpdateOrderStatusRequestStatus = "FAILED"
+	UpdateOrderStatusRequestStatusPAID      UpdateOrderStatusRequestStatus = "PAID"
+	UpdateOrderStatusRequestStatusPENDING   UpdateOrderStatusRequestStatus = "PENDING"
+	UpdateOrderStatusRequestStatusREFUNDED  UpdateOrderStatusRequestStatus = "REFUNDED"
+	UpdateOrderStatusRequestStatusSHIPPED   UpdateOrderStatusRequestStatus = "SHIPPED"
 )
 
 // Defines values for UpdateUserRoleRequestRole.
@@ -86,6 +117,13 @@ const (
 const (
 	UserRoleAdmin    UserRole = "admin"
 	UserRoleCustomer UserRole = "customer"
+)
+
+// Defines values for UpdateAdminCheckoutPluginParamsType.
+const (
+	UpdateAdminCheckoutPluginParamsTypePayment  UpdateAdminCheckoutPluginParamsType = "payment"
+	UpdateAdminCheckoutPluginParamsTypeShipping UpdateAdminCheckoutPluginParamsType = "shipping"
+	UpdateAdminCheckoutPluginParamsTypeTax      UpdateAdminCheckoutPluginParamsType = "tax"
 )
 
 // Defines values for ListAdminProductsParamsSort.
@@ -108,9 +146,13 @@ const (
 
 // Defines values for ListUserOrdersParamsStatus.
 const (
-	FAILED  ListUserOrdersParamsStatus = "FAILED"
-	PAID    ListUserOrdersParamsStatus = "PAID"
-	PENDING ListUserOrdersParamsStatus = "PENDING"
+	CANCELLED ListUserOrdersParamsStatus = "CANCELLED"
+	DELIVERED ListUserOrdersParamsStatus = "DELIVERED"
+	FAILED    ListUserOrdersParamsStatus = "FAILED"
+	PAID      ListUserOrdersParamsStatus = "PAID"
+	PENDING   ListUserOrdersParamsStatus = "PENDING"
+	REFUNDED  ListUserOrdersParamsStatus = "REFUNDED"
+	SHIPPED   ListUserOrdersParamsStatus = "SHIPPED"
 )
 
 // Defines values for ListProductsParamsSort.
@@ -157,6 +199,81 @@ type CartItem struct {
 	ProductId int        `json:"product_id"`
 	Quantity  int        `json:"quantity"`
 	UpdatedAt time.Time  `json:"updated_at"`
+}
+
+// CheckoutPlugin defines model for CheckoutPlugin.
+type CheckoutPlugin struct {
+	Description string                `json:"description"`
+	Enabled     bool                  `json:"enabled"`
+	Fields      []CheckoutPluginField `json:"fields"`
+	Id          string                `json:"id"`
+	Name        string                `json:"name"`
+	States      []CheckoutPluginState `json:"states"`
+	Status      string                `json:"status"`
+	Type        CheckoutPluginType    `json:"type"`
+}
+
+// CheckoutPluginType defines model for CheckoutPlugin.Type.
+type CheckoutPluginType string
+
+// CheckoutPluginCatalog defines model for CheckoutPluginCatalog.
+type CheckoutPluginCatalog struct {
+	Payment  []CheckoutPlugin `json:"payment"`
+	Shipping []CheckoutPlugin `json:"shipping"`
+	Tax      []CheckoutPlugin `json:"tax"`
+}
+
+// CheckoutPluginField defines model for CheckoutPluginField.
+type CheckoutPluginField struct {
+	HelpText    *string                      `json:"help_text,omitempty"`
+	Key         string                       `json:"key"`
+	Label       string                       `json:"label"`
+	Options     *[]CheckoutPluginFieldOption `json:"options,omitempty"`
+	Placeholder *string                      `json:"placeholder,omitempty"`
+	Required    bool                         `json:"required"`
+	Type        CheckoutPluginFieldType      `json:"type"`
+}
+
+// CheckoutPluginFieldType defines model for CheckoutPluginField.Type.
+type CheckoutPluginFieldType string
+
+// CheckoutPluginFieldOption defines model for CheckoutPluginFieldOption.
+type CheckoutPluginFieldOption struct {
+	Label string `json:"label"`
+	Value string `json:"value"`
+}
+
+// CheckoutPluginState defines model for CheckoutPluginState.
+type CheckoutPluginState struct {
+	Code     string                      `json:"code"`
+	Message  string                      `json:"message"`
+	Severity CheckoutPluginStateSeverity `json:"severity"`
+}
+
+// CheckoutPluginStateSeverity defines model for CheckoutPluginState.Severity.
+type CheckoutPluginStateSeverity string
+
+// CheckoutQuoteRequest defines model for CheckoutQuoteRequest.
+type CheckoutQuoteRequest struct {
+	PaymentData        *map[string]string `json:"payment_data,omitempty"`
+	PaymentProviderId  string             `json:"payment_provider_id"`
+	ShippingData       *map[string]string `json:"shipping_data,omitempty"`
+	ShippingProviderId string             `json:"shipping_provider_id"`
+	TaxData            *map[string]string `json:"tax_data,omitempty"`
+	TaxProviderId      string             `json:"tax_provider_id"`
+}
+
+// CheckoutQuoteResponse defines model for CheckoutQuoteResponse.
+type CheckoutQuoteResponse struct {
+	Currency       string                `json:"currency"`
+	PaymentStates  []CheckoutPluginState `json:"payment_states"`
+	Shipping       float64               `json:"shipping"`
+	ShippingStates []CheckoutPluginState `json:"shipping_states"`
+	Subtotal       float64               `json:"subtotal"`
+	Tax            float64               `json:"tax"`
+	TaxStates      []CheckoutPluginState `json:"tax_states"`
+	Total          float64               `json:"total"`
+	Valid          bool                  `json:"valid"`
 }
 
 // CreateOrderItemRequest defines model for CreateOrderItemRequest.
@@ -223,6 +340,7 @@ type MessageResponse struct {
 
 // Order defines model for Order.
 type Order struct {
+	CanCancel             bool        `json:"can_cancel"`
 	CreatedAt             time.Time   `json:"created_at"`
 	DeletedAt             *time.Time  `json:"deleted_at"`
 	Id                    int         `json:"id"`
@@ -286,10 +404,16 @@ type ProcessPaymentInputMethod struct {
 
 // ProcessPaymentRequest defines model for ProcessPaymentRequest.
 type ProcessPaymentRequest struct {
-	Address         *ProcessPaymentInputAddress `json:"address,omitempty"`
-	AddressId       *int                        `json:"address_id,omitempty"`
-	PaymentMethod   *ProcessPaymentInputMethod  `json:"payment_method,omitempty"`
-	PaymentMethodId *int                        `json:"payment_method_id,omitempty"`
+	Address            *ProcessPaymentInputAddress `json:"address,omitempty"`
+	AddressId          *int                        `json:"address_id,omitempty"`
+	PaymentData        *map[string]string          `json:"payment_data,omitempty"`
+	PaymentMethod      *ProcessPaymentInputMethod  `json:"payment_method,omitempty"`
+	PaymentMethodId    *int                        `json:"payment_method_id,omitempty"`
+	PaymentProviderId  *string                     `json:"payment_provider_id,omitempty"`
+	ShippingData       *map[string]string          `json:"shipping_data,omitempty"`
+	ShippingProviderId *string                     `json:"shipping_provider_id,omitempty"`
+	TaxData            *map[string]string          `json:"tax_data,omitempty"`
+	TaxProviderId      *string                     `json:"tax_provider_id,omitempty"`
 }
 
 // ProcessPaymentResponse defines model for ProcessPaymentResponse.
@@ -498,6 +622,11 @@ type UpdateCartItemRequest struct {
 	Quantity int `json:"quantity"`
 }
 
+// UpdateCheckoutPluginRequest defines model for UpdateCheckoutPluginRequest.
+type UpdateCheckoutPluginRequest struct {
+	Enabled bool `json:"enabled"`
+}
+
 // UpdateOrderStatusRequest defines model for UpdateOrderStatusRequest.
 type UpdateOrderStatusRequest struct {
 	Status UpdateOrderStatusRequestStatus `json:"status"`
@@ -549,6 +678,9 @@ type UserPage struct {
 	Data       []User     `json:"data"`
 	Pagination Pagination `json:"pagination"`
 }
+
+// UpdateAdminCheckoutPluginParamsType defines parameters for UpdateAdminCheckoutPlugin.
+type UpdateAdminCheckoutPluginParamsType string
 
 // ListAdminOrdersParams defines parameters for ListAdminOrders.
 type ListAdminOrdersParams struct {
@@ -637,6 +769,9 @@ type ListProductsParamsSort string
 // ListProductsParamsOrder defines parameters for ListProducts.
 type ListProductsParamsOrder string
 
+// UpdateAdminCheckoutPluginJSONRequestBody defines body for UpdateAdminCheckoutPlugin for application/json ContentType.
+type UpdateAdminCheckoutPluginJSONRequestBody = UpdateCheckoutPluginRequest
+
 // UpdateOrderStatusJSONRequestBody defines body for UpdateOrderStatus for application/json ContentType.
 type UpdateOrderStatusJSONRequestBody = UpdateOrderStatusRequest
 
@@ -679,6 +814,9 @@ type AddCartItemJSONRequestBody = AddCartItemRequest
 // UpdateCartItemJSONRequestBody defines body for UpdateCartItem for application/json ContentType.
 type UpdateCartItemJSONRequestBody = UpdateCartItemRequest
 
+// QuoteCheckoutJSONRequestBody defines body for QuoteCheckout for application/json ContentType.
+type QuoteCheckoutJSONRequestBody = CheckoutQuoteRequest
+
 // CreateOrderJSONRequestBody defines body for CreateOrder for application/json ContentType.
 type CreateOrderJSONRequestBody = CreateOrderRequest
 
@@ -693,6 +831,12 @@ type SetProfilePhotoJSONRequestBody SetProfilePhotoJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+
+	// (GET /api/v1/admin/checkout/plugins)
+	ListAdminCheckoutPlugins(c *gin.Context)
+
+	// (PATCH /api/v1/admin/checkout/plugins/{type}/{id})
+	UpdateAdminCheckoutPlugin(c *gin.Context, pType UpdateAdminCheckoutPluginParamsType, id string)
 
 	// (GET /api/v1/admin/orders)
 	ListAdminOrders(c *gin.Context, params ListAdminOrdersParams)
@@ -811,6 +955,12 @@ type ServerInterface interface {
 	// (PATCH /api/v1/me/cart/{itemId})
 	UpdateCartItem(c *gin.Context, itemId int)
 
+	// (GET /api/v1/me/checkout/plugins)
+	ListCheckoutPlugins(c *gin.Context)
+
+	// (POST /api/v1/me/checkout/quote)
+	QuoteCheckout(c *gin.Context)
+
 	// (GET /api/v1/me/orders)
 	ListUserOrders(c *gin.Context, params ListUserOrdersParams)
 
@@ -819,6 +969,9 @@ type ServerInterface interface {
 
 	// (GET /api/v1/me/orders/{id})
 	GetUserOrder(c *gin.Context, id int)
+
+	// (POST /api/v1/me/orders/{id}/cancel)
+	CancelUserOrder(c *gin.Context, id int)
 
 	// (POST /api/v1/me/orders/{id}/pay)
 	ProcessPayment(c *gin.Context, id int)
@@ -868,6 +1021,60 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(c *gin.Context)
+
+// ListAdminCheckoutPlugins operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminCheckoutPlugins(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminCheckoutPlugins(c)
+}
+
+// UpdateAdminCheckoutPlugin operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminCheckoutPlugin(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "type" -------------
+	var pType UpdateAdminCheckoutPluginParamsType
+
+	err = runtime.BindStyledParameterWithOptions("simple", "type", c.Param("type"), &pType, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter type: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminCheckoutPlugin(c, pType, id)
+}
 
 // ListAdminOrders operation middleware
 func (siw *ServerInterfaceWrapper) ListAdminOrders(c *gin.Context) {
@@ -1869,6 +2076,40 @@ func (siw *ServerInterfaceWrapper) UpdateCartItem(c *gin.Context) {
 	siw.Handler.UpdateCartItem(c, itemId)
 }
 
+// ListCheckoutPlugins operation middleware
+func (siw *ServerInterfaceWrapper) ListCheckoutPlugins(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListCheckoutPlugins(c)
+}
+
+// QuoteCheckout operation middleware
+func (siw *ServerInterfaceWrapper) QuoteCheckout(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.QuoteCheckout(c)
+}
+
 // ListUserOrders operation middleware
 func (siw *ServerInterfaceWrapper) ListUserOrders(c *gin.Context) {
 
@@ -1974,6 +2215,34 @@ func (siw *ServerInterfaceWrapper) GetUserOrder(c *gin.Context) {
 	}
 
 	siw.Handler.GetUserOrder(c, id)
+}
+
+// CancelUserOrder operation middleware
+func (siw *ServerInterfaceWrapper) CancelUserOrder(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CancelUserOrder(c, id)
 }
 
 // ProcessPayment operation middleware
@@ -2403,6 +2672,8 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
+	router.GET(options.BaseURL+"/api/v1/admin/checkout/plugins", wrapper.ListAdminCheckoutPlugins)
+	router.PATCH(options.BaseURL+"/api/v1/admin/checkout/plugins/:type/:id", wrapper.UpdateAdminCheckoutPlugin)
 	router.GET(options.BaseURL+"/api/v1/admin/orders", wrapper.ListAdminOrders)
 	router.GET(options.BaseURL+"/api/v1/admin/orders/:id", wrapper.GetAdminOrder)
 	router.PATCH(options.BaseURL+"/api/v1/admin/orders/:id/status", wrapper.UpdateOrderStatus)
@@ -2442,9 +2713,12 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/api/v1/me/cart", wrapper.AddCartItem)
 	router.DELETE(options.BaseURL+"/api/v1/me/cart/:itemId", wrapper.DeleteCartItem)
 	router.PATCH(options.BaseURL+"/api/v1/me/cart/:itemId", wrapper.UpdateCartItem)
+	router.GET(options.BaseURL+"/api/v1/me/checkout/plugins", wrapper.ListCheckoutPlugins)
+	router.POST(options.BaseURL+"/api/v1/me/checkout/quote", wrapper.QuoteCheckout)
 	router.GET(options.BaseURL+"/api/v1/me/orders", wrapper.ListUserOrders)
 	router.POST(options.BaseURL+"/api/v1/me/orders", wrapper.CreateOrder)
 	router.GET(options.BaseURL+"/api/v1/me/orders/:id", wrapper.GetUserOrder)
+	router.POST(options.BaseURL+"/api/v1/me/orders/:id/cancel", wrapper.CancelUserOrder)
 	router.POST(options.BaseURL+"/api/v1/me/orders/:id/pay", wrapper.ProcessPayment)
 	router.GET(options.BaseURL+"/api/v1/me/payment-methods", wrapper.ListSavedPaymentMethods)
 	router.POST(options.BaseURL+"/api/v1/me/payment-methods", wrapper.CreateSavedPaymentMethod)
@@ -2458,6 +2732,50 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/api/v1/products", wrapper.ListProducts)
 	router.GET(options.BaseURL+"/api/v1/products/:id", wrapper.GetProduct)
 	router.GET(options.BaseURL+"/api/v1/storefront", wrapper.GetStorefrontSettings)
+}
+
+type ListAdminCheckoutPluginsRequestObject struct {
+}
+
+type ListAdminCheckoutPluginsResponseObject interface {
+	VisitListAdminCheckoutPluginsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminCheckoutPlugins200JSONResponse CheckoutPluginCatalog
+
+func (response ListAdminCheckoutPlugins200JSONResponse) VisitListAdminCheckoutPluginsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCheckoutPluginRequestObject struct {
+	Type UpdateAdminCheckoutPluginParamsType `json:"type"`
+	Id   string                              `json:"id"`
+	Body *UpdateAdminCheckoutPluginJSONRequestBody
+}
+
+type UpdateAdminCheckoutPluginResponseObject interface {
+	VisitUpdateAdminCheckoutPluginResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminCheckoutPlugin200JSONResponse CheckoutPluginCatalog
+
+func (response UpdateAdminCheckoutPlugin200JSONResponse) VisitUpdateAdminCheckoutPluginResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCheckoutPlugin400JSONResponse Error
+
+func (response UpdateAdminCheckoutPlugin400JSONResponse) VisitUpdateAdminCheckoutPluginResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type ListAdminOrdersRequestObject struct {
@@ -3281,6 +3599,48 @@ func (response UpdateCartItem200JSONResponse) VisitUpdateCartItemResponse(w http
 	return json.NewEncoder(w).Encode(response)
 }
 
+type ListCheckoutPluginsRequestObject struct {
+}
+
+type ListCheckoutPluginsResponseObject interface {
+	VisitListCheckoutPluginsResponse(w http.ResponseWriter) error
+}
+
+type ListCheckoutPlugins200JSONResponse CheckoutPluginCatalog
+
+func (response ListCheckoutPlugins200JSONResponse) VisitListCheckoutPluginsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type QuoteCheckoutRequestObject struct {
+	Body *QuoteCheckoutJSONRequestBody
+}
+
+type QuoteCheckoutResponseObject interface {
+	VisitQuoteCheckoutResponse(w http.ResponseWriter) error
+}
+
+type QuoteCheckout200JSONResponse CheckoutQuoteResponse
+
+func (response QuoteCheckout200JSONResponse) VisitQuoteCheckoutResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type QuoteCheckout400JSONResponse Error
+
+func (response QuoteCheckout400JSONResponse) VisitQuoteCheckoutResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type ListUserOrdersRequestObject struct {
 	Params ListUserOrdersParams
 }
@@ -3335,6 +3695,41 @@ func (response GetUserOrder200JSONResponse) VisitGetUserOrderResponse(w http.Res
 type GetUserOrder404JSONResponse Error
 
 func (response GetUserOrder404JSONResponse) VisitGetUserOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CancelUserOrderRequestObject struct {
+	Id int `json:"id"`
+}
+
+type CancelUserOrderResponseObject interface {
+	VisitCancelUserOrderResponse(w http.ResponseWriter) error
+}
+
+type CancelUserOrder200JSONResponse Order
+
+func (response CancelUserOrder200JSONResponse) VisitCancelUserOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CancelUserOrder400JSONResponse Error
+
+func (response CancelUserOrder400JSONResponse) VisitCancelUserOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CancelUserOrder404JSONResponse Error
+
+func (response CancelUserOrder404JSONResponse) VisitCancelUserOrderResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
 
@@ -3649,6 +4044,12 @@ func (response GetStorefrontSettings500JSONResponse) VisitGetStorefrontSettingsR
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
+	// (GET /api/v1/admin/checkout/plugins)
+	ListAdminCheckoutPlugins(ctx context.Context, request ListAdminCheckoutPluginsRequestObject) (ListAdminCheckoutPluginsResponseObject, error)
+
+	// (PATCH /api/v1/admin/checkout/plugins/{type}/{id})
+	UpdateAdminCheckoutPlugin(ctx context.Context, request UpdateAdminCheckoutPluginRequestObject) (UpdateAdminCheckoutPluginResponseObject, error)
+
 	// (GET /api/v1/admin/orders)
 	ListAdminOrders(ctx context.Context, request ListAdminOrdersRequestObject) (ListAdminOrdersResponseObject, error)
 
@@ -3766,6 +4167,12 @@ type StrictServerInterface interface {
 	// (PATCH /api/v1/me/cart/{itemId})
 	UpdateCartItem(ctx context.Context, request UpdateCartItemRequestObject) (UpdateCartItemResponseObject, error)
 
+	// (GET /api/v1/me/checkout/plugins)
+	ListCheckoutPlugins(ctx context.Context, request ListCheckoutPluginsRequestObject) (ListCheckoutPluginsResponseObject, error)
+
+	// (POST /api/v1/me/checkout/quote)
+	QuoteCheckout(ctx context.Context, request QuoteCheckoutRequestObject) (QuoteCheckoutResponseObject, error)
+
 	// (GET /api/v1/me/orders)
 	ListUserOrders(ctx context.Context, request ListUserOrdersRequestObject) (ListUserOrdersResponseObject, error)
 
@@ -3774,6 +4181,9 @@ type StrictServerInterface interface {
 
 	// (GET /api/v1/me/orders/{id})
 	GetUserOrder(ctx context.Context, request GetUserOrderRequestObject) (GetUserOrderResponseObject, error)
+
+	// (POST /api/v1/me/orders/{id}/cancel)
+	CancelUserOrder(ctx context.Context, request CancelUserOrderRequestObject) (CancelUserOrderResponseObject, error)
 
 	// (POST /api/v1/me/orders/{id}/pay)
 	ProcessPayment(ctx context.Context, request ProcessPaymentRequestObject) (ProcessPaymentResponseObject, error)
@@ -3825,6 +4235,67 @@ func NewStrictHandler(ssi StrictServerInterface, middlewares []StrictMiddlewareF
 type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
+}
+
+// ListAdminCheckoutPlugins operation middleware
+func (sh *strictHandler) ListAdminCheckoutPlugins(ctx *gin.Context) {
+	var request ListAdminCheckoutPluginsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminCheckoutPlugins(ctx, request.(ListAdminCheckoutPluginsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminCheckoutPlugins")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminCheckoutPluginsResponseObject); ok {
+		if err := validResponse.VisitListAdminCheckoutPluginsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminCheckoutPlugin operation middleware
+func (sh *strictHandler) UpdateAdminCheckoutPlugin(ctx *gin.Context, pType UpdateAdminCheckoutPluginParamsType, id string) {
+	var request UpdateAdminCheckoutPluginRequestObject
+
+	request.Type = pType
+	request.Id = id
+
+	var body UpdateAdminCheckoutPluginJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminCheckoutPlugin(ctx, request.(UpdateAdminCheckoutPluginRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminCheckoutPlugin")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminCheckoutPluginResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminCheckoutPluginResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // ListAdminOrders operation middleware
@@ -4959,6 +5430,64 @@ func (sh *strictHandler) UpdateCartItem(ctx *gin.Context, itemId int) {
 	}
 }
 
+// ListCheckoutPlugins operation middleware
+func (sh *strictHandler) ListCheckoutPlugins(ctx *gin.Context) {
+	var request ListCheckoutPluginsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListCheckoutPlugins(ctx, request.(ListCheckoutPluginsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListCheckoutPlugins")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListCheckoutPluginsResponseObject); ok {
+		if err := validResponse.VisitListCheckoutPluginsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// QuoteCheckout operation middleware
+func (sh *strictHandler) QuoteCheckout(ctx *gin.Context) {
+	var request QuoteCheckoutRequestObject
+
+	var body QuoteCheckoutJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.QuoteCheckout(ctx, request.(QuoteCheckoutRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "QuoteCheckout")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(QuoteCheckoutResponseObject); ok {
+		if err := validResponse.VisitQuoteCheckoutResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListUserOrders operation middleware
 func (sh *strictHandler) ListUserOrders(ctx *gin.Context, params ListUserOrdersParams) {
 	var request ListUserOrdersRequestObject
@@ -5039,6 +5568,33 @@ func (sh *strictHandler) GetUserOrder(ctx *gin.Context, id int) {
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(GetUserOrderResponseObject); ok {
 		if err := validResponse.VisitGetUserOrderResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CancelUserOrder operation middleware
+func (sh *strictHandler) CancelUserOrder(ctx *gin.Context, id int) {
+	var request CancelUserOrderRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CancelUserOrder(ctx, request.(CancelUserOrderRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CancelUserOrder")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CancelUserOrderResponseObject); ok {
+		if err := validResponse.VisitCancelUserOrderResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -5418,74 +5974,86 @@ func (sh *strictHandler) GetStorefrontSettings(ctx *gin.Context) {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"9YMFxuO3x/8PAAD//zq3UyYwqQAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

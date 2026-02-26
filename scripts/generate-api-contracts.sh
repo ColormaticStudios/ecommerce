@@ -26,7 +26,7 @@ go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.4.1 \
 
 (
 	cd "${ROOT_DIR}/frontend"
-	bunx openapi-typescript ../api/openapi.yaml -o src/lib/api/generated/openapi.ts
+	bunx openapi-typescript@7.10.1 ../api/openapi.yaml -o src/lib/api/generated/openapi.ts
 )
 
 echo "Generated contract files:"

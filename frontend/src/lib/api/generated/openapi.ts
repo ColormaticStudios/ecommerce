@@ -294,6 +294,38 @@ export interface paths {
 		patch: operations["updateCartItem"];
 		trace?: never;
 	};
+	"/api/v1/me/checkout/plugins": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listCheckoutPlugins"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/me/checkout/quote": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["quoteCheckout"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/me/orders": {
 		parameters: {
 			query?: never;
@@ -336,6 +368,22 @@ export interface paths {
 		get?: never;
 		put?: never;
 		post: operations["processPayment"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/me/orders/{id}/cancel": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["cancelUserOrder"];
 		delete?: never;
 		options?: never;
 		head?: never;
@@ -564,6 +612,38 @@ export interface paths {
 		options?: never;
 		head?: never;
 		patch: operations["updateUserRole"];
+		trace?: never;
+	};
+	"/api/v1/admin/checkout/plugins": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminCheckoutPlugins"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/checkout/plugins/{type}/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch: operations["updateAdminCheckoutPlugin"];
 		trace?: never;
 	};
 	"/api/v1/admin/storefront": {
@@ -845,7 +925,8 @@ export interface components {
 			id: number;
 			user_id: number;
 			/** @enum {string} */
-			status: "PENDING" | "PAID" | "FAILED";
+			status: "PENDING" | "PAID" | "FAILED" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "REFUNDED";
+			can_cancel: boolean;
 			/** Format: double */
 			total: number;
 			payment_method_display: string | null;
@@ -889,14 +970,94 @@ export interface components {
 			address_id?: number;
 			payment_method?: components["schemas"]["ProcessPaymentInputMethod"];
 			address?: components["schemas"]["ProcessPaymentInputAddress"];
+			payment_provider_id?: string;
+			shipping_provider_id?: string;
+			tax_provider_id?: string;
+			payment_data?: {
+				[key: string]: string;
+			};
+			shipping_data?: {
+				[key: string]: string;
+			};
+			tax_data?: {
+				[key: string]: string;
+			};
 		};
 		ProcessPaymentResponse: {
 			message: string;
 			order: components["schemas"]["Order"];
 		};
+		CheckoutPluginFieldOption: {
+			value: string;
+			label: string;
+		};
+		CheckoutPluginField: {
+			key: string;
+			label: string;
+			/** @enum {string} */
+			type: "text" | "number" | "checkbox" | "select";
+			required: boolean;
+			placeholder?: string;
+			help_text?: string;
+			options?: components["schemas"]["CheckoutPluginFieldOption"][];
+		};
+		CheckoutPluginState: {
+			code: string;
+			/** @enum {string} */
+			severity: "info" | "success" | "warning" | "error";
+			message: string;
+		};
+		CheckoutPlugin: {
+			id: string;
+			/** @enum {string} */
+			type: "payment" | "shipping" | "tax";
+			name: string;
+			description: string;
+			status: string;
+			enabled: boolean;
+			fields: components["schemas"]["CheckoutPluginField"][];
+			states: components["schemas"]["CheckoutPluginState"][];
+		};
+		CheckoutPluginCatalog: {
+			payment: components["schemas"]["CheckoutPlugin"][];
+			shipping: components["schemas"]["CheckoutPlugin"][];
+			tax: components["schemas"]["CheckoutPlugin"][];
+		};
+		CheckoutQuoteRequest: {
+			payment_provider_id: string;
+			shipping_provider_id: string;
+			tax_provider_id: string;
+			payment_data?: {
+				[key: string]: string;
+			};
+			shipping_data?: {
+				[key: string]: string;
+			};
+			tax_data?: {
+				[key: string]: string;
+			};
+		};
+		CheckoutQuoteResponse: {
+			currency: string;
+			/** Format: double */
+			subtotal: number;
+			/** Format: double */
+			shipping: number;
+			/** Format: double */
+			tax: number;
+			/** Format: double */
+			total: number;
+			valid: boolean;
+			payment_states: components["schemas"]["CheckoutPluginState"][];
+			shipping_states: components["schemas"]["CheckoutPluginState"][];
+			tax_states: components["schemas"]["CheckoutPluginState"][];
+		};
+		UpdateCheckoutPluginRequest: {
+			enabled: boolean;
+		};
 		UpdateOrderStatusRequest: {
 			/** @enum {string} */
-			status: "PENDING" | "PAID" | "FAILED";
+			status: "PENDING" | "PAID" | "FAILED" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "REFUNDED";
 		};
 		SavedPaymentMethod: {
 			id: number;
@@ -1766,10 +1927,63 @@ export interface operations {
 			};
 		};
 	};
+	listCheckoutPlugins: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Available checkout provider plugins */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CheckoutPluginCatalog"];
+				};
+			};
+		};
+	};
+	quoteCheckout: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CheckoutQuoteRequest"];
+			};
+		};
+		responses: {
+			/** @description Quote */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CheckoutQuoteResponse"];
+				};
+			};
+			/** @description Invalid request payload */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
 	listUserOrders: {
 		parameters: {
 			query?: {
-				status?: "PENDING" | "PAID" | "FAILED";
+				status?: "PENDING" | "PAID" | "FAILED" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "REFUNDED";
 				start_date?: string;
 				end_date?: string;
 				page?: number;
@@ -1873,6 +2087,46 @@ export interface operations {
 			};
 			/** @description Bad request */
 			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	cancelUserOrder: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Cancelled order */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Order"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Not found */
+			404: {
 				headers: {
 					[name: string]: unknown;
 				};
@@ -2325,6 +2579,62 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["User"];
+				};
+			};
+		};
+	};
+	listAdminCheckoutPlugins: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Checkout providers including disabled ones */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CheckoutPluginCatalog"];
+				};
+			};
+		};
+	};
+	updateAdminCheckoutPlugin: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				type: "payment" | "shipping" | "tax";
+				id: string;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["UpdateCheckoutPluginRequest"];
+			};
+		};
+		responses: {
+			/** @description Updated checkout provider catalog */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CheckoutPluginCatalog"];
+				};
+			};
+			/** @description Invalid request payload */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
 				};
 			};
 		};

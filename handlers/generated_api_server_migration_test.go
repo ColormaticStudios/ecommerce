@@ -100,6 +100,77 @@ func TestGeneratedAdminAuthParity(t *testing.T) {
 	assert.Equal(t, http.StatusOK, adminW.Code)
 }
 
+func TestAdminCheckoutPluginManagement(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.CheckoutProviderSetting{})
+	admin := seedUser(t, db, "sub-admin-plugins", "admin-plugins", "admin-plugins@example.com", "admin")
+	customer := seedUser(t, db, "sub-customer-plugins", "customer-plugins", "customer-plugins@example.com", "customer")
+
+	unauthList := performJSONRequest(t, r, http.MethodGet, "/api/v1/admin/checkout/plugins", nil, "")
+	require.Equal(t, http.StatusUnauthorized, unauthList.Code)
+
+	customerList := performJSONRequest(t, r, http.MethodGet, "/api/v1/admin/checkout/plugins", nil, issueBearerTokenWithRole(t, generatedTestJWTSecret, customer.Subject, customer.Role))
+	require.Equal(t, http.StatusForbidden, customerList.Code)
+
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+	adminList := performJSONRequest(t, r, http.MethodGet, "/api/v1/admin/checkout/plugins", nil, adminToken)
+	require.Equal(t, http.StatusOK, adminList.Code)
+
+	catalog := decodeJSON[apicontract.CheckoutPluginCatalog](t, adminList)
+	activeTaxes := 0
+	disabledTaxID := ""
+	activeTaxID := ""
+	for _, tax := range catalog.Tax {
+		if tax.Enabled {
+			activeTaxes++
+			activeTaxID = tax.Id
+		} else {
+			disabledTaxID = tax.Id
+		}
+	}
+	require.Equal(t, 1, activeTaxes)
+	require.NotEmpty(t, disabledTaxID)
+
+	activateResp := performJSONRequest(
+		t,
+		r,
+		http.MethodPatch,
+		fmt.Sprintf("/api/v1/admin/checkout/plugins/tax/%s", disabledTaxID),
+		map[string]any{"enabled": true},
+		adminToken,
+	)
+	require.Equal(t, http.StatusOK, activateResp.Code)
+	updatedCatalog := decodeJSON[apicontract.CheckoutPluginCatalog](t, activateResp)
+
+	activeTaxes = 0
+	for _, tax := range updatedCatalog.Tax {
+		if tax.Enabled {
+			activeTaxes++
+			require.Equal(t, disabledTaxID, tax.Id)
+		}
+	}
+	require.Equal(t, 1, activeTaxes)
+
+	disableActiveResp := performJSONRequest(
+		t,
+		r,
+		http.MethodPatch,
+		fmt.Sprintf("/api/v1/admin/checkout/plugins/tax/%s", disabledTaxID),
+		map[string]any{"enabled": false},
+		adminToken,
+	)
+	require.Equal(t, http.StatusBadRequest, disableActiveResp.Code)
+
+	disableOldActiveResp := performJSONRequest(
+		t,
+		r,
+		http.MethodPatch,
+		fmt.Sprintf("/api/v1/admin/checkout/plugins/tax/%s", activeTaxID),
+		map[string]any{"enabled": false},
+		adminToken,
+	)
+	require.Equal(t, http.StatusOK, disableOldActiveResp.Code)
+}
+
 func TestGeneratedMeAuthParity(t *testing.T) {
 	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Cart{}, &models.CartItem{}, &models.Product{})
 	_ = seedUser(t, db, "sub-me", "me-user", "me@example.com", "customer")
@@ -770,6 +841,14 @@ func TestOrdersDateFilterAndGetOrderValidation(t *testing.T) {
 	}, token)
 	require.Equal(t, http.StatusCreated, createOrderResp.Code)
 	createdOrder := decodeJSON[models.Order](t, createOrderResp)
+	require.True(t, createdOrder.CanCancel)
+
+	shippedOrder := models.Order{
+		UserID: user.ID,
+		Status: models.StatusShipped,
+		Total:  models.MoneyFromFloat(30),
+	}
+	require.NoError(t, db.Create(&shippedOrder).Error)
 
 	badStart := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/orders?start_date=nope", nil, token)
 	require.Equal(t, http.StatusBadRequest, badStart.Code)
@@ -791,6 +870,23 @@ func TestOrdersDateFilterAndGetOrderValidation(t *testing.T) {
 
 	getOrderResp := performJSONRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/me/orders/%d", createdOrder.ID), nil, token)
 	require.Equal(t, http.StatusOK, getOrderResp.Code)
+	gotOrder := decodeJSON[models.Order](t, getOrderResp)
+	require.True(t, gotOrder.CanCancel)
+
+	listOrdersResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/orders", nil, token)
+	require.Equal(t, http.StatusOK, listOrdersResp.Code)
+	var listPayload struct {
+		Data []models.Order `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(listOrdersResp.Body.Bytes(), &listPayload))
+
+	canCancelByID := make(map[uint]bool, len(listPayload.Data))
+	for _, order := range listPayload.Data {
+		canCancelByID[order.ID] = order.CanCancel
+	}
+
+	require.True(t, canCancelByID[createdOrder.ID])
+	require.False(t, canCancelByID[shippedOrder.ID])
 }
 
 func TestAdminUpdateOrderStatusDeductsStockOnceAndRollbackOnFailure(t *testing.T) {
@@ -817,6 +913,16 @@ func TestAdminUpdateOrderStatusDeductsStockOnceAndRollbackOnFailure(t *testing.T
 	require.NoError(t, db.First(&reloaded, product.ID).Error)
 	assert.Equal(t, 3, reloaded.Stock)
 
+	ship := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/orders/%d/status", order.ID), map[string]any{"status": models.StatusShipped}, adminToken)
+	require.Equal(t, http.StatusOK, ship.Code)
+	require.NoError(t, db.First(&reloaded, product.ID).Error)
+	assert.Equal(t, 3, reloaded.Stock)
+
+	deliver := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/orders/%d/status", order.ID), map[string]any{"status": models.StatusDelivered}, adminToken)
+	require.Equal(t, http.StatusOK, deliver.Code)
+	require.NoError(t, db.First(&reloaded, product.ID).Error)
+	assert.Equal(t, 3, reloaded.Stock)
+
 	reverseToFailed := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/orders/%d/status", order.ID), map[string]any{"status": models.StatusFailed}, adminToken)
 	require.Equal(t, http.StatusOK, reverseToFailed.Code)
 	require.NoError(t, db.First(&reloaded, product.ID).Error)
@@ -839,6 +945,78 @@ func TestAdminUpdateOrderStatusDeductsStockOnceAndRollbackOnFailure(t *testing.T
 	var orderAfter models.Order
 	require.NoError(t, db.First(&orderAfter, failingOrder.ID).Error)
 	assert.Equal(t, models.StatusPending, orderAfter.Status)
+}
+
+func TestUserCancelOrderRefundsAndRestocks(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.Order{}, &models.OrderItem{})
+	customer := seedUser(t, db, "sub-customer-cancel", "customer-cancel", "customer-cancel@example.com", "customer")
+	product := seedProduct(t, db, "sku-cancel-flow", "Cancelable Product", 19.99, 5)
+
+	order := models.Order{
+		UserID:                customer.ID,
+		Status:                models.StatusPaid,
+		Total:                 models.MoneyFromFloat(39.98),
+		PaymentMethodDisplay:  "Visa •••• 4242",
+		ShippingAddressPretty: "123 Main St, New York, NY, 10001, US",
+	}
+	require.NoError(t, db.Create(&order).Error)
+	require.NoError(t, db.Create(&models.OrderItem{
+		OrderID:   order.ID,
+		ProductID: product.ID,
+		Quantity:  2,
+		Price:     models.MoneyFromFloat(19.99),
+	}).Error)
+	require.NoError(t, db.Model(&models.Product{}).Where("id = ?", product.ID).Update("stock", 3).Error)
+
+	customerToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, customer.Subject, customer.Role)
+	cancelResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/me/orders/%d/cancel", order.ID), nil, customerToken)
+	require.Equal(t, http.StatusOK, cancelResp.Code)
+
+	var cancelled models.Order
+	require.NoError(t, json.Unmarshal(cancelResp.Body.Bytes(), &cancelled))
+	assert.Equal(t, models.StatusCancelled, cancelled.Status)
+
+	var reloadedProduct models.Product
+	require.NoError(t, db.First(&reloadedProduct, product.ID).Error)
+	assert.Equal(t, 5, reloadedProduct.Stock)
+
+	shippedOrder := models.Order{
+		UserID:                customer.ID,
+		Status:                models.StatusShipped,
+		Total:                 models.MoneyFromFloat(19.99),
+		PaymentMethodDisplay:  "Visa •••• 0005",
+		ShippingAddressPretty: "In transit",
+	}
+	require.NoError(t, db.Create(&shippedOrder).Error)
+	require.NoError(t, db.Create(&models.OrderItem{
+		OrderID:   shippedOrder.ID,
+		ProductID: product.ID,
+		Quantity:  1,
+		Price:     models.MoneyFromFloat(19.99),
+	}).Error)
+
+	cancelShippedResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/me/orders/%d/cancel", shippedOrder.ID), nil, customerToken)
+	require.Equal(t, http.StatusBadRequest, cancelShippedResp.Code)
+	assert.Contains(t, cancelShippedResp.Body.String(), "Order cannot be cancelled")
+
+	deliveredOrder := models.Order{
+		UserID:                customer.ID,
+		Status:                models.StatusDelivered,
+		Total:                 models.MoneyFromFloat(19.99),
+		PaymentMethodDisplay:  "Visa •••• 1111",
+		ShippingAddressPretty: "Completed delivery",
+	}
+	require.NoError(t, db.Create(&deliveredOrder).Error)
+	require.NoError(t, db.Create(&models.OrderItem{
+		OrderID:   deliveredOrder.ID,
+		ProductID: product.ID,
+		Quantity:  1,
+		Price:     models.MoneyFromFloat(19.99),
+	}).Error)
+
+	cancelDeliveredResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/me/orders/%d/cancel", deliveredOrder.ID), nil, customerToken)
+	require.Equal(t, http.StatusBadRequest, cancelDeliveredResp.Code)
+	assert.Contains(t, cancelDeliveredResp.Body.String(), "Order cannot be cancelled")
 }
 
 func TestStorefrontDisabledSectionsAndHeroMediaValidation(t *testing.T) {
@@ -1009,10 +1187,11 @@ func TestAdminPreviewSessionAndPublicDraftRendering(t *testing.T) {
 	require.NoError(t, err)
 	draftStorefrontRaw, err := json.Marshal(draftStorefront)
 	require.NoError(t, err)
+	draftStorefrontRawStr := string(draftStorefrontRaw)
 	require.NoError(t, db.Create(&models.StorefrontSettings{
 		ID:               models.StorefrontSettingsSingletonID,
 		ConfigJSON:       string(publishedStorefrontRaw),
-		DraftConfigJSON:  string(draftStorefrontRaw),
+		DraftConfigJSON:  &draftStorefrontRawStr,
 		DraftUpdatedAt:   ptrTimeNow(),
 		PublishedUpdated: time.Now(),
 	}).Error)
@@ -1229,6 +1408,62 @@ func TestProcessPaymentRemovesOnlyOrderedCartQuantities(t *testing.T) {
 	assert.Equal(t, 1, remaining[0].Quantity)
 	assert.Equal(t, productB.ID, remaining[1].ProductID)
 	assert.Equal(t, 4, remaining[1].Quantity)
+}
+
+func TestProcessPaymentWithPluginsPersistsQuotedTotal(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.Product{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.Order{},
+		&models.OrderItem{},
+	)
+
+	user := seedUser(t, db, "sub-plugin-total", "plugin-total", "plugin-total@example.com", "customer")
+	product := seedProduct(t, db, "sku-plugin-total", "Plugin Total", 20, 10)
+	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, user.Subject, user.Role)
+
+	createOrderResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/orders", map[string]any{
+		"items": []map[string]any{{"product_id": product.ID, "quantity": 1}},
+	}, token)
+	require.Equal(t, http.StatusCreated, createOrderResp.Code)
+	order := decodeJSON[models.Order](t, createOrderResp)
+
+	payResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/me/orders/%d/pay", order.ID), map[string]any{
+		"payment_provider_id":  "dummy-card",
+		"shipping_provider_id": "dummy-ground",
+		"tax_provider_id":      "dummy-us-tax",
+		"payment_data": map[string]any{
+			"cardholder_name": "Plugin Total",
+			"card_number":     "4111111111111111",
+			"exp_month":       "12",
+			"exp_year":        "2035",
+		},
+		"shipping_data": map[string]any{
+			"full_name":     "Plugin Total",
+			"line1":         "200 Plugin Way",
+			"city":          "Austin",
+			"state":         "CA",
+			"postal_code":   "78701",
+			"country":       "US",
+			"service_level": "standard",
+		},
+		"tax_data": map[string]any{
+			"state": "CA",
+		},
+	}, token)
+	require.Equal(t, http.StatusOK, payResp.Code)
+
+	var reloaded models.Order
+	require.NoError(t, db.First(&reloaded, order.ID).Error)
+
+	expectedShipping := models.MoneyFromFloat(5.99)
+	expectedTax := models.MoneyFromFloat((order.Total + expectedShipping).Float64() * 0.085)
+	expectedTotal := order.Total + expectedShipping + expectedTax
+	assert.Equal(t, expectedTotal, reloaded.Total)
 }
 
 func TestCreateOrderDuplicateItemsAggregateStockValidation(t *testing.T) {

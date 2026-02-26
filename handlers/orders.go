@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"ecommerce/internal/checkoutplugins"
 	"ecommerce/internal/media"
 	"ecommerce/models"
 
@@ -82,6 +83,23 @@ func applyOrderMediaToOrder(order *models.Order, mediaService *media.Service) {
 	orders := []models.Order{*order}
 	applyOrderMedia(orders, mediaService)
 	*order = orders[0]
+}
+
+func applyOrderCapabilities(order *models.Order, userID *uint) {
+	if order == nil {
+		return
+	}
+	if userID == nil {
+		order.CanCancel = false
+		return
+	}
+	order.CanCancel = order.UserID == *userID && models.IsUserCancelableOrderStatus(order.Status)
+}
+
+func applyOrderCapabilitiesToList(orders []models.Order, userID *uint) {
+	for i := range orders {
+		applyOrderCapabilities(&orders[i], userID)
+	}
 }
 
 // CreateOrder creates a new order for the authenticated user
@@ -180,6 +198,7 @@ func CreateOrder(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
 		// Preload related data for response
 		db.Preload("Items.Product").First(&order, order.ID)
 		applyOrderMediaToOrder(&order, mediaService)
+		applyOrderCapabilities(&order, &user.ID)
 
 		c.JSON(http.StatusCreated, order)
 	}
@@ -204,12 +223,7 @@ func GetUserOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc
 		}
 
 		status := strings.ToUpper(c.Query("status"))
-		validStatuses := map[string]bool{
-			models.StatusPending: true,
-			models.StatusPaid:    true,
-			models.StatusFailed:  true,
-		}
-		if status != "" && !validStatuses[status] {
+		if status != "" && !models.IsValidOrderStatus(status) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status filter"})
 			return
 		}
@@ -281,6 +295,7 @@ func GetUserOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc
 			return
 		}
 		applyOrderMedia(orders, mediaService)
+		applyOrderCapabilitiesToList(orders, &user.ID)
 
 		totalPages := int(total) / limit
 		if int(total)%limit > 0 {
@@ -333,13 +348,14 @@ func GetOrderByID(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc 
 			return
 		}
 		applyOrderMediaToOrder(&order, mediaService)
+		applyOrderCapabilities(&order, &user.ID)
 
 		c.JSON(http.StatusOK, order)
 	}
 }
 
 type UpdateOrderStatusRequest struct {
-	Status string `json:"status" binding:"required,oneof=PENDING PAID FAILED"`
+	Status string `json:"status" binding:"required"`
 }
 
 type insufficientStockError struct {
@@ -412,14 +428,26 @@ type ProcessPaymentInputAddress struct {
 }
 
 type ProcessPaymentRequest struct {
-	PaymentMethodID *uint                       `json:"payment_method_id"`
-	AddressID       *uint                       `json:"address_id"`
-	PaymentMethod   *ProcessPaymentInputMethod  `json:"payment_method"`
-	Address         *ProcessPaymentInputAddress `json:"address"`
+	PaymentMethodID    *uint                       `json:"payment_method_id"`
+	AddressID          *uint                       `json:"address_id"`
+	PaymentMethod      *ProcessPaymentInputMethod  `json:"payment_method"`
+	Address            *ProcessPaymentInputAddress `json:"address"`
+	PaymentProviderID  string                      `json:"payment_provider_id"`
+	ShippingProviderID string                      `json:"shipping_provider_id"`
+	TaxProviderID      string                      `json:"tax_provider_id"`
+	PaymentData        map[string]string           `json:"payment_data"`
+	ShippingData       map[string]string           `json:"shipping_data"`
+	TaxData            map[string]string           `json:"tax_data"`
+}
+
+func hasPluginCheckoutSelection(req ProcessPaymentRequest) bool {
+	return strings.TrimSpace(req.PaymentProviderID) != "" ||
+		strings.TrimSpace(req.ShippingProviderID) != "" ||
+		strings.TrimSpace(req.TaxProviderID) != ""
 }
 
 // ProcessPayment processes payment for an order (mock implementation)
-func ProcessPayment(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
+func ProcessPayment(db *gorm.DB, pluginManager *checkoutplugins.Manager, mediaServices ...*media.Service) gin.HandlerFunc {
 	mediaService := resolveMediaService(mediaServices...)
 	return func(c *gin.Context) {
 		user, ok := getAuthenticatedUser(db, c)
@@ -461,15 +489,57 @@ func ProcessPayment(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFun
 			return
 		}
 
-		paymentDisplay, err := resolvePaymentDisplayForOrder(db, user.ID, req)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		shippingAddress, err := resolveShippingAddressForOrder(db, user.ID, req)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
+		paymentDisplay := ""
+		shippingAddress := ""
+		if hasPluginCheckoutSelection(req) {
+			if pluginManager == nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Checkout plugins unavailable"})
+				return
+			}
+
+			quote := pluginManager.Quote(checkoutplugins.QuoteRequest{
+				Subtotal:     order.Total,
+				PaymentID:    strings.TrimSpace(req.PaymentProviderID),
+				ShippingID:   strings.TrimSpace(req.ShippingProviderID),
+				TaxID:        strings.TrimSpace(req.TaxProviderID),
+				PaymentData:  req.PaymentData,
+				ShippingData: req.ShippingData,
+				TaxData:      req.TaxData,
+			})
+			if !quote.Valid {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "selected providers are invalid"})
+				return
+			}
+
+			details, err := pluginManager.ResolveCheckoutDetails(checkoutplugins.QuoteRequest{
+				Subtotal:     order.Total,
+				PaymentID:    strings.TrimSpace(req.PaymentProviderID),
+				ShippingID:   strings.TrimSpace(req.ShippingProviderID),
+				TaxID:        strings.TrimSpace(req.TaxProviderID),
+				PaymentData:  req.PaymentData,
+				ShippingData: req.ShippingData,
+				TaxData:      req.TaxData,
+			})
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+
+			paymentDisplay = details.PaymentDisplay
+			shippingAddress = details.ShippingAddress
+			order.Total = quote.Total
+		} else {
+			var err error
+			paymentDisplay, err = resolvePaymentDisplayForOrder(db, user.ID, req)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+			shippingAddress, err = resolveShippingAddressForOrder(db, user.ID, req)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
 		}
 
 		// Mock payment processing - in a real app, this would call a payment provider
@@ -550,11 +620,81 @@ func ProcessPayment(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFun
 		// Reload order
 		db.Preload("Items.Product").First(&order, order.ID)
 		applyOrderMediaToOrder(&order, mediaService)
+		applyOrderCapabilities(&order, &user.ID)
 
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Order submitted and pending confirmation",
 			"order":   order,
 		})
+	}
+}
+
+// CancelUserOrder cancels a user's order and restores stock when needed.
+func CancelUserOrder(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
+	mediaService := resolveMediaService(mediaServices...)
+	return func(c *gin.Context) {
+		user, ok := getAuthenticatedUser(db, c)
+		if !ok {
+			return
+		}
+
+		orderID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid order ID"})
+			return
+		}
+
+		var responseOrder models.Order
+
+		errCannotCancel := errors.New("order cannot be cancelled")
+		err = db.Transaction(func(tx *gorm.DB) error {
+			var order models.Order
+			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+				Where("id = ? AND user_id = ?", orderID, user.ID).
+				First(&order).Error; err != nil {
+				return err
+			}
+
+			if !models.IsUserCancelableOrderStatus(order.Status) {
+				return errCannotCancel
+			}
+
+			var items []models.OrderItem
+			if err := tx.Where("order_id = ?", order.ID).Find(&items).Error; err != nil {
+				return err
+			}
+
+			if models.IsStockCommittedOrderStatus(order.Status) {
+				if err := replenishStockForItems(tx, items); err != nil {
+					return err
+				}
+			}
+
+			order.Status = models.StatusCancelled
+			if err := tx.Save(&order).Error; err != nil {
+				return err
+			}
+
+			if err := tx.Preload("Items.Product").First(&responseOrder, order.ID).Error; err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			switch {
+			case errors.Is(err, gorm.ErrRecordNotFound):
+				c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
+			case errors.Is(err, errCannotCancel):
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Order cannot be cancelled"})
+			default:
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to cancel order"})
+			}
+			return
+		}
+
+		applyOrderMediaToOrder(&responseOrder, mediaService)
+		applyOrderCapabilities(&responseOrder, &user.ID)
+		c.JSON(http.StatusOK, responseOrder)
 	}
 }
 
@@ -635,6 +775,10 @@ func UpdateOrderStatus(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		if !models.IsValidOrderStatus(req.Status) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status"})
+			return
+		}
 
 		var order models.Order
 		err = db.Transaction(func(tx *gorm.DB) error {
@@ -646,11 +790,14 @@ func UpdateOrderStatus(db *gorm.DB) gin.HandlerFunc {
 			}
 
 			previousStatus := order.Status
-			if req.Status == models.StatusPaid && previousStatus != models.StatusPaid {
+			wasStockCommitted := models.IsStockCommittedOrderStatus(previousStatus)
+			willCommitStock := models.IsStockCommittedOrderStatus(req.Status)
+
+			if willCommitStock && !wasStockCommitted {
 				if err := deductStockForItems(tx, order.Items); err != nil {
 					return err
 				}
-			} else if req.Status != models.StatusPaid && previousStatus == models.StatusPaid {
+			} else if !willCommitStock && wasStockCommitted {
 				if err := replenishStockForItems(tx, order.Items); err != nil {
 					return err
 				}
@@ -684,6 +831,7 @@ func UpdateOrderStatus(db *gorm.DB) gin.HandlerFunc {
 
 		// Reload order with product details for response shape consistency.
 		db.Preload("Items.Product").First(&order, order.ID)
+		applyOrderCapabilities(&order, nil)
 		c.JSON(http.StatusOK, order)
 	}
 }
@@ -749,6 +897,7 @@ func GetAllOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc 
 			return
 		}
 		applyOrderMedia(orders, mediaService)
+		applyOrderCapabilitiesToList(orders, nil)
 
 		totalPages := int(total) / limit
 		if int(total)%limit > 0 {
@@ -787,6 +936,7 @@ func GetAdminOrderByID(db *gorm.DB, mediaServices ...*media.Service) gin.Handler
 			return
 		}
 		applyOrderMediaToOrder(&order, mediaService)
+		applyOrderCapabilities(&order, nil)
 
 		c.JSON(http.StatusOK, order)
 	}

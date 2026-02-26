@@ -1,0 +1,26 @@
+{
+  "id": "externalrate",
+  "type": "tax",
+  "name": "External Tax Engine",
+  "description": "Runtime external tax computation plugin.",
+  "status": "available",
+  "command": "go",
+  "args": ["run", "../provider/main.go", "tax"],
+  "timeout_ms": 4000,
+  "fields": [
+    {
+      "key": "rate_percent",
+      "label": "Tax rate %",
+      "type": "number",
+      "required": false,
+      "placeholder": "7.25"
+    }
+  ],
+  "states": [
+    {
+      "code": "external_runtime",
+      "severity": "info",
+      "message": "Handled by an external executable plugin"
+    }
+  ]
+}

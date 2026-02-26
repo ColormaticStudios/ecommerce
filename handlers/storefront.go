@@ -888,7 +888,14 @@ func decodeStorefrontConfig(configJSON string) StorefrontSettingsPayload {
 }
 
 func hasStorefrontDraft(record models.StorefrontSettings) bool {
-	return strings.TrimSpace(record.DraftConfigJSON) != ""
+	return record.DraftConfigJSON != nil && strings.TrimSpace(*record.DraftConfigJSON) != ""
+}
+
+func storefrontDraftJSON(record models.StorefrontSettings) string {
+	if record.DraftConfigJSON == nil {
+		return ""
+	}
+	return *record.DraftConfigJSON
 }
 
 func loadOrCreateStorefrontRecord(db *gorm.DB) (models.StorefrontSettings, error) {
@@ -931,7 +938,7 @@ func storefrontSettingsForRecord(record models.StorefrontSettings, mediaService 
 	config := record.ConfigJSON
 	role := media.RoleStorefrontHero
 	if preferDraft && hasStorefrontDraft(record) {
-		config = record.DraftConfigJSON
+		config = storefrontDraftJSON(record)
 		role = media.RoleStorefrontHeroDraft
 	}
 	settings := decodeStorefrontConfig(config)
@@ -1024,7 +1031,7 @@ func PublishStorefrontSettings(db *gorm.DB, mediaService *media.Service) gin.Han
 				return nil
 			}
 
-			draftSettings := decodeStorefrontConfig(record.DraftConfigJSON)
+			draftSettings := decodeStorefrontConfig(storefrontDraftJSON(record))
 			if err := syncStorefrontHeroMedia(tx, mediaService, collectHeroMediaIDs(draftSettings), media.RoleStorefrontHero); err != nil {
 				return err
 			}
@@ -1039,7 +1046,7 @@ func PublishStorefrontSettings(db *gorm.DB, mediaService *media.Service) gin.Han
 
 			now := time.Now()
 			if err := tx.Model(&record).Updates(map[string]any{
-				"config_json":       record.DraftConfigJSON,
+				"config_json":       storefrontDraftJSON(record),
 				"draft_config_json": nil,
 				"draft_updated_at":  nil,
 				"published_updated": now,

@@ -12,6 +12,8 @@ Always run tests for code you modify, read `frontend/package.json` for frontend 
 
 Create new tests where needed. Use best practices, test valid and invalid data.
 
+For your sandbox environment, you will need to prefix Go test with `GOCACHE=/tmp/go-build` because you do not have write access to `~/.cache/go-build`.
+
 Always run the formatter on code you modify:
 - Backend code: `gofmt -w <file>`
 - Frontend code: `cd frontend && bun x prettier -w <file>`
@@ -42,3 +44,4 @@ This project is still very early, don't hesitate to clean things up or make brea
 - Prefer triggering async work from explicit events (`onMount`, user actions, dedicated loader functions) instead of effect bodies.
 - Avoid helper calls inside `$effect` when those helpers mutate state that contributes to the same effect dependency graph.
 - If an effect must write state, ensure the writes target state that does not feed back into that same effect’s dependencies.
+- In load/hydration `$effect` blocks, do not call helper functions that read/write local `$state`; use `untrack` or move logic to explicit events.

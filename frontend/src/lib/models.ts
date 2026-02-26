@@ -176,6 +176,7 @@ export function parseOrder(order: OrderPayload): OrderModel {
 		id: order.id,
 		user_id: order.user_id,
 		status: order.status,
+		can_cancel: order.can_cancel,
 		total: order.total,
 		payment_method_display: order.payment_method_display || null,
 		shipping_address_pretty: order.shipping_address_pretty || null,
@@ -190,6 +191,7 @@ export interface OrderModel {
 	id: number;
 	user_id: number;
 	status: OrderStatus;
+	can_cancel: boolean;
 	total: number;
 	payment_method_display: string | null;
 	shipping_address_pretty: string | null;

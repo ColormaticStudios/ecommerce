@@ -1,0 +1,33 @@
+{
+  "id": "externalpay",
+  "type": "payment",
+  "name": "ExternalPay Gateway",
+  "description": "Runtime external payment plugin executed via go run.",
+  "status": "available",
+  "command": "go",
+  "args": ["run", "../provider/main.go", "payment"],
+  "timeout_ms": 4000,
+  "fields": [
+    {
+      "key": "token",
+      "label": "Payment token",
+      "type": "text",
+      "required": true,
+      "placeholder": "tok_live_or_test"
+    },
+    {
+      "key": "simulate_3ds",
+      "label": "Simulate 3DS",
+      "type": "checkbox",
+      "required": false,
+      "help_text": "Adds a requires_action informational state"
+    }
+  ],
+  "states": [
+    {
+      "code": "external_runtime",
+      "severity": "info",
+      "message": "Handled by an external executable plugin"
+    }
+  ]
+}

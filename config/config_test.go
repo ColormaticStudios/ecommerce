@@ -29,6 +29,7 @@ PUBLIC_URL = "toml.example.com"
 
 	dotenv := `PORT="2222"
 PUBLIC_URL="envfile.example.com"
+DISABLE_LOCAL_SIGN_IN="true"
 `
 	if err := os.WriteFile(filepath.Join(tempDir, ".env"), []byte(dotenv), 0o644); err != nil {
 		t.Fatalf("write .env: %v", err)
@@ -49,6 +50,9 @@ PUBLIC_URL="envfile.example.com"
 	}
 	if !cfg.DevMode {
 		t.Fatalf("expected DEV_MODE from config.toml fallback to be true")
+	}
+	if !cfg.DisableLocalSignIn {
+		t.Fatalf("expected DISABLE_LOCAL_SIGN_IN from .env to parse as true")
 	}
 }
 

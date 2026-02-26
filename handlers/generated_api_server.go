@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"ecommerce/internal/apicontract"
+	"ecommerce/internal/checkoutplugins"
 	"ecommerce/internal/media"
 	"ecommerce/middleware"
 
@@ -20,12 +21,14 @@ type GeneratedAPIServerConfig struct {
 	OIDCClientID       string
 	OIDCRedirectURI    string
 	MediaUploads       http.Handler
+	CheckoutPlugins    *checkoutplugins.Manager
 }
 
 // GeneratedAPIServer adapts generated OpenAPI routes to existing handler implementations.
 type GeneratedAPIServer struct {
 	db                 *gorm.DB
 	mediaService       *media.Service
+	pluginManager      *checkoutplugins.Manager
 	jwtSecret          string
 	disableLocalSignIn bool
 	authCookieCfg      AuthCookieConfig
@@ -36,9 +39,18 @@ type GeneratedAPIServer struct {
 }
 
 func NewGeneratedAPIServer(db *gorm.DB, mediaService *media.Service, cfg GeneratedAPIServerConfig) *GeneratedAPIServer {
+	pluginManager := cfg.CheckoutPlugins
+	if pluginManager == nil {
+		pluginManager = checkoutplugins.NewDefaultManager()
+	}
+	if err := syncCheckoutProviderSettings(db, pluginManager); err != nil {
+		panic(err)
+	}
+
 	return &GeneratedAPIServer{
 		db:                 db,
 		mediaService:       mediaService,
+		pluginManager:      pluginManager,
 		jwtSecret:          cfg.JWTSecret,
 		disableLocalSignIn: cfg.DisableLocalSignIn,
 		authCookieCfg:      cfg.AuthCookieConfig,
@@ -76,6 +88,16 @@ func (s *GeneratedAPIServer) applyDraftPreview(c *gin.Context) {
 func (s *GeneratedAPIServer) ListAdminOrders(c *gin.Context, params apicontract.ListAdminOrdersParams) {
 	_ = params
 	s.runProtected(c, "admin", GetAllOrders(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) ListAdminCheckoutPlugins(c *gin.Context) {
+	s.runProtected(c, "admin", ListAdminCheckoutPlugins(s.pluginManager))
+}
+
+func (s *GeneratedAPIServer) UpdateAdminCheckoutPlugin(c *gin.Context, pType apicontract.UpdateAdminCheckoutPluginParamsType, id string) {
+	_ = pType
+	_ = id
+	s.runProtected(c, "admin", UpdateAdminCheckoutPlugin(s.db, s.pluginManager))
 }
 
 func (s *GeneratedAPIServer) GetAdminOrder(c *gin.Context, id int) {
@@ -269,6 +291,14 @@ func (s *GeneratedAPIServer) CreateOrder(c *gin.Context) {
 	s.runProtected(c, "", CreateOrder(s.db, s.mediaService))
 }
 
+func (s *GeneratedAPIServer) ListCheckoutPlugins(c *gin.Context) {
+	s.runProtected(c, "", ListCheckoutPlugins(s.pluginManager))
+}
+
+func (s *GeneratedAPIServer) QuoteCheckout(c *gin.Context) {
+	s.runProtected(c, "", QuoteCheckout(s.db, s.pluginManager))
+}
+
 func (s *GeneratedAPIServer) GetUserOrder(c *gin.Context, id int) {
 	_ = id
 	s.runProtected(c, "", GetOrderByID(s.db, s.mediaService))
@@ -276,7 +306,12 @@ func (s *GeneratedAPIServer) GetUserOrder(c *gin.Context, id int) {
 
 func (s *GeneratedAPIServer) ProcessPayment(c *gin.Context, id int) {
 	_ = id
-	s.runProtected(c, "", ProcessPayment(s.db, s.mediaService))
+	s.runProtected(c, "", ProcessPayment(s.db, s.pluginManager, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) CancelUserOrder(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "", CancelUserOrder(s.db, s.mediaService))
 }
 
 func (s *GeneratedAPIServer) ListSavedPaymentMethods(c *gin.Context) {
