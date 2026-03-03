@@ -10,11 +10,11 @@ Project documentation is maintained in the wiki:
 
 API reference is generated in:
 
-- `API.md`
+- [API.md](API.md)
 
 Frontend-specific docs are in:
 
-- `frontend/README.md`
+- [frontend/README.md](frontend/README.md)
 
 ## Features
 
@@ -32,6 +32,7 @@ Frontend-specific docs are in:
 
 ```bash
 cp .env.example .env
+# Edit .env and fill in variables
 ```
 
 2. Start PostgreSQL for development:
@@ -62,11 +63,15 @@ bun install
 bun run dev
 ```
 
+Note: the storefront placeholders that the AI generated are cringe but funny, so I left them in. The example products are certified artisan humanslop.
+
 ## Build and Test
 
 Build binaries:
 
 ```bash
+make all
+# or
 make api
 make cli
 ```
@@ -84,6 +89,15 @@ cd frontend
 bun run check
 bun run lint
 ```
+
+Database migrations:
+
+```bash
+make migrate
+make migrate-check
+```
+
+Note: pending migrations are also applied automatically when starting the API or using CLI commands that open the database.
 
 ## License
 

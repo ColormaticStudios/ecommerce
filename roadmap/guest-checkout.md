@@ -36,7 +36,7 @@
   - This roadmap uses `product_variant_id` as the cart/order line identifier (aligned with `roadmap/product-catalog-depth.md` P2).
   - No long-term `product_id` purchase fallback is planned.
 - Providers:
-  - `submit-payment` is a short-term endpoint that evolves into explicit payment lifecycle endpoints in `roadmap/providers.md`.
+  - Use explicit payment lifecycle endpoints from the start (`/payments/authorize` plus admin capture/void/refund).
 - Discounts/promotions:
   - `/api/v1/checkout/quote` must include discount/promotion adjustments from `roadmap/discounts-promotions.md`.
 
@@ -56,7 +56,7 @@
   - `status` (`ACTIVE|CONVERTED|EXPIRED`)
   - `expires_at`, `last_seen_at`
 - `models.Cart` changed from `user_id` to `checkout_session_id` (unique active cart per session).
-- `main.go` `AutoMigrate` updated with new model and altered models.
+- `internal/migrations` updated with new model and altered models (plus any required backfills).
 - Session resolver helper in `handlers/` or `internal/checkout/`:
   - Resolves checkout session by HttpOnly cookie token.
   - Creates a new session+cart when absent.
@@ -89,7 +89,7 @@
     - `GET /api/v1/checkout/plugins`
     - `POST /api/v1/checkout/quote`
     - `POST /api/v1/checkout/orders`
-    - `POST /api/v1/checkout/orders/{id}/submit-payment`
+    - `POST /api/v1/checkout/orders/{id}/payments/authorize`
   - Deprecate/remove `/api/v1/me/cart*`, `/api/v1/me/checkout/*`, `/api/v1/me/orders` create/pay usage in frontend.
   - Add explicit guest-checkout-disabled error response schema/code for checkout-session endpoints.
 - `Order` schema update:
@@ -198,8 +198,6 @@
   - `/api/v1/checkout/plugins`
   - `/api/v1/checkout/quote`
   - `/api/v1/checkout/orders`
-  - `/api/v1/checkout/orders/{id}/submit-payment`
-- Planned provider-lifecycle replacement (follow-up cut):
   - `/api/v1/checkout/orders/{id}/payments/authorize`
   - `/api/v1/admin/orders/{id}/payments/{intentId}/capture`
   - `/api/v1/admin/orders/{id}/payments/{intentId}/void`
@@ -221,7 +219,7 @@
 2. Run `make openapi-gen` and commit generated files:
 - `internal/apicontract/openapi.gen.go`
 - `frontend/src/lib/api/generated/openapi.ts`
-3. Implement model changes and register new models/fields in `main.go` `AutoMigrate`.
+3. Implement model changes and register new models/fields in `internal/migrations`.
 4. Refactor handlers with thin route handlers + reusable checkout session services/helpers in `internal/`.
 5. Update `handlers/generated_api_server.go` route methods to stop requiring auth for `/checkout/*` and keep CSRF for mutating methods.
 6. Run `make openapi-check`.
@@ -237,7 +235,7 @@
 - Misconfigured toggle defaults could unintentionally block checkout at launch; require explicit default and integration test coverage.
 
 ## Immediate Next Slice
-1. Define `checkout_sessions` and cart ownership model in `models/` and `main.go` `AutoMigrate`.
+1. Define `checkout_sessions` and cart ownership model in `models/` and wire it through `internal/migrations`.
 2. Draft OpenAPI replacement for `/api/v1/checkout/cart*`, `/checkout/quote`, `/checkout/orders`, and updated `Order` schema with nullable `user_id`.
 3. Implement checkout session resolver helper and migrate cart handlers to use it.
 4. Add integration tests for guest cart lifecycle and guest order creation validation (including missing guest email invalid path).

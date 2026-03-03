@@ -5,7 +5,7 @@
 - Public product listing (`GET /api/v1/products`) supports `q`, `min_price`, `max_price`, `sort`, `order`, `page`, `limit` only.
 - Admin product editing uses draft-aware flows (`draft_data`, publish/unpublish) and generated OpenAPI handlers.
 - Storefront product sections support `source: manual|newest|search` and query/sort controls, but no category source/filter.
-- Database schema is managed through GORM `AutoMigrate` in `main.go`.
+- Database schema is managed through explicit versioned migrations in `internal/migrations` (migration steps may use GORM `AutoMigrate` plus backfills).
 
 ## Goals
 - Introduce first-class product categories with stable slugs and admin management.
@@ -51,7 +51,7 @@
   - `parent_id` (nullable)
   - `path` (materialized path, indexed)
   - `depth` (small int, indexed)
-- Registration of `models.Category` in `main.go` `AutoMigrate`.
+- Migration entry in `internal/migrations` that creates/registers `models.Category` schema and related constraints.
 - OpenAPI/admin endpoints:
   - `GET /api/v1/admin/categories`
   - `POST /api/v1/admin/categories`
@@ -160,7 +160,7 @@
 - `internal/apicontract/openapi.gen.go`
 - `frontend/src/lib/api/generated/openapi.ts`
 3. Implement model + handler/service updates (keep handlers thin, move reusable logic to `internal/` helpers/services).
-4. Register new models in `main.go` `AutoMigrate`.
+4. Add/update migration(s) in `internal/migrations` for new models and schema/data changes.
 5. Run `make openapi-check`.
 6. Run backend/frontend tests for touched paths.
 
@@ -171,7 +171,7 @@
 - Slug changes can break links; define either immutable slug policy or explicit redirect alias table before launch.
 
 ## Immediate Next Slice
-1. Add `Category` model + AutoMigrate registration and join table relation on `Product`.
+1. Add `Category` model + migration wiring (including join table relation on `Product`).
 2. Add admin category CRUD endpoints in OpenAPI + generated handlers.
 3. Extend nested product upsert/read contracts with `category_ids`/`categories` and wire draft-aware persistence.
 4. Add initial integration tests for category CRUD and product assignment publish behavior.

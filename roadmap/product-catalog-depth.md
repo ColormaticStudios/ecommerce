@@ -57,7 +57,7 @@
 - Draft architecture upgrade:
   - `product_drafts` (draft header/versioning)
   - `product_variant_drafts`, `product_option_drafts`, `product_attribute_value_drafts`, `product_related_drafts`.
-- `main.go` `AutoMigrate` updated to register all new catalog models.
+- `internal/migrations` updated to register all new catalog models and related schema changes.
 - Legacy `products.draft_data` marked for removal in final phase of rollout.
 
 ### Done Criteria
@@ -228,7 +228,7 @@
 - `internal/apicontract/openapi.gen.go`
 - `frontend/src/lib/api/generated/openapi.ts`
 3. Implement backend model/handler/service changes, keeping handlers thin.
-4. Register model changes in `main.go` `AutoMigrate` while migrations are still GORM-managed.
+4. Register model/schema/data changes in `internal/migrations` (including any required backfills).
 5. Update frontend models/parsers/admin UI for new generated types.
 6. Run `make openapi-check`.
 7. Run backend tests with `GOCACHE=/tmp/go-build` and frontend checks/tests for touched areas.
@@ -240,7 +240,7 @@
 - Canonical URL/slug collisions across product/category/brand entities can break storefront links if not centrally validated.
 
 ## Immediate Next Slice
-1. Land P0 schema skeleton in models + `AutoMigrate` (no behavior switch yet).
+1. Land P0 schema skeleton in models + migration wiring (no behavior switch yet).
 2. Define and commit the new nested product OpenAPI schemas (`Product`, `ProductUpsertInput`, variant/option/brand/attribute/seo components).
 3. Implement draft table persistence helpers and publish/discard transaction scaffolding.
 4. Add integration tests proving nested draft isolation and atomic publish before touching cart/order flows.

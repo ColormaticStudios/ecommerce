@@ -27,7 +27,7 @@ For the frontend, always use the proper component (ex. NumberInput instead of Te
 
 Keep handlers thin where possible; shared logic should move to reusable helpers/services.
 
-This project is still very early, don't hesitate to clean things up or make breaking changes to the API, schema, UI, etc. We just need to get the project in the right shape.
+This project is still very early, we will take a **breaking-change first** policy to get the project in the right shape. The project is not being used in production so there is no risk.
 
 ## OpenAPI Contract Workflow
 - Update `api/openapi.yaml` first whenever request/response shapes change.

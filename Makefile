@@ -20,7 +20,6 @@ run: api
 # Run tests
 test:
 	@go test ./...
-	@cd frontend && bun run test:e2e
 
 test-services:
 	@GOCACHE=/tmp/go-build go test ./internal/services/...

@@ -6,7 +6,7 @@
 - Order creation snapshots current product price into `models.OrderItem.Price` in `handlers/orders.go`.
 - Current checkout quote/payment routes are still `/api/v1/me/*`, but this roadmap targets the guest-checkout replacement routes under `/api/v1/checkout/*`.
 - API routing is OpenAPI-generated (`api/openapi.yaml` -> `internal/apicontract/openapi.gen.go` -> `handlers/generated_api_server.go`).
-- Schema changes are currently managed by GORM `AutoMigrate` in `main.go` (no separate migration framework yet).
+- Schema changes are managed by explicit versioned migrations in `internal/migrations` (migration steps may use GORM `AutoMigrate` plus data backfills).
 - There is no shared scheduling system for recurring campaign activation/deactivation.
 - There is no admin archive for expired discounts/promotions.
 
@@ -206,7 +206,7 @@
 - Reuse strict payload binding/validation patterns already used in current handlers.
 
 3. Model registration
-- Register new GORM models in `main.go` `AutoMigrate` list until a dedicated migration system is introduced.
+- Add/update versioned migration entries in `internal/migrations` for new tables, columns, indexes, and any required data backfills.
 
 4. Frontend contract safety
 - Current frontend pages read `product.price` directly.

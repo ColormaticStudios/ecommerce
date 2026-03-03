@@ -33,12 +33,20 @@ Use this section order unless there is a strong reason not to:
 - Prefer short bullets over long paragraphs.
 - Use repo-specific paths, endpoint names, and table names.
 - Avoid vague wording like "improve", "optimize", or "support better".
-- Include migration/backward compatibility notes when replacing existing behavior.
+- Call out explicit breaking changes and the one-cut migration plan when replacing existing behavior.
+
+## Breaking-Change Policy (Pre-Production)
+- This repo is pre-production; prioritize clean contracts over temporary compatibility layers.
+- Avoid introducing legacy wrappers, dual API surfaces, and long-lived fallback fields unless there is a hard operational requirement.
+- If a temporary bridge is unavoidable, it must be:
+- explicitly time-boxed to one phase,
+- owned by a single roadmap,
+- removed by a named follow-up phase with done criteria.
 
 ## Architecture Alignment Checklist
 Every roadmap must explicitly map changes to this codebase:
 - API contract: identify `api/openapi.yaml` changes and affected generated handlers.
-- Backend wiring: identify affected `handlers/`, `internal/`, and model registration in `main.go` `AutoMigrate`.
+- Backend wiring: identify affected `handlers/`, `internal/`, and migration updates in `internal/migrations` (including model registration/backfills inside migration steps).
 - Data model: use existing model conventions (`models.BaseModel`, `models.Money` where relevant).
 - Frontend impact: call out existing fields consumed by `frontend/` and whether changes are additive or breaking.
 - Runtime model: if background work is needed, state where worker lifecycle lives in this repo.
@@ -49,7 +57,7 @@ Every roadmap should explicitly list dependencies/assumptions against other road
 - Canonical purchasable identifier (`product_variant_id` vs `product_id`).
 - Shared ownership/session model (`user_id` vs `checkout_session_id`).
 - Shared totals pipeline (catalog pricing -> discounts/promotions -> provider snapshot/payment).
-- Whether temporary compatibility wrappers exist and which roadmap phase removes them.
+- Confirm there is one canonical surface per domain after each phase (no long-term parallel contracts).
 
 ## Phase Quality Bar
 Each phase must include:
@@ -71,7 +79,7 @@ Roadmaps should include test intent, including:
 - Invalid input/rejection behavior.
 - Retry/idempotency behavior for mutation flows.
 - Concurrency/race safety where duplicate execution is possible.
-- Regression coverage for compatibility wrappers.
+- Regression coverage for breaking migrations and removal of superseded contracts.
 
 ## Definition of Done (Document Level)
 A roadmap doc is ready when:

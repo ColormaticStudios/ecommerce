@@ -66,7 +66,7 @@
 - Add concurrency guards for double capture/refund.
 
 ### Deliverables
-- Compatibility wrapper for `POST /api/v1/checkout/orders/{id}/submit-payment` (temporary).
+- Remove `POST /api/v1/checkout/orders/{id}/submit-payment` from contract; use explicit lifecycle endpoints only.
 - New lifecycle endpoints and admin ledger endpoint.
 - Provider abstraction with stable request/response models.
 
@@ -192,7 +192,6 @@ type IdempotencyStore interface {
 
 ## Endpoint Plan
 1. Payment lifecycle
-- Keep `POST /api/v1/checkout/orders/{id}/submit-payment` as a compatibility wrapper (temporary).
 - Add:
   - `POST /api/v1/checkout/orders/{id}/payments/authorize`
   - `POST /api/v1/admin/orders/{id}/payments/{intentId}/capture`
@@ -223,7 +222,7 @@ type IdempotencyStore interface {
 ## Execution Workflow in This Repo
 1. Update `api/openapi.yaml` first (required for any API shape changes).
 2. Run `make openapi-gen` and commit generated artifacts.
-3. Add/adjust models and `AutoMigrate` entries.
+3. Add/adjust models and corresponding `internal/migrations` entries.
 4. Implement services under `internal/` (`payments`, `idempotency`, `webhooks`, `shipping`, `tax`).
 5. Wire handlers in the generated server adapter layer.
 6. Run `make openapi-check`.
