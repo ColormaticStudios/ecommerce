@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"ecommerce/internal/migrations"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -17,20 +18,20 @@ import (
 	"gorm.io/gorm"
 )
 
-func newTestDB(t *testing.T, migrateModels ...any) *gorm.DB {
+func newTestDB(t *testing.T, _ ...any) *gorm.DB {
 	t.Helper()
 
 	dbName := strings.ReplaceAll(t.Name(), "/", "_")
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", dbName)
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	require.NoError(t, err)
-	require.NoError(t, db.AutoMigrate(migrateModels...))
+	require.NoError(t, migrations.Run(db))
 	return db
 }
 
 func TestRegisterRejectsInvalidEmail(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	db := newTestDB(t, &models.User{})
+	db := newTestDB(t)
 
 	r := gin.New()
 	r.POST("/api/v1/auth/register", Register(db, "test-secret", AuthCookieConfig{}))
@@ -57,7 +58,7 @@ func TestRegisterRejectsInvalidEmail(t *testing.T) {
 
 func TestUpdateUserRoleRejectsUnsupportedRole(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	db := newTestDB(t, &models.User{})
+	db := newTestDB(t)
 
 	user := models.User{
 		Subject:  "sub-1",

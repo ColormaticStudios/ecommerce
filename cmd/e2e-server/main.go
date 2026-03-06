@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"ecommerce/handlers"
@@ -17,6 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -24,6 +26,7 @@ import (
 const (
 	// Test-only defaults for the local E2E harness.
 	defaultE2EAPIPort = 3001
+	defaultE2EDriver  = "sqlite"
 	defaultE2EDBPath  = "/tmp/ecommerce-e2e.sqlite"
 	e2eJWTSecret      = "e2e-test-jwt-secret"
 	testRoutePrefix   = "/__test"
@@ -99,18 +102,39 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	port := envInt("E2E_API_PORT", defaultE2EAPIPort)
+	dbDriver := strings.TrimSpace(strings.ToLower(os.Getenv("E2E_DB_DRIVER")))
+	if dbDriver == "" {
+		dbDriver = defaultE2EDriver
+	}
 	dbPath := os.Getenv("E2E_DB_PATH")
 	if dbPath == "" {
 		dbPath = defaultE2EDBPath
 	}
+	dbURL := strings.TrimSpace(os.Getenv("E2E_DB_URL"))
 
-	if err := os.Remove(dbPath); err != nil && !os.IsNotExist(err) {
-		log.Fatalf("failed to reset e2e db: %v", err)
-	}
-
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("failed to open e2e sqlite db: %v", err)
+	var (
+		db  *gorm.DB
+		err error
+	)
+	switch dbDriver {
+	case "sqlite":
+		if err := os.Remove(dbPath); err != nil && !os.IsNotExist(err) {
+			log.Fatalf("failed to reset e2e db: %v", err)
+		}
+		db, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+		if err != nil {
+			log.Fatalf("failed to open e2e sqlite db: %v", err)
+		}
+	case "postgres":
+		if dbURL == "" {
+			log.Fatalf("E2E_DB_URL is required when E2E_DB_DRIVER=postgres")
+		}
+		db, err = gorm.Open(postgres.Open(dbURL), &gorm.Config{})
+		if err != nil {
+			log.Fatalf("failed to open e2e postgres db: %v", err)
+		}
+	default:
+		log.Fatalf("unsupported E2E_DB_DRIVER=%q (expected sqlite or postgres)", dbDriver)
 	}
 
 	if err := migrations.Run(db); err != nil {

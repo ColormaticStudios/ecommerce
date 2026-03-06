@@ -59,3 +59,4 @@ This will create a production-ready build in the `build/` directory.
 - `bun run lint`: Lint code with ESLint
 - `bun run check`: Run type checks with TypeScript
 - `bun run gen:api`: Generate TypeScript API types from `../api/openapi.yaml`
+- `bun run test:e2e`: Run Playwright E2E suite (CI requires `E2E_DB_DRIVER=postgres` + `E2E_DB_URL`; SQLite is local smoke only)

@@ -63,11 +63,14 @@ func main() {
 	}
 	log.Println("[INFO] Database connection established")
 
-	// Run explicit, versioned schema migrations.
-	if err := migrations.Run(db); err != nil {
-		log.Fatalf("[ERROR] Failed to apply migrations: %v", err)
+	if err := migrations.EnsureReady(db, cfg.AutoApplyMigrations); err != nil {
+		log.Fatalf("[ERROR] Database migration readiness check failed: %v", err)
 	}
-	log.Printf("[INFO] Database migration completed (latest=%s)", migrations.LatestVersion())
+	if cfg.AutoApplyMigrations {
+		log.Printf("[INFO] Database migration completed (latest=%s)", migrations.LatestVersion())
+	} else {
+		log.Printf("[INFO] Database migration check completed (latest=%s)", migrations.LatestVersion())
+	}
 
 	// Setup Gin router
 	if os.Getenv("GIN_MODE") == "" {

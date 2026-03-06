@@ -29,6 +29,11 @@ Keep handlers thin where possible; shared logic should move to reusable helpers/
 
 This project is still very early, we will take a **breaking-change first** policy to get the project in the right shape. The project is not being used in production so there is no risk.
 
+If a task takes more work to complete than it should (like a simple change touching many files), report this to the user. Bad patterns throughout the codebase should be caught and not repeated. Abide by an "if you see something, say something" policy.
+
+SQLite in-memory test DBs can leak state across tests if you use `file::memory:?cache=shared`.  
+For isolated tests, use a per-test DSN (for example `file:<test-name>?mode=memory&cache=shared`) so each test gets its own database namespace.
+
 ## OpenAPI Contract Workflow
 - Update `api/openapi.yaml` first whenever request/response shapes change.
 - Regenerate contract artifacts with `make openapi-gen`.

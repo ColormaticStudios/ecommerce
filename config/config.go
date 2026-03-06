@@ -11,6 +11,7 @@ import (
 
 type Config struct {
 	DBURL                      string `mapstructure:"DATABASE_URL"`
+	AutoApplyMigrations        bool   `mapstructure:"AUTO_APPLY_MIGRATIONS"`
 	Port                       string `mapstructure:"PORT"`
 	JWTSecret                  string `mapstructure:"JWT_SECRET"`
 	DisableLocalSignIn         bool   `mapstructure:"DISABLE_LOCAL_SIGN_IN"`
@@ -28,6 +29,7 @@ type Config struct {
 
 var configKeys = []string{
 	"DATABASE_URL",
+	"AUTO_APPLY_MIGRATIONS",
 	"PORT",
 	"JWT_SECRET",
 	"DISABLE_LOCAL_SIGN_IN",
@@ -74,6 +76,7 @@ func LoadConfig() (config Config, err error) {
 	}
 
 	// Highest precedence: runtime environment variables.
+	v.SetDefault("AUTO_APPLY_MIGRATIONS", false)
 	v.AutomaticEnv()
 	for _, key := range configKeys {
 		if bindErr := v.BindEnv(key); bindErr != nil {

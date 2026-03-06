@@ -30,6 +30,7 @@ PUBLIC_URL = "toml.example.com"
 	dotenv := `PORT="2222"
 PUBLIC_URL="envfile.example.com"
 DISABLE_LOCAL_SIGN_IN="true"
+AUTO_APPLY_MIGRATIONS="true"
 `
 	if err := os.WriteFile(filepath.Join(tempDir, ".env"), []byte(dotenv), 0o644); err != nil {
 		t.Fatalf("write .env: %v", err)
@@ -54,6 +55,9 @@ DISABLE_LOCAL_SIGN_IN="true"
 	if !cfg.DisableLocalSignIn {
 		t.Fatalf("expected DISABLE_LOCAL_SIGN_IN from .env to parse as true")
 	}
+	if !cfg.AutoApplyMigrations {
+		t.Fatalf("expected AUTO_APPLY_MIGRATIONS from .env to parse as true")
+	}
 }
 
 func TestLoadConfigAllowsMissingFiles(t *testing.T) {
@@ -77,5 +81,8 @@ func TestLoadConfigAllowsMissingFiles(t *testing.T) {
 	}
 	if cfg.Port != "8080" {
 		t.Fatalf("expected PORT from env-only setup, got %q", cfg.Port)
+	}
+	if cfg.AutoApplyMigrations {
+		t.Fatalf("expected AUTO_APPLY_MIGRATIONS default to be false")
 	}
 }

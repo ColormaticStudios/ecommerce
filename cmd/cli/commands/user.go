@@ -271,8 +271,8 @@ func getDB() *gorm.DB {
 	)
 	db = db.Session(&gorm.Session{Logger: gormLogger})
 
-	if err := migrations.Run(db); err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
+	if err := migrations.EnsureReady(db, cfg.AutoApplyMigrations); err != nil {
+		log.Fatalf("Database migration readiness check failed: %v", err)
 	}
 
 	return db

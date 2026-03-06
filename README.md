@@ -94,10 +94,28 @@ Database migrations:
 
 ```bash
 make migrate
+make migrate-plan
 make migrate-check
+make migrate-status
+make migrate-lint
+make migrate-guard
+make migrate-snapshot
+make migrate-drift-check
+make migrate-forward-compat
+make migrate-ci-gate
 ```
 
-Note: pending migrations are also applied automatically when starting the API or using CLI commands that open the database.
+Note: by default, API/CLI startup checks that the database is already at the latest migration and fails if not. To auto-apply pending migrations on startup, set `AUTO_APPLY_MIGRATIONS=true`.
+
+Migration-sensitive E2E policy:
+
+```bash
+# Required CI path (Postgres)
+E2E_DB_URL='postgres://...' make test-e2e-postgres
+
+# Optional local smoke path (SQLite only, non-authoritative for migration parity)
+make test-e2e-sqlite
+```
 
 ## License
 
