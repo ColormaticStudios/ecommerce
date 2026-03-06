@@ -346,8 +346,8 @@
 				</div>
 			{:else}
 				<div>
-					<a href={resolve("/login")} class="navlink text-xl">Log In</a>
-					<a href={resolve("/signup")} class="navlink text-xl">Sign Up</a>
+					<a href={resolve("/login")} class="navlink">Log In</a>
+					<a href={resolve("/signup")} class="navlink">Sign Up</a>
 				</div>
 			{/if}
 		</div>
