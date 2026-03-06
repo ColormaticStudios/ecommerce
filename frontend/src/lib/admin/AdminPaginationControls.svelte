@@ -7,8 +7,6 @@
 		totalItems?: number | null;
 		limit: number;
 		limitOptions: number[];
-		loading?: boolean;
-		loadingLabel?: string;
 		onLimitChange?: (limit: number) => void;
 		onPrev?: () => void;
 		onNext?: () => void;
@@ -20,8 +18,6 @@
 		totalItems = null,
 		limit,
 		limitOptions,
-		loading = false,
-		loadingLabel = "Refreshing...",
 		onLimitChange,
 		onPrev,
 		onNext,
@@ -29,12 +25,9 @@
 </script>
 
 <div
-	class="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-gray-500 dark:text-gray-400"
+	class="grid gap-3 pt-2 text-xs text-gray-500 sm:grid-cols-[1fr_auto_1fr] sm:items-center dark:text-gray-400"
 >
-	{#if loading}
-		<span class="text-xs text-gray-500 dark:text-gray-400">{loadingLabel}</span>
-	{/if}
-	<div class="flex items-center gap-2">
+	<div class="flex flex-wrap items-center gap-2 sm:justify-self-start">
 		<span>Per page</span>
 		<select
 			class="cursor-pointer rounded-md border border-gray-300 bg-gray-100 px-2 py-1 text-xs dark:border-gray-700 dark:bg-gray-800"
@@ -46,13 +39,13 @@
 			{/each}
 		</select>
 	</div>
-	<span>
+	<span class="sm:justify-self-center">
 		Page {page} of {totalPages}
 		{#if totalItems !== null}
 			({totalItems} total)
 		{/if}
 	</span>
-	<div class="flex items-center gap-2">
+	<div class="flex items-center gap-2 sm:justify-self-end">
 		<Button
 			variant="regular"
 			size="small"

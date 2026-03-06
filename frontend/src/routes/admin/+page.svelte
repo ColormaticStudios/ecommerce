@@ -694,7 +694,7 @@
 						<div class="mt-6 space-y-3">
 							{#each products as product (product.id)}
 								<div
-									class={`flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 transition ${
+									class={`flex w-full items-center justify-between gap-3 rounded-xl border transition ${
 										selectedProductId === product.id
 											? "border-gray-900 bg-gray-50 shadow-sm dark:border-gray-100 dark:bg-gray-800"
 											: "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:hover:bg-gray-800"
@@ -702,7 +702,7 @@
 								>
 									<button
 										type="button"
-										class="flex flex-1 cursor-pointer items-center justify-between text-left"
+										class="flex flex-1 cursor-pointer items-center justify-between px-4 py-3 text-left"
 										onclick={() => (selectedProductId = product.id)}
 									>
 										<div>
@@ -748,6 +748,7 @@
 										size="md"
 										aria-label="Edit product"
 										title="Edit product"
+										class="mr-4"
 										onclick={() => goto(resolve(`/admin/product/${product.id}`))}
 									>
 										<i class="bi bi-wrench-adjustable"></i>
@@ -759,7 +760,6 @@
 								totalPages={productTotalPages}
 								limit={productLimit}
 								{limitOptions}
-								loading={productsLoading}
 								onLimitChange={updateProductLimit}
 								onPrev={() => void changeProductPage(productPage - 1)}
 								onNext={() => void changeProductPage(productPage + 1)}
