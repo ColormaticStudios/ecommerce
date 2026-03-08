@@ -75,6 +75,21 @@ func newCreateProductCmd() *cobra.Command {
 			if err := db.Create(&product).Error; err != nil {
 				log.Fatalf("Error creating product: %v", err)
 			}
+			variant := models.ProductVariant{
+				ProductID:   product.ID,
+				SKU:         product.SKU,
+				Title:       product.Name,
+				Price:       product.Price,
+				Stock:       product.Stock,
+				Position:    1,
+				IsPublished: product.IsPublished,
+			}
+			if err := db.Create(&variant).Error; err != nil {
+				log.Fatalf("Error creating default product variant: %v", err)
+			}
+			if err := db.Model(&product).Update("default_variant_id", variant.ID).Error; err != nil {
+				log.Fatalf("Error linking default product variant: %v", err)
+			}
 
 			fmt.Printf("✓ Product created successfully:\n")
 			fmt.Printf("  ID: %d\n", product.ID)
@@ -169,6 +184,22 @@ func newEditProductCmd() *cobra.Command {
 
 			if err := db.Save(&product).Error; err != nil {
 				log.Fatalf("Error updating product: %v", err)
+			}
+
+			if product.DefaultVariantID != nil {
+				updates := map[string]any{
+					"sku":   product.SKU,
+					"title": product.Name,
+				}
+				if cmd.Flags().Changed("price") {
+					updates["price"] = product.Price
+				}
+				if cmd.Flags().Changed("stock") {
+					updates["stock"] = product.Stock
+				}
+				if err := db.Model(&models.ProductVariant{}).Where("id = ?", *product.DefaultVariantID).Updates(updates).Error; err != nil {
+					log.Fatalf("Error updating default variant: %v", err)
+				}
 			}
 
 			fmt.Printf("✓ Product updated successfully:\n")

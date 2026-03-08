@@ -31,8 +31,16 @@ This project is still very early, we will take a **breaking-change first** polic
 
 If a task takes more work to complete than it should (like a simple change touching many files), report this to the user. Bad patterns throughout the codebase should be caught and not repeated. Abide by an "if you see something, say something" policy.
 
-SQLite in-memory test DBs can leak state across tests if you use `file::memory:?cache=shared`.  
+SQLite in-memory test DBs can leak state across tests if you use `file::memory:?cache=shared`.
 For isolated tests, use a per-test DSN (for example `file:<test-name>?mode=memory&cache=shared`) so each test gets its own database namespace.
+
+Migration replay tests must use frozen legacy schema structs for historical setup/assertions, not current `models.*` types. Current models can gain columns that do not exist in earlier migration states and will break replay tests with schema drift errors.
+
+On SQLite, `tx.Migrator().DropColumn("table_name", "column")` can panic when called with a raw table-name string during migrations. Prefer explicit SQL `ALTER TABLE ... DROP COLUMN ...` or a model-backed path instead of the string-table `DropColumn` helper.
+
+`handlers/validation_integration_test.go` defines a shared `newTestDB` helper used by many handler tests across the package. Treat its signature as package-level API: changing it can break a large number of tests outside that file.
+
+GORM can silently persist `bool` fields with schema defaults instead of explicit `false` on `Create`, unless the insert explicitly selects zero-value fields. If a row must persist `false` (for example `is_published` on variant draft/live rows), prefer `tx.Select("*").Create(&row)` or another path that explicitly includes zero values.
 
 ## OpenAPI Contract Workflow
 - Update `api/openapi.yaml` first whenever request/response shapes change.
@@ -41,6 +49,7 @@ For isolated tests, use a per-test DSN (for example `file:<test-name>?mode=memor
   - `internal/apicontract/openapi.gen.go`
   - `frontend/src/lib/api/generated/openapi.ts`
 - Run `make openapi-check` before finishing to ensure generated files are up to date.
+- `make openapi-check` is a clean-tree guard against `HEAD`, not just a regeneration smoke test. If those generated files are intentionally uncommitted in your working tree, it will still fail after a fresh `make openapi-gen`.
 - Prefer generated types in backend/frontend code over hand-written duplicate API payload interfaces.
 
 ## Svelte Effect Safety

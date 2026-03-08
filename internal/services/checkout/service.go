@@ -81,29 +81,29 @@ func ClearOrderedItemsFromCart(tx *gorm.DB, userID uint, orderItems []models.Ord
 		return fmt.Errorf("load cart: %w", err)
 	}
 
-	orderedQtyByProduct := make(map[uint]int, len(orderItems))
+	orderedQtyByVariant := make(map[uint]int, len(orderItems))
 	for _, item := range orderItems {
 		if item.Quantity <= 0 {
 			continue
 		}
-		orderedQtyByProduct[item.ProductID] += item.Quantity
+		orderedQtyByVariant[item.ProductVariantID] += item.Quantity
 	}
-	if len(orderedQtyByProduct) == 0 {
+	if len(orderedQtyByVariant) == 0 {
 		return nil
 	}
 
-	productIDs := make([]uint, 0, len(orderedQtyByProduct))
-	for productID := range orderedQtyByProduct {
-		productIDs = append(productIDs, productID)
+	variantIDs := make([]uint, 0, len(orderedQtyByVariant))
+	for variantID := range orderedQtyByVariant {
+		variantIDs = append(variantIDs, variantID)
 	}
 
 	var cartItems []models.CartItem
-	if err := tx.Where("cart_id = ? AND product_id IN ?", cart.ID, productIDs).Find(&cartItems).Error; err != nil {
+	if err := tx.Where("cart_id = ? AND product_variant_id IN ?", cart.ID, variantIDs).Find(&cartItems).Error; err != nil {
 		return fmt.Errorf("load cart items: %w", err)
 	}
 
 	for _, cartItem := range cartItems {
-		remaining := cartItem.Quantity - orderedQtyByProduct[cartItem.ProductID]
+		remaining := cartItem.Quantity - orderedQtyByVariant[cartItem.ProductVariantID]
 		if remaining <= 0 {
 			if err := tx.Delete(&cartItem).Error; err != nil {
 				return fmt.Errorf("clear cart item: %w", err)

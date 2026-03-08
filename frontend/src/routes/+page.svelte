@@ -135,10 +135,12 @@
 								imageAspect={section.product_section.image_aspect}
 								data={{
 									name: product.name,
+									brand: product.brand?.name,
 									description: section.product_section.show_description
 										? product.description
 										: undefined,
 									price: product.price,
+									priceRange: product.price_range,
 									image: product.images?.[0],
 									stock: product.stock,
 								}}

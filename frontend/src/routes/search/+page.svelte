@@ -3,8 +3,13 @@
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import Button from "$lib/components/Button.svelte";
+	import NumberInput from "$lib/components/NumberInput.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
-	import { type ProductModel } from "$lib/models";
+	import {
+		type BrandModel,
+		type ProductAttributeDefinitionModel,
+		type ProductModel,
+	} from "$lib/models";
 	import ProductCard from "$lib/components/ProductCard.svelte";
 	import { SvelteURLSearchParams } from "svelte/reactivity";
 	import type { PageData } from "./$types";
@@ -15,9 +20,14 @@
 	let { data }: Props = $props();
 
 	let results = $state<ProductModel[]>([]);
+	let brands = $state<BrandModel[]>([]);
+	let attributes = $state<ProductAttributeDefinitionModel[]>([]);
 	let errorMessage = $state("");
 	let searchQuery = $state("");
 	let draftQuery = $state("");
+	let selectedBrandSlug = $state("");
+	let hasVariantStock = $state(false);
+	let attributeFilters = $state<Record<string, string>>({});
 	let currentPage = $state(1);
 	let pageSize = $state(12);
 	let totalPages = $state(1);
@@ -32,9 +42,18 @@
 		{ value: "price", label: "Price" },
 		{ value: "name", label: "Name" },
 	];
+	const hasActiveFilters = $derived(
+		searchQuery.trim() !== "" ||
+			selectedBrandSlug !== "" ||
+			hasVariantStock ||
+			Object.values(attributeFilters).some((value) => value.trim() !== "")
+	);
 
 	function buildSearchParams(next: {
 		query?: string;
+		brandSlug?: string;
+		hasVariantStock?: boolean;
+		attributeFilters?: Record<string, string>;
 		page?: number;
 		limit?: number;
 		sort?: "created_at" | "price" | "name";
@@ -43,6 +62,17 @@
 		const params = new SvelteURLSearchParams();
 		if (next.query) {
 			params.set("q", next.query);
+		}
+		if (next.brandSlug) {
+			params.set("brand_slug", next.brandSlug);
+		}
+		if (next.hasVariantStock) {
+			params.set("has_variant_stock", "true");
+		}
+		for (const [slug, value] of Object.entries(next.attributeFilters ?? {})) {
+			if (value.trim()) {
+				params.set(`attribute[${slug}]`, value.trim());
+			}
 		}
 		if (next.page && next.page > 1) {
 			params.set("page", String(next.page));
@@ -61,6 +91,9 @@
 
 	function updateUrl(next: {
 		query?: string;
+		brandSlug?: string;
+		hasVariantStock?: boolean;
+		attributeFilters?: Record<string, string>;
 		page?: number;
 		limit?: number;
 		sort?: "created_at" | "price" | "name";
@@ -68,6 +101,9 @@
 	}) {
 		const params = buildSearchParams({
 			query: next.query ?? searchQuery,
+			brandSlug: next.brandSlug ?? selectedBrandSlug,
+			hasVariantStock: next.hasVariantStock ?? hasVariantStock,
+			attributeFilters: next.attributeFilters ?? attributeFilters,
 			page: next.page ?? currentPage,
 			limit: next.limit ?? pageSize,
 			sort: next.sort ?? sortBy,
@@ -82,9 +118,14 @@
 
 	$effect(() => {
 		results = data.results;
+		brands = data.brands;
+		attributes = data.attributes;
 		errorMessage = data.errorMessage;
 		searchQuery = data.searchQuery;
 		draftQuery = data.draftQuery;
+		selectedBrandSlug = data.brandSlug;
+		hasVariantStock = data.hasVariantStock;
+		attributeFilters = { ...data.attributeFilters };
 		currentPage = data.currentPage;
 		pageSize = data.pageSize;
 		totalPages = data.totalPages;
@@ -92,6 +133,13 @@
 		sortBy = data.sortBy;
 		sortOrder = data.sortOrder;
 	});
+
+	function updateAttributeFilter(slug: string, value: string) {
+		attributeFilters = {
+			...attributeFilters,
+			[slug]: value,
+		};
+	}
 </script>
 
 <section>
@@ -105,7 +153,13 @@
 				class="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-gray-800 dark:bg-gray-900/70"
 				onsubmit={(event) => {
 					event.preventDefault();
-					updateUrl({ query: draftQuery.trim(), page: 1 });
+					updateUrl({
+						query: draftQuery.trim(),
+						brandSlug: selectedBrandSlug,
+						hasVariantStock,
+						attributeFilters,
+						page: 1,
+					});
 				}}
 			>
 				<div class="flex flex-row flex-wrap items-center gap-3">
@@ -120,13 +174,26 @@
 						Search
 					</Button>
 				</div>
-				<div
-					class="flex flex-wrap items-center justify-between text-sm text-gray-600 dark:text-gray-300"
-				>
-					<div class="flex items-center gap-2">
-						<span class="text-xs text-gray-600 dark:text-gray-400"> Sort by </span>
+				<div class="flex flex-wrap items-end gap-3">
+					<select
+						class="min-w-[12rem] rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
+						bind:value={selectedBrandSlug}
+					>
+						<option value="">All brands</option>
+						{#each brands as brand (brand.id)}
+							<option value={brand.slug}>{brand.name}</option>
+						{/each}
+					</select>
+					<label
+						class="flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
+					>
+						<input type="checkbox" bind:checked={hasVariantStock} />
+						In stock only
+					</label>
+					<div class="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+						<span class="text-xs text-gray-600 dark:text-gray-400">Sort by</span>
 						<select
-							class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
+							class="min-w-[10rem] rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
 							bind:value={sortBy}
 							onchange={() => updateUrl({ page: 1 })}
 						>
@@ -137,23 +204,63 @@
 						<Button
 							type="button"
 							variant="regular"
-							class="flex items-center gap-2"
+							class="flex items-center gap-2 whitespace-nowrap"
 							onclick={() => updateUrl({ order: sortOrder === "asc" ? "desc" : "asc", page: 1 })}
 						>
 							<i class={sortOrder === "asc" ? "bi bi-sort-up" : "bi bi-sort-down"}></i>
 							{sortOrder === "asc" ? "Ascending" : "Descending"}
 						</Button>
 					</div>
-					{#if searchQuery}
+					{#if hasActiveFilters}
 						<Button
 							type="button"
 							variant="regular"
-							onclick={() => updateUrl({ query: "", page: 1 })}
+							class="whitespace-nowrap"
+							onclick={() =>
+								updateUrl({
+									query: "",
+									brandSlug: "",
+									hasVariantStock: false,
+									attributeFilters: {},
+									page: 1,
+								})}
 						>
 							<i class="bi bi-x-circle mr-1"></i>
-							Clear search
+							Clear filters
 						</Button>
 					{/if}
+				</div>
+				<div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+					{#each attributes as attribute (attribute.id)}
+						{#if attribute.type === "number"}
+							<NumberInput
+								allowDecimal={true}
+								placeholder={attribute.key}
+								value={attributeFilters[attribute.slug] ?? ""}
+								oninput={(event) =>
+									updateAttributeFilter(attribute.slug, (event.target as HTMLInputElement).value)}
+							/>
+						{:else if attribute.type === "boolean"}
+							<select
+								class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
+								value={attributeFilters[attribute.slug] ?? ""}
+								onchange={(event) =>
+									updateAttributeFilter(attribute.slug, (event.target as HTMLSelectElement).value)}
+							>
+								<option value="">{attribute.key}</option>
+								<option value="true">{attribute.key}: true</option>
+								<option value="false">{attribute.key}: false</option>
+							</select>
+						{:else}
+							<TextInput
+								type="text"
+								placeholder={attribute.key}
+								value={attributeFilters[attribute.slug] ?? ""}
+								oninput={(event) =>
+									updateAttributeFilter(attribute.slug, (event.target as HTMLInputElement).value)}
+							/>
+						{/if}
+					{/each}
 				</div>
 			</form>
 		</div>
@@ -207,8 +314,10 @@
 					data={{
 						//id: product.id, // Unused
 						name: product.name,
+						brand: product.brand?.name,
 						description: product.description,
 						price: product.price,
+						priceRange: product.price_range,
 						image: product.images?.[0],
 						stock: product.stock,
 					}}

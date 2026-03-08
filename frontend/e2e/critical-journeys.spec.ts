@@ -40,7 +40,7 @@ async function readSummary(request: Parameters<typeof test>[0]["request"]): Prom
 
 async function seedCartItem(
 	request: Parameters<typeof test>[0]["request"],
-	input: { email: string; quantity: number; product_id?: number }
+	input: { email: string; quantity: number; product_variant_id?: number }
 ): Promise<void> {
 	const response = await request.post(`${apiBaseURL}/__test/cart-item`, { data: input });
 	expect(response.ok()).toBeTruthy();
@@ -68,7 +68,7 @@ test("sign up, checkout, and persist order/cart state", async ({ page, request }
 	await page.goto("/");
 	await expect(page).toHaveURL(/\/$/);
 	await expect(page.getByRole("link", { name: "View cart" })).toBeVisible();
-	await seedCartItem(request, { email, quantity: 1, product_id: 1 });
+	await seedCartItem(request, { email, quantity: 1, product_variant_id: 1 });
 	await seedSavedCheckoutData(request, email);
 
 	await page.goto("/cart");
@@ -110,7 +110,7 @@ test("invalid data paths show user-facing errors", async ({ page, request }) => 
 	await establishSession(page, email, password);
 	await page.goto("/");
 	await expect(page).toHaveURL(/\/$/);
-	await seedCartItem(request, { email, quantity: 1, product_id: 1 });
+	await seedCartItem(request, { email, quantity: 1, product_variant_id: 1 });
 	await page.goto("/cart");
 	await page.getByRole("link", { name: "Go to checkout" }).click();
 	await expect(page).toHaveURL(/\/checkout$/);

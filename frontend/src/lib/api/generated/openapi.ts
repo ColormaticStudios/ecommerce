@@ -101,6 +101,40 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/brands": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List active storefront brands */
+		get: operations["listBrands"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/product-attributes": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List storefront product attributes */
+		get: operations["listProductAttributes"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/products/{id}": {
 		parameters: {
 			query?: never;
@@ -404,6 +438,70 @@ export interface paths {
 		options?: never;
 		head?: never;
 		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/brands": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminBrands"];
+		put?: never;
+		post: operations["createAdminBrand"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/brands/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete: operations["deleteAdminBrand"];
+		options?: never;
+		head?: never;
+		patch: operations["updateAdminBrand"];
+		trace?: never;
+	};
+	"/api/v1/admin/product-attributes": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminProductAttributes"];
+		put?: never;
+		post: operations["createAdminProductAttribute"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/product-attributes/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete: operations["deleteAdminProductAttribute"];
+		options?: never;
+		head?: never;
+		patch: operations["updateAdminProductAttribute"];
 		trace?: never;
 	};
 	"/api/v1/admin/products/{id}": {
@@ -830,16 +928,126 @@ export interface components {
 			currency?: string;
 			profile_photo_url?: string;
 		};
+		Brand: {
+			id: number;
+			name: string;
+			slug: string;
+			description?: string | null;
+			logo_media_id?: string | null;
+			is_active: boolean;
+		};
+		BrandListResponse: {
+			data: components["schemas"]["Brand"][];
+		};
+		BrandInput: {
+			name: string;
+			slug?: string | null;
+			description?: string | null;
+			logo_media_id?: string | null;
+			is_active?: boolean;
+		};
+		ProductAttributeDefinition: {
+			id: number;
+			key: string;
+			slug: string;
+			/** @enum {string} */
+			type: "text" | "number" | "boolean" | "enum";
+			filterable: boolean;
+			sortable: boolean;
+		};
+		ProductAttributeDefinitionInput: {
+			key: string;
+			slug?: string | null;
+			/** @enum {string} */
+			type: "text" | "number" | "boolean" | "enum";
+			filterable?: boolean;
+			sortable?: boolean;
+		};
+		ProductAttributeDefinitionListResponse: {
+			data: components["schemas"]["ProductAttributeDefinition"][];
+		};
+		ProductOptionValue: {
+			id?: number;
+			value: string;
+			position: number;
+		};
+		ProductOption: {
+			id?: number;
+			name: string;
+			position: number;
+			display_type: string;
+			values: components["schemas"]["ProductOptionValue"][];
+		};
+		ProductVariantSelection: {
+			product_option_value_id?: number;
+			option_name: string;
+			option_value: string;
+			position: number;
+		};
+		ProductVariant: {
+			id?: number;
+			sku: string;
+			title: string;
+			/** Format: double */
+			price: number;
+			/** Format: double */
+			compare_at_price?: number | null;
+			stock: number;
+			position: number;
+			is_published: boolean;
+			weight_grams?: number | null;
+			/** Format: double */
+			length_cm?: number | null;
+			/** Format: double */
+			width_cm?: number | null;
+			/** Format: double */
+			height_cm?: number | null;
+			selections: components["schemas"]["ProductVariantSelection"][];
+		};
+		ProductAttributeValue: {
+			product_attribute_id: number;
+			key: string;
+			slug: string;
+			type: string;
+			text_value?: string | null;
+			/** Format: double */
+			number_value?: number | null;
+			boolean_value?: boolean | null;
+			enum_value?: string | null;
+			position: number;
+		};
+		ProductSEO: {
+			title?: string | null;
+			description?: string | null;
+			canonical_path?: string | null;
+			og_image_media_id?: string | null;
+			noindex?: boolean;
+		};
+		ProductPriceRange: {
+			/** Format: double */
+			min: number;
+			/** Format: double */
+			max: number;
+		};
 		Product: {
 			id: number;
 			sku: string;
 			name: string;
+			subtitle?: string | null;
 			description: string;
 			/** Format: double */
 			price: number;
 			stock: number;
 			images: string[];
 			cover_image?: string | null;
+			brand?: components["schemas"]["Brand"];
+			default_variant_id?: number | null;
+			default_variant_sku?: string | null;
+			price_range: components["schemas"]["ProductPriceRange"];
+			options: components["schemas"]["ProductOption"][];
+			variants: components["schemas"]["ProductVariant"][];
+			attributes: components["schemas"]["ProductAttributeValue"][];
+			seo: components["schemas"]["ProductSEO"];
 			related_products: components["schemas"]["RelatedProduct"][];
 			/** Format: date-time */
 			created_at: string;
@@ -862,14 +1070,69 @@ export interface components {
 			stock: number;
 			cover_image?: string | null;
 		};
-		ProductInput: {
-			sku?: string;
-			name?: string;
-			description?: string;
+		ProductOptionValueInput: {
+			value: string;
+			position?: number;
+		};
+		ProductOptionInput: {
+			name: string;
+			position?: number;
+			display_type?: string;
+			values: components["schemas"]["ProductOptionValueInput"][];
+		};
+		ProductVariantSelectionInput: {
+			option_name: string;
+			option_value: string;
+			position?: number;
+		};
+		ProductVariantInput: {
+			sku: string;
+			title: string;
 			/** Format: double */
-			price?: number;
-			stock?: number;
-			images?: string[];
+			price: number;
+			/** Format: double */
+			compare_at_price?: number | null;
+			stock: number;
+			position?: number;
+			is_published?: boolean;
+			weight_grams?: number | null;
+			/** Format: double */
+			length_cm?: number | null;
+			/** Format: double */
+			width_cm?: number | null;
+			/** Format: double */
+			height_cm?: number | null;
+			selections: components["schemas"]["ProductVariantSelectionInput"][];
+		};
+		ProductAttributeValueInput: {
+			product_attribute_id: number;
+			text_value?: string | null;
+			/** Format: double */
+			number_value?: number | null;
+			boolean_value?: boolean | null;
+			enum_value?: string | null;
+			position?: number;
+		};
+		ProductSEOInput: {
+			title?: string | null;
+			description?: string | null;
+			canonical_path?: string | null;
+			og_image_media_id?: string | null;
+			noindex?: boolean;
+		};
+		ProductUpsertInput: {
+			sku: string;
+			name: string;
+			subtitle?: string | null;
+			description: string;
+			images: string[];
+			related_product_ids: number[];
+			brand_id?: number | null;
+			default_variant_sku?: string | null;
+			options: components["schemas"]["ProductOptionInput"][];
+			variants: components["schemas"]["ProductVariantInput"][];
+			attributes: components["schemas"]["ProductAttributeValueInput"][];
+			seo: components["schemas"]["ProductSEOInput"];
 		};
 		ProductPage: {
 			data: components["schemas"]["Product"][];
@@ -878,7 +1141,8 @@ export interface components {
 		CartItem: {
 			id: number;
 			cart_id: number;
-			product_id: number;
+			product_variant_id: number;
+			product_variant: components["schemas"]["ProductVariant"];
 			quantity: number;
 			product: components["schemas"]["Product"];
 			/** Format: date-time */
@@ -900,7 +1164,7 @@ export interface components {
 			deleted_at?: string | null;
 		};
 		AddCartItemRequest: {
-			product_id: number;
+			product_variant_id: number;
 			quantity: number;
 		};
 		UpdateCartItemRequest: {
@@ -909,10 +1173,13 @@ export interface components {
 		OrderItem: {
 			id: number;
 			order_id: number;
-			product_id: number;
+			product_variant_id: number;
+			variant_sku: string;
+			variant_title: string;
 			quantity: number;
 			/** Format: double */
 			price: number;
+			product_variant: components["schemas"]["ProductVariant"];
 			product: components["schemas"]["Product"];
 			/** Format: date-time */
 			created_at: string;
@@ -944,7 +1211,7 @@ export interface components {
 			pagination: components["schemas"]["Pagination"];
 		};
 		CreateOrderItemRequest: {
-			product_id: number;
+			product_variant_id: number;
 			quantity: number;
 		};
 		CreateOrderRequest: {
@@ -1156,6 +1423,11 @@ export interface components {
 			/** @enum {string} */
 			order: "asc" | "desc";
 			limit: number;
+			brand_slug: string;
+			has_variant_stock: boolean;
+			attribute_filters: {
+				[key: string]: string;
+			};
 			show_stock: boolean;
 			show_description: boolean;
 			/** @enum {string} */
@@ -1397,6 +1669,11 @@ export interface operations {
 				q?: string;
 				min_price?: number;
 				max_price?: number;
+				brand_slug?: string;
+				has_variant_stock?: boolean;
+				attribute?: {
+					[key: string]: string;
+				};
 				sort?: "price" | "name" | "created_at";
 				order?: "asc" | "desc";
 				page?: number;
@@ -1424,6 +1701,46 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	listBrands: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Active brands */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["BrandListResponse"];
+				};
+			};
+		};
+	};
+	listProductAttributes: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Filterable product attribute definitions */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProductAttributeDefinitionListResponse"];
 				};
 			};
 		};
@@ -2142,6 +2459,11 @@ export interface operations {
 				q?: string;
 				min_price?: number;
 				max_price?: number;
+				brand_slug?: string;
+				has_variant_stock?: boolean;
+				attribute?: {
+					[key: string]: string;
+				};
 				sort?: "price" | "name" | "created_at";
 				order?: "asc" | "desc";
 				page?: number;
@@ -2173,7 +2495,7 @@ export interface operations {
 		};
 		requestBody: {
 			content: {
-				"application/json": components["schemas"]["ProductInput"];
+				"application/json": components["schemas"]["ProductUpsertInput"];
 			};
 		};
 		responses: {
@@ -2184,6 +2506,192 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["Product"];
+				};
+			};
+		};
+	};
+	listAdminBrands: {
+		parameters: {
+			query?: {
+				q?: string;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Available brands */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["BrandListResponse"];
+				};
+			};
+		};
+	};
+	createAdminBrand: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["BrandInput"];
+			};
+		};
+		responses: {
+			/** @description Created brand */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Brand"];
+				};
+			};
+		};
+	};
+	deleteAdminBrand: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Deleted brand */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["MessageResponse"];
+				};
+			};
+		};
+	};
+	updateAdminBrand: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["BrandInput"];
+			};
+		};
+		responses: {
+			/** @description Updated brand */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Brand"];
+				};
+			};
+		};
+	};
+	listAdminProductAttributes: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Product attribute definitions */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProductAttributeDefinitionListResponse"];
+				};
+			};
+		};
+	};
+	createAdminProductAttribute: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["ProductAttributeDefinitionInput"];
+			};
+		};
+		responses: {
+			/** @description Created product attribute definition */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProductAttributeDefinition"];
+				};
+			};
+		};
+	};
+	deleteAdminProductAttribute: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Deleted product attribute definition */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["MessageResponse"];
+				};
+			};
+		};
+	};
+	updateAdminProductAttribute: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["ProductAttributeDefinitionInput"];
+			};
+		};
+		responses: {
+			/** @description Updated product attribute definition */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProductAttributeDefinition"];
 				};
 			};
 		};
@@ -2252,7 +2760,7 @@ export interface operations {
 		};
 		requestBody: {
 			content: {
-				"application/json": components["schemas"]["ProductInput"];
+				"application/json": components["schemas"]["ProductUpsertInput"];
 			};
 		};
 		responses: {

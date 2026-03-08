@@ -28,7 +28,7 @@ func cartSubtotal(cart *models.Cart) models.Money {
 		if item.Quantity <= 0 {
 			continue
 		}
-		subtotal += item.Product.Price.Mul(item.Quantity)
+		subtotal += item.ProductVariant.Price.Mul(item.Quantity)
 	}
 	return subtotal
 }

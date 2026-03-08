@@ -62,6 +62,31 @@ func AddColumnIfNotExists(tx *gorm.DB, table, column, definition string) error {
 	return nil
 }
 
+func CreateTableIfNotExists(tx *gorm.DB, model any) error {
+	if tx.Migrator().HasTable(model) {
+		return nil
+	}
+	if err := tx.Migrator().CreateTable(model); err != nil {
+		return err
+	}
+	AddRowsTouched(tx, 1)
+	return nil
+}
+
+func CreateIndexIfNotExists(tx *gorm.DB, model any, name string) error {
+	if strings.TrimSpace(name) == "" {
+		return fmt.Errorf("index name cannot be empty")
+	}
+	if tx.Migrator().HasIndex(model, name) {
+		return nil
+	}
+	if err := tx.Migrator().CreateIndex(model, name); err != nil {
+		return err
+	}
+	AddRowsTouched(tx, 1)
+	return nil
+}
+
 func CreateIndexConcurrently(tx *gorm.DB, indexName, table, columns string) error {
 	if err := validateIdentifier(indexName); err != nil {
 		return fmt.Errorf("invalid index name: %w", err)

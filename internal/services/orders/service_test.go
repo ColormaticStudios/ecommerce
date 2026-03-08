@@ -13,28 +13,51 @@ import (
 
 func newOrdersTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory&cache=shared"), &gorm.Config{})
 	require.NoError(t, err)
-	require.NoError(t, db.AutoMigrate(&models.Product{}, &models.Order{}, &models.OrderItem{}))
+	require.NoError(t, db.AutoMigrate(&models.Product{}, &models.ProductVariant{}, &models.Order{}, &models.OrderItem{}))
 	return db
+}
+
+func seedVariant(t *testing.T, db *gorm.DB, sku string, stock int) models.ProductVariant {
+	t.Helper()
+	product := models.Product{SKU: sku, Name: sku, Price: models.MoneyFromFloat(10), Stock: stock, IsPublished: true}
+	require.NoError(t, db.Create(&product).Error)
+	variant := models.ProductVariant{
+		ProductID:   product.ID,
+		SKU:         sku + "-default",
+		Title:       sku,
+		Price:       models.MoneyFromFloat(10),
+		Stock:       stock,
+		Position:    1,
+		IsPublished: true,
+	}
+	require.NoError(t, db.Create(&variant).Error)
+	return variant
 }
 
 func TestApplyStatusTransition_CommitsStock(t *testing.T) {
 	db := newOrdersTestDB(t)
 
-	product := models.Product{SKU: "SKU-1", Name: "Item", Price: models.MoneyFromFloat(10), Stock: 8, IsPublished: true}
-	require.NoError(t, db.Create(&product).Error)
+	variant := seedVariant(t, db, "SKU-1", 8)
 	order := models.Order{UserID: 1, Total: models.MoneyFromFloat(20), Status: models.StatusPending}
 	require.NoError(t, db.Create(&order).Error)
-	require.NoError(t, db.Create(&models.OrderItem{OrderID: order.ID, ProductID: product.ID, Quantity: 3, Price: models.MoneyFromFloat(10)}).Error)
+	require.NoError(t, db.Create(&models.OrderItem{
+		OrderID:          order.ID,
+		ProductVariantID: variant.ID,
+		VariantSKU:       variant.SKU,
+		VariantTitle:     variant.Title,
+		Quantity:         3,
+		Price:            models.MoneyFromFloat(10),
+	}).Error)
 
 	require.NoError(t, db.Transaction(func(tx *gorm.DB) error {
 		return ApplyStatusTransition(tx, &order, models.StatusPaid)
 	}))
 
-	var updatedProduct models.Product
-	require.NoError(t, db.First(&updatedProduct, product.ID).Error)
-	assert.Equal(t, 5, updatedProduct.Stock)
+	var updatedVariant models.ProductVariant
+	require.NoError(t, db.First(&updatedVariant, variant.ID).Error)
+	assert.Equal(t, 5, updatedVariant.Stock)
 
 	var updatedOrder models.Order
 	require.NoError(t, db.First(&updatedOrder, order.ID).Error)
@@ -44,29 +67,41 @@ func TestApplyStatusTransition_CommitsStock(t *testing.T) {
 func TestApplyStatusTransition_RestoresStock(t *testing.T) {
 	db := newOrdersTestDB(t)
 
-	product := models.Product{SKU: "SKU-2", Name: "Item", Price: models.MoneyFromFloat(10), Stock: 4, IsPublished: true}
-	require.NoError(t, db.Create(&product).Error)
+	variant := seedVariant(t, db, "SKU-2", 4)
 	order := models.Order{UserID: 1, Total: models.MoneyFromFloat(20), Status: models.StatusPaid}
 	require.NoError(t, db.Create(&order).Error)
-	require.NoError(t, db.Create(&models.OrderItem{OrderID: order.ID, ProductID: product.ID, Quantity: 2, Price: models.MoneyFromFloat(10)}).Error)
+	require.NoError(t, db.Create(&models.OrderItem{
+		OrderID:          order.ID,
+		ProductVariantID: variant.ID,
+		VariantSKU:       variant.SKU,
+		VariantTitle:     variant.Title,
+		Quantity:         2,
+		Price:            models.MoneyFromFloat(10),
+	}).Error)
 
 	require.NoError(t, db.Transaction(func(tx *gorm.DB) error {
 		return ApplyStatusTransition(tx, &order, models.StatusCancelled)
 	}))
 
-	var updatedProduct models.Product
-	require.NoError(t, db.First(&updatedProduct, product.ID).Error)
-	assert.Equal(t, 6, updatedProduct.Stock)
+	var updatedVariant models.ProductVariant
+	require.NoError(t, db.First(&updatedVariant, variant.ID).Error)
+	assert.Equal(t, 6, updatedVariant.Stock)
 }
 
 func TestApplyStatusTransition_InsufficientStock(t *testing.T) {
 	db := newOrdersTestDB(t)
 
-	product := models.Product{SKU: "SKU-3", Name: "Item", Price: models.MoneyFromFloat(10), Stock: 1, IsPublished: true}
-	require.NoError(t, db.Create(&product).Error)
+	variant := seedVariant(t, db, "SKU-3", 1)
 	order := models.Order{UserID: 1, Total: models.MoneyFromFloat(20), Status: models.StatusPending}
 	require.NoError(t, db.Create(&order).Error)
-	require.NoError(t, db.Create(&models.OrderItem{OrderID: order.ID, ProductID: product.ID, Quantity: 3, Price: models.MoneyFromFloat(10)}).Error)
+	require.NoError(t, db.Create(&models.OrderItem{
+		OrderID:          order.ID,
+		ProductVariantID: variant.ID,
+		VariantSKU:       variant.SKU,
+		VariantTitle:     variant.Title,
+		Quantity:         3,
+		Price:            models.MoneyFromFloat(10),
+	}).Error)
 
 	err := db.Transaction(func(tx *gorm.DB) error {
 		return ApplyStatusTransition(tx, &order, models.StatusPaid)
@@ -75,7 +110,7 @@ func TestApplyStatusTransition_InsufficientStock(t *testing.T) {
 
 	var stockErr *InsufficientStockError
 	require.ErrorAs(t, err, &stockErr)
-	assert.Equal(t, product.ID, stockErr.ProductID)
+	assert.Equal(t, variant.ID, stockErr.ProductVariantID)
 	assert.Equal(t, 3, stockErr.Requested)
 	assert.Equal(t, 1, stockErr.Available)
 }

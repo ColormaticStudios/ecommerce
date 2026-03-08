@@ -50,6 +50,12 @@ async function loadProductSection(
 
 	const page = await serverRequest<ProductPagePayload>(event, "/products", {
 		q: config.source === "search" ? config.query.trim() || undefined : undefined,
+		brand_slug: config.source === "search" ? config.brand_slug.trim() || undefined : undefined,
+		has_variant_stock: config.source === "search" && config.has_variant_stock ? true : undefined,
+		attribute:
+			config.source === "search" && Object.keys(config.attribute_filters).length > 0
+				? config.attribute_filters
+				: undefined,
 		sort: config.sort,
 		order: config.order,
 		page: 1,

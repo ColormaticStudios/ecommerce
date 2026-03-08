@@ -3,14 +3,14 @@ package migrations
 import (
 	"context"
 	"crypto/sha256"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"os"
-	"reflect"
 	"regexp"
-	"runtime"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -62,16 +62,33 @@ type Status struct {
 const advisoryLockKey int64 = 2172384190179656700
 const migrationContractTag = "contract"
 const contractGuardEnvVar = "MIGRATIONS_ALLOW_CONTRACT"
+const migrationChecksumCutoverVersion = productPublishBackfillVersion
 const defaultSchemaSnapshotPath = "internal/migrations/schema_snapshot.sql"
 const initialSchemaVersion = "2026022601_initial_schema"
 const productPublishBackfillVersion = "2026030501_backfill_product_publish_state"
+const productCatalogDepthP0Version = "2026030601_catalog_depth_p0"
+const productCatalogDepthP2Version = "2026030602_catalog_depth_p2_variant_checkout"
+const productCatalogDepthP2ProductBackfillVersion = "2026030603_catalog_depth_p2_backfill_missing_variants"
+const productCatalogDepthP4Version = "2026030701_catalog_depth_p4_hardening"
 const migrationStepAlertThresholdEnvVar = "MIGRATIONS_STEP_ALERT_THRESHOLD_MS"
 
 var versionPattern = regexp.MustCompile(`^\d{10}_[a-z0-9_]+$`)
 var tagPattern = regexp.MustCompile(`^[a-z0-9_]+$`)
 
+var migrationChecksumCompatibilityBackfills = map[string][]string{
+	// 2026030602 was corrected to remove a direct AutoMigrate call after it had
+	// already been applied in development databases. Accept the prior checksum
+	// once so those databases can backfill to the fixed definition.
+	productCatalogDepthP2Version: {
+		"5a483908a1331a23cfcfa2ab5b4992a5f63fd50e7cef4f732013328f23ca4329",
+	},
+}
+
 var acquireMigrationLock = acquireMigrationLockForDB
 var migrationSourcePath = "internal/migrations/migrations.go"
+
+//go:embed migrations.go
+var embeddedMigrationSource []byte
 
 var orderedMigrations = []Migration{
 	{
@@ -138,6 +155,527 @@ var orderedMigrations = []Migration{
 			return err
 		},
 	},
+	{
+		Version:         productCatalogDepthP0Version,
+		Name:            "add catalog depth tables and normalized product drafts",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "catalog"},
+		PostChecks: []PostCheck{
+			{
+				Name: "catalog_depth_tables_exist",
+				Check: func(tx *gorm.DB) error {
+					required := []any{
+						&models.Brand{},
+						&models.ProductOption{},
+						&models.ProductOptionValue{},
+						&models.ProductVariant{},
+						&models.ProductVariantOptionValue{},
+						&models.ProductAttribute{},
+						&models.ProductAttributeValue{},
+						&models.SEOMetadata{},
+						&models.ProductDraft{},
+						&models.ProductOptionDraft{},
+						&models.ProductOptionValueDraft{},
+						&models.ProductVariantDraft{},
+						&models.ProductVariantOptionValueDraft{},
+						&models.ProductAttributeValueDraft{},
+						&models.ProductRelatedDraft{},
+					}
+					for _, model := range required {
+						if !tx.Migrator().HasTable(model) {
+							return fmt.Errorf("missing migrated table for %T", model)
+						}
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			if err := ops.AddColumnIfNotExists(tx, "products", "subtitle", "TEXT"); err != nil {
+				return err
+			}
+			if err := ops.AddColumnIfNotExists(tx, "products", "brand_id", "BIGINT"); err != nil {
+				return err
+			}
+			if err := ops.AddColumnIfNotExists(tx, "products", "default_variant_id", "BIGINT"); err != nil {
+				return err
+			}
+			if err := ops.CreateIndexIfNotExists(tx, &models.Product{}, "idx_products_brand_id"); err != nil {
+				return err
+			}
+			if err := ops.CreateIndexIfNotExists(tx, &models.Product{}, "idx_products_default_variant_id"); err != nil {
+				return err
+			}
+
+			for _, model := range []any{
+				&models.Brand{},
+				&models.ProductOption{},
+				&models.ProductOptionValue{},
+				&models.ProductVariant{},
+				&models.ProductVariantOptionValue{},
+				&models.ProductAttribute{},
+				&models.ProductAttributeValue{},
+				&models.SEOMetadata{},
+				&models.ProductDraft{},
+				&models.ProductOptionDraft{},
+				&models.ProductOptionValueDraft{},
+				&models.ProductVariantDraft{},
+				&models.ProductVariantOptionValueDraft{},
+				&models.ProductAttributeValueDraft{},
+				&models.ProductRelatedDraft{},
+			} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         productCatalogDepthP2Version,
+		Name:            "migrate cart and order items to product variants",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "catalog", "checkout"},
+		PostChecks: []PostCheck{
+			{
+				Name: "variant_checkout_columns_populated",
+				Check: func(tx *gorm.DB) error {
+					for _, query := range []string{
+						`SELECT COUNT(*) FROM cart_items WHERE product_variant_id IS NULL OR product_variant_id = 0`,
+						`SELECT COUNT(*) FROM order_items WHERE product_variant_id IS NULL OR product_variant_id = 0`,
+						`SELECT COUNT(*) FROM order_items WHERE TRIM(COALESCE(variant_sku, '')) = ''`,
+						`SELECT COUNT(*) FROM order_items WHERE TRIM(COALESCE(variant_title, '')) = ''`,
+					} {
+						var count int64
+						if err := tx.Raw(query).Scan(&count).Error; err != nil {
+							return err
+						}
+						if count != 0 {
+							return fmt.Errorf("post-check failed: %s returned %d rows", query, count)
+						}
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			if err := ops.AddColumnIfNotExists(tx, "cart_items", "product_variant_id", "BIGINT"); err != nil {
+				return err
+			}
+			if err := ops.AddColumnIfNotExists(tx, "order_items", "product_variant_id", "BIGINT"); err != nil {
+				return err
+			}
+			if err := ops.AddColumnIfNotExists(tx, "order_items", "variant_sku", "TEXT NOT NULL DEFAULT ''"); err != nil {
+				return err
+			}
+			if err := ops.AddColumnIfNotExists(tx, "order_items", "variant_title", "TEXT NOT NULL DEFAULT ''"); err != nil {
+				return err
+			}
+			if err := backfillCartItemVariants(tx); err != nil {
+				return err
+			}
+			if err := backfillOrderItemVariants(tx); err != nil {
+				return err
+			}
+			return nil
+		},
+	},
+	{
+		Version:         productCatalogDepthP2ProductBackfillVersion,
+		Name:            "backfill default variants for legacy products",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"backfill", "catalog", "checkout"},
+		PostChecks: []PostCheck{
+			{
+				Name: "all_products_have_default_variant",
+				Check: func(tx *gorm.DB) error {
+					var count int64
+					if err := tx.Table("products").
+						Where("default_variant_id IS NULL OR default_variant_id = 0").
+						Count(&count).Error; err != nil {
+						return err
+					}
+					if count != 0 {
+						return fmt.Errorf("post-check failed: %d products still missing default_variant_id", count)
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			return ensureAllProductsHaveDefaultVariants(tx)
+		},
+	},
+	{
+		Version:         productCatalogDepthP4Version,
+		Name:            "harden catalog indexes and remove legacy draft blob",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"contract", "catalog", "hardening"},
+		ContractBlockers: []string{
+			"allow_contract_migrations",
+		},
+		PostChecks: []PostCheck{
+			{
+				Name: "legacy_product_draft_blob_removed",
+				Check: func(tx *gorm.DB) error {
+					if tx.Migrator().HasColumn("products", "draft_data") {
+						return fmt.Errorf("post-check failed: products.draft_data still exists")
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			if tx.Migrator().HasColumn("products", "draft_data") {
+				if err := backfillLegacyProductDraftBlobs(tx); err != nil {
+					return err
+				}
+			}
+			for _, statement := range catalogHardeningIndexStatements() {
+				if err := tx.Exec(statement).Error; err != nil {
+					return err
+				}
+				ops.AddRowsTouched(tx, 1)
+			}
+			if tx.Migrator().HasColumn("products", "draft_data") {
+				if err := tx.Exec(`ALTER TABLE "products" DROP COLUMN "draft_data"`).Error; err != nil {
+					return err
+				}
+				ops.AddRowsTouched(tx, 1)
+			}
+			return nil
+		},
+	},
+}
+
+type legacyCartItemVariantBackfillRow struct {
+	ID        uint
+	ProductID uint
+}
+
+type legacyOrderItemVariantBackfillRow struct {
+	ID        uint
+	ProductID uint
+}
+
+type legacyProductVariantBackfillRow struct {
+	ID uint
+}
+
+type legacyProductDraftBlobRow struct {
+	ID             uint
+	SKU            string
+	Name           string
+	Subtitle       *string
+	Description    string
+	Price          models.Money
+	Stock          int
+	Images         []string
+	BrandID        *uint
+	DraftData      string
+	DraftUpdatedAt *time.Time
+}
+
+type legacyProductDraftPayload struct {
+	SKU         string   `json:"sku"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Price       float64  `json:"price"`
+	Stock       int      `json:"stock"`
+	Images      []string `json:"images"`
+	RelatedIDs  []uint   `json:"related_ids"`
+}
+
+func backfillCartItemVariants(tx *gorm.DB) error {
+	queryDB := tx.Session(&gorm.Session{NewDB: true})
+
+	var rows []legacyCartItemVariantBackfillRow
+	if err := queryDB.Table("cart_items").
+		Select("id", "product_id").
+		Where("product_variant_id IS NULL OR product_variant_id = 0").
+		Scan(&rows).Error; err != nil {
+		return err
+	}
+
+	for _, row := range rows {
+		variantID, _, _, err := resolveVariantBackfillTarget(tx, row.ProductID)
+		if err != nil {
+			return fmt.Errorf("backfill cart_items.id=%d: %w", row.ID, err)
+		}
+		if err := queryDB.Table("cart_items").Where("id = ?", row.ID).Update("product_variant_id", variantID).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func ensureAllProductsHaveDefaultVariants(tx *gorm.DB) error {
+	queryDB := tx.Session(&gorm.Session{NewDB: true})
+
+	var rows []legacyProductVariantBackfillRow
+	if err := queryDB.Table("products").
+		Select("id").
+		Where("default_variant_id IS NULL OR default_variant_id = 0").
+		Order("id ASC").
+		Scan(&rows).Error; err != nil {
+		return err
+	}
+
+	for _, row := range rows {
+		if _, _, _, err := resolveVariantBackfillTarget(tx, row.ID); err != nil {
+			return fmt.Errorf("backfill products.id=%d: %w", row.ID, err)
+		}
+	}
+
+	return nil
+}
+
+func backfillLegacyProductDraftBlobs(tx *gorm.DB) error {
+	queryDB := tx.Session(&gorm.Session{NewDB: true})
+
+	var rows []legacyProductDraftBlobRow
+	if err := queryDB.Table("products").
+		Select("id", "sku", "name", "subtitle", "description", "price", "stock", "images", "brand_id", "draft_data", "draft_updated_at").
+		Where("TRIM(COALESCE(draft_data, '')) <> ''").
+		Where("NOT EXISTS (SELECT 1 FROM product_drafts WHERE product_drafts.product_id = products.id)").
+		Order("id ASC").
+		Scan(&rows).Error; err != nil {
+		return err
+	}
+
+	for _, row := range rows {
+		var payload legacyProductDraftPayload
+		if err := json.Unmarshal([]byte(strings.TrimSpace(row.DraftData)), &payload); err != nil {
+			return fmt.Errorf("backfill product %d legacy draft blob: %w", row.ID, err)
+		}
+
+		sku := firstNonEmpty(payload.SKU, row.SKU)
+		name := firstNonEmpty(payload.Name, row.Name)
+		description := firstNonEmpty(payload.Description, row.Description)
+		price := row.Price
+		if payload.Price > 0 {
+			price = models.MoneyFromFloat(payload.Price)
+		}
+		stock := row.Stock
+		if payload.Stock > 0 || row.Stock == 0 {
+			stock = payload.Stock
+		}
+		images := append([]string(nil), row.Images...)
+		if len(payload.Images) > 0 {
+			images = dedupeStrings(payload.Images)
+		}
+		imagesJSON, err := json.Marshal(images)
+		if err != nil {
+			return err
+		}
+
+		draftUpdatedAt := time.Now().UTC()
+		if row.DraftUpdatedAt != nil && !row.DraftUpdatedAt.IsZero() {
+			draftUpdatedAt = row.DraftUpdatedAt.UTC()
+		}
+
+		record := models.ProductDraft{
+			ProductID:         row.ID,
+			Version:           1,
+			SKU:               sku,
+			DefaultVariantSKU: sku,
+			Name:              name,
+			Subtitle:          row.Subtitle,
+			Description:       description,
+			Price:             price,
+			Stock:             stock,
+			ImagesJSON:        string(imagesJSON),
+			BrandID:           row.BrandID,
+		}
+		if err := queryDB.Create(&record).Error; err != nil {
+			return fmt.Errorf("backfill product %d draft header: %w", row.ID, err)
+		}
+
+		variant := models.ProductVariantDraft{
+			ProductDraftID: record.ID,
+			SKU:            sku,
+			Title:          name,
+			Price:          price,
+			Stock:          stock,
+			Position:       1,
+			IsPublished:    true,
+		}
+		if err := queryDB.Create(&variant).Error; err != nil {
+			return fmt.Errorf("backfill product %d default variant draft: %w", row.ID, err)
+		}
+
+		for index, relatedID := range dedupeUint(payload.RelatedIDs) {
+			if err := queryDB.Create(&models.ProductRelatedDraft{
+				ProductDraftID:   record.ID,
+				RelatedProductID: relatedID,
+				Position:         index + 1,
+			}).Error; err != nil {
+				return fmt.Errorf("backfill product %d related draft %d: %w", row.ID, relatedID, err)
+			}
+		}
+
+		if row.DraftUpdatedAt == nil || row.DraftUpdatedAt.IsZero() {
+			if err := queryDB.Table("products").Where("id = ?", row.ID).Update("draft_updated_at", draftUpdatedAt).Error; err != nil {
+				return fmt.Errorf("backfill product %d draft timestamp: %w", row.ID, err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func catalogHardeningIndexStatements() []string {
+	return []string{
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_product_variants_sku_unique ON product_variants (sku)`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_product_options_product_name_unique ON product_options (product_id, name)`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_product_option_values_option_value_unique ON product_option_values (product_option_id, value)`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_product_variant_option_values_variant_value_unique ON product_variant_option_values (product_variant_id, product_option_value_id)`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_product_attribute_values_product_attribute_unique ON product_attribute_values (product_id, product_attribute_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_products_brand_published_created_at ON products (brand_id, is_published, created_at)`,
+		`CREATE INDEX IF NOT EXISTS idx_product_variants_product_published_price ON product_variants (product_id, is_published, price)`,
+		`CREATE INDEX IF NOT EXISTS idx_product_variants_product_published_stock ON product_variants (product_id, is_published, stock)`,
+		`CREATE INDEX IF NOT EXISTS idx_product_attribute_values_text_lookup ON product_attribute_values (product_attribute_id, text_value, product_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_product_attribute_values_enum_lookup ON product_attribute_values (product_attribute_id, enum_value, product_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_product_attribute_values_number_lookup ON product_attribute_values (product_attribute_id, number_value, product_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_product_attribute_values_boolean_lookup ON product_attribute_values (product_attribute_id, boolean_value, product_id)`,
+	}
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return strings.TrimSpace(value)
+		}
+	}
+	return ""
+}
+
+func dedupeStrings(values []string) []string {
+	result := make([]string, 0, len(values))
+	seen := make(map[string]struct{}, len(values))
+	for _, value := range values {
+		trimmed := strings.TrimSpace(value)
+		if trimmed == "" {
+			continue
+		}
+		if _, exists := seen[trimmed]; exists {
+			continue
+		}
+		seen[trimmed] = struct{}{}
+		result = append(result, trimmed)
+	}
+	return result
+}
+
+func dedupeUint(values []uint) []uint {
+	result := make([]uint, 0, len(values))
+	seen := make(map[uint]struct{}, len(values))
+	for _, value := range values {
+		if value == 0 {
+			continue
+		}
+		if _, exists := seen[value]; exists {
+			continue
+		}
+		seen[value] = struct{}{}
+		result = append(result, value)
+	}
+	return result
+}
+
+func backfillOrderItemVariants(tx *gorm.DB) error {
+	queryDB := tx.Session(&gorm.Session{NewDB: true})
+
+	var rows []legacyOrderItemVariantBackfillRow
+	if err := queryDB.Table("order_items").
+		Select("id", "product_id").
+		Where("product_variant_id IS NULL OR product_variant_id = 0 OR TRIM(COALESCE(variant_sku, '')) = '' OR TRIM(COALESCE(variant_title, '')) = ''").
+		Scan(&rows).Error; err != nil {
+		return err
+	}
+
+	for _, row := range rows {
+		variantID, sku, title, err := resolveVariantBackfillTarget(tx, row.ProductID)
+		if err != nil {
+			return fmt.Errorf("backfill order_items.id=%d: %w", row.ID, err)
+		}
+		if err := queryDB.Table("order_items").Where("id = ?", row.ID).Updates(map[string]any{
+			"product_variant_id": variantID,
+			"variant_sku":        sku,
+			"variant_title":      title,
+		}).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func resolveVariantBackfillTarget(tx *gorm.DB, productID uint) (uint, string, string, error) {
+	if productID == 0 {
+		return 0, "", "", fmt.Errorf("missing product_id")
+	}
+
+	queryDB := tx.Session(&gorm.Session{NewDB: true})
+
+	var product struct {
+		ID               uint
+		SKU              string
+		Name             string
+		Price            models.Money
+		Stock            int
+		IsPublished      bool
+		DefaultVariantID *uint
+	}
+	if err := queryDB.Table("products").
+		Select("id", "sku", "name", "price", "stock", "is_published", "default_variant_id").
+		Where("id = ?", productID).
+		Take(&product).Error; err != nil {
+		return 0, "", "", fmt.Errorf("load product %d: %w", productID, err)
+	}
+
+	var variant struct {
+		ID    uint
+		SKU   string
+		Title string
+	}
+	query := queryDB.Table("product_variants").Select("id", "sku", "title")
+	if product.DefaultVariantID != nil && *product.DefaultVariantID != 0 {
+		if err := query.Where("id = ? AND product_id = ?", *product.DefaultVariantID, productID).Take(&variant).Error; err == nil {
+			return variant.ID, variant.SKU, variant.Title, nil
+		}
+	}
+
+	if err := queryDB.Table("product_variants").
+		Select("id", "sku", "title").
+		Where("product_id = ?", productID).
+		Order("position ASC").
+		Order("id ASC").
+		Take(&variant).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return 0, "", "", fmt.Errorf("resolve default variant for product %d: %w", productID, err)
+		}
+
+		createdVariant := models.ProductVariant{
+			ProductID:   product.ID,
+			SKU:         product.SKU,
+			Title:       product.Name,
+			Price:       product.Price,
+			Stock:       product.Stock,
+			Position:    1,
+			IsPublished: product.IsPublished,
+		}
+		if err := queryDB.Create(&createdVariant).Error; err != nil {
+			return 0, "", "", fmt.Errorf("create fallback variant for product %d: %w", productID, err)
+		}
+		if err := queryDB.Table("products").
+			Where("id = ?", productID).
+			Update("default_variant_id", createdVariant.ID).Error; err != nil {
+			return 0, "", "", fmt.Errorf("set default variant for product %d: %w", productID, err)
+		}
+		return createdVariant.ID, createdVariant.SKU, createdVariant.Title, nil
+	}
+
+	return variant.ID, variant.SKU, variant.Title, nil
 }
 
 func ensureTable(db *gorm.DB) error {
@@ -181,6 +719,19 @@ func Run(db *gorm.DB) error {
 	return runWithMigrations(db, orderedMigrations)
 }
 
+// RunWithoutContract applies all known non-contract migrations without
+// acknowledging contract steps.
+func RunWithoutContract(db *gorm.DB) error {
+	definitions := make([]Migration, 0, len(orderedMigrations))
+	for _, migration := range orderedMigrations {
+		if hasTag(migration.Tags, migrationContractTag) {
+			continue
+		}
+		definitions = append(definitions, migration)
+	}
+	return runWithMigrations(db, definitions)
+}
+
 func StatusReport(db *gorm.DB) (Status, error) {
 	return statusForMigrations(db, orderedMigrations)
 }
@@ -209,7 +760,7 @@ func runWithMigrations(db *gorm.DB, definitions []Migration) (runErr error) {
 		return err
 	}
 
-	if err := guardPendingMigrations(db, pending); err != nil {
+	if err := guardPendingMigrations(db, pending, true); err != nil {
 		return err
 	}
 
@@ -603,13 +1154,26 @@ func validateAndBackfillAppliedChecksums(db *gorm.DB, definitions []Migration, r
 		}
 
 		expectedChecksum := migrationChecksum(definition)
-		if strings.TrimSpace(row.Checksum) == "" {
-			if err := db.Model(&SchemaMigration{}).
-				Where("version = ?", row.Version).
-				Update("checksum", expectedChecksum).Error; err != nil {
-				return fmt.Errorf("failed to backfill checksum for applied migration %s: %w", row.Version, err)
+		trimmedChecksum := strings.TrimSpace(row.Checksum)
+		if trimmedChecksum == "" {
+			if err := backfillAppliedChecksum(db, row, expectedChecksum); err != nil {
+				return err
 			}
-			row.Checksum = expectedChecksum
+			continue
+		}
+		if trimmedChecksum == expectedChecksum {
+			continue
+		}
+		if row.Version <= migrationChecksumCutoverVersion {
+			if err := backfillAppliedChecksum(db, row, expectedChecksum); err != nil {
+				return err
+			}
+			continue
+		}
+		if slices.Contains(migrationChecksumCompatibilityBackfills[row.Version], trimmedChecksum) {
+			if err := backfillAppliedChecksum(db, row, expectedChecksum); err != nil {
+				return err
+			}
 			continue
 		}
 		if row.Checksum != expectedChecksum {
@@ -624,20 +1188,21 @@ func validateAndBackfillAppliedChecksums(db *gorm.DB, definitions []Migration, r
 	return nil
 }
 
+func backfillAppliedChecksum(db *gorm.DB, row *SchemaMigration, checksum string) error {
+	if err := db.Model(&SchemaMigration{}).
+		Where("version = ?", row.Version).
+		Update("checksum", checksum).Error; err != nil {
+		return fmt.Errorf("failed to backfill checksum for applied migration %s: %w", row.Version, err)
+	}
+	row.Checksum = checksum
+	return nil
+}
+
 func migrationChecksum(migration Migration) string {
 	tags := append([]string(nil), migration.Tags...)
 	sort.Strings(tags)
 	contractBlockers := append([]string(nil), migration.ContractBlockers...)
 	sort.Strings(contractBlockers)
-
-	upSignature := "nil"
-	if migration.Up != nil {
-		pc := runtime.FuncForPC(reflect.ValueOf(migration.Up).Pointer())
-		if pc != nil {
-			file, line := pc.FileLine(pc.Entry())
-			upSignature = fmt.Sprintf("%s|%s:%d", pc.Name(), file, line)
-		}
-	}
 
 	fingerprint := map[string]any{
 		"version":           migration.Version,
@@ -645,7 +1210,7 @@ func migrationChecksum(migration Migration) string {
 		"transaction_mode":  normalizeTransactionMode(migration.TransactionMode),
 		"tags":              tags,
 		"contract_blockers": contractBlockers,
-		"up_signature":      upSignature,
+		"source":            migrationChecksumSource(migration.Version),
 		"post_checks_count": len(migration.PostChecks),
 	}
 	encoded, err := json.Marshal(fingerprint)
@@ -654,6 +1219,23 @@ func migrationChecksum(migration Migration) string {
 	}
 	sum := sha256.Sum256(encoded)
 	return fmt.Sprintf("%x", sum)
+}
+
+func migrationChecksumSource(version string) string {
+	content := embeddedMigrationSource
+	if migrationSourcePath != "internal/migrations/migrations.go" {
+		loaded, err := os.ReadFile(migrationSourcePath)
+		if err != nil {
+			return ""
+		}
+		content = loaded
+	}
+
+	source := migrationSourceByVersion(content, version)
+	if source == "" {
+		return ""
+	}
+	return source
 }
 
 func SourcePath() string {

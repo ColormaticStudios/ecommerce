@@ -171,6 +171,22 @@ paths:
             type: number
             format: double
         - in: query
+          name: brand_slug
+          schema:
+            type: string
+        - in: query
+          name: has_variant_stock
+          schema:
+            type: boolean
+        - in: query
+          name: attribute
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+        - in: query
           name: sort
           schema:
             type: string
@@ -204,6 +220,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /api/v1/brands:
+    get:
+      tags: [products]
+      operationId: listBrands
+      security: []
+      summary: List active storefront brands
+      responses:
+        '200':
+          description: Active brands
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandListResponse'
+
+  /api/v1/product-attributes:
+    get:
+      tags: [products]
+      operationId: listProductAttributes
+      security: []
+      summary: List storefront product attributes
+      responses:
+        '200':
+          description: Filterable product attribute definitions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductAttributeDefinitionListResponse'
 
   /api/v1/products/{id}:
     get:
@@ -767,6 +811,22 @@ paths:
             type: number
             format: double
         - in: query
+          name: brand_slug
+          schema:
+            type: string
+        - in: query
+          name: has_variant_stock
+          schema:
+            type: boolean
+        - in: query
+          name: attribute
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+        - in: query
           name: sort
           schema:
             type: string
@@ -802,7 +862,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProductInput'
+              $ref: '#/components/schemas/ProductUpsertInput'
       responses:
         '201':
           description: Created product
@@ -810,6 +870,151 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
+
+  /api/v1/admin/brands:
+    get:
+      tags: [admin]
+      operationId: listAdminBrands
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Available brands
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandListResponse'
+    post:
+      tags: [admin]
+      operationId: createAdminBrand
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrandInput'
+      responses:
+        '201':
+          description: Created brand
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Brand'
+
+  /api/v1/admin/brands/{id}:
+    patch:
+      tags: [admin]
+      operationId: updateAdminBrand
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrandInput'
+      responses:
+        '200':
+          description: Updated brand
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Brand'
+    delete:
+      tags: [admin]
+      operationId: deleteAdminBrand
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Deleted brand
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /api/v1/admin/product-attributes:
+    get:
+      tags: [admin]
+      operationId: listAdminProductAttributes
+      responses:
+        '200':
+          description: Product attribute definitions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductAttributeDefinitionListResponse'
+    post:
+      tags: [admin]
+      operationId: createAdminProductAttribute
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductAttributeDefinitionInput'
+      responses:
+        '201':
+          description: Created product attribute definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductAttributeDefinition'
+
+  /api/v1/admin/product-attributes/{id}:
+    patch:
+      tags: [admin]
+      operationId: updateAdminProductAttribute
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductAttributeDefinitionInput'
+      responses:
+        '200':
+          description: Updated product attribute definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductAttributeDefinition'
+    delete:
+      tags: [admin]
+      operationId: deleteAdminProductAttribute
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Deleted product attribute definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
 
   /api/v1/admin/products/{id}:
     get:
@@ -850,7 +1055,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProductInput'
+              $ref: '#/components/schemas/ProductUpsertInput'
       responses:
         '200':
           description: Updated product
@@ -1537,6 +1742,287 @@ components:
         profile_photo_url:
           type: string
 
+    Brand:
+      type: object
+      required:
+        - id
+        - name
+        - slug
+        - is_active
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+          nullable: true
+        logo_media_id:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+
+    BrandListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Brand'
+
+    BrandInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        slug:
+          type: string
+          nullable: true
+          maxLength: 120
+        description:
+          type: string
+          nullable: true
+          maxLength: 500
+        logo_media_id:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+
+    ProductAttributeDefinition:
+      type: object
+      required: [id, key, slug, type, filterable, sortable]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        key:
+          type: string
+        slug:
+          type: string
+        type:
+          type: string
+          enum: [text, number, boolean, enum]
+        filterable:
+          type: boolean
+        sortable:
+          type: boolean
+
+    ProductAttributeDefinitionInput:
+      type: object
+      required: [key, type]
+      properties:
+        key:
+          type: string
+          minLength: 2
+          maxLength: 120
+        slug:
+          type: string
+          nullable: true
+          maxLength: 120
+        type:
+          type: string
+          enum: [text, number, boolean, enum]
+        filterable:
+          type: boolean
+        sortable:
+          type: boolean
+
+    ProductAttributeDefinitionListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductAttributeDefinition'
+
+    ProductOptionValue:
+      type: object
+      required:
+        - value
+        - position
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        value:
+          type: string
+        position:
+          type: integer
+          minimum: 1
+
+    ProductOption:
+      type: object
+      required:
+        - name
+        - position
+        - display_type
+        - values
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        position:
+          type: integer
+          minimum: 1
+        display_type:
+          type: string
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductOptionValue'
+
+    ProductVariantSelection:
+      type: object
+      required:
+        - option_name
+        - option_value
+        - position
+      properties:
+        product_option_value_id:
+          type: integer
+          minimum: 1
+        option_name:
+          type: string
+        option_value:
+          type: string
+        position:
+          type: integer
+          minimum: 1
+
+    ProductVariant:
+      type: object
+      required:
+        - sku
+        - title
+        - price
+        - stock
+        - position
+        - is_published
+        - selections
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        sku:
+          type: string
+        title:
+          type: string
+        price:
+          type: number
+          format: double
+        compare_at_price:
+          type: number
+          format: double
+          nullable: true
+        stock:
+          type: integer
+          minimum: 0
+        position:
+          type: integer
+          minimum: 1
+        is_published:
+          type: boolean
+        weight_grams:
+          type: integer
+          nullable: true
+        length_cm:
+          type: number
+          format: double
+          nullable: true
+        width_cm:
+          type: number
+          format: double
+          nullable: true
+        height_cm:
+          type: number
+          format: double
+          nullable: true
+        selections:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariantSelection'
+
+    ProductAttributeValue:
+      type: object
+      required:
+        - product_attribute_id
+        - key
+        - slug
+        - type
+        - position
+      properties:
+        product_attribute_id:
+          type: integer
+          minimum: 1
+        key:
+          type: string
+        slug:
+          type: string
+        type:
+          type: string
+        text_value:
+          type: string
+          nullable: true
+        number_value:
+          type: number
+          format: double
+          nullable: true
+        boolean_value:
+          type: boolean
+          nullable: true
+        enum_value:
+          type: string
+          nullable: true
+        position:
+          type: integer
+          minimum: 1
+
+    ProductSEO:
+      type: object
+      properties:
+        title:
+          type: string
+          nullable: true
+          maxLength: 70
+        description:
+          type: string
+          nullable: true
+          maxLength: 160
+        canonical_path:
+          type: string
+          nullable: true
+          maxLength: 255
+        og_image_media_id:
+          type: string
+          nullable: true
+        noindex:
+          type: boolean
+
+    ProductPriceRange:
+      type: object
+      required:
+        - min
+        - max
+      properties:
+        min:
+          type: number
+          format: double
+        max:
+          type: number
+          format: double
+
     Product:
       type: object
       required:
@@ -1548,6 +2034,11 @@ components:
         - stock
         - images
         - related_products
+        - options
+        - variants
+        - attributes
+        - seo
+        - price_range
         - created_at
         - updated_at
       properties:
@@ -1558,6 +2049,9 @@ components:
           type: string
         name:
           type: string
+        subtitle:
+          type: string
+          nullable: true
         description:
           type: string
         price:
@@ -1573,6 +2067,31 @@ components:
         cover_image:
           type: string
           nullable: true
+        brand:
+          $ref: '#/components/schemas/Brand'
+        default_variant_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        default_variant_sku:
+          type: string
+          nullable: true
+        price_range:
+          $ref: '#/components/schemas/ProductPriceRange'
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductOption'
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariant'
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductAttributeValue'
+        seo:
+          $ref: '#/components/schemas/ProductSEO'
         related_products:
           type: array
           items:
@@ -1625,24 +2144,189 @@ components:
           type: string
           nullable: true
 
-    ProductInput:
+    ProductOptionValueInput:
       type: object
+      required: [value]
+      properties:
+        value:
+          type: string
+        position:
+          type: integer
+          minimum: 1
+
+    ProductOptionInput:
+      type: object
+      required: [name, values]
+      properties:
+        name:
+          type: string
+        position:
+          type: integer
+          minimum: 1
+        display_type:
+          type: string
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductOptionValueInput'
+
+    ProductVariantSelectionInput:
+      type: object
+      required: [option_name, option_value]
+      properties:
+        option_name:
+          type: string
+        option_value:
+          type: string
+        position:
+          type: integer
+          minimum: 1
+
+    ProductVariantInput:
+      type: object
+      required:
+        - sku
+        - title
+        - price
+        - stock
+        - selections
+      properties:
+        sku:
+          type: string
+        title:
+          type: string
+        price:
+          type: number
+          format: double
+        compare_at_price:
+          type: number
+          format: double
+          nullable: true
+        stock:
+          type: integer
+          minimum: 0
+        position:
+          type: integer
+          minimum: 1
+        is_published:
+          type: boolean
+        weight_grams:
+          type: integer
+          nullable: true
+        length_cm:
+          type: number
+          format: double
+          nullable: true
+        width_cm:
+          type: number
+          format: double
+          nullable: true
+        height_cm:
+          type: number
+          format: double
+          nullable: true
+        selections:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariantSelectionInput'
+
+    ProductAttributeValueInput:
+      type: object
+      required: [product_attribute_id]
+      properties:
+        product_attribute_id:
+          type: integer
+          minimum: 1
+        text_value:
+          type: string
+          nullable: true
+        number_value:
+          type: number
+          format: double
+          nullable: true
+        boolean_value:
+          type: boolean
+          nullable: true
+        enum_value:
+          type: string
+          nullable: true
+        position:
+          type: integer
+          minimum: 1
+
+    ProductSEOInput:
+      type: object
+      properties:
+        title:
+          type: string
+          nullable: true
+          maxLength: 70
+        description:
+          type: string
+          nullable: true
+          maxLength: 160
+        canonical_path:
+          type: string
+          nullable: true
+          maxLength: 255
+        og_image_media_id:
+          type: string
+          nullable: true
+        noindex:
+          type: boolean
+
+    ProductUpsertInput:
+      type: object
+      required:
+        - sku
+        - name
+        - description
+        - images
+        - related_product_ids
+        - options
+        - variants
+        - attributes
+        - seo
       properties:
         sku:
           type: string
         name:
           type: string
+        subtitle:
+          type: string
+          nullable: true
         description:
           type: string
-        price:
-          type: number
-          format: double
-        stock:
-          type: integer
         images:
           type: array
           items:
             type: string
+        related_product_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        brand_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        default_variant_sku:
+          type: string
+          nullable: true
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductOptionInput'
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariantInput'
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductAttributeValueInput'
+        seo:
+          $ref: '#/components/schemas/ProductSEOInput'
 
     ProductPage:
       type: object
@@ -1660,8 +2344,9 @@ components:
       required:
         - id
         - cart_id
-        - product_id
+        - product_variant_id
         - quantity
+        - product_variant
         - product
         - created_at
         - updated_at
@@ -1670,8 +2355,10 @@ components:
           type: integer
         cart_id:
           type: integer
-        product_id:
+        product_variant_id:
           type: integer
+        product_variant:
+          $ref: '#/components/schemas/ProductVariant'
         quantity:
           type: integer
         product:
@@ -1712,9 +2399,9 @@ components:
 
     AddCartItemRequest:
       type: object
-      required: [product_id, quantity]
+      required: [product_variant_id, quantity]
       properties:
-        product_id:
+        product_variant_id:
           type: integer
           minimum: 1
         quantity:
@@ -1734,9 +2421,12 @@ components:
       required:
         - id
         - order_id
-        - product_id
+        - product_variant_id
+        - variant_sku
+        - variant_title
         - quantity
         - price
+        - product_variant
         - product
         - created_at
         - updated_at
@@ -1745,13 +2435,19 @@ components:
           type: integer
         order_id:
           type: integer
-        product_id:
+        product_variant_id:
           type: integer
+        variant_sku:
+          type: string
+        variant_title:
+          type: string
         quantity:
           type: integer
         price:
           type: number
           format: double
+        product_variant:
+          $ref: '#/components/schemas/ProductVariant'
         product:
           $ref: '#/components/schemas/Product'
         created_at:
@@ -1825,9 +2521,9 @@ components:
 
     CreateOrderItemRequest:
       type: object
-      required: [product_id, quantity]
+      required: [product_variant_id, quantity]
       properties:
-        product_id:
+        product_variant_id:
           type: integer
           minimum: 1
         quantity:
@@ -2310,6 +3006,9 @@ components:
         - sort
         - order
         - limit
+        - brand_slug
+        - has_variant_stock
+        - attribute_filters
         - show_stock
         - show_description
         - image_aspect
@@ -2338,6 +3037,14 @@ components:
           type: integer
           minimum: 1
           maximum: 24
+        brand_slug:
+          type: string
+        has_variant_stock:
+          type: boolean
+        attribute_filters:
+          type: object
+          additionalProperties:
+            type: string
         show_stock:
           type: boolean
         show_description:

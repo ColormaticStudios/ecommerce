@@ -11,10 +11,10 @@ import (
 
 // InsufficientStockError describes stock validation failures during stock transitions.
 type InsufficientStockError struct {
-	ProductID   uint
-	ProductName string
-	Requested   int
-	Available   int
+	ProductVariantID uint
+	ProductName      string
+	Requested        int
+	Available        int
 }
 
 func (e *InsufficientStockError) Error() string {
@@ -24,22 +24,22 @@ func (e *InsufficientStockError) Error() string {
 // DeductStockForItems decrements stock for every order item while holding row locks.
 func DeductStockForItems(tx *gorm.DB, items []models.OrderItem) error {
 	for _, item := range items {
-		var product models.Product
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&product, item.ProductID).Error; err != nil {
+		var variant models.ProductVariant
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Preload("Product").First(&variant, item.ProductVariantID).Error; err != nil {
 			return err
 		}
 
-		if product.Stock < item.Quantity {
+		if variant.Stock < item.Quantity {
 			return &InsufficientStockError{
-				ProductID:   item.ProductID,
-				ProductName: product.Name,
-				Requested:   item.Quantity,
-				Available:   product.Stock,
+				ProductVariantID: item.ProductVariantID,
+				ProductName:      variant.Product.Name,
+				Requested:        item.Quantity,
+				Available:        variant.Stock,
 			}
 		}
 
-		if err := tx.Model(&models.Product{}).
-			Where("id = ? AND stock >= ?", item.ProductID, item.Quantity).
+		if err := tx.Model(&models.ProductVariant{}).
+			Where("id = ? AND stock >= ?", item.ProductVariantID, item.Quantity).
 			Update("stock", gorm.Expr("stock - ?", item.Quantity)).Error; err != nil {
 			return err
 		}
@@ -50,13 +50,13 @@ func DeductStockForItems(tx *gorm.DB, items []models.OrderItem) error {
 // ReplenishStockForItems restores stock for every order item while holding row locks.
 func ReplenishStockForItems(tx *gorm.DB, items []models.OrderItem) error {
 	for _, item := range items {
-		var product models.Product
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&product, item.ProductID).Error; err != nil {
+		var variant models.ProductVariant
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&variant, item.ProductVariantID).Error; err != nil {
 			return err
 		}
 
-		if err := tx.Model(&models.Product{}).
-			Where("id = ?", item.ProductID).
+		if err := tx.Model(&models.ProductVariant{}).
+			Where("id = ?", item.ProductVariantID).
 			Update("stock", gorm.Expr("stock + ?", item.Quantity)).Error; err != nil {
 			return err
 		}

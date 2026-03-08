@@ -15,6 +15,7 @@ an already-applied migration is edited later, runners fail fast on checksum mism
    - `none` for operations that cannot run in a transaction (for example `CREATE INDEX CONCURRENTLY`).
 1. Tag each migration (`expand`, `backfill`, `contract`, etc.).
 1. Contract-tagged migrations must include `ContractBlockers` (for example `allow_contract_migrations`).
+   These blockers are enforced by `go run ./cmd/migrate guard` and related readiness checks, not by ordinary `Run()` execution used in local bootstrap/tests.
 1. Include a validation step (query or invariant check) in the migration body when possible.
 1. Prefer `PostChecks` for migration-level invariant checks.
 1. Data backfills must be idempotent so reruns are safe if a step is retried.

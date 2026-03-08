@@ -34,6 +34,9 @@
         "sort": "created_at",
         "order": "desc",
         "limit": 8,
+        "brand_slug": "",
+        "has_variant_stock": false,
+        "attribute_filters": {},
         "show_stock": true,
         "show_description": true,
         "image_aspect": "square"
@@ -52,6 +55,9 @@
         "sort": "created_at",
         "order": "desc",
         "limit": 4,
+        "brand_slug": "",
+        "has_variant_stock": false,
+        "attribute_filters": {},
         "show_stock": true,
         "show_description": true,
         "image_aspect": "square"
@@ -99,7 +105,12 @@
       "id": "badges",
       "type": "badges",
       "enabled": true,
-      "badges": ["Secure checkout", "Easy returns", "Tracked shipping", "Dedicated support"]
+      "badges": [
+        "Secure checkout",
+        "Easy returns",
+        "Tracked shipping",
+        "Dedicated support"
+      ]
     }
   ],
   "footer": {

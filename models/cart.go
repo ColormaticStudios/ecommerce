@@ -9,9 +9,9 @@ type Cart struct {
 
 type CartItem struct {
 	BaseModel
-	CartID    uint    `json:"cart_id"`
-	Cart      Cart    `json:"-" gorm:"foreignKey:CartID"`
-	ProductID uint    `json:"product_id"`
-	Product   Product `json:"product" gorm:"foreignKey:ProductID"`
-	Quantity  int     `json:"quantity" gorm:"default:1"`
+	CartID           uint           `json:"cart_id"`
+	Cart             Cart           `json:"-" gorm:"foreignKey:CartID"`
+	ProductVariantID uint           `json:"product_variant_id"`
+	ProductVariant   ProductVariant `json:"product_variant" gorm:"foreignKey:ProductVariantID"`
+	Quantity         int            `json:"quantity" gorm:"default:1"`
 }

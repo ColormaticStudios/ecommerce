@@ -178,7 +178,7 @@ func AttachProductMedia(db *gorm.DB, mediaService *media.Service) gin.HandlerFun
 		}
 
 		if err := db.Transaction(func(tx *gorm.DB) error {
-			_, _, err := ensureProductDraft(tx, &product)
+			_, err := ensureProductCatalogDraft(tx, &product)
 			return err
 		}); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize product draft"})
@@ -256,12 +256,7 @@ func AttachProductMedia(db *gorm.DB, mediaService *media.Service) gin.HandlerFun
 			}
 		}
 
-		view, err := materializeAdminProduct(db, mediaService, product, true)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load updated product"})
-			return
-		}
-		c.JSON(http.StatusOK, toContractProduct(view))
+		respondAdminProduct(c, db, mediaService, product.ID)
 	}
 }
 
@@ -286,7 +281,7 @@ func UpdateProductMediaOrder(db *gorm.DB, mediaService *media.Service) gin.Handl
 		}
 
 		if err := db.Transaction(func(tx *gorm.DB) error {
-			_, _, err := ensureProductDraft(tx, &product)
+			_, err := ensureProductCatalogDraft(tx, &product)
 			return err
 		}); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize product draft"})
@@ -328,12 +323,7 @@ func UpdateProductMediaOrder(db *gorm.DB, mediaService *media.Service) gin.Handl
 			return
 		}
 
-		view, err := materializeAdminProduct(db, mediaService, product, true)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load updated product"})
-			return
-		}
-		c.JSON(http.StatusOK, toContractProduct(view))
+		respondAdminProduct(c, db, mediaService, product.ID)
 	}
 }
 
@@ -349,7 +339,7 @@ func DetachProductMedia(db *gorm.DB, mediaService *media.Service) gin.HandlerFun
 		}
 
 		if err := db.Transaction(func(tx *gorm.DB) error {
-			_, _, err := ensureProductDraft(tx, &product)
+			_, err := ensureProductCatalogDraft(tx, &product)
 			return err
 		}); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize product draft"})
@@ -363,11 +353,6 @@ func DetachProductMedia(db *gorm.DB, mediaService *media.Service) gin.HandlerFun
 		}
 
 		_ = mediaService.DeleteIfOrphan(mediaID)
-		view, err := materializeAdminProduct(db, mediaService, product, true)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load updated product"})
-			return
-		}
-		c.JSON(http.StatusOK, toContractProduct(view))
+		respondAdminProduct(c, db, mediaService, product.ID)
 	}
 }

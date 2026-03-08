@@ -119,6 +119,7 @@ func TestRunWithMigrationsConcurrentRunnersPostgresLockApplyOnce(t *testing.T) {
 
 func TestRunReplayFromEmptyToLatestPostgres(t *testing.T) {
 	db := openIsolatedPostgresTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
 
 	require.NoError(t, Run(db))
 	require.NoError(t, Check(db))

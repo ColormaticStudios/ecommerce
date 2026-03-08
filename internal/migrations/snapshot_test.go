@@ -12,6 +12,7 @@ import (
 
 func TestSchemaSnapshotAndDriftCheck(t *testing.T) {
 	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
 	require.NoError(t, Run(db))
 
 	snapshot, err := SchemaSnapshot(db)

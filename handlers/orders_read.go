@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"ecommerce/internal/apicontract"
 	"ecommerce/internal/media"
 	"ecommerce/models"
 
@@ -97,7 +98,13 @@ func GetUserOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc
 		}
 
 		var orders []models.Order
-		if err := query.Preload("Items.Product").Order("created_at DESC").Offset(offset).Limit(limit).Find(&orders).Error; err != nil {
+		if err := query.
+			Preload("Items.ProductVariant").
+			Preload("Items.ProductVariant.Product").
+			Order("created_at DESC").
+			Offset(offset).
+			Limit(limit).
+			Find(&orders).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
 			return
 		}
@@ -109,15 +116,25 @@ func GetUserOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc
 			totalPages++
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"data": orders,
-			"pagination": gin.H{
-				"page":        page,
-				"limit":       limit,
-				"total":       total,
-				"total_pages": totalPages,
+		response := orderPageResponse{
+			Data: make([]orderResponse, 0, len(orders)),
+			Pagination: apicontract.Pagination{
+				Page:       page,
+				Limit:      limit,
+				Total:      int(total),
+				TotalPages: totalPages,
 			},
-		})
+		}
+		for _, order := range orders {
+			entry, err := buildOrderResponse(db, mediaService, order)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render orders"})
+				return
+			}
+			response.Data = append(response.Data, entry)
+		}
+
+		c.JSON(http.StatusOK, response)
 	}
 }
 
@@ -137,14 +154,22 @@ func GetOrderByID(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc 
 		}
 
 		var order models.Order
-		if err := db.Where("id = ? AND user_id = ?", orderID, user.ID).Preload("Items.Product").First(&order).Error; err != nil {
+		if err := db.Where("id = ? AND user_id = ?", orderID, user.ID).
+			Preload("Items.ProductVariant").
+			Preload("Items.ProductVariant.Product").
+			First(&order).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 			return
 		}
 		applyOrderMediaToOrder(&order, mediaService)
 		applyOrderCapabilities(&order, &user.ID)
+		response, err := buildOrderResponse(db, mediaService, order)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render order"})
+			return
+		}
 
-		c.JSON(http.StatusOK, order)
+		c.JSON(http.StatusOK, response)
 	}
 }
 
@@ -170,14 +195,17 @@ func GetAllOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc 
 				 EXISTS (
 				 	SELECT 1
 				 	FROM order_items
-				 	JOIN products ON products.id = order_items.product_id
+				 	JOIN product_variants ON product_variants.id = order_items.product_variant_id
+				 	JOIN products ON products.id = product_variants.product_id
 				 	WHERE order_items.order_id = orders.id
 				 	  AND (
 				 		LOWER(COALESCE(products.name, '')) LIKE ? OR
-				 		LOWER(COALESCE(products.sku, '')) LIKE ?
+				 		LOWER(COALESCE(product_variants.sku, '')) LIKE ? OR
+				 		LOWER(COALESCE(order_items.variant_sku, '')) LIKE ? OR
+				 		LOWER(COALESCE(order_items.variant_title, '')) LIKE ?
 				 	  )
 				 )`,
-				like, like, like, like, like, like, like, like, like, like,
+				like, like, like, like, like, like, like, like, like, like, like, like,
 			)
 		}
 		var total int64
@@ -187,7 +215,14 @@ func GetAllOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc 
 		}
 
 		var orders []models.Order
-		if err := query.Preload("Items.Product").Preload("User").Order("orders.created_at DESC").Offset(offset).Limit(limit).Find(&orders).Error; err != nil {
+		if err := query.
+			Preload("Items.ProductVariant").
+			Preload("Items.ProductVariant.Product").
+			Preload("User").
+			Order("orders.created_at DESC").
+			Offset(offset).
+			Limit(limit).
+			Find(&orders).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
 			return
 		}
@@ -199,15 +234,25 @@ func GetAllOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc 
 			totalPages++
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"data": orders,
-			"pagination": gin.H{
-				"page":        page,
-				"limit":       limit,
-				"total":       total,
-				"total_pages": totalPages,
+		response := orderPageResponse{
+			Data: make([]orderResponse, 0, len(orders)),
+			Pagination: apicontract.Pagination{
+				Page:       page,
+				Limit:      limit,
+				Total:      int(total),
+				TotalPages: totalPages,
 			},
-		})
+		}
+		for _, order := range orders {
+			entry, err := buildOrderResponse(db, mediaService, order)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render orders"})
+				return
+			}
+			response.Data = append(response.Data, entry)
+		}
+
+		c.JSON(http.StatusOK, response)
 	}
 }
 
@@ -222,13 +267,18 @@ func GetAdminOrderByID(db *gorm.DB, mediaServices ...*media.Service) gin.Handler
 		}
 
 		var order models.Order
-		if err := db.Preload("Items.Product").Preload("User").First(&order, orderID).Error; err != nil {
+		if err := db.Preload("Items.ProductVariant").Preload("Items.ProductVariant.Product").Preload("User").First(&order, orderID).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 			return
 		}
 		applyOrderMediaToOrder(&order, mediaService)
 		applyOrderCapabilities(&order, nil)
+		response, err := buildOrderResponse(db, mediaService, order)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render order"})
+			return
+		}
 
-		c.JSON(http.StatusOK, order)
+		c.JSON(http.StatusOK, response)
 	}
 }

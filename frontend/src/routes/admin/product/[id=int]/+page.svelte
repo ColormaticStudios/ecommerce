@@ -104,7 +104,7 @@
 	{:else}
 		<div class="flex flex-wrap items-start justify-between gap-4">
 			<div>
-				<h1 class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">Product editor</h1>
+				<h1 class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">Product Editor</h1>
 			</div>
 			<div class="flex items-center gap-2">
 				<ButtonLink href={resolve("/admin")} variant="regular">Back to admin</ButtonLink>

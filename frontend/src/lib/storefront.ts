@@ -50,6 +50,9 @@ export interface StorefrontProductSectionModel {
 	sort: StorefrontProductSort;
 	order: StorefrontProductOrder;
 	limit: number;
+	brand_slug: string;
+	has_variant_stock: boolean;
+	attribute_filters: Record<string, string>;
 	show_stock: boolean;
 	show_description: boolean;
 	image_aspect: StorefrontProductImageAspect;
@@ -216,6 +219,9 @@ function validateProductSection(value: unknown, path: string, errors: string[]):
 			"sort",
 			"order",
 			"limit",
+			"brand_slug",
+			"has_variant_stock",
+			"attribute_filters",
 			"show_stock",
 			"show_description",
 			"image_aspect",
@@ -229,6 +235,9 @@ function validateProductSection(value: unknown, path: string, errors: string[]):
 			"sort",
 			"order",
 			"limit",
+			"brand_slug",
+			"has_variant_stock",
+			"attribute_filters",
 			"show_stock",
 			"show_description",
 			"image_aspect",
@@ -241,6 +250,15 @@ function validateProductSection(value: unknown, path: string, errors: string[]):
 	expectString(value.source, `${path}.source`, errors);
 	expectString(value.query, `${path}.query`, errors);
 	expectNumber(value.limit, `${path}.limit`, errors);
+	expectString(value.brand_slug, `${path}.brand_slug`, errors);
+	expectBoolean(value.has_variant_stock, `${path}.has_variant_stock`, errors);
+	if (!isObject(value.attribute_filters)) {
+		errors.push(`Expected object at ${path}.attribute_filters`);
+	} else {
+		for (const [key, entry] of Object.entries(value.attribute_filters)) {
+			expectString(entry, `${path}.attribute_filters.${key}`, errors);
+		}
+	}
 	expectBoolean(value.show_stock, `${path}.show_stock`, errors);
 	expectBoolean(value.show_description, `${path}.show_description`, errors);
 	expectString(value.image_aspect, `${path}.image_aspect`, errors);
@@ -538,6 +556,13 @@ function parseProductSection(
 			1,
 			STOREFRONT_LIMITS.max_product_section_limit
 		),
+		brand_slug: toStringValue(section?.brand_slug),
+		has_variant_stock: section?.has_variant_stock ?? false,
+		attribute_filters: Object.fromEntries(
+			Object.entries(section?.attribute_filters ?? {}).filter(
+				([key, value]) => key.trim() !== "" && typeof value === "string" && value.trim() !== ""
+			)
+		),
 		show_stock: section?.show_stock ?? true,
 		show_description: section?.show_description ?? true,
 		image_aspect: normalizeImageAspect(section?.image_aspect),
@@ -656,6 +681,9 @@ const DEFAULT_PRODUCT_SECTION_TEMPLATE = DEFAULT_STOREFRONT_SETTINGS.homepage_se
 	sort: "created_at" as const,
 	order: "desc" as const,
 	limit: STOREFRONT_LIMITS.default_product_section_limit,
+	brand_slug: "",
+	has_variant_stock: false,
+	attribute_filters: {},
 	show_stock: true,
 	show_description: true,
 	image_aspect: "square" as const,
@@ -689,6 +717,7 @@ export function createDefaultProductSection(
 		title,
 		source,
 		product_ids: [...DEFAULT_PRODUCT_SECTION_TEMPLATE.product_ids],
+		attribute_filters: { ...DEFAULT_PRODUCT_SECTION_TEMPLATE.attribute_filters },
 	};
 }
 

@@ -63,9 +63,31 @@ func ensureSeedData(db *gorm.DB) error {
 
 	var existing models.Product
 	if err := db.Where("sku = ?", product.SKU).First(&existing).Error; err == nil {
+		if existing.DefaultVariantID != nil {
+			return nil
+		}
+		var variant models.ProductVariant
+		if err := db.Where("product_id = ?", existing.ID).Order("id asc").First(&variant).Error; err == nil {
+			return db.Model(&existing).Update("default_variant_id", variant.ID).Error
+		}
 		return nil
 	}
 	if err := db.Create(&product).Error; err != nil {
+		return err
+	}
+	variant := models.ProductVariant{
+		ProductID:   product.ID,
+		SKU:         product.SKU + "-default",
+		Title:       product.Name,
+		Price:       product.Price,
+		Stock:       product.Stock,
+		Position:    1,
+		IsPublished: true,
+	}
+	if err := db.Create(&variant).Error; err != nil {
+		return err
+	}
+	if err := db.Model(&product).Update("default_variant_id", variant.ID).Error; err != nil {
 		return err
 	}
 	return nil
@@ -87,11 +109,13 @@ func buildSummary(db *gorm.DB) (summaryResponse, error) {
 		return summary, err
 	}
 
-	var product models.Product
-	if err := db.Where("sku = ?", "e2e-product-1").First(&product).Error; err != nil {
+	var variant models.ProductVariant
+	if err := db.Joins("JOIN products ON products.id = product_variants.product_id").
+		Where("products.sku = ?", "e2e-product-1").
+		First(&variant).Error; err != nil {
 		return summary, err
 	}
-	summary.ProductStock = product.Stock
+	summary.ProductStock = variant.Stock
 
 	return summary, nil
 }
@@ -137,6 +161,12 @@ func main() {
 		log.Fatalf("unsupported E2E_DB_DRIVER=%q (expected sqlite or postgres)", dbDriver)
 	}
 
+	// The Playwright harness must exercise the real latest schema end-to-end, so
+	// it explicitly acknowledges contract migrations here instead of weakening the
+	// default test database helpers for every other test suite.
+	if err := os.Setenv("MIGRATIONS_ALLOW_CONTRACT", "true"); err != nil {
+		log.Fatalf("failed to configure e2e migration acknowledgement: %v", err)
+	}
 	if err := migrations.Run(db); err != nil {
 		log.Fatalf("failed to run e2e migrations: %v", err)
 	}
@@ -217,9 +247,9 @@ func main() {
 	})
 	r.POST(testRoutePrefix+"/cart-item", func(c *gin.Context) {
 		var payload struct {
-			Email     string `json:"email"`
-			ProductID uint   `json:"product_id"`
-			Quantity  int    `json:"quantity"`
+			Email            string `json:"email"`
+			ProductVariantID uint   `json:"product_variant_id"`
+			Quantity         int    `json:"quantity"`
 		}
 		if err := c.ShouldBindJSON(&payload); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
@@ -229,8 +259,15 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "email is required"})
 			return
 		}
-		if payload.ProductID == 0 {
-			payload.ProductID = 1
+		if payload.ProductVariantID == 0 {
+			var defaultVariant models.ProductVariant
+			if err := db.Joins("JOIN products ON products.id = product_variants.product_id").
+				Where("products.sku = ?", "e2e-product-1").
+				First(&defaultVariant).Error; err != nil {
+				c.JSON(http.StatusNotFound, gin.H{"error": "default variant not found"})
+				return
+			}
+			payload.ProductVariantID = defaultVariant.ID
 		}
 		if payload.Quantity < 1 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "quantity must be >= 1"})
@@ -242,9 +279,9 @@ func main() {
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 			return
 		}
-		var product models.Product
-		if err := db.First(&product, payload.ProductID).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
+		var variant models.ProductVariant
+		if err := db.Preload("Product").First(&variant, payload.ProductVariantID).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "product variant not found"})
 			return
 		}
 
@@ -266,12 +303,12 @@ func main() {
 		}
 
 		var item models.CartItem
-		if err := tx.Where("cart_id = ? AND product_id = ?", cart.ID, product.ID).First(&item).Error; err != nil {
+		if err := tx.Where("cart_id = ? AND product_variant_id = ?", cart.ID, variant.ID).First(&item).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				item = models.CartItem{
-					CartID:    cart.ID,
-					ProductID: product.ID,
-					Quantity:  payload.Quantity,
+					CartID:           cart.ID,
+					ProductVariantID: variant.ID,
+					Quantity:         payload.Quantity,
 				}
 				if err := tx.Create(&item).Error; err != nil {
 					tx.Rollback()

@@ -64,6 +64,7 @@ func TestCriticalJourney_RegisterCartOrderAndPayPersistsState(t *testing.T) {
 		&models.SavedAddress{},
 	)
 	product := seedProduct(t, db, "journey-sku-1", "Journey Product", 39.99, 8)
+	variantID := requireDefaultVariantID(t, product)
 
 	registerResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/auth/register", map[string]any{
 		"username": "journey-user",
@@ -82,22 +83,22 @@ func TestCriticalJourney_RegisterCartOrderAndPayPersistsState(t *testing.T) {
 	)
 
 	addCartResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/cart", map[string]any{
-		"product_id": product.ID,
-		"quantity":   2,
+		"product_variant_id": variantID,
+		"quantity":           2,
 	}, customerToken)
 	require.Equal(t, http.StatusOK, addCartResp.Code)
-	cart := decodeJSON[models.Cart](t, addCartResp)
+	cart := decodeJSON[cartResponse](t, addCartResp)
 	require.Len(t, cart.Items, 1)
 	assert.Equal(t, 2, cart.Items[0].Quantity)
 
 	createOrderResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/orders", map[string]any{
 		"items": []map[string]any{{
-			"product_id": product.ID,
-			"quantity":   2,
+			"product_variant_id": variantID,
+			"quantity":           2,
 		}},
 	}, customerToken)
 	require.Equal(t, http.StatusCreated, createOrderResp.Code)
-	order := decodeJSON[models.Order](t, createOrderResp)
+	order := decodeJSON[orderResponse](t, createOrderResp)
 	require.NotZero(t, order.ID)
 	require.Equal(t, models.StatusPending, order.Status)
 
@@ -175,6 +176,7 @@ func TestCriticalJourney_InvalidPayloadsAreRejected(t *testing.T) {
 		&models.SavedAddress{},
 	)
 	product := seedProduct(t, db, "journey-sku-2", "Validation Product", 22.50, 3)
+	variantID := requireDefaultVariantID(t, product)
 
 	registerResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/auth/register", map[string]any{
 		"username": "invalid-flow-user",
@@ -186,8 +188,8 @@ func TestCriticalJourney_InvalidPayloadsAreRejected(t *testing.T) {
 	customerToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, registered.User.Subject, "customer")
 
 	tooMuchStockResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/cart", map[string]any{
-		"product_id": product.ID,
-		"quantity":   10,
+		"product_variant_id": variantID,
+		"quantity":           10,
 	}, customerToken)
 	require.Equal(t, http.StatusBadRequest, tooMuchStockResp.Code)
 	tooMuchStockBody := decodeJSON[map[string]any](t, tooMuchStockResp)
@@ -201,12 +203,12 @@ func TestCriticalJourney_InvalidPayloadsAreRejected(t *testing.T) {
 
 	createOrderResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/orders", map[string]any{
 		"items": []map[string]any{{
-			"product_id": product.ID,
-			"quantity":   1,
+			"product_variant_id": variantID,
+			"quantity":           1,
 		}},
 	}, customerToken)
 	require.Equal(t, http.StatusCreated, createOrderResp.Code)
-	order := decodeJSON[models.Order](t, createOrderResp)
+	order := decodeJSON[orderResponse](t, createOrderResp)
 
 	invalidCardResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/me/orders/%d/pay", order.ID), map[string]any{
 		"payment_method": map[string]any{
@@ -259,14 +261,15 @@ func TestCriticalJourney_OrderCannotBePaidByAnotherUser(t *testing.T) {
 		&models.OrderItem{},
 	)
 	product := seedProduct(t, db, "journey-sku-3", "Authorization Product", 11.99, 5)
+	variantID := requireDefaultVariantID(t, product)
 
 	owner := seedUser(t, db, "owner-sub", "owner", "owner@example.com", "customer")
 	other := seedUser(t, db, "other-sub", "other", "other@example.com", "customer")
 
 	createOrderResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/orders", map[string]any{
 		"items": []map[string]any{{
-			"product_id": product.ID,
-			"quantity":   1,
+			"product_variant_id": variantID,
+			"quantity":           1,
 		}},
 	}, issueBearerTokenWithRole(t, generatedTestJWTSecret, owner.Subject, owner.Role))
 	require.Equal(t, http.StatusCreated, createOrderResp.Code)

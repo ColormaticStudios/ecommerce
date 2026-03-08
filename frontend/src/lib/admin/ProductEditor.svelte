@@ -6,7 +6,13 @@
 	import IconButton from "$lib/components/IconButton.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
-	import { type ProductModel, type RelatedProductModel } from "$lib/models";
+	import type { components } from "$lib/api/generated/openapi";
+	import {
+		type BrandModel,
+		type ProductAttributeDefinitionModel,
+		type ProductModel,
+		type RelatedProductModel,
+	} from "$lib/models";
 	import { uploadMediaFiles } from "$lib/media";
 	import { getContext, onDestroy, onMount, untrack } from "svelte";
 
@@ -48,7 +54,49 @@
 
 	const api: API = getContext("api");
 
+	type ProductUpsertInput = components["schemas"]["ProductUpsertInput"];
+	type EditorOptionValue = {
+		key: string;
+		value: string;
+		position: number;
+	};
+	type EditorOption = {
+		key: string;
+		name: string;
+		display_type: string;
+		position: number;
+		values: EditorOptionValue[];
+	};
+	type EditorVariantSelection = {
+		key: string;
+		option_name: string;
+		option_value: string;
+		position: number;
+	};
+	type EditorVariant = {
+		key: string;
+		sku: string;
+		title: string;
+		price: string;
+		compare_at_price: string;
+		stock: string;
+		is_published: boolean;
+		selections: EditorVariantSelection[];
+	};
+	type EditorAttributeValue = {
+		key: string;
+		product_attribute_id: string;
+		type: ProductAttributeDefinitionModel["type"] | "";
+		text_value: string;
+		number_value: string;
+		boolean_value: boolean;
+		enum_value: string;
+		position: number;
+	};
+
 	let product = $state<ProductModel | null>(null);
+	let brands = $state<BrandModel[]>([]);
+	let attributeDefinitions = $state<ProductAttributeDefinitionModel[]>([]);
 	let loading = $state(false);
 	let saving = $state(false);
 	let publishing = $state(false);
@@ -71,9 +119,18 @@
 
 	let sku = $state("");
 	let name = $state("");
+	let subtitle = $state("");
 	let description = $state("");
-	let price = $state("");
-	let stock = $state("");
+	let selectedBrandId = $state("");
+	let seoTitle = $state("");
+	let seoDescription = $state("");
+	let seoCanonicalPath = $state("");
+	let seoOgImageMediaId = $state("");
+	let seoNoIndex = $state(false);
+	let options = $state<EditorOption[]>([]);
+	let variants = $state<EditorVariant[]>([]);
+	let attributeValues = $state<EditorAttributeValue[]>([]);
+	let defaultVariantSku = $state("");
 	let mediaFiles = $state<FileList | null>(null);
 	let mediaInputRef = $state<HTMLInputElement | null>(null);
 	let pendingMediaOrder = $state<string[] | null>(null);
@@ -82,6 +139,7 @@
 	let relatedSelected = $state<RelatedProductModel[]>([]);
 	let relatedLastSearchedQuery = $state("");
 	let savedSnapshot = $state("");
+	let savedProductSnapshot = $state("");
 
 	const mediaFilesCount = $derived(mediaFiles ? mediaFiles.length : 0);
 	const mediaOrderView = $derived(pendingMediaOrder ?? product?.images ?? []);
@@ -104,40 +162,7 @@
 		return selectedIds !== baselineIds;
 	});
 	const hasPendingUploadSelection = $derived(mediaFilesCount > 0);
-	const hasPendingProductChanges = $derived.by(() => {
-		if (!product) {
-			if (!allowCreate) {
-				return false;
-			}
-			const skuValue = asTrimmedString(sku);
-			const nameValue = asTrimmedString(name);
-			const descriptionValue = asTrimmedString(description);
-			const priceValue = asTrimmedString(price);
-			const stockValue = asTrimmedString(stock);
-			return (
-				skuValue !== "" ||
-				nameValue !== "" ||
-				descriptionValue !== "" ||
-				priceValue !== "" ||
-				stockValue !== ""
-			);
-		}
-
-		const skuValue = asTrimmedString(sku);
-		const nameValue = asTrimmedString(name);
-		const descriptionValue = asTrimmedString(description);
-		const priceValue = Number(price);
-		const stockTrimmed = asTrimmedString(stock);
-		const stockValue = stockTrimmed === "" ? undefined : Number(stockTrimmed);
-		return (
-			skuValue !== product.sku ||
-			nameValue !== product.name ||
-			(descriptionValue || "") !== (product.description ?? "") ||
-			Number.isNaN(priceValue) ||
-			priceValue !== product.price ||
-			stockValue !== product.stock
-		);
-	});
+	const hasPendingProductChanges = $derived(buildProductSnapshot() !== savedProductSnapshot);
 	const currentSnapshot = $derived(buildDraftSnapshot());
 	const hasUnsavedChanges = $derived(currentSnapshot !== savedSnapshot);
 
@@ -149,6 +174,7 @@
 	let lastSaveActionDirty: boolean | null = null;
 	let lastDirtyHandler: Props["onDirtyChange"] = undefined;
 	let lastSaveHandler: Props["onSaveRequestChange"] = undefined;
+	let editorKeySeed = 0;
 
 	type MessageScope = "product" | "media" | "related";
 	type MessageTone = "error" | "success";
@@ -166,18 +192,163 @@
 		return String(value ?? "").trim();
 	}
 
-	function buildDraftSnapshot(): string {
-		const relatedIDs = [...relatedSelected.map((item) => item.id)].sort((a, b) => a - b);
-		const mediaOrder = pendingMediaOrder ?? product?.images ?? [];
+	function nextEditorKey(prefix: string): string {
+		editorKeySeed += 1;
+		return `${prefix}-${editorKeySeed}`;
+	}
+
+	function createOptionValue(value = "", position = 1): EditorOptionValue {
+		return {
+			key: nextEditorKey("option-value"),
+			value,
+			position,
+		};
+	}
+
+	function createOption(name = "", displayType = "select", values: string[] = []): EditorOption {
+		return {
+			key: nextEditorKey("option"),
+			name,
+			display_type: displayType,
+			position: options.length + 1,
+			values:
+				values.length > 0
+					? values.map((value, index) => createOptionValue(value, index + 1))
+					: [createOptionValue("", 1)],
+		};
+	}
+
+	function createVariantSelection(
+		optionName = "",
+		optionValue = "",
+		position = 1
+	): EditorVariantSelection {
+		return {
+			key: nextEditorKey("variant-selection"),
+			option_name: optionName,
+			option_value: optionValue,
+			position,
+		};
+	}
+
+	function createVariant(overrides: Partial<EditorVariant> = {}): EditorVariant {
+		const variant: EditorVariant = {
+			key: nextEditorKey("variant"),
+			sku: "",
+			title: "",
+			price: "",
+			compare_at_price: "",
+			stock: "0",
+			is_published: true,
+			selections: [],
+			...overrides,
+		};
+		return variant;
+	}
+
+	function createAttributeValue(
+		overrides: Partial<EditorAttributeValue> = {}
+	): EditorAttributeValue {
+		return {
+			key: nextEditorKey("attribute"),
+			product_attribute_id: "",
+			type: "",
+			text_value: "",
+			number_value: "",
+			boolean_value: false,
+			enum_value: "",
+			position: attributeValues.length + 1,
+			...overrides,
+		};
+	}
+
+	function variantSeed(): Pick<EditorVariant, "price" | "compare_at_price" | "stock"> {
+		const source = variants.find((variant) => variant.sku === defaultVariantSku) ?? variants[0];
+		if (source) {
+			return {
+				price: source.price,
+				compare_at_price: source.compare_at_price,
+				stock: source.stock,
+			};
+		}
+		return {
+			price: "",
+			compare_at_price: "",
+			stock: "0",
+		};
+	}
+
+	function normalizeEditorOptionsForSnapshot() {
+		return options.map((option, optionIndex) => ({
+			name: asTrimmedString(option.name),
+			display_type: asTrimmedString(option.display_type) || "select",
+			position: optionIndex + 1,
+			values: option.values.map((value, valueIndex) => ({
+				value: asTrimmedString(value.value),
+				position: valueIndex + 1,
+			})),
+		}));
+	}
+
+	function normalizeEditorVariantsForSnapshot() {
+		return variants.map((variant, variantIndex) => ({
+			sku: asTrimmedString(variant.sku),
+			title: asTrimmedString(variant.title),
+			price: normalizedNumber(variant.price),
+			compare_at_price: normalizedNumber(variant.compare_at_price),
+			stock: normalizedNumber(variant.stock),
+			is_published: variant.is_published,
+			position: variantIndex + 1,
+			selections: variant.selections.map((selection, selectionIndex) => ({
+				option_name: asTrimmedString(selection.option_name),
+				option_value: asTrimmedString(selection.option_value),
+				position: selectionIndex + 1,
+			})),
+		}));
+	}
+
+	function normalizeEditorAttributesForSnapshot() {
+		return attributeValues.map((attribute, index) => ({
+			product_attribute_id: Number(attribute.product_attribute_id),
+			type: attribute.type,
+			position: index + 1,
+			text_value: asTrimmedString(attribute.text_value),
+			number_value: normalizedNumber(attribute.number_value),
+			boolean_value: attribute.boolean_value,
+			enum_value: asTrimmedString(attribute.enum_value),
+		}));
+	}
+
+	function buildProductSnapshot(): string {
 		return JSON.stringify({
 			product_id: resolvedProductId,
 			fields: {
 				sku: asTrimmedString(sku),
 				name: asTrimmedString(name),
+				subtitle: asTrimmedString(subtitle),
 				description: asTrimmedString(description),
-				price: normalizedNumber(price),
-				stock: normalizedNumber(stock),
+				brand_id: asTrimmedString(selectedBrandId),
+				default_variant_sku: asTrimmedString(defaultVariantSku),
 			},
+			seo: {
+				title: asTrimmedString(seoTitle),
+				description: asTrimmedString(seoDescription),
+				canonical_path: asTrimmedString(seoCanonicalPath),
+				og_image_media_id: asTrimmedString(seoOgImageMediaId),
+				noindex: seoNoIndex,
+			},
+			options: normalizeEditorOptionsForSnapshot(),
+			variants: normalizeEditorVariantsForSnapshot(),
+			related_product_ids: [...relatedSelected.map((item) => item.id)].sort((a, b) => a - b),
+			attributes: normalizeEditorAttributesForSnapshot(),
+		});
+	}
+
+	function buildDraftSnapshot(): string {
+		const relatedIDs = [...relatedSelected.map((item) => item.id)].sort((a, b) => a - b);
+		const mediaOrder = pendingMediaOrder ?? product?.images ?? [];
+		return JSON.stringify({
+			product: JSON.parse(buildProductSnapshot()),
 			media_order: mediaOrder,
 			pending_upload_count: mediaFilesCount,
 			related_product_ids: relatedIDs,
@@ -185,6 +356,7 @@
 	}
 
 	function captureSavedSnapshot() {
+		savedProductSnapshot = untrack(() => buildProductSnapshot());
 		savedSnapshot = untrack(() => buildDraftSnapshot());
 	}
 
@@ -332,9 +504,18 @@
 	function resetForm() {
 		sku = "";
 		name = "";
+		subtitle = "";
 		description = "";
-		price = "";
-		stock = "";
+		selectedBrandId = "";
+		seoTitle = "";
+		seoDescription = "";
+		seoCanonicalPath = "";
+		seoOgImageMediaId = "";
+		seoNoIndex = false;
+		options = [];
+		variants = [createVariant()];
+		attributeValues = [];
+		defaultVariantSku = "";
 		mediaFiles = null;
 		pendingMediaOrder = null;
 		relatedQuery = "";
@@ -347,11 +528,345 @@
 	function hydrateForm(value: ProductModel) {
 		sku = value.sku;
 		name = value.name;
+		subtitle = value.subtitle ?? "";
 		description = value.description ?? "";
-		price = String(value.price ?? "");
-		stock = String(value.stock ?? "");
+		selectedBrandId = value.brand ? String(value.brand.id) : "";
+		seoTitle = value.seo.title ?? "";
+		seoDescription = value.seo.description ?? "";
+		seoCanonicalPath = value.seo.canonical_path ?? "";
+		seoOgImageMediaId = value.seo.og_image_media_id ?? "";
+		seoNoIndex = value.seo.noindex;
+		options = (value.options ?? []).map((option, optionIndex) => ({
+			key: nextEditorKey("option"),
+			name: option.name,
+			display_type: option.display_type,
+			position: option.position || optionIndex + 1,
+			values:
+				option.values.length > 0
+					? option.values.map((valueItem, valueIndex) => ({
+							key: nextEditorKey("option-value"),
+							value: valueItem.value,
+							position: valueItem.position || valueIndex + 1,
+						}))
+					: [createOptionValue("", 1)],
+		}));
+		variants =
+			(value.variants ?? []).length > 0
+				? value.variants.map((variant) => ({
+						key: nextEditorKey("variant"),
+						sku: variant.sku,
+						title: variant.title,
+						price: String(variant.price),
+						compare_at_price:
+							variant.compare_at_price == null ? "" : String(variant.compare_at_price),
+						stock: String(variant.stock),
+						is_published: variant.is_published,
+						selections: (variant.selections ?? []).map((selection, selectionIndex) => ({
+							key: nextEditorKey("variant-selection"),
+							option_name: selection.option_name,
+							option_value: selection.option_value,
+							position: selection.position || selectionIndex + 1,
+						})),
+					}))
+				: [createVariant()];
+		attributeValues = (value.attributes ?? []).map((attribute, index) =>
+			createAttributeValue({
+				product_attribute_id: String(attribute.product_attribute_id),
+				type: attribute.type,
+				text_value: attribute.text_value ?? "",
+				number_value: attribute.number_value == null ? "" : String(attribute.number_value),
+				boolean_value: attribute.boolean_value ?? false,
+				enum_value: attribute.enum_value ?? "",
+				position: attribute.position || index + 1,
+			})
+		);
+		defaultVariantSku = value.default_variant_sku ?? value.variants?.[0]?.sku ?? "";
 		pendingMediaOrder = null;
 		relatedSelected = value.related_products ?? [];
+	}
+
+	async function loadBrands() {
+		try {
+			brands = await api.listAdminBrands();
+		} catch (err) {
+			console.error(err);
+		}
+	}
+
+	async function loadAttributeDefinitions() {
+		try {
+			attributeDefinitions = await api.listAdminProductAttributes();
+		} catch (err) {
+			console.error(err);
+		}
+	}
+
+	function attributeDefinitionById(
+		productAttributeID: string
+	): ProductAttributeDefinitionModel | undefined {
+		return attributeDefinitions.find((attribute) => String(attribute.id) === productAttributeID);
+	}
+
+	function optionalString(value: string): string | undefined {
+		const trimmed = asTrimmedString(value);
+		return trimmed === "" ? undefined : trimmed;
+	}
+
+	function buildProductPayload(): ProductUpsertInput {
+		const optionPayload = options.map((option, optionIndex) => ({
+			name: asTrimmedString(option.name),
+			position: optionIndex + 1,
+			display_type: optionalString(option.display_type) ?? "select",
+			values: option.values.map((value, valueIndex) => ({
+				value: asTrimmedString(value.value),
+				position: valueIndex + 1,
+			})),
+		}));
+
+		const variantPayload = variants.map((variant, variantIndex) => ({
+			sku: asTrimmedString(variant.sku),
+			title: asTrimmedString(variant.title),
+			price: Number(variant.price),
+			compare_at_price:
+				asTrimmedString(variant.compare_at_price) === ""
+					? undefined
+					: Number(variant.compare_at_price),
+			stock: Number(variant.stock),
+			position: variantIndex + 1,
+			is_published: variant.is_published,
+			selections: variant.selections.map((selection, selectionIndex) => ({
+				option_name: asTrimmedString(selection.option_name),
+				option_value: asTrimmedString(selection.option_value),
+				position: selectionIndex + 1,
+			})),
+		}));
+
+		return {
+			sku: asTrimmedString(sku),
+			name: asTrimmedString(name),
+			subtitle: optionalString(subtitle),
+			description: asTrimmedString(description),
+			images: product?.images ?? [],
+			related_product_ids: relatedSelected.map((item) => item.id),
+			brand_id: selectedBrandId ? Number(selectedBrandId) : undefined,
+			default_variant_sku:
+				optionalString(defaultVariantSku) ?? optionalString(variantPayload[0]?.sku ?? ""),
+			options: optionPayload,
+			variants: variantPayload,
+			attributes: attributeValues
+				.map((attribute, index) => {
+					const productAttributeID = Number(attribute.product_attribute_id);
+					if (!Number.isInteger(productAttributeID) || productAttributeID <= 0) {
+						return null;
+					}
+					const payload: NonNullable<ProductUpsertInput["attributes"]>[number] = {
+						product_attribute_id: productAttributeID,
+						position: index + 1,
+					};
+					if (attribute.type === "text") {
+						payload.text_value = optionalString(attribute.text_value);
+					}
+					if (attribute.type === "number") {
+						payload.number_value =
+							asTrimmedString(attribute.number_value) === ""
+								? undefined
+								: Number(attribute.number_value);
+					}
+					if (attribute.type === "boolean") {
+						payload.boolean_value = attribute.boolean_value;
+					}
+					if (attribute.type === "enum") {
+						payload.enum_value = optionalString(attribute.enum_value);
+					}
+					return payload;
+				})
+				.filter((attribute): attribute is NonNullable<typeof attribute> => attribute !== null),
+			seo: {
+				title: optionalString(seoTitle),
+				description: optionalString(seoDescription),
+				canonical_path: optionalString(seoCanonicalPath),
+				og_image_media_id: optionalString(seoOgImageMediaId),
+				noindex: seoNoIndex,
+			},
+		};
+	}
+
+	function addAttributeValue() {
+		attributeValues = [...attributeValues, createAttributeValue()];
+	}
+
+	function removeAttributeValue(attributeKey: string) {
+		attributeValues = attributeValues.filter((attribute) => attribute.key !== attributeKey);
+	}
+
+	function updateAttributeSelection(attributeKey: string, nextValue: string) {
+		const definition = attributeDefinitionById(nextValue);
+		attributeValues = attributeValues.map((attribute) =>
+			attribute.key === attributeKey
+				? {
+						...attribute,
+						product_attribute_id: nextValue,
+						type: definition?.type ?? "",
+						text_value: "",
+						number_value: "",
+						boolean_value: false,
+						enum_value: "",
+					}
+				: attribute
+		);
+	}
+
+	function addOption() {
+		options = [...options, createOption()];
+	}
+
+	function removeOption(optionKey: string) {
+		options = options.filter((option) => option.key !== optionKey);
+	}
+
+	function addOptionValue(optionKey: string) {
+		options = options.map((option) =>
+			option.key === optionKey
+				? {
+						...option,
+						values: [...option.values, createOptionValue("", option.values.length + 1)],
+					}
+				: option
+		);
+	}
+
+	function removeOptionValue(optionKey: string, valueKey: string) {
+		options = options.map((option) =>
+			option.key === optionKey
+				? {
+						...option,
+						values:
+							option.values.filter((value) => value.key !== valueKey).length > 0
+								? option.values.filter((value) => value.key !== valueKey)
+								: [createOptionValue("", 1)],
+					}
+				: option
+		);
+	}
+
+	function addManualVariant() {
+		const seed = variantSeed();
+		const nextVariants = [
+			...variants,
+			createVariant({
+				sku: `${asTrimmedString(sku)}-${variants.length + 1}`.replace(/^-/, ""),
+				title: `Variant ${variants.length + 1}`,
+				price: seed.price,
+				compare_at_price: seed.compare_at_price,
+				stock: seed.stock,
+			}),
+		];
+		variants = nextVariants;
+		if (!defaultVariantSku) {
+			defaultVariantSku = nextVariants[0]?.sku ?? "";
+		}
+	}
+
+	function removeVariant(variantKey: string) {
+		const remaining = variants.filter((variant) => variant.key !== variantKey);
+		variants = remaining.length > 0 ? remaining : [createVariant()];
+		if (!variants.some((variant) => variant.sku === defaultVariantSku)) {
+			defaultVariantSku = variants[0]?.sku ?? "";
+		}
+	}
+
+	function optionValueMatrix() {
+		return options
+			.map((option) => ({
+				name: asTrimmedString(option.name),
+				values: option.values.map((value) => asTrimmedString(value.value)).filter(Boolean),
+			}))
+			.filter((option) => option.name !== "" && option.values.length > 0);
+	}
+
+	function variantSelectionKey(
+		selections: Array<{ option_name: string; option_value: string }>
+	): string {
+		return selections
+			.map(
+				(selection) =>
+					`${selection.option_name.toLowerCase()}=${selection.option_value.toLowerCase()}`
+			)
+			.sort()
+			.join("|");
+	}
+
+	function buildVariantSku(baseSku: string, selections: string[]): string {
+		const suffix = selections
+			.map((value) =>
+				value
+					.toUpperCase()
+					.replace(/[^A-Z0-9]+/g, "-")
+					.replace(/^-+|-+$/g, "")
+			)
+			.filter(Boolean)
+			.join("-");
+		return suffix ? `${baseSku}-${suffix}` : baseSku;
+	}
+
+	function generateVariantsFromOptions() {
+		const matrix = optionValueMatrix();
+		if (matrix.length === 0) {
+			const seed = variantSeed();
+			variants = [
+				createVariant({
+					sku: asTrimmedString(sku),
+					title: asTrimmedString(name) || "Default Variant",
+					price: seed.price,
+					compare_at_price: seed.compare_at_price,
+					stock: seed.stock,
+				}),
+			];
+			defaultVariantSku = variants[0]?.sku ?? "";
+			return;
+		}
+
+		const existingByKey = new Map(
+			variants.map((variant) => [variantSelectionKey(variant.selections), variant])
+		);
+
+		let combinations: Array<Array<{ option_name: string; option_value: string }>> = [[]];
+		for (const option of matrix) {
+			combinations = combinations.flatMap((selectionSet) =>
+				option.values.map((value) => [
+					...selectionSet,
+					{ option_name: option.name, option_value: value },
+				])
+			);
+		}
+
+		const generated = combinations.map((selectionSet) => {
+			const selectionKey = variantSelectionKey(selectionSet);
+			const existing = existingByKey.get(selectionKey);
+			const seed = variantSeed();
+			return createVariant({
+				key: existing?.key ?? nextEditorKey("variant"),
+				sku:
+					existing?.sku ??
+					buildVariantSku(
+						asTrimmedString(sku),
+						selectionSet.map((item) => item.option_value)
+					),
+				title: existing?.title ?? selectionSet.map((item) => item.option_value).join(" / "),
+				price: existing?.price ?? seed.price,
+				compare_at_price: existing?.compare_at_price ?? seed.compare_at_price,
+				stock: existing?.stock ?? seed.stock,
+				is_published: existing?.is_published ?? true,
+				selections: selectionSet.map((selection, selectionIndex) =>
+					createVariantSelection(selection.option_name, selection.option_value, selectionIndex + 1)
+				),
+			});
+		});
+
+		variants = generated;
+		if (!generated.some((variant) => variant.sku === defaultVariantSku)) {
+			defaultVariantSku = generated[0]?.sku ?? "";
+		}
 	}
 
 	function extractMediaId(url: string): string | null {
@@ -402,17 +917,22 @@
 		clearMessages("product");
 		saving = true;
 		try {
-			const trimmedStock = asTrimmedString(stock);
-			const payload = {
-				sku: asTrimmedString(sku),
-				name: asTrimmedString(name),
-				description: asTrimmedString(description) || undefined,
-				price: Number(price),
-				stock: trimmedStock === "" ? undefined : Number(trimmedStock),
-			};
+			const payload = buildProductPayload();
 
-			if (!payload.sku || !payload.name || Number.isNaN(payload.price)) {
-				setMessage("product", "error", "Please provide SKU, name, and a valid price.");
+			if (!payload.sku || !payload.name) {
+				setMessage("product", "error", "Please provide SKU and product name.");
+				return;
+			}
+			if (payload.variants.length === 0) {
+				setMessage("product", "error", "Add at least one variant before saving.");
+				return;
+			}
+			if (
+				payload.variants.some(
+					(variant) => Number.isNaN(variant.price) || Number.isNaN(variant.stock)
+				)
+			) {
+				setMessage("product", "error", "Each variant needs a valid price and stock value.");
 				return;
 			}
 
@@ -796,6 +1316,28 @@
 		}
 	});
 
+	const editorPriceRangePreview = $derived.by(() => {
+		const prices = variants
+			.map((variant) => normalizedNumber(variant.price))
+			.filter((value): value is number => typeof value === "number");
+		if (prices.length === 0) {
+			return "Set variant prices to preview range";
+		}
+		const min = Math.min(...prices);
+		const max = Math.max(...prices);
+		return min === max ? String(min) : `${min} to ${max}`;
+	});
+
+	$effect(() => {
+		if (variants.length === 0) {
+			defaultVariantSku = "";
+			return;
+		}
+		if (!defaultVariantSku || !variants.some((variant) => variant.sku === defaultVariantSku)) {
+			defaultVariantSku = variants[0]?.sku ?? "";
+		}
+	});
+
 	onDestroy(() => {
 		window.removeEventListener(DRAFT_PREVIEW_SYNC_EVENT, handlePreviewSyncEvent as EventListener);
 		window.removeEventListener("storage", handlePreviewStorageEvent);
@@ -806,6 +1348,8 @@
 	onMount(() => {
 		window.addEventListener(DRAFT_PREVIEW_SYNC_EVENT, handlePreviewSyncEvent as EventListener);
 		window.addEventListener("storage", handlePreviewStorageEvent);
+		void loadBrands();
+		void loadAttributeDefinitions();
 		void loadPreviewState();
 	});
 
@@ -844,12 +1388,24 @@
 	});
 </script>
 
-{#snippet ProductFields()}
+{#snippet BasicInfoSection()}
 	<div>
 		<label for="admin-product-name" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
 			Name
 		</label>
 		<TextInput id="admin-product-name" name="name" class="mt-1" type="text" bind:value={name} />
+	</div>
+	<div>
+		<label for="admin-product-subtitle" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
+			Subtitle
+		</label>
+		<TextInput
+			id="admin-product-subtitle"
+			name="subtitle"
+			class="mt-1"
+			type="text"
+			bind:value={subtitle}
+		/>
 	</div>
 	<div>
 		<label for="admin-product-sku" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
@@ -858,6 +1414,21 @@
 		<TextInput id="admin-product-sku" name="sku" class="mt-1" type="text" bind:value={sku} />
 	</div>
 	<div>
+		<label for="admin-product-brand" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
+			Brand
+		</label>
+		<select
+			id="admin-product-brand"
+			class="mt-1 w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+			bind:value={selectedBrandId}
+		>
+			<option value="">No brand</option>
+			{#each brands as brand (brand.id)}
+				<option value={String(brand.id)}>{brand.name}</option>
+			{/each}
+		</select>
+	</div>
+	<div class="sm:col-span-2">
 		<label for="admin-product-description" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
 			Description
 		</label>
@@ -869,25 +1440,408 @@
 			bind:value={description}
 		></textarea>
 	</div>
+{/snippet}
+
+{#snippet OptionsSection(layoutMode: "split" | "stacked")}
+	<div
+		class={layoutMode === "split"
+			? "rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+			: "rounded-xl border border-gray-200 p-4 dark:border-gray-800"}
+	>
+		<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+			<div>
+				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Options</p>
+				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+					Define the choice sets that can be combined into sellable variants.
+				</p>
+			</div>
+			<div
+				class={layoutMode === "split"
+					? "flex w-full shrink-0 flex-col gap-2 sm:w-48"
+					: "flex flex-wrap gap-2"}
+			>
+				<Button
+					variant="regular"
+					type="button"
+					class={layoutMode === "split" ? "w-full justify-center whitespace-nowrap" : ""}
+					onclick={addOption}
+				>
+					<i class="bi bi-plus-lg mr-1"></i>
+					Add option
+				</Button>
+				<Button
+					variant="primary"
+					type="button"
+					class={layoutMode === "split" ? "w-full justify-center whitespace-nowrap" : ""}
+					onclick={generateVariantsFromOptions}
+				>
+					<i class="bi bi-grid-3x3-gap-fill mr-1"></i>
+					Generate variants
+				</Button>
+			</div>
+		</div>
+		{#if options.length === 0}
+			<p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+				No options yet. Add one to build a variant matrix.
+			</p>
+		{:else}
+			<div class="mt-4 space-y-4">
+				{#each options as option, optionIndex (option.key)}
+					<div class="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+						<div class="flex items-start justify-between gap-3">
+							<div class="grid flex-1 gap-4 sm:grid-cols-2">
+								<div>
+									<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Option name</p>
+									<TextInput
+										class="mt-1"
+										type="text"
+										aria-label={`Option ${optionIndex + 1} name`}
+										bind:value={option.name}
+									/>
+								</div>
+								<div>
+									<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Display type</p>
+									<select
+										class="mt-1 w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+										aria-label={`Option ${optionIndex + 1} display type`}
+										bind:value={option.display_type}
+									>
+										<option value="select">Select</option>
+										<option value="swatch">Swatch</option>
+									</select>
+								</div>
+							</div>
+							<IconButton
+								variant="danger"
+								type="button"
+								onclick={() => removeOption(option.key)}
+								aria-label={`Remove option ${optionIndex + 1}`}
+								title="Remove option"
+							>
+								<i class="bi bi-trash-fill"></i>
+							</IconButton>
+						</div>
+
+						<div class="mt-4 space-y-3">
+							{#each option.values as value (value.key)}
+								<div class="flex items-center gap-2">
+									<TextInput
+										class="flex-1"
+										type="text"
+										aria-label={`${option.name || `Option ${optionIndex + 1}`} value`}
+										bind:value={value.value}
+									/>
+									<IconButton
+										variant="danger"
+										type="button"
+										onclick={() => removeOptionValue(option.key, value.key)}
+										aria-label={`Remove value ${value.value || "value"}`}
+										title="Remove value"
+									>
+										<i class="bi bi-dash-lg"></i>
+									</IconButton>
+								</div>
+							{/each}
+							<Button variant="regular" type="button" onclick={() => addOptionValue(option.key)}>
+								<i class="bi bi-plus-lg mr-1"></i>
+								Add value
+							</Button>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</div>
+{/snippet}
+
+{#snippet VariantsSection(layoutMode: "split" | "stacked")}
+	<div
+		class={layoutMode === "split"
+			? "rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+			: "rounded-xl border border-gray-200 p-4 dark:border-gray-800"}
+	>
+		<div class="flex items-center justify-between gap-3">
+			<div>
+				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Variants</p>
+				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+					Product price and stock are derived from the default variant.
+				</p>
+			</div>
+			<Button
+				variant="regular"
+				type="button"
+				class="min-w-38 whitespace-nowrap"
+				onclick={addManualVariant}
+			>
+				<i class="bi bi-plus-lg mr-1"></i>
+				Add variant
+			</Button>
+		</div>
+
+		<div class="mt-4 space-y-4">
+			{#each variants as variant, variantIndex (variant.key)}
+				<div class="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+					<div class="flex items-start justify-between gap-3">
+						<div
+							class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200"
+						>
+							<input
+								type="radio"
+								name="default-variant"
+								value={variant.sku}
+								checked={defaultVariantSku === variant.sku}
+								onchange={() => (defaultVariantSku = variant.sku)}
+							/>
+							Default variant
+						</div>
+						<IconButton
+							variant="danger"
+							type="button"
+							onclick={() => removeVariant(variant.key)}
+							aria-label={`Remove variant ${variantIndex + 1}`}
+							title="Remove variant"
+						>
+							<i class="bi bi-trash-fill"></i>
+						</IconButton>
+					</div>
+
+					<div class="mt-4 grid gap-4 sm:grid-cols-2">
+						<div>
+							<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Variant SKU</p>
+							<TextInput
+								class="mt-1"
+								type="text"
+								aria-label={`Variant ${variantIndex + 1} SKU`}
+								bind:value={variant.sku}
+							/>
+						</div>
+						<div>
+							<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Title</p>
+							<TextInput
+								class="mt-1"
+								type="text"
+								aria-label={`Variant ${variantIndex + 1} title`}
+								bind:value={variant.title}
+							/>
+						</div>
+						<div>
+							<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Price</p>
+							<NumberInput
+								class="mt-1"
+								allowDecimal={true}
+								min="0"
+								aria-label={`Variant ${variantIndex + 1} price`}
+								bind:value={variant.price}
+							/>
+						</div>
+						<div>
+							<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Stock</p>
+							<NumberInput
+								class="mt-1"
+								min="0"
+								aria-label={`Variant ${variantIndex + 1} stock`}
+								bind:value={variant.stock}
+							/>
+						</div>
+						<div>
+							<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Compare-at price</p>
+							<NumberInput
+								class="mt-1"
+								allowDecimal={true}
+								min="0"
+								aria-label={`Variant ${variantIndex + 1} compare-at price`}
+								bind:value={variant.compare_at_price}
+							/>
+						</div>
+						<label class="mt-6 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+							<input type="checkbox" bind:checked={variant.is_published} />
+							Variant published
+						</label>
+					</div>
+
+					{#if variant.selections.length}
+						<div class="mt-4 flex flex-wrap gap-2">
+							{#each variant.selections as selection (selection.key)}
+								<span
+									class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-200"
+								>
+									{selection.option_name}: {selection.option_value}
+								</span>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			{/each}
+		</div>
+	</div>
+{/snippet}
+
+{#snippet AttributesSection(layoutMode: "split" | "stacked")}
+	<div
+		class={layoutMode === "split"
+			? "rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+			: "rounded-xl border border-gray-200 p-4 dark:border-gray-800"}
+	>
+		<div class="flex items-center justify-between gap-3">
+			<div>
+				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Attributes</p>
+				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+					Assign typed merchandising attributes for filtering and discovery.
+				</p>
+			</div>
+			<Button
+				variant="regular"
+				type="button"
+				class="min-w-38 whitespace-nowrap"
+				onclick={addAttributeValue}
+			>
+				<i class="bi bi-plus-lg mr-1"></i>
+				Add attribute
+			</Button>
+		</div>
+
+		{#if attributeValues.length === 0}
+			<p class="mt-3 text-sm text-gray-500 dark:text-gray-400">No attributes assigned yet.</p>
+		{:else}
+			<div class="mt-4 space-y-4">
+				{#each attributeValues as attribute, attributeIndex (attribute.key)}
+					<div class="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+						<div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
+							<div class="grid gap-4 sm:grid-cols-2">
+								<div>
+									<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Attribute</p>
+									<select
+										class="mt-1 w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+										aria-label={`Attribute ${attributeIndex + 1}`}
+										value={attribute.product_attribute_id}
+										onchange={(event) =>
+											updateAttributeSelection(
+												attribute.key,
+												(event.target as HTMLSelectElement).value
+											)}
+									>
+										<option value="">Select attribute</option>
+										{#each attributeDefinitions as definition (definition.id)}
+											<option value={String(definition.id)}>{definition.key}</option>
+										{/each}
+									</select>
+								</div>
+								<div>
+									<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Value</p>
+									{#if attribute.type === "number"}
+										<NumberInput
+											class="mt-1"
+											allowDecimal={true}
+											aria-label={`Attribute ${attributeIndex + 1} value`}
+											bind:value={attribute.number_value}
+										/>
+									{:else if attribute.type === "boolean"}
+										<label
+											class="mt-3 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"
+										>
+											<input type="checkbox" bind:checked={attribute.boolean_value} />
+											Enabled
+										</label>
+									{:else if attribute.type === "enum"}
+										<TextInput
+											class="mt-1"
+											type="text"
+											aria-label={`Attribute ${attributeIndex + 1} enum value`}
+											bind:value={attribute.enum_value}
+										/>
+									{:else}
+										<TextInput
+											class="mt-1"
+											type="text"
+											aria-label={`Attribute ${attributeIndex + 1} text value`}
+											bind:value={attribute.text_value}
+										/>
+									{/if}
+								</div>
+							</div>
+							<div class="flex justify-end">
+								<IconButton
+									variant="danger"
+									type="button"
+									onclick={() => removeAttributeValue(attribute.key)}
+									aria-label={`Remove attribute ${attributeIndex + 1}`}
+									title="Remove attribute"
+								>
+									<i class="bi bi-trash-fill"></i>
+								</IconButton>
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+
+		{#if attributeDefinitions.length === 0}
+			<p class="mt-3 text-xs text-amber-600 dark:text-amber-300">
+				No product attribute definitions exist yet. Create them via the admin product-attribute API.
+			</p>
+		{/if}
+	</div>
+{/snippet}
+
+{#snippet SEOSection(layoutMode: "split" | "stacked")}
+	<div
+		class={layoutMode === "split"
+			? "rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+			: "rounded-xl border border-gray-200 p-4 dark:border-gray-800"}
+	>
+		<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">SEO</p>
+		<div class="mt-4 grid gap-4 sm:grid-cols-2">
+			<div>
+				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">SEO title</p>
+				<TextInput class="mt-1" type="text" aria-label="SEO title" bind:value={seoTitle} />
+			</div>
+			<div>
+				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Canonical path</p>
+				<TextInput
+					class="mt-1"
+					type="text"
+					aria-label="Canonical path"
+					bind:value={seoCanonicalPath}
+				/>
+			</div>
+			<div class="sm:col-span-2">
+				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">SEO description</p>
+				<textarea
+					class="mt-1 w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+					rows="3"
+					aria-label="SEO description"
+					bind:value={seoDescription}
+				></textarea>
+			</div>
+			<div>
+				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">OG image media ID</p>
+				<TextInput
+					class="mt-1"
+					type="text"
+					aria-label="OG image media ID"
+					bind:value={seoOgImageMediaId}
+				/>
+			</div>
+			<label class="mt-6 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+				<input type="checkbox" bind:checked={seoNoIndex} />
+				Prevent indexing
+			</label>
+		</div>
+	</div>
+{/snippet}
+
+{#snippet VariantSummarySection()}
 	<div class="grid gap-4 sm:grid-cols-2">
 		<div>
-			<label for="admin-product-price" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
-				Price
-			</label>
-			<NumberInput
-				id="admin-product-price"
-				name="price"
-				class="mt-1"
-				allowDecimal={true}
-				min="0"
-				bind:value={price}
-			/>
+			<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Default variant</p>
+			<p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
+				{defaultVariantSku || variants[0]?.sku || "No default variant selected"}
+			</p>
 		</div>
 		<div>
-			<label for="admin-product-stock" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
-				Stock
-			</label>
-			<NumberInput id="admin-product-stock" name="stock" class="mt-1" min="0" bind:value={stock} />
+			<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Price range preview</p>
+			<p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{editorPriceRangePreview}</p>
 		</div>
 	</div>
 {/snippet}
@@ -1253,12 +2207,16 @@
 {:else if !allowCreate && !hasProduct}
 	<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">Product not found.</p>
 {:else if layout === "split"}
-	<div class="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+	<div class="mt-6 space-y-6">
 		<div
 			class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 		>
-			<div class="space-y-4 text-sm">
-				{@render ProductFields()}
+			<div class="grid gap-4 text-sm sm:grid-cols-2">
+				{@render BasicInfoSection()}
+			</div>
+
+			<div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-800">
+				{@render VariantSummarySection()}
 			</div>
 
 			{@render ProductStateChips()}
@@ -1276,33 +2234,53 @@
 			{/if}
 		</div>
 
-		<div
-			class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-		>
-			{#if mediaOrderView.length}
-				{@render MediaGrid()}
-			{:else}
-				<p class="mt-4 text-sm text-gray-500 dark:text-gray-400">No images yet.</p>
-			{/if}
-
-			<div class="mt-6">
-				{@render MediaUpload(false)}
+		<div class="columns-1 gap-6 md:columns-2 2xl:columns-3">
+			<div class="mb-6 break-inside-avoid">
+				{@render OptionsSection("split")}
 			</div>
-			{#if showMessages}
-				{#if mediaErrorMessage}
-					{@render DismissibleAlert("media", "error", mediaErrorMessage)}
-				{/if}
-				{#if mediaStatusMessage}
-					{@render DismissibleAlert("media", "success", mediaStatusMessage)}
-				{/if}
-			{/if}
-		</div>
-	</div>
+			<div class="mb-6 break-inside-avoid">
+				{@render VariantsSection("split")}
+			</div>
+			<div class="mb-6 break-inside-avoid">
+				{@render AttributesSection("split")}
+			</div>
+			<div class="mb-6 break-inside-avoid">
+				{@render SEOSection("split")}
+			</div>
+			<div class="mb-6 break-inside-avoid">
+				<div
+					class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+				>
+					<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Images</p>
+					{#if mediaOrderView.length}
+						<div class="mt-4">
+							{@render MediaGrid()}
+						</div>
+					{:else}
+						<p class="mt-4 text-sm text-gray-500 dark:text-gray-400">No images yet.</p>
+					{/if}
 
-	<div
-		class="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-	>
-		{@render RelatedProducts()}
+					<div class="mt-6">
+						{@render MediaUpload(false)}
+					</div>
+					{#if showMessages}
+						{#if mediaErrorMessage}
+							{@render DismissibleAlert("media", "error", mediaErrorMessage)}
+						{/if}
+						{#if mediaStatusMessage}
+							{@render DismissibleAlert("media", "success", mediaStatusMessage)}
+						{/if}
+					{/if}
+				</div>
+			</div>
+			<div class="mb-6 break-inside-avoid">
+				<div
+					class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+				>
+					{@render RelatedProducts()}
+				</div>
+			</div>
+		</div>
 	</div>
 {:else}
 	<div
@@ -1325,8 +2303,13 @@
 			</div>
 		{/if}
 
-		<div class="mt-4 space-y-4 text-sm">
-			{@render ProductFields()}
+		<div class="mt-4 space-y-6 text-sm">
+			<div class="grid gap-4 sm:grid-cols-2">
+				{@render BasicInfoSection()}
+			</div>
+			<div class="border-t border-gray-200 pt-6 dark:border-gray-800">
+				{@render VariantSummarySection()}
+			</div>
 			{@render ProductStateChips()}
 			<div
 				class="mt-2 mb-6 grid grid-cols-1 gap-2 border-b border-gray-200 pb-6 text-base sm:grid-cols-2 dark:border-gray-800"
@@ -1352,8 +2335,24 @@
 			{/if}
 		</div>
 
+		<div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-800">
+			{@render OptionsSection("stacked")}
+		</div>
+
+		<div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-800">
+			{@render VariantsSection("stacked")}
+		</div>
+
+		<div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-800">
+			{@render AttributesSection("stacked")}
+		</div>
+
+		<div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-800">
+			{@render SEOSection("stacked")}
+		</div>
+
 		{#if mediaOrderView.length}
-			<div class="mt-6">
+			<div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-800">
 				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Images</p>
 				{@render MediaGrid()}
 			</div>

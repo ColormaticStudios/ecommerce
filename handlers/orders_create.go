@@ -15,8 +15,8 @@ type CreateOrderRequest struct {
 }
 
 type OrderItemRequest struct {
-	ProductID uint `json:"product_id" binding:"required"`
-	Quantity  int  `json:"quantity" binding:"required,min=1"`
+	ProductVariantID uint `json:"product_variant_id" binding:"required"`
+	Quantity         int  `json:"quantity" binding:"required,min=1"`
 }
 
 // CreateOrder creates a new order for the authenticated user.
@@ -39,45 +39,47 @@ func CreateOrder(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
 			return
 		}
 
-		requestedByProduct := make(map[uint]int, len(req.Items))
-		orderedProductIDs := make([]uint, 0, len(req.Items))
+		requestedByVariant := make(map[uint]int, len(req.Items))
+		orderedVariantIDs := make([]uint, 0, len(req.Items))
 		for _, itemReq := range req.Items {
-			if _, exists := requestedByProduct[itemReq.ProductID]; !exists {
-				orderedProductIDs = append(orderedProductIDs, itemReq.ProductID)
+			if _, exists := requestedByVariant[itemReq.ProductVariantID]; !exists {
+				orderedVariantIDs = append(orderedVariantIDs, itemReq.ProductVariantID)
 			}
-			requestedByProduct[itemReq.ProductID] += itemReq.Quantity
+			requestedByVariant[itemReq.ProductVariantID] += itemReq.Quantity
 		}
 
 		var total models.Money
-		orderItems := make([]models.OrderItem, 0, len(orderedProductIDs))
-		for _, productID := range orderedProductIDs {
-			quantity := requestedByProduct[productID]
-			var product models.Product
-			if err := db.First(&product, productID).Error; err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Product not found", "product_id": productID})
+		orderItems := make([]models.OrderItem, 0, len(orderedVariantIDs))
+		for _, variantID := range orderedVariantIDs {
+			quantity := requestedByVariant[variantID]
+			var variant models.ProductVariant
+			if err := db.Preload("Product").First(&variant, variantID).Error; err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Product variant not found", "product_variant_id": variantID})
 				return
 			}
-			if !productIsPubliclyVisible(product) {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Product not found", "product_id": productID})
+			if !variant.IsPublished || !productIsPubliclyVisible(variant.Product) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Product variant not found", "product_variant_id": variantID})
 				return
 			}
 
-			if product.Stock < quantity {
+			if variant.Stock < quantity {
 				c.JSON(http.StatusBadRequest, gin.H{
-					"error":        "Insufficient stock",
-					"product_id":   productID,
-					"product_name": product.Name,
-					"requested":    quantity,
-					"available":    product.Stock,
+					"error":              "Insufficient stock",
+					"product_variant_id": variantID,
+					"product_name":       variant.Product.Name,
+					"requested":          quantity,
+					"available":          variant.Stock,
 				})
 				return
 			}
 
-			total += product.Price.Mul(quantity)
+			total += variant.Price.Mul(quantity)
 			orderItems = append(orderItems, models.OrderItem{
-				ProductID: productID,
-				Quantity:  quantity,
-				Price:     product.Price,
+				ProductVariantID: variantID,
+				VariantSKU:       variant.SKU,
+				VariantTitle:     variant.Title,
+				Quantity:         quantity,
+				Price:            variant.Price,
 			})
 		}
 
@@ -93,10 +95,15 @@ func CreateOrder(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc {
 			return
 		}
 
-		db.Preload("Items.Product").First(&order, order.ID)
+		db.Preload("Items.ProductVariant").Preload("Items.ProductVariant.Product").First(&order, order.ID)
 		applyOrderMediaToOrder(&order, mediaService)
 		applyOrderCapabilities(&order, &user.ID)
+		response, err := buildOrderResponse(db, mediaService, order)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render order"})
+			return
+		}
 
-		c.JSON(http.StatusCreated, order)
+		c.JSON(http.StatusCreated, response)
 	}
 }

@@ -115,9 +115,46 @@ func (s *GeneratedAPIServer) CreateProduct(c *gin.Context) {
 	s.runProtected(c, "admin", CreateProduct(s.db))
 }
 
+func (s *GeneratedAPIServer) CreateAdminBrand(c *gin.Context) {
+	s.runProtected(c, "admin", CreateAdminBrand(s.db))
+}
+
+func (s *GeneratedAPIServer) DeleteAdminBrand(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", DeleteAdminBrand(s.db))
+}
+
+func (s *GeneratedAPIServer) UpdateAdminBrand(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", UpdateAdminBrand(s.db))
+}
+
 func (s *GeneratedAPIServer) ListAdminProducts(c *gin.Context, params apicontract.ListAdminProductsParams) {
 	_ = params
 	s.runProtected(c, "admin", ListAdminProducts(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) ListAdminBrands(c *gin.Context, params apicontract.ListAdminBrandsParams) {
+	_ = params
+	s.runProtected(c, "admin", ListAdminBrands(s.db))
+}
+
+func (s *GeneratedAPIServer) ListAdminProductAttributes(c *gin.Context) {
+	s.runProtected(c, "admin", ListAdminProductAttributes(s.db))
+}
+
+func (s *GeneratedAPIServer) CreateAdminProductAttribute(c *gin.Context) {
+	s.runProtected(c, "admin", CreateAdminProductAttribute(s.db))
+}
+
+func (s *GeneratedAPIServer) UpdateAdminProductAttribute(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", UpdateAdminProductAttribute(s.db))
+}
+
+func (s *GeneratedAPIServer) DeleteAdminProductAttribute(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", DeleteAdminProductAttribute(s.db))
 }
 
 func (s *GeneratedAPIServer) GetAdminProduct(c *gin.Context, id int) {
@@ -378,6 +415,14 @@ func (s *GeneratedAPIServer) ListProducts(c *gin.Context, params apicontract.Lis
 	_ = params
 	s.applyDraftPreview(c)
 	GetProducts(s.db, s.mediaService)(c)
+}
+
+func (s *GeneratedAPIServer) ListBrands(c *gin.Context) {
+	ListBrands(s.db)(c)
+}
+
+func (s *GeneratedAPIServer) ListProductAttributes(c *gin.Context) {
+	ListProductAttributes(s.db)(c)
 }
 
 func (s *GeneratedAPIServer) GetProduct(c *gin.Context, id int) {

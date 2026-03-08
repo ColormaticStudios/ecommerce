@@ -53,7 +53,7 @@ func setupGeneratedCartRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
 	t.Helper()
 
 	gin.SetMode(gin.TestMode)
-	db := newTestDB(t, &models.User{}, &models.Product{}, &models.Cart{}, &models.CartItem{})
+	db := newTestDB(t, &models.User{}, &models.Product{}, &models.ProductVariant{}, &models.Cart{}, &models.CartItem{})
 
 	require.NoError(t, db.Create(&models.User{
 		Subject:  "sub-cart-1",
@@ -62,13 +62,25 @@ func setupGeneratedCartRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
 		Role:     "customer",
 		Currency: "USD",
 	}).Error)
-	require.NoError(t, db.Create(&models.Product{
+	product := models.Product{
 		SKU:         "sku-cart-1",
 		Name:        "Cart Product",
 		Description: "Cart Product Description",
 		Price:       models.MoneyFromFloat(9.99),
 		Stock:       20,
-	}).Error)
+	}
+	require.NoError(t, db.Create(&product).Error)
+	variant := models.ProductVariant{
+		ProductID:   product.ID,
+		SKU:         "sku-cart-1-default",
+		Title:       product.Name,
+		Price:       product.Price,
+		Stock:       product.Stock,
+		Position:    1,
+		IsPublished: true,
+	}
+	require.NoError(t, db.Create(&variant).Error)
+	require.NoError(t, db.Model(&product).Update("default_variant_id", variant.ID).Error)
 
 	r := gin.New()
 	server, err := NewGeneratedAPIServer(db, nil, GeneratedAPIServerConfig{
@@ -208,10 +220,10 @@ func TestGeneratedGetCartWithBearerToken(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var body models.Cart
+	var body map[string]any
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
-	assert.NotZero(t, body.ID)
-	assert.Empty(t, body.Items)
+	assert.NotZero(t, body["id"])
+	assert.Empty(t, body["items"])
 }
 
 func TestGeneratedAddCartItemWithBearerToken(t *testing.T) {
@@ -221,7 +233,7 @@ func TestGeneratedAddCartItemWithBearerToken(t *testing.T) {
 	req := httptest.NewRequest(
 		http.MethodPost,
 		"/api/v1/me/cart",
-		strings.NewReader(`{"product_id":1,"quantity":2}`),
+		strings.NewReader(`{"product_variant_id":1,"quantity":2}`),
 	)
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
@@ -230,11 +242,15 @@ func TestGeneratedAddCartItemWithBearerToken(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var body models.Cart
+	var body map[string]any
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
-	require.Len(t, body.Items, 1)
-	assert.Equal(t, uint(1), body.Items[0].ProductID)
-	assert.Equal(t, 2, body.Items[0].Quantity)
+	items, ok := body["items"].([]any)
+	require.True(t, ok)
+	require.Len(t, items, 1)
+	first, ok := items[0].(map[string]any)
+	require.True(t, ok)
+	assert.Equal(t, float64(1), first["product_variant_id"])
+	assert.Equal(t, float64(2), first["quantity"])
 }
 
 func TestGeneratedAddCartItemSessionRequiresCSRF(t *testing.T) {
@@ -244,7 +260,7 @@ func TestGeneratedAddCartItemSessionRequiresCSRF(t *testing.T) {
 	req := httptest.NewRequest(
 		http.MethodPost,
 		"/api/v1/me/cart",
-		strings.NewReader(`{"product_id":1,"quantity":1}`),
+		strings.NewReader(`{"product_variant_id":1,"quantity":1}`),
 	)
 	req.Header.Set("Content-Type", "application/json")
 	req.AddCookie(&http.Cookie{Name: "session_token", Value: token})

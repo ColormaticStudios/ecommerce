@@ -73,7 +73,12 @@
 		quantity = clampedQuantity;
 		adding = true;
 		try {
-			await api.addToCart({ product_id: product.id, quantity: clampedQuantity });
+			const variantId = product.default_variant_id ?? product.variants?.[0]?.id;
+			if (!variantId) {
+				showToast("This product is not purchasable yet.");
+				return;
+			}
+			await api.addToCart({ product_variant_id: variantId, quantity: clampedQuantity });
 			window.dispatchEvent(new CustomEvent("cart:updated"));
 			showToast("Added to cart.");
 		} catch (err) {

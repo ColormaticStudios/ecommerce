@@ -47,6 +47,15 @@ export interface PageModel {
 
 type RelatedProductPayload = components["schemas"]["RelatedProduct"];
 type ProductPayload = components["schemas"]["Product"];
+type BrandPayload = components["schemas"]["Brand"];
+type ProductAttributeDefinitionPayload = components["schemas"]["ProductAttributeDefinition"];
+type ProductOptionPayload = components["schemas"]["ProductOption"];
+type ProductOptionValuePayload = components["schemas"]["ProductOptionValue"];
+type ProductVariantPayload = components["schemas"]["ProductVariant"];
+type ProductVariantSelectionPayload = components["schemas"]["ProductVariantSelection"];
+type ProductAttributeValuePayload = components["schemas"]["ProductAttributeValue"];
+type ProductPriceRangePayload = components["schemas"]["ProductPriceRange"];
+type ProductSEOPayload = components["schemas"]["ProductSEO"];
 
 function parseRelatedProduct(product: RelatedProductPayload): RelatedProductModel {
 	return {
@@ -57,6 +66,110 @@ function parseRelatedProduct(product: RelatedProductPayload): RelatedProductMode
 		price: product.price,
 		cover_image: product.cover_image ?? null,
 		stock: product.stock ?? 0,
+	};
+}
+
+export function parseBrand(brand: BrandPayload): BrandModel {
+	return {
+		id: brand.id,
+		name: brand.name,
+		slug: brand.slug,
+		description: brand.description ?? null,
+		logo_media_id: brand.logo_media_id ?? null,
+		is_active: brand.is_active,
+	};
+}
+
+export function parseProductAttributeDefinition(
+	attribute: ProductAttributeDefinitionPayload
+): ProductAttributeDefinitionModel {
+	return {
+		id: attribute.id,
+		key: attribute.key,
+		slug: attribute.slug,
+		type: attribute.type,
+		filterable: attribute.filterable,
+		sortable: attribute.sortable,
+	};
+}
+
+function parseProductOptionValue(value: ProductOptionValuePayload): ProductOptionValueModel {
+	return {
+		id: value.id ?? null,
+		value: value.value,
+		position: value.position,
+	};
+}
+
+function parseProductOption(option: ProductOptionPayload): ProductOptionModel {
+	return {
+		id: option.id ?? null,
+		name: option.name,
+		position: option.position,
+		display_type: option.display_type,
+		values: (option.values ?? []).map(parseProductOptionValue),
+	};
+}
+
+function parseProductVariantSelection(
+	selection: ProductVariantSelectionPayload
+): ProductVariantSelectionModel {
+	return {
+		product_option_value_id: selection.product_option_value_id ?? null,
+		option_name: selection.option_name,
+		option_value: selection.option_value,
+		position: selection.position,
+	};
+}
+
+function parseProductVariant(variant: ProductVariantPayload): ProductVariantModel {
+	return {
+		id: variant.id ?? null,
+		sku: variant.sku,
+		title: variant.title,
+		price: variant.price,
+		compare_at_price: variant.compare_at_price ?? null,
+		stock: variant.stock,
+		position: variant.position,
+		is_published: variant.is_published,
+		weight_grams: variant.weight_grams ?? null,
+		length_cm: variant.length_cm ?? null,
+		width_cm: variant.width_cm ?? null,
+		height_cm: variant.height_cm ?? null,
+		selections: (variant.selections ?? []).map(parseProductVariantSelection),
+	};
+}
+
+function parseProductAttributeValue(
+	attribute: ProductAttributeValuePayload
+): ProductAttributeValueModel {
+	return {
+		product_attribute_id: attribute.product_attribute_id,
+		key: attribute.key,
+		slug: attribute.slug,
+		type: attribute.type as ProductAttributeValueModel["type"],
+		text_value: attribute.text_value ?? null,
+		number_value: attribute.number_value ?? null,
+		boolean_value: attribute.boolean_value ?? null,
+		enum_value: attribute.enum_value ?? null,
+		position: attribute.position,
+	};
+}
+
+function parseProductPriceRange(range: ProductPriceRangePayload): ProductPriceRangeModel {
+	return {
+		min: range.min,
+		max: range.max,
+	};
+}
+
+function parseProductSEO(seo: ProductSEOPayload): ProductSEOModel {
+	return {
+		title: seo.title ?? null,
+		description: seo.description ?? null,
+		canonical_path: seo.canonical_path ?? null,
+		og_image_media_id: seo.og_image_media_id ?? null,
+		noindex: seo.noindex ?? false,
 	};
 }
 
@@ -84,11 +197,20 @@ export function parseProduct(product: ProductPayload): ProductModel {
 		id: product.id,
 		sku: product.sku,
 		name: product.name,
+		subtitle: product.subtitle ?? null,
 		description: product.description,
 		price: product.price,
 		stock: product.stock,
 		images: product.images ?? [],
 		cover_image: coverImage ?? undefined,
+		brand: product.brand ? parseBrand(product.brand) : null,
+		default_variant_id: product.default_variant_id ?? null,
+		default_variant_sku: product.default_variant_sku ?? null,
+		price_range: parseProductPriceRange(product.price_range),
+		options: (product.options ?? []).map(parseProductOption),
+		variants: (product.variants ?? []).map(parseProductVariant),
+		attributes: (product.attributes ?? []).map(parseProductAttributeValue),
+		seo: parseProductSEO(product.seo),
 		related_products: (product.related_products ?? []).map(parseRelatedProduct),
 	};
 }
@@ -103,12 +225,101 @@ export interface ProductModel {
 	id: number;
 	sku: string;
 	name: string;
+	subtitle: string | null;
 	description: string;
 	price: number;
 	stock: number;
 	images: string[];
 	cover_image?: string;
+	brand: BrandModel | null;
+	default_variant_id: number | null;
+	default_variant_sku: string | null;
+	price_range: ProductPriceRangeModel;
+	options: ProductOptionModel[];
+	variants: ProductVariantModel[];
+	attributes: ProductAttributeValueModel[];
+	seo: ProductSEOModel;
 	related_products: RelatedProductModel[];
+}
+
+export interface BrandModel {
+	id: number;
+	name: string;
+	slug: string;
+	description: string | null;
+	logo_media_id: string | null;
+	is_active: boolean;
+}
+
+export interface ProductAttributeDefinitionModel {
+	id: number;
+	key: string;
+	slug: string;
+	type: "text" | "number" | "boolean" | "enum";
+	filterable: boolean;
+	sortable: boolean;
+}
+
+export interface ProductOptionValueModel {
+	id: number | null;
+	value: string;
+	position: number;
+}
+
+export interface ProductOptionModel {
+	id: number | null;
+	name: string;
+	position: number;
+	display_type: string;
+	values: ProductOptionValueModel[];
+}
+
+export interface ProductVariantSelectionModel {
+	product_option_value_id: number | null;
+	option_name: string;
+	option_value: string;
+	position: number;
+}
+
+export interface ProductVariantModel {
+	id: number | null;
+	sku: string;
+	title: string;
+	price: number;
+	compare_at_price: number | null;
+	stock: number;
+	position: number;
+	is_published: boolean;
+	weight_grams: number | null;
+	length_cm: number | null;
+	width_cm: number | null;
+	height_cm: number | null;
+	selections: ProductVariantSelectionModel[];
+}
+
+export interface ProductAttributeValueModel {
+	product_attribute_id: number;
+	key: string;
+	slug: string;
+	type: "text" | "number" | "boolean" | "enum";
+	text_value: string | null;
+	number_value: number | null;
+	boolean_value: boolean | null;
+	enum_value: string | null;
+	position: number;
+}
+
+export interface ProductPriceRangeModel {
+	min: number;
+	max: number;
+}
+
+export interface ProductSEOModel {
+	title: string | null;
+	description: string | null;
+	canonical_path: string | null;
+	og_image_media_id: string | null;
+	noindex: boolean;
 }
 
 export interface RelatedProductModel {
@@ -148,8 +359,9 @@ export function parseCartItem(cartItem: CartItemPayload): CartItemModel {
 	return {
 		id: cartItem.id,
 		cart_id: cartItem.cart_id,
-		product_id: cartItem.product_id,
+		product_variant_id: cartItem.product_variant_id,
 		quantity: cartItem.quantity,
+		product_variant: parseProductVariant(cartItem.product_variant),
 		product: parseProduct(cartItem.product),
 		created_at: parseDate(cartItem.created_at) ?? new Date(),
 		updated_at: parseDate(cartItem.updated_at) ?? new Date(),
@@ -160,8 +372,9 @@ export function parseCartItem(cartItem: CartItemPayload): CartItemModel {
 export interface CartItemModel {
 	id: number;
 	cart_id: number;
-	product_id: number;
+	product_variant_id: number;
 	quantity: number;
+	product_variant: ProductVariantModel;
 	product: ProductModel;
 	created_at: Date;
 	updated_at: Date;
@@ -205,9 +418,12 @@ export function parseOrderItem(orderItem: OrderItemPayload): OrderItemModel {
 	return {
 		id: orderItem.id,
 		order_id: orderItem.order_id,
-		product_id: orderItem.product_id,
+		product_variant_id: orderItem.product_variant_id,
+		variant_sku: orderItem.variant_sku,
+		variant_title: orderItem.variant_title,
 		quantity: orderItem.quantity,
 		price: orderItem.price,
+		product_variant: parseProductVariant(orderItem.product_variant),
 		product: parseProduct(orderItem.product),
 		created_at: parseDate(orderItem.created_at) ?? new Date(),
 		updated_at: parseDate(orderItem.updated_at) ?? new Date(),
@@ -218,9 +434,12 @@ export function parseOrderItem(orderItem: OrderItemPayload): OrderItemModel {
 export interface OrderItemModel {
 	id: number;
 	order_id: number;
-	product_id: number;
+	product_variant_id: number;
+	variant_sku: string;
+	variant_title: string;
 	quantity: number;
 	price: number;
+	product_variant: ProductVariantModel;
 	product: ProductModel;
 	created_at: Date;
 	updated_at: Date;

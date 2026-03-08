@@ -12,7 +12,7 @@ func Guard(db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
-	return guardPendingMigrations(db, pending)
+	return guardPendingMigrations(db, pending, true)
 }
 
 func GuardLines(db *gorm.DB) ([]string, error) {
@@ -28,7 +28,7 @@ func GuardLines(db *gorm.DB) ([]string, error) {
 		}
 	}
 
-	if err := guardPendingMigrations(db, pending); err != nil {
+	if err := guardPendingMigrations(db, pending, true); err != nil {
 		return []string{
 			fmt.Sprintf("pending_contract_count=%d", contractPending),
 			"guard_status=failed",
@@ -42,7 +42,10 @@ func GuardLines(db *gorm.DB) ([]string, error) {
 	}, nil
 }
 
-func guardPendingMigrations(db *gorm.DB, pending []Migration) error {
+func guardPendingMigrations(db *gorm.DB, pending []Migration, enforceBlockers bool) error {
+	if !enforceBlockers {
+		return nil
+	}
 	for _, migration := range pending {
 		if !hasTag(migration.Tags, migrationContractTag) && len(migration.ContractBlockers) == 0 {
 			continue

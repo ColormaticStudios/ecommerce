@@ -16,11 +16,17 @@ type OrderPagePayload = components["schemas"]["OrderPage"];
 type UserPagePayload = components["schemas"]["UserPage"];
 type CheckoutPluginCatalogPayload = components["schemas"]["CheckoutPluginCatalog"];
 
-type AdminTab = "products" | "orders" | "users" | "providers" | "storefront";
+type AdminTab = "products" | "brands" | "orders" | "users" | "providers" | "storefront";
 const defaultAdminPageLimit = 10;
 
 function normalizeTab(value: string | null): AdminTab {
-	if (value === "orders" || value === "users" || value === "providers" || value === "storefront") {
+	if (
+		value === "brands" ||
+		value === "orders" ||
+		value === "users" ||
+		value === "providers" ||
+		value === "storefront"
+	) {
 		return value;
 	}
 	return "products";

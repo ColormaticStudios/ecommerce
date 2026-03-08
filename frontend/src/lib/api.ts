@@ -1,5 +1,7 @@
 import {
+	type BrandModel,
 	type ProductModel,
+	type ProductAttributeDefinitionModel,
 	type UserModel,
 	type PageModel,
 	type OrderModel,
@@ -9,6 +11,8 @@ import {
 	type OrderPayload,
 	type SavedPaymentMethodModel,
 	type SavedAddressModel,
+	parseBrand,
+	parseProductAttributeDefinition,
 	parseProduct,
 	parseOrder,
 	parseProfile,
@@ -39,9 +43,14 @@ type CheckoutPluginCatalog = components["schemas"]["CheckoutPluginCatalog"];
 type CheckoutPluginType = components["schemas"]["CheckoutPlugin"]["type"];
 type UpdateCheckoutPluginRequest = components["schemas"]["UpdateCheckoutPluginRequest"];
 type MessageResponse = components["schemas"]["MessageResponse"];
-type ProductInput = components["schemas"]["ProductInput"];
+type ProductUpsertInput = components["schemas"]["ProductUpsertInput"];
 type MediaIDsRequest = components["schemas"]["MediaIDsRequest"];
 type UpdateRelatedRequest = components["schemas"]["UpdateRelatedRequest"];
+type BrandListResponse = components["schemas"]["BrandListResponse"];
+type ProductAttributeDefinitionListResponse =
+	components["schemas"]["ProductAttributeDefinitionListResponse"];
+type BrandInput = components["schemas"]["BrandInput"];
+type ProductAttributeDefinitionInput = components["schemas"]["ProductAttributeDefinitionInput"];
 type OrderPagePayload = components["schemas"]["OrderPage"];
 type UserPagePayload = components["schemas"]["UserPage"];
 type UpdateOrderStatusRequest = components["schemas"]["UpdateOrderStatusRequest"];
@@ -49,6 +58,9 @@ type StorefrontSettingsRequest = components["schemas"]["StorefrontSettingsReques
 type StorefrontSettingsResponse = components["schemas"]["StorefrontSettingsResponse"];
 type DraftPreviewSessionResponse = components["schemas"]["DraftPreviewSessionResponse"];
 type ListUserOrdersQuery = paths["/api/v1/me/orders"]["get"]["parameters"]["query"];
+type ListAdminBrandsQuery = NonNullable<
+	paths["/api/v1/admin/brands"]["get"]["parameters"]["query"]
+>;
 type ListAdminOrdersQuery = paths["/api/v1/admin/orders"]["get"]["parameters"]["query"];
 type ListAdminProductsQuery = paths["/api/v1/admin/products"]["get"]["parameters"]["query"];
 type ListUsersQuery = paths["/api/v1/admin/users"]["get"]["parameters"]["query"];
@@ -472,7 +484,7 @@ export class API {
 		);
 	}
 
-	public async createProduct(data: ProductInput): Promise<ProductModel> {
+	public async createProduct(data: ProductUpsertInput): Promise<ProductModel> {
 		const response = await this.request<components["schemas"]["Product"]>(
 			"POST",
 			"/admin/products",
@@ -481,13 +493,93 @@ export class API {
 		return parseProduct(response);
 	}
 
-	public async updateProduct(id: number, data: ProductInput): Promise<ProductModel> {
+	public async updateProduct(id: number, data: ProductUpsertInput): Promise<ProductModel> {
 		const response = await this.request<components["schemas"]["Product"]>(
 			"PATCH",
 			`/admin/products/${id}`,
 			data
 		);
 		return parseProduct(response);
+	}
+
+	public async listAdminBrands(params: ListAdminBrandsQuery = {}): Promise<BrandModel[]> {
+		const response = await this.request<BrandListResponse>(
+			"GET",
+			"/admin/brands",
+			undefined,
+			params
+		);
+		return response.data.map(parseBrand);
+	}
+
+	public async createAdminBrand(data: BrandInput): Promise<BrandModel> {
+		const response = await this.request<components["schemas"]["Brand"]>(
+			"POST",
+			"/admin/brands",
+			data
+		);
+		return parseBrand(response);
+	}
+
+	public async updateAdminBrand(id: number, data: BrandInput): Promise<BrandModel> {
+		const response = await this.request<components["schemas"]["Brand"]>(
+			"PATCH",
+			`/admin/brands/${id}`,
+			data
+		);
+		return parseBrand(response);
+	}
+
+	public async deleteAdminBrand(id: number): Promise<MessageResponse> {
+		return await this.request("DELETE", `/admin/brands/${id}`);
+	}
+
+	public async listBrands(): Promise<BrandModel[]> {
+		const response = await this.request<BrandListResponse>("GET", "/brands");
+		return response.data.map(parseBrand);
+	}
+
+	public async listAdminProductAttributes(): Promise<ProductAttributeDefinitionModel[]> {
+		const response = await this.request<ProductAttributeDefinitionListResponse>(
+			"GET",
+			"/admin/product-attributes"
+		);
+		return response.data.map(parseProductAttributeDefinition);
+	}
+
+	public async createAdminProductAttribute(
+		data: ProductAttributeDefinitionInput
+	): Promise<ProductAttributeDefinitionModel> {
+		const response = await this.request<components["schemas"]["ProductAttributeDefinition"]>(
+			"POST",
+			"/admin/product-attributes",
+			data
+		);
+		return parseProductAttributeDefinition(response);
+	}
+
+	public async updateAdminProductAttribute(
+		id: number,
+		data: ProductAttributeDefinitionInput
+	): Promise<ProductAttributeDefinitionModel> {
+		const response = await this.request<components["schemas"]["ProductAttributeDefinition"]>(
+			"PATCH",
+			`/admin/product-attributes/${id}`,
+			data
+		);
+		return parseProductAttributeDefinition(response);
+	}
+
+	public async deleteAdminProductAttribute(id: number): Promise<MessageResponse> {
+		return await this.request("DELETE", `/admin/product-attributes/${id}`);
+	}
+
+	public async listProductAttributes(): Promise<ProductAttributeDefinitionModel[]> {
+		const response = await this.request<ProductAttributeDefinitionListResponse>(
+			"GET",
+			"/product-attributes"
+		);
+		return response.data.map(parseProductAttributeDefinition);
 	}
 
 	public async listAdminProducts(params?: ListAdminProductsQuery): Promise<PageModel> {

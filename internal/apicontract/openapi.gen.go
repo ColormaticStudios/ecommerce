@@ -37,10 +37,10 @@ const (
 
 // Defines values for CheckoutPluginFieldType.
 const (
-	Checkbox CheckoutPluginFieldType = "checkbox"
-	Number   CheckoutPluginFieldType = "number"
-	Select   CheckoutPluginFieldType = "select"
-	Text     CheckoutPluginFieldType = "text"
+	CheckoutPluginFieldTypeCheckbox CheckoutPluginFieldType = "checkbox"
+	CheckoutPluginFieldTypeNumber   CheckoutPluginFieldType = "number"
+	CheckoutPluginFieldTypeSelect   CheckoutPluginFieldType = "select"
+	CheckoutPluginFieldTypeText     CheckoutPluginFieldType = "text"
 )
 
 // Defines values for CheckoutPluginStateSeverity.
@@ -60,6 +60,22 @@ const (
 	OrderStatusPENDING   OrderStatus = "PENDING"
 	OrderStatusREFUNDED  OrderStatus = "REFUNDED"
 	OrderStatusSHIPPED   OrderStatus = "SHIPPED"
+)
+
+// Defines values for ProductAttributeDefinitionType.
+const (
+	ProductAttributeDefinitionTypeBoolean ProductAttributeDefinitionType = "boolean"
+	ProductAttributeDefinitionTypeEnum    ProductAttributeDefinitionType = "enum"
+	ProductAttributeDefinitionTypeNumber  ProductAttributeDefinitionType = "number"
+	ProductAttributeDefinitionTypeText    ProductAttributeDefinitionType = "text"
+)
+
+// Defines values for ProductAttributeDefinitionInputType.
+const (
+	Boolean ProductAttributeDefinitionInputType = "boolean"
+	Enum    ProductAttributeDefinitionInputType = "enum"
+	Number  ProductAttributeDefinitionInputType = "number"
+	Text    ProductAttributeDefinitionInputType = "text"
 )
 
 // Defines values for StorefrontHomepageSectionType.
@@ -170,13 +186,37 @@ const (
 
 // AddCartItemRequest defines model for AddCartItemRequest.
 type AddCartItemRequest struct {
-	ProductId int `json:"product_id"`
-	Quantity  int `json:"quantity"`
+	ProductVariantId int `json:"product_variant_id"`
+	Quantity         int `json:"quantity"`
 }
 
 // AuthResponse defines model for AuthResponse.
 type AuthResponse struct {
 	User User `json:"user"`
+}
+
+// Brand defines model for Brand.
+type Brand struct {
+	Description *string `json:"description"`
+	Id          int     `json:"id"`
+	IsActive    bool    `json:"is_active"`
+	LogoMediaId *string `json:"logo_media_id"`
+	Name        string  `json:"name"`
+	Slug        string  `json:"slug"`
+}
+
+// BrandInput defines model for BrandInput.
+type BrandInput struct {
+	Description *string `json:"description"`
+	IsActive    *bool   `json:"is_active,omitempty"`
+	LogoMediaId *string `json:"logo_media_id"`
+	Name        string  `json:"name"`
+	Slug        *string `json:"slug"`
+}
+
+// BrandListResponse defines model for BrandListResponse.
+type BrandListResponse struct {
+	Data []Brand `json:"data"`
 }
 
 // Cart defines model for Cart.
@@ -191,14 +231,15 @@ type Cart struct {
 
 // CartItem defines model for CartItem.
 type CartItem struct {
-	CartId    int        `json:"cart_id"`
-	CreatedAt time.Time  `json:"created_at"`
-	DeletedAt *time.Time `json:"deleted_at"`
-	Id        int        `json:"id"`
-	Product   Product    `json:"product"`
-	ProductId int        `json:"product_id"`
-	Quantity  int        `json:"quantity"`
-	UpdatedAt time.Time  `json:"updated_at"`
+	CartId           int            `json:"cart_id"`
+	CreatedAt        time.Time      `json:"created_at"`
+	DeletedAt        *time.Time     `json:"deleted_at"`
+	Id               int            `json:"id"`
+	Product          Product        `json:"product"`
+	ProductVariant   ProductVariant `json:"product_variant"`
+	ProductVariantId int            `json:"product_variant_id"`
+	Quantity         int            `json:"quantity"`
+	UpdatedAt        time.Time      `json:"updated_at"`
 }
 
 // CheckoutPlugin defines model for CheckoutPlugin.
@@ -278,8 +319,8 @@ type CheckoutQuoteResponse struct {
 
 // CreateOrderItemRequest defines model for CreateOrderItemRequest.
 type CreateOrderItemRequest struct {
-	ProductId int `json:"product_id"`
-	Quantity  int `json:"quantity"`
+	ProductVariantId int `json:"product_variant_id"`
+	Quantity         int `json:"quantity"`
 }
 
 // CreateOrderRequest defines model for CreateOrderRequest.
@@ -358,15 +399,18 @@ type OrderStatus string
 
 // OrderItem defines model for OrderItem.
 type OrderItem struct {
-	CreatedAt time.Time  `json:"created_at"`
-	DeletedAt *time.Time `json:"deleted_at"`
-	Id        int        `json:"id"`
-	OrderId   int        `json:"order_id"`
-	Price     float64    `json:"price"`
-	Product   Product    `json:"product"`
-	ProductId int        `json:"product_id"`
-	Quantity  int        `json:"quantity"`
-	UpdatedAt time.Time  `json:"updated_at"`
+	CreatedAt        time.Time      `json:"created_at"`
+	DeletedAt        *time.Time     `json:"deleted_at"`
+	Id               int            `json:"id"`
+	OrderId          int            `json:"order_id"`
+	Price            float64        `json:"price"`
+	Product          Product        `json:"product"`
+	ProductVariant   ProductVariant `json:"product_variant"`
+	ProductVariantId int            `json:"product_variant_id"`
+	Quantity         int            `json:"quantity"`
+	UpdatedAt        time.Time      `json:"updated_at"`
+	VariantSku       string         `json:"variant_sku"`
+	VariantTitle     string         `json:"variant_title"`
 }
 
 // OrderPage defines model for OrderPage.
@@ -424,37 +468,207 @@ type ProcessPaymentResponse struct {
 
 // Product defines model for Product.
 type Product struct {
-	CoverImage      *string          `json:"cover_image"`
-	CreatedAt       time.Time        `json:"created_at"`
-	DeletedAt       *time.Time       `json:"deleted_at"`
-	Description     string           `json:"description"`
-	DraftUpdatedAt  *time.Time       `json:"draft_updated_at"`
-	HasDraftChanges *bool            `json:"has_draft_changes,omitempty"`
-	Id              int              `json:"id"`
-	Images          []string         `json:"images"`
-	IsPublished     *bool            `json:"is_published,omitempty"`
-	Name            string           `json:"name"`
-	Price           float64          `json:"price"`
-	RelatedProducts []RelatedProduct `json:"related_products"`
-	Sku             string           `json:"sku"`
-	Stock           int              `json:"stock"`
-	UpdatedAt       time.Time        `json:"updated_at"`
+	Attributes        []ProductAttributeValue `json:"attributes"`
+	Brand             *Brand                  `json:"brand,omitempty"`
+	CoverImage        *string                 `json:"cover_image"`
+	CreatedAt         time.Time               `json:"created_at"`
+	DefaultVariantId  *int                    `json:"default_variant_id"`
+	DefaultVariantSku *string                 `json:"default_variant_sku"`
+	DeletedAt         *time.Time              `json:"deleted_at"`
+	Description       string                  `json:"description"`
+	DraftUpdatedAt    *time.Time              `json:"draft_updated_at"`
+	HasDraftChanges   *bool                   `json:"has_draft_changes,omitempty"`
+	Id                int                     `json:"id"`
+	Images            []string                `json:"images"`
+	IsPublished       *bool                   `json:"is_published,omitempty"`
+	Name              string                  `json:"name"`
+	Options           []ProductOption         `json:"options"`
+	Price             float64                 `json:"price"`
+	PriceRange        ProductPriceRange       `json:"price_range"`
+	RelatedProducts   []RelatedProduct        `json:"related_products"`
+	Seo               ProductSEO              `json:"seo"`
+	Sku               string                  `json:"sku"`
+	Stock             int                     `json:"stock"`
+	Subtitle          *string                 `json:"subtitle"`
+	UpdatedAt         time.Time               `json:"updated_at"`
+	Variants          []ProductVariant        `json:"variants"`
 }
 
-// ProductInput defines model for ProductInput.
-type ProductInput struct {
-	Description *string   `json:"description,omitempty"`
-	Images      *[]string `json:"images,omitempty"`
-	Name        *string   `json:"name,omitempty"`
-	Price       *float64  `json:"price,omitempty"`
-	Sku         *string   `json:"sku,omitempty"`
-	Stock       *int      `json:"stock,omitempty"`
+// ProductAttributeDefinition defines model for ProductAttributeDefinition.
+type ProductAttributeDefinition struct {
+	Filterable bool                           `json:"filterable"`
+	Id         int                            `json:"id"`
+	Key        string                         `json:"key"`
+	Slug       string                         `json:"slug"`
+	Sortable   bool                           `json:"sortable"`
+	Type       ProductAttributeDefinitionType `json:"type"`
+}
+
+// ProductAttributeDefinitionType defines model for ProductAttributeDefinition.Type.
+type ProductAttributeDefinitionType string
+
+// ProductAttributeDefinitionInput defines model for ProductAttributeDefinitionInput.
+type ProductAttributeDefinitionInput struct {
+	Filterable *bool                               `json:"filterable,omitempty"`
+	Key        string                              `json:"key"`
+	Slug       *string                             `json:"slug"`
+	Sortable   *bool                               `json:"sortable,omitempty"`
+	Type       ProductAttributeDefinitionInputType `json:"type"`
+}
+
+// ProductAttributeDefinitionInputType defines model for ProductAttributeDefinitionInput.Type.
+type ProductAttributeDefinitionInputType string
+
+// ProductAttributeDefinitionListResponse defines model for ProductAttributeDefinitionListResponse.
+type ProductAttributeDefinitionListResponse struct {
+	Data []ProductAttributeDefinition `json:"data"`
+}
+
+// ProductAttributeValue defines model for ProductAttributeValue.
+type ProductAttributeValue struct {
+	BooleanValue       *bool    `json:"boolean_value"`
+	EnumValue          *string  `json:"enum_value"`
+	Key                string   `json:"key"`
+	NumberValue        *float64 `json:"number_value"`
+	Position           int      `json:"position"`
+	ProductAttributeId int      `json:"product_attribute_id"`
+	Slug               string   `json:"slug"`
+	TextValue          *string  `json:"text_value"`
+	Type               string   `json:"type"`
+}
+
+// ProductAttributeValueInput defines model for ProductAttributeValueInput.
+type ProductAttributeValueInput struct {
+	BooleanValue       *bool    `json:"boolean_value"`
+	EnumValue          *string  `json:"enum_value"`
+	NumberValue        *float64 `json:"number_value"`
+	Position           *int     `json:"position,omitempty"`
+	ProductAttributeId int      `json:"product_attribute_id"`
+	TextValue          *string  `json:"text_value"`
+}
+
+// ProductOption defines model for ProductOption.
+type ProductOption struct {
+	DisplayType string               `json:"display_type"`
+	Id          *int                 `json:"id,omitempty"`
+	Name        string               `json:"name"`
+	Position    int                  `json:"position"`
+	Values      []ProductOptionValue `json:"values"`
+}
+
+// ProductOptionInput defines model for ProductOptionInput.
+type ProductOptionInput struct {
+	DisplayType *string                   `json:"display_type,omitempty"`
+	Name        string                    `json:"name"`
+	Position    *int                      `json:"position,omitempty"`
+	Values      []ProductOptionValueInput `json:"values"`
+}
+
+// ProductOptionValue defines model for ProductOptionValue.
+type ProductOptionValue struct {
+	Id       *int   `json:"id,omitempty"`
+	Position int    `json:"position"`
+	Value    string `json:"value"`
+}
+
+// ProductOptionValueInput defines model for ProductOptionValueInput.
+type ProductOptionValueInput struct {
+	Position *int   `json:"position,omitempty"`
+	Value    string `json:"value"`
 }
 
 // ProductPage defines model for ProductPage.
 type ProductPage struct {
 	Data       []Product  `json:"data"`
 	Pagination Pagination `json:"pagination"`
+}
+
+// ProductPriceRange defines model for ProductPriceRange.
+type ProductPriceRange struct {
+	Max float64 `json:"max"`
+	Min float64 `json:"min"`
+}
+
+// ProductSEO defines model for ProductSEO.
+type ProductSEO struct {
+	CanonicalPath  *string `json:"canonical_path"`
+	Description    *string `json:"description"`
+	Noindex        *bool   `json:"noindex,omitempty"`
+	OgImageMediaId *string `json:"og_image_media_id"`
+	Title          *string `json:"title"`
+}
+
+// ProductSEOInput defines model for ProductSEOInput.
+type ProductSEOInput struct {
+	CanonicalPath  *string `json:"canonical_path"`
+	Description    *string `json:"description"`
+	Noindex        *bool   `json:"noindex,omitempty"`
+	OgImageMediaId *string `json:"og_image_media_id"`
+	Title          *string `json:"title"`
+}
+
+// ProductUpsertInput defines model for ProductUpsertInput.
+type ProductUpsertInput struct {
+	Attributes        []ProductAttributeValueInput `json:"attributes"`
+	BrandId           *int                         `json:"brand_id"`
+	DefaultVariantSku *string                      `json:"default_variant_sku"`
+	Description       string                       `json:"description"`
+	Images            []string                     `json:"images"`
+	Name              string                       `json:"name"`
+	Options           []ProductOptionInput         `json:"options"`
+	RelatedProductIds []int                        `json:"related_product_ids"`
+	Seo               ProductSEOInput              `json:"seo"`
+	Sku               string                       `json:"sku"`
+	Subtitle          *string                      `json:"subtitle"`
+	Variants          []ProductVariantInput        `json:"variants"`
+}
+
+// ProductVariant defines model for ProductVariant.
+type ProductVariant struct {
+	CompareAtPrice *float64                  `json:"compare_at_price"`
+	HeightCm       *float64                  `json:"height_cm"`
+	Id             *int                      `json:"id,omitempty"`
+	IsPublished    bool                      `json:"is_published"`
+	LengthCm       *float64                  `json:"length_cm"`
+	Position       int                       `json:"position"`
+	Price          float64                   `json:"price"`
+	Selections     []ProductVariantSelection `json:"selections"`
+	Sku            string                    `json:"sku"`
+	Stock          int                       `json:"stock"`
+	Title          string                    `json:"title"`
+	WeightGrams    *int                      `json:"weight_grams"`
+	WidthCm        *float64                  `json:"width_cm"`
+}
+
+// ProductVariantInput defines model for ProductVariantInput.
+type ProductVariantInput struct {
+	CompareAtPrice *float64                       `json:"compare_at_price"`
+	HeightCm       *float64                       `json:"height_cm"`
+	IsPublished    *bool                          `json:"is_published,omitempty"`
+	LengthCm       *float64                       `json:"length_cm"`
+	Position       *int                           `json:"position,omitempty"`
+	Price          float64                        `json:"price"`
+	Selections     []ProductVariantSelectionInput `json:"selections"`
+	Sku            string                         `json:"sku"`
+	Stock          int                            `json:"stock"`
+	Title          string                         `json:"title"`
+	WeightGrams    *int                           `json:"weight_grams"`
+	WidthCm        *float64                       `json:"width_cm"`
+}
+
+// ProductVariantSelection defines model for ProductVariantSelection.
+type ProductVariantSelection struct {
+	OptionName           string `json:"option_name"`
+	OptionValue          string `json:"option_value"`
+	Position             int    `json:"position"`
+	ProductOptionValueId *int   `json:"product_option_value_id,omitempty"`
+}
+
+// ProductVariantSelectionInput defines model for ProductVariantSelectionInput.
+type ProductVariantSelectionInput struct {
+	OptionName  string `json:"option_name"`
+	OptionValue string `json:"option_value"`
+	Position    *int   `json:"position,omitempty"`
 }
 
 // RegisterRequest defines model for RegisterRequest.
@@ -562,17 +776,20 @@ type StorefrontLink struct {
 
 // StorefrontProductSection defines model for StorefrontProductSection.
 type StorefrontProductSection struct {
-	ImageAspect     StorefrontProductSectionImageAspect `json:"image_aspect"`
-	Limit           int                                 `json:"limit"`
-	Order           StorefrontProductSectionOrder       `json:"order"`
-	ProductIds      []int                               `json:"product_ids"`
-	Query           string                              `json:"query"`
-	ShowDescription bool                                `json:"show_description"`
-	ShowStock       bool                                `json:"show_stock"`
-	Sort            StorefrontProductSectionSort        `json:"sort"`
-	Source          StorefrontProductSectionSource      `json:"source"`
-	Subtitle        string                              `json:"subtitle"`
-	Title           string                              `json:"title"`
+	AttributeFilters map[string]string                   `json:"attribute_filters"`
+	BrandSlug        string                              `json:"brand_slug"`
+	HasVariantStock  bool                                `json:"has_variant_stock"`
+	ImageAspect      StorefrontProductSectionImageAspect `json:"image_aspect"`
+	Limit            int                                 `json:"limit"`
+	Order            StorefrontProductSectionOrder       `json:"order"`
+	ProductIds       []int                               `json:"product_ids"`
+	Query            string                              `json:"query"`
+	ShowDescription  bool                                `json:"show_description"`
+	ShowStock        bool                                `json:"show_stock"`
+	Sort             StorefrontProductSectionSort        `json:"sort"`
+	Source           StorefrontProductSectionSource      `json:"source"`
+	Subtitle         string                              `json:"subtitle"`
+	Title            string                              `json:"title"`
 }
 
 // StorefrontProductSectionImageAspect defines model for StorefrontProductSection.ImageAspect.
@@ -679,6 +896,11 @@ type UserPage struct {
 	Pagination Pagination `json:"pagination"`
 }
 
+// ListAdminBrandsParams defines parameters for ListAdminBrands.
+type ListAdminBrandsParams struct {
+	Q *string `form:"q,omitempty" json:"q,omitempty"`
+}
+
 // UpdateAdminCheckoutPluginParamsType defines parameters for UpdateAdminCheckoutPlugin.
 type UpdateAdminCheckoutPluginParamsType string
 
@@ -691,13 +913,16 @@ type ListAdminOrdersParams struct {
 
 // ListAdminProductsParams defines parameters for ListAdminProducts.
 type ListAdminProductsParams struct {
-	Q        *string                       `form:"q,omitempty" json:"q,omitempty"`
-	MinPrice *float64                      `form:"min_price,omitempty" json:"min_price,omitempty"`
-	MaxPrice *float64                      `form:"max_price,omitempty" json:"max_price,omitempty"`
-	Sort     *ListAdminProductsParamsSort  `form:"sort,omitempty" json:"sort,omitempty"`
-	Order    *ListAdminProductsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
-	Page     *int                          `form:"page,omitempty" json:"page,omitempty"`
-	Limit    *int                          `form:"limit,omitempty" json:"limit,omitempty"`
+	Q               *string                       `form:"q,omitempty" json:"q,omitempty"`
+	MinPrice        *float64                      `form:"min_price,omitempty" json:"min_price,omitempty"`
+	MaxPrice        *float64                      `form:"max_price,omitempty" json:"max_price,omitempty"`
+	BrandSlug       *string                       `form:"brand_slug,omitempty" json:"brand_slug,omitempty"`
+	HasVariantStock *bool                         `form:"has_variant_stock,omitempty" json:"has_variant_stock,omitempty"`
+	Attribute       *map[string]string            `json:"attribute,omitempty"`
+	Sort            *ListAdminProductsParamsSort  `form:"sort,omitempty" json:"sort,omitempty"`
+	Order           *ListAdminProductsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
+	Page            *int                          `form:"page,omitempty" json:"page,omitempty"`
+	Limit           *int                          `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
 // ListAdminProductsParamsSort defines parameters for ListAdminProducts.
@@ -754,13 +979,16 @@ type CreateMediaUploadParams struct {
 
 // ListProductsParams defines parameters for ListProducts.
 type ListProductsParams struct {
-	Q        *string                  `form:"q,omitempty" json:"q,omitempty"`
-	MinPrice *float64                 `form:"min_price,omitempty" json:"min_price,omitempty"`
-	MaxPrice *float64                 `form:"max_price,omitempty" json:"max_price,omitempty"`
-	Sort     *ListProductsParamsSort  `form:"sort,omitempty" json:"sort,omitempty"`
-	Order    *ListProductsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
-	Page     *int                     `form:"page,omitempty" json:"page,omitempty"`
-	Limit    *int                     `form:"limit,omitempty" json:"limit,omitempty"`
+	Q               *string                  `form:"q,omitempty" json:"q,omitempty"`
+	MinPrice        *float64                 `form:"min_price,omitempty" json:"min_price,omitempty"`
+	MaxPrice        *float64                 `form:"max_price,omitempty" json:"max_price,omitempty"`
+	BrandSlug       *string                  `form:"brand_slug,omitempty" json:"brand_slug,omitempty"`
+	HasVariantStock *bool                    `form:"has_variant_stock,omitempty" json:"has_variant_stock,omitempty"`
+	Attribute       *map[string]string       `json:"attribute,omitempty"`
+	Sort            *ListProductsParamsSort  `form:"sort,omitempty" json:"sort,omitempty"`
+	Order           *ListProductsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
+	Page            *int                     `form:"page,omitempty" json:"page,omitempty"`
+	Limit           *int                     `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
 // ListProductsParamsSort defines parameters for ListProducts.
@@ -769,17 +997,29 @@ type ListProductsParamsSort string
 // ListProductsParamsOrder defines parameters for ListProducts.
 type ListProductsParamsOrder string
 
+// CreateAdminBrandJSONRequestBody defines body for CreateAdminBrand for application/json ContentType.
+type CreateAdminBrandJSONRequestBody = BrandInput
+
+// UpdateAdminBrandJSONRequestBody defines body for UpdateAdminBrand for application/json ContentType.
+type UpdateAdminBrandJSONRequestBody = BrandInput
+
 // UpdateAdminCheckoutPluginJSONRequestBody defines body for UpdateAdminCheckoutPlugin for application/json ContentType.
 type UpdateAdminCheckoutPluginJSONRequestBody = UpdateCheckoutPluginRequest
 
 // UpdateOrderStatusJSONRequestBody defines body for UpdateOrderStatus for application/json ContentType.
 type UpdateOrderStatusJSONRequestBody = UpdateOrderStatusRequest
 
+// CreateAdminProductAttributeJSONRequestBody defines body for CreateAdminProductAttribute for application/json ContentType.
+type CreateAdminProductAttributeJSONRequestBody = ProductAttributeDefinitionInput
+
+// UpdateAdminProductAttributeJSONRequestBody defines body for UpdateAdminProductAttribute for application/json ContentType.
+type UpdateAdminProductAttributeJSONRequestBody = ProductAttributeDefinitionInput
+
 // CreateProductJSONRequestBody defines body for CreateProduct for application/json ContentType.
-type CreateProductJSONRequestBody = ProductInput
+type CreateProductJSONRequestBody = ProductUpsertInput
 
 // UpdateProductJSONRequestBody defines body for UpdateProduct for application/json ContentType.
-type UpdateProductJSONRequestBody = ProductInput
+type UpdateProductJSONRequestBody = ProductUpsertInput
 
 // AttachProductMediaJSONRequestBody defines body for AttachProductMedia for application/json ContentType.
 type AttachProductMediaJSONRequestBody = MediaIDsRequest
@@ -832,6 +1072,18 @@ type SetProfilePhotoJSONRequestBody SetProfilePhotoJSONBody
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 
+	// (GET /api/v1/admin/brands)
+	ListAdminBrands(c *gin.Context, params ListAdminBrandsParams)
+
+	// (POST /api/v1/admin/brands)
+	CreateAdminBrand(c *gin.Context)
+
+	// (DELETE /api/v1/admin/brands/{id})
+	DeleteAdminBrand(c *gin.Context, id int)
+
+	// (PATCH /api/v1/admin/brands/{id})
+	UpdateAdminBrand(c *gin.Context, id int)
+
 	// (GET /api/v1/admin/checkout/plugins)
 	ListAdminCheckoutPlugins(c *gin.Context)
 
@@ -855,6 +1107,18 @@ type ServerInterface interface {
 
 	// (POST /api/v1/admin/preview/stop)
 	StopAdminPreview(c *gin.Context)
+
+	// (GET /api/v1/admin/product-attributes)
+	ListAdminProductAttributes(c *gin.Context)
+
+	// (POST /api/v1/admin/product-attributes)
+	CreateAdminProductAttribute(c *gin.Context)
+
+	// (DELETE /api/v1/admin/product-attributes/{id})
+	DeleteAdminProductAttribute(c *gin.Context, id int)
+
+	// (PATCH /api/v1/admin/product-attributes/{id})
+	UpdateAdminProductAttribute(c *gin.Context, id int)
 
 	// (GET /api/v1/admin/products)
 	ListAdminProducts(c *gin.Context, params ListAdminProductsParams)
@@ -924,6 +1188,9 @@ type ServerInterface interface {
 
 	// (POST /api/v1/auth/register)
 	Register(c *gin.Context)
+	// List active storefront brands
+	// (GET /api/v1/brands)
+	ListBrands(c *gin.Context)
 
 	// (GET /api/v1/me/)
 	GetProfile(c *gin.Context)
@@ -1002,6 +1269,9 @@ type ServerInterface interface {
 
 	// (PATCH /api/v1/media/uploads/{path})
 	PatchMediaUpload(c *gin.Context, path string)
+	// List storefront product attributes
+	// (GET /api/v1/product-attributes)
+	ListProductAttributes(c *gin.Context)
 	// List products
 	// (GET /api/v1/products)
 	ListProducts(c *gin.Context, params ListProductsParams)
@@ -1021,6 +1291,109 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(c *gin.Context)
+
+// ListAdminBrands operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminBrands(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminBrandsParams
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "q", c.Request.URL.Query(), &params.Q)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminBrands(c, params)
+}
+
+// CreateAdminBrand operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminBrand(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminBrand(c)
+}
+
+// DeleteAdminBrand operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAdminBrand(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteAdminBrand(c, id)
+}
+
+// UpdateAdminBrand operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminBrand(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminBrand(c, id)
+}
 
 // ListAdminCheckoutPlugins operation middleware
 func (siw *ServerInterfaceWrapper) ListAdminCheckoutPlugins(c *gin.Context) {
@@ -1229,6 +1602,96 @@ func (siw *ServerInterfaceWrapper) StopAdminPreview(c *gin.Context) {
 	siw.Handler.StopAdminPreview(c)
 }
 
+// ListAdminProductAttributes operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminProductAttributes(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminProductAttributes(c)
+}
+
+// CreateAdminProductAttribute operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminProductAttribute(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminProductAttribute(c)
+}
+
+// DeleteAdminProductAttribute operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAdminProductAttribute(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteAdminProductAttribute(c, id)
+}
+
+// UpdateAdminProductAttribute operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminProductAttribute(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminProductAttribute(c, id)
+}
+
 // ListAdminProducts operation middleware
 func (siw *ServerInterfaceWrapper) ListAdminProducts(c *gin.Context) {
 
@@ -1262,6 +1725,30 @@ func (siw *ServerInterfaceWrapper) ListAdminProducts(c *gin.Context) {
 	err = runtime.BindQueryParameter("form", true, false, "max_price", c.Request.URL.Query(), &params.MaxPrice)
 	if err != nil {
 		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter max_price: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "brand_slug" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "brand_slug", c.Request.URL.Query(), &params.BrandSlug)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter brand_slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "has_variant_stock" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "has_variant_stock", c.Request.URL.Query(), &params.HasVariantStock)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter has_variant_stock: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "attribute" -------------
+
+	err = runtime.BindQueryParameter("deepObject", true, false, "attribute", c.Request.URL.Query(), &params.Attribute)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter attribute: %w", err), http.StatusBadRequest)
 		return
 	}
 
@@ -1860,6 +2347,19 @@ func (siw *ServerInterfaceWrapper) Register(c *gin.Context) {
 	}
 
 	siw.Handler.Register(c)
+}
+
+// ListBrands operation middleware
+func (siw *ServerInterfaceWrapper) ListBrands(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListBrands(c)
 }
 
 // GetProfile operation middleware
@@ -2534,6 +3034,19 @@ func (siw *ServerInterfaceWrapper) PatchMediaUpload(c *gin.Context) {
 	siw.Handler.PatchMediaUpload(c, path)
 }
 
+// ListProductAttributes operation middleware
+func (siw *ServerInterfaceWrapper) ListProductAttributes(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListProductAttributes(c)
+}
+
 // ListProducts operation middleware
 func (siw *ServerInterfaceWrapper) ListProducts(c *gin.Context) {
 
@@ -2563,6 +3076,30 @@ func (siw *ServerInterfaceWrapper) ListProducts(c *gin.Context) {
 	err = runtime.BindQueryParameter("form", true, false, "max_price", c.Request.URL.Query(), &params.MaxPrice)
 	if err != nil {
 		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter max_price: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "brand_slug" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "brand_slug", c.Request.URL.Query(), &params.BrandSlug)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter brand_slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "has_variant_stock" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "has_variant_stock", c.Request.URL.Query(), &params.HasVariantStock)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter has_variant_stock: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "attribute" -------------
+
+	err = runtime.BindQueryParameter("deepObject", true, false, "attribute", c.Request.URL.Query(), &params.Attribute)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter attribute: %w", err), http.StatusBadRequest)
 		return
 	}
 
@@ -2672,6 +3209,10 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
+	router.GET(options.BaseURL+"/api/v1/admin/brands", wrapper.ListAdminBrands)
+	router.POST(options.BaseURL+"/api/v1/admin/brands", wrapper.CreateAdminBrand)
+	router.DELETE(options.BaseURL+"/api/v1/admin/brands/:id", wrapper.DeleteAdminBrand)
+	router.PATCH(options.BaseURL+"/api/v1/admin/brands/:id", wrapper.UpdateAdminBrand)
 	router.GET(options.BaseURL+"/api/v1/admin/checkout/plugins", wrapper.ListAdminCheckoutPlugins)
 	router.PATCH(options.BaseURL+"/api/v1/admin/checkout/plugins/:type/:id", wrapper.UpdateAdminCheckoutPlugin)
 	router.GET(options.BaseURL+"/api/v1/admin/orders", wrapper.ListAdminOrders)
@@ -2680,6 +3221,10 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/api/v1/admin/preview", wrapper.GetAdminPreview)
 	router.POST(options.BaseURL+"/api/v1/admin/preview/start", wrapper.StartAdminPreview)
 	router.POST(options.BaseURL+"/api/v1/admin/preview/stop", wrapper.StopAdminPreview)
+	router.GET(options.BaseURL+"/api/v1/admin/product-attributes", wrapper.ListAdminProductAttributes)
+	router.POST(options.BaseURL+"/api/v1/admin/product-attributes", wrapper.CreateAdminProductAttribute)
+	router.DELETE(options.BaseURL+"/api/v1/admin/product-attributes/:id", wrapper.DeleteAdminProductAttribute)
+	router.PATCH(options.BaseURL+"/api/v1/admin/product-attributes/:id", wrapper.UpdateAdminProductAttribute)
 	router.GET(options.BaseURL+"/api/v1/admin/products", wrapper.ListAdminProducts)
 	router.POST(options.BaseURL+"/api/v1/admin/products", wrapper.CreateProduct)
 	router.DELETE(options.BaseURL+"/api/v1/admin/products/:id", wrapper.DeleteProduct)
@@ -2703,6 +3248,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/api/v1/auth/oidc/callback", wrapper.OidcCallback)
 	router.GET(options.BaseURL+"/api/v1/auth/oidc/login", wrapper.OidcLogin)
 	router.POST(options.BaseURL+"/api/v1/auth/register", wrapper.Register)
+	router.GET(options.BaseURL+"/api/v1/brands", wrapper.ListBrands)
 	router.GET(options.BaseURL+"/api/v1/me/", wrapper.GetProfile)
 	router.PATCH(options.BaseURL+"/api/v1/me/", wrapper.UpdateProfile)
 	router.GET(options.BaseURL+"/api/v1/me/addresses", wrapper.ListSavedAddresses)
@@ -2729,9 +3275,79 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/api/v1/media/uploads", wrapper.CreateMediaUpload)
 	router.HEAD(options.BaseURL+"/api/v1/media/uploads/:path", wrapper.HeadMediaUpload)
 	router.PATCH(options.BaseURL+"/api/v1/media/uploads/:path", wrapper.PatchMediaUpload)
+	router.GET(options.BaseURL+"/api/v1/product-attributes", wrapper.ListProductAttributes)
 	router.GET(options.BaseURL+"/api/v1/products", wrapper.ListProducts)
 	router.GET(options.BaseURL+"/api/v1/products/:id", wrapper.GetProduct)
 	router.GET(options.BaseURL+"/api/v1/storefront", wrapper.GetStorefrontSettings)
+}
+
+type ListAdminBrandsRequestObject struct {
+	Params ListAdminBrandsParams
+}
+
+type ListAdminBrandsResponseObject interface {
+	VisitListAdminBrandsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminBrands200JSONResponse BrandListResponse
+
+func (response ListAdminBrands200JSONResponse) VisitListAdminBrandsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminBrandRequestObject struct {
+	Body *CreateAdminBrandJSONRequestBody
+}
+
+type CreateAdminBrandResponseObject interface {
+	VisitCreateAdminBrandResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminBrand201JSONResponse Brand
+
+func (response CreateAdminBrand201JSONResponse) VisitCreateAdminBrandResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminBrandRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DeleteAdminBrandResponseObject interface {
+	VisitDeleteAdminBrandResponse(w http.ResponseWriter) error
+}
+
+type DeleteAdminBrand200JSONResponse MessageResponse
+
+func (response DeleteAdminBrand200JSONResponse) VisitDeleteAdminBrandResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminBrandRequestObject struct {
+	Id   int `json:"id"`
+	Body *UpdateAdminBrandJSONRequestBody
+}
+
+type UpdateAdminBrandResponseObject interface {
+	VisitUpdateAdminBrandResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminBrand200JSONResponse Brand
+
+func (response UpdateAdminBrand200JSONResponse) VisitUpdateAdminBrandResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type ListAdminCheckoutPluginsRequestObject struct {
@@ -2872,6 +3488,74 @@ type StopAdminPreviewResponseObject interface {
 type StopAdminPreview200JSONResponse DraftPreviewSessionResponse
 
 func (response StopAdminPreview200JSONResponse) VisitStopAdminPreviewResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminProductAttributesRequestObject struct {
+}
+
+type ListAdminProductAttributesResponseObject interface {
+	VisitListAdminProductAttributesResponse(w http.ResponseWriter) error
+}
+
+type ListAdminProductAttributes200JSONResponse ProductAttributeDefinitionListResponse
+
+func (response ListAdminProductAttributes200JSONResponse) VisitListAdminProductAttributesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminProductAttributeRequestObject struct {
+	Body *CreateAdminProductAttributeJSONRequestBody
+}
+
+type CreateAdminProductAttributeResponseObject interface {
+	VisitCreateAdminProductAttributeResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminProductAttribute201JSONResponse ProductAttributeDefinition
+
+func (response CreateAdminProductAttribute201JSONResponse) VisitCreateAdminProductAttributeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminProductAttributeRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DeleteAdminProductAttributeResponseObject interface {
+	VisitDeleteAdminProductAttributeResponse(w http.ResponseWriter) error
+}
+
+type DeleteAdminProductAttribute200JSONResponse MessageResponse
+
+func (response DeleteAdminProductAttribute200JSONResponse) VisitDeleteAdminProductAttributeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminProductAttributeRequestObject struct {
+	Id   int `json:"id"`
+	Body *UpdateAdminProductAttributeJSONRequestBody
+}
+
+type UpdateAdminProductAttributeResponseObject interface {
+	VisitUpdateAdminProductAttributeResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminProductAttribute200JSONResponse ProductAttributeDefinition
+
+func (response UpdateAdminProductAttribute200JSONResponse) VisitUpdateAdminProductAttributeResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
@@ -3391,6 +4075,22 @@ type Register409JSONResponse Error
 func (response Register409JSONResponse) VisitRegisterResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListBrandsRequestObject struct {
+}
+
+type ListBrandsResponseObject interface {
+	VisitListBrandsResponse(w http.ResponseWriter) error
+}
+
+type ListBrands200JSONResponse BrandListResponse
+
+func (response ListBrands200JSONResponse) VisitListBrandsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -3964,6 +4664,22 @@ func (response PatchMediaUpload204Response) VisitPatchMediaUploadResponse(w http
 	return nil
 }
 
+type ListProductAttributesRequestObject struct {
+}
+
+type ListProductAttributesResponseObject interface {
+	VisitListProductAttributesResponse(w http.ResponseWriter) error
+}
+
+type ListProductAttributes200JSONResponse ProductAttributeDefinitionListResponse
+
+func (response ListProductAttributes200JSONResponse) VisitListProductAttributesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type ListProductsRequestObject struct {
 	Params ListProductsParams
 }
@@ -4044,6 +4760,18 @@ func (response GetStorefrontSettings500JSONResponse) VisitGetStorefrontSettingsR
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
+	// (GET /api/v1/admin/brands)
+	ListAdminBrands(ctx context.Context, request ListAdminBrandsRequestObject) (ListAdminBrandsResponseObject, error)
+
+	// (POST /api/v1/admin/brands)
+	CreateAdminBrand(ctx context.Context, request CreateAdminBrandRequestObject) (CreateAdminBrandResponseObject, error)
+
+	// (DELETE /api/v1/admin/brands/{id})
+	DeleteAdminBrand(ctx context.Context, request DeleteAdminBrandRequestObject) (DeleteAdminBrandResponseObject, error)
+
+	// (PATCH /api/v1/admin/brands/{id})
+	UpdateAdminBrand(ctx context.Context, request UpdateAdminBrandRequestObject) (UpdateAdminBrandResponseObject, error)
+
 	// (GET /api/v1/admin/checkout/plugins)
 	ListAdminCheckoutPlugins(ctx context.Context, request ListAdminCheckoutPluginsRequestObject) (ListAdminCheckoutPluginsResponseObject, error)
 
@@ -4067,6 +4795,18 @@ type StrictServerInterface interface {
 
 	// (POST /api/v1/admin/preview/stop)
 	StopAdminPreview(ctx context.Context, request StopAdminPreviewRequestObject) (StopAdminPreviewResponseObject, error)
+
+	// (GET /api/v1/admin/product-attributes)
+	ListAdminProductAttributes(ctx context.Context, request ListAdminProductAttributesRequestObject) (ListAdminProductAttributesResponseObject, error)
+
+	// (POST /api/v1/admin/product-attributes)
+	CreateAdminProductAttribute(ctx context.Context, request CreateAdminProductAttributeRequestObject) (CreateAdminProductAttributeResponseObject, error)
+
+	// (DELETE /api/v1/admin/product-attributes/{id})
+	DeleteAdminProductAttribute(ctx context.Context, request DeleteAdminProductAttributeRequestObject) (DeleteAdminProductAttributeResponseObject, error)
+
+	// (PATCH /api/v1/admin/product-attributes/{id})
+	UpdateAdminProductAttribute(ctx context.Context, request UpdateAdminProductAttributeRequestObject) (UpdateAdminProductAttributeResponseObject, error)
 
 	// (GET /api/v1/admin/products)
 	ListAdminProducts(ctx context.Context, request ListAdminProductsRequestObject) (ListAdminProductsResponseObject, error)
@@ -4136,6 +4876,9 @@ type StrictServerInterface interface {
 
 	// (POST /api/v1/auth/register)
 	Register(ctx context.Context, request RegisterRequestObject) (RegisterResponseObject, error)
+	// List active storefront brands
+	// (GET /api/v1/brands)
+	ListBrands(ctx context.Context, request ListBrandsRequestObject) (ListBrandsResponseObject, error)
 
 	// (GET /api/v1/me/)
 	GetProfile(ctx context.Context, request GetProfileRequestObject) (GetProfileResponseObject, error)
@@ -4214,6 +4957,9 @@ type StrictServerInterface interface {
 
 	// (PATCH /api/v1/media/uploads/{path})
 	PatchMediaUpload(ctx context.Context, request PatchMediaUploadRequestObject) (PatchMediaUploadResponseObject, error)
+	// List storefront product attributes
+	// (GET /api/v1/product-attributes)
+	ListProductAttributes(ctx context.Context, request ListProductAttributesRequestObject) (ListProductAttributesResponseObject, error)
 	// List products
 	// (GET /api/v1/products)
 	ListProducts(ctx context.Context, request ListProductsRequestObject) (ListProductsResponseObject, error)
@@ -4235,6 +4981,128 @@ func NewStrictHandler(ssi StrictServerInterface, middlewares []StrictMiddlewareF
 type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
+}
+
+// ListAdminBrands operation middleware
+func (sh *strictHandler) ListAdminBrands(ctx *gin.Context, params ListAdminBrandsParams) {
+	var request ListAdminBrandsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminBrands(ctx, request.(ListAdminBrandsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminBrands")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminBrandsResponseObject); ok {
+		if err := validResponse.VisitListAdminBrandsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminBrand operation middleware
+func (sh *strictHandler) CreateAdminBrand(ctx *gin.Context) {
+	var request CreateAdminBrandRequestObject
+
+	var body CreateAdminBrandJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminBrand(ctx, request.(CreateAdminBrandRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminBrand")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminBrandResponseObject); ok {
+		if err := validResponse.VisitCreateAdminBrandResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteAdminBrand operation middleware
+func (sh *strictHandler) DeleteAdminBrand(ctx *gin.Context, id int) {
+	var request DeleteAdminBrandRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAdminBrand(ctx, request.(DeleteAdminBrandRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAdminBrand")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteAdminBrandResponseObject); ok {
+		if err := validResponse.VisitDeleteAdminBrandResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminBrand operation middleware
+func (sh *strictHandler) UpdateAdminBrand(ctx *gin.Context, id int) {
+	var request UpdateAdminBrandRequestObject
+
+	request.Id = id
+
+	var body UpdateAdminBrandJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminBrand(ctx, request.(UpdateAdminBrandRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminBrand")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminBrandResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminBrandResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // ListAdminCheckoutPlugins operation middleware
@@ -4455,6 +5323,126 @@ func (sh *strictHandler) StopAdminPreview(ctx *gin.Context) {
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(StopAdminPreviewResponseObject); ok {
 		if err := validResponse.VisitStopAdminPreviewResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminProductAttributes operation middleware
+func (sh *strictHandler) ListAdminProductAttributes(ctx *gin.Context) {
+	var request ListAdminProductAttributesRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminProductAttributes(ctx, request.(ListAdminProductAttributesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminProductAttributes")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminProductAttributesResponseObject); ok {
+		if err := validResponse.VisitListAdminProductAttributesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminProductAttribute operation middleware
+func (sh *strictHandler) CreateAdminProductAttribute(ctx *gin.Context) {
+	var request CreateAdminProductAttributeRequestObject
+
+	var body CreateAdminProductAttributeJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminProductAttribute(ctx, request.(CreateAdminProductAttributeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminProductAttribute")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminProductAttributeResponseObject); ok {
+		if err := validResponse.VisitCreateAdminProductAttributeResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteAdminProductAttribute operation middleware
+func (sh *strictHandler) DeleteAdminProductAttribute(ctx *gin.Context, id int) {
+	var request DeleteAdminProductAttributeRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAdminProductAttribute(ctx, request.(DeleteAdminProductAttributeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAdminProductAttribute")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteAdminProductAttributeResponseObject); ok {
+		if err := validResponse.VisitDeleteAdminProductAttributeResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminProductAttribute operation middleware
+func (sh *strictHandler) UpdateAdminProductAttribute(ctx *gin.Context, id int) {
+	var request UpdateAdminProductAttributeRequestObject
+
+	request.Id = id
+
+	var body UpdateAdminProductAttributeJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminProductAttribute(ctx, request.(UpdateAdminProductAttributeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminProductAttribute")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminProductAttributeResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminProductAttributeResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -5133,6 +6121,31 @@ func (sh *strictHandler) Register(ctx *gin.Context) {
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(RegisterResponseObject); ok {
 		if err := validResponse.VisitRegisterResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListBrands operation middleware
+func (sh *strictHandler) ListBrands(ctx *gin.Context) {
+	var request ListBrandsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListBrands(ctx, request.(ListBrandsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListBrands")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListBrandsResponseObject); ok {
+		if err := validResponse.VisitListBrandsResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -5892,6 +6905,31 @@ func (sh *strictHandler) PatchMediaUpload(ctx *gin.Context, path string) {
 	}
 }
 
+// ListProductAttributes operation middleware
+func (sh *strictHandler) ListProductAttributes(ctx *gin.Context) {
+	var request ListProductAttributesRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListProductAttributes(ctx, request.(ListProductAttributesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListProductAttributes")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListProductAttributesResponseObject); ok {
+		if err := validResponse.VisitListProductAttributesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListProducts operation middleware
 func (sh *strictHandler) ListProducts(ctx *gin.Context, params ListProductsParams) {
 	var request ListProductsRequestObject
@@ -5974,86 +7012,104 @@ func (sh *strictHandler) GetStorefrontSettings(ctx *gin.Context) {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"9YMFxuO3x/8PAAD//zq3UyYwqQAA",
+	"H4sIAAAAAAAC/+xdSXPcuJL+KwzO3Kbskpd+E6Ob2ku33qjtela75+BwMCASqkKLJGgAlK1R6L+/wEaC",
+	"JECApdok62SrCAKJLxckEonkbZziosIlLBmNj29jmq5gAcR/T7LsDSDslMHiE/xWQ8r4rxXBFSQMQar+",
+	"yuqUJdeAIFCyBGX81wKVqKiL+PjFLGY3FYyPY1QyuIQkvpvF32pQMsRufC3vZjGB32pEYBYff7ENZfT1",
+	"tXkfX/wNU8YHOqnZ6hOkFS4pHJJeU0j4v/9J4GV8HP/HvAVirlCYf6YWQsSLtvF+JaDMhgNlkKYEVQzh",
+	"kv9Z1nkOLnIYHzNSw6Ybyggql7ybEAwRTUDK0LWYl3p8gXEOQckf53iJkwJmCCiOeActQWH21T6geb20",
+	"POhhIpgh+lBvmCQ6sTotq5p5ASvAjzNYLtkqPv7l6GgWAOC2wDEoefHyaMZ5pP9+OXND13/NM14PWjG4",
+	"E8IzRJlbxjPAAP8XMVhQn7BL8b1rRgKEgJsBOaJLGzncVgwpSAkEDGYJEM8uMSn4/3gv8BlDQl4GuGUw",
+	"h553ApXIojgaiSBItP0bojKL6yqbPDNuOhI7aTaF0s012TMTzg4FLoYI4odMAYQlLoQOjWPK7vtYtVDN",
+	"2jf0ShH45l+q9bADJ1TmSjZ8Ol1AbDKgeTXzLIDDabfQTZSbFUyvcM0Web1Epdc8DxgJS87nzG58LxHM",
+	"swkK2KHlPX/ZposdBoUsagwwuC4V5/xlGxW815paB5Q/3Maw5Ev6l7gCNwUUPKIrVFW81Sxm4IfBkDGh",
+	"EE2aBddkSENFy4cG9Gbefq6/AQzkeGlx+BTh60FnRU0DsLkuOZCb6q3vhfoZ58JUSu8A0RXMq4TBH8wq",
+	"OFfwxvp7Di5gbn2ChSDcS8U+SlmyIFvlIIUrnGfSdx4M3kJlU/6+FohZ86WhuICEWylOygX+wdGFOQfR",
+	"qw4cH41GoxdNg0CmfGyMWZc1bpCvQV5Dv1ssm2n6/NRI0zJcr3Fmt2MFpBQsHTYOXkOiFicNOCovMQe3",
+	"TlNIuUH4DkgpZRgSgokfb0GK0XlLw9js/lVjBt2bSKlTifZWQZYhzhCQLzrtHFbVGE/3VBF8jbK+r2Vg",
+	"o3R3A0M2XfnGZODHBobjvYyPZDdYnZccVA97D+Cpa+uR1oTAMrVbL03UltZhY0Vp3S5cc++zaa2MjsnB",
+	"LVFTXzDMQB5IjVq7wlpuieQp9F6DHFnNfd9waHkwEBksonpo3e1AUobc6uBglVfh+n4kGSQPN5RlTMI5",
+	"gYlbWzssdyKqcSp7eOFxhuRAbnrPwTXMTrKMQEqdZKfdDVRrJFJcl4zYn13WeZ443Xv3up2jEr5wPnlp",
+	"N1YrXNrHqTBlIE+cyzOFLMngJahzZneIqF7vx214O1s9g5mErUtCC5mHJQupVH9AtsKZmzGAZIlSdCt/",
+	"AMmkK+jmBPxRJQUu2UrFwZSGvJx5FIu/dwMBse+sS5Reufd246D3zVJvErPOtM0JGETZ4H1LwCVbEHiN",
+	"4PdzSCnCpXtxHAtPwh8VIpDeI5bSm+JIFPadcPoG5EH983jHfZex7fcML1HpFCxYAJQ7/AJKv2MS4NbI",
+	"Pow3bGT8ATMETt+6bY+OAnfNpssLsxvBtg87CcI7douC24UfjOP2s4UZt2lwmaSgTDvG0BC1hx2cbdYu",
+	"60ZV+Q2FsHFJhmiVg5ugaH/jYQC5ciUVgYwFvtuEgPSWa/Huw9vTD7/Fs3hxcvo2nsXvT07P3vH/nP9+",
+	"uliI/719d3b617tP4v9vTj68eXcmW3x69/7zh7fv3lq2ZdOctJ3GqpsAlCF+rWPnYIwb9vWC361wHPyR",
+	"BCaZE+lZXBGUwkA2/0Shcr5DkCPSq9oRopHPGWI5DDzBbFjhiLabY/ZH6MXiOdc2F5MX4rxQ68Q9zvjk",
+	"QmG1l0tUAh0GG5WBtqX1bLDTl20ui85QvYgbKhDz77sqhcR4q8ZCNs2OnM0S3iX1NR7EVpbSJedEtybO",
+	"7NAKAMEppFR54eIQXG2SdrM7WmcP5Nvp7HAjY4FP7mQezhZmW5uQLjROtxe00uax9i45vZvpTtwL18aj",
+	"ukXD5YlUK/EYuoU+2n/yOLJXvqZvatQaG7hOObZAuhOHCmgfqCf0jBF0UU8Jl6q+TvSbf4njHMvqeaEz",
+	"v4Lya1J8zUEvFEJex3E9h1VEQEaimY5hDS3o96E8LS+9m3CWfUkGGQGXLAnwG70jrQBNZG/pCpTLjgIZ",
+	"e+WgrLxCOxGhsQSRrFbVFzmiK9epqXNlmnrSq8R55HR30l4DpTAhHLHAcRf8jU/iBaHXuWCd8ofDZ/FJ",
+	"vmhsYgYnLhAHknT+7qN4wbGFoAynV34HktYXzSbDK2732OpM5rSxTxuP44ttu9jTWFNK9G5G4tHIuYWJ",
+	"rVAaVM9M2yvZ05WfaXuhvlV+Cy9Riez7iUuUM0gkQ9bValcKhiMzdhZTTJh7SF8ShG46ky3CEoJkGoTK",
+	"vFVZEMbcDZqmIerI0PXBqiDbTb7srgGXWIs208DcYK7uiA6sncBr93YGdCq4kiYFxsEe80ijrAtve3/O",
+	"k+RY29FwlXJ0baxamDaWwhNiUJGbxnQFHQg7bQIXugkQaJn15HbYaLQbg2biwZx3qP722f8A2DyJmyFM",
+	"G+GKKzlNRc4Th6iErW1O3zIcQQHDmk6oY0NluwFhkDTrzr0hwQui676JD8lDQEnSHghVKCAOEx8iOROn",
+	"Hp4rGWKpBrgMs3m2Q94ITRuIzo/saXYZnx9s14bxneAktULeIPC27Ed6EFfzwpFXbezebGfeuESpCMA3",
+	"MdvG6/zll+mxB9Md/UeIO1piVGbwh90bxUsZ+Zl2A63ZXxrE/HfQVbIR8Byq84RgGIKfKwoJc4C4qWij",
+	"w+yrkOOOw3rjIbl1ol/biW05QevFKwaZPx6v7z5xpoYmZ7BpShTpnhGhMGdiJCLkigAJREODQCOm/a82",
+	"H6F/FaKoAIEJYMlItNK7QVhBtFyxJC3WfD/wjrYnspsLO7Q+FVO2OeGRXXn1Zh3tU1w71x1YleZ+sVZX",
+	"Nscs/i5ZuiRA0us3hN9Rtj76Vl3RmSD9gKmxdelIRQdsvzq4FuwD0YmfXt6d685PKfSTRLu1GQPxlotJ",
+	"4nEVEtc+bp1okNllQECoB4tJcI+8sO2tXa72B0z4/GyT+gSXiLKRiyvufHB34MVIFDdOFf7hyGNtCni0",
+	"TV/54nTNe7OwZPPeuaTFSk879d9G2Rg3nlPs5X2M2cSTR9mnDW7zbtGG0ub2lRg8nq7nTJan43eLDuYS",
+	"lCM1cMdZ6fqKuC0FUU67SUWUFLtSEjUWHQ5MO8EeXsKynLPolKK1khb3JcqdZMmp17rWl3TKXtvXj7GL",
+	"Ys5w/07lUh1hSHbruThSPmeWTNFmiveRR4YJvCS4ZO8xZrabRBeYMVwkJWZqnRgAIONRboHEeV1M8LD7",
+	"JL0R79t86xRXN4R7wY5cjBSBPMlRebXO4GeovLJXGFlyo+E/NjBgad8yiW6h6RE764EewjiFkiWtfsPT",
+	"D7tToXcGcvjxCfwOCbbIHUivlgTXZWaJ+Q5lsN+6JvYVEN7AC4K/u1yhApCbJJUHN9OAojDFZbb+60YM",
+	"0B3B9tyMVHNrN2ZNrw6EunPuT8LDNlzACizhuWv3dgGyyVHh0QpSKyUoYcgKsXJXiNIbPtqSH9avDuy2",
+	"ga6K4AInInG/vcUSfl2gfX0dRV3wt98AYq2O1U+AEgg2c6dxd/CZZtmkUlSaZePSIuR8Qpkdu/72yNCe",
+	"HW88PnyPae5Dm0QmuNH75dhL2+9MCVoB2p7B6L2TJUVR6CmgFZS7Ss1F+q0GhEP/HWXQekN0KIYvX/vE",
+	"sMnO18MAmqpdmXWMzZykfKuhY09GV/h7Yj95Muso8FYjGFJMOth1nCMdt+oV2jR9iJqkHQ0qQFmLq14l",
+	"/A6pqAYGAUlX9tc3YNQtplxRpcHrskJNWfOzvaNmyKRNAmcWHejAa+FIT0S9KqgM1eS6guNL+hVKrxy3",
+	"vHJldSb6PGGcUeO2q60NGrnKCjrG4TmHjKFyaYloXDae+RS3WdgZtUTrRW6d9aW/zNti3IjB0Mu2Rlsb",
+	"fTM92zCwnIFFaqAZNs8G/wHF+kEoSc40311fXGnOZJJ19rX3gXADJVCb4Tt92ebumKiNXZ/FY29t8zWL",
+	"O43WcVJDd8pwuePibje47/OPeF9ySHGh7lxUZnCry66KV/SZLMd1E78g+BLl7gKCZq05I73n1Ww84D8a",
+	"DxcjJtUKM5w43VAHveoowEmvTpq4j9PUw9Ds0g3kZwrJJzyCJMF5x9EBmczES2vKcAEDCkSKHqwUUGuJ",
+	"mjUClaOlBTcSxXQeSE05ZPEOYxUy71trsEj4jX+r/cPGwp0O5bGe8KjhZ7ZTNZ3ePUBDzXVm1g6cEtbk",
+	"EreBrFz5EYg9puTKuFJNELs55z2qwAoEBJKTWsba5V/vNfP++X9/cthFa75uiKctI1eMVTJ2iq8Q1H2g",
+	"Mj5WP2m2HMdU1jJLGL6CZdsDqND/Qm6GuFKUl3jgwMcni9MoxSUjIGXRJSbRBUivYJlFoMwi4SnwP3h3",
+	"0RKWkIjZP28c6eP4XYqLApIURieL03gWX0NCZddHz18+P5In3LAEFYqP41fPj56/EkCylYBnDio0v34x",
+	"F+oxF9se8fsSMnl2rkY8zeLj+AxRdsIb/irb8X4IKKCMAXxR0OiNlkLmm0YY2LTgK+ezdALFuC+PjuQp",
+	"MJ+3IAFUVY5SQcT8byqlqO3Pe5O8c5tM8KGH/zVAwpJEavJ3Mm5NW6PxVR3fDQGRxQJbSFRRZUjZrzi7",
+	"2exEVNZMVzO48bsbQPhisyPbYJMzzyRoVszuZlbhmt+i7E6qAV+Bhpi+Fb93MLVJmUi6boQMZXEfFlPq",
+	"Rv3SbYpgv66dBUk53zEkhbqmqyFU0lvZNVT7l++j7cu3hHaSfKdquzKvxH4lwIx2NzgyT3hLE7V/t8Cm",
+	"2KphpMue0AiVaV5nqFxGGaJiBxXhEtospapNj2sWAtD8lgvYXWMR/FLe+wpBiLj3a90PBH6tb02so1nW",
+	"pW/zyjS2d96xdgULnda2tC98UapfmsWvN0iZrOhqoeS0FCW1I8WZqAI3OQbZZFkXAeUAE/BRtgvypFQd",
+	"tUBbPbN3oiPcRi/N6dvR0WytPvfn4rUF/yy8lNhGlXwcYMEl0xp7ZOXcb9Bg3IP2TXTxKDtukxGbt3Gx",
+	"UUNuhNgeqr/ijBXu2L46OajtKQ7nZCVrcnvlXtXu3qavMlYj3OaxiLAHXzPEG5HaikcyP3HK5LkIq6/z",
+	"Wbd75/zxgaKwGM6eMJhNnT+uxqaPqwcze1xV4bMXJ8LPupdRx9ft/i3UrTrvgbVyrLiIN6NmalHWvLt2",
+	"qKNPzpaiHr5ySzsOhYzVEnLHR6oRBqwrnVNCKBZe/RTRlMm4hwRZ9gPmgWrW0Z40S/s2G9OscGu/kYi3",
+	"Yw9VoDJprgY2LwcUBHF0JwrXbqy7Tj7U5LnZEqgGnRiH9rcx/FHl4qaMVBdbp8DQwraze1QWZjfiPCWD",
+	"sPqof7XPRyWNWWJIZo5c5xRuJIjU61ynog17H80xdHW3/6DB1+2bDlcEQJ0owiwSGh81Gj/d81k0HyTY",
+	"okU2a6Xsx70J8GWmGddAZ6WF92dwTxzy59l4P3yERoTsxFRQGe59vf1w7wfMoktcr3fwtlOOHI7N2Yk4",
+	"9Ly8NWzOXCQ+jloeRFNA9FV0EXF4rNrVxAEuGSSRQCbK5PQPRNc8zBQX2tyhqRPGQLpSsxTfs3uoWtn/",
+	"GN9DUsmZ/MpfIDfnzSWaECsrcNnhocsTZ+/B2Vvxz6nP8du5ztrP7RWx0w/vHzSn1D0At01dyAaP3O9c",
+	"6OsQB+Z7erinEtlDradKtX/YB669+wKPylmtS68+ftZNHrlGNvM8fJ2kzXUu77m55ebXFuEduWpnmXXb",
+	"OqLGtbRfdpNwxSApQR5RSK4hiaBqOFzXDLDF1rxmLqPnwHrzdsl9yXLHxmkav7W9ona+7yTR7lfQJNn5",
+	"uT2ieMHb/BYivdM/XO2z79Pvg1Kot3fIZqp11R6u4NbUlxb6mT4lhN7DU6TufFCB7IR0UMEr5W6r24Sj",
+	"vra+Nvqwvez+5dcdr2TyGqF7zappQEZjzVbzHC/lRzXs9u4MyxsE2wBS9L0n/E5qthq971azFSwZ7xxm",
+	"+zGafMwX2x/zc8nlABP0/+rATd8OjY+/fDXkp2Yru/jgmo3KD3++3+PEM7xcwizCNZs+QYyydJ6CPL8A",
+	"sh6QdUX6iLL0jW4UtCipOqCTk0R0OdHJL6qkFlvGhADckivxdY8KqNGMAI3+ef7xA9eHV0cvhzeDzYYE",
+	"ZohAvRF+UliXPDdG3ynM2u4HSHID+hRnxsrKT6qniOHmatP0GRJVIdxtlHQN8S2ta/0S5TtOUfFpliZv",
+	"n+va/2x/zDe4vMxROs3kB9zsby717/lCfsrQdec2fneOtC4KQG4U0RGQzY0d4YWeh0ajyfrqIFLA+VjQ",
+	"ThXTiffg6uqh92Z3DeAEISGZMA1Y29qX9KobHdi2pDJ5tscoRMuyrqgD+QkAz9UW82sB97/SElY8z/xA",
+	"wbB80zBaxttH7XSc8jqSy9kZczsyOxxoT4tmF193cidoWXDYAhyYUNrj8c+RVbrXU7Iwzs2NbxQ41pRz",
+	"yN7KRo+Bfz4F1CtIo4ABkKbqmqrLeXkDyFZDE6J/696WdLVZEOo2xydZputLbskOGyPsqwjGRKyGnJ7f",
+	"8pX0NMTqGWgGaIzo9VHl0rfyNuau7h6lrZV52b9sCyBH7BqSz31yPqV40iHWTWrryA2L2Og5dVCwFo8x",
+	"kfhWY6nodtv5L/5Yk7ctL1Z1L8bacxEhRYPbHogGB1UoyMnjgOpAfMM5pTgQ1RVVhlHwrZUndlJCWJKt",
+	"Gc2HZbb2u4/7ruNatY6UpPl2xDqxfntbYTHCnvbAzjo5evM7rJPT4GZTXG+FqEZ5H3WBqL3uNv0Mmqeg",
+	"TOUXcxyiL54/cl7JSeatkO/rZOSQJaUCNyOZcQSnkNJFUx/yod72NGZhGOIt58x3Bh3J7ZNNIgJpnbO9",
+	"RyEdMqNqhD4rxNdIA2Lpna+X7jCg3v1qanBYXc0v0vNbO7jeHX/rIfbOcPsMtPdwH6ml0EH6YKPuPYGf",
+	"Envvi8BTBH5vEXgbFyfF4R8PL8O0tDnV7WlpCNby92fi+xxBdU9484VofQjn18YU9UVSl70/b7IkWvLX",
+	"M/Pdz46MfLy291mQpqXlayBP6QF7y0uaxa9fvNr+gH9iHOWALO1S21HLDIF5XeUYSKdtzH8RN9E/i7YO",
+	"S7eCQG4Xla37s6bPPkFaF0DWVPPHrfo9yOGeqW9wWQ3l0UgEy9HdH5AB9eGcDVShx5eXFLL/wimD7Bll",
+	"BIKiy8OmuNwFKoGIqPXHunP4X32d4dRHqnhaPFPTEy+c4bT5lJB7TndT5GF+y1cu4dXwgYZi8TsEmV8o",
+	"usuf+uve9QSsyKhQr8NU29fyBf95N7PYlTD57ftrt3Ct6vIqAmkKq/4RokVeJhYIfiC1gd+LD9eKI6vK",
+	"WyZ4NAfTSL4c9ORPxAwqw/lUgfOpAudTBc6HXIGzrb2598oCo8bM+N5/mN3yngY99go6e63R4eLlb7Bd",
+	"jC5uIoHrOD/Dink81fG4n7ZpHnSvyXeb3Xa+uPnlKzeK5nc8v3zlsi4Hkpokvgorvtd5PJ/nOAX5ClN2",
+	"/Oro6Ci+a0e9bZYu3g/vVtvo1jiZv6k9e/OTSF0y/9YJHsZv6ujA+EXeUDZ+kC6m8YMBxt3Xu38HAAD/",
+	"/5ny2HNt2AAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

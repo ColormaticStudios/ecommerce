@@ -5,8 +5,10 @@
 	type ProductCardData = {
 		//id: number; // Unused
 		name: string;
+		brand?: string | null;
 		description?: string | null;
 		price?: number | null;
+		priceRange?: { min: number; max: number } | null;
 		image?: string | null;
 		stock?: number | null;
 	};
@@ -44,6 +46,12 @@
 			{data.name}
 		</h2>
 
+		{#if data.brand}
+			<p class="text-xs font-semibold tracking-[0.18em] text-gray-500 uppercase dark:text-gray-400">
+				{data.brand}
+			</p>
+		{/if}
+
 		{#if data.description}
 			<p class="line-clamp-2 text-sm text-gray-600 dark:text-gray-400">{data.description}</p>
 		{/if}
@@ -51,7 +59,11 @@
 		<div class="mt-auto flex items-center justify-between">
 			{#if data.price != null}
 				<span class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-					{formatPrice(data.price)}
+					{#if data.priceRange && data.priceRange.min < data.priceRange.max}
+						From {formatPrice(data.priceRange.min)}
+					{:else}
+						{formatPrice(data.price)}
+					{/if}
 				</span>
 			{/if}
 			{#if showStock && data.stock != null}

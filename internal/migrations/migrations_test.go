@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -237,6 +239,42 @@ func TestAppliedVersionsBackfillsMissingChecksum(t *testing.T) {
 	row, ok := applied["2026030601_checksum_backfill"]
 	require.True(t, ok)
 	require.NotEmpty(t, row.Checksum)
+	require.Len(t, row.Checksum, 64)
+}
+
+func TestAppliedVersionsBackfillsLegacyChecksum(t *testing.T) {
+	db := newTestDB(t)
+
+	definitions := []Migration{
+		noopMigration("2026030409_legacy_checksum_backfill", "legacy checksum backfill"),
+	}
+	require.NoError(t, runWithMigrations(db, definitions))
+
+	require.NoError(t, db.Model(&SchemaMigration{}).
+		Where("version = ?", "2026030409_legacy_checksum_backfill").
+		Update("checksum", strings.Repeat("b", 64)).Error)
+
+	applied, err := appliedVersionsWithMigrations(db, definitions)
+	require.NoError(t, err)
+	row, ok := applied["2026030409_legacy_checksum_backfill"]
+	require.True(t, ok)
+	require.Equal(t, migrationChecksum(definitions[0]), row.Checksum)
+}
+
+func TestAppliedVersionsFailsOnFirstSourceChecksumMismatch(t *testing.T) {
+	db := newTestDB(t)
+
+	definitions := []Migration{
+		noopMigration(productCatalogDepthP0Version, "source checksum mismatch"),
+	}
+	require.NoError(t, runWithMigrations(db, definitions))
+
+	require.NoError(t, db.Model(&SchemaMigration{}).
+		Where("version = ?", productCatalogDepthP0Version).
+		Update("checksum", strings.Repeat("c", 64)).Error)
+
+	_, err := appliedVersionsWithMigrations(db, definitions)
+	require.ErrorContains(t, err, "checksum mismatch")
 }
 
 func TestAppliedVersionsFailsOnChecksumMismatch(t *testing.T) {
@@ -249,10 +287,80 @@ func TestAppliedVersionsFailsOnChecksumMismatch(t *testing.T) {
 
 	require.NoError(t, db.Model(&SchemaMigration{}).
 		Where("version = ?", "2026030602_checksum_mismatch").
-		Update("checksum", "not-a-real-checksum").Error)
+		Update("checksum", strings.Repeat("a", 64)).Error)
 
 	_, err := appliedVersionsWithMigrations(db, definitions)
 	require.ErrorContains(t, err, "checksum mismatch")
+}
+
+func TestAppliedVersionsBackfillsKnownCompatibleChecksum(t *testing.T) {
+	db := newTestDB(t)
+
+	definitions := []Migration{
+		noopMigration(productCatalogDepthP2Version, "compatible checksum backfill"),
+	}
+	require.NoError(t, runWithMigrations(db, definitions))
+
+	require.NoError(t, db.Model(&SchemaMigration{}).
+		Where("version = ?", productCatalogDepthP2Version).
+		Update("checksum", "5a483908a1331a23cfcfa2ab5b4992a5f63fd50e7cef4f732013328f23ca4329").Error)
+
+	applied, err := appliedVersionsWithMigrations(db, definitions)
+	require.NoError(t, err)
+	row, ok := applied[productCatalogDepthP2Version]
+	require.True(t, ok)
+	require.Equal(t, migrationChecksum(definitions[0]), row.Checksum)
+}
+
+func TestMigrationChecksumStableAcrossLaterFileEdits(t *testing.T) {
+	tempDir := t.TempDir()
+	path := filepath.Join(tempDir, "migrations.go")
+	baseContent := `package migrations
+const firstVersion = "2026030610_first"
+var orderedMigrations = []Migration{
+  {
+    Version: firstVersion,
+    Name: "first",
+    Up: func(tx *gorm.DB) error {
+      return nil
+    },
+  },
+}
+`
+	expandedContent := `package migrations
+const firstVersion = "2026030610_first"
+const secondVersion = "2026030611_second"
+var orderedMigrations = []Migration{
+  {
+    Version: firstVersion,
+    Name: "first",
+    Up: func(tx *gorm.DB) error {
+      return nil
+    },
+  },
+  {
+    Version: secondVersion,
+    Name: "second",
+    Up: func(tx *gorm.DB) error {
+      return nil
+    },
+  },
+}
+`
+	require.NoError(t, os.WriteFile(path, []byte(baseContent), 0o644))
+
+	originalPath := migrationSourcePath
+	migrationSourcePath = path
+	t.Cleanup(func() {
+		migrationSourcePath = originalPath
+	})
+
+	migration := Migration{Version: "2026030610_first", Name: "first"}
+	before := migrationChecksum(migration)
+	require.NoError(t, os.WriteFile(path, []byte(expandedContent), 0o644))
+	after := migrationChecksum(migration)
+	require.Equal(t, before, after)
+	require.Len(t, after, 64)
 }
 
 func TestStatusLinesOutput(t *testing.T) {
@@ -367,6 +475,29 @@ var orderedMigrations = []Migration{
 	require.ErrorContains(t, err, "must not call AutoMigrate directly")
 }
 
+func TestMigrationChecksumSourceUsesEmbeddedSourceAtDefaultPath(t *testing.T) {
+	originalPath := migrationSourcePath
+	migrationSourcePath = "internal/migrations/migrations.go"
+	t.Cleanup(func() {
+		migrationSourcePath = originalPath
+	})
+
+	before := migrationChecksumSource(productCatalogDepthP0Version)
+	require.NotEmpty(t, before)
+
+	cwd, err := os.Getwd()
+	require.NoError(t, err)
+
+	tempDir := t.TempDir()
+	require.NoError(t, os.Chdir(tempDir))
+	t.Cleanup(func() {
+		require.NoError(t, os.Chdir(cwd))
+	})
+
+	after := migrationChecksumSource(productCatalogDepthP0Version)
+	require.Equal(t, before, after)
+}
+
 func TestGuardPendingMigrationsContractBlocked(t *testing.T) {
 	db := newTestDB(t)
 	t.Setenv(contractGuardEnvVar, "false")
@@ -381,7 +512,7 @@ func TestGuardPendingMigrationsContractBlocked(t *testing.T) {
 				return nil
 			},
 		},
-	})
+	}, true)
 	require.ErrorContains(t, err, contractGuardEnvVar)
 }
 
@@ -399,12 +530,60 @@ func TestGuardPendingMigrationsContractAllowed(t *testing.T) {
 				return nil
 			},
 		},
+	}, true)
+	require.NoError(t, err)
+}
+
+func TestRunWithMigrationsBlocksContractMigrationsWithoutAcknowledgement(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "false")
+
+	err := runWithMigrations(db, []Migration{
+		{
+			Version:          "2026030702_contract_run_allowed",
+			Name:             "contract migration still runs",
+			Tags:             []string{"contract"},
+			ContractBlockers: []string{"allow_contract_migrations"},
+			Up: func(tx *gorm.DB) error {
+				return nil
+			},
+		},
+	})
+	require.ErrorContains(t, err, contractGuardEnvVar)
+}
+
+func TestRunWithMigrationsAllowsContractMigrationsWithAcknowledgement(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
+
+	err := runWithMigrations(db, []Migration{
+		{
+			Version:          "2026030703_contract_run_allowed",
+			Name:             "contract migration runs with acknowledgement",
+			Tags:             []string{"contract"},
+			ContractBlockers: []string{"allow_contract_migrations"},
+			Up: func(tx *gorm.DB) error {
+				return nil
+			},
+		},
 	})
 	require.NoError(t, err)
 }
 
+func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
+	db := newTestDB(t)
+
+	require.NoError(t, RunWithoutContract(db))
+
+	status, err := statusForMigrations(db, orderedMigrations)
+	require.NoError(t, err)
+	require.Equal(t, productCatalogDepthP2ProductBackfillVersion, status.LatestAppliedVersion)
+	require.Equal(t, 1, status.PendingCount)
+}
+
 func TestRunAppliesAllOrderedMigrationsAndReplayIsIdempotent(t *testing.T) {
 	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
 
 	require.NoError(t, Run(db))
 	require.NoError(t, Check(db))
@@ -426,7 +605,7 @@ func TestProductPublishStateBackfillMigration(t *testing.T) {
 	require.GreaterOrEqual(t, len(orderedMigrations), 2)
 	require.NoError(t, runWithMigrations(db, orderedMigrations[:1]))
 
-	inputs := []models.Product{
+	inputs := []legacyProduct{
 		{
 			SKU:         "backfill-empty-draft",
 			Name:        "Needs backfill",
@@ -456,26 +635,126 @@ func TestProductPublishStateBackfillMigration(t *testing.T) {
 	for _, product := range inputs {
 		require.NoError(t, db.Create(&product).Error)
 	}
-	require.NoError(t, db.Model(&models.Product{}).Where("sku IN ?", []string{
+	require.NoError(t, db.Model(&legacyProduct{}).Where("sku IN ?", []string{
 		"backfill-empty-draft",
 		"backfill-has-draft",
 	}).Update("is_published", false).Error)
 
 	require.NoError(t, runWithMigrations(db, orderedMigrations[:2]))
 
-	var emptyDraft models.Product
+	var emptyDraft legacyProduct
 	require.NoError(t, db.Where("sku = ?", "backfill-empty-draft").First(&emptyDraft).Error)
 	require.True(t, emptyDraft.IsPublished)
 
-	var hasDraft models.Product
+	var hasDraft legacyProduct
 	require.NoError(t, db.Where("sku = ?", "backfill-has-draft").First(&hasDraft).Error)
 	require.False(t, hasDraft.IsPublished)
 
-	var alreadyPublished models.Product
+	var alreadyPublished legacyProduct
 	require.NoError(t, db.Where("sku = ?", "backfill-already-published").First(&alreadyPublished).Error)
 	require.True(t, alreadyPublished.IsPublished)
 
 	var applied SchemaMigration
 	require.NoError(t, db.Where("version = ?", productPublishBackfillVersion).First(&applied).Error)
 	require.Equal(t, "backfill publish state for products with empty draft payload", applied.Name)
+}
+
+func TestCatalogDepthP0MigrationCreatesCatalogTables(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
+	require.NoError(t, Run(db))
+
+	required := []any{
+		&models.Brand{},
+		&models.ProductOption{},
+		&models.ProductOptionValue{},
+		&models.ProductVariant{},
+		&models.ProductVariantOptionValue{},
+		&models.ProductAttribute{},
+		&models.ProductAttributeValue{},
+		&models.SEOMetadata{},
+		&models.ProductDraft{},
+		&models.ProductOptionDraft{},
+		&models.ProductOptionValueDraft{},
+		&models.ProductVariantDraft{},
+		&models.ProductVariantOptionValueDraft{},
+		&models.ProductAttributeValueDraft{},
+		&models.ProductRelatedDraft{},
+	}
+
+	for _, model := range required {
+		assert.True(t, db.Migrator().HasTable(model), "expected migrated table for %T", model)
+	}
+}
+
+func TestCatalogDepthP2BackfillsDefaultVariantForLegacyProducts(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:2]))
+
+	legacy := legacyProduct{
+		SKU:         "legacy-no-variant",
+		Name:        "Legacy Product",
+		Description: "Flat product only",
+		Price:       models.MoneyFromFloat(19.99),
+		Stock:       7,
+		IsPublished: true,
+	}
+	require.NoError(t, db.Create(&legacy).Error)
+
+	require.NoError(t, runWithMigrations(db, orderedMigrations))
+
+	var product models.Product
+	require.NoError(t, db.Where("id = ?", legacy.ID).First(&product).Error)
+	require.NotNil(t, product.DefaultVariantID)
+
+	var variant models.ProductVariant
+	require.NoError(t, db.First(&variant, *product.DefaultVariantID).Error)
+	assert.Equal(t, product.ID, variant.ProductID)
+	assert.Equal(t, product.SKU, variant.SKU)
+	assert.Equal(t, product.Name, variant.Title)
+	assert.Equal(t, product.Price, variant.Price)
+	assert.Equal(t, product.Stock, variant.Stock)
+}
+
+func TestCatalogDepthP4BackfillsLegacyDraftBlobAndDropsColumn(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:1]))
+
+	legacy := legacyProduct{
+		SKU:         "legacy-draft-product",
+		Name:        "Legacy Product",
+		Description: "legacy live description",
+		Price:       models.MoneyFromFloat(19.99),
+		Stock:       4,
+		IsPublished: false,
+		DraftData:   `{"sku":"legacy-draft-product","name":"Legacy Draft","description":"legacy draft description","price":24.5,"stock":6,"images":["legacy-a","legacy-b","legacy-a"],"related_ids":[7,7]}`,
+	}
+	require.NoError(t, db.Create(&legacy).Error)
+
+	require.NoError(t, runWithMigrations(db, orderedMigrations))
+
+	assert.False(t, db.Migrator().HasColumn("products", "draft_data"))
+
+	var draft models.ProductDraft
+	require.NoError(t, db.Where("product_id = ?", legacy.ID).First(&draft).Error)
+	assert.Equal(t, "Legacy Draft", draft.Name)
+	assert.Equal(t, "legacy draft description", draft.Description)
+	assert.Equal(t, models.MoneyFromFloat(24.5), draft.Price)
+	assert.Equal(t, 6, draft.Stock)
+	assert.Equal(t, "legacy-draft-product", draft.DefaultVariantSKU)
+
+	var variantDrafts []models.ProductVariantDraft
+	require.NoError(t, db.Where("product_draft_id = ?", draft.ID).Order("position asc").Find(&variantDrafts).Error)
+	require.Len(t, variantDrafts, 1)
+	assert.Equal(t, "legacy-draft-product", variantDrafts[0].SKU)
+	assert.Equal(t, "Legacy Draft", variantDrafts[0].Title)
+	assert.Equal(t, models.MoneyFromFloat(24.5), variantDrafts[0].Price)
+	assert.Equal(t, 6, variantDrafts[0].Stock)
+
+	var relatedDrafts []models.ProductRelatedDraft
+	require.NoError(t, db.Where("product_draft_id = ?", draft.ID).Order("position asc").Find(&relatedDrafts).Error)
+	require.Len(t, relatedDrafts, 1)
+	assert.Equal(t, uint(7), relatedDrafts[0].RelatedProductID)
 }

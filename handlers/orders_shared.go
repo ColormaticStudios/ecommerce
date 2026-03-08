@@ -23,7 +23,7 @@ func applyOrderMedia(orders []models.Order, mediaService *media.Service) {
 	seen := map[uint]struct{}{}
 	for i := range orders {
 		for j := range orders[i].Items {
-			productID := orders[i].Items[j].ProductID
+			productID := orders[i].Items[j].ProductVariant.ProductID
 			if productID == 0 {
 				continue
 			}
@@ -42,12 +42,12 @@ func applyOrderMedia(orders []models.Order, mediaService *media.Service) {
 
 	for i := range orders {
 		for j := range orders[i].Items {
-			product := &orders[i].Items[j].Product
+			product := &orders[i].Items[j].ProductVariant.Product
 			if len(product.Images) > 0 && product.CoverImage == nil {
 				product.CoverImage = &product.Images[0]
 			}
 
-			mediaURLs := mediaByProduct[orders[i].Items[j].ProductID]
+			mediaURLs := mediaByProduct[orders[i].Items[j].ProductVariant.ProductID]
 			if len(mediaURLs) > 0 {
 				product.Images = mediaURLs
 				product.CoverImage = &mediaURLs[0]

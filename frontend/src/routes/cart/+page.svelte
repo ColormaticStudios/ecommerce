@@ -23,7 +23,7 @@
 	let isAuthenticated = $state(false);
 
 	const total = $derived(
-		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.product.price, 0) : 0
+		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.product_variant.price, 0) : 0
 	);
 
 	async function updateItemQuantity(itemId: number, quantity: number) {
@@ -141,8 +141,9 @@
 								{item.product.name}
 							</h2>
 							<p class="text-sm text-gray-500 dark:text-gray-400">
-								{formatPrice(item.product.price, $userStore?.currency ?? "USD")}
+								{formatPrice(item.product_variant.price, $userStore?.currency ?? "USD")}
 							</p>
+							<p class="text-sm text-gray-500 dark:text-gray-400">{item.product_variant.title}</p>
 						</div>
 
 						<div class="flex items-center gap-2">

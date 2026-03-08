@@ -72,7 +72,7 @@
 	const activeShippingProvider = $derived(findProvider("shipping", selectedShippingProviderId));
 	const activeTaxProvider = $derived(findProvider("tax", autoTaxProviderId));
 	const subtotal = $derived(
-		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.product.price, 0) : 0
+		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.product_variant.price, 0) : 0
 	);
 	const paymentUsesCard = $derived(providerUsesCardFields(activePaymentProvider));
 	const shippingUsesAddress = $derived(providerUsesAddressFields(activeShippingProvider));
@@ -334,7 +334,7 @@
 
 			const created = await api.createOrder({
 				items: cart.items.map((item) => ({
-					product_id: item.product_id,
+					product_variant_id: item.product_variant_id,
 					quantity: item.quantity,
 				})),
 			});
@@ -697,11 +697,14 @@
 								<p class="font-medium text-gray-900 dark:text-gray-100">{item.product.name}</p>
 								<p class="text-gray-600 dark:text-gray-400">
 									Qty {item.quantity} ·
-									{formatPrice(item.product.price, $userStore?.currency ?? "USD")}
+									{formatPrice(item.product_variant.price, $userStore?.currency ?? "USD")}
 								</p>
 							</div>
 							<p class="font-medium text-gray-900 dark:text-gray-100">
-								{formatPrice(item.product.price * item.quantity, $userStore?.currency ?? "USD")}
+								{formatPrice(
+									item.product_variant.price * item.quantity,
+									$userStore?.currency ?? "USD"
+								)}
 							</p>
 						</div>
 					{/each}

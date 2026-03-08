@@ -124,6 +124,30 @@
 		manualProductIdsInputBySection = next;
 	}
 
+	function formatAttributeFilters(filters: Record<string, string>): string {
+		return Object.entries(filters)
+			.filter(([key, value]) => key.trim() !== "" && value.trim() !== "")
+			.map(([key, value]) => `${key}=${value}`)
+			.join("\n");
+	}
+
+	function parseAttributeFiltersInput(value: string): Record<string, string> {
+		const next: Record<string, string> = {};
+		for (const line of value.split(/\r?\n/)) {
+			const trimmed = line.trim();
+			if (trimmed === "") {
+				continue;
+			}
+			const [key, ...rest] = trimmed.split("=");
+			const slug = key.trim();
+			const filterValue = rest.join("=").trim();
+			if (slug !== "" && filterValue !== "") {
+				next[slug] = filterValue;
+			}
+		}
+		return next;
+	}
+
 	function ensurePromoCardShape(section: StorefrontHomepageSectionModel) {
 		if (section.type !== "promo_cards") {
 			return;
@@ -978,10 +1002,26 @@
 									</div>
 
 									{#if section.product_section.source === "search"}
-										<TextInput
-											placeholder="Search query"
-											bind:value={section.product_section.query}
-										/>
+										<div class="grid gap-3 md:grid-cols-2">
+											<TextInput
+												placeholder="Search query"
+												bind:value={section.product_section.query}
+											/>
+											<TextInput
+												placeholder="Brand slug"
+												bind:value={section.product_section.brand_slug}
+											/>
+										</div>
+										<textarea
+											class="min-h-20 rounded-md border border-gray-300 bg-gray-200 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+											placeholder="Attribute filters, one per line: color=red"
+											value={formatAttributeFilters(section.product_section.attribute_filters)}
+											oninput={(event) => {
+												section.product_section!.attribute_filters = parseAttributeFiltersInput(
+													(event.target as HTMLTextAreaElement).value
+												);
+											}}
+										></textarea>
 									{/if}
 									{#if section.product_section.source === "manual"}
 										<TextInput
@@ -995,7 +1035,14 @@
 										/>
 									{/if}
 
-									<div class="grid gap-3 md:grid-cols-3">
+									<div class="grid gap-3 md:grid-cols-4">
+										<label class="flex items-center gap-2 text-sm">
+											<input
+												type="checkbox"
+												bind:checked={section.product_section.has_variant_stock}
+											/>
+											In stock only
+										</label>
 										<label class="flex items-center gap-2 text-sm">
 											<input
 												type="checkbox"

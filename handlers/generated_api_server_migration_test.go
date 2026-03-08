@@ -75,7 +75,48 @@ func seedProduct(t *testing.T, db *gorm.DB, sku, name string, price float64, sto
 		Stock:       stock,
 	}
 	require.NoError(t, db.Create(&product).Error)
+	variant := models.ProductVariant{
+		ProductID:   product.ID,
+		SKU:         sku + "-default",
+		Title:       name,
+		Price:       models.MoneyFromFloat(price),
+		Stock:       stock,
+		Position:    1,
+		IsPublished: true,
+	}
+	require.NoError(t, db.Create(&variant).Error)
+	require.NoError(t, db.Model(&product).Update("default_variant_id", variant.ID).Error)
+	product.DefaultVariantID = &variant.ID
 	return product
+}
+
+func requireDefaultVariantID(t *testing.T, product models.Product) uint {
+	t.Helper()
+	require.NotNil(t, product.DefaultVariantID)
+	return *product.DefaultVariantID
+}
+
+func singleVariantProductUpsertPayload(sku, name, description string, price float64, stock int) map[string]any {
+	return map[string]any{
+		"sku":                 sku,
+		"name":                name,
+		"description":         description,
+		"images":              []string{},
+		"related_product_ids": []int{},
+		"options":             []map[string]any{},
+		"variants": []map[string]any{
+			{
+				"sku":          sku,
+				"title":        name,
+				"price":        price,
+				"stock":        stock,
+				"is_published": true,
+				"selections":   []map[string]any{},
+			},
+		},
+		"attributes": []map[string]any{},
+		"seo":        map[string]any{},
+	}
 }
 
 func TestGeneratedAdminAuthParity(t *testing.T) {
@@ -195,26 +236,27 @@ func TestGeneratedMeAuthParity(t *testing.T) {
 }
 
 func TestGeneratedCSRFMiddlewareMatrix(t *testing.T) {
-	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.Cart{}, &models.CartItem{})
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.ProductVariant{}, &models.Cart{}, &models.CartItem{})
 	user := seedUser(t, db, "sub-csrf", "csrf-user", "csrf@example.com", "customer")
 	product := seedProduct(t, db, "sku-csrf", "CSRF Product", 12.99, 10)
+	variantID := requireDefaultVariantID(t, product)
 	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, user.Subject, user.Role)
 
-	bearerReq := httptest.NewRequest(http.MethodPost, "/api/v1/me/cart", strings.NewReader(`{"product_id":`+strconv.Itoa(int(product.ID))+`,"quantity":1}`))
+	bearerReq := httptest.NewRequest(http.MethodPost, "/api/v1/me/cart", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":1}`))
 	bearerReq.Header.Set("Authorization", "Bearer "+token)
 	bearerReq.Header.Set("Content-Type", "application/json")
 	bearerW := httptest.NewRecorder()
 	r.ServeHTTP(bearerW, bearerReq)
 	assert.Equal(t, http.StatusOK, bearerW.Code)
 
-	sessionNoCsrfReq := httptest.NewRequest(http.MethodPost, "/api/v1/me/cart", strings.NewReader(`{"product_id":`+strconv.Itoa(int(product.ID))+`,"quantity":1}`))
+	sessionNoCsrfReq := httptest.NewRequest(http.MethodPost, "/api/v1/me/cart", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":1}`))
 	sessionNoCsrfReq.Header.Set("Content-Type", "application/json")
 	sessionNoCsrfReq.AddCookie(&http.Cookie{Name: "session_token", Value: token})
 	sessionNoCsrfW := httptest.NewRecorder()
 	r.ServeHTTP(sessionNoCsrfW, sessionNoCsrfReq)
 	assert.Equal(t, http.StatusForbidden, sessionNoCsrfW.Code)
 
-	sessionCsrfReq := httptest.NewRequest(http.MethodPost, "/api/v1/me/cart", strings.NewReader(`{"product_id":`+strconv.Itoa(int(product.ID))+`,"quantity":2}`))
+	sessionCsrfReq := httptest.NewRequest(http.MethodPost, "/api/v1/me/cart", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":2}`))
 	sessionCsrfReq.Header.Set("Content-Type", "application/json")
 	sessionCsrfReq.AddCookie(&http.Cookie{Name: "session_token", Value: token})
 	sessionCsrfReq.AddCookie(&http.Cookie{Name: "csrf_token", Value: "csrf-123"})
@@ -223,7 +265,7 @@ func TestGeneratedCSRFMiddlewareMatrix(t *testing.T) {
 	r.ServeHTTP(sessionCsrfW, sessionCsrfReq)
 	assert.Equal(t, http.StatusOK, sessionCsrfW.Code)
 
-	invalidDataReq := httptest.NewRequest(http.MethodPost, "/api/v1/me/cart", strings.NewReader(`{"product_id":`+strconv.Itoa(int(product.ID))+`,"quantity":0}`))
+	invalidDataReq := httptest.NewRequest(http.MethodPost, "/api/v1/me/cart", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":0}`))
 	invalidDataReq.Header.Set("Content-Type", "application/json")
 	invalidDataReq.AddCookie(&http.Cookie{Name: "session_token", Value: token})
 	invalidDataReq.AddCookie(&http.Cookie{Name: "csrf_token", Value: "csrf-123"})
@@ -370,8 +412,9 @@ func TestGeneratedProtectedRouteValidation(t *testing.T) {
 }
 
 func TestGeneratedSmokeRegisterCartOrderFlow(t *testing.T) {
-	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.Cart{}, &models.CartItem{}, &models.Order{}, &models.OrderItem{})
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.ProductVariant{}, &models.Cart{}, &models.CartItem{}, &models.Order{}, &models.OrderItem{})
 	product := seedProduct(t, db, "sku-smoke-1", "Smoke Product", 15.50, 10)
+	variantID := requireDefaultVariantID(t, product)
 
 	registerReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", strings.NewReader(`{"username":"smoke-user","email":"smoke@example.com","password":"supersecret"}`))
 	registerReq.Header.Set("Content-Type", "application/json")
@@ -385,7 +428,7 @@ func TestGeneratedSmokeRegisterCartOrderFlow(t *testing.T) {
 
 	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, authResp.User.Subject, "customer")
 
-	addCartReq := httptest.NewRequest(http.MethodPost, "/api/v1/me/cart", strings.NewReader(`{"product_id":`+strconv.Itoa(int(product.ID))+`,"quantity":2}`))
+	addCartReq := httptest.NewRequest(http.MethodPost, "/api/v1/me/cart", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":2}`))
 	addCartReq.Header.Set("Authorization", "Bearer "+token)
 	addCartReq.Header.Set("Content-Type", "application/json")
 	addCartW := httptest.NewRecorder()
@@ -399,7 +442,7 @@ func TestGeneratedSmokeRegisterCartOrderFlow(t *testing.T) {
 	r.ServeHTTP(createInvalidOrderW, createInvalidOrderReq)
 	assert.Equal(t, http.StatusBadRequest, createInvalidOrderW.Code)
 
-	createValidOrderReq := httptest.NewRequest(http.MethodPost, "/api/v1/me/orders", strings.NewReader(`{"items":[{"product_id":`+strconv.Itoa(int(product.ID))+`,"quantity":2}]}`))
+	createValidOrderReq := httptest.NewRequest(http.MethodPost, "/api/v1/me/orders", strings.NewReader(`{"items":[{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":2}]}`))
 	createValidOrderReq.Header.Set("Authorization", "Bearer "+token)
 	createValidOrderReq.Header.Set("Content-Type", "application/json")
 	createValidOrderW := httptest.NewRecorder()
@@ -641,10 +684,13 @@ func TestAdminProductDraftIsolationAndPublish(t *testing.T) {
 	r, _, admin, product, _, _, _, _, _, _, _ := setupMediaRouter(t, "sub-media-customer-iso", "sub-media-admin-iso")
 	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
 
-	updateResp := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/products/%d", product.ID), map[string]any{
-		"name":  "Draft Name",
-		"stock": 0,
-	}, adminToken)
+	updateResp := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/products/%d", product.ID), singleVariantProductUpsertPayload(
+		product.SKU,
+		"Draft Name",
+		product.Description,
+		product.Price.Float64(),
+		0,
+	), adminToken)
 	require.Equal(t, http.StatusOK, updateResp.Code)
 	updated := decodeJSON[apicontract.Product](t, updateResp)
 	assert.Equal(t, "Draft Name", updated.Name)
@@ -678,12 +724,13 @@ func TestAdminCreateProductStaysUnpublishedUntilPublish(t *testing.T) {
 	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.Product{})
 	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, "sub-admin-create-draft", "admin")
 
-	createResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/admin/products", map[string]any{
-		"sku":   "draft-create-sku",
-		"name":  "Draft Create Product",
-		"price": 19.99,
-		"stock": 7,
-	}, adminToken)
+	createResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/admin/products", singleVariantProductUpsertPayload(
+		"draft-create-sku",
+		"Draft Create Product",
+		"Draft Create Product description",
+		19.99,
+		7,
+	), adminToken)
 	require.Equal(t, http.StatusCreated, createResp.Code)
 
 	created := decodeJSON[apicontract.Product](t, createResp)
@@ -747,7 +794,10 @@ func TestAdminCanUnpublishProductWithoutDeleting(t *testing.T) {
 	var stored models.Product
 	require.NoError(t, db.First(&stored, product.ID).Error)
 	assert.False(t, stored.IsPublished)
-	assert.NotEmpty(t, strings.TrimSpace(stored.DraftData))
+	assert.NotNil(t, stored.DraftUpdatedAt)
+	var draftCount int64
+	require.NoError(t, db.Model(&models.ProductDraft{}).Where("product_id = ?", product.ID).Count(&draftCount).Error)
+	assert.EqualValues(t, 1, draftCount)
 
 	publicAfter := performJSONRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/products/%d", product.ID), nil, "")
 	assert.Equal(t, http.StatusNotFound, publicAfter.Code)
@@ -802,17 +852,18 @@ func TestAdminProductDraftMediaPromotesOnPublish(t *testing.T) {
 }
 
 func TestCartUpdateDeleteOwnershipIsolation(t *testing.T) {
-	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.Cart{}, &models.CartItem{})
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.ProductVariant{}, &models.Cart{}, &models.CartItem{})
 	owner := seedUser(t, db, "sub-owner", "owner", "owner@example.com", "customer")
 	other := seedUser(t, db, "sub-other", "other", "other@example.com", "customer")
 	product := seedProduct(t, db, "sku-cart-gap", "Cart Gap Product", 10, 5)
+	variantID := requireDefaultVariantID(t, product)
 
 	ownerToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, owner.Subject, owner.Role)
 	otherToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, other.Subject, other.Role)
 
-	addResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/cart", map[string]any{"product_id": product.ID, "quantity": 1}, ownerToken)
+	addResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/cart", map[string]any{"product_variant_id": variantID, "quantity": 1}, ownerToken)
 	require.Equal(t, http.StatusOK, addResp.Code)
-	cart := decodeJSON[models.Cart](t, addResp)
+	cart := decodeJSON[cartResponse](t, addResp)
 	require.Len(t, cart.Items, 1)
 	itemID := cart.Items[0].ID
 
@@ -833,16 +884,17 @@ func TestCartUpdateDeleteOwnershipIsolation(t *testing.T) {
 }
 
 func TestOrdersDateFilterAndGetOrderValidation(t *testing.T) {
-	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.Order{}, &models.OrderItem{})
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.ProductVariant{}, &models.Order{}, &models.OrderItem{})
 	user := seedUser(t, db, "sub-order-gap", "order-gap", "order-gap@example.com", "customer")
 	product := seedProduct(t, db, "sku-order-gap", "Order Gap Product", 30, 8)
+	variantID := requireDefaultVariantID(t, product)
 	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, user.Subject, user.Role)
 
 	createOrderResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/orders", map[string]any{
-		"items": []map[string]any{{"product_id": product.ID, "quantity": 1}},
+		"items": []map[string]any{{"product_variant_id": variantID, "quantity": 1}},
 	}, token)
 	require.Equal(t, http.StatusCreated, createOrderResp.Code)
-	createdOrder := decodeJSON[models.Order](t, createOrderResp)
+	createdOrder := decodeJSON[orderResponse](t, createOrderResp)
 	require.True(t, createdOrder.CanCancel)
 
 	shippedOrder := models.Order{
@@ -878,67 +930,83 @@ func TestOrdersDateFilterAndGetOrderValidation(t *testing.T) {
 	listOrdersResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/orders", nil, token)
 	require.Equal(t, http.StatusOK, listOrdersResp.Code)
 	var listPayload struct {
-		Data []models.Order `json:"data"`
+		Data []orderResponse `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(listOrdersResp.Body.Bytes(), &listPayload))
 
-	canCancelByID := make(map[uint]bool, len(listPayload.Data))
+	canCancelByID := make(map[int]bool, len(listPayload.Data))
 	for _, order := range listPayload.Data {
 		canCancelByID[order.ID] = order.CanCancel
 	}
 
 	require.True(t, canCancelByID[createdOrder.ID])
-	require.False(t, canCancelByID[shippedOrder.ID])
+	require.False(t, canCancelByID[int(shippedOrder.ID)])
 }
 
 func TestAdminUpdateOrderStatusDeductsStockOnceAndRollbackOnFailure(t *testing.T) {
-	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.Order{}, &models.OrderItem{})
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.ProductVariant{}, &models.Order{}, &models.OrderItem{})
 	admin := seedUser(t, db, "sub-admin-order", "admin-order", "admin-order@example.com", "admin")
 	customer := seedUser(t, db, "sub-customer-order", "customer-order", "customer-order@example.com", "customer")
 	product := seedProduct(t, db, "sku-stock-gap", "Stock Gap Product", 12.5, 5)
+	productVariantID := requireDefaultVariantID(t, product)
 
 	order := models.Order{UserID: customer.ID, Status: models.StatusPending, Total: models.MoneyFromFloat(25)}
 	require.NoError(t, db.Create(&order).Error)
-	require.NoError(t, db.Create(&models.OrderItem{OrderID: order.ID, ProductID: product.ID, Quantity: 2, Price: models.MoneyFromFloat(12.5)}).Error)
+	require.NoError(t, db.Create(&models.OrderItem{
+		OrderID:          order.ID,
+		ProductVariantID: productVariantID,
+		VariantSKU:       "sku-stock-gap-default",
+		VariantTitle:     "Stock Gap Product",
+		Quantity:         2,
+		Price:            models.MoneyFromFloat(12.5),
+	}).Error)
 
 	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
 
 	firstPay := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/orders/%d/status", order.ID), map[string]any{"status": models.StatusPaid}, adminToken)
 	require.Equal(t, http.StatusOK, firstPay.Code)
 
-	var reloaded models.Product
-	require.NoError(t, db.First(&reloaded, product.ID).Error)
+	var reloaded models.ProductVariant
+	require.NoError(t, db.First(&reloaded, productVariantID).Error)
 	assert.Equal(t, 3, reloaded.Stock)
 
 	secondPay := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/orders/%d/status", order.ID), map[string]any{"status": models.StatusPaid}, adminToken)
 	require.Equal(t, http.StatusOK, secondPay.Code)
-	require.NoError(t, db.First(&reloaded, product.ID).Error)
+	require.NoError(t, db.First(&reloaded, productVariantID).Error)
 	assert.Equal(t, 3, reloaded.Stock)
 
 	ship := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/orders/%d/status", order.ID), map[string]any{"status": models.StatusShipped}, adminToken)
 	require.Equal(t, http.StatusOK, ship.Code)
-	require.NoError(t, db.First(&reloaded, product.ID).Error)
+	require.NoError(t, db.First(&reloaded, productVariantID).Error)
 	assert.Equal(t, 3, reloaded.Stock)
 
 	deliver := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/orders/%d/status", order.ID), map[string]any{"status": models.StatusDelivered}, adminToken)
 	require.Equal(t, http.StatusOK, deliver.Code)
-	require.NoError(t, db.First(&reloaded, product.ID).Error)
+	require.NoError(t, db.First(&reloaded, productVariantID).Error)
 	assert.Equal(t, 3, reloaded.Stock)
 
 	reverseToFailed := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/orders/%d/status", order.ID), map[string]any{"status": models.StatusFailed}, adminToken)
 	require.Equal(t, http.StatusOK, reverseToFailed.Code)
-	require.NoError(t, db.First(&reloaded, product.ID).Error)
+	require.NoError(t, db.First(&reloaded, productVariantID).Error)
 	assert.Equal(t, 5, reloaded.Stock)
 
 	reapplyPaid := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/orders/%d/status", order.ID), map[string]any{"status": models.StatusPaid}, adminToken)
 	require.Equal(t, http.StatusOK, reapplyPaid.Code)
-	require.NoError(t, db.First(&reloaded, product.ID).Error)
+	require.NoError(t, db.First(&reloaded, productVariantID).Error)
 	assert.Equal(t, 3, reloaded.Stock)
 
 	lowStockProduct := seedProduct(t, db, "sku-low-stock", "Low Stock Product", 9.99, 1)
+	lowStockVariantID := requireDefaultVariantID(t, lowStockProduct)
 	failingOrder := models.Order{UserID: customer.ID, Status: models.StatusPending, Total: models.MoneyFromFloat(29.97)}
 	require.NoError(t, db.Create(&failingOrder).Error)
-	require.NoError(t, db.Create(&models.OrderItem{OrderID: failingOrder.ID, ProductID: lowStockProduct.ID, Quantity: 2, Price: models.MoneyFromFloat(9.99)}).Error)
+	require.NoError(t, db.Create(&models.OrderItem{
+		OrderID:          failingOrder.ID,
+		ProductVariantID: lowStockVariantID,
+		VariantSKU:       "sku-low-stock-default",
+		VariantTitle:     "Low Stock Product",
+		Quantity:         2,
+		Price:            models.MoneyFromFloat(9.99),
+	}).Error)
 
 	failPay := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/orders/%d/status", failingOrder.ID), map[string]any{"status": models.StatusPaid}, adminToken)
 	require.Equal(t, http.StatusBadRequest, failPay.Code)
@@ -950,9 +1018,10 @@ func TestAdminUpdateOrderStatusDeductsStockOnceAndRollbackOnFailure(t *testing.T
 }
 
 func TestUserCancelOrderRefundsAndRestocks(t *testing.T) {
-	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.Order{}, &models.OrderItem{})
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.Product{}, &models.ProductVariant{}, &models.Order{}, &models.OrderItem{})
 	customer := seedUser(t, db, "sub-customer-cancel", "customer-cancel", "customer-cancel@example.com", "customer")
 	product := seedProduct(t, db, "sku-cancel-flow", "Cancelable Product", 19.99, 5)
+	productVariantID := requireDefaultVariantID(t, product)
 
 	order := models.Order{
 		UserID:                customer.ID,
@@ -963,23 +1032,25 @@ func TestUserCancelOrderRefundsAndRestocks(t *testing.T) {
 	}
 	require.NoError(t, db.Create(&order).Error)
 	require.NoError(t, db.Create(&models.OrderItem{
-		OrderID:   order.ID,
-		ProductID: product.ID,
-		Quantity:  2,
-		Price:     models.MoneyFromFloat(19.99),
+		OrderID:          order.ID,
+		ProductVariantID: productVariantID,
+		VariantSKU:       "sku-cancel-flow-default",
+		VariantTitle:     "Cancelable Product",
+		Quantity:         2,
+		Price:            models.MoneyFromFloat(19.99),
 	}).Error)
-	require.NoError(t, db.Model(&models.Product{}).Where("id = ?", product.ID).Update("stock", 3).Error)
+	require.NoError(t, db.Model(&models.ProductVariant{}).Where("id = ?", productVariantID).Update("stock", 3).Error)
 
 	customerToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, customer.Subject, customer.Role)
 	cancelResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/me/orders/%d/cancel", order.ID), nil, customerToken)
 	require.Equal(t, http.StatusOK, cancelResp.Code)
 
-	var cancelled models.Order
+	var cancelled orderResponse
 	require.NoError(t, json.Unmarshal(cancelResp.Body.Bytes(), &cancelled))
 	assert.Equal(t, models.StatusCancelled, cancelled.Status)
 
-	var reloadedProduct models.Product
-	require.NoError(t, db.First(&reloadedProduct, product.ID).Error)
+	var reloadedProduct models.ProductVariant
+	require.NoError(t, db.First(&reloadedProduct, productVariantID).Error)
 	assert.Equal(t, 5, reloadedProduct.Stock)
 
 	shippedOrder := models.Order{
@@ -991,10 +1062,12 @@ func TestUserCancelOrderRefundsAndRestocks(t *testing.T) {
 	}
 	require.NoError(t, db.Create(&shippedOrder).Error)
 	require.NoError(t, db.Create(&models.OrderItem{
-		OrderID:   shippedOrder.ID,
-		ProductID: product.ID,
-		Quantity:  1,
-		Price:     models.MoneyFromFloat(19.99),
+		OrderID:          shippedOrder.ID,
+		ProductVariantID: productVariantID,
+		VariantSKU:       "sku-cancel-flow-default",
+		VariantTitle:     "Cancelable Product",
+		Quantity:         1,
+		Price:            models.MoneyFromFloat(19.99),
 	}).Error)
 
 	cancelShippedResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/me/orders/%d/cancel", shippedOrder.ID), nil, customerToken)
@@ -1010,10 +1083,12 @@ func TestUserCancelOrderRefundsAndRestocks(t *testing.T) {
 	}
 	require.NoError(t, db.Create(&deliveredOrder).Error)
 	require.NoError(t, db.Create(&models.OrderItem{
-		OrderID:   deliveredOrder.ID,
-		ProductID: product.ID,
-		Quantity:  1,
-		Price:     models.MoneyFromFloat(19.99),
+		OrderID:          deliveredOrder.ID,
+		ProductVariantID: productVariantID,
+		VariantSKU:       "sku-cancel-flow-default",
+		VariantTitle:     "Cancelable Product",
+		Quantity:         1,
+		Price:            models.MoneyFromFloat(19.99),
 	}).Error)
 
 	cancelDeliveredResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/me/orders/%d/cancel", deliveredOrder.ID), nil, customerToken)
@@ -1123,12 +1198,25 @@ func TestAdminPreviewSessionAndPublicDraftRendering(t *testing.T) {
 	}).Error)
 
 	publishedProduct := seedProduct(t, db, "sku-preview-live", "Live Product", 9.99, 4)
-	publishedDraftPayload, err := encodeProductDraftData(productDraftFromPublished(publishedProduct))
-	require.NoError(t, err)
-	require.NoError(t, db.Model(&publishedProduct).Updates(map[string]any{
-		"draft_data":       publishedDraftPayload,
-		"draft_updated_at": ptrTimeNow(),
-	}).Error)
+	require.NoError(t, saveNormalizedProductDraft(db, publishedProduct, productCatalogDraft{
+		SKU:         publishedProduct.SKU,
+		Name:        publishedProduct.Name,
+		Description: publishedProduct.Description,
+		Price:       publishedProduct.Price.Float64(),
+		Stock:       publishedProduct.Stock,
+		Images:      []string{"products/draft.jpg"},
+		Variants: []productVariantDraftData{
+			{
+				SKU:         publishedProduct.SKU + "-draft",
+				Title:       publishedProduct.Name,
+				Price:       publishedProduct.Price.Float64(),
+				Stock:       publishedProduct.Stock,
+				IsPublished: true,
+			},
+		},
+		DefaultVariantSKU: publishedProduct.SKU + "-draft",
+	}, time.Now().UTC()))
+	require.NoError(t, db.Model(&publishedProduct).Update("draft_updated_at", ptrTimeNow()).Error)
 	require.NoError(t, db.Create(&models.MediaReference{
 		MediaID:   "product-live",
 		OwnerType: media.OwnerTypeProduct,
@@ -1152,19 +1240,27 @@ func TestAdminPreviewSessionAndPublicDraftRendering(t *testing.T) {
 		Stock:       3,
 		IsPublished: false,
 	}
-	draftPayload, err := encodeProductDraftData(productDraftData{
+	require.NoError(t, db.Select("*").Create(&unpublishedDraft).Error)
+	require.NoError(t, saveNormalizedProductDraft(db, unpublishedDraft, productCatalogDraft{
 		SKU:         "sku-preview-draft",
 		Name:        "Draft Product",
 		Description: "draft description",
 		Price:       13.25,
 		Stock:       2,
-	})
-	require.NoError(t, err)
-	unpublishedDraft.DraftData = draftPayload
-	require.NoError(t, db.Select("*").Create(&unpublishedDraft).Error)
+		Variants: []productVariantDraftData{
+			{
+				SKU:         "sku-preview-draft-default",
+				Title:       "Draft Product",
+				Price:       13.25,
+				Stock:       2,
+				IsPublished: true,
+			},
+		},
+		DefaultVariantSKU: "sku-preview-draft-default",
+	}, time.Now().UTC()))
 	require.NoError(t, db.Model(&unpublishedDraft).Updates(map[string]any{
-		"is_published": false,
-		"draft_data":   draftPayload,
+		"is_published":     false,
+		"draft_updated_at": ptrTimeNow(),
 	}).Error)
 
 	publishedStorefront := defaultStorefrontSettings()
@@ -1365,6 +1461,7 @@ func TestProcessPaymentRemovesOnlyOrderedCartQuantities(t *testing.T) {
 		GeneratedAPIServerConfig{},
 		&models.User{},
 		&models.Product{},
+		&models.ProductVariant{},
 		&models.Cart{},
 		&models.CartItem{},
 		&models.Order{},
@@ -1374,18 +1471,20 @@ func TestProcessPaymentRemovesOnlyOrderedCartQuantities(t *testing.T) {
 	user := seedUser(t, db, "sub-partial-checkout", "partial-checkout", "partial-checkout@example.com", "customer")
 	productA := seedProduct(t, db, "sku-partial-a", "Partial A", 10, 20)
 	productB := seedProduct(t, db, "sku-partial-b", "Partial B", 12, 20)
+	productAVariantID := requireDefaultVariantID(t, productA)
+	productBVariantID := requireDefaultVariantID(t, productB)
 	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, user.Subject, user.Role)
 
 	cart := models.Cart{UserID: user.ID}
 	require.NoError(t, db.Create(&cart).Error)
-	require.NoError(t, db.Create(&models.CartItem{CartID: cart.ID, ProductID: productA.ID, Quantity: 3}).Error)
-	require.NoError(t, db.Create(&models.CartItem{CartID: cart.ID, ProductID: productB.ID, Quantity: 4}).Error)
+	require.NoError(t, db.Create(&models.CartItem{CartID: cart.ID, ProductVariantID: productAVariantID, Quantity: 3}).Error)
+	require.NoError(t, db.Create(&models.CartItem{CartID: cart.ID, ProductVariantID: productBVariantID, Quantity: 4}).Error)
 
 	createOrderResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/orders", map[string]any{
-		"items": []map[string]any{{"product_id": productA.ID, "quantity": 2}},
+		"items": []map[string]any{{"product_variant_id": productAVariantID, "quantity": 2}},
 	}, token)
 	require.Equal(t, http.StatusCreated, createOrderResp.Code)
-	order := decodeJSON[models.Order](t, createOrderResp)
+	order := decodeJSON[orderResponse](t, createOrderResp)
 
 	payResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/me/orders/%d/pay", order.ID), map[string]any{
 		"payment_method": map[string]any{
@@ -1405,11 +1504,11 @@ func TestProcessPaymentRemovesOnlyOrderedCartQuantities(t *testing.T) {
 	require.Equal(t, http.StatusOK, payResp.Code)
 
 	var remaining []models.CartItem
-	require.NoError(t, db.Where("cart_id = ?", cart.ID).Order("product_id asc").Find(&remaining).Error)
+	require.NoError(t, db.Where("cart_id = ?", cart.ID).Order("product_variant_id asc").Find(&remaining).Error)
 	require.Len(t, remaining, 2)
-	assert.Equal(t, productA.ID, remaining[0].ProductID)
+	assert.Equal(t, productAVariantID, remaining[0].ProductVariantID)
 	assert.Equal(t, 1, remaining[0].Quantity)
-	assert.Equal(t, productB.ID, remaining[1].ProductID)
+	assert.Equal(t, productBVariantID, remaining[1].ProductVariantID)
 	assert.Equal(t, 4, remaining[1].Quantity)
 }
 
@@ -1427,13 +1526,14 @@ func TestProcessPaymentWithPluginsPersistsQuotedTotal(t *testing.T) {
 
 	user := seedUser(t, db, "sub-plugin-total", "plugin-total", "plugin-total@example.com", "customer")
 	product := seedProduct(t, db, "sku-plugin-total", "Plugin Total", 20, 10)
+	variantID := requireDefaultVariantID(t, product)
 	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, user.Subject, user.Role)
 
 	createOrderResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/orders", map[string]any{
-		"items": []map[string]any{{"product_id": product.ID, "quantity": 1}},
+		"items": []map[string]any{{"product_variant_id": variantID, "quantity": 1}},
 	}, token)
 	require.Equal(t, http.StatusCreated, createOrderResp.Code)
-	order := decodeJSON[models.Order](t, createOrderResp)
+	order := decodeJSON[orderResponse](t, createOrderResp)
 
 	payResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/me/orders/%d/pay", order.ID), map[string]any{
 		"payment_provider_id":  "dummy-card",
@@ -1464,8 +1564,9 @@ func TestProcessPaymentWithPluginsPersistsQuotedTotal(t *testing.T) {
 	require.NoError(t, db.First(&reloaded, order.ID).Error)
 
 	expectedShipping := models.MoneyFromFloat(5.99)
-	expectedTax := models.MoneyFromFloat((order.Total + expectedShipping).Float64() * 0.085)
-	expectedTotal := order.Total + expectedShipping + expectedTax
+	orderSubtotal := models.MoneyFromFloat(order.Total)
+	expectedTax := models.MoneyFromFloat((orderSubtotal + expectedShipping).Float64() * 0.085)
+	expectedTotal := orderSubtotal + expectedShipping + expectedTax
 	assert.Equal(t, expectedTotal, reloaded.Total)
 }
 
@@ -1475,18 +1576,20 @@ func TestCreateOrderDuplicateItemsAggregateStockValidation(t *testing.T) {
 		GeneratedAPIServerConfig{},
 		&models.User{},
 		&models.Product{},
+		&models.ProductVariant{},
 		&models.Order{},
 		&models.OrderItem{},
 	)
 
 	user := seedUser(t, db, "sub-order-aggregate", "order-aggregate", "order-aggregate@example.com", "customer")
 	product := seedProduct(t, db, "sku-order-aggregate", "Aggregate Product", 25, 5)
+	variantID := requireDefaultVariantID(t, product)
 	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, user.Subject, user.Role)
 
 	resp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/orders", map[string]any{
 		"items": []map[string]any{
-			{"product_id": product.ID, "quantity": 3},
-			{"product_id": product.ID, "quantity": 3},
+			{"product_variant_id": variantID, "quantity": 3},
+			{"product_variant_id": variantID, "quantity": 3},
 		},
 	}, token)
 	require.Equal(t, http.StatusBadRequest, resp.Code)
@@ -1502,9 +1605,13 @@ func TestAdminUpdateProductAllowsZeroValues(t *testing.T) {
 	product := seedProduct(t, db, "sku-update-zero", "Update Zero Product", 15, 4)
 	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
 
-	updateResp := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/products/%d", product.ID), map[string]any{
-		"stock": 0,
-	}, adminToken)
+	updateResp := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/products/%d", product.ID), singleVariantProductUpsertPayload(
+		product.SKU,
+		product.Name,
+		product.Description,
+		product.Price.Float64(),
+		0,
+	), adminToken)
 	require.Equal(t, http.StatusOK, updateResp.Code)
 
 	updated := decodeJSON[apicontract.Product](t, updateResp)
@@ -1530,4 +1637,245 @@ func TestCartModelEnforcesSingleCartPerUser(t *testing.T) {
 	require.NoError(t, db.Create(&models.Cart{UserID: user.ID}).Error)
 	err := db.Create(&models.Cart{UserID: user.ID}).Error
 	require.Error(t, err)
+}
+
+func TestGeneratedProductFiltersByBrandAttributeAndVariantStock(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.Brand{},
+		&models.ProductAttribute{},
+		&models.ProductAttributeValue{},
+		&models.Product{},
+		&models.ProductVariant{},
+	)
+
+	acme := models.Brand{Name: "Acme", Slug: "acme", IsActive: true}
+	require.NoError(t, db.Create(&acme).Error)
+	zen := models.Brand{Name: "Zen", Slug: "zen", IsActive: true}
+	require.NoError(t, db.Create(&zen).Error)
+	color := models.ProductAttribute{Key: "Color", Slug: "color", Type: "enum", Filterable: true}
+	require.NoError(t, db.Create(&color).Error)
+	redValue := "Red"
+	blueValue := "Blue"
+
+	redProduct := seedProduct(t, db, "sku-filter-red", "Filter Red", 19.99, 8)
+	blueProduct := seedProduct(t, db, "sku-filter-blue", "Filter Blue", 18.99, 0)
+	otherBrand := seedProduct(t, db, "sku-filter-zen", "Filter Zen", 21.99, 6)
+
+	require.NoError(t, db.Model(&models.Product{}).Where("id = ?", redProduct.ID).Update("brand_id", acme.ID).Error)
+	require.NoError(t, db.Model(&models.Product{}).Where("id = ?", blueProduct.ID).Update("brand_id", acme.ID).Error)
+	require.NoError(t, db.Model(&models.Product{}).Where("id = ?", otherBrand.ID).Update("brand_id", zen.ID).Error)
+
+	require.NoError(t, db.Create(&models.ProductAttributeValue{
+		ProductID:          redProduct.ID,
+		ProductAttributeID: color.ID,
+		EnumValue:          &redValue,
+		Position:           1,
+	}).Error)
+	require.NoError(t, db.Create(&models.ProductAttributeValue{
+		ProductID:          blueProduct.ID,
+		ProductAttributeID: color.ID,
+		EnumValue:          &blueValue,
+		Position:           1,
+	}).Error)
+	require.NoError(t, db.Create(&models.ProductAttributeValue{
+		ProductID:          otherBrand.ID,
+		ProductAttributeID: color.ID,
+		EnumValue:          &redValue,
+		Position:           1,
+	}).Error)
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/api/v1/products?brand_slug=acme&has_variant_stock=true&attribute[color]=red",
+		nil,
+	)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code)
+
+	body := decodeJSON[apicontract.ProductPage](t, w)
+	require.Len(t, body.Data, 1)
+	assert.Equal(t, redProduct.SKU, body.Data[0].Sku)
+	assert.Equal(t, "acme", body.Data[0].Brand.Slug)
+}
+
+func TestAdminBrandCRUD(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.Brand{},
+		&models.Product{},
+		&models.ProductDraft{},
+	)
+	admin := seedUser(t, db, "sub-admin-brand", "admin-brand", "admin-brand@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	createResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/admin/brands", map[string]any{
+		"name":        "Acme Labs",
+		"description": "Primary brand",
+		"is_active":   true,
+	}, adminToken)
+	require.Equal(t, http.StatusCreated, createResp.Code)
+	created := decodeJSON[apicontract.Brand](t, createResp)
+	assert.Equal(t, "acme-labs", created.Slug)
+
+	updateResp := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/brands/%d", created.Id), map[string]any{
+		"name":      "Acme Refresh",
+		"slug":      "acme-refresh",
+		"is_active": false,
+	}, adminToken)
+	require.Equal(t, http.StatusOK, updateResp.Code)
+	updated := decodeJSON[apicontract.Brand](t, updateResp)
+	assert.Equal(t, "Acme Refresh", updated.Name)
+	assert.Equal(t, "acme-refresh", updated.Slug)
+	assert.False(t, updated.IsActive)
+
+	listResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/admin/brands", nil, adminToken)
+	require.Equal(t, http.StatusOK, listResp.Code)
+	listing := decodeJSON[apicontract.BrandListResponse](t, listResp)
+	require.Len(t, listing.Data, 1)
+
+	deleteResp := performJSONRequest(
+		t,
+		r,
+		http.MethodDelete,
+		fmt.Sprintf("/api/v1/admin/brands/%d", created.Id),
+		nil,
+		adminToken,
+	)
+	require.Equal(t, http.StatusOK, deleteResp.Code)
+
+	var count int64
+	require.NoError(t, db.Model(&models.Brand{}).Count(&count).Error)
+	assert.Zero(t, count)
+}
+
+func TestAdminBrandListSearch(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.Brand{},
+	)
+	admin := seedUser(t, db, "sub-admin-brand-search", "admin-brand-search", "admin-brand-search@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	description := func(value string) *string {
+		return &value
+	}
+
+	brands := []models.Brand{
+		{
+			Name:        "Acme Labs",
+			Slug:        "acme-labs",
+			Description: description("Precision tools and accessories"),
+			IsActive:    true,
+		},
+		{
+			Name:        "Zen House",
+			Slug:        "zen-refresh",
+			Description: description("Calm essentials"),
+			IsActive:    false,
+		},
+		{
+			Name:        "Nova Goods",
+			Slug:        "nova-goods",
+			Description: description("Bright everyday items"),
+			IsActive:    true,
+		},
+	}
+	for i := range brands {
+		require.NoError(t, db.Select("*").Create(&brands[i]).Error)
+	}
+
+	nameResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/admin/brands?q=acme", nil, adminToken)
+	require.Equal(t, http.StatusOK, nameResp.Code)
+	nameResults := decodeJSON[apicontract.BrandListResponse](t, nameResp)
+	require.Len(t, nameResults.Data, 1)
+	assert.Equal(t, "Acme Labs", nameResults.Data[0].Name)
+
+	slugResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/admin/brands?q=refresh", nil, adminToken)
+	require.Equal(t, http.StatusOK, slugResp.Code)
+	slugResults := decodeJSON[apicontract.BrandListResponse](t, slugResp)
+	require.Len(t, slugResults.Data, 1)
+	assert.Equal(t, "Zen House", slugResults.Data[0].Name)
+
+	descriptionResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/admin/brands?q=accessories", nil, adminToken)
+	require.Equal(t, http.StatusOK, descriptionResp.Code)
+	descriptionResults := decodeJSON[apicontract.BrandListResponse](t, descriptionResp)
+	require.Len(t, descriptionResults.Data, 1)
+	assert.Equal(t, "Acme Labs", descriptionResults.Data[0].Name)
+}
+
+func TestAdminProductAttributeCRUD(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.ProductAttribute{},
+		&models.ProductAttributeValue{},
+		&models.ProductAttributeValueDraft{},
+	)
+	admin := seedUser(t, db, "sub-admin-attr", "admin-attr", "admin-attr@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	createResp := performJSONRequest(
+		t,
+		r,
+		http.MethodPost,
+		"/api/v1/admin/product-attributes",
+		map[string]any{
+			"key":        "Material",
+			"type":       "text",
+			"filterable": true,
+			"sortable":   false,
+		},
+		adminToken,
+	)
+	require.Equal(t, http.StatusCreated, createResp.Code)
+	created := decodeJSON[apicontract.ProductAttributeDefinition](t, createResp)
+	assert.Equal(t, "material", created.Slug)
+	assert.True(t, created.Filterable)
+
+	updateResp := performJSONRequest(
+		t,
+		r,
+		http.MethodPatch,
+		fmt.Sprintf("/api/v1/admin/product-attributes/%d", created.Id),
+		map[string]any{
+			"key":        "Material Type",
+			"slug":       "material-type",
+			"type":       "enum",
+			"filterable": true,
+			"sortable":   true,
+		},
+		adminToken,
+	)
+	require.Equal(t, http.StatusOK, updateResp.Code)
+	updated := decodeJSON[apicontract.ProductAttributeDefinition](t, updateResp)
+	assert.Equal(t, "material-type", updated.Slug)
+	assert.Equal(t, apicontract.ProductAttributeDefinitionTypeEnum, updated.Type)
+	assert.True(t, updated.Sortable)
+
+	listResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/admin/product-attributes", nil, adminToken)
+	require.Equal(t, http.StatusOK, listResp.Code)
+	listing := decodeJSON[apicontract.ProductAttributeDefinitionListResponse](t, listResp)
+	require.Len(t, listing.Data, 1)
+
+	deleteResp := performJSONRequest(
+		t,
+		r,
+		http.MethodDelete,
+		fmt.Sprintf("/api/v1/admin/product-attributes/%d", created.Id),
+		nil,
+		adminToken,
+	)
+	require.Equal(t, http.StatusOK, deleteResp.Code)
+
+	var count int64
+	require.NoError(t, db.Model(&models.ProductAttribute{}).Count(&count).Error)
+	assert.Zero(t, count)
 }

@@ -60,10 +60,12 @@ type Order struct {
 
 type OrderItem struct {
 	BaseModel
-	OrderID   uint    `json:"order_id"`
-	Order     Order   `json:"-" gorm:"foreignKey:OrderID"`
-	ProductID uint    `json:"product_id"`
-	Product   Product `json:"product" gorm:"foreignKey:ProductID"`
-	Quantity  int     `json:"quantity"`
-	Price     Money   `json:"price" gorm:"type:numeric(12,2);not null"` // Price at time of order (snapshot)
+	OrderID          uint           `json:"order_id"`
+	Order            Order          `json:"-" gorm:"foreignKey:OrderID"`
+	ProductVariantID uint           `json:"product_variant_id"`
+	ProductVariant   ProductVariant `json:"product_variant" gorm:"foreignKey:ProductVariantID"`
+	VariantSKU       string         `json:"variant_sku"`
+	VariantTitle     string         `json:"variant_title"`
+	Quantity         int            `json:"quantity"`
+	Price            Money          `json:"price" gorm:"type:numeric(12,2);not null"` // Price at time of order (snapshot)
 }

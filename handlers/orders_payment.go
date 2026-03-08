@@ -47,7 +47,10 @@ func ProcessPayment(db *gorm.DB, pluginManager *checkoutplugins.Manager, mediaSe
 		}
 
 		var order models.Order
-		if err := db.Where("id = ? AND user_id = ?", orderID, user.ID).Preload("Items.Product").First(&order).Error; err != nil {
+		if err := db.Where("id = ? AND user_id = ?", orderID, user.ID).
+			Preload("Items.ProductVariant").
+			Preload("Items.ProductVariant.Product").
+			First(&order).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 			return
 		}
@@ -123,13 +126,18 @@ func ProcessPayment(db *gorm.DB, pluginManager *checkoutplugins.Manager, mediaSe
 			return
 		}
 
-		db.Preload("Items.Product").First(&order, order.ID)
+		db.Preload("Items.ProductVariant").Preload("Items.ProductVariant.Product").First(&order, order.ID)
 		applyOrderMediaToOrder(&order, mediaService)
 		applyOrderCapabilities(&order, &user.ID)
+		responseOrder, err := buildOrderResponse(db, mediaService, order)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render order"})
+			return
+		}
 
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Order submitted and pending confirmation",
-			"order":   order,
+			"order":   responseOrder,
 		})
 	}
 }

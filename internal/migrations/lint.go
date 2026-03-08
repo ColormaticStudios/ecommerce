@@ -70,6 +70,29 @@ func lintAutoMigrateUsage() error {
 	return errors.New("new migrations must not call AutoMigrate directly; use internal/migrations/ops helpers instead")
 }
 
+func migrationSourceByVersion(content []byte, version string) string {
+	fileSet := token.NewFileSet()
+	file, err := parser.ParseFile(fileSet, migrationSourcePath, content, parser.SkipObjectResolution)
+	if err != nil {
+		return ""
+	}
+
+	constStringValues := findStringConstants(file)
+	migrationItems := findOrderedMigrationItems(file)
+	for _, migration := range migrationItems {
+		if migrationVersion(migration, constStringValues) != version {
+			continue
+		}
+		start := fileSet.Position(migration.Pos()).Offset
+		end := fileSet.Position(migration.End()).Offset
+		if start < 0 || end < start || end > len(content) {
+			return ""
+		}
+		return string(content[start:end])
+	}
+	return ""
+}
+
 func findStringConstants(file *ast.File) map[string]string {
 	constants := map[string]string{}
 	for _, decl := range file.Decls {

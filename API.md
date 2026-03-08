@@ -310,6 +310,9 @@ fetch('http://localhost:3000/api/v1/products',
 |q|query|string|false|none|
 |min_price|query|number(double)|false|none|
 |max_price|query|number(double)|false|none|
+|brand_slug|query|string|false|none|
+|has_variant_stock|query|boolean|false|none|
+|attribute|query|object|false|none|
 |sort|query|string|false|none|
 |order|query|string|false|none|
 |page|query|integer|false|none|
@@ -331,6 +334,82 @@ fetch('http://localhost:3000/api/v1/products',
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Paginated products|ProductPage|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Internal server error|Error|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## List active storefront brands
+
+<a id="opIdlistBrands"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/brands',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/brands`
+
+<h3 id="list-active-storefront-brands-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Active brands|BrandListResponse|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## List storefront product attributes
+
+<a id="opIdlistProductAttributes"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/product-attributes',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/product-attributes`
+
+<h3 id="list-storefront-product-attributes-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Filterable product attribute definitions|ProductAttributeDefinitionListResponse|
 
 <aside class="success">
 This operation does not require authentication
@@ -979,7 +1058,7 @@ cookieAuth, bearerAuth
 
 ```javascript
 const inputBody = '{
-  "product_id": 1,
+  "product_variant_id": 1,
   "quantity": 1
 }';
 const headers = {
@@ -1007,7 +1086,7 @@ fetch('http://localhost:3000/api/v1/me/cart',
 
 ```json
 {
-  "product_id": 1,
+  "product_variant_id": 1,
   "quantity": 1
 }
 ```
@@ -1304,6 +1383,10 @@ fetch('http://localhost:3000/api/v1/me/orders',
 |status|PENDING|
 |status|PAID|
 |status|FAILED|
+|status|SHIPPED|
+|status|DELIVERED|
+|status|CANCELLED|
+|status|REFUNDED|
 
 <h3 id="listuserorders-responses">Responses</h3>
 
@@ -1326,7 +1409,7 @@ cookieAuth, bearerAuth
 const inputBody = '{
   "items": [
     {
-      "product_id": 1,
+      "product_variant_id": 1,
       "quantity": 1
     }
   ]
@@ -1358,7 +1441,7 @@ fetch('http://localhost:3000/api/v1/me/orders',
 {
   "items": [
     {
-      "product_id": 1,
+      "product_variant_id": 1,
       "quantity": 1
     }
   ]
@@ -1548,6 +1631,53 @@ To perform this operation, you must be authenticated by means of one of the foll
 cookieAuth, bearerAuth
 </aside>
 
+## cancelUserOrder
+
+<a id="opIdcancelUserOrder"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/me/orders/{id}/cancel',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/me/orders/{id}/cancel`
+
+<h3 id="canceluserorder-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="canceluserorder-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Cancelled order|Order|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
 <h1 id="ecommerce-api-admin">admin</h1>
 
 ## listAdminProducts
@@ -1585,6 +1715,9 @@ fetch('http://localhost:3000/api/v1/admin/products',
 |q|query|string|false|none|
 |min_price|query|number(double)|false|none|
 |max_price|query|number(double)|false|none|
+|brand_slug|query|string|false|none|
+|has_variant_stock|query|boolean|false|none|
+|attribute|query|object|false|none|
 |sort|query|string|false|none|
 |order|query|string|false|none|
 |page|query|integer|false|none|
@@ -1621,12 +1754,68 @@ cookieAuth, bearerAuth
 const inputBody = '{
   "sku": "string",
   "name": "string",
+  "subtitle": "string",
   "description": "string",
-  "price": 0.1,
-  "stock": 0,
   "images": [
     "string"
-  ]
+  ],
+  "related_product_ids": [
+    1
+  ],
+  "brand_id": 1,
+  "default_variant_sku": "string",
+  "options": [
+    {
+      "name": "string",
+      "position": 1,
+      "display_type": "string",
+      "values": [
+        {
+          "value": "string",
+          "position": 1
+        }
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "sku": "string",
+      "title": "string",
+      "price": 0.1,
+      "compare_at_price": 0.1,
+      "stock": 0,
+      "position": 1,
+      "is_published": true,
+      "weight_grams": 0,
+      "length_cm": 0.1,
+      "width_cm": 0.1,
+      "height_cm": 0.1,
+      "selections": [
+        {
+          "option_name": "string",
+          "option_value": "string",
+          "position": 1
+        }
+      ]
+    }
+  ],
+  "attributes": [
+    {
+      "product_attribute_id": 1,
+      "text_value": "string",
+      "number_value": 0.1,
+      "boolean_value": true,
+      "enum_value": "string",
+      "position": 1
+    }
+  ],
+  "seo": {
+    "title": "string",
+    "description": "string",
+    "canonical_path": "string",
+    "og_image_media_id": "string",
+    "noindex": true
+  }
 }';
 const headers = {
   'Content-Type':'application/json',
@@ -1655,12 +1844,68 @@ fetch('http://localhost:3000/api/v1/admin/products',
 {
   "sku": "string",
   "name": "string",
+  "subtitle": "string",
   "description": "string",
-  "price": 0.1,
-  "stock": 0,
   "images": [
     "string"
-  ]
+  ],
+  "related_product_ids": [
+    1
+  ],
+  "brand_id": 1,
+  "default_variant_sku": "string",
+  "options": [
+    {
+      "name": "string",
+      "position": 1,
+      "display_type": "string",
+      "values": [
+        {
+          "value": "string",
+          "position": 1
+        }
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "sku": "string",
+      "title": "string",
+      "price": 0.1,
+      "compare_at_price": 0.1,
+      "stock": 0,
+      "position": 1,
+      "is_published": true,
+      "weight_grams": 0,
+      "length_cm": 0.1,
+      "width_cm": 0.1,
+      "height_cm": 0.1,
+      "selections": [
+        {
+          "option_name": "string",
+          "option_value": "string",
+          "position": 1
+        }
+      ]
+    }
+  ],
+  "attributes": [
+    {
+      "product_attribute_id": 1,
+      "text_value": "string",
+      "number_value": 0.1,
+      "boolean_value": true,
+      "enum_value": "string",
+      "position": 1
+    }
+  ],
+  "seo": {
+    "title": "string",
+    "description": "string",
+    "canonical_path": "string",
+    "og_image_media_id": "string",
+    "noindex": true
+  }
 }
 ```
 
@@ -1668,13 +1913,439 @@ fetch('http://localhost:3000/api/v1/admin/products',
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
-|body|body|ProductInput|true|none|
+|body|body|ProductUpsertInput|true|none|
 
 <h3 id="createproduct-responses">Responses</h3>
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
 |201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created product|Product|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminBrands
+
+<a id="opIdlistAdminBrands"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/brands',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/brands`
+
+<h3 id="listadminbrands-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Available brands|BrandListResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminBrand
+
+<a id="opIdcreateAdminBrand"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "slug": "string",
+  "description": "string",
+  "logo_media_id": "string",
+  "is_active": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/brands',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/brands`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "slug": "string",
+  "description": "string",
+  "logo_media_id": "string",
+  "is_active": true
+}
+```
+
+<h3 id="createadminbrand-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|BrandInput|true|none|
+
+<h3 id="createadminbrand-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created brand|Brand|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateAdminBrand
+
+<a id="opIdupdateAdminBrand"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "slug": "string",
+  "description": "string",
+  "logo_media_id": "string",
+  "is_active": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/brands/{id}',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/brands/{id}`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "slug": "string",
+  "description": "string",
+  "logo_media_id": "string",
+  "is_active": true
+}
+```
+
+<h3 id="updateadminbrand-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|BrandInput|true|none|
+
+<h3 id="updateadminbrand-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated brand|Brand|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## deleteAdminBrand
+
+<a id="opIddeleteAdminBrand"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/brands/{id}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`DELETE /api/v1/admin/brands/{id}`
+
+<h3 id="deleteadminbrand-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="deleteadminbrand-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Deleted brand|MessageResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminProductAttributes
+
+<a id="opIdlistAdminProductAttributes"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/product-attributes',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/product-attributes`
+
+<h3 id="listadminproductattributes-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Product attribute definitions|ProductAttributeDefinitionListResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminProductAttribute
+
+<a id="opIdcreateAdminProductAttribute"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "key": "string",
+  "slug": "string",
+  "type": "text",
+  "filterable": true,
+  "sortable": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/product-attributes',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/product-attributes`
+
+> Body parameter
+
+```json
+{
+  "key": "string",
+  "slug": "string",
+  "type": "text",
+  "filterable": true,
+  "sortable": true
+}
+```
+
+<h3 id="createadminproductattribute-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|ProductAttributeDefinitionInput|true|none|
+
+<h3 id="createadminproductattribute-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created product attribute definition|ProductAttributeDefinition|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateAdminProductAttribute
+
+<a id="opIdupdateAdminProductAttribute"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "key": "string",
+  "slug": "string",
+  "type": "text",
+  "filterable": true,
+  "sortable": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/product-attributes/{id}',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/product-attributes/{id}`
+
+> Body parameter
+
+```json
+{
+  "key": "string",
+  "slug": "string",
+  "type": "text",
+  "filterable": true,
+  "sortable": true
+}
+```
+
+<h3 id="updateadminproductattribute-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|ProductAttributeDefinitionInput|true|none|
+
+<h3 id="updateadminproductattribute-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated product attribute definition|ProductAttributeDefinition|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## deleteAdminProductAttribute
+
+<a id="opIddeleteAdminProductAttribute"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/product-attributes/{id}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`DELETE /api/v1/admin/product-attributes/{id}`
+
+<h3 id="deleteadminproductattribute-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="deleteadminproductattribute-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Deleted product attribute definition|MessageResponse|
 
 <aside class="warning">
 To perform this operation, you must be authenticated by means of one of the following methods:
@@ -1737,12 +2408,68 @@ cookieAuth, bearerAuth
 const inputBody = '{
   "sku": "string",
   "name": "string",
+  "subtitle": "string",
   "description": "string",
-  "price": 0.1,
-  "stock": 0,
   "images": [
     "string"
-  ]
+  ],
+  "related_product_ids": [
+    1
+  ],
+  "brand_id": 1,
+  "default_variant_sku": "string",
+  "options": [
+    {
+      "name": "string",
+      "position": 1,
+      "display_type": "string",
+      "values": [
+        {
+          "value": "string",
+          "position": 1
+        }
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "sku": "string",
+      "title": "string",
+      "price": 0.1,
+      "compare_at_price": 0.1,
+      "stock": 0,
+      "position": 1,
+      "is_published": true,
+      "weight_grams": 0,
+      "length_cm": 0.1,
+      "width_cm": 0.1,
+      "height_cm": 0.1,
+      "selections": [
+        {
+          "option_name": "string",
+          "option_value": "string",
+          "position": 1
+        }
+      ]
+    }
+  ],
+  "attributes": [
+    {
+      "product_attribute_id": 1,
+      "text_value": "string",
+      "number_value": 0.1,
+      "boolean_value": true,
+      "enum_value": "string",
+      "position": 1
+    }
+  ],
+  "seo": {
+    "title": "string",
+    "description": "string",
+    "canonical_path": "string",
+    "og_image_media_id": "string",
+    "noindex": true
+  }
 }';
 const headers = {
   'Content-Type':'application/json',
@@ -1771,12 +2498,68 @@ fetch('http://localhost:3000/api/v1/admin/products/{id}',
 {
   "sku": "string",
   "name": "string",
+  "subtitle": "string",
   "description": "string",
-  "price": 0.1,
-  "stock": 0,
   "images": [
     "string"
-  ]
+  ],
+  "related_product_ids": [
+    1
+  ],
+  "brand_id": 1,
+  "default_variant_sku": "string",
+  "options": [
+    {
+      "name": "string",
+      "position": 1,
+      "display_type": "string",
+      "values": [
+        {
+          "value": "string",
+          "position": 1
+        }
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "sku": "string",
+      "title": "string",
+      "price": 0.1,
+      "compare_at_price": 0.1,
+      "stock": 0,
+      "position": 1,
+      "is_published": true,
+      "weight_grams": 0,
+      "length_cm": 0.1,
+      "width_cm": 0.1,
+      "height_cm": 0.1,
+      "selections": [
+        {
+          "option_name": "string",
+          "option_value": "string",
+          "position": 1
+        }
+      ]
+    }
+  ],
+  "attributes": [
+    {
+      "product_attribute_id": 1,
+      "text_value": "string",
+      "number_value": 0.1,
+      "boolean_value": true,
+      "enum_value": "string",
+      "position": 1
+    }
+  ],
+  "seo": {
+    "title": "string",
+    "description": "string",
+    "canonical_path": "string",
+    "og_image_media_id": "string",
+    "noindex": true
+  }
 }
 ```
 
@@ -1785,7 +2568,7 @@ fetch('http://localhost:3000/api/v1/admin/products/{id}',
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
 |id|path|integer|true|none|
-|body|body|ProductInput|true|none|
+|body|body|ProductUpsertInput|true|none|
 
 <h3 id="updateproduct-responses">Responses</h3>
 
@@ -2463,6 +3246,112 @@ To perform this operation, you must be authenticated by means of one of the foll
 cookieAuth, bearerAuth
 </aside>
 
+## listAdminCheckoutPlugins
+
+<a id="opIdlistAdminCheckoutPlugins"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/checkout/plugins',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/checkout/plugins`
+
+<h3 id="listadmincheckoutplugins-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Checkout providers including disabled ones|CheckoutPluginCatalog|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateAdminCheckoutPlugin
+
+<a id="opIdupdateAdminCheckoutPlugin"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "enabled": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/checkout/plugins/{type}/{id}',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/checkout/plugins/{type}/{id}`
+
+> Body parameter
+
+```json
+{
+  "enabled": true
+}
+```
+
+<h3 id="updateadmincheckoutplugin-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|type|path|string|true|none|
+|id|path|string|true|none|
+|body|body|UpdateCheckoutPluginRequest|true|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|type|payment|
+|type|shipping|
+|type|tax|
+
+<h3 id="updateadmincheckoutplugin-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated checkout provider catalog|CheckoutPluginCatalog|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid request payload|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
 ## getAdminStorefrontSettings
 
 <a id="opIdgetAdminStorefrontSettings"></a>
@@ -2544,6 +3433,12 @@ const inputBody = '{
           "sort": "created_at",
           "order": "asc",
           "limit": 1,
+          "brand_slug": "string",
+          "has_variant_stock": true,
+          "attribute_filters": {
+            "property1": "string",
+            "property2": "string"
+          },
           "show_stock": true,
           "show_description": true,
           "image_aspect": "square"
@@ -2649,6 +3544,12 @@ fetch('http://localhost:3000/api/v1/admin/storefront',
           "sort": "created_at",
           "order": "asc",
           "limit": 1,
+          "brand_slug": "string",
+          "has_variant_stock": true,
+          "attribute_filters": {
+            "property1": "string",
+            "property2": "string"
+          },
           "show_stock": true,
           "show_description": true,
           "image_aspect": "square"

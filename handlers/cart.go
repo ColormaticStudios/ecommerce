@@ -13,8 +13,8 @@ import (
 )
 
 type AddCartItemRequest struct {
-	ProductID uint `json:"product_id" binding:"required"`
-	Quantity  int  `json:"quantity" binding:"required,min=1"`
+	ProductVariantID uint `json:"product_variant_id" binding:"required"`
+	Quantity         int  `json:"quantity" binding:"required,min=1"`
 }
 
 type UpdateCartItemRequest struct {
@@ -24,14 +24,20 @@ type UpdateCartItemRequest struct {
 // getOrCreateCart gets the user's cart or creates one if it doesn't exist
 func getOrCreateCart(db *gorm.DB, userID uint) (*models.Cart, error) {
 	var cart models.Cart
-	err := db.Where("user_id = ?", userID).Preload("Items.Product").First(&cart).Error
+	err := db.Where("user_id = ?", userID).
+		Preload("Items.ProductVariant").
+		Preload("Items.ProductVariant.Product").
+		First(&cart).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// Create new cart
 		cart = models.Cart{UserID: userID}
 		if err := db.Create(&cart).Error; err != nil {
 			// Another request may have created the cart first.
-			if lookupErr := db.Where("user_id = ?", userID).Preload("Items.Product").First(&cart).Error; lookupErr == nil {
+			if lookupErr := db.Where("user_id = ?", userID).
+				Preload("Items.ProductVariant").
+				Preload("Items.ProductVariant.Product").
+				First(&cart).Error; lookupErr == nil {
 				return &cart, nil
 			}
 			return nil, err
@@ -52,7 +58,7 @@ func applyCartMedia(cart *models.Cart, mediaService *media.Service) {
 	}
 	productIDs := make([]uint, 0, len(cart.Items))
 	for i := range cart.Items {
-		productIDs = append(productIDs, cart.Items[i].ProductID)
+		productIDs = append(productIDs, cart.Items[i].ProductVariant.ProductID)
 	}
 
 	mediaByProduct, err := mediaService.ProductMediaURLsByProductIDs(productIDs)
@@ -61,11 +67,22 @@ func applyCartMedia(cart *models.Cart, mediaService *media.Service) {
 	}
 
 	for i := range cart.Items {
-		mediaURLs := mediaByProduct[cart.Items[i].ProductID]
+		mediaURLs := mediaByProduct[cart.Items[i].ProductVariant.ProductID]
 		if len(mediaURLs) > 0 {
-			cart.Items[i].Product.Images = mediaURLs
+			cart.Items[i].ProductVariant.Product.Images = mediaURLs
 		}
 	}
+}
+
+func loadPublicVariant(db *gorm.DB, variantID uint) (models.ProductVariant, error) {
+	var variant models.ProductVariant
+	if err := db.Preload("Product").First(&variant, variantID).Error; err != nil {
+		return models.ProductVariant{}, err
+	}
+	if !variant.IsPublished || !productIsPubliclyVisible(variant.Product) {
+		return models.ProductVariant{}, gorm.ErrRecordNotFound
+	}
+	return variant, nil
 }
 
 // AddCartItem adds an item to the user's cart
@@ -83,25 +100,20 @@ func AddCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 			return
 		}
 
-		// Verify product exists
-		var product models.Product
-		if err := db.First(&product, req.ProductID).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
-			return
-		}
-		if !productIsPubliclyVisible(product) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+		// Verify variant exists and is publicly purchasable.
+		variant, err := loadPublicVariant(db, req.ProductVariantID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Product variant not found"})
 			return
 		}
 
-		// Check stock availability
-		if product.Stock < req.Quantity {
+		if variant.Stock < req.Quantity {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"error":        "Insufficient stock",
-				"product_id":   req.ProductID,
-				"product_name": product.Name,
-				"requested":    req.Quantity,
-				"available":    product.Stock,
+				"error":              "Insufficient stock",
+				"product_variant_id": req.ProductVariantID,
+				"product_name":       variant.Product.Name,
+				"requested":          req.Quantity,
+				"available":          variant.Stock,
 			})
 			return
 		}
@@ -115,18 +127,18 @@ func AddCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 
 		// Check if item already exists in cart
 		var existingItem models.CartItem
-		err = db.Where("cart_id = ? AND product_id = ?", cart.ID, req.ProductID).First(&existingItem).Error
+		err = db.Where("cart_id = ? AND product_variant_id = ?", cart.ID, req.ProductVariantID).First(&existingItem).Error
 
 		switch err {
 		case nil:
 			// Update quantity
 			newQuantity := existingItem.Quantity + req.Quantity
-			if product.Stock < newQuantity {
+			if variant.Stock < newQuantity {
 				c.JSON(http.StatusBadRequest, gin.H{
-					"error":      "Insufficient stock for updated quantity",
-					"product_id": req.ProductID,
-					"requested":  newQuantity,
-					"available":  product.Stock,
+					"error":              "Insufficient stock for updated quantity",
+					"product_variant_id": req.ProductVariantID,
+					"requested":          newQuantity,
+					"available":          variant.Stock,
 				})
 				return
 			}
@@ -138,9 +150,9 @@ func AddCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 		case gorm.ErrRecordNotFound:
 			// Create new cart item
 			cartItem := models.CartItem{
-				CartID:    cart.ID,
-				ProductID: req.ProductID,
-				Quantity:  req.Quantity,
+				CartID:           cart.ID,
+				ProductVariantID: req.ProductVariantID,
+				Quantity:         req.Quantity,
 			}
 			if err := db.Create(&cartItem).Error; err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add item to cart"})
@@ -152,9 +164,14 @@ func AddCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 		}
 
 		// Reload cart with items
-		db.Preload("Items.Product").First(cart, cart.ID)
+		db.Preload("Items.ProductVariant").Preload("Items.ProductVariant.Product").First(cart, cart.ID)
 		applyCartMedia(cart, mediaService)
-		c.JSON(http.StatusOK, cart)
+		response, err := buildCartResponse(db, mediaService, *cart)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render cart"})
+			return
+		}
+		c.JSON(http.StatusOK, response)
 	}
 }
 
@@ -174,7 +191,12 @@ func GetCart(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 		}
 
 		applyCartMedia(cart, mediaService)
-		c.JSON(http.StatusOK, cart)
+		response, err := buildCartResponse(db, mediaService, *cart)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render cart"})
+			return
+		}
+		c.JSON(http.StatusOK, response)
 	}
 }
 
@@ -209,23 +231,19 @@ func UpdateCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 			return
 		}
 
-		// Check product stock
-		var product models.Product
-		if err := db.First(&product, cartItem.ProductID).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
-			return
-		}
-		if !productIsPubliclyVisible(product) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+		// Check variant stock.
+		variant, err := loadPublicVariant(db, cartItem.ProductVariantID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Product variant not found"})
 			return
 		}
 
-		if product.Stock < req.Quantity {
+		if variant.Stock < req.Quantity {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"error":      "Insufficient stock",
-				"product_id": cartItem.ProductID,
-				"requested":  req.Quantity,
-				"available":  product.Stock,
+				"error":              "Insufficient stock",
+				"product_variant_id": cartItem.ProductVariantID,
+				"requested":          req.Quantity,
+				"available":          variant.Stock,
 			})
 			return
 		}
@@ -237,15 +255,14 @@ func UpdateCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 			return
 		}
 
-		// Reload with product
-		db.Preload("Product").First(&cartItem, cartItem.ID)
-		if mediaService != nil {
-			mediaURLs, err := mediaService.ProductMediaURLs(cartItem.ProductID)
-			if err == nil && len(mediaURLs) > 0 {
-				cartItem.Product.Images = mediaURLs
-			}
+		// Reload with variant and product
+		db.Preload("ProductVariant").Preload("ProductVariant.Product").First(&cartItem, cartItem.ID)
+		response, err := buildCartItemResponse(db, mediaService, cartItem)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render cart item"})
+			return
 		}
-		c.JSON(http.StatusOK, cartItem)
+		c.JSON(http.StatusOK, response)
 	}
 }
 

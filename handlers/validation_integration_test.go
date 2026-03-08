@@ -25,7 +25,7 @@ func newTestDB(t *testing.T, _ ...any) *gorm.DB {
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", dbName)
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	require.NoError(t, err)
-	require.NoError(t, migrations.Run(db))
+	require.NoError(t, migrations.RunWithoutContract(db))
 	return db
 }
 

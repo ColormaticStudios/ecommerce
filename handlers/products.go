@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -107,6 +108,22 @@ func toPublicProduct(product models.Product) PublicProduct {
 	}
 }
 
+func publicProductPayload(product apicontract.Product) (map[string]any, error) {
+	payload, err := json.Marshal(product)
+	if err != nil {
+		return nil, err
+	}
+
+	var decoded map[string]any
+	if err := json.Unmarshal(payload, &decoded); err != nil {
+		return nil, err
+	}
+	delete(decoded, "has_draft_changes")
+	delete(decoded, "draft_updated_at")
+	delete(decoded, "is_published")
+	return decoded, nil
+}
+
 // GetProducts handles search, filtering, sorting, and pagination
 // Query parameters:
 //   - q: search term (searches in name)
@@ -120,65 +137,39 @@ func GetProducts(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	catalog := catalogservice.NewService(db, mediaService)
 	return func(c *gin.Context) {
 		preview := isDraftPreviewActive(c)
-		page, limit, offset := parsePagination(c, 10)
-		_ = offset
-
-		minPrice, _ := catalogservice.ParsePrice(c.Query("min_price"))
-		maxPrice, _ := catalogservice.ParsePrice(c.Query("max_price"))
-		list, err := catalog.ListProducts(catalogservice.ListProductsInput{
-			SearchTerm: c.Query("q"),
-			MinPrice:   minPrice,
-			MaxPrice:   maxPrice,
-			SortField:  c.DefaultQuery("sort", "created_at"),
-			SortOrder:  c.DefaultQuery("order", "desc"),
-			Page:       page,
-			Limit:      limit,
-			Preview:    preview,
-		})
+		input := buildCatalogListInput(c, preview, 10)
+		list, err := catalog.ListProducts(input)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch products"})
 			return
 		}
 		products := list.Products
 
-		for i := range products {
-			if preview {
-				view, err := materializeAdminProduct(db, mediaService, products[i], false)
+		contractProducts := make([]apicontract.Product, 0, len(products))
+		publicProducts := make([]map[string]any, 0, len(products))
+		for _, product := range products {
+			contractProduct, err := buildProductContract(db, mediaService, product, preview, false, preview)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product"})
+				return
+			}
+			if !preview {
+				publicProduct, err := publicProductPayload(contractProduct)
 				if err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product draft"})
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product"})
 					return
 				}
-				products[i] = view
-				continue
+				publicProducts = append(publicProducts, publicProduct)
 			}
-
-			if mediaService != nil {
-				mediaURLs, err := mediaService.ProductMediaURLs(products[i].ID)
-				if err == nil && len(mediaURLs) > 0 {
-					products[i].Images = mediaURLs
-					products[i].CoverImage = &mediaURLs[0]
-					continue
-				}
-			}
-			if len(products[i].Images) > 0 {
-				products[i].CoverImage = &products[i].Images[0]
-			}
+			contractProducts = append(contractProducts, contractProduct)
 		}
-
-		contractProducts := make([]apicontract.Product, 0, len(products))
-		publicProducts := make([]PublicProduct, 0, len(products))
-		for _, product := range products {
-			if preview {
-				contractProducts = append(contractProducts, toContractProduct(product))
-				continue
-			}
-			publicProducts = append(publicProducts, toPublicProduct(product))
-		}
+		page := input.Page
+		limit := input.Limit
 
 		if !preview {
-			c.JSON(http.StatusOK, PublicProductPage{
-				Data: publicProducts,
-				Pagination: apicontract.Pagination{
+			c.JSON(http.StatusOK, gin.H{
+				"data": publicProducts,
+				"pagination": apicontract.Pagination{
 					Page:       page,
 					Limit:      limit,
 					Total:      int(list.Total),
@@ -221,45 +212,27 @@ func GetProductByID(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 				c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 				return
 			}
-			view, err := materializeAdminProduct(db, mediaService, product, true)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product draft"})
-				return
-			}
-			c.JSON(http.StatusOK, toContractProduct(view))
-			return
 		}
 
-		if !productIsPubliclyVisible(product) {
+		if !preview && !productIsPubliclyVisible(product) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}
 
-		if mediaService != nil {
-			mediaURLs, err := mediaService.ProductMediaURLs(product.ID)
-			if err == nil && len(mediaURLs) > 0 {
-				product.Images = mediaURLs
-				product.CoverImage = &mediaURLs[0]
-			}
+		contractProduct, err := buildProductContract(db, mediaService, product, preview, true, preview)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product"})
+			return
 		}
-		if product.CoverImage == nil && len(product.Images) > 0 {
-			product.CoverImage = &product.Images[0]
-		}
-
-		for i := range product.Related {
-			if mediaService != nil {
-				mediaURLs, err := mediaService.ProductMediaURLs(product.Related[i].ID)
-				if err == nil && len(mediaURLs) > 0 {
-					product.Related[i].Images = mediaURLs
-					product.Related[i].CoverImage = &mediaURLs[0]
-					continue
-				}
+		if !preview {
+			publicProduct, err := publicProductPayload(contractProduct)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product"})
+				return
 			}
-			if len(product.Related[i].Images) > 0 {
-				product.Related[i].CoverImage = &product.Related[i].Images[0]
-			}
+			c.JSON(http.StatusOK, publicProduct)
+			return
 		}
-
-		c.JSON(http.StatusOK, toPublicProduct(product))
+		c.JSON(http.StatusOK, contractProduct)
 	}
 }

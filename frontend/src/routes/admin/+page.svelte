@@ -3,6 +3,7 @@
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
 	import AdminPaginationControls from "$lib/admin/AdminPaginationControls.svelte";
 	import AdminSearchForm from "$lib/admin/AdminSearchForm.svelte";
+	import BrandManager from "$lib/admin/BrandManager.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import { type OrderModel, type ProductModel, type UserModel } from "$lib/models";
@@ -20,7 +21,7 @@
 	type CheckoutPluginCatalog = components["schemas"]["CheckoutPluginCatalog"];
 	type CheckoutPlugin = components["schemas"]["CheckoutPlugin"];
 	type CheckoutPluginType = CheckoutPlugin["type"];
-	type AdminTab = "products" | "orders" | "users" | "providers" | "storefront";
+	type AdminTab = "products" | "brands" | "orders" | "users" | "providers" | "storefront";
 	type NoticeTone = "success" | "error" | null;
 	type SaveAction = (() => Promise<void>) | null;
 	interface Props {
@@ -43,14 +44,16 @@
 		switch (activeTab) {
 			case "products":
 				return 0;
-			case "orders":
+			case "brands":
 				return 1;
-			case "users":
+			case "orders":
 				return 2;
-			case "providers":
+			case "users":
 				return 3;
-			default:
+			case "providers":
 				return 4;
+			default:
+				return 5;
 		}
 	});
 
@@ -132,6 +135,7 @@
 	function isAdminTab(value: string | null): value is AdminTab {
 		return (
 			value === "products" ||
+			value === "brands" ||
 			value === "orders" ||
 			value === "users" ||
 			value === "providers" ||
@@ -600,10 +604,10 @@
 				class="relative rounded-full border border-gray-200 bg-white p-1 text-xs font-semibold tracking-[0.2em] text-gray-500 uppercase shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400"
 			>
 				<div
-					class="pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/5)] rounded-full bg-gray-900 transition-transform duration-300 ease-out dark:bg-gray-100"
+					class="pointer-events-none absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/6)] rounded-full bg-gray-900 transition-transform duration-300 ease-out dark:bg-gray-100"
 					style={`transform: translateX(${tabIndex * 100}%);`}
 				></div>
-				<div class="relative grid grid-cols-5 items-center gap-0">
+				<div class="relative grid grid-cols-6 items-center gap-0">
 					<button
 						type="button"
 						class={`cursor-pointer rounded-full px-4 py-2 transition ${
@@ -614,6 +618,17 @@
 						onclick={() => setActiveTab("products")}
 					>
 						Products
+					</button>
+					<button
+						type="button"
+						class={`cursor-pointer rounded-full px-4 py-2 transition ${
+							activeTab === "brands"
+								? "text-white dark:text-gray-900"
+								: "hover:text-gray-900 dark:hover:text-gray-200"
+						}`}
+						onclick={() => setActiveTab("brands")}
+					>
+						Brands
 					</button>
 					<button
 						type="button"
@@ -664,7 +679,7 @@
 		</div>
 
 		{#if activeTab === "products"}
-			<div class="mt-6 grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
+			<div class="mt-6 grid items-start gap-6 lg:grid-cols-[1.3fr_0.9fr]">
 				<div
 					class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 				>
@@ -784,6 +799,10 @@
 					onProductDeleted={handleProductDeleted}
 				/>
 			</div>
+		{/if}
+
+		{#if activeTab === "brands"}
+			<BrandManager onError={setErrorMessage} onStatus={setStatusMessage} />
 		{/if}
 
 		{#if activeTab === "orders"}

@@ -3,16 +3,16 @@ package handlers
 import (
 	"errors"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/media"
+	catalogservice "ecommerce/internal/services/catalog"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type UpdateProductRequest struct {
@@ -26,19 +26,6 @@ type UpdateProductRequest struct {
 
 type UpdateRelatedRequest struct {
 	RelatedIDs []uint `json:"related_ids"`
-}
-
-func validateProductDraft(draft productDraftData) error {
-	if strings.TrimSpace(draft.SKU) == "" {
-		return errors.New("Product SKU is required")
-	}
-	if strings.TrimSpace(draft.Name) == "" {
-		return errors.New("Product name is required")
-	}
-	if draft.Price <= 0 {
-		return errors.New("Product price must be greater than 0")
-	}
-	return nil
 }
 
 func ensureUniqueProductSKU(db *gorm.DB, sku string, excludedID uint) error {
@@ -88,12 +75,17 @@ func relatedProductsByIDs(db *gorm.DB, ids []uint) ([]models.Product, error) {
 	}
 	byID := make(map[uint]models.Product, len(raw))
 	for _, product := range raw {
-		draft, hasDraft, err := editableProductDraftData(product)
-		if err != nil {
-			return nil, err
-		}
-		if hasDraft {
-			product = applyDraftDataToProduct(product, draft)
+		if productHasDraft(product) {
+			draft, hasDraft, err := loadNormalizedProductDraft(db, product)
+			if err != nil {
+				return nil, err
+			}
+			if hasDraft {
+				if derived, deriveErr := deriveCatalogMerchandising(draft); deriveErr == nil {
+					draft = derived
+				}
+				product = applyCatalogDraftToProduct(product, draft)
+			}
 		}
 		byID[product.ID] = product
 	}
@@ -107,6 +99,18 @@ func relatedProductsByIDs(db *gorm.DB, ids []uint) ([]models.Product, error) {
 		ordered = append(ordered, product)
 	}
 	return ordered, nil
+}
+
+func applyCatalogDraftToProduct(product models.Product, draft productCatalogDraft) models.Product {
+	product.SKU = draft.SKU
+	product.Name = draft.Name
+	product.Subtitle = draft.Subtitle
+	product.Description = draft.Description
+	product.Price = models.MoneyFromFloat(draft.Price)
+	product.Stock = draft.Stock
+	product.Images = append([]string(nil), draft.Images...)
+	product.BrandID = draft.BrandID
+	return product
 }
 
 func applyProductMediaWithRole(product *models.Product, mediaService *media.Service, role string, fallbackImages []string) {
@@ -128,131 +132,33 @@ func applyProductMediaWithRole(product *models.Product, mediaService *media.Serv
 	}
 }
 
-func materializeAdminProduct(db *gorm.DB, mediaService *media.Service, source models.Product, includeRelated bool) (models.Product, error) {
-	draft, hasDraft, err := editableProductDraftData(source)
-	if err != nil {
-		return models.Product{}, err
-	}
-
-	view := source
-	if hasDraft {
-		view = applyDraftDataToProduct(view, draft)
-	}
-	if includeRelated {
-		if hasDraft {
-			related, relatedErr := relatedProductsByIDs(db, draft.RelatedIDs)
-			if relatedErr != nil {
-				return models.Product{}, relatedErr
-			}
-			view.Related = related
-		} else {
-			view.Related = append([]models.Product(nil), source.Related...)
-		}
-	}
-
-	imageRole := media.RoleProductImage
-	fallbackImages := view.Images
-	if hasDraft {
-		imageRole = media.RoleProductDraftImage
-		fallbackImages = draft.Images
-	}
-	applyProductMediaWithRole(&view, mediaService, imageRole, fallbackImages)
-
-	if includeRelated {
-		for i := range view.Related {
-			role := media.RoleProductImage
-			fallbackImages := view.Related[i].Images
-			if productHasDraft(view.Related[i]) {
-				role = media.RoleProductDraftImage
-			}
-			applyProductMediaWithRole(&view.Related[i], mediaService, role, fallbackImages)
-		}
-	}
-
-	view.IsPublished = source.IsPublished
-	view.DraftData = source.DraftData
-	view.DraftUpdatedAt = source.DraftUpdatedAt
-	return view, nil
-}
-
 func ListAdminProducts(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
+	catalog := catalogservice.NewService(db, mediaService)
 	return func(c *gin.Context) {
-		query := db.Model(&models.Product{})
-
-		if searchTerm := strings.TrimSpace(c.Query("q")); searchTerm != "" {
-			query = query.Where("name ILIKE ? OR sku ILIKE ?", "%"+searchTerm+"%", "%"+searchTerm+"%")
-		}
-		if minPriceStr := c.Query("min_price"); minPriceStr != "" {
-			if minPrice, err := strconv.ParseFloat(minPriceStr, 64); err == nil {
-				query = query.Where("price >= ?", minPrice)
-			}
-		}
-		if maxPriceStr := c.Query("max_price"); maxPriceStr != "" {
-			if maxPrice, err := strconv.ParseFloat(maxPriceStr, 64); err == nil {
-				query = query.Where("price <= ?", maxPrice)
-			}
-		}
-
-		sortField := c.DefaultQuery("sort", "created_at")
-		sortOrder := c.DefaultQuery("order", "desc")
-		validSortFields := map[string]bool{
-			"price": true, "name": true, "created_at": true,
-		}
-		if !validSortFields[sortField] {
-			sortField = "created_at"
-		}
-		if sortOrder != "asc" && sortOrder != "desc" {
-			sortOrder = "desc"
-		}
-		query = query.Order(sortField + " " + sortOrder)
-
-		page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
-		if page < 1 {
-			page = 1
-		}
-		if limit < 1 {
-			limit = 20
-		}
-		if limit > 100 {
-			limit = 100
-		}
-		offset := (page - 1) * limit
-
-		var total int64
-		if err := query.Count(&total).Error; err != nil {
+		input := buildCatalogListInput(c, true, 10)
+		list, err := catalog.ListProducts(input)
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch products"})
 			return
 		}
 
-		var products []models.Product
-		if err := query.Offset(offset).Limit(limit).Find(&products).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch products"})
-			return
-		}
-
-		contractProducts := make([]apicontract.Product, 0, len(products))
-		for _, product := range products {
-			view, viewErr := materializeAdminProduct(db, mediaService, product, false)
+		contractProducts := make([]apicontract.Product, 0, len(list.Products))
+		for _, product := range list.Products {
+			view, viewErr := buildProductContract(db, mediaService, product, true, false, true)
 			if viewErr != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product draft"})
 				return
 			}
-			contractProducts = append(contractProducts, toContractProduct(view))
-		}
-
-		totalPages := int(total) / limit
-		if int(total)%limit > 0 {
-			totalPages++
+			contractProducts = append(contractProducts, view)
 		}
 
 		c.JSON(http.StatusOK, apicontract.ProductPage{
 			Data: contractProducts,
 			Pagination: apicontract.Pagination{
-				Page:       page,
-				Limit:      limit,
-				Total:      int(total),
-				TotalPages: totalPages,
+				Page:       input.Page,
+				Limit:      input.Limit,
+				Total:      int(list.Total),
+				TotalPages: list.TotalPages,
 			},
 		})
 	}
@@ -267,111 +173,83 @@ func GetAdminProductByID(db *gorm.DB, mediaService *media.Service) gin.HandlerFu
 			return
 		}
 
-		view, err := materializeAdminProduct(db, mediaService, product, true)
+		view, err := buildProductContract(db, mediaService, product, true, true, true)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product draft"})
 			return
 		}
-		c.JSON(http.StatusOK, toContractProduct(view))
+		c.JSON(http.StatusOK, view)
 	}
 }
 
 func CreateProduct(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req UpdateProductRequest
+		var req apicontract.ProductUpsertInput
 		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		draft := normalizeProductDraftData(productDraftData{})
-		if req.SKU != nil {
-			draft.SKU = strings.TrimSpace(*req.SKU)
-		}
-		if req.Name != nil {
-			draft.Name = strings.TrimSpace(*req.Name)
-		}
-		if req.Description != nil {
-			draft.Description = strings.TrimSpace(*req.Description)
-		}
-		if req.Price != nil {
-			draft.Price = *req.Price
-		}
-		if req.Stock != nil {
-			draft.Stock = *req.Stock
-		}
-		if req.Images != nil {
-			draft.Images = append([]string(nil), (*req.Images)...)
-		}
-		draft = normalizeProductDraftData(draft)
-
-		if err := validateProductDraft(draft); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		if err := ensureUniqueProductSKU(db, draft.SKU, 0); err != nil {
-			if err.Error() == "Product with this SKU already exists" {
-				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-				return
-			}
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check SKU uniqueness"})
-			return
-		}
-
-		payload, err := encodeProductDraftData(draft)
+		draft := catalogDraftFromUpsertInput(req)
+		derived, err := deriveCatalogMerchandising(draft)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create product draft"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		product := models.Product{
-			SKU:            draft.SKU,
-			Name:           draft.Name,
-			Description:    draft.Description,
-			Price:          models.MoneyFromFloat(draft.Price),
-			Stock:          draft.Stock,
-			Images:         append([]string(nil), draft.Images...),
+			SKU:            derived.SKU,
+			Name:           derived.Name,
+			Subtitle:       derived.Subtitle,
+			Description:    derived.Description,
+			Price:          models.MoneyFromFloat(derived.Price),
+			Stock:          derived.Stock,
+			Images:         append([]string(nil), derived.Images...),
+			BrandID:        derived.BrandID,
 			IsPublished:    false,
-			DraftData:      payload,
 			DraftUpdatedAt: ptrTimeNow(),
 		}
 		if err := db.Transaction(func(tx *gorm.DB) error {
+			if err := validateProductCatalogDraft(tx, draft, 0); err != nil {
+				return err
+			}
 			if err := tx.Select("*").Create(&product).Error; err != nil {
 				return err
 			}
-			return tx.Model(&product).Updates(map[string]any{
-				"is_published":     false,
-				"draft_data":       payload,
-				"draft_updated_at": product.DraftUpdatedAt,
-			}).Error
+			if err := tx.Model(&product).Updates(map[string]any{
+				"is_published": false,
+			}).Error; err != nil {
+				return err
+			}
+			return saveEditableProductCatalogDraft(tx, &product, draft)
 		}); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create product"})
+			if err.Error() == "Product with this SKU already exists" || err.Error() == "Variant SKU already exists" {
+				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
 		if err := db.Preload("Related").First(&product, product.ID).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load created product"})
 			return
 		}
-
-		view, viewErr := materializeAdminProduct(db, nil, product, true)
-		if viewErr != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load created product"})
+		view, err := buildProductContract(db, nil, product, true, true, true)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product draft"})
 			return
 		}
-		c.JSON(http.StatusCreated, toContractProduct(view))
+		c.JSON(http.StatusCreated, view)
 	}
 }
 
 func UpdateProduct(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		var req UpdateProductRequest
+		var req apicontract.ProductUpsertInput
 		if err := bindStrictJSON(c, &req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		if req.SKU == nil && req.Name == nil && req.Description == nil && req.Price == nil && req.Stock == nil && req.Images == nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "No fields to update"})
 			return
 		}
 
@@ -382,62 +260,21 @@ func UpdateProduct(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		if err := db.Transaction(func(tx *gorm.DB) error {
-			draft, _, err := ensureProductDraft(tx, &product)
-			if err != nil {
+			draft := catalogDraftFromUpsertInput(req)
+			if err := validateProductCatalogDraft(tx, draft, product.ID); err != nil {
 				return err
 			}
-
-			if req.SKU != nil {
-				draft.SKU = strings.TrimSpace(*req.SKU)
-			}
-			if req.Name != nil {
-				draft.Name = strings.TrimSpace(*req.Name)
-			}
-			if req.Description != nil {
-				draft.Description = strings.TrimSpace(*req.Description)
-			}
-			if req.Price != nil {
-				draft.Price = *req.Price
-			}
-			if req.Stock != nil {
-				draft.Stock = *req.Stock
-			}
-			if req.Images != nil {
-				draft.Images = append([]string(nil), (*req.Images)...)
-			}
-			draft = normalizeProductDraftData(draft)
-
-			if err := validateProductDraft(draft); err != nil {
-				return err
-			}
-			if err := ensureUniqueProductSKU(tx, draft.SKU, product.ID); err != nil {
-				return err
-			}
-			return upsertProductDraft(tx, &product, draft)
+			return saveEditableProductCatalogDraft(tx, &product, draft)
 		}); err != nil {
-			switch err.Error() {
-			case "Product SKU is required", "Product name is required", "Product price must be greater than 0":
-				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			case "Product with this SKU already exists":
+			if err.Error() == "Product with this SKU already exists" || err.Error() == "Variant SKU already exists" {
 				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 				return
-			default:
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product"})
-				return
 			}
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
 
-		if err := db.Preload("Related").First(&product, id).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load updated product"})
-			return
-		}
-		view, err := materializeAdminProduct(db, nil, product, true)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product draft"})
-			return
-		}
-		c.JSON(http.StatusOK, toContractProduct(view))
+		respondAdminProduct(c, db, nil, product.ID)
 	}
 }
 
@@ -466,68 +303,57 @@ func UpdateProductRelated(db *gorm.DB, mediaService *media.Service) gin.HandlerF
 		}
 
 		if err := db.Transaction(func(tx *gorm.DB) error {
-			draft, _, err := ensureProductDraft(tx, &product)
+			_, err := ensureProductCatalogDraft(tx, &product)
+			if err != nil {
+				return err
+			}
+			draft, _, err := loadNormalizedProductDraft(tx, product)
 			if err != nil {
 				return err
 			}
 			draft.RelatedIDs = append([]uint(nil), req.RelatedIDs...)
-			draft = normalizeProductDraftData(draft)
-			return upsertProductDraft(tx, &product, draft)
+			return saveEditableProductCatalogDraft(tx, &product, draft)
 		}); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update related products"})
 			return
 		}
 
-		if err := db.Preload("Related").First(&product, id).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load updated product"})
-			return
-		}
-		view, err := materializeAdminProduct(db, mediaService, product, true)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product draft"})
-			return
-		}
-		c.JSON(http.StatusOK, toContractProduct(view))
+		respondAdminProduct(c, db, mediaService, product.ID)
 	}
 }
 
 func PublishProduct(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		var product models.Product
-		if err := db.Preload("Related").First(&product, id).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
-			return
-		}
-
-		draft, hasDraft, err := editableProductDraftData(product)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load product draft"})
-			return
-		}
-		if !hasDraft {
-			draft = productDraftFromPublished(product)
-		}
-		if err := validateProductDraft(draft); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		if err := ensureUniqueProductSKU(db, draft.SKU, product.ID); err != nil {
-			if err.Error() == "Product with this SKU already exists" {
-				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-				return
-			}
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check SKU uniqueness"})
-			return
-		}
-
 		cleanupIDs := []string{}
-		if err := db.Transaction(func(tx *gorm.DB) error {
-			var related []models.Product
-			if len(draft.RelatedIDs) > 0 {
-				if err := tx.Where("id IN ?", draft.RelatedIDs).Find(&related).Error; err != nil {
+		publishedProductID := uint(0)
+		err := db.Transaction(func(tx *gorm.DB) error {
+			var product models.Product
+			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Preload("Related").First(&product, id).Error; err != nil {
+				return err
+			}
+			publishedProductID = product.ID
+
+			if productHasDraft(product) {
+				var draftHeader models.ProductDraft
+				if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("product_id = ?", product.ID).First(&draftHeader).Error; err != nil {
 					return err
 				}
+				if draftHeader.Version <= 0 {
+					return errors.New("product draft version is invalid")
+				}
+			}
+
+			draft, hasDraft, err := loadNormalizedProductDraft(tx, product)
+			if err != nil {
+				return err
+			}
+			if err := validateProductCatalogDraft(tx, draft, product.ID); err != nil {
+				return err
+			}
+			normalized, err := deriveCatalogMerchandising(draft)
+			if err != nil {
+				return err
 			}
 
 			oldLiveRefs, err := loadProductMediaReferences(tx, product.ID, media.RoleProductImage)
@@ -539,22 +365,7 @@ func PublishProduct(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 				return err
 			}
 
-			updates := map[string]any{
-				"sku":              draft.SKU,
-				"name":             draft.Name,
-				"description":      draft.Description,
-				"price":            models.MoneyFromFloat(draft.Price),
-				"stock":            draft.Stock,
-				"images":           draft.Images,
-				"is_published":     true,
-				"draft_data":       "",
-				"draft_updated_at": nil,
-			}
-			if err := tx.Model(&product).Updates(updates).Error; err != nil {
-				return err
-			}
-
-			if err := tx.Model(&product).Association("Related").Replace(related); err != nil {
+			if err := publishNormalizedProductDraft(tx, &product, normalized); err != nil {
 				return err
 			}
 
@@ -580,23 +391,22 @@ func PublishProduct(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 				cleanupIDs = append(cleanupIDs, diffMediaIDs(draftRefs, activeLiveRefs)...)
 			}
 			return nil
-		}); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to publish product"})
+		})
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+				return
+			}
+			if err.Error() == "Product with this SKU already exists" || err.Error() == "Variant SKU already exists" {
+				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		cleanupMediaIDs(mediaService, cleanupIDs)
-
-		if err := db.Preload("Related").First(&product, id).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load published product"})
-			return
-		}
-		view, err := materializeAdminProduct(db, mediaService, product, true)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product"})
-			return
-		}
-		c.JSON(http.StatusOK, toContractProduct(view))
+		respondAdminProduct(c, db, mediaService, publishedProductID)
 	}
 }
 
@@ -610,7 +420,7 @@ func UnpublishProduct(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc 
 		}
 
 		if err := db.Transaction(func(tx *gorm.DB) error {
-			_, hadDraft, err := ensureProductDraft(tx, &product)
+			hadDraft, err := ensureProductCatalogDraft(tx, &product)
 			if err != nil {
 				return err
 			}
@@ -632,17 +442,7 @@ func UnpublishProduct(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc 
 			return
 		}
 
-		if err := db.Preload("Related").First(&product, id).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load unpublished product"})
-			return
-		}
-
-		view, err := materializeAdminProduct(db, mediaService, product, true)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product draft"})
-			return
-		}
-		c.JSON(http.StatusOK, toContractProduct(view))
+		respondAdminProduct(c, db, mediaService, product.ID)
 	}
 }
 
@@ -655,12 +455,7 @@ func DiscardProductDraft(db *gorm.DB, mediaService *media.Service) gin.HandlerFu
 			return
 		}
 		if !productHasDraft(product) {
-			view, err := materializeAdminProduct(db, mediaService, product, true)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product"})
-				return
-			}
-			c.JSON(http.StatusOK, toContractProduct(view))
+			respondAdminProduct(c, db, mediaService, product.ID)
 			return
 		}
 
@@ -672,10 +467,7 @@ func DiscardProductDraft(db *gorm.DB, mediaService *media.Service) gin.HandlerFu
 			}
 
 			if product.IsPublished {
-				if err := tx.Model(&product).Updates(map[string]any{
-					"draft_data":       "",
-					"draft_updated_at": nil,
-				}).Error; err != nil {
+				if err := discardNormalizedProductDraft(tx, &product); err != nil {
 					return err
 				}
 				if hasMediaReferenceTable(tx) {
@@ -689,8 +481,7 @@ func DiscardProductDraft(db *gorm.DB, mediaService *media.Service) gin.HandlerFu
 				return nil
 			}
 
-			baseDraft := productDraftFromPublished(product)
-			if err := upsertProductDraft(tx, &product, baseDraft); err != nil {
+			if err := discardNormalizedProductDraft(tx, &product); err != nil {
 				return err
 			}
 			if err := copyProductMediaRole(tx, product.ID, media.RoleProductImage, media.RoleProductDraftImage); err != nil {
@@ -708,17 +499,7 @@ func DiscardProductDraft(db *gorm.DB, mediaService *media.Service) gin.HandlerFu
 		}
 
 		cleanupMediaIDs(mediaService, cleanupIDs)
-
-		if err := db.Preload("Related").First(&product, id).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load product"})
-			return
-		}
-		view, err := materializeAdminProduct(db, mediaService, product, true)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render product"})
-			return
-		}
-		c.JSON(http.StatusOK, toContractProduct(view))
+		respondAdminProduct(c, db, mediaService, product.ID)
 	}
 }
 

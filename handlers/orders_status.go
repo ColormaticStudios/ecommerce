@@ -46,7 +46,7 @@ func CancelUserOrder(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFu
 				return err
 			}
 
-			if err := tx.Preload("Items.Product").First(&responseOrder, order.ID).Error; err != nil {
+			if err := tx.Preload("Items.ProductVariant").Preload("Items.ProductVariant.Product").First(&responseOrder, order.ID).Error; err != nil {
 				return err
 			}
 			return nil
@@ -65,7 +65,12 @@ func CancelUserOrder(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFu
 
 		applyOrderMediaToOrder(&responseOrder, mediaService)
 		applyOrderCapabilities(&responseOrder, &user.ID)
-		c.JSON(http.StatusOK, responseOrder)
+		response, err := buildOrderResponse(db, mediaService, responseOrder)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render order"})
+			return
+		}
+		c.JSON(http.StatusOK, response)
 	}
 }
 
@@ -103,11 +108,11 @@ func UpdateOrderStatus(db *gorm.DB) gin.HandlerFunc {
 			var stockErr *orderservice.InsufficientStockError
 			if errors.As(err, &stockErr) {
 				c.JSON(http.StatusBadRequest, gin.H{
-					"error":        "Insufficient stock",
-					"product_id":   stockErr.ProductID,
-					"product_name": stockErr.ProductName,
-					"requested":    stockErr.Requested,
-					"available":    stockErr.Available,
+					"error":              "Insufficient stock",
+					"product_variant_id": stockErr.ProductVariantID,
+					"product_name":       stockErr.ProductName,
+					"requested":          stockErr.Requested,
+					"available":          stockErr.Available,
 				})
 				return
 			}
@@ -115,8 +120,13 @@ func UpdateOrderStatus(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		db.Preload("Items.Product").First(&order, order.ID)
+		db.Preload("Items.ProductVariant").Preload("Items.ProductVariant.Product").First(&order, order.ID)
 		applyOrderCapabilities(&order, nil)
-		c.JSON(http.StatusOK, order)
+		response, err := buildOrderResponse(db, nil, order)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render order"})
+			return
+		}
+		c.JSON(http.StatusOK, response)
 	}
 }

@@ -1,10 +1,20 @@
 import type { PageServerLoad } from "./$types";
-import { parseProduct, type ProductModel } from "$lib/models";
+import {
+	parseBrand,
+	parseProduct,
+	parseProductAttributeDefinition,
+	type BrandModel,
+	type ProductAttributeDefinitionModel,
+	type ProductModel,
+} from "$lib/models";
 import { setPublicPageCacheHeaders } from "$lib/server/cache";
 import { serverRequest } from "$lib/server/api";
 import type { components } from "$lib/api/generated/openapi";
 
 type ProductPagePayload = components["schemas"]["ProductPage"];
+type BrandListPayload = components["schemas"]["BrandListResponse"];
+type ProductAttributeDefinitionListPayload =
+	components["schemas"]["ProductAttributeDefinitionListResponse"];
 
 const pageSizeOptions = [8, 12, 24, 36] as const;
 
@@ -33,25 +43,49 @@ export const load: PageServerLoad = async (event) => {
 	setPublicPageCacheHeaders(event);
 	const { url } = event;
 	const searchQuery = url.searchParams.get("q") ?? "";
+	const brandSlug = url.searchParams.get("brand_slug") ?? "";
+	const hasVariantStock = url.searchParams.get("has_variant_stock") === "true";
 	const currentPage = Math.max(1, Number(url.searchParams.get("page") ?? 1));
 	const pageSize = normalizeLimit(Number(url.searchParams.get("limit") ?? 12));
 	const sortBy = normalizeSort(url.searchParams.get("sort"));
 	const sortOrder = normalizeOrder(url.searchParams.get("order"));
+	const attributeFilters: Record<string, string> = {};
+	for (const [key, value] of url.searchParams.entries()) {
+		if (!key.startsWith("attribute[") || !key.endsWith("]")) {
+			continue;
+		}
+		const slug = key.slice("attribute[".length, -1).trim();
+		if (!slug || !value.trim()) {
+			continue;
+		}
+		attributeFilters[slug] = value.trim();
+	}
 
 	let results: ProductModel[] = [];
+	let brands: BrandModel[] = [];
+	let attributes: ProductAttributeDefinitionModel[] = [];
 	let totalPages = 1;
 	let totalResults = 0;
 	let errorMessage = "";
 
 	try {
-		const response = await serverRequest<ProductPagePayload>(event, "/products", {
-			q: searchQuery.trim() || undefined,
-			page: currentPage,
-			limit: pageSize,
-			sort: sortBy,
-			order: sortOrder,
-		});
+		const [response, brandsPayload, attributesPayload] = await Promise.all([
+			serverRequest<ProductPagePayload>(event, "/products", {
+				q: searchQuery.trim() || undefined,
+				brand_slug: brandSlug || undefined,
+				has_variant_stock: hasVariantStock ? true : undefined,
+				attribute: Object.keys(attributeFilters).length > 0 ? attributeFilters : undefined,
+				page: currentPage,
+				limit: pageSize,
+				sort: sortBy,
+				order: sortOrder,
+			}),
+			serverRequest<BrandListPayload>(event, "/brands"),
+			serverRequest<ProductAttributeDefinitionListPayload>(event, "/product-attributes"),
+		]);
 		results = response.data.map(parseProduct);
+		brands = brandsPayload.data.map(parseBrand);
+		attributes = attributesPayload.data.map(parseProductAttributeDefinition);
 		totalPages = Math.max(1, response.pagination.total_pages);
 		totalResults = response.pagination.total;
 	} catch (err) {
@@ -61,9 +95,14 @@ export const load: PageServerLoad = async (event) => {
 
 	return {
 		results,
+		brands,
+		attributes,
 		errorMessage,
 		searchQuery,
 		draftQuery: searchQuery,
+		brandSlug,
+		hasVariantStock,
+		attributeFilters,
 		currentPage,
 		pageSize,
 		totalPages,

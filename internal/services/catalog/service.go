@@ -15,14 +15,17 @@ type Service struct {
 }
 
 type ListProductsInput struct {
-	SearchTerm string
-	MinPrice   *float64
-	MaxPrice   *float64
-	SortField  string
-	SortOrder  string
-	Page       int
-	Limit      int
-	Preview    bool
+	SearchTerm      string
+	MinPrice        *float64
+	MaxPrice        *float64
+	BrandSlug       string
+	HasVariantStock *bool
+	Attribute       map[string]string
+	SortField       string
+	SortOrder       string
+	Page            int
+	Limit           int
+	Preview         bool
 }
 
 type ListProductsOutput struct {
@@ -38,14 +41,17 @@ func NewService(db *gorm.DB, mediaService *media.Service) *Service {
 
 func (s *Service) ListProducts(input ListProductsInput) (ListProductsOutput, error) {
 	result, err := s.repo.ListProducts(catalogrepo.ProductListFilters{
-		SearchTerm: input.SearchTerm,
-		MinPrice:   input.MinPrice,
-		MaxPrice:   input.MaxPrice,
-		SortField:  input.SortField,
-		SortOrder:  input.SortOrder,
-		Page:       input.Page,
-		Limit:      input.Limit,
-		Preview:    input.Preview,
+		SearchTerm:      input.SearchTerm,
+		MinPrice:        input.MinPrice,
+		MaxPrice:        input.MaxPrice,
+		BrandSlug:       input.BrandSlug,
+		HasVariantStock: input.HasVariantStock,
+		Attribute:       input.Attribute,
+		SortField:       input.SortField,
+		SortOrder:       input.SortOrder,
+		Page:            input.Page,
+		Limit:           input.Limit,
+		Preview:         input.Preview,
 	})
 	if err != nil {
 		return ListProductsOutput{}, err

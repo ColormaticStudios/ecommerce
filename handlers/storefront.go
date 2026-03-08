@@ -36,17 +36,20 @@ type StorefrontHero struct {
 }
 
 type StorefrontProductSection struct {
-	Title           string `json:"title"`
-	Subtitle        string `json:"subtitle"`
-	Source          string `json:"source"`
-	Query           string `json:"query"`
-	ProductIds      []int  `json:"product_ids"`
-	Sort            string `json:"sort"`
-	Order           string `json:"order"`
-	Limit           int    `json:"limit"`
-	ShowStock       bool   `json:"show_stock"`
-	ShowDescription bool   `json:"show_description"`
-	ImageAspect     string `json:"image_aspect"`
+	Title            string            `json:"title"`
+	Subtitle         string            `json:"subtitle"`
+	Source           string            `json:"source"`
+	Query            string            `json:"query"`
+	ProductIds       []int             `json:"product_ids"`
+	Sort             string            `json:"sort"`
+	Order            string            `json:"order"`
+	Limit            int               `json:"limit"`
+	BrandSlug        string            `json:"brand_slug"`
+	HasVariantStock  bool              `json:"has_variant_stock"`
+	AttributeFilters map[string]string `json:"attribute_filters"`
+	ShowStock        bool              `json:"show_stock"`
+	ShowDescription  bool              `json:"show_description"`
+	ImageAspect      string            `json:"image_aspect"`
 }
 
 type StorefrontPromoCard struct {
@@ -183,17 +186,20 @@ func limits() storefrontLimits {
 func defaultProductSection(title, source string) StorefrontProductSection {
 	limitValues := limits()
 	return StorefrontProductSection{
-		Title:           title,
-		Subtitle:        "",
-		Source:          source,
-		Query:           "",
-		ProductIds:      []int{},
-		Sort:            "created_at",
-		Order:           "desc",
-		Limit:           limitValues.DefaultProductLimit,
-		ShowStock:       true,
-		ShowDescription: true,
-		ImageAspect:     "square",
+		Title:            title,
+		Subtitle:         "",
+		Source:           source,
+		Query:            "",
+		ProductIds:       []int{},
+		Sort:             "created_at",
+		Order:            "desc",
+		Limit:            limitValues.DefaultProductLimit,
+		BrandSlug:        "",
+		HasVariantStock:  false,
+		AttributeFilters: map[string]string{},
+		ShowStock:        true,
+		ShowDescription:  true,
+		ImageAspect:      "square",
 	}
 }
 
@@ -343,6 +349,18 @@ func defaultStorefrontSettings() StorefrontSettingsPayload {
 			SiteTitle: "Storefront",
 			HomepageSections: []StorefrontHomepageSection{
 				{
+					ID:      "fallback-hero",
+					Type:    string(apicontract.Hero),
+					Enabled: true,
+					Hero: &StorefrontHero{
+						Eyebrow:      "Welcome",
+						Title:        "Storefront",
+						Subtitle:     "",
+						PrimaryCta:   StorefrontLink{},
+						SecondaryCta: StorefrontLink{},
+					},
+				},
+				{
 					ID:      "fallback-products",
 					Type:    string(apicontract.Products),
 					Enabled: true,
@@ -454,17 +472,20 @@ func normalizeProductSection(input *StorefrontProductSection) *StorefrontProduct
 	}
 
 	normalized := StorefrontProductSection{
-		Title:           strings.TrimSpace(input.Title),
-		Subtitle:        strings.TrimSpace(input.Subtitle),
-		Source:          normalizeProductSource(strings.TrimSpace(input.Source)),
-		Query:           strings.TrimSpace(input.Query),
-		Sort:            normalizeSort(strings.TrimSpace(input.Sort)),
-		Order:           normalizeOrder(strings.TrimSpace(input.Order)),
-		Limit:           clamp(input.Limit, 1, limitValues.MaxProductSectionLimit),
-		ShowStock:       input.ShowStock,
-		ShowDescription: input.ShowDescription,
-		ImageAspect:     normalizeImageAspect(strings.TrimSpace(input.ImageAspect)),
-		ProductIds:      make([]int, 0, limitValues.MaxManualProductIDs),
+		Title:            strings.TrimSpace(input.Title),
+		Subtitle:         strings.TrimSpace(input.Subtitle),
+		Source:           normalizeProductSource(strings.TrimSpace(input.Source)),
+		Query:            strings.TrimSpace(input.Query),
+		Sort:             normalizeSort(strings.TrimSpace(input.Sort)),
+		Order:            normalizeOrder(strings.TrimSpace(input.Order)),
+		Limit:            clamp(input.Limit, 1, limitValues.MaxProductSectionLimit),
+		BrandSlug:        strings.TrimSpace(input.BrandSlug),
+		HasVariantStock:  input.HasVariantStock,
+		AttributeFilters: make(map[string]string),
+		ShowStock:        input.ShowStock,
+		ShowDescription:  input.ShowDescription,
+		ImageAspect:      normalizeImageAspect(strings.TrimSpace(input.ImageAspect)),
+		ProductIds:       make([]int, 0, limitValues.MaxManualProductIDs),
 	}
 	if normalized.Title == "" {
 		normalized.Title = "Products"
@@ -483,6 +504,14 @@ func normalizeProductSection(input *StorefrontProductSection) *StorefrontProduct
 		}
 		seen[id] = struct{}{}
 		normalized.ProductIds = append(normalized.ProductIds, id)
+	}
+	for key, value := range input.AttributeFilters {
+		slug := strings.TrimSpace(key)
+		trimmed := strings.TrimSpace(value)
+		if slug == "" || trimmed == "" {
+			continue
+		}
+		normalized.AttributeFilters[slug] = trimmed
 	}
 	return &normalized
 }
