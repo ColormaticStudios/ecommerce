@@ -28,7 +28,7 @@
 
 ## Cross-Roadmap Alignment
 - Catalog depth:
-  - Product write contract aligns with `roadmap/product-catalog-depth.md` nested `ProductUpsertInput`, not legacy flat `ProductInput`.
+  - Product catalog depth is already the repo baseline; product write contract aligns with the nested `ProductUpsertInput`, not legacy flat `ProductInput`.
   - Categories attach at product level and apply to all product variants.
 - Discounts/promotions:
   - `roadmap/discounts-promotions.md` category-targeted campaigns reuse this `categories` + `product_categories` data.

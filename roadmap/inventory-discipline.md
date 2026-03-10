@@ -36,8 +36,8 @@
 - Order fulfillment (`roadmap/order-fulfillment-ops.md`):
   - Inventory reservation records become the source of truth for `ALLOCATED` and shipment consumption events.
   - Allocation identity is `product_variant_id` from P0 onward.
-- Product catalog depth (`roadmap/product-catalog-depth.md`):
-  - Inventory identity must align with variant-first catalog contracts (`product_variant_id`) and should not add new `product_id`-based ownership paths.
+- Product catalog depth baseline:
+  - Inventory identity must align with the implemented variant-first catalog contracts (`product_variant_id`) and should not add new `product_id`-based ownership paths.
 - Guest checkout (`roadmap/guest-checkout.md`):
   - Reservation ownership should support both `user_id` and guest checkout session/order identity.
 - Providers (`roadmap/providers.md`):

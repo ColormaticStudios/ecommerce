@@ -40,7 +40,7 @@
   - Fulfillment consumes canonical checkout order records from `roadmap/guest-checkout.md` (`/api/v1/checkout/*` for customer mutations).
   - Customer order status reads remain compatible with guest/auth order ownership model.
 - Catalog depth:
-  - Fulfillment line identity must use `product_variant_id` from `roadmap/product-catalog-depth.md` rather than `product_id`.
+  - Product catalog depth is already the repo baseline; fulfillment line identity must use `product_variant_id` rather than `product_id`.
   - Inventory reservation/availability is variant-based.
 - Providers:
   - Shipping label purchase/tracking should align with provider abstractions in `roadmap/providers.md`.

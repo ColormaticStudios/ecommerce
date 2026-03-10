@@ -33,7 +33,7 @@
 
 ## Cross-Roadmap Alignment
 - Catalog depth:
-  - This roadmap uses `product_variant_id` as the cart/order line identifier (aligned with `roadmap/product-catalog-depth.md` P2).
+  - Product catalog depth is already the repo baseline; this roadmap uses `product_variant_id` as the cart/order line identifier.
   - No long-term `product_id` purchase fallback is planned.
 - Providers:
   - Use explicit payment lifecycle endpoints from the start (`/payments/authorize` plus admin capture/void/refund).
@@ -177,7 +177,7 @@
 
 4. `order_items`
 - No ownership change; remains linked to `orders`.
-- Purchase reference aligns to variant model (`product_variant_id`) from `roadmap/product-catalog-depth.md`.
+- Purchase reference aligns to the existing variant-first catalog model (`product_variant_id`).
 
 5. `storefront_settings` (`config_json` / `draft_config_json`)
 - Add `checkout.allow_guest_checkout` boolean (default `true`).

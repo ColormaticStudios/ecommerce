@@ -38,8 +38,8 @@
 - CMS (`roadmap/ecommerce-cms.md`):
   - This roadmap defines the shared localization platform consumed by CMS.
   - CMS P6 should use this roadmap’s locale/fallback/workflow model rather than defining a second localization stack.
-- Product catalog depth (`roadmap/product-catalog-depth.md`):
-  - Catalog’s canonical purchasable model remains variant-first; localization adds translated display fields only.
+- Product catalog depth baseline:
+  - Catalog’s canonical purchasable model is already variant-first; localization adds translated display fields only.
   - Do not reintroduce product-level purchase semantics while localizing product copy.
 - Search (`roadmap/search-discoverability-quality.md`):
   - Initial localization rollout keeps search behavior deterministic with canonical-language indexing fallback.

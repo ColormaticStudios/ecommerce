@@ -29,7 +29,7 @@
   - Use checkout-session routes from `roadmap/guest-checkout.md` (`/api/v1/checkout/*`) for customer-facing mutations.
   - Keep `/api/v1/me/orders*` as read/account surfaces only.
 - Catalog depth:
-  - Snapshot and payment amounts are based on variant-backed order items (`product_variant_id`) from `roadmap/product-catalog-depth.md`.
+  - Product catalog depth is already the repo baseline; snapshot and payment amounts are based on variant-backed order items (`product_variant_id`).
 - Discounts/promotions:
   - Snapshot totals include applied campaign/level adjustments from `roadmap/discounts-promotions.md`.
 

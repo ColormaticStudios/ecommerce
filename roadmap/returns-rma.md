@@ -38,7 +38,7 @@
 - Guest checkout:
   - Customer return surface must work for both authenticated and guest-origin orders where ownership is session/token based (`roadmap/guest-checkout.md`).
 - Catalog depth:
-  - Return lines must use `product_variant_id` as canonical line identity (`roadmap/product-catalog-depth.md`).
+  - Product catalog depth is already the repo baseline; return lines must use `product_variant_id` as canonical line identity.
 - Providers:
   - Refund and store-credit funding flows must align with provider abstractions and idempotency patterns in `roadmap/providers.md`.
 - Discounts/promotions:

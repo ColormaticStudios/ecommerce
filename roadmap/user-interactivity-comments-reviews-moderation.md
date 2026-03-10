@@ -28,7 +28,7 @@
 5. P4: Reputation, trust surfacing, and optimization/hardening.
 
 ## Cross-Roadmap Alignment
-- Product catalog depth (`roadmap/product-catalog-depth.md`):
+- Product catalog depth baseline:
   - Canonical item linkage should be `product_id` for display and `order_item`/`product_variant_id` for verified purchase checks.
 - Search and discoverability (`roadmap/search-discoverability-quality.md`):
   - Review rating aggregates and helpfulness should be indexable signals for ranking/faceting in later phases.

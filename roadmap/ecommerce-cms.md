@@ -38,8 +38,8 @@
 - Guest checkout (`roadmap/guest-checkout.md`):
   - CMS CTAs and links for cart/checkout flows must target `/api/v1/checkout/*` UX routes, not legacy `/api/v1/me/*` mutation assumptions.
   - Guest checkout disable state must be readable by CMS rendering logic so checkout-related blocks can degrade safely.
-- Catalog depth (`roadmap/product-catalog-depth.md`):
-  - CMS product blocks consume variant-first catalog contracts and `price_range`/variant-aware summaries.
+- Product catalog depth baseline:
+  - CMS product blocks consume the implemented variant-first catalog contracts and `price_range`/variant-aware summaries.
   - Product pickers in CMS authoring should resolve to product IDs while storefront purchase actions remain variant-aware at runtime.
 - Product categories (`roadmap/product-categories.md`):
   - Category landing blocks and navigation use canonical category slugs from `categories` and product-category joins.

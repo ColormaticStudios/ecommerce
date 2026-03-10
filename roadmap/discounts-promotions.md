@@ -36,7 +36,7 @@
 - Checkout surface:
   - Use session checkout endpoints from `roadmap/guest-checkout.md` (`/api/v1/checkout/*`), not legacy `/api/v1/me/checkout/*`.
 - Catalog depth:
-  - Evaluate promotions against cart/order line `product_variant_id` once `roadmap/product-catalog-depth.md` P2 lands.
+  - Product catalog depth is already the repo baseline; evaluate promotions against cart/order line `product_variant_id`.
   - Campaign targets remain product/category level; variant-level eligibility is resolved through parent product/category joins.
 - Categories:
   - Category-targeted promotions depend on `roadmap/product-categories.md` category and product-category join model.
