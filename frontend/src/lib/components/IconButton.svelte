@@ -3,11 +3,13 @@
 
 	type IconButtonVariant = "neutral" | "danger" | "primary" | "success";
 	type IconButtonSize = "sm" | "md" | "lg";
+	type IconButtonTone = "default" | "admin";
 
 	interface Props extends HTMLButtonAttributes {
 		variant?: IconButtonVariant;
 		size?: IconButtonSize;
 		outlined?: boolean;
+		tone?: IconButtonTone;
 		class?: string;
 		children?: import("svelte").Snippet;
 	}
@@ -16,6 +18,7 @@
 		variant = "neutral",
 		size = "md",
 		outlined = false,
+		tone = "default",
 		class: className = "",
 		type = "button",
 		children,
@@ -48,7 +51,9 @@
 			case "success":
 				return "border border-emerald-300 dark:border-emerald-700";
 			default:
-				return "border border-gray-300 dark:border-gray-700";
+				return tone === "admin"
+					? "border border-stone-300 dark:border-stone-700"
+					: "border border-gray-300 dark:border-gray-700";
 		}
 	});
 
@@ -61,7 +66,9 @@
 			case "success":
 				return "text-emerald-600 hover:bg-emerald-100 focus-visible:outline-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-900/50";
 			default:
-				return "text-gray-700 hover:bg-gray-100 focus-visible:outline-gray-500 dark:text-gray-200 dark:hover:bg-gray-800";
+				return tone === "admin"
+					? "text-stone-700 hover:bg-stone-100 focus-visible:outline-stone-500 dark:text-stone-200 dark:hover:bg-stone-900"
+					: "text-gray-700 hover:bg-gray-100 focus-visible:outline-gray-500 dark:text-gray-200 dark:hover:bg-gray-800";
 		}
 	});
 </script>

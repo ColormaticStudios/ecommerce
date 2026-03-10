@@ -1,9 +1,12 @@
 <script lang="ts">
 	import type { HTMLInputAttributes } from "svelte/elements";
 
+	type InputTone = "default" | "admin";
+
 	interface Props extends Omit<HTMLInputAttributes, "type"> {
 		full?: boolean;
 		allowDecimal?: boolean;
+		tone?: InputTone;
 		class?: string;
 		value?: string | number | undefined;
 	}
@@ -11,14 +14,18 @@
 	let {
 		full = true,
 		allowDecimal = false,
+		tone = "default",
 		class: className = "",
 		value = $bindable(),
 		inputmode = "numeric",
 		...rest
 	}: Props = $props();
 
-	const baseClasses =
-		"px-3 py-2 rounded-md border border-gray-300 bg-gray-200 dark:border-gray-700 dark:bg-gray-800";
+	const baseClasses = $derived(
+		tone === "admin"
+			? "admin-input"
+			: "px-3 py-2 rounded-md border border-gray-300 bg-gray-200 dark:border-gray-700 dark:bg-gray-800"
+	);
 	const widthClasses = $derived(full ? "w-full" : "");
 	let isComposing = $state(false);
 

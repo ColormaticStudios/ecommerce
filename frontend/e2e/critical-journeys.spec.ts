@@ -32,8 +32,12 @@ async function establishSession(
 	await page.goto(`${apiBaseURL}/__test/login?email=${encodeURIComponent(email)}`);
 }
 
-async function readSummary(request: Parameters<typeof test>[0]["request"]): Promise<TestSummary> {
-	const response = await request.get(`${apiBaseURL}/__test/summary`);
+async function readSummary(
+	request: Parameters<typeof test>[0]["request"],
+	email?: string
+): Promise<TestSummary> {
+	const query = email ? `?email=${encodeURIComponent(email)}` : "";
+	const response = await request.get(`${apiBaseURL}/__test/summary${query}`);
 	expect(response.ok()).toBeTruthy();
 	return (await response.json()) as TestSummary;
 }
@@ -57,12 +61,11 @@ async function seedSavedCheckoutData(
 }
 
 test("sign up, checkout, and persist order/cart state", async ({ page, request }) => {
-	const before = await readSummary(request);
-
 	const now = Date.now();
 	const email = `buyer-${now}@example.com`;
 	const password = "supersecret";
 	const username = `buyer-${now}`;
+	const before = await readSummary(request, email);
 	await registerUser(request, { username, email, password, name: "Checkout Buyer" });
 	await establishSession(page, email, password);
 	await page.goto("/");
@@ -92,7 +95,7 @@ test("sign up, checkout, and persist order/cart state", async ({ page, request }
 	await page.goto("/cart");
 	await expect(page.getByText("Your cart is empty.")).toBeVisible();
 
-	const after = await readSummary(request);
+	const after = await readSummary(request, email);
 	expect(after.users).toBe(before.users + 1);
 	expect(after.orders).toBe(before.orders + 1);
 	expect(after.paid_orders).toBe(before.paid_orders);

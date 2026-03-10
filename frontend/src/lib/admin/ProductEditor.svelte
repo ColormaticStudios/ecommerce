@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
 	import { DRAFT_PREVIEW_SYNC_EVENT, DRAFT_PREVIEW_SYNC_STORAGE_KEY, type API } from "$lib/api";
+	import AdminSearchForm from "$lib/admin/AdminSearchForm.svelte";
 	import Alert from "$lib/components/Alert.svelte";
 	import Button from "$lib/components/Button.svelte";
+	import Dropdown from "$lib/components/Dropdown.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
+	import TextArea from "$lib/components/TextArea.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
 	import type { components } from "$lib/api/generated/openapi";
 	import {
@@ -175,6 +178,15 @@
 	let lastDirtyHandler: Props["onDirtyChange"] = undefined;
 	let lastSaveHandler: Props["onSaveRequestChange"] = undefined;
 	let editorKeySeed = 0;
+
+	const splitEditorSectionClass = "admin-surface-tight";
+	const stackedEditorSectionClass = "admin-subsurface";
+	const nestedEditorSectionClass = "admin-subsurface";
+	const overlayIconButtonClass = "admin-icon-button-surface";
+
+	function editorSectionClass(layoutMode: "split" | "stacked"): string {
+		return layoutMode === "split" ? splitEditorSectionClass : stackedEditorSectionClass;
+	}
 
 	type MessageScope = "product" | "media" | "related";
 	type MessageTone = "error" | "success";
@@ -1339,8 +1351,10 @@
 	});
 
 	onDestroy(() => {
-		window.removeEventListener(DRAFT_PREVIEW_SYNC_EVENT, handlePreviewSyncEvent as EventListener);
-		window.removeEventListener("storage", handlePreviewStorageEvent);
+		if (typeof window !== "undefined") {
+			window.removeEventListener(DRAFT_PREVIEW_SYNC_EVENT, handlePreviewSyncEvent as EventListener);
+			window.removeEventListener("storage", handlePreviewStorageEvent);
+		}
 		onDirtyChange?.(false);
 		onSaveRequestChange?.(null);
 	});
@@ -1390,16 +1404,20 @@
 
 {#snippet BasicInfoSection()}
 	<div>
-		<label for="admin-product-name" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
-			Name
-		</label>
-		<TextInput id="admin-product-name" name="name" class="mt-1" type="text" bind:value={name} />
+		<label for="admin-product-name" class="admin-label">Name</label>
+		<TextInput
+			tone="admin"
+			id="admin-product-name"
+			name="name"
+			class="mt-1"
+			type="text"
+			bind:value={name}
+		/>
 	</div>
 	<div>
-		<label for="admin-product-subtitle" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
-			Subtitle
-		</label>
+		<label for="admin-product-subtitle" class="admin-label">Subtitle</label>
 		<TextInput
+			tone="admin"
 			id="admin-product-subtitle"
 			name="subtitle"
 			class="mt-1"
@@ -1408,49 +1426,43 @@
 		/>
 	</div>
 	<div>
-		<label for="admin-product-sku" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
-			SKU
-		</label>
-		<TextInput id="admin-product-sku" name="sku" class="mt-1" type="text" bind:value={sku} />
+		<label for="admin-product-sku" class="admin-label">SKU</label>
+		<TextInput
+			tone="admin"
+			id="admin-product-sku"
+			name="sku"
+			class="mt-1"
+			type="text"
+			bind:value={sku}
+		/>
 	</div>
 	<div>
-		<label for="admin-product-brand" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
-			Brand
-		</label>
-		<select
-			id="admin-product-brand"
-			class="mt-1 w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
-			bind:value={selectedBrandId}
-		>
+		<label for="admin-product-brand" class="admin-label">Brand</label>
+		<Dropdown tone="admin" id="admin-product-brand" class="mt-1" bind:value={selectedBrandId}>
 			<option value="">No brand</option>
 			{#each brands as brand (brand.id)}
 				<option value={String(brand.id)}>{brand.name}</option>
 			{/each}
-		</select>
+		</Dropdown>
 	</div>
 	<div class="sm:col-span-2">
-		<label for="admin-product-description" class="text-xs tracking-[0.2em] text-gray-500 uppercase">
-			Description
-		</label>
-		<textarea
+		<label for="admin-product-description" class="admin-label">Description</label>
+		<TextArea
+			tone="admin"
 			id="admin-product-description"
 			name="description"
-			class="mt-1 w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
-			rows="4"
+			class="mt-1"
+			rows={4}
 			bind:value={description}
-		></textarea>
+		/>
 	</div>
 {/snippet}
 
 {#snippet OptionsSection(layoutMode: "split" | "stacked")}
-	<div
-		class={layoutMode === "split"
-			? "rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-			: "rounded-xl border border-gray-200 p-4 dark:border-gray-800"}
-	>
+	<div class={editorSectionClass(layoutMode)}>
 		<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 			<div>
-				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Options</p>
+				<p class="admin-label">Options</p>
 				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
 					Define the choice sets that can be combined into sellable variants.
 				</p>
@@ -1461,6 +1473,7 @@
 					: "flex flex-wrap gap-2"}
 			>
 				<Button
+					tone="admin"
 					variant="regular"
 					type="button"
 					class={layoutMode === "split" ? "w-full justify-center whitespace-nowrap" : ""}
@@ -1487,12 +1500,13 @@
 		{:else}
 			<div class="mt-4 space-y-4">
 				{#each options as option, optionIndex (option.key)}
-					<div class="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+					<div class={nestedEditorSectionClass}>
 						<div class="flex items-start justify-between gap-3">
 							<div class="grid flex-1 gap-4 sm:grid-cols-2">
 								<div>
-									<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Option name</p>
+									<p class="admin-label">Option name</p>
 									<TextInput
+										tone="admin"
 										class="mt-1"
 										type="text"
 										aria-label={`Option ${optionIndex + 1} name`}
@@ -1500,15 +1514,16 @@
 									/>
 								</div>
 								<div>
-									<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Display type</p>
-									<select
-										class="mt-1 w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+									<p class="admin-label">Display type</p>
+									<Dropdown
+										tone="admin"
+										class="mt-1"
 										aria-label={`Option ${optionIndex + 1} display type`}
 										bind:value={option.display_type}
 									>
 										<option value="select">Select</option>
 										<option value="swatch">Swatch</option>
-									</select>
+									</Dropdown>
 								</div>
 							</div>
 							<IconButton
@@ -1526,6 +1541,7 @@
 							{#each option.values as value (value.key)}
 								<div class="flex items-center gap-2">
 									<TextInput
+										tone="admin"
 										class="flex-1"
 										type="text"
 										aria-label={`${option.name || `Option ${optionIndex + 1}`} value`}
@@ -1542,7 +1558,12 @@
 									</IconButton>
 								</div>
 							{/each}
-							<Button variant="regular" type="button" onclick={() => addOptionValue(option.key)}>
+							<Button
+								tone="admin"
+								variant="regular"
+								type="button"
+								onclick={() => addOptionValue(option.key)}
+							>
 								<i class="bi bi-plus-lg mr-1"></i>
 								Add value
 							</Button>
@@ -1555,19 +1576,16 @@
 {/snippet}
 
 {#snippet VariantsSection(layoutMode: "split" | "stacked")}
-	<div
-		class={layoutMode === "split"
-			? "rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-			: "rounded-xl border border-gray-200 p-4 dark:border-gray-800"}
-	>
+	<div class={editorSectionClass(layoutMode)}>
 		<div class="flex items-center justify-between gap-3">
 			<div>
-				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Variants</p>
+				<p class="admin-label">Variants</p>
 				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
 					Product price and stock are derived from the default variant.
 				</p>
 			</div>
 			<Button
+				tone="admin"
 				variant="regular"
 				type="button"
 				class="min-w-38 whitespace-nowrap"
@@ -1580,7 +1598,7 @@
 
 		<div class="mt-4 space-y-4">
 			{#each variants as variant, variantIndex (variant.key)}
-				<div class="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+				<div class={nestedEditorSectionClass}>
 					<div class="flex items-start justify-between gap-3">
 						<div
 							class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200"
@@ -1607,8 +1625,9 @@
 
 					<div class="mt-4 grid gap-4 sm:grid-cols-2">
 						<div>
-							<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Variant SKU</p>
+							<p class="admin-label">Variant SKU</p>
 							<TextInput
+								tone="admin"
 								class="mt-1"
 								type="text"
 								aria-label={`Variant ${variantIndex + 1} SKU`}
@@ -1616,8 +1635,9 @@
 							/>
 						</div>
 						<div>
-							<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Title</p>
+							<p class="admin-label">Title</p>
 							<TextInput
+								tone="admin"
 								class="mt-1"
 								type="text"
 								aria-label={`Variant ${variantIndex + 1} title`}
@@ -1625,8 +1645,9 @@
 							/>
 						</div>
 						<div>
-							<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Price</p>
+							<p class="admin-label">Price</p>
 							<NumberInput
+								tone="admin"
 								class="mt-1"
 								allowDecimal={true}
 								min="0"
@@ -1635,8 +1656,9 @@
 							/>
 						</div>
 						<div>
-							<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Stock</p>
+							<p class="admin-label">Stock</p>
 							<NumberInput
+								tone="admin"
 								class="mt-1"
 								min="0"
 								aria-label={`Variant ${variantIndex + 1} stock`}
@@ -1644,8 +1666,9 @@
 							/>
 						</div>
 						<div>
-							<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Compare-at price</p>
+							<p class="admin-label">Compare-at price</p>
 							<NumberInput
+								tone="admin"
 								class="mt-1"
 								allowDecimal={true}
 								min="0"
@@ -1662,9 +1685,7 @@
 					{#if variant.selections.length}
 						<div class="mt-4 flex flex-wrap gap-2">
 							{#each variant.selections as selection (selection.key)}
-								<span
-									class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-200"
-								>
+								<span class="admin-chip">
 									{selection.option_name}: {selection.option_value}
 								</span>
 							{/each}
@@ -1677,19 +1698,16 @@
 {/snippet}
 
 {#snippet AttributesSection(layoutMode: "split" | "stacked")}
-	<div
-		class={layoutMode === "split"
-			? "rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-			: "rounded-xl border border-gray-200 p-4 dark:border-gray-800"}
-	>
+	<div class={editorSectionClass(layoutMode)}>
 		<div class="flex items-center justify-between gap-3">
 			<div>
-				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Attributes</p>
+				<p class="admin-label">Attributes</p>
 				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
 					Assign typed merchandising attributes for filtering and discovery.
 				</p>
 			</div>
 			<Button
+				tone="admin"
 				variant="regular"
 				type="button"
 				class="min-w-38 whitespace-nowrap"
@@ -1705,13 +1723,14 @@
 		{:else}
 			<div class="mt-4 space-y-4">
 				{#each attributeValues as attribute, attributeIndex (attribute.key)}
-					<div class="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+					<div class={nestedEditorSectionClass}>
 						<div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
 							<div class="grid gap-4 sm:grid-cols-2">
 								<div>
-									<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Attribute</p>
-									<select
-										class="mt-1 w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+									<p class="admin-label">Attribute</p>
+									<Dropdown
+										tone="admin"
+										class="mt-1"
 										aria-label={`Attribute ${attributeIndex + 1}`}
 										value={attribute.product_attribute_id}
 										onchange={(event) =>
@@ -1724,12 +1743,13 @@
 										{#each attributeDefinitions as definition (definition.id)}
 											<option value={String(definition.id)}>{definition.key}</option>
 										{/each}
-									</select>
+									</Dropdown>
 								</div>
 								<div>
-									<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Value</p>
+									<p class="admin-label">Value</p>
 									{#if attribute.type === "number"}
 										<NumberInput
+											tone="admin"
 											class="mt-1"
 											allowDecimal={true}
 											aria-label={`Attribute ${attributeIndex + 1} value`}
@@ -1744,6 +1764,7 @@
 										</label>
 									{:else if attribute.type === "enum"}
 										<TextInput
+											tone="admin"
 											class="mt-1"
 											type="text"
 											aria-label={`Attribute ${attributeIndex + 1} enum value`}
@@ -1751,6 +1772,7 @@
 										/>
 									{:else}
 										<TextInput
+											tone="admin"
 											class="mt-1"
 											type="text"
 											aria-label={`Attribute ${attributeIndex + 1} text value`}
@@ -1785,20 +1807,23 @@
 {/snippet}
 
 {#snippet SEOSection(layoutMode: "split" | "stacked")}
-	<div
-		class={layoutMode === "split"
-			? "rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-			: "rounded-xl border border-gray-200 p-4 dark:border-gray-800"}
-	>
-		<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">SEO</p>
+	<div class={editorSectionClass(layoutMode)}>
+		<p class="admin-label">SEO</p>
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
 			<div>
-				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">SEO title</p>
-				<TextInput class="mt-1" type="text" aria-label="SEO title" bind:value={seoTitle} />
+				<p class="admin-label">SEO title</p>
+				<TextInput
+					tone="admin"
+					class="mt-1"
+					type="text"
+					aria-label="SEO title"
+					bind:value={seoTitle}
+				/>
 			</div>
 			<div>
-				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Canonical path</p>
+				<p class="admin-label">Canonical path</p>
 				<TextInput
+					tone="admin"
 					class="mt-1"
 					type="text"
 					aria-label="Canonical path"
@@ -1806,17 +1831,19 @@
 				/>
 			</div>
 			<div class="sm:col-span-2">
-				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">SEO description</p>
-				<textarea
-					class="mt-1 w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
-					rows="3"
+				<p class="admin-label">SEO description</p>
+				<TextArea
+					tone="admin"
+					class="mt-1"
+					rows={3}
 					aria-label="SEO description"
 					bind:value={seoDescription}
-				></textarea>
+				/>
 			</div>
 			<div>
-				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">OG image media ID</p>
+				<p class="admin-label">OG image media ID</p>
 				<TextInput
+					tone="admin"
 					class="mt-1"
 					type="text"
 					aria-label="OG image media ID"
@@ -1834,14 +1861,14 @@
 {#snippet VariantSummarySection()}
 	<div class="grid gap-4 sm:grid-cols-2">
 		<div>
-			<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Default variant</p>
-			<p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
+			<p class="admin-label">Default variant</p>
+			<p class="admin-detail-strong mt-1">
 				{defaultVariantSku || variants[0]?.sku || "No default variant selected"}
 			</p>
 		</div>
 		<div>
-			<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Price range preview</p>
-			<p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{editorPriceRangePreview}</p>
+			<p class="admin-label">Price range preview</p>
+			<p class="admin-detail-strong mt-1">{editorPriceRangePreview}</p>
 		</div>
 	</div>
 {/snippet}
@@ -1888,6 +1915,7 @@
 {#snippet ProductActionButtons(layoutMode: "split" | "stacked")}
 	{@const isStacked = layoutMode === "stacked"}
 	<Button
+		tone="admin"
 		variant="primary"
 		size={isStacked ? "large" : "regular"}
 		class={isStacked ? `w-full ${canEditProduct ? "" : "sm:col-span-2"}` : "min-w-40"}
@@ -1908,6 +1936,7 @@
 	</Button>
 	{#if canEditProduct}
 		<Button
+			tone="admin"
 			variant="regular"
 			size={isStacked ? "large" : "regular"}
 			class={isStacked ? "w-full" : ""}
@@ -1925,6 +1954,7 @@
 					: "Preview"}
 		</Button>
 		<Button
+			tone="admin"
 			variant="success"
 			size={isStacked ? "large" : "regular"}
 			class={isStacked ? "w-full" : ""}
@@ -1936,6 +1966,7 @@
 			{publishing ? "Publishing..." : "Publish"}
 		</Button>
 		<Button
+			tone="admin"
 			variant="warning"
 			size={isStacked ? "large" : "regular"}
 			class={isStacked ? "w-full" : ""}
@@ -1947,6 +1978,7 @@
 			{unpublishing ? "Unpublishing..." : "Unpublish"}
 		</Button>
 		<Button
+			tone="admin"
 			variant="warning"
 			size={isStacked ? "large" : "regular"}
 			class={isStacked ? "w-full" : ""}
@@ -1958,6 +1990,7 @@
 			{discardingDraft ? "Discarding..." : "Discard draft"}
 		</Button>
 		<Button
+			tone="admin"
 			variant="danger"
 			size={isStacked ? "large" : "regular"}
 			class={isStacked ? "w-full" : ""}
@@ -1972,8 +2005,8 @@
 {/snippet}
 
 {#snippet MediaUpload(showHint: boolean)}
-	<div class="rounded-xl border border-dashed border-gray-300 p-4 dark:border-gray-700">
-		<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Upload media</p>
+	<div class="admin-muted-surface">
+		<p class="admin-label">Upload media</p>
 		<input
 			class="hidden"
 			type="file"
@@ -1988,6 +2021,7 @@
 		/>
 		<div class="mt-3 flex flex-wrap items-center gap-2">
 			<Button
+				tone="admin"
 				variant="regular"
 				type="button"
 				disabled={!canEditProduct || uploading}
@@ -1996,6 +2030,7 @@
 				Choose files
 			</Button>
 			<Button
+				tone="admin"
 				variant="primary"
 				type="button"
 				disabled={!canEditProduct || uploading || !mediaFilesCount}
@@ -2019,16 +2054,15 @@
 	<div class="max-h-64 overflow-y-auto pr-1">
 		<div class="grid grid-cols-2 gap-3">
 			{#each mediaOrderView as image, index (image)}
-				<div
-					class="relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800"
-				>
+				<div class={`${nestedEditorSectionClass} relative overflow-hidden`}>
 					<img
 						src={image}
 						alt={product ? `${product.name} ${index + 1}` : `Product image ${index + 1}`}
 						class="h-28 w-full object-cover"
 					/>
 					<IconButton
-						class="absolute top-2 right-2 bg-white/90 shadow-sm hover:bg-white dark:bg-gray-900/80 dark:hover:bg-gray-800"
+						tone="admin"
+						class={`absolute top-2 right-2 ${overlayIconButtonClass}`}
 						size="sm"
 						disabled={mediaDeleting !== null || mediaReordering}
 						onclick={() => detachMedia(image)}
@@ -2044,7 +2078,8 @@
 					</IconButton>
 					<div class="absolute right-2 bottom-2 flex gap-1">
 						<IconButton
-							class="bg-white/90 shadow-sm hover:bg-white dark:bg-gray-900/80 dark:hover:bg-gray-800"
+							tone="admin"
+							class={overlayIconButtonClass}
 							size="sm"
 							disabled={mediaReordering || index === 0}
 							onclick={() => moveMedia(index, -1)}
@@ -2054,7 +2089,8 @@
 							<i class="bi bi-chevron-left"></i>
 						</IconButton>
 						<IconButton
-							class="bg-white/90 shadow-sm hover:bg-white dark:bg-gray-900/80 dark:hover:bg-gray-800"
+							tone="admin"
+							class={overlayIconButtonClass}
 							size="sm"
 							disabled={mediaReordering || index === mediaOrderView.length - 1}
 							onclick={() => moveMedia(index, 1)}
@@ -2070,11 +2106,18 @@
 	</div>
 	{#if hasPendingMediaOrder}
 		<div class="mt-3 flex flex-wrap gap-2">
-			<Button variant="primary" type="button" disabled={mediaReordering} onclick={saveMediaOrder}>
+			<Button
+				tone="admin"
+				variant="primary"
+				type="button"
+				disabled={mediaReordering}
+				onclick={saveMediaOrder}
+			>
 				<i class="bi bi-floppy-fill mr-1"></i>
 				{mediaReordering ? "Saving..." : "Save order"}
 			</Button>
 			<Button
+				tone="admin"
 				variant="regular"
 				type="button"
 				disabled={mediaReordering}
@@ -2089,10 +2132,11 @@
 
 {#snippet RelatedProducts()}
 	<div class="flex items-center justify-between">
-		<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Related products</p>
+		<p class="admin-label">Related products</p>
 		{#if hasPendingRelatedChanges}
 			<div class="flex items-center gap-2">
 				<Button
+					tone="admin"
 					variant="regular"
 					type="button"
 					disabled={!canEditProduct || relatedSaving}
@@ -2102,6 +2146,7 @@
 					Discard changes
 				</Button>
 				<Button
+					tone="admin"
 					variant="primary"
 					type="button"
 					disabled={!canEditProduct || relatedSaving}
@@ -2113,40 +2158,29 @@
 			</div>
 		{/if}
 	</div>
-	<form
-		class="mt-3 flex flex-nowrap items-center gap-2"
-		onsubmit={(event) => {
-			event.preventDefault();
-			searchRelatedProducts();
-		}}
-	>
-		<TextInput
-			class="min-w-0 flex-1"
-			type="search"
-			placeholder="Search products"
-			bind:value={relatedQuery}
-		/>
-		<button
-			class="aspect-square cursor-pointer rounded-md border border-gray-200 p-2 dark:border-gray-700"
-			type="submit"
-			disabled={!canEditProduct || relatedLoading}
-			aria-label="Search related products"
-		>
-			<i class="bi bi-search"></i>
-		</button>
-	</form>
+	<AdminSearchForm
+		fullWidth={true}
+		class="mt-3 w-full"
+		placeholder="Search products"
+		bind:value={relatedQuery}
+		onSearch={() => void searchRelatedProducts()}
+		onRefresh={() => void searchRelatedProducts()}
+		refreshing={relatedLoading}
+		disabled={!canEditProduct || relatedLoading}
+	/>
 
-	{#if relatedOptions.length}
+	{#if relatedLoading && relatedOptions.length === 0 && relatedLastSearchedQuery !== ""}
+		<p class="admin-empty-state">Searching products...</p>
+	{:else if relatedOptions.length}
 		<div class="mt-3 space-y-2">
 			{#each relatedOptions as option (option.id)}
-				<div
-					class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-800 dark:bg-gray-900"
-				>
-					<div>
-						<p class="font-semibold text-gray-900 dark:text-gray-100">{option.name}</p>
-						<p class="text-xs text-gray-500 dark:text-gray-400">SKU {option.sku}</p>
+				<div class="admin-list-item flex items-center justify-between gap-3 p-4 text-sm">
+					<div class="min-w-0">
+						<p class="truncate font-semibold text-stone-950 dark:text-stone-50">{option.name}</p>
+						<p class="text-xs text-stone-500 dark:text-stone-400">SKU {option.sku}</p>
 					</div>
 					<IconButton
+						tone="admin"
 						variant="primary"
 						type="button"
 						onclick={() => addRelatedProduct(option)}
@@ -2159,20 +2193,19 @@
 			{/each}
 		</div>
 	{:else if !relatedLoading && relatedLastSearchedQuery !== "" && relatedLastSearchedQuery === relatedQuery.trim()}
-		<p class="mt-3 text-xs text-gray-500 dark:text-gray-400">No matches.</p>
+		<p class="admin-empty-state">Your search didn&apos;t match any products.</p>
 	{/if}
 
 	{#if relatedSelected.length}
 		<div class="mt-4 space-y-2">
 			{#each relatedSelected as related (related.id)}
-				<div
-					class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
-				>
+				<div class="admin-muted-surface flex items-center justify-between px-3 py-2 text-sm">
 					<div>
 						<p class="font-semibold text-gray-900 dark:text-gray-100">{related.name}</p>
 						<p class="text-xs text-gray-500 dark:text-gray-400">SKU {related.sku}</p>
 					</div>
 					<IconButton
+						tone="admin"
 						variant="danger"
 						type="button"
 						onclick={() => removeRelatedProduct(related.id)}
@@ -2199,23 +2232,19 @@
 {/snippet}
 
 {#if loading && !hasProduct}
-	<div
-		class="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-	>
+	<div class="admin-surface mt-6">
 		<p class="text-sm text-gray-500 dark:text-gray-400">Loading product details...</p>
 	</div>
 {:else if !allowCreate && !hasProduct}
 	<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">Product not found.</p>
 {:else if layout === "split"}
 	<div class="mt-6 space-y-6">
-		<div
-			class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-		>
+		<div class="admin-surface">
 			<div class="grid gap-4 text-sm sm:grid-cols-2">
 				{@render BasicInfoSection()}
 			</div>
 
-			<div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-800">
+			<div class="admin-divider-top mt-6 pt-6">
 				{@render VariantSummarySection()}
 			</div>
 
@@ -2248,10 +2277,8 @@
 				{@render SEOSection("split")}
 			</div>
 			<div class="mb-6 break-inside-avoid">
-				<div
-					class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-				>
-					<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Images</p>
+				<div class="admin-surface">
+					<p class="admin-label">Images</p>
 					{#if mediaOrderView.length}
 						<div class="mt-4">
 							{@render MediaGrid()}
@@ -2274,18 +2301,14 @@
 				</div>
 			</div>
 			<div class="mb-6 break-inside-avoid">
-				<div
-					class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-				>
+				<div class="admin-surface">
 					{@render RelatedProducts()}
 				</div>
 			</div>
 		</div>
 	</div>
 {:else}
-	<div
-		class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-	>
+	<div class="admin-surface">
 		{#if showHeader}
 			<div class="flex items-center justify-between">
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -2307,12 +2330,12 @@
 			<div class="grid gap-4 sm:grid-cols-2">
 				{@render BasicInfoSection()}
 			</div>
-			<div class="border-t border-gray-200 pt-6 dark:border-gray-800">
+			<div class="admin-divider-top pt-6">
 				{@render VariantSummarySection()}
 			</div>
 			{@render ProductStateChips()}
 			<div
-				class="mt-2 mb-6 grid grid-cols-1 gap-2 border-b border-gray-200 pb-6 text-base sm:grid-cols-2 dark:border-gray-800"
+				class="admin-divider-bottom mt-2 mb-6 grid grid-cols-1 gap-2 pb-6 text-base sm:grid-cols-2"
 			>
 				{@render ProductActionButtons("stacked")}
 			</div>
@@ -2335,30 +2358,30 @@
 			{/if}
 		</div>
 
-		<div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-800">
+		<div class="admin-divider-top mt-6 pt-6">
 			{@render OptionsSection("stacked")}
 		</div>
 
-		<div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-800">
+		<div class="admin-divider-top mt-6 pt-6">
 			{@render VariantsSection("stacked")}
 		</div>
 
-		<div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-800">
+		<div class="admin-divider-top mt-6 pt-6">
 			{@render AttributesSection("stacked")}
 		</div>
 
-		<div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-800">
+		<div class="admin-divider-top mt-6 pt-6">
 			{@render SEOSection("stacked")}
 		</div>
 
 		{#if mediaOrderView.length}
-			<div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-800">
-				<p class="text-xs tracking-[0.2em] text-gray-500 uppercase">Images</p>
+			<div class="admin-divider-top mt-6 pt-6">
+				<p class="admin-label">Images</p>
 				{@render MediaGrid()}
 			</div>
 		{/if}
 
-		<div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-800">
+		<div class="admin-divider-top mt-6 pt-6">
 			{@render RelatedProducts()}
 		</div>
 	</div>

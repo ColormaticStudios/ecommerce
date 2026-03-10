@@ -42,6 +42,10 @@ On SQLite, `tx.Migrator().DropColumn("table_name", "column")` can panic when cal
 
 GORM can silently persist `bool` fields with schema defaults instead of explicit `false` on `Create`, unless the insert explicitly selects zero-value fields. If a row must persist `false` (for example `is_published` on variant draft/live rows), prefer `tx.Select("*").Create(&row)` or another path that explicitly includes zero values.
 
+Tailwind v4 in this frontend rejects `@apply` of project-defined custom classes during formatting/build tooling, so shared CSS tokens need to be expanded rather than composed from other local classes.
+
+The E2E server uses one shared DB per Playwright run, so helper assertions must be scoped to test-owned data or they will race under multiple workers.
+
 ## OpenAPI Contract Workflow
 - Update `api/openapi.yaml` first whenever request/response shapes change.
 - Regenerate contract artifacts with `make openapi-gen`.

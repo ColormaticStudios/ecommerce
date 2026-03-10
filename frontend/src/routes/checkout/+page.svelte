@@ -8,6 +8,7 @@
 	} from "$lib/models";
 	import Alert from "$lib/components/Alert.svelte";
 	import Button from "$lib/components/Button.svelte";
+	import Dropdown from "$lib/components/Dropdown.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
@@ -485,9 +486,9 @@
 									>
 										Use a saved card
 									</label>
-									<select
+									<Dropdown
 										id="saved-payment-method"
-										class="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+										tone="plain"
 										bind:value={selectedSavedPaymentMethodId}
 										onchange={(event) => applySavedPaymentMethod(event.currentTarget.value)}
 									>
@@ -497,7 +498,7 @@
 												{method.nickname || `${method.brand} •••• ${method.last4}`}
 											</option>
 										{/each}
-									</select>
+									</Dropdown>
 								{/if}
 
 								{#each activePaymentProvider.fields ?? [] as field (field.key)}
@@ -516,15 +517,15 @@
 											readonly
 										/>
 									{:else if field.type === "select"}
-										<select
+										<Dropdown
 											id={`payment-${field.key}`}
-											class="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+											tone="plain"
 											bind:value={paymentData[field.key]}
 										>
 											{#each field.options ?? [] as option (option.value)}
 												<option value={option.value}>{option.label}</option>
 											{/each}
-										</select>
+										</Dropdown>
 									{:else if field.type === "checkbox"}
 										<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
 											<input
@@ -611,9 +612,9 @@
 									<label class="block text-sm text-gray-700 dark:text-gray-200" for="saved-address">
 										Use a saved address
 									</label>
-									<select
+									<Dropdown
 										id="saved-address"
-										class="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+										tone="plain"
 										bind:value={selectedSavedAddressId}
 										onchange={(event) => applySavedAddress(event.currentTarget.value)}
 									>
@@ -623,7 +624,7 @@
 												{address.label || `${address.full_name} - ${address.line1}`}
 											</option>
 										{/each}
-									</select>
+									</Dropdown>
 								{/if}
 
 								{#each activeShippingProvider.fields ?? [] as field (field.key)}
@@ -634,15 +635,15 @@
 										{field.label}{field.required ? " *" : ""}
 									</label>
 									{#if field.type === "select"}
-										<select
+										<Dropdown
 											id={`shipping-${field.key}`}
-											class="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+											tone="plain"
 											bind:value={shippingData[field.key]}
 										>
 											{#each field.options ?? [] as option (option.value)}
 												<option value={option.value}>{option.label}</option>
 											{/each}
-										</select>
+										</Dropdown>
 									{:else if field.type === "checkbox"}
 										<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
 											<input

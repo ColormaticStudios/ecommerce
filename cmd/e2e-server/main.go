@@ -40,6 +40,20 @@ type summaryResponse struct {
 	ProductStock int   `json:"product_stock"`
 }
 
+type testUserPayload struct {
+	Email    string `json:"email"`
+	Username string `json:"username"`
+	Name     string `json:"name"`
+	Role     string `json:"role"`
+}
+
+type testBrandPayload struct {
+	Name        string `json:"name"`
+	Slug        string `json:"slug"`
+	Description string `json:"description"`
+	IsActive    *bool  `json:"is_active"`
+}
+
 func envInt(name string, fallback int) int {
 	value := os.Getenv(name)
 	if value == "" {
@@ -93,20 +107,49 @@ func ensureSeedData(db *gorm.DB) error {
 	return nil
 }
 
-func buildSummary(db *gorm.DB) (summaryResponse, error) {
+func buildSummary(db *gorm.DB, email string) (summaryResponse, error) {
 	var summary summaryResponse
+	email = strings.TrimSpace(strings.ToLower(email))
 
-	if err := db.Model(&models.User{}).Count(&summary.Users).Error; err != nil {
-		return summary, err
+	var user *models.User
+	if email != "" {
+		var matchedUser models.User
+		if err := db.Where("email = ?", email).First(&matchedUser).Error; err == nil {
+			user = &matchedUser
+		} else if err != gorm.ErrRecordNotFound {
+			return summary, err
+		}
 	}
-	if err := db.Model(&models.Order{}).Count(&summary.Orders).Error; err != nil {
-		return summary, err
-	}
-	if err := db.Model(&models.Order{}).Where("status = ?", models.StatusPaid).Count(&summary.PaidOrders).Error; err != nil {
-		return summary, err
-	}
-	if err := db.Model(&models.CartItem{}).Count(&summary.CartItems).Error; err != nil {
-		return summary, err
+
+	if user != nil {
+		summary.Users = 1
+		if err := db.Model(&models.Order{}).Where("user_id = ?", user.ID).Count(&summary.Orders).Error; err != nil {
+			return summary, err
+		}
+		if err := db.Model(&models.Order{}).
+			Where("user_id = ? AND status = ?", user.ID, models.StatusPaid).
+			Count(&summary.PaidOrders).Error; err != nil {
+			return summary, err
+		}
+		if err := db.Model(&models.CartItem{}).
+			Joins("JOIN carts ON carts.id = cart_items.cart_id").
+			Where("carts.user_id = ?", user.ID).
+			Count(&summary.CartItems).Error; err != nil {
+			return summary, err
+		}
+	} else {
+		if err := db.Model(&models.User{}).Count(&summary.Users).Error; err != nil {
+			return summary, err
+		}
+		if err := db.Model(&models.Order{}).Count(&summary.Orders).Error; err != nil {
+			return summary, err
+		}
+		if err := db.Model(&models.Order{}).Where("status = ?", models.StatusPaid).Count(&summary.PaidOrders).Error; err != nil {
+			return summary, err
+		}
+		if err := db.Model(&models.CartItem{}).Count(&summary.CartItems).Error; err != nil {
+			return summary, err
+		}
 	}
 
 	var variant models.ProductVariant
@@ -206,7 +249,7 @@ func main() {
 
 	// Test-only helper endpoints consumed by Playwright E2E tests.
 	r.GET(testRoutePrefix+"/summary", func(c *gin.Context) {
-		summary, err := buildSummary(db)
+		summary, err := buildSummary(db, c.Query("email"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -244,6 +287,147 @@ func main() {
 		c.SetCookie("session_token", signedToken, maxAge, "/", "", false, true)
 		c.SetCookie("csrf_token", uuid.NewString(), maxAge, "/", "", false, false)
 		c.JSON(http.StatusOK, gin.H{"ok": true})
+	})
+	r.POST(testRoutePrefix+"/users", func(c *gin.Context) {
+		var payload testUserPayload
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
+			return
+		}
+
+		payload.Email = strings.TrimSpace(strings.ToLower(payload.Email))
+		payload.Username = strings.TrimSpace(payload.Username)
+		payload.Name = strings.TrimSpace(payload.Name)
+		payload.Role = strings.TrimSpace(strings.ToLower(payload.Role))
+
+		if payload.Email == "" || payload.Username == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "email and username are required"})
+			return
+		}
+		if payload.Role == "" {
+			payload.Role = "customer"
+		}
+		if payload.Role != "admin" && payload.Role != "customer" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "role must be admin or customer"})
+			return
+		}
+		if payload.Name == "" {
+			payload.Name = payload.Username
+		}
+
+		var user models.User
+		if err := db.Where("email = ?", payload.Email).First(&user).Error; err == nil {
+			user.Username = payload.Username
+			user.Name = payload.Name
+			user.Role = payload.Role
+			if strings.TrimSpace(user.Subject) == "" {
+				user.Subject = "e2e-" + uuid.NewString()
+			}
+			if err := db.Save(&user).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update user"})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{
+				"id":       user.ID,
+				"email":    user.Email,
+				"username": user.Username,
+				"name":     user.Name,
+				"role":     user.Role,
+			})
+			return
+		} else if err != gorm.ErrRecordNotFound {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load user"})
+			return
+		}
+
+		user = models.User{
+			Subject:  "e2e-" + uuid.NewString(),
+			Email:    payload.Email,
+			Username: payload.Username,
+			Name:     payload.Name,
+			Role:     payload.Role,
+			Currency: "USD",
+		}
+		if err := db.Create(&user).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
+			return
+		}
+
+		c.JSON(http.StatusCreated, gin.H{
+			"id":       user.ID,
+			"email":    user.Email,
+			"username": user.Username,
+			"name":     user.Name,
+			"role":     user.Role,
+		})
+	})
+	r.POST(testRoutePrefix+"/brands", func(c *gin.Context) {
+		var payload testBrandPayload
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
+			return
+		}
+
+		payload.Name = strings.TrimSpace(payload.Name)
+		payload.Slug = strings.TrimSpace(strings.ToLower(payload.Slug))
+		payload.Description = strings.TrimSpace(payload.Description)
+
+		if payload.Name == "" || payload.Slug == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "name and slug are required"})
+			return
+		}
+
+		isActive := true
+		if payload.IsActive != nil {
+			isActive = *payload.IsActive
+		}
+
+		var existing models.Brand
+		if err := db.Where("slug = ?", payload.Slug).First(&existing).Error; err == nil {
+			existing.Name = payload.Name
+			existing.IsActive = isActive
+			if payload.Description == "" {
+				existing.Description = nil
+			} else {
+				existing.Description = &payload.Description
+			}
+			if err := db.Save(&existing).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update brand"})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{
+				"id":          existing.ID,
+				"name":        existing.Name,
+				"slug":        existing.Slug,
+				"description": existing.Description,
+				"is_active":   existing.IsActive,
+			})
+			return
+		} else if err != gorm.ErrRecordNotFound {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load brand"})
+			return
+		}
+
+		brand := models.Brand{
+			Name:     payload.Name,
+			Slug:     payload.Slug,
+			IsActive: isActive,
+		}
+		if payload.Description != "" {
+			brand.Description = &payload.Description
+		}
+		if err := db.Create(&brand).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create brand"})
+			return
+		}
+
+		c.JSON(http.StatusCreated, gin.H{
+			"id":          brand.ID,
+			"name":        brand.Name,
+			"slug":        brand.Slug,
+			"description": brand.Description,
+			"is_active":   brand.IsActive,
+		})
 	})
 	r.POST(testRoutePrefix+"/cart-item", func(c *gin.Context) {
 		var payload struct {

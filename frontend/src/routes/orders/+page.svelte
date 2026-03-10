@@ -5,6 +5,7 @@
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import Toast from "$lib/components/Toast.svelte";
 	import Button from "$lib/components/Button.svelte";
+	import Dropdown from "$lib/components/Dropdown.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
 	import { getContext } from "svelte";
@@ -241,11 +242,7 @@
 					<label for="statusFilter" class="mb-1 block text-sm text-gray-600 dark:text-gray-300">
 						Status
 					</label>
-					<select
-						id="statusFilter"
-						class="w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
-						bind:value={statusFilter}
-					>
+					<Dropdown id="statusFilter" bind:value={statusFilter}>
 						<option value="">All statuses</option>
 						<option value="PENDING">Pending</option>
 						<option value="PAID">Paid</option>
@@ -254,7 +251,7 @@
 						<option value="CANCELLED">Cancelled</option>
 						<option value="REFUNDED">Refunded</option>
 						<option value="FAILED">Failed</option>
-					</select>
+					</Dropdown>
 				</div>
 				<div class="sm:col-span-1">
 					<label for="startDate" class="mb-1 block text-sm text-gray-600 dark:text-gray-300">
@@ -282,15 +279,11 @@
 					<label for="limit" class="mb-1 block text-sm text-gray-600 dark:text-gray-300"
 						>Per page</label
 					>
-					<select
-						id="limit"
-						class="w-full rounded-md border border-gray-300 bg-gray-200 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
-						bind:value={limit}
-					>
+					<Dropdown id="limit" bind:value={limit}>
 						<option value="10">10</option>
 						<option value="20">20</option>
 						<option value="50">50</option>
-					</select>
+					</Dropdown>
 				</div>
 			</div>
 			<div class="mt-3 flex flex-wrap gap-2">

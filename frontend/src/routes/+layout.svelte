@@ -313,7 +313,11 @@
 							class="absolute right-0 z-1 mt-2 w-44 rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-900"
 						>
 							{#if $userStore.role === "admin"}
-								<a href={resolve("/admin")} class="menu-item" onclick={() => (menuOpen = false)}>
+								<a
+									href={resolve("/admin/products")}
+									class="menu-item"
+									onclick={() => (menuOpen = false)}
+								>
 									Admin
 									<i class="bi bi-shield-lock"></i>
 								</a>

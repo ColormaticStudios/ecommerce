@@ -3,6 +3,7 @@
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import Button from "$lib/components/Button.svelte";
+	import Dropdown from "$lib/components/Dropdown.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
 	import {
@@ -175,15 +176,17 @@
 					</Button>
 				</div>
 				<div class="flex flex-wrap items-end gap-3">
-					<select
-						class="min-w-[12rem] rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
+					<Dropdown
+						tone="surface"
+						full={false}
+						class="min-w-[12rem]"
 						bind:value={selectedBrandSlug}
 					>
 						<option value="">All brands</option>
 						{#each brands as brand (brand.id)}
 							<option value={brand.slug}>{brand.name}</option>
 						{/each}
-					</select>
+					</Dropdown>
 					<label
 						class="flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
 					>
@@ -192,15 +195,17 @@
 					</label>
 					<div class="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
 						<span class="text-xs text-gray-600 dark:text-gray-400">Sort by</span>
-						<select
-							class="min-w-[10rem] rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
+						<Dropdown
+							tone="surface"
+							full={false}
+							class="min-w-[10rem]"
 							bind:value={sortBy}
 							onchange={() => updateUrl({ page: 1 })}
 						>
 							{#each sortOptions as option, i (i)}
 								<option value={option.value}>{option.label}</option>
 							{/each}
-						</select>
+						</Dropdown>
 						<Button
 							type="button"
 							variant="regular"
@@ -241,8 +246,8 @@
 									updateAttributeFilter(attribute.slug, (event.target as HTMLInputElement).value)}
 							/>
 						{:else if attribute.type === "boolean"}
-							<select
-								class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
+							<Dropdown
+								tone="surface"
 								value={attributeFilters[attribute.slug] ?? ""}
 								onchange={(event) =>
 									updateAttributeFilter(attribute.slug, (event.target as HTMLSelectElement).value)}
@@ -250,7 +255,7 @@
 								<option value="">{attribute.key}</option>
 								<option value="true">{attribute.key}: true</option>
 								<option value="false">{attribute.key}: false</option>
-							</select>
+							</Dropdown>
 						{:else}
 							<TextInput
 								type="text"
@@ -330,15 +335,16 @@
 		>
 			<div class="flex items-center gap-2">
 				<span>Per page</span>
-				<select
-					class="cursor-pointer rounded-md border border-gray-300 bg-gray-100 px-2 py-1 text-xs dark:border-gray-700 dark:bg-gray-800"
+				<Dropdown
+					full={false}
+					class="px-2 py-1 text-xs"
 					bind:value={pageSize}
 					onchange={() => updateUrl({ page: 1 })}
 				>
 					{#each pageSizeOptions as option, i (i)}
 						<option value={option}>{option}</option>
 					{/each}
-				</select>
+				</Dropdown>
 			</div>
 			<span>Page {currentPage} of {totalPages}</span>
 			<div class="flex items-center gap-2">
