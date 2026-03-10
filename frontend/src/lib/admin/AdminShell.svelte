@@ -95,19 +95,17 @@
 		Sections
 	</button>
 
-	<div class="grid min-h-[calc(100vh-4rem)] items-start lg:grid-cols-[auto_minmax(0,1fr)]">
+	<div class="grid min-h-[calc(100vh-4rem)] lg:grid-cols-[auto_minmax(0,1fr)]">
 		<aside
 			class={`hidden border-r border-gray-200 bg-gray-100 transition-[width] duration-200 lg:block dark:border-gray-800 dark:bg-gray-900 ${
 				sidebarCollapsed ? "w-20" : "w-64"
 			}`}
 		>
-			<div class="sticky top-16 h-[calc(100vh-4rem)]">
-				<AdminSidebar
-					{activeSection}
-					collapsed={sidebarCollapsed}
-					onToggleCollapse={() => (sidebarCollapsed = !sidebarCollapsed)}
-				/>
-			</div>
+			<AdminSidebar
+				{activeSection}
+				collapsed={sidebarCollapsed}
+				onToggleCollapse={() => (sidebarCollapsed = !sidebarCollapsed)}
+			/>
 		</aside>
 
 		<div class="min-w-0 bg-gray-100 px-4 py-6 sm:px-6 lg:px-8 dark:bg-gray-950">
