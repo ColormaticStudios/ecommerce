@@ -11,6 +11,7 @@ import (
 
 	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
+	"ecommerce/internal/httpcors"
 	"ecommerce/internal/migrations"
 	"ecommerce/models"
 
@@ -133,7 +134,26 @@ func buildSummary(db *gorm.DB, email string) (summaryResponse, error) {
 		}
 		if err := db.Model(&models.CartItem{}).
 			Joins("JOIN carts ON carts.id = cart_items.cart_id").
-			Where("carts.user_id = ?", user.ID).
+			Joins("JOIN checkout_sessions ON checkout_sessions.id = carts.checkout_session_id").
+			Where("checkout_sessions.user_id = ?", user.ID).
+			Count(&summary.CartItems).Error; err != nil {
+			return summary, err
+		}
+	} else if email != "" {
+		if err := db.Model(&models.Order{}).
+			Where("user_id IS NULL AND guest_email = ?", email).
+			Count(&summary.Orders).Error; err != nil {
+			return summary, err
+		}
+		if err := db.Model(&models.Order{}).
+			Where("user_id IS NULL AND guest_email = ? AND status = ?", email, models.StatusPaid).
+			Count(&summary.PaidOrders).Error; err != nil {
+			return summary, err
+		}
+		if err := db.Model(&models.CartItem{}).
+			Joins("JOIN carts ON carts.id = cart_items.cart_id").
+			Joins("JOIN checkout_sessions ON checkout_sessions.id = carts.checkout_session_id").
+			Where("checkout_sessions.user_id IS NULL AND checkout_sessions.guest_email = ?", email).
 			Count(&summary.CartItems).Error; err != nil {
 			return summary, err
 		}
@@ -228,9 +248,9 @@ func main() {
 			"http://127.0.0.1:4173",
 			"http://localhost:4173",
 		},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-CSRF-Token"},
-		ExposeHeaders:    []string{"Content-Length", "Location"},
+		AllowMethods:     httpcors.AllowMethods(),
+		AllowHeaders:     httpcors.AllowHeaders(),
+		ExposeHeaders:    httpcors.ExposeHeaders(),
 		AllowCredentials: true,
 	}))
 
@@ -471,9 +491,24 @@ func main() {
 
 		tx := db.Begin()
 		var cart models.Cart
-		if err := tx.Where("user_id = ?", user.ID).First(&cart).Error; err != nil {
+		if err := tx.Joins("JOIN checkout_sessions ON checkout_sessions.id = carts.checkout_session_id").
+			Where("checkout_sessions.user_id = ? AND checkout_sessions.status = ?", user.ID, models.CheckoutSessionStatusActive).
+			Order("checkout_sessions.last_seen_at DESC").
+			First(&cart).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
-				cart = models.Cart{UserID: user.ID}
+				session := models.CheckoutSession{
+					PublicToken: uuid.NewString(),
+					UserID:      &user.ID,
+					Status:      models.CheckoutSessionStatusActive,
+					ExpiresAt:   time.Now().Add(24 * time.Hour).UTC(),
+					LastSeenAt:  time.Now().UTC(),
+				}
+				if err := tx.Create(&session).Error; err != nil {
+					tx.Rollback()
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create checkout session"})
+					return
+				}
+				cart = models.Cart{CheckoutSessionID: session.ID}
 				if err := tx.Create(&cart).Error; err != nil {
 					tx.Rollback()
 					c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create cart"})

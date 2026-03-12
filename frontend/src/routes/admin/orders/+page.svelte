@@ -63,6 +63,9 @@
 	}
 
 	function getOrderCustomerLabel(order: OrderModel): string {
+		if (order.user_id == null) {
+			return order.guest_email ? `Guest (${order.guest_email})` : "Guest checkout";
+		}
 		const user = orderUsersById[order.user_id];
 		if (!user) {
 			return `Customer #${order.user_id}`;
@@ -76,6 +79,9 @@
 	async function hydrateOrderUsers(orderList: OrderModel[]) {
 		let missing: number[] = [];
 		for (const order of orderList) {
+			if (order.user_id == null) {
+				continue;
+			}
 			if (
 				!orderUsersById[order.user_id] &&
 				!unresolvedOrderUserIds[order.user_id] &&

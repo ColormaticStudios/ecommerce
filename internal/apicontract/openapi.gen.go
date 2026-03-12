@@ -21,6 +21,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/oapi-codegen/runtime"
 	strictgin "github.com/oapi-codegen/runtime/strictmiddleware/gin"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 const (
@@ -242,6 +243,11 @@ type CartItem struct {
 	UpdatedAt        time.Time      `json:"updated_at"`
 }
 
+// CheckoutCartSummary defines model for CheckoutCartSummary.
+type CheckoutCartSummary struct {
+	ItemCount int `json:"item_count"`
+}
+
 // CheckoutPlugin defines model for CheckoutPlugin.
 type CheckoutPlugin struct {
 	Description string                `json:"description"`
@@ -317,6 +323,23 @@ type CheckoutQuoteResponse struct {
 	Valid          bool                  `json:"valid"`
 }
 
+// ClaimGuestOrderRequest defines model for ClaimGuestOrderRequest.
+type ClaimGuestOrderRequest struct {
+	ConfirmationToken string              `json:"confirmation_token"`
+	Email             openapi_types.Email `json:"email"`
+}
+
+// ClaimGuestOrderResponse defines model for ClaimGuestOrderResponse.
+type ClaimGuestOrderResponse struct {
+	Message string `json:"message"`
+	Order   Order  `json:"order"`
+}
+
+// CreateCheckoutOrderRequest defines model for CreateCheckoutOrderRequest.
+type CreateCheckoutOrderRequest struct {
+	GuestEmail *openapi_types.Email `json:"guest_email"`
+}
+
 // CreateOrderItemRequest defines model for CreateOrderItemRequest.
 type CreateOrderItemRequest struct {
 	ProductVariantId int `json:"product_variant_id"`
@@ -360,7 +383,8 @@ type DraftPreviewSessionResponse struct {
 
 // Error defines model for Error.
 type Error struct {
-	Error string `json:"error"`
+	Code  *string `json:"code,omitempty"`
+	Error string  `json:"error"`
 }
 
 // LoginRequest defines model for LoginRequest.
@@ -381,17 +405,20 @@ type MessageResponse struct {
 
 // Order defines model for Order.
 type Order struct {
-	CanCancel             bool        `json:"can_cancel"`
-	CreatedAt             time.Time   `json:"created_at"`
-	DeletedAt             *time.Time  `json:"deleted_at"`
-	Id                    int         `json:"id"`
-	Items                 []OrderItem `json:"items"`
-	PaymentMethodDisplay  *string     `json:"payment_method_display"`
-	ShippingAddressPretty *string     `json:"shipping_address_pretty"`
-	Status                OrderStatus `json:"status"`
-	Total                 float64     `json:"total"`
-	UpdatedAt             time.Time   `json:"updated_at"`
-	UserId                int         `json:"user_id"`
+	CanCancel             bool                 `json:"can_cancel"`
+	CheckoutSessionId     int                  `json:"checkout_session_id"`
+	ConfirmationToken     *string              `json:"confirmation_token"`
+	CreatedAt             time.Time            `json:"created_at"`
+	DeletedAt             *time.Time           `json:"deleted_at"`
+	GuestEmail            *openapi_types.Email `json:"guest_email"`
+	Id                    int                  `json:"id"`
+	Items                 []OrderItem          `json:"items"`
+	PaymentMethodDisplay  *string              `json:"payment_method_display"`
+	ShippingAddressPretty *string              `json:"shipping_address_pretty"`
+	Status                OrderStatus          `json:"status"`
+	Total                 float64              `json:"total"`
+	UpdatedAt             time.Time            `json:"updated_at"`
+	UserId                *int                 `json:"user_id"`
 }
 
 // OrderStatus defines model for Order.Status.
@@ -726,6 +753,11 @@ type SavedPaymentMethod struct {
 	UserId         int        `json:"user_id"`
 }
 
+// StorefrontCheckoutSettings defines model for StorefrontCheckoutSettings.
+type StorefrontCheckoutSettings struct {
+	AllowGuestCheckout bool `json:"allow_guest_checkout"`
+}
+
 // StorefrontFooter defines model for StorefrontFooter.
 type StorefrontFooter struct {
 	BottomNotice string                   `json:"bottom_notice"`
@@ -815,6 +847,7 @@ type StorefrontPromoCard struct {
 
 // StorefrontSettings defines model for StorefrontSettings.
 type StorefrontSettings struct {
+	Checkout         StorefrontCheckoutSettings  `json:"checkout"`
 	Footer           StorefrontFooter            `json:"footer"`
 	HomepageSections []StorefrontHomepageSection `json:"homepage_sections"`
 	SiteTitle        string                      `json:"site_title"`
@@ -953,6 +986,16 @@ type OidcLoginParams struct {
 	Redirect *string `form:"redirect,omitempty" json:"redirect,omitempty"`
 }
 
+// CreateCheckoutOrderParams defines parameters for CreateCheckoutOrder.
+type CreateCheckoutOrderParams struct {
+	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
+}
+
+// AuthorizeCheckoutOrderPaymentParams defines parameters for AuthorizeCheckoutOrderPayment.
+type AuthorizeCheckoutOrderPaymentParams struct {
+	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
+}
+
 // ListUserOrdersParams defines parameters for ListUserOrders.
 type ListUserOrdersParams struct {
 	Status    *ListUserOrdersParamsStatus `form:"status,omitempty" json:"status,omitempty"`
@@ -1042,6 +1085,21 @@ type LoginJSONRequestBody = LoginRequest
 // RegisterJSONRequestBody defines body for Register for application/json ContentType.
 type RegisterJSONRequestBody = RegisterRequest
 
+// AddCheckoutCartItemJSONRequestBody defines body for AddCheckoutCartItem for application/json ContentType.
+type AddCheckoutCartItemJSONRequestBody = AddCartItemRequest
+
+// UpdateCheckoutCartItemJSONRequestBody defines body for UpdateCheckoutCartItem for application/json ContentType.
+type UpdateCheckoutCartItemJSONRequestBody = UpdateCartItemRequest
+
+// CreateCheckoutOrderJSONRequestBody defines body for CreateCheckoutOrder for application/json ContentType.
+type CreateCheckoutOrderJSONRequestBody = CreateCheckoutOrderRequest
+
+// AuthorizeCheckoutOrderPaymentJSONRequestBody defines body for AuthorizeCheckoutOrderPayment for application/json ContentType.
+type AuthorizeCheckoutOrderPaymentJSONRequestBody = ProcessPaymentRequest
+
+// QuoteCheckoutSessionJSONRequestBody defines body for QuoteCheckoutSession for application/json ContentType.
+type QuoteCheckoutSessionJSONRequestBody = CheckoutQuoteRequest
+
 // UpdateProfileJSONRequestBody defines body for UpdateProfile for application/json ContentType.
 type UpdateProfileJSONRequestBody = UpdateProfileRequest
 
@@ -1059,6 +1117,9 @@ type QuoteCheckoutJSONRequestBody = CheckoutQuoteRequest
 
 // CreateOrderJSONRequestBody defines body for CreateOrder for application/json ContentType.
 type CreateOrderJSONRequestBody = CreateOrderRequest
+
+// ClaimGuestOrderJSONRequestBody defines body for ClaimGuestOrder for application/json ContentType.
+type ClaimGuestOrderJSONRequestBody = ClaimGuestOrderRequest
 
 // ProcessPaymentJSONRequestBody defines body for ProcessPayment for application/json ContentType.
 type ProcessPaymentJSONRequestBody = ProcessPaymentRequest
@@ -1192,6 +1253,33 @@ type ServerInterface interface {
 	// (GET /api/v1/brands)
 	ListBrands(c *gin.Context)
 
+	// (GET /api/v1/checkout/cart)
+	GetCheckoutCart(c *gin.Context)
+
+	// (POST /api/v1/checkout/cart/items)
+	AddCheckoutCartItem(c *gin.Context)
+
+	// (DELETE /api/v1/checkout/cart/items/{itemId})
+	DeleteCheckoutCartItem(c *gin.Context, itemId int)
+
+	// (PATCH /api/v1/checkout/cart/items/{itemId})
+	UpdateCheckoutCartItem(c *gin.Context, itemId int)
+
+	// (GET /api/v1/checkout/cart/summary)
+	GetCheckoutCartSummary(c *gin.Context)
+
+	// (POST /api/v1/checkout/orders)
+	CreateCheckoutOrder(c *gin.Context, params CreateCheckoutOrderParams)
+
+	// (POST /api/v1/checkout/orders/{id}/payments/authorize)
+	AuthorizeCheckoutOrderPayment(c *gin.Context, id int, params AuthorizeCheckoutOrderPaymentParams)
+
+	// (GET /api/v1/checkout/plugins)
+	ListCheckoutSessionPlugins(c *gin.Context)
+
+	// (POST /api/v1/checkout/quote)
+	QuoteCheckoutSession(c *gin.Context)
+
 	// (GET /api/v1/me/)
 	GetProfile(c *gin.Context)
 
@@ -1233,6 +1321,9 @@ type ServerInterface interface {
 
 	// (POST /api/v1/me/orders)
 	CreateOrder(c *gin.Context)
+
+	// (POST /api/v1/me/orders/claim)
+	ClaimGuestOrder(c *gin.Context)
 
 	// (GET /api/v1/me/orders/{id})
 	GetUserOrder(c *gin.Context, id int)
@@ -2362,6 +2453,242 @@ func (siw *ServerInterfaceWrapper) ListBrands(c *gin.Context) {
 	siw.Handler.ListBrands(c)
 }
 
+// GetCheckoutCart operation middleware
+func (siw *ServerInterfaceWrapper) GetCheckoutCart(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetCheckoutCart(c)
+}
+
+// AddCheckoutCartItem operation middleware
+func (siw *ServerInterfaceWrapper) AddCheckoutCartItem(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AddCheckoutCartItem(c)
+}
+
+// DeleteCheckoutCartItem operation middleware
+func (siw *ServerInterfaceWrapper) DeleteCheckoutCartItem(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "itemId" -------------
+	var itemId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "itemId", c.Param("itemId"), &itemId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter itemId: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteCheckoutCartItem(c, itemId)
+}
+
+// UpdateCheckoutCartItem operation middleware
+func (siw *ServerInterfaceWrapper) UpdateCheckoutCartItem(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "itemId" -------------
+	var itemId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "itemId", c.Param("itemId"), &itemId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter itemId: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateCheckoutCartItem(c, itemId)
+}
+
+// GetCheckoutCartSummary operation middleware
+func (siw *ServerInterfaceWrapper) GetCheckoutCartSummary(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetCheckoutCartSummary(c)
+}
+
+// CreateCheckoutOrder operation middleware
+func (siw *ServerInterfaceWrapper) CreateCheckoutOrder(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CreateCheckoutOrderParams
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = &IdempotencyKey
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateCheckoutOrder(c, params)
+}
+
+// AuthorizeCheckoutOrderPayment operation middleware
+func (siw *ServerInterfaceWrapper) AuthorizeCheckoutOrderPayment(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params AuthorizeCheckoutOrderPaymentParams
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = &IdempotencyKey
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AuthorizeCheckoutOrderPayment(c, id, params)
+}
+
+// ListCheckoutSessionPlugins operation middleware
+func (siw *ServerInterfaceWrapper) ListCheckoutSessionPlugins(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListCheckoutSessionPlugins(c)
+}
+
+// QuoteCheckoutSession operation middleware
+func (siw *ServerInterfaceWrapper) QuoteCheckoutSession(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.QuoteCheckoutSession(c)
+}
+
 // GetProfile operation middleware
 func (siw *ServerInterfaceWrapper) GetProfile(c *gin.Context) {
 
@@ -2687,6 +3014,23 @@ func (siw *ServerInterfaceWrapper) CreateOrder(c *gin.Context) {
 	}
 
 	siw.Handler.CreateOrder(c)
+}
+
+// ClaimGuestOrder operation middleware
+func (siw *ServerInterfaceWrapper) ClaimGuestOrder(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ClaimGuestOrder(c)
 }
 
 // GetUserOrder operation middleware
@@ -3249,6 +3593,15 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/api/v1/auth/oidc/login", wrapper.OidcLogin)
 	router.POST(options.BaseURL+"/api/v1/auth/register", wrapper.Register)
 	router.GET(options.BaseURL+"/api/v1/brands", wrapper.ListBrands)
+	router.GET(options.BaseURL+"/api/v1/checkout/cart", wrapper.GetCheckoutCart)
+	router.POST(options.BaseURL+"/api/v1/checkout/cart/items", wrapper.AddCheckoutCartItem)
+	router.DELETE(options.BaseURL+"/api/v1/checkout/cart/items/:itemId", wrapper.DeleteCheckoutCartItem)
+	router.PATCH(options.BaseURL+"/api/v1/checkout/cart/items/:itemId", wrapper.UpdateCheckoutCartItem)
+	router.GET(options.BaseURL+"/api/v1/checkout/cart/summary", wrapper.GetCheckoutCartSummary)
+	router.POST(options.BaseURL+"/api/v1/checkout/orders", wrapper.CreateCheckoutOrder)
+	router.POST(options.BaseURL+"/api/v1/checkout/orders/:id/payments/authorize", wrapper.AuthorizeCheckoutOrderPayment)
+	router.GET(options.BaseURL+"/api/v1/checkout/plugins", wrapper.ListCheckoutSessionPlugins)
+	router.POST(options.BaseURL+"/api/v1/checkout/quote", wrapper.QuoteCheckoutSession)
 	router.GET(options.BaseURL+"/api/v1/me/", wrapper.GetProfile)
 	router.PATCH(options.BaseURL+"/api/v1/me/", wrapper.UpdateProfile)
 	router.GET(options.BaseURL+"/api/v1/me/addresses", wrapper.ListSavedAddresses)
@@ -3263,6 +3616,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/api/v1/me/checkout/quote", wrapper.QuoteCheckout)
 	router.GET(options.BaseURL+"/api/v1/me/orders", wrapper.ListUserOrders)
 	router.POST(options.BaseURL+"/api/v1/me/orders", wrapper.CreateOrder)
+	router.POST(options.BaseURL+"/api/v1/me/orders/claim", wrapper.ClaimGuestOrder)
 	router.GET(options.BaseURL+"/api/v1/me/orders/:id", wrapper.GetUserOrder)
 	router.POST(options.BaseURL+"/api/v1/me/orders/:id/cancel", wrapper.CancelUserOrder)
 	router.POST(options.BaseURL+"/api/v1/me/orders/:id/pay", wrapper.ProcessPayment)
@@ -4095,6 +4449,313 @@ func (response ListBrands200JSONResponse) VisitListBrandsResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetCheckoutCartRequestObject struct {
+}
+
+type GetCheckoutCartResponseObject interface {
+	VisitGetCheckoutCartResponse(w http.ResponseWriter) error
+}
+
+type GetCheckoutCart200JSONResponse Cart
+
+func (response GetCheckoutCart200JSONResponse) VisitGetCheckoutCartResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetCheckoutCart403JSONResponse Error
+
+func (response GetCheckoutCart403JSONResponse) VisitGetCheckoutCartResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AddCheckoutCartItemRequestObject struct {
+	Body *AddCheckoutCartItemJSONRequestBody
+}
+
+type AddCheckoutCartItemResponseObject interface {
+	VisitAddCheckoutCartItemResponse(w http.ResponseWriter) error
+}
+
+type AddCheckoutCartItem200JSONResponse Cart
+
+func (response AddCheckoutCartItem200JSONResponse) VisitAddCheckoutCartItemResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AddCheckoutCartItem403JSONResponse Error
+
+func (response AddCheckoutCartItem403JSONResponse) VisitAddCheckoutCartItemResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteCheckoutCartItemRequestObject struct {
+	ItemId int `json:"itemId"`
+}
+
+type DeleteCheckoutCartItemResponseObject interface {
+	VisitDeleteCheckoutCartItemResponse(w http.ResponseWriter) error
+}
+
+type DeleteCheckoutCartItem200JSONResponse MessageResponse
+
+func (response DeleteCheckoutCartItem200JSONResponse) VisitDeleteCheckoutCartItemResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteCheckoutCartItem403JSONResponse Error
+
+func (response DeleteCheckoutCartItem403JSONResponse) VisitDeleteCheckoutCartItemResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateCheckoutCartItemRequestObject struct {
+	ItemId int `json:"itemId"`
+	Body   *UpdateCheckoutCartItemJSONRequestBody
+}
+
+type UpdateCheckoutCartItemResponseObject interface {
+	VisitUpdateCheckoutCartItemResponse(w http.ResponseWriter) error
+}
+
+type UpdateCheckoutCartItem200JSONResponse CartItem
+
+func (response UpdateCheckoutCartItem200JSONResponse) VisitUpdateCheckoutCartItemResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateCheckoutCartItem403JSONResponse Error
+
+func (response UpdateCheckoutCartItem403JSONResponse) VisitUpdateCheckoutCartItemResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetCheckoutCartSummaryRequestObject struct {
+}
+
+type GetCheckoutCartSummaryResponseObject interface {
+	VisitGetCheckoutCartSummaryResponse(w http.ResponseWriter) error
+}
+
+type GetCheckoutCartSummary200JSONResponse CheckoutCartSummary
+
+func (response GetCheckoutCartSummary200JSONResponse) VisitGetCheckoutCartSummaryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetCheckoutCartSummary403JSONResponse Error
+
+func (response GetCheckoutCartSummary403JSONResponse) VisitGetCheckoutCartSummaryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateCheckoutOrderRequestObject struct {
+	Params CreateCheckoutOrderParams
+	Body   *CreateCheckoutOrderJSONRequestBody
+}
+
+type CreateCheckoutOrderResponseObject interface {
+	VisitCreateCheckoutOrderResponse(w http.ResponseWriter) error
+}
+
+type CreateCheckoutOrder201JSONResponse Order
+
+func (response CreateCheckoutOrder201JSONResponse) VisitCreateCheckoutOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateCheckoutOrder400JSONResponse Error
+
+func (response CreateCheckoutOrder400JSONResponse) VisitCreateCheckoutOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateCheckoutOrder403JSONResponse Error
+
+func (response CreateCheckoutOrder403JSONResponse) VisitCreateCheckoutOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateCheckoutOrder409JSONResponse Error
+
+func (response CreateCheckoutOrder409JSONResponse) VisitCreateCheckoutOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateCheckoutOrder429JSONResponse Error
+
+func (response CreateCheckoutOrder429JSONResponse) VisitCreateCheckoutOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(429)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AuthorizeCheckoutOrderPaymentRequestObject struct {
+	Id     int `json:"id"`
+	Params AuthorizeCheckoutOrderPaymentParams
+	Body   *AuthorizeCheckoutOrderPaymentJSONRequestBody
+}
+
+type AuthorizeCheckoutOrderPaymentResponseObject interface {
+	VisitAuthorizeCheckoutOrderPaymentResponse(w http.ResponseWriter) error
+}
+
+type AuthorizeCheckoutOrderPayment200JSONResponse ProcessPaymentResponse
+
+func (response AuthorizeCheckoutOrderPayment200JSONResponse) VisitAuthorizeCheckoutOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AuthorizeCheckoutOrderPayment400JSONResponse Error
+
+func (response AuthorizeCheckoutOrderPayment400JSONResponse) VisitAuthorizeCheckoutOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AuthorizeCheckoutOrderPayment403JSONResponse Error
+
+func (response AuthorizeCheckoutOrderPayment403JSONResponse) VisitAuthorizeCheckoutOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AuthorizeCheckoutOrderPayment404JSONResponse Error
+
+func (response AuthorizeCheckoutOrderPayment404JSONResponse) VisitAuthorizeCheckoutOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AuthorizeCheckoutOrderPayment409JSONResponse Error
+
+func (response AuthorizeCheckoutOrderPayment409JSONResponse) VisitAuthorizeCheckoutOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AuthorizeCheckoutOrderPayment429JSONResponse Error
+
+func (response AuthorizeCheckoutOrderPayment429JSONResponse) VisitAuthorizeCheckoutOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(429)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListCheckoutSessionPluginsRequestObject struct {
+}
+
+type ListCheckoutSessionPluginsResponseObject interface {
+	VisitListCheckoutSessionPluginsResponse(w http.ResponseWriter) error
+}
+
+type ListCheckoutSessionPlugins200JSONResponse CheckoutPluginCatalog
+
+func (response ListCheckoutSessionPlugins200JSONResponse) VisitListCheckoutSessionPluginsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListCheckoutSessionPlugins403JSONResponse Error
+
+func (response ListCheckoutSessionPlugins403JSONResponse) VisitListCheckoutSessionPluginsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type QuoteCheckoutSessionRequestObject struct {
+	Body *QuoteCheckoutSessionJSONRequestBody
+}
+
+type QuoteCheckoutSessionResponseObject interface {
+	VisitQuoteCheckoutSessionResponse(w http.ResponseWriter) error
+}
+
+type QuoteCheckoutSession200JSONResponse CheckoutQuoteResponse
+
+func (response QuoteCheckoutSession200JSONResponse) VisitQuoteCheckoutSessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type QuoteCheckoutSession400JSONResponse Error
+
+func (response QuoteCheckoutSession400JSONResponse) VisitQuoteCheckoutSessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type QuoteCheckoutSession403JSONResponse Error
+
+func (response QuoteCheckoutSession403JSONResponse) VisitQuoteCheckoutSessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetProfileRequestObject struct {
 }
 
@@ -4371,6 +5032,50 @@ type CreateOrder201JSONResponse Order
 func (response CreateOrder201JSONResponse) VisitCreateOrderResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ClaimGuestOrderRequestObject struct {
+	Body *ClaimGuestOrderJSONRequestBody
+}
+
+type ClaimGuestOrderResponseObject interface {
+	VisitClaimGuestOrderResponse(w http.ResponseWriter) error
+}
+
+type ClaimGuestOrder200JSONResponse ClaimGuestOrderResponse
+
+func (response ClaimGuestOrder200JSONResponse) VisitClaimGuestOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ClaimGuestOrder400JSONResponse Error
+
+func (response ClaimGuestOrder400JSONResponse) VisitClaimGuestOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ClaimGuestOrder404JSONResponse Error
+
+func (response ClaimGuestOrder404JSONResponse) VisitClaimGuestOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ClaimGuestOrder409JSONResponse Error
+
+func (response ClaimGuestOrder409JSONResponse) VisitClaimGuestOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -4880,6 +5585,33 @@ type StrictServerInterface interface {
 	// (GET /api/v1/brands)
 	ListBrands(ctx context.Context, request ListBrandsRequestObject) (ListBrandsResponseObject, error)
 
+	// (GET /api/v1/checkout/cart)
+	GetCheckoutCart(ctx context.Context, request GetCheckoutCartRequestObject) (GetCheckoutCartResponseObject, error)
+
+	// (POST /api/v1/checkout/cart/items)
+	AddCheckoutCartItem(ctx context.Context, request AddCheckoutCartItemRequestObject) (AddCheckoutCartItemResponseObject, error)
+
+	// (DELETE /api/v1/checkout/cart/items/{itemId})
+	DeleteCheckoutCartItem(ctx context.Context, request DeleteCheckoutCartItemRequestObject) (DeleteCheckoutCartItemResponseObject, error)
+
+	// (PATCH /api/v1/checkout/cart/items/{itemId})
+	UpdateCheckoutCartItem(ctx context.Context, request UpdateCheckoutCartItemRequestObject) (UpdateCheckoutCartItemResponseObject, error)
+
+	// (GET /api/v1/checkout/cart/summary)
+	GetCheckoutCartSummary(ctx context.Context, request GetCheckoutCartSummaryRequestObject) (GetCheckoutCartSummaryResponseObject, error)
+
+	// (POST /api/v1/checkout/orders)
+	CreateCheckoutOrder(ctx context.Context, request CreateCheckoutOrderRequestObject) (CreateCheckoutOrderResponseObject, error)
+
+	// (POST /api/v1/checkout/orders/{id}/payments/authorize)
+	AuthorizeCheckoutOrderPayment(ctx context.Context, request AuthorizeCheckoutOrderPaymentRequestObject) (AuthorizeCheckoutOrderPaymentResponseObject, error)
+
+	// (GET /api/v1/checkout/plugins)
+	ListCheckoutSessionPlugins(ctx context.Context, request ListCheckoutSessionPluginsRequestObject) (ListCheckoutSessionPluginsResponseObject, error)
+
+	// (POST /api/v1/checkout/quote)
+	QuoteCheckoutSession(ctx context.Context, request QuoteCheckoutSessionRequestObject) (QuoteCheckoutSessionResponseObject, error)
+
 	// (GET /api/v1/me/)
 	GetProfile(ctx context.Context, request GetProfileRequestObject) (GetProfileResponseObject, error)
 
@@ -4921,6 +5653,9 @@ type StrictServerInterface interface {
 
 	// (POST /api/v1/me/orders)
 	CreateOrder(ctx context.Context, request CreateOrderRequestObject) (CreateOrderResponseObject, error)
+
+	// (POST /api/v1/me/orders/claim)
+	ClaimGuestOrder(ctx context.Context, request ClaimGuestOrderRequestObject) (ClaimGuestOrderResponseObject, error)
 
 	// (GET /api/v1/me/orders/{id})
 	GetUserOrder(ctx context.Context, request GetUserOrderRequestObject) (GetUserOrderResponseObject, error)
@@ -6153,6 +6888,280 @@ func (sh *strictHandler) ListBrands(ctx *gin.Context) {
 	}
 }
 
+// GetCheckoutCart operation middleware
+func (sh *strictHandler) GetCheckoutCart(ctx *gin.Context) {
+	var request GetCheckoutCartRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetCheckoutCart(ctx, request.(GetCheckoutCartRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetCheckoutCart")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetCheckoutCartResponseObject); ok {
+		if err := validResponse.VisitGetCheckoutCartResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AddCheckoutCartItem operation middleware
+func (sh *strictHandler) AddCheckoutCartItem(ctx *gin.Context) {
+	var request AddCheckoutCartItemRequestObject
+
+	var body AddCheckoutCartItemJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AddCheckoutCartItem(ctx, request.(AddCheckoutCartItemRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AddCheckoutCartItem")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(AddCheckoutCartItemResponseObject); ok {
+		if err := validResponse.VisitAddCheckoutCartItemResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteCheckoutCartItem operation middleware
+func (sh *strictHandler) DeleteCheckoutCartItem(ctx *gin.Context, itemId int) {
+	var request DeleteCheckoutCartItemRequestObject
+
+	request.ItemId = itemId
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteCheckoutCartItem(ctx, request.(DeleteCheckoutCartItemRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteCheckoutCartItem")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteCheckoutCartItemResponseObject); ok {
+		if err := validResponse.VisitDeleteCheckoutCartItemResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateCheckoutCartItem operation middleware
+func (sh *strictHandler) UpdateCheckoutCartItem(ctx *gin.Context, itemId int) {
+	var request UpdateCheckoutCartItemRequestObject
+
+	request.ItemId = itemId
+
+	var body UpdateCheckoutCartItemJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateCheckoutCartItem(ctx, request.(UpdateCheckoutCartItemRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateCheckoutCartItem")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateCheckoutCartItemResponseObject); ok {
+		if err := validResponse.VisitUpdateCheckoutCartItemResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetCheckoutCartSummary operation middleware
+func (sh *strictHandler) GetCheckoutCartSummary(ctx *gin.Context) {
+	var request GetCheckoutCartSummaryRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetCheckoutCartSummary(ctx, request.(GetCheckoutCartSummaryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetCheckoutCartSummary")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetCheckoutCartSummaryResponseObject); ok {
+		if err := validResponse.VisitGetCheckoutCartSummaryResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateCheckoutOrder operation middleware
+func (sh *strictHandler) CreateCheckoutOrder(ctx *gin.Context, params CreateCheckoutOrderParams) {
+	var request CreateCheckoutOrderRequestObject
+
+	request.Params = params
+
+	var body CreateCheckoutOrderJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateCheckoutOrder(ctx, request.(CreateCheckoutOrderRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateCheckoutOrder")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateCheckoutOrderResponseObject); ok {
+		if err := validResponse.VisitCreateCheckoutOrderResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AuthorizeCheckoutOrderPayment operation middleware
+func (sh *strictHandler) AuthorizeCheckoutOrderPayment(ctx *gin.Context, id int, params AuthorizeCheckoutOrderPaymentParams) {
+	var request AuthorizeCheckoutOrderPaymentRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	var body AuthorizeCheckoutOrderPaymentJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AuthorizeCheckoutOrderPayment(ctx, request.(AuthorizeCheckoutOrderPaymentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AuthorizeCheckoutOrderPayment")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(AuthorizeCheckoutOrderPaymentResponseObject); ok {
+		if err := validResponse.VisitAuthorizeCheckoutOrderPaymentResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListCheckoutSessionPlugins operation middleware
+func (sh *strictHandler) ListCheckoutSessionPlugins(ctx *gin.Context) {
+	var request ListCheckoutSessionPluginsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListCheckoutSessionPlugins(ctx, request.(ListCheckoutSessionPluginsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListCheckoutSessionPlugins")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListCheckoutSessionPluginsResponseObject); ok {
+		if err := validResponse.VisitListCheckoutSessionPluginsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// QuoteCheckoutSession operation middleware
+func (sh *strictHandler) QuoteCheckoutSession(ctx *gin.Context) {
+	var request QuoteCheckoutSessionRequestObject
+
+	var body QuoteCheckoutSessionJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.QuoteCheckoutSession(ctx, request.(QuoteCheckoutSessionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "QuoteCheckoutSession")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(QuoteCheckoutSessionResponseObject); ok {
+		if err := validResponse.VisitQuoteCheckoutSessionResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // GetProfile operation middleware
 func (sh *strictHandler) GetProfile(ctx *gin.Context) {
 	var request GetProfileRequestObject
@@ -6554,6 +7563,39 @@ func (sh *strictHandler) CreateOrder(ctx *gin.Context) {
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(CreateOrderResponseObject); ok {
 		if err := validResponse.VisitCreateOrderResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ClaimGuestOrder operation middleware
+func (sh *strictHandler) ClaimGuestOrder(ctx *gin.Context) {
+	var request ClaimGuestOrderRequestObject
+
+	var body ClaimGuestOrderJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ClaimGuestOrder(ctx, request.(ClaimGuestOrderRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ClaimGuestOrder")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ClaimGuestOrderResponseObject); ok {
+		if err := validResponse.VisitClaimGuestOrderResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -7012,104 +8054,111 @@ func (sh *strictHandler) GetStorefrontSettings(ctx *gin.Context) {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"/5ny2HNt2AAA",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -160,6 +160,9 @@
 		if (settings.site_title.trim() === "") {
 			settings.site_title = "Ecommerce";
 		}
+		settings.checkout = {
+			allow_guest_checkout: settings.checkout?.allow_guest_checkout ?? true,
+		};
 
 		if (settings.homepage_sections.length > maxHomepageSections) {
 			settings.homepage_sections = settings.homepage_sections.slice(0, maxHomepageSections);
@@ -820,6 +823,22 @@
 					<div class="mt-4">
 						<TextInput tone="admin" placeholder="Navbar site title" bind:value={draft.site_title} />
 					</div>
+				</section>
+
+				<section class="admin-subsurface">
+					<h3
+						class="text-sm font-semibold tracking-[0.18em] text-stone-500 uppercase dark:text-stone-400"
+					>
+						Checkout access
+					</h3>
+					<label class="mt-4 flex items-start gap-3 text-sm text-stone-700 dark:text-stone-200">
+						<input
+							class="mt-1 h-4 w-4 shrink-0"
+							type="checkbox"
+							bind:checked={draft.checkout.allow_guest_checkout}
+						/>
+						<span> Allow guests to create carts and start checkout without signing in. </span>
+					</label>
 				</section>
 
 				<section class="admin-subsurface">

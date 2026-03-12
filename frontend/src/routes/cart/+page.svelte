@@ -21,6 +21,7 @@
 	let errorMessage = $state("");
 	let updatingItemId = $state<number | null>(null);
 	let isAuthenticated = $state(false);
+	let guestCheckoutDisabled = $state(false);
 
 	const total = $derived(
 		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.product_variant.price, 0) : 0
@@ -73,6 +74,7 @@
 		cart = data.cart;
 		errorMessage = data.errorMessage;
 		isAuthenticated = data.isAuthenticated;
+		guestCheckoutDisabled = data.guestCheckoutDisabled ?? false;
 	});
 </script>
 
@@ -88,14 +90,21 @@
 		{/if}
 	</div>
 
-	{#if !isAuthenticated}
-		<p class="mt-4 text-gray-600 dark:text-gray-300">
-			Please
-			<a href={resolve("/login")} class="text-blue-600 hover:underline dark:text-blue-400">
-				log in
-			</a>
-			to view your cart.
-		</p>
+	{#if guestCheckoutDisabled && !isAuthenticated}
+		<div
+			class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-gray-700 shadow-sm dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-50"
+		>
+			<p class="text-xl font-medium">Guest checkout is currently turned off.</p>
+			<p class="mt-2 text-sm text-gray-600 dark:text-amber-100/80">
+				Sign in or create an account to keep building your cart and continue to checkout.
+			</p>
+			<div class="mt-5 flex flex-wrap gap-3">
+				<ButtonLink href={resolve("/login")} variant="primary" size="large">Log in</ButtonLink>
+				<ButtonLink href={resolve("/signup/")} variant="regular" size="large"
+					>Create account</ButtonLink
+				>
+			</div>
+		</div>
 	{:else if errorMessage}
 		<div class="mt-4">
 			<Alert
@@ -110,6 +119,11 @@
 			class="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
 		>
 			<p class="text-2xl font-medium">Your cart is empty.</p>
+			{#if !isAuthenticated}
+				<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+					Your selections are saved to this browser until you check out or clear them.
+				</p>
+			{/if}
 			<div class="mt-6">
 				<ButtonLink href={resolve("/")} variant="primary" size="large">Continue shopping</ButtonLink
 				>
@@ -118,6 +132,13 @@
 	{:else}
 		<div class="mt-6 grid items-start gap-6 lg:grid-cols-[1.6fr_0.8fr]">
 			<div class="space-y-4">
+				{#if !isAuthenticated}
+					<div
+						class="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-100"
+					>
+						Your cart is attached to this browser session. You can still check out as a guest.
+					</div>
+				{/if}
 				{#each cart.items as item (item.id)}
 					<div
 						class="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center dark:border-gray-800 dark:bg-gray-900"

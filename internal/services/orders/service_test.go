@@ -2,6 +2,7 @@ package orders
 
 import (
 	"testing"
+	"time"
 
 	"ecommerce/models"
 
@@ -15,8 +16,23 @@ func newOrdersTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 	db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory&cache=shared"), &gorm.Config{})
 	require.NoError(t, err)
-	require.NoError(t, db.AutoMigrate(&models.Product{}, &models.ProductVariant{}, &models.Order{}, &models.OrderItem{}))
+	require.NoError(t, db.AutoMigrate(&models.CheckoutSession{}, &models.Product{}, &models.ProductVariant{}, &models.Order{}, &models.OrderItem{}))
 	return db
+}
+
+func seedOrderSession(t *testing.T, db *gorm.DB, userID *uint) models.CheckoutSession {
+	t.Helper()
+	session := models.CheckoutSession{
+		PublicToken: "orders-test-session",
+		Status:      models.CheckoutSessionStatusActive,
+		ExpiresAt:   time.Now().Add(24 * time.Hour).UTC(),
+		LastSeenAt:  time.Now().UTC(),
+	}
+	if userID != nil {
+		session.UserID = userID
+	}
+	require.NoError(t, db.Create(&session).Error)
+	return session
 }
 
 func seedVariant(t *testing.T, db *gorm.DB, sku string, stock int) models.ProductVariant {
@@ -40,7 +56,9 @@ func TestApplyStatusTransition_CommitsStock(t *testing.T) {
 	db := newOrdersTestDB(t)
 
 	variant := seedVariant(t, db, "SKU-1", 8)
-	order := models.Order{UserID: 1, Total: models.MoneyFromFloat(20), Status: models.StatusPending}
+	userID := uint(1)
+	session := seedOrderSession(t, db, &userID)
+	order := models.Order{UserID: &userID, CheckoutSessionID: session.ID, Total: models.MoneyFromFloat(20), Status: models.StatusPending}
 	require.NoError(t, db.Create(&order).Error)
 	require.NoError(t, db.Create(&models.OrderItem{
 		OrderID:          order.ID,
@@ -68,7 +86,9 @@ func TestApplyStatusTransition_RestoresStock(t *testing.T) {
 	db := newOrdersTestDB(t)
 
 	variant := seedVariant(t, db, "SKU-2", 4)
-	order := models.Order{UserID: 1, Total: models.MoneyFromFloat(20), Status: models.StatusPaid}
+	userID := uint(1)
+	session := seedOrderSession(t, db, &userID)
+	order := models.Order{UserID: &userID, CheckoutSessionID: session.ID, Total: models.MoneyFromFloat(20), Status: models.StatusPaid}
 	require.NoError(t, db.Create(&order).Error)
 	require.NoError(t, db.Create(&models.OrderItem{
 		OrderID:          order.ID,
@@ -92,7 +112,9 @@ func TestApplyStatusTransition_InsufficientStock(t *testing.T) {
 	db := newOrdersTestDB(t)
 
 	variant := seedVariant(t, db, "SKU-3", 1)
-	order := models.Order{UserID: 1, Total: models.MoneyFromFloat(20), Status: models.StatusPending}
+	userID := uint(1)
+	session := seedOrderSession(t, db, &userID)
+	order := models.Order{UserID: &userID, CheckoutSessionID: session.ID, Total: models.MoneyFromFloat(20), Status: models.StatusPending}
 	require.NoError(t, db.Create(&order).Error)
 	require.NoError(t, db.Create(&models.OrderItem{
 		OrderID:          order.ID,

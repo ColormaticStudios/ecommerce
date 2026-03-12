@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -577,7 +578,7 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, productCatalogDepthP2ProductBackfillVersion, status.LatestAppliedVersion)
+	require.Equal(t, guestCheckoutP3Version, status.LatestAppliedVersion)
 	require.Equal(t, 1, status.PendingCount)
 }
 
@@ -757,4 +758,99 @@ func TestCatalogDepthP4BackfillsLegacyDraftBlobAndDropsColumn(t *testing.T) {
 	require.NoError(t, db.Where("product_draft_id = ?", draft.ID).Order("position asc").Find(&relatedDrafts).Error)
 	require.Len(t, relatedDrafts, 1)
 	assert.Equal(t, uint(7), relatedDrafts[0].RelatedProductID)
+}
+
+func TestGuestCheckoutP0BackfillsCheckoutSessionsForLegacyCarts(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
+
+	guestCheckoutIndex := slices.IndexFunc(orderedMigrations, func(m Migration) bool {
+		return m.Version == guestCheckoutP0Version
+	})
+	require.NotEqual(t, -1, guestCheckoutIndex)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:guestCheckoutIndex]))
+
+	user := legacyUser{
+		Subject:  "legacy-cart-user",
+		Username: "legacy-cart-user",
+		Email:    "legacy-cart-user@example.com",
+		Role:     "customer",
+		Currency: "USD",
+	}
+	require.NoError(t, db.Create(&user).Error)
+	cart := legacyCart{UserID: user.ID}
+	require.NoError(t, db.Create(&cart).Error)
+
+	require.NoError(t, runWithMigrations(db, orderedMigrations))
+
+	assert.True(t, db.Migrator().HasTable(&models.CheckoutSession{}))
+	assert.False(t, db.Migrator().HasColumn("carts", "user_id"))
+	assert.True(t, db.Migrator().HasColumn("carts", "checkout_session_id"))
+
+	var checkoutSession models.CheckoutSession
+	require.NoError(t, db.Where("user_id = ?", user.ID).First(&checkoutSession).Error)
+	assert.Equal(t, models.CheckoutSessionStatusActive, checkoutSession.Status)
+	assert.NotEmpty(t, checkoutSession.PublicToken)
+
+	var reloadedCart models.Cart
+	require.NoError(t, db.First(&reloadedCart, cart.ID).Error)
+	assert.Equal(t, checkoutSession.ID, reloadedCart.CheckoutSessionID)
+}
+
+func TestGuestCheckoutP1BackfillsCheckoutSessionsForLegacyOrders(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
+
+	guestCheckoutIndex := slices.IndexFunc(orderedMigrations, func(m Migration) bool {
+		return m.Version == guestCheckoutP1Version
+	})
+	require.NotEqual(t, -1, guestCheckoutIndex)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:guestCheckoutIndex]))
+
+	user := legacyUser{
+		Subject:  "legacy-order-user",
+		Username: "legacy-order-user",
+		Email:    "legacy-order-user@example.com",
+		Role:     "customer",
+		Currency: "USD",
+	}
+	require.NoError(t, db.Create(&user).Error)
+	order := legacyOrder{
+		UserID: user.ID,
+		Total:  models.MoneyFromFloat(42),
+		Status: models.StatusPending,
+	}
+	require.NoError(t, db.Create(&order).Error)
+
+	require.NoError(t, runWithMigrations(db, orderedMigrations))
+
+	assert.True(t, db.Migrator().HasColumn("orders", "checkout_session_id"))
+	assert.True(t, db.Migrator().HasColumn("orders", "guest_email"))
+	assert.True(t, db.Migrator().HasColumn("orders", "confirmation_token"))
+
+	var reloaded models.Order
+	require.NoError(t, db.First(&reloaded, order.ID).Error)
+	require.NotZero(t, reloaded.CheckoutSessionID)
+	require.NotNil(t, reloaded.UserID)
+	assert.Equal(t, user.ID, *reloaded.UserID)
+
+	var checkoutSession models.CheckoutSession
+	require.NoError(t, db.First(&checkoutSession, reloaded.CheckoutSessionID).Error)
+	assert.Equal(t, models.CheckoutSessionStatusConverted, checkoutSession.Status)
+	require.NotNil(t, checkoutSession.UserID)
+	assert.Equal(t, user.ID, *checkoutSession.UserID)
+}
+
+func TestGuestCheckoutP3AddsClaimAndIdempotencyStructures(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
+
+	guestCheckoutIndex := slices.IndexFunc(orderedMigrations, func(m Migration) bool {
+		return m.Version == guestCheckoutP3Version
+	})
+	require.NotEqual(t, -1, guestCheckoutIndex)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:guestCheckoutIndex+1]))
+
+	assert.True(t, db.Migrator().HasColumn("orders", "claimed_at"))
+	assert.True(t, db.Migrator().HasTable(&models.IdempotencyKey{}))
 }

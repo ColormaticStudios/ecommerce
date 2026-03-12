@@ -85,10 +85,15 @@ type StorefrontFooter struct {
 	BottomNotice string                   `json:"bottom_notice"`
 }
 
+type StorefrontCheckoutSettings struct {
+	AllowGuestCheckout bool `json:"allow_guest_checkout"`
+}
+
 type StorefrontSettingsPayload struct {
 	SiteTitle        string                      `json:"site_title"`
 	HomepageSections []StorefrontHomepageSection `json:"homepage_sections"`
 	Footer           StorefrontFooter            `json:"footer"`
+	Checkout         StorefrontCheckoutSettings  `json:"checkout"`
 }
 
 type StorefrontSettingsResponse struct {
@@ -239,7 +244,7 @@ func decodeDefaultStorefrontSettingsStrict() (StorefrontSettingsPayload, error) 
 	if err := json.Unmarshal(rawJSON, &topLevel); err != nil {
 		return StorefrontSettingsPayload{}, fmt.Errorf("invalid JSON: %w", err)
 	}
-	if err := assertRequiredKeys(topLevel, []string{"site_title", "homepage_sections", "footer"}, "settings"); err != nil {
+	if err := assertRequiredKeys(topLevel, []string{"site_title", "homepage_sections", "footer", "checkout"}, "settings"); err != nil {
 		return StorefrontSettingsPayload{}, err
 	}
 
@@ -319,6 +324,14 @@ func decodeDefaultStorefrontSettingsStrict() (StorefrontSettingsPayload, error) 
 		}
 	}
 
+	checkoutRaw, err := unmarshalObject(topLevel["checkout"], "settings.checkout")
+	if err != nil {
+		return StorefrontSettingsPayload{}, err
+	}
+	if err := assertRequiredKeys(checkoutRaw, []string{"allow_guest_checkout"}, "settings.checkout"); err != nil {
+		return StorefrontSettingsPayload{}, err
+	}
+
 	var parsed StorefrontSettingsPayload
 	decoder := json.NewDecoder(bytes.NewReader(rawJSON))
 	decoder.DisallowUnknownFields()
@@ -376,7 +389,8 @@ func defaultStorefrontSettings() StorefrontSettingsPayload {
 					},
 				},
 			},
-			Footer: StorefrontFooter{BrandName: "Storefront"},
+			Footer:   StorefrontFooter{BrandName: "Storefront"},
+			Checkout: StorefrontCheckoutSettings{AllowGuestCheckout: true},
 		}
 	}
 	return cloneStorefrontSettings(defaultStorefront)
@@ -602,6 +616,7 @@ func normalizeStorefrontSettings(settings StorefrontSettingsPayload) StorefrontS
 	if normalized.SiteTitle == "" {
 		normalized.SiteTitle = defaults.SiteTitle
 	}
+	normalized.Checkout.AllowGuestCheckout = settings.Checkout.AllowGuestCheckout
 
 	normalized.HomepageSections = make([]StorefrontHomepageSection, 0, limitValues.MaxHomepageSections)
 	for i, section := range settings.HomepageSections {

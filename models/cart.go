@@ -2,9 +2,9 @@ package models
 
 type Cart struct {
 	BaseModel
-	UserID uint       `json:"user_id" gorm:"uniqueIndex"`
-	User   User       `json:"-" gorm:"foreignKey:UserID"`
-	Items  []CartItem `json:"items" gorm:"foreignKey:CartID"`
+	CheckoutSessionID uint            `json:"checkout_session_id" gorm:"uniqueIndex"`
+	CheckoutSession   CheckoutSession `json:"-" gorm:"foreignKey:CheckoutSessionID"`
+	Items             []CartItem      `json:"items" gorm:"foreignKey:CartID"`
 }
 
 type CartItem struct {

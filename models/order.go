@@ -48,14 +48,19 @@ func IsUserCancelableOrderStatus(status string) bool {
 
 type Order struct {
 	BaseModel
-	UserID                uint        `json:"user_id"`
-	User                  User        `json:"user" gorm:"foreignKey:UserID"`
-	Total                 Money       `json:"total" gorm:"type:numeric(12,2);not null"`
-	Status                string      `json:"status"` // PENDING, PAID, FAILED, SHIPPED, DELIVERED, CANCELLED, REFUNDED
-	CanCancel             bool        `json:"can_cancel" gorm:"-"`
-	PaymentMethodDisplay  string      `json:"payment_method_display"`
-	ShippingAddressPretty string      `json:"shipping_address_pretty"`
-	Items                 []OrderItem `json:"items" gorm:"foreignKey:OrderID"`
+	UserID                *uint           `json:"user_id"`
+	User                  *User           `json:"user" gorm:"foreignKey:UserID"`
+	CheckoutSessionID     uint            `json:"checkout_session_id" gorm:"not null;index"`
+	CheckoutSession       CheckoutSession `json:"-" gorm:"foreignKey:CheckoutSessionID"`
+	GuestEmail            *string         `json:"guest_email"`
+	ConfirmationToken     *string         `json:"confirmation_token" gorm:"uniqueIndex"`
+	ClaimedAt             NullableTime    `json:"-"`
+	Total                 Money           `json:"total" gorm:"type:numeric(12,2);not null"`
+	Status                string          `json:"status"` // PENDING, PAID, FAILED, SHIPPED, DELIVERED, CANCELLED, REFUNDED
+	CanCancel             bool            `json:"can_cancel" gorm:"-"`
+	PaymentMethodDisplay  string          `json:"payment_method_display"`
+	ShippingAddressPretty string          `json:"shipping_address_pretty"`
+	Items                 []OrderItem     `json:"items" gorm:"foreignKey:OrderID"`
 }
 
 type OrderItem struct {

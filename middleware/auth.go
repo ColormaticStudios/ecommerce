@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -11,11 +12,78 @@ import (
 
 const sessionCookieName = "session_token"
 
+var (
+	ErrAuthTokenMissing = errors.New("authentication token missing")
+	ErrAuthTokenInvalid = errors.New("authentication token invalid")
+)
+
+type AuthIdentity struct {
+	Subject string
+	Email   string
+	Role    string
+}
+
 type CustomClaims struct {
 	Email string `json:"email"`
 	Role  string `json:"role"`
 	Name  string `json:"name"`
 	jwt.RegisteredClaims
+}
+
+func ResolveAuthIdentity(c *gin.Context, secretKey string) (*AuthIdentity, error) {
+	authHeader := c.GetHeader("Authorization")
+	tokenString := ""
+	if authHeader != "" {
+		tokenString = strings.TrimPrefix(authHeader, "Bearer ")
+	}
+
+	if tokenString == "" {
+		if cookieToken, err := c.Cookie(sessionCookieName); err == nil {
+			tokenString = cookieToken
+		}
+	}
+	if tokenString == "" {
+		return nil, ErrAuthTokenMissing
+	}
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(secretKey), nil
+	})
+	if err != nil || !token.Valid {
+		return nil, ErrAuthTokenInvalid
+	}
+
+	var subject, email, role string
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		if sub, ok := claims["sub"].(string); ok {
+			subject = sub
+		}
+		if em, ok := claims["email"].(string); ok {
+			email = em
+		}
+		if r, ok := claims["role"].(string); ok {
+			role = r
+		}
+	} else if customClaims, ok := token.Claims.(*CustomClaims); ok {
+		subject = customClaims.Subject
+		email = customClaims.Email
+		role = customClaims.Role
+	} else {
+		return nil, ErrAuthTokenInvalid
+	}
+
+	if subject == "" {
+		return nil, ErrAuthTokenInvalid
+	}
+
+	return &AuthIdentity{
+		Subject: subject,
+		Email:   email,
+		Role:    role,
+	}, nil
 }
 
 func AuthMiddleware(secretKey string, requiredRole string) gin.HandlerFunc {
@@ -26,77 +94,24 @@ func AuthMiddleware(secretKey string, requiredRole string) gin.HandlerFunc {
 			return
 		}
 
-		// 1. Extract the token from Authorization header or HttpOnly session cookie
-		authHeader := c.GetHeader("Authorization")
-		tokenString := ""
-		if authHeader != "" {
-			tokenString = strings.TrimPrefix(authHeader, "Bearer ")
-		}
-
-		if tokenString == "" {
-			if cookieToken, err := c.Cookie(sessionCookieName); err == nil {
-				tokenString = cookieToken
+		identity, err := ResolveAuthIdentity(c, secretKey)
+		if err != nil {
+			if errors.Is(err, ErrAuthTokenMissing) {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
+				return
 			}
-		}
-		if tokenString == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
-			return
-		}
-
-		// 2. Parse and validate the token (try MapClaims first, then CustomClaims)
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
-			// Ensure the signing method is what we expect (e.g., HS256)
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-			}
-			return []byte(secretKey), nil
-		})
-
-		// 3. Handle validation errors
-		if err != nil || !token.Valid {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
 			return
 		}
 
-		// 4. Extract claims (support both MapClaims and CustomClaims)
-		var subject, email, role string
-
-		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			// MapClaims format (from our auth handlers)
-			if sub, ok := claims["sub"].(string); ok {
-				subject = sub
-			}
-			if em, ok := claims["email"].(string); ok {
-				email = em
-			}
-			if r, ok := claims["role"].(string); ok {
-				role = r
-			}
-		} else if customClaims, ok := token.Claims.(*CustomClaims); ok {
-			// CustomClaims format (for OIDC compatibility)
-			subject = customClaims.Subject
-			email = customClaims.Email
-			role = customClaims.Role
-		} else {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
-			return
-		}
-
-		if subject == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token: missing subject"})
-			return
-		}
-
-		// 5. Check role requirement
-		if requiredRole != "" && role != requiredRole {
+		if requiredRole != "" && identity.Role != requiredRole {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Access denied: insufficient permissions"})
 			return
 		}
 
-		// 6. Store user data in Gin context for handlers to use
-		c.Set("userID", subject)
-		c.Set("userEmail", email)
-		c.Set("userRole", role)
+		c.Set("userID", identity.Subject)
+		c.Set("userEmail", identity.Email)
+		c.Set("userRole", identity.Role)
 
 		c.Next()
 	}

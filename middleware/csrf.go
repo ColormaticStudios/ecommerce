@@ -25,12 +25,6 @@ func CSRFMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		sessionToken, err := c.Cookie(sessionCookieName)
-		if err != nil || sessionToken == "" {
-			c.Next()
-			return
-		}
-
 		csrfCookie, err := c.Cookie(csrfCookieName)
 		if err != nil || csrfCookie == "" {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Missing CSRF token"})

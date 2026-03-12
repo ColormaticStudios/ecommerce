@@ -71,10 +71,11 @@ func ResolveProviderSelection(
 	}, nil
 }
 
-// ClearOrderedItemsFromCart removes only the quantities consumed by the order from the cart.
-func ClearOrderedItemsFromCart(tx *gorm.DB, userID uint, orderItems []models.OrderItem) error {
+// ClearOrderedItemsFromCart removes only the quantities consumed by the order from the checkout session cart.
+func ClearOrderedItemsFromCart(tx *gorm.DB, checkoutSessionID uint, orderItems []models.OrderItem) error {
 	var cart models.Cart
-	if err := tx.Where("user_id = ?", userID).First(&cart).Error; err != nil {
+	if err := tx.Where("checkout_session_id = ?", checkoutSessionID).
+		First(&cart).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil
 		}

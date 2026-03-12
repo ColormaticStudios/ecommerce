@@ -24,7 +24,7 @@
 	let cartCount = $state<number | null>(null);
 	let cartCountLoading = $state(false);
 	let cartCountLoaded = $state(false);
-	let lastCartUserId = $state<number | null>(null);
+	let lastCartOwnerKey = $state<string | null>(null);
 	const showNavigationSpinner = $derived(Boolean(navigating.to));
 	let exitingDraftPreview = $state(false);
 	let draftPreviewError = $state("");
@@ -54,18 +54,14 @@
 	});
 
 	async function refreshCartCount() {
-		const authenticated = await api.refreshAuthState();
-		if (!authenticated) {
-			cartCount = null;
-			cartCountLoaded = true;
-			lastCartUserId = null;
-			return;
-		}
 		cartCountLoading = true;
 		try {
-			const cart = await api.viewCart();
-			cartCount = cart.items.length;
+			cartCount = await api.viewCartSummary();
 		} catch (err) {
+			if (typeof err === "object" && err && "status" in err && err.status === 403) {
+				cartCount = 0;
+				return;
+			}
 			console.error(err);
 			cartCount = null;
 		} finally {
@@ -132,15 +128,9 @@
 		api.bootstrapAuthState(Boolean(data.isAuthenticated));
 		void userStore.load(api);
 		const unsubscribeUser = userStore.subscribe((user) => {
-			if (!user) {
-				cartCount = null;
-				cartCountLoaded = false;
-				cartCountLoading = false;
-				lastCartUserId = null;
-				return;
-			}
-			if ((!cartCountLoaded && !cartCountLoading) || lastCartUserId !== user.id) {
-				lastCartUserId = user.id;
+			const cartOwnerKey = user ? `user:${user.id}` : "guest";
+			if ((!cartCountLoaded && !cartCountLoading) || lastCartOwnerKey !== cartOwnerKey) {
+				lastCartOwnerKey = cartOwnerKey;
 				void refreshCartCount();
 			}
 		});
@@ -259,28 +249,27 @@
 			<a href={resolve("/search")} class="navlink text-lg" aria-label="search">
 				<i class="bi bi-search"></i>
 			</a>
+			<a
+				href={resolve("/cart")}
+				class="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:border-gray-600 dark:hover:bg-gray-700"
+				aria-label="View cart"
+			>
+				<i class="bi bi-cart text-lg"></i>
+				{#if cartCountLoading}
+					<span
+						class="absolute -top-1 -right-1 rounded-full bg-gray-200 px-1 text-[10px] font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-100"
+					>
+						...
+					</span>
+				{:else if cartCount != null && cartCount > 0}
+					<span
+						class="absolute -top-1 -right-1 min-w-[1.15rem] rounded-full bg-blue-200 px-1 text-center text-[10px] font-semibold text-blue-700 dark:bg-blue-800/60 dark:text-blue-200"
+					>
+						{cartCount}
+					</span>
+				{/if}
+			</a>
 			{#if $userStore}
-				<a
-					href={resolve("/cart")}
-					class="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:border-gray-600 dark:hover:bg-gray-700"
-					aria-label="View cart"
-				>
-					<i class="bi bi-cart text-lg"></i>
-					{#if cartCountLoading}
-						<span
-							class="absolute -top-1 -right-1 rounded-full bg-gray-200 px-1 text-[10px] font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-100"
-						>
-							...
-						</span>
-					{:else if cartCount != null && cartCount > 0}
-						<span
-							class="absolute -top-1 -right-1 min-w-[1.15rem] rounded-full bg-blue-200 px-1 text-center text-[10px] font-semibold text-blue-700 dark:bg-blue-800/60 dark:text-blue-200"
-						>
-							{cartCount}
-						</span>
-					{/if}
-				</a>
-
 				<div class="relative" bind:this={menuRef}>
 					<button
 						type="button"

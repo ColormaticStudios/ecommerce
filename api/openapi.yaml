@@ -573,6 +573,120 @@ paths:
               schema:
                 $ref: '#/components/schemas/Cart'
 
+  /api/v1/checkout/cart:
+    get:
+      tags: [checkout]
+      operationId: getCheckoutCart
+      responses:
+        '200':
+          description: Cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '403':
+          description: Guest checkout disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/checkout/cart/summary:
+    get:
+      tags: [checkout]
+      operationId: getCheckoutCartSummary
+      responses:
+        '200':
+          description: Cart summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutCartSummary'
+        '403':
+          description: Guest checkout disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/checkout/cart/items:
+    post:
+      tags: [checkout]
+      operationId: addCheckoutCartItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCartItemRequest'
+      responses:
+        '200':
+          description: Cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '403':
+          description: Guest checkout disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/checkout/cart/items/{itemId}:
+    patch:
+      tags: [checkout]
+      operationId: updateCheckoutCartItem
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCartItemRequest'
+      responses:
+        '200':
+          description: Updated item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartItem'
+        '403':
+          description: Guest checkout disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags: [checkout]
+      operationId: deleteCheckoutCartItem
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '403':
+          description: Guest checkout disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /api/v1/me/cart/{itemId}:
     patch:
       tags: [cart]
@@ -627,6 +741,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/CheckoutPluginCatalog'
 
+  /api/v1/checkout/plugins:
+    get:
+      tags: [checkout]
+      operationId: listCheckoutSessionPlugins
+      responses:
+        '200':
+          description: Available checkout provider plugins
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutPluginCatalog'
+        '403':
+          description: Guest checkout disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /api/v1/me/checkout/quote:
     post:
       tags: [checkout]
@@ -646,6 +778,144 @@ paths:
                 $ref: '#/components/schemas/CheckoutQuoteResponse'
         '400':
           description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/checkout/quote:
+    post:
+      tags: [checkout]
+      operationId: quoteCheckoutSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutQuoteRequest'
+      responses:
+        '200':
+          description: Quote
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutQuoteResponse'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Guest checkout disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/checkout/orders:
+    post:
+      tags: [checkout, orders]
+      operationId: createCheckoutOrder
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCheckoutOrderRequest'
+      responses:
+        '201':
+          description: Created order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Guest checkout disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Checkout submission rate limited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/checkout/orders/{id}/payments/authorize:
+    post:
+      tags: [checkout, orders]
+      operationId: authorizeCheckoutOrderPayment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessPaymentRequest'
+      responses:
+        '200':
+          description: Payment result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessPaymentResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Guest checkout disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Checkout submission rate limited
           content:
             application/json:
               schema:
@@ -703,6 +973,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
+
+  /api/v1/me/orders/claim:
+    post:
+      tags: [orders]
+      operationId: claimGuestOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimGuestOrderRequest'
+      responses:
+        '200':
+          description: Guest order linked to authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimGuestOrderResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Guest order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Guest order already claimed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/v1/me/orders/{id}:
     get:
@@ -1618,6 +1924,8 @@ components:
       properties:
         error:
           type: string
+        code:
+          type: string
 
     MessageResponse:
       type: object
@@ -2397,6 +2705,14 @@ components:
           format: date-time
           nullable: true
 
+    CheckoutCartSummary:
+      type: object
+      required: [item_count]
+      properties:
+        item_count:
+          type: integer
+          minimum: 0
+
     AddCartItemRequest:
       type: object
       required: [product_variant_id, quantity]
@@ -2465,12 +2781,10 @@ components:
       type: object
       required:
         - id
-        - user_id
+        - checkout_session_id
         - status
         - can_cancel
         - total
-        - payment_method_display
-        - shipping_address_pretty
         - items
         - created_at
         - updated_at
@@ -2479,6 +2793,16 @@ components:
           type: integer
         user_id:
           type: integer
+          nullable: true
+        checkout_session_id:
+          type: integer
+        guest_email:
+          type: string
+          format: email
+          nullable: true
+        confirmation_token:
+          type: string
+          nullable: true
         status:
           type: string
           enum: [PENDING, PAID, FAILED, SHIPPED, DELIVERED, CANCELLED, REFUNDED]
@@ -2539,6 +2863,24 @@ components:
           minItems: 1
           items:
             $ref: '#/components/schemas/CreateOrderItemRequest'
+
+    CreateCheckoutOrderRequest:
+      type: object
+      properties:
+        guest_email:
+          type: string
+          format: email
+          nullable: true
+
+    ClaimGuestOrderRequest:
+      type: object
+      required: [email, confirmation_token]
+      properties:
+        email:
+          type: string
+          format: email
+        confirmation_token:
+          type: string
 
     ProcessPaymentInputMethod:
       type: object
@@ -2605,6 +2947,15 @@ components:
             type: string
 
     ProcessPaymentResponse:
+      type: object
+      required: [message, order]
+      properties:
+        message:
+          type: string
+        order:
+          $ref: '#/components/schemas/Order'
+
+    ClaimGuestOrderResponse:
       type: object
       required: [message, order]
       properties:
@@ -3128,9 +3479,16 @@ components:
         bottom_notice:
           type: string
 
+    StorefrontCheckoutSettings:
+      type: object
+      required: [allow_guest_checkout]
+      properties:
+        allow_guest_checkout:
+          type: boolean
+
     StorefrontSettings:
       type: object
-      required: [site_title, homepage_sections, footer]
+      required: [site_title, homepage_sections, footer, checkout]
       properties:
         site_title:
           type: string
@@ -3140,6 +3498,8 @@ components:
             $ref: '#/components/schemas/StorefrontHomepageSection'
         footer:
           $ref: '#/components/schemas/StorefrontFooter'
+        checkout:
+          $ref: '#/components/schemas/StorefrontCheckoutSettings'
 
     StorefrontSettingsRequest:
       type: object

@@ -8,8 +8,10 @@
 	} from "$lib/models";
 	import Alert from "$lib/components/Alert.svelte";
 	import Button from "$lib/components/Button.svelte";
+	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import Dropdown from "$lib/components/Dropdown.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
+	import TextInput from "$lib/components/TextInput.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
 	import {
@@ -45,6 +47,11 @@
 	let quoting = $state(false);
 	let isAuthenticated = $state(false);
 	let orderPlaced = $state(false);
+	let guestCheckoutDisabled = $state(false);
+	let guestEmail = $state("");
+	let pendingOrderId = $state<number | null>(null);
+	let createOrderIdempotencyKey = $state("");
+	let paymentIdempotencyKey = $state("");
 
 	let paymentProviders = $state<CheckoutProvider[]>([]);
 	let shippingProviders = $state<CheckoutProvider[]>([]);
@@ -171,6 +178,13 @@
 		return output;
 	}
 
+	function nextIdempotencyKey(): string {
+		if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+			return crypto.randomUUID();
+		}
+		return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+	}
+
 	function syncPaymentProviderState() {
 		const selectedExists = paymentProviders.some(
 			(provider) => provider.id === selectedPaymentProviderId
@@ -234,6 +248,10 @@
 	}
 
 	async function maybeSaveProfileData() {
+		if (!isAuthenticated) {
+			return;
+		}
+
 		if (
 			paymentUsesCard &&
 			savePaymentMethodToProfile &&
@@ -319,6 +337,10 @@
 		if (!cart || cart.items.length === 0) {
 			return;
 		}
+		if (!isAuthenticated && guestEmail.trim().length === 0) {
+			errorMessage = "Enter your email to place a guest order.";
+			return;
+		}
 
 		processing = true;
 		errorMessage = "";
@@ -333,31 +355,59 @@
 
 			await maybeSaveProfileData();
 
-			const created = await api.createOrder({
-				items: cart.items.map((item) => ({
-					product_variant_id: item.product_variant_id,
-					quantity: item.quantity,
-				})),
-			});
+			let orderID = pendingOrderId;
+			if (orderID === null) {
+				if (!createOrderIdempotencyKey) {
+					createOrderIdempotencyKey = nextIdempotencyKey();
+				}
+				const created = await api.createOrder(
+					isAuthenticated ? {} : { guest_email: guestEmail.trim() },
+					createOrderIdempotencyKey
+				);
+				orderID = created.id;
+				pendingOrderId = created.id;
+			}
 
-			order = await api.processPayment(created.id, {
-				payment_provider_id: selectedPaymentProviderId,
-				shipping_provider_id: selectedShippingProviderId,
-				tax_provider_id: "",
-				payment_data: toStringMap(paymentData),
-				shipping_data: toStringMap(shippingData),
-				tax_data: toStringMap(taxData),
-			});
+			if (!paymentIdempotencyKey) {
+				paymentIdempotencyKey = nextIdempotencyKey();
+			}
+			order = await api.processPayment(
+				orderID,
+				{
+					payment_provider_id: selectedPaymentProviderId,
+					shipping_provider_id: selectedShippingProviderId,
+					tax_provider_id: "",
+					payment_data: toStringMap(paymentData),
+					shipping_data: toStringMap(shippingData),
+					tax_data: toStringMap(taxData),
+				},
+				paymentIdempotencyKey
+			);
 
-			statusMessage = order?.status ? `Payment status: ${order.status}` : "Payment processed.";
+			statusMessage = isAuthenticated
+				? order?.status
+					? `Payment status: ${order.status}`
+					: "Payment processed."
+				: "Order submitted. Keep your confirmation details for reference.";
 			orderPlaced = true;
+			pendingOrderId = null;
+			createOrderIdempotencyKey = "";
+			paymentIdempotencyKey = "";
 			window.dispatchEvent(new CustomEvent("cart:updated"));
-			if (typeof window !== "undefined") {
+			if (isAuthenticated && typeof window !== "undefined") {
 				window.sessionStorage.setItem("orders_toast", "order_placed");
 			}
-			await goto(resolve("/orders"));
+			if (isAuthenticated) {
+				await goto(resolve("/orders"));
+			}
 		} catch (err) {
-			const error = err as { body?: { error?: string } };
+			const error = err as { status?: number; body?: { error?: string; code?: string } };
+			if (pendingOrderId === null && error.status !== undefined && error.status < 500) {
+				createOrderIdempotencyKey = "";
+			}
+			if (error.status !== undefined && error.status < 500) {
+				paymentIdempotencyKey = "";
+			}
 			errorMessage = error.body?.error ?? "Unable to place your order.";
 		} finally {
 			processing = false;
@@ -368,11 +418,18 @@
 		isAuthenticated = data.isAuthenticated;
 		cart = data.cart;
 		errorMessage = data.errorMessage;
+		guestCheckoutDisabled = data.guestCheckoutDisabled ?? false;
 		paymentProviders = data.plugins?.payment ?? [];
 		shippingProviders = data.plugins?.shipping ?? [];
 		taxProviders = data.plugins?.tax ?? [];
 		savedPaymentMethods = data.savedPaymentMethods ?? [];
 		savedAddresses = data.savedAddresses ?? [];
+		if (isAuthenticated) {
+			guestEmail = "";
+		} else {
+			savePaymentMethodToProfile = false;
+			saveAddressToProfile = false;
+		}
 		untrack(() => {
 			syncPaymentProviderState();
 			syncShippingProviderState();
@@ -415,13 +472,21 @@
 		{/if}
 	</div>
 
-	{#if !isAuthenticated}
-		<p class="mt-4 text-gray-600 dark:text-gray-300">
-			Please
-			<a href={resolve("/login")} class="text-blue-600 hover:underline dark:text-blue-400">log in</a
-			>
-			to continue to checkout.
-		</p>
+	{#if guestCheckoutDisabled && !isAuthenticated}
+		<div
+			class="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-6 text-gray-700 shadow-sm dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-50"
+		>
+			<p class="text-2xl font-semibold">Guest checkout is unavailable right now.</p>
+			<p class="mt-2 max-w-2xl text-sm text-gray-600 dark:text-amber-100/80">
+				Sign in or create an account to continue through checkout with your saved order history.
+			</p>
+			<div class="mt-5 flex flex-wrap gap-3">
+				<ButtonLink href={resolve("/login")} variant="primary" size="large">Log in</ButtonLink>
+				<ButtonLink href={resolve("/signup/")} variant="regular" size="large"
+					>Create account</ButtonLink
+				>
+			</div>
+		</div>
 	{:else if !cart || cart.items.length === 0}
 		<p class="mt-4 text-gray-600 dark:text-gray-300">
 			Your cart is empty. Visit the
@@ -430,6 +495,50 @@
 		</p>
 	{:else}
 		<div class="mt-6 space-y-6">
+			{#if !isAuthenticated}
+				<div
+					class="rounded-3xl border border-sky-200 bg-sky-50 p-6 shadow-sm dark:border-sky-900/60 dark:bg-sky-950/40"
+				>
+					<div class="grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+						<div>
+							<h2 class="text-xl font-semibold text-sky-950 dark:text-sky-50">Guest contact</h2>
+							<p class="mt-2 text-sm text-sky-900/80 dark:text-sky-100/80">
+								We will use your email for order confirmation and any follow-up about delivery.
+							</p>
+							<label
+								class="mt-4 block text-sm font-medium text-sky-950 dark:text-sky-50"
+								for="guest-email"
+							>
+								Email address
+							</label>
+							<TextInput
+								id="guest-email"
+								type="email"
+								autocomplete="email"
+								placeholder="you@example.com"
+								bind:value={guestEmail}
+								class="mt-2 bg-white text-gray-900 dark:bg-sky-950/20 dark:text-sky-50"
+							/>
+						</div>
+						<div
+							class="rounded-2xl border border-white/70 bg-white/80 p-4 text-sm text-sky-950 shadow-sm dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-50"
+						>
+							<p class="font-medium">Already have an account?</p>
+							<p class="mt-2 text-sky-900/80 dark:text-sky-100/80">
+								Sign in to use your saved cards, addresses, and order history after checkout.
+							</p>
+							<div class="mt-4 flex flex-wrap gap-3">
+								<ButtonLink href={resolve("/login")} variant="regular" size="large"
+									>Log in</ButtonLink
+								>
+								<ButtonLink href={resolve("/signup/")} variant="regular" size="large"
+									>Create account</ButtonLink
+								>
+							</div>
+						</div>
+					</div>
+				</div>
+			{/if}
 			<div
 				class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 			>
@@ -556,7 +665,7 @@
 									{/if}
 								{/each}
 
-								{#if paymentUsesCard && !selectedSavedPaymentMethodId}
+								{#if isAuthenticated && paymentUsesCard && !selectedSavedPaymentMethodId}
 									<label
 										class="mt-1 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"
 									>
@@ -674,7 +783,7 @@
 									{/if}
 								{/each}
 
-								{#if shippingUsesAddress && !selectedSavedAddressId}
+								{#if isAuthenticated && shippingUsesAddress && !selectedSavedAddressId}
 									<label
 										class="mt-1 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"
 									>
@@ -818,6 +927,19 @@
 							Order {order.id ? `#${order.id}` : ""}
 							{order.status ? `· ${order.status}` : ""}
 						</p>
+						{#if !isAuthenticated && order.confirmation_token}
+							<div
+								class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-50"
+							>
+								<p class="font-medium">Guest confirmation token</p>
+								<p class="mt-2 font-mono text-xs tracking-[0.18em] break-all uppercase">
+									{order.confirmation_token}
+								</p>
+								<p class="mt-2 text-emerald-900/80 dark:text-emerald-100/80">
+									Order confirmation was sent to {order.guest_email ?? guestEmail.trim()}.
+								</p>
+							</div>
+						{/if}
 					{/if}
 				</div>
 			</div>

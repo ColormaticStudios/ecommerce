@@ -60,6 +60,19 @@ async function seedSavedCheckoutData(
 	expect(response.ok()).toBeTruthy();
 }
 
+async function findSeedProductVariantID(
+	request: Parameters<typeof test>[0]["request"]
+): Promise<number> {
+	const response = await request.get(`${apiBaseURL}/api/v1/products?limit=20`);
+	expect(response.ok()).toBeTruthy();
+	const body = (await response.json()) as {
+		data?: Array<{ sku?: string; default_variant_id?: number | null }>;
+	};
+	const product = body.data?.find((candidate) => candidate.sku === "e2e-product-1");
+	expect(product?.default_variant_id).toBeTruthy();
+	return Number(product?.default_variant_id);
+}
+
 test("sign up, checkout, and persist order/cart state", async ({ page, request }) => {
 	const now = Date.now();
 	const email = `buyer-${now}@example.com`;
@@ -97,6 +110,141 @@ test("sign up, checkout, and persist order/cart state", async ({ page, request }
 
 	const after = await readSummary(request, email);
 	expect(after.users).toBe(before.users + 1);
+	expect(after.orders).toBe(before.orders + 1);
+	expect(after.paid_orders).toBe(before.paid_orders);
+	expect(after.cart_items).toBe(0);
+	expect(after.product_stock).toBe(before.product_stock);
+});
+
+test("guest can add to cart and complete checkout", async ({ page, request }) => {
+	const now = Date.now();
+	const email = `guest-${now}@example.com`;
+	const before = await readSummary(request, email);
+	const variantID = await findSeedProductVariantID(request);
+	const checkoutResponses: Array<{ url: string; status: number; body: string }> = [];
+	const profileRequests: string[] = [];
+	const consoleErrors: string[] = [];
+	const failedRequests: string[] = [];
+
+	page.on("response", async (response) => {
+		if (!response.url().includes("/api/v1/checkout/orders")) {
+			return;
+		}
+		checkoutResponses.push({
+			url: response.url(),
+			status: response.status(),
+			body: await response.text(),
+		});
+	});
+	page.on("console", (message) => {
+		if (message.type() === "error") {
+			consoleErrors.push(message.text());
+		}
+	});
+	page.on("request", (request) => {
+		if (request.url().includes("/api/v1/me/")) {
+			profileRequests.push(`${request.method()} ${request.url()}`);
+		}
+	});
+	page.on("requestfailed", (request) => {
+		failedRequests.push(
+			`${request.method()} ${request.url()} :: ${request.failure()?.errorText ?? ""}`
+		);
+	});
+
+	await page.goto("/");
+	const addCartResult = await page.evaluate(
+		async ({ apiBaseURL, variantID }) => {
+			const response = await fetch(`${apiBaseURL}/api/v1/checkout/cart/items`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ product_variant_id: variantID, quantity: 1 }),
+				credentials: "include",
+			});
+
+			return {
+				status: response.status,
+				body: await response.text(),
+			};
+		},
+		{ apiBaseURL, variantID }
+	);
+	expect(addCartResult.status).toBe(200);
+
+	await page.goto("/cart");
+
+	await expect(page).toHaveURL(/\/cart$/);
+	await expect(
+		page.getByText(
+			"Your cart is attached to this browser session. You can still check out as a guest."
+		)
+	).toBeVisible();
+	await expect(page.getByRole("heading", { name: "E2E Running Shoes" })).toBeVisible();
+	await page.getByRole("link", { name: "Go to checkout" }).click();
+
+	await expect(page).toHaveURL(/\/checkout$/);
+	await page.getByLabel("Email address").fill(email);
+	await page.getByRole("button", { name: /Dummy Card Gateway/i }).click();
+	await page.getByLabel("Cardholder name").fill("Guest Buyer");
+	await page.getByLabel("Card number").fill("4111111111111111");
+	await page.getByLabel("Exp month").fill("12");
+	await page.getByLabel("Exp year").fill("2030");
+	await page.getByRole("button", { name: /Dummy Ground Carrier/i }).click();
+	await page.getByLabel("Recipient name").fill("Guest Buyer");
+	await page.getByLabel("Address line 1").fill("1 Guest Way");
+	await page.getByLabel("City").fill("Austin");
+	await page.getByLabel("State/Province").fill("TX");
+	await page.getByLabel("Postal code").fill("78701");
+	await page.getByLabel("Country").fill("US");
+	await page.getByLabel("Service level").selectOption("standard");
+	await expect(page.getByText("Save this card to my profile")).toHaveCount(0);
+	await expect(page.getByText("Save this address to my profile")).toHaveCount(0);
+
+	await page.getByRole("button", { name: "Place order" }).click();
+	await expect
+		.poll(() => checkoutResponses.length, {
+			message: JSON.stringify(
+				{ checkoutResponses, profileRequests, consoleErrors, failedRequests },
+				null,
+				2
+			),
+		})
+		.toBeGreaterThanOrEqual(2);
+
+	const createOrderResponse = checkoutResponses.find(
+		(response) =>
+			response.url.endsWith("/api/v1/checkout/orders") ||
+			response.url.includes("/api/v1/checkout/orders?")
+	);
+	expect(
+		createOrderResponse,
+		JSON.stringify({ checkoutResponses, profileRequests, consoleErrors, failedRequests }, null, 2)
+	).toMatchObject({ status: 201 });
+
+	const paymentResponse = checkoutResponses.find((response) =>
+		response.url.includes("/payments/authorize")
+	);
+	expect(
+		paymentResponse,
+		JSON.stringify({ checkoutResponses, profileRequests, consoleErrors, failedRequests }, null, 2)
+	).toMatchObject({ status: 200 });
+	expect(profileRequests).toHaveLength(0);
+
+	await expect(
+		page.getByText("Order submitted. Keep your confirmation details for reference.")
+	).toBeVisible();
+	await expect(page.getByText(/Order #\d+/)).toBeVisible();
+	await expect(page.getByText("PENDING")).toBeVisible();
+	await expect(page.getByText("Guest confirmation token")).toBeVisible();
+	await expect(page.getByText(`Order confirmation was sent to ${email}.`)).toBeVisible();
+
+	await page.goto("/cart");
+	await expect(page.getByText("Your cart is empty.")).toBeVisible();
+
+	const after = await readSummary(request, email);
+	expect(after.users).toBe(0);
 	expect(after.orders).toBe(before.orders + 1);
 	expect(after.paid_orders).toBe(before.paid_orders);
 	expect(after.cart_items).toBe(0);

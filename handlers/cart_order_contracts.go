@@ -48,7 +48,10 @@ type orderItemResponse struct {
 
 type orderResponse struct {
 	ID                    int                 `json:"id"`
-	UserID                int                 `json:"user_id"`
+	UserID                *int                `json:"user_id"`
+	CheckoutSessionID     int                 `json:"checkout_session_id"`
+	GuestEmail            *string             `json:"guest_email,omitempty"`
+	ConfirmationToken     *string             `json:"confirmation_token,omitempty"`
 	Status                string              `json:"status"`
 	CanCancel             bool                `json:"can_cancel"`
 	Total                 float64             `json:"total"`
@@ -97,12 +100,19 @@ func buildCartResponse(db *gorm.DB, mediaService *media.Service, cart models.Car
 
 	return cartResponse{
 		ID:        int(cart.ID),
-		UserID:    int(cart.UserID),
+		UserID:    contractCartUserID(cart),
 		Items:     items,
 		CreatedAt: cart.CreatedAt,
 		UpdatedAt: cart.UpdatedAt,
 		DeletedAt: toContractDeletedAt(cart.DeletedAt),
 	}, nil
+}
+
+func contractCartUserID(cart models.Cart) int {
+	if cart.CheckoutSession.UserID == nil {
+		return 0
+	}
+	return int(*cart.CheckoutSession.UserID)
 }
 
 func buildCartItemResponse(
@@ -160,7 +170,10 @@ func buildOrderResponse(
 
 	return orderResponse{
 		ID:                    int(order.ID),
-		UserID:                int(order.UserID),
+		UserID:                contractOrderUserID(order.UserID),
+		CheckoutSessionID:     int(order.CheckoutSessionID),
+		GuestEmail:            order.GuestEmail,
+		ConfirmationToken:     order.ConfirmationToken,
 		Status:                order.Status,
 		CanCancel:             order.CanCancel,
 		Total:                 order.Total.Float64(),
@@ -171,6 +184,14 @@ func buildOrderResponse(
 		UpdatedAt:             order.UpdatedAt,
 		DeletedAt:             toContractDeletedAt(order.DeletedAt),
 	}, nil
+}
+
+func contractOrderUserID(userID *uint) *int {
+	if userID == nil {
+		return nil
+	}
+	value := int(*userID)
+	return &value
 }
 
 func loadCartOrderContracts(

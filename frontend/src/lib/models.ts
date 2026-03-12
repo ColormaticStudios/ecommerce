@@ -387,7 +387,10 @@ export type OrderPayload = components["schemas"]["Order"];
 export function parseOrder(order: OrderPayload): OrderModel {
 	return {
 		id: order.id,
-		user_id: order.user_id,
+		user_id: order.user_id ?? null,
+		checkout_session_id: order.checkout_session_id,
+		guest_email: order.guest_email ?? null,
+		confirmation_token: order.confirmation_token ?? null,
 		status: order.status,
 		can_cancel: order.can_cancel,
 		total: order.total,
@@ -402,7 +405,10 @@ export function parseOrder(order: OrderPayload): OrderModel {
 
 export interface OrderModel {
 	id: number;
-	user_id: number;
+	user_id: number | null;
+	checkout_session_id: number;
+	guest_email: string | null;
+	confirmation_token: string | null;
 	status: OrderStatus;
 	can_cancel: boolean;
 	total: number;

@@ -69,11 +69,11 @@ func applyOrderCapabilities(order *models.Order, userID *uint) {
 	if order == nil {
 		return
 	}
-	if userID == nil {
+	if userID == nil || order.UserID == nil {
 		order.CanCancel = false
 		return
 	}
-	order.CanCancel = order.UserID == *userID && models.IsUserCancelableOrderStatus(order.Status)
+	order.CanCancel = *order.UserID == *userID && models.IsUserCancelableOrderStatus(order.Status)
 }
 
 func applyOrderCapabilitiesToList(orders []models.Order, userID *uint) {

@@ -44,9 +44,18 @@ func ListCheckoutPlugins(pluginManager *checkoutplugins.Manager) gin.HandlerFunc
 	}
 }
 
-func QuoteCheckout(db *gorm.DB, pluginManager *checkoutplugins.Manager) gin.HandlerFunc {
+func ListCheckoutPluginsWithAccess(db *gorm.DB, pluginManager *checkoutplugins.Manager, jwtSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user, ok := getAuthenticatedUser(db, c)
+		if _, ok := requireCheckoutAccess(db, c, jwtSecret); !ok {
+			return
+		}
+		ListCheckoutPlugins(pluginManager)(c)
+	}
+}
+
+func QuoteCheckout(db *gorm.DB, pluginManager *checkoutplugins.Manager, jwtSecret string, cookieCfg AuthCookieConfig) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		requestCtx, ok := resolveCheckoutRequestContext(db, c, jwtSecret, cookieCfg)
 		if !ok {
 			return
 		}
@@ -57,14 +66,8 @@ func QuoteCheckout(db *gorm.DB, pluginManager *checkoutplugins.Manager) gin.Hand
 			return
 		}
 
-		cart, err := getOrCreateCart(db, user.ID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load cart"})
-			return
-		}
-
 		quote := pluginManager.Quote(checkoutplugins.QuoteRequest{
-			Subtotal:     cartSubtotal(cart),
+			Subtotal:     cartSubtotal(requestCtx.Cart),
 			PaymentID:    req.PaymentProviderID,
 			ShippingID:   req.ShippingProviderID,
 			TaxID:        req.TaxProviderID,

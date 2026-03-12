@@ -186,6 +186,7 @@ func GetAllOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc 
 			query = query.Where(
 				`CAST(orders.id AS TEXT) LIKE ? OR
 				 CAST(orders.user_id AS TEXT) LIKE ? OR
+				 LOWER(COALESCE(orders.guest_email, '')) LIKE ? OR
 				 LOWER(orders.status) LIKE ? OR
 				 LOWER(COALESCE(orders.payment_method_display, '')) LIKE ? OR
 				 LOWER(COALESCE(orders.shipping_address_pretty, '')) LIKE ? OR
@@ -203,9 +204,9 @@ func GetAllOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc 
 				 		LOWER(COALESCE(product_variants.sku, '')) LIKE ? OR
 				 		LOWER(COALESCE(order_items.variant_sku, '')) LIKE ? OR
 				 		LOWER(COALESCE(order_items.variant_title, '')) LIKE ?
-				 	  )
+				 	 )
 				 )`,
-				like, like, like, like, like, like, like, like, like, like, like, like,
+				like, like, like, like, like, like, like, like, like, like, like, like, like,
 			)
 		}
 		var total int64

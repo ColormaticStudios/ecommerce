@@ -18,6 +18,7 @@ import (
 	"ecommerce/internal/migrations/ops"
 	"ecommerce/models"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -70,6 +71,9 @@ const productCatalogDepthP0Version = "2026030601_catalog_depth_p0"
 const productCatalogDepthP2Version = "2026030602_catalog_depth_p2_variant_checkout"
 const productCatalogDepthP2ProductBackfillVersion = "2026030603_catalog_depth_p2_backfill_missing_variants"
 const productCatalogDepthP4Version = "2026030701_catalog_depth_p4_hardening"
+const guestCheckoutP0Version = "2026031001_guest_checkout_p0"
+const guestCheckoutP1Version = "2026031002_guest_checkout_p1"
+const guestCheckoutP3Version = "2026031101_guest_checkout_p3"
 const migrationStepAlertThresholdEnvVar = "MIGRATIONS_STEP_ALERT_THRESHOLD_MS"
 
 var versionPattern = regexp.MustCompile(`^\d{10}_[a-z0-9_]+$`)
@@ -346,6 +350,150 @@ var orderedMigrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:         guestCheckoutP0Version,
+		Name:            "introduce checkout sessions and guest checkout settings",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "checkout"},
+		PostChecks: []PostCheck{
+			{
+				Name: "checkout_sessions_backfilled",
+				Check: func(tx *gorm.DB) error {
+					if !tx.Migrator().HasTable(&models.CheckoutSession{}) {
+						return fmt.Errorf("missing checkout_sessions table")
+					}
+					if !tx.Migrator().HasColumn("carts", "checkout_session_id") {
+						return fmt.Errorf("missing carts.checkout_session_id")
+					}
+					if tx.Migrator().HasColumn("carts", "user_id") {
+						return fmt.Errorf("post-check failed: carts.user_id still exists")
+					}
+					var count int64
+					if err := tx.Table("carts").
+						Where("checkout_session_id IS NULL OR checkout_session_id = 0").
+						Count(&count).Error; err != nil {
+						return err
+					}
+					if count != 0 {
+						return fmt.Errorf("post-check failed: found %d carts without checkout_session_id", count)
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			if err := ops.CreateTableIfNotExists(tx, &models.CheckoutSession{}); err != nil {
+				return err
+			}
+			if err := ops.AddColumnIfNotExists(tx, "carts", "checkout_session_id", "BIGINT"); err != nil {
+				return err
+			}
+			if err := backfillLegacyCartCheckoutSessions(tx); err != nil {
+				return err
+			}
+			if err := ops.CreateIndexIfNotExists(tx, &models.Cart{}, "idx_carts_checkout_session_id"); err != nil {
+				return err
+			}
+			if err := tx.Exec(`DROP INDEX IF EXISTS "idx_carts_user_id"`).Error; err != nil {
+				return err
+			}
+			ops.AddRowsTouched(tx, 1)
+			if tx.Migrator().HasColumn("carts", "user_id") {
+				if err := tx.Exec(`ALTER TABLE "carts" DROP COLUMN "user_id"`).Error; err != nil {
+					return err
+				}
+				ops.AddRowsTouched(tx, 1)
+			}
+			if err := backfillStorefrontCheckoutDefaults(tx); err != nil {
+				return err
+			}
+			return nil
+		},
+	},
+	{
+		Version:         guestCheckoutP1Version,
+		Name:            "move orders to checkout sessions with guest fields",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "checkout", "orders"},
+		PostChecks: []PostCheck{
+			{
+				Name: "orders_checkout_session_backfilled",
+				Check: func(tx *gorm.DB) error {
+					for _, column := range []string{"checkout_session_id", "guest_email", "confirmation_token"} {
+						if !tx.Migrator().HasColumn("orders", column) {
+							return fmt.Errorf("missing orders.%s", column)
+						}
+					}
+					var count int64
+					if err := tx.Model(&models.Order{}).
+						Where("checkout_session_id IS NULL OR checkout_session_id = 0").
+						Count(&count).Error; err != nil {
+						return err
+					}
+					if count != 0 {
+						return fmt.Errorf("post-check failed: found %d orders without checkout_session_id", count)
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			if err := ops.AddColumnIfNotExists(tx, "orders", "checkout_session_id", "BIGINT"); err != nil {
+				return err
+			}
+			if err := ops.AddColumnIfNotExists(tx, "orders", "guest_email", "TEXT"); err != nil {
+				return err
+			}
+			if err := ops.AddColumnIfNotExists(tx, "orders", "confirmation_token", "TEXT"); err != nil {
+				return err
+			}
+			if err := backfillLegacyOrderCheckoutSessions(tx); err != nil {
+				return err
+			}
+			if err := ops.CreateIndexIfNotExists(tx, &models.Order{}, "idx_orders_checkout_session_id"); err != nil {
+				return err
+			}
+			if err := ops.CreateIndexIfNotExists(tx, &models.Order{}, "idx_orders_confirmation_token"); err != nil {
+				return err
+			}
+			return nil
+		},
+	},
+	{
+		Version:         guestCheckoutP3Version,
+		Name:            "add guest order claim metadata and idempotency records",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "checkout", "orders", "hardening"},
+		PostChecks: []PostCheck{
+			{
+				Name: "guest_checkout_p3_structures_exist",
+				Check: func(tx *gorm.DB) error {
+					if !tx.Migrator().HasColumn("orders", "claimed_at") {
+						return fmt.Errorf("missing orders.claimed_at")
+					}
+					if !tx.Migrator().HasTable(&models.IdempotencyKey{}) {
+						return fmt.Errorf("missing idempotency_keys table")
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			if err := ops.AddColumnIfNotExists(tx, "orders", "claimed_at", "TIMESTAMPTZ"); err != nil {
+				return err
+			}
+			if err := ops.CreateTableIfNotExists(tx, &models.IdempotencyKey{}); err != nil {
+				return err
+			}
+			if err := ops.CreateIndexIfNotExists(tx, &models.IdempotencyKey{}, "idx_idempotency_scope_session_key"); err != nil {
+				return err
+			}
+			if err := ops.CreateIndexIfNotExists(tx, &models.IdempotencyKey{}, "idx_idempotency_keys_expires_at"); err != nil {
+				return err
+			}
+			return nil
+		},
+	},
 }
 
 type legacyCartItemVariantBackfillRow struct {
@@ -384,6 +532,22 @@ type legacyProductDraftPayload struct {
 	Stock       int      `json:"stock"`
 	Images      []string `json:"images"`
 	RelatedIDs  []uint   `json:"related_ids"`
+}
+
+type legacyCartSessionBackfillRow struct {
+	ID        uint
+	UserID    uint
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+type legacyOrderSessionBackfillRow struct {
+	ID                uint
+	UserID            *uint
+	GuestEmail        *string
+	CheckoutSessionID *uint
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }
 
 func backfillCartItemVariants(tx *gorm.DB) error {
@@ -676,6 +840,166 @@ func resolveVariantBackfillTarget(tx *gorm.DB, productID uint) (uint, string, st
 	}
 
 	return variant.ID, variant.SKU, variant.Title, nil
+}
+
+func backfillLegacyCartCheckoutSessions(tx *gorm.DB) error {
+	queryDB := tx.Session(&gorm.Session{NewDB: true})
+
+	var rows []legacyCartSessionBackfillRow
+	if err := queryDB.Table("carts").
+		Select("id", "user_id", "created_at", "updated_at").
+		Where("checkout_session_id IS NULL OR checkout_session_id = 0").
+		Order("id ASC").
+		Scan(&rows).Error; err != nil {
+		return err
+	}
+
+	for _, row := range rows {
+		lastSeenAt := row.UpdatedAt.UTC()
+		if lastSeenAt.IsZero() {
+			lastSeenAt = row.CreatedAt.UTC()
+		}
+		if lastSeenAt.IsZero() {
+			lastSeenAt = time.Now().UTC()
+		}
+
+		session := models.CheckoutSession{
+			PublicToken: uuid.NewString(),
+			Status:      models.CheckoutSessionStatusActive,
+			ExpiresAt:   lastSeenAt.Add(30 * 24 * time.Hour),
+			LastSeenAt:  lastSeenAt,
+		}
+		if row.UserID != 0 {
+			session.UserID = &row.UserID
+		}
+		if err := queryDB.Create(&session).Error; err != nil {
+			return fmt.Errorf("create checkout session for cart %d: %w", row.ID, err)
+		}
+		if err := queryDB.Table("carts").Where("id = ?", row.ID).Update("checkout_session_id", session.ID).Error; err != nil {
+			return fmt.Errorf("backfill carts.id=%d checkout_session_id: %w", row.ID, err)
+		}
+	}
+
+	return nil
+}
+
+func backfillLegacyOrderCheckoutSessions(tx *gorm.DB) error {
+	queryDB := tx.Session(&gorm.Session{NewDB: true})
+
+	var rows []legacyOrderSessionBackfillRow
+	if err := queryDB.Table("orders").
+		Select("id", "user_id", "guest_email", "checkout_session_id", "created_at", "updated_at").
+		Where("checkout_session_id IS NULL OR checkout_session_id = 0").
+		Order("id ASC").
+		Scan(&rows).Error; err != nil {
+		return err
+	}
+
+	for _, row := range rows {
+		lastSeenAt := row.UpdatedAt.UTC()
+		if lastSeenAt.IsZero() {
+			lastSeenAt = row.CreatedAt.UTC()
+		}
+		if lastSeenAt.IsZero() {
+			lastSeenAt = time.Now().UTC()
+		}
+
+		session := models.CheckoutSession{
+			PublicToken: uuid.NewString(),
+			GuestEmail:  row.GuestEmail,
+			Status:      models.CheckoutSessionStatusConverted,
+			ExpiresAt:   lastSeenAt,
+			LastSeenAt:  lastSeenAt,
+		}
+		if row.UserID != nil && *row.UserID != 0 {
+			session.UserID = row.UserID
+		}
+		if err := queryDB.Create(&session).Error; err != nil {
+			return fmt.Errorf("create checkout session for order %d: %w", row.ID, err)
+		}
+		if err := queryDB.Table("orders").Where("id = ?", row.ID).Update("checkout_session_id", session.ID).Error; err != nil {
+			return fmt.Errorf("backfill orders.id=%d checkout_session_id: %w", row.ID, err)
+		}
+	}
+
+	return nil
+}
+
+func backfillStorefrontCheckoutDefaults(tx *gorm.DB) error {
+	queryDB := tx.Session(&gorm.Session{NewDB: true})
+
+	type storefrontRow struct {
+		ID              uint
+		ConfigJSON      string
+		DraftConfigJSON *string
+	}
+
+	var rows []storefrontRow
+	if err := queryDB.Table("storefront_settings").
+		Select("id", "config_json", "draft_config_json").
+		Order("id ASC").
+		Scan(&rows).Error; err != nil {
+		return err
+	}
+
+	for _, row := range rows {
+		updates := map[string]any{}
+
+		configJSON, changed, err := ensureStorefrontCheckoutConfig(row.ConfigJSON)
+		if err != nil {
+			return fmt.Errorf("backfill storefront_settings.id=%d config_json: %w", row.ID, err)
+		}
+		if changed {
+			updates["config_json"] = configJSON
+		}
+
+		if row.DraftConfigJSON != nil {
+			draftJSON, draftChanged, err := ensureStorefrontCheckoutConfig(*row.DraftConfigJSON)
+			if err != nil {
+				return fmt.Errorf("backfill storefront_settings.id=%d draft_config_json: %w", row.ID, err)
+			}
+			if draftChanged {
+				updates["draft_config_json"] = draftJSON
+			}
+		}
+
+		if len(updates) == 0 {
+			continue
+		}
+		if err := queryDB.Table("storefront_settings").Where("id = ?", row.ID).Updates(updates).Error; err != nil {
+			return fmt.Errorf("update storefront_settings.id=%d: %w", row.ID, err)
+		}
+	}
+
+	return nil
+}
+
+func ensureStorefrontCheckoutConfig(raw string) (string, bool, error) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return raw, false, nil
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(trimmed), &payload); err != nil {
+		return "", false, err
+	}
+
+	checkoutPayload, ok := payload["checkout"].(map[string]any)
+	if !ok || checkoutPayload == nil {
+		checkoutPayload = map[string]any{}
+	}
+	if _, exists := checkoutPayload["allow_guest_checkout"]; exists {
+		return raw, false, nil
+	}
+
+	checkoutPayload["allow_guest_checkout"] = true
+	payload["checkout"] = checkoutPayload
+	encoded, err := json.Marshal(payload)
+	if err != nil {
+		return "", false, err
+	}
+	return string(encoded), true, nil
 }
 
 func ensureTable(db *gorm.DB) error {

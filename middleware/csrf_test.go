@@ -56,6 +56,21 @@ func TestCSRFMiddleware_RejectsMissingTokenForSessionAuth(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, w.Code)
 }
 
+func TestCSRFMiddleware_RejectsMissingTokenWithoutSessionCookies(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(CSRFMiddleware())
+	r.POST("/test", func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/test", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
 func TestCSRFMiddleware_RejectsMismatchedToken(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

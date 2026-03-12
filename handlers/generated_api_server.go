@@ -82,6 +82,30 @@ func (s *GeneratedAPIServer) runProtected(c *gin.Context, requiredRole string, h
 	handler(c)
 }
 
+func (s *GeneratedAPIServer) runWithCSRF(c *gin.Context, handler gin.HandlerFunc) {
+	if !s.requireCSRF(c) {
+		return
+	}
+	handler(c)
+}
+
+func (s *GeneratedAPIServer) runWithCheckoutCartBootstrapCSRF(c *gin.Context, handler gin.HandlerFunc) {
+	if s.shouldAllowCheckoutCartBootstrapWithoutCSRF(c) {
+		handler(c)
+		return
+	}
+	s.runWithCSRF(c, handler)
+}
+
+func (s *GeneratedAPIServer) shouldAllowCheckoutCartBootstrapWithoutCSRF(c *gin.Context) bool {
+	for _, cookieName := range []string{SessionCookieName, checkoutSessionCookieName, csrfCookieName} {
+		if _, err := c.Cookie(cookieName); err == nil {
+			return false
+		}
+	}
+	return true
+}
+
 func (s *GeneratedAPIServer) applyDraftPreview(c *gin.Context) {
 	_ = enableDraftPreviewContext(c, s.jwtSecret)
 }
@@ -276,6 +300,47 @@ func (s *GeneratedAPIServer) Register(c *gin.Context) {
 	Register(s.db, s.jwtSecret, s.authCookieCfg)(c)
 }
 
+func (s *GeneratedAPIServer) GetCheckoutCart(c *gin.Context) {
+	GetCart(s.db, s.mediaService, s.jwtSecret, s.authCookieCfg)(c)
+}
+
+func (s *GeneratedAPIServer) GetCheckoutCartSummary(c *gin.Context) {
+	GetCartSummary(s.db, s.jwtSecret, s.authCookieCfg)(c)
+}
+
+func (s *GeneratedAPIServer) AddCheckoutCartItem(c *gin.Context) {
+	s.runWithCheckoutCartBootstrapCSRF(c, AddCartItem(s.db, s.mediaService, s.jwtSecret, s.authCookieCfg))
+}
+
+func (s *GeneratedAPIServer) DeleteCheckoutCartItem(c *gin.Context, itemId int) {
+	_ = itemId
+	s.runWithCSRF(c, DeleteCartItem(s.db, s.jwtSecret, s.authCookieCfg))
+}
+
+func (s *GeneratedAPIServer) UpdateCheckoutCartItem(c *gin.Context, itemId int) {
+	_ = itemId
+	s.runWithCSRF(c, UpdateCartItem(s.db, s.mediaService, s.jwtSecret, s.authCookieCfg))
+}
+
+func (s *GeneratedAPIServer) ListCheckoutSessionPlugins(c *gin.Context) {
+	ListCheckoutPluginsWithAccess(s.db, s.pluginManager, s.jwtSecret)(c)
+}
+
+func (s *GeneratedAPIServer) QuoteCheckoutSession(c *gin.Context) {
+	QuoteCheckout(s.db, s.pluginManager, s.jwtSecret, s.authCookieCfg)(c)
+}
+
+func (s *GeneratedAPIServer) CreateCheckoutOrder(c *gin.Context, params apicontract.CreateCheckoutOrderParams) {
+	_ = params
+	s.runWithCSRF(c, CreateCheckoutOrder(s.db, s.jwtSecret, s.authCookieCfg, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) AuthorizeCheckoutOrderPayment(c *gin.Context, id int, params apicontract.AuthorizeCheckoutOrderPaymentParams) {
+	_ = id
+	_ = params
+	s.runWithCSRF(c, AuthorizeCheckoutOrderPayment(s.db, s.pluginManager, s.jwtSecret, s.authCookieCfg, s.mediaService))
+}
+
 func (s *GeneratedAPIServer) GetProfile(c *gin.Context) {
 	s.runProtected(c, "", GetProfile(s.db, s.mediaService))
 }
@@ -303,21 +368,21 @@ func (s *GeneratedAPIServer) SetDefaultAddress(c *gin.Context, id int) {
 }
 
 func (s *GeneratedAPIServer) GetCart(c *gin.Context) {
-	s.runProtected(c, "", GetCart(s.db, s.mediaService))
+	s.runProtected(c, "", GetCart(s.db, s.mediaService, s.jwtSecret, s.authCookieCfg))
 }
 
 func (s *GeneratedAPIServer) AddCartItem(c *gin.Context) {
-	s.runProtected(c, "", AddCartItem(s.db, s.mediaService))
+	s.runProtected(c, "", AddCartItem(s.db, s.mediaService, s.jwtSecret, s.authCookieCfg))
 }
 
 func (s *GeneratedAPIServer) DeleteCartItem(c *gin.Context, itemId int) {
 	_ = itemId
-	s.runProtected(c, "", DeleteCartItem(s.db))
+	s.runProtected(c, "", DeleteCartItem(s.db, s.jwtSecret, s.authCookieCfg))
 }
 
 func (s *GeneratedAPIServer) UpdateCartItem(c *gin.Context, itemId int) {
 	_ = itemId
-	s.runProtected(c, "", UpdateCartItem(s.db, s.mediaService))
+	s.runProtected(c, "", UpdateCartItem(s.db, s.mediaService, s.jwtSecret, s.authCookieCfg))
 }
 
 func (s *GeneratedAPIServer) ListUserOrders(c *gin.Context, params apicontract.ListUserOrdersParams) {
@@ -325,16 +390,20 @@ func (s *GeneratedAPIServer) ListUserOrders(c *gin.Context, params apicontract.L
 	s.runProtected(c, "", GetUserOrders(s.db, s.mediaService))
 }
 
+func (s *GeneratedAPIServer) ClaimGuestOrder(c *gin.Context) {
+	s.runProtected(c, "", ClaimGuestOrder(s.db, s.mediaService))
+}
+
 func (s *GeneratedAPIServer) CreateOrder(c *gin.Context) {
-	s.runProtected(c, "", CreateOrder(s.db, s.mediaService))
+	s.runProtected(c, "", CreateOrder(s.db, s.jwtSecret, s.authCookieCfg, s.mediaService))
 }
 
 func (s *GeneratedAPIServer) ListCheckoutPlugins(c *gin.Context) {
-	s.runProtected(c, "", ListCheckoutPlugins(s.pluginManager))
+	s.runProtected(c, "", ListCheckoutPluginsWithAccess(s.db, s.pluginManager, s.jwtSecret))
 }
 
 func (s *GeneratedAPIServer) QuoteCheckout(c *gin.Context) {
-	s.runProtected(c, "", QuoteCheckout(s.db, s.pluginManager))
+	s.runProtected(c, "", QuoteCheckout(s.db, s.pluginManager, s.jwtSecret, s.authCookieCfg))
 }
 
 func (s *GeneratedAPIServer) GetUserOrder(c *gin.Context, id int) {

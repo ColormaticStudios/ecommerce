@@ -91,10 +91,15 @@ export interface StorefrontFooterModel {
 	bottom_notice: string;
 }
 
+export interface StorefrontCheckoutModel {
+	allow_guest_checkout: boolean;
+}
+
 export interface StorefrontSettingsModel {
 	site_title: string;
 	homepage_sections: StorefrontHomepageSectionModel[];
 	footer: StorefrontFooterModel;
+	checkout: StorefrontCheckoutModel;
 }
 
 export interface StorefrontSettingsResponseModel {
@@ -368,6 +373,15 @@ function validateFooterColumn(value: unknown, path: string, errors: string[]): v
 	value.links.forEach((link, index) => validateLink(link, `${path}.links[${index}]`, errors));
 }
 
+function validateCheckout(value: unknown, path: string, errors: string[]): void {
+	if (!isObject(value)) {
+		errors.push(`Expected object at ${path}`);
+		return;
+	}
+	validateObjectKeys(value, ["allow_guest_checkout"], ["allow_guest_checkout"], path, errors);
+	expectBoolean(value.allow_guest_checkout, `${path}.allow_guest_checkout`, errors);
+}
+
 function validateStorefrontDefaults(raw: unknown): asserts raw is StorefrontSettingsPayload {
 	const errors: string[] = [];
 	if (!isObject(raw)) {
@@ -375,8 +389,8 @@ function validateStorefrontDefaults(raw: unknown): asserts raw is StorefrontSett
 	}
 	validateObjectKeys(
 		raw,
-		["site_title", "homepage_sections", "footer"],
-		["site_title", "homepage_sections", "footer"],
+		["site_title", "homepage_sections", "footer", "checkout"],
+		["site_title", "homepage_sections", "footer", "checkout"],
 		"settings",
 		errors
 	);
@@ -419,6 +433,7 @@ function validateStorefrontDefaults(raw: unknown): asserts raw is StorefrontSett
 			);
 		}
 	}
+	validateCheckout(raw.checkout, "settings.checkout", errors);
 
 	if (errors.length > 0) {
 		throw new Error(
@@ -638,6 +653,10 @@ function parseStorefrontSettingsWithFallback(
 			bottom_notice:
 				toStringValue(settings?.footer?.bottom_notice) || fallback.footer.bottom_notice,
 		},
+		checkout: {
+			allow_guest_checkout:
+				settings?.checkout?.allow_guest_checkout ?? fallback.checkout.allow_guest_checkout,
+		},
 	};
 }
 
@@ -653,6 +672,9 @@ function loadSharedDefaultStorefrontSettings(): StorefrontSettingsModel {
 			columns: [],
 			social_links: [],
 			bottom_notice: "",
+		},
+		checkout: {
+			allow_guest_checkout: true,
 		},
 	});
 }

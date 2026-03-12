@@ -312,6 +312,70 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/checkout/cart": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getCheckoutCart"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/checkout/cart/summary": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getCheckoutCartSummary"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/checkout/cart/items": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["addCheckoutCartItem"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/checkout/cart/items/{itemId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete: operations["deleteCheckoutCartItem"];
+		options?: never;
+		head?: never;
+		patch: operations["updateCheckoutCartItem"];
+		trace?: never;
+	};
 	"/api/v1/me/cart/{itemId}": {
 		parameters: {
 			query?: never;
@@ -344,6 +408,22 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/checkout/plugins": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listCheckoutSessionPlugins"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/me/checkout/quote": {
 		parameters: {
 			query?: never;
@@ -360,6 +440,54 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/checkout/quote": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["quoteCheckoutSession"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/checkout/orders": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["createCheckoutOrder"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/checkout/orders/{id}/payments/authorize": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["authorizeCheckoutOrderPayment"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/me/orders": {
 		parameters: {
 			query?: never;
@@ -370,6 +498,22 @@ export interface paths {
 		get: operations["listUserOrders"];
 		put?: never;
 		post: operations["createOrder"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/me/orders/claim": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["claimGuestOrder"];
 		delete?: never;
 		options?: never;
 		head?: never;
@@ -878,6 +1022,7 @@ export interface components {
 	schemas: {
 		Error: {
 			error: string;
+			code?: string;
 		};
 		MessageResponse: {
 			message: string;
@@ -1163,6 +1308,9 @@ export interface components {
 			/** Format: date-time */
 			deleted_at?: string | null;
 		};
+		CheckoutCartSummary: {
+			item_count: number;
+		};
 		AddCartItemRequest: {
 			product_variant_id: number;
 			quantity: number;
@@ -1190,14 +1338,18 @@ export interface components {
 		};
 		Order: {
 			id: number;
-			user_id: number;
+			user_id?: number | null;
+			checkout_session_id: number;
+			/** Format: email */
+			guest_email?: string | null;
+			confirmation_token?: string | null;
 			/** @enum {string} */
 			status: "PENDING" | "PAID" | "FAILED" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "REFUNDED";
 			can_cancel: boolean;
 			/** Format: double */
 			total: number;
-			payment_method_display: string | null;
-			shipping_address_pretty: string | null;
+			payment_method_display?: string | null;
+			shipping_address_pretty?: string | null;
 			items: components["schemas"]["OrderItem"][];
 			/** Format: date-time */
 			created_at: string;
@@ -1216,6 +1368,15 @@ export interface components {
 		};
 		CreateOrderRequest: {
 			items: components["schemas"]["CreateOrderItemRequest"][];
+		};
+		CreateCheckoutOrderRequest: {
+			/** Format: email */
+			guest_email?: string | null;
+		};
+		ClaimGuestOrderRequest: {
+			/** Format: email */
+			email: string;
+			confirmation_token: string;
 		};
 		ProcessPaymentInputMethod: {
 			cardholder_name: string;
@@ -1251,6 +1412,10 @@ export interface components {
 			};
 		};
 		ProcessPaymentResponse: {
+			message: string;
+			order: components["schemas"]["Order"];
+		};
+		ClaimGuestOrderResponse: {
 			message: string;
 			order: components["schemas"]["Order"];
 		};
@@ -1463,10 +1628,14 @@ export interface components {
 			social_links: components["schemas"]["StorefrontLink"][];
 			bottom_notice: string;
 		};
+		StorefrontCheckoutSettings: {
+			allow_guest_checkout: boolean;
+		};
 		StorefrontSettings: {
 			site_title: string;
 			homepage_sections: components["schemas"]["StorefrontHomepageSection"][];
 			footer: components["schemas"]["StorefrontFooter"];
+			checkout: components["schemas"]["StorefrontCheckoutSettings"];
 		};
 		StorefrontSettingsRequest: {
 			settings: components["schemas"]["StorefrontSettings"];
@@ -2196,6 +2365,163 @@ export interface operations {
 			};
 		};
 	};
+	getCheckoutCart: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Cart */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Cart"];
+				};
+			};
+			/** @description Guest checkout disabled */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	getCheckoutCartSummary: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Cart summary */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CheckoutCartSummary"];
+				};
+			};
+			/** @description Guest checkout disabled */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	addCheckoutCartItem: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["AddCartItemRequest"];
+			};
+		};
+		responses: {
+			/** @description Cart */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Cart"];
+				};
+			};
+			/** @description Guest checkout disabled */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	deleteCheckoutCartItem: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				itemId: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Deleted */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["MessageResponse"];
+				};
+			};
+			/** @description Guest checkout disabled */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	updateCheckoutCartItem: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				itemId: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["UpdateCartItemRequest"];
+			};
+		};
+		responses: {
+			/** @description Updated item */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CartItem"];
+				};
+			};
+			/** @description Guest checkout disabled */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
 	deleteCartItem: {
 		parameters: {
 			query?: never;
@@ -2264,6 +2590,35 @@ export interface operations {
 			};
 		};
 	};
+	listCheckoutSessionPlugins: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Available checkout provider plugins */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CheckoutPluginCatalog"];
+				};
+			};
+			/** @description Guest checkout disabled */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
 	quoteCheckout: {
 		parameters: {
 			query?: never;
@@ -2288,6 +2643,183 @@ export interface operations {
 			};
 			/** @description Invalid request payload */
 			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	quoteCheckoutSession: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CheckoutQuoteRequest"];
+			};
+		};
+		responses: {
+			/** @description Quote */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CheckoutQuoteResponse"];
+				};
+			};
+			/** @description Invalid request payload */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Guest checkout disabled */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	createCheckoutOrder: {
+		parameters: {
+			query?: never;
+			header?: {
+				"Idempotency-Key"?: string;
+			};
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CreateCheckoutOrderRequest"];
+			};
+		};
+		responses: {
+			/** @description Created order */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Order"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Guest checkout disabled */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Idempotency conflict */
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Checkout submission rate limited */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	authorizeCheckoutOrderPayment: {
+		parameters: {
+			query?: never;
+			header?: {
+				"Idempotency-Key"?: string;
+			};
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": components["schemas"]["ProcessPaymentRequest"];
+			};
+		};
+		responses: {
+			/** @description Payment result */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProcessPaymentResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Guest checkout disabled */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Order not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Idempotency conflict */
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Checkout submission rate limited */
+			429: {
 				headers: {
 					[name: string]: unknown;
 				};
@@ -2343,6 +2875,57 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["Order"];
+				};
+			};
+		};
+	};
+	claimGuestOrder: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["ClaimGuestOrderRequest"];
+			};
+		};
+		responses: {
+			/** @description Guest order linked to authenticated user */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ClaimGuestOrderResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Guest order not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Guest order already claimed */
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
 				};
 			};
 		};

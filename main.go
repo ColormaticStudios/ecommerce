@@ -11,8 +11,10 @@ import (
 	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/checkoutplugins"
+	"ecommerce/internal/httpcors"
 	"ecommerce/internal/media"
 	"ecommerce/internal/migrations"
+	checkoutservice "ecommerce/internal/services/checkout"
 
 	"github.com/didip/tollbooth/v7"
 	"github.com/didip/tollbooth_gin"
@@ -110,32 +112,18 @@ func main() {
 				"http://localhost:5173", // SvelteKit/Vite dev
 				"http://127.0.0.1:5173",
 			},
-			AllowMethods: []string{
-				"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS",
-			},
-			AllowHeaders: []string{
-				"Origin",
-				"Content-Type",
-				"Authorization",
-				"X-CSRF-Token",
-				"Tus-Resumable",
-				"Upload-Length",
-				"Upload-Metadata",
-				"Upload-Offset",
-			},
-			ExposeHeaders: []string{
-				"Content-Length",
-				"Location",
-			},
+			AllowMethods:     httpcors.AllowMethods(),
+			AllowHeaders:     httpcors.AllowHeaders(),
+			ExposeHeaders:    httpcors.ExposeHeaders(),
 			AllowCredentials: true,
 			MaxAge:           12 * time.Hour,
 		}))
 	} else {
 		config := cors.DefaultConfig()
 		config.AllowOrigins = []string{cfg.PublicURL}
-		config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
-		config.AllowHeaders = []string{"Origin", "Content-Type", "Content-Length", "Accept-Encoding", "Authorization", "X-CSRF-Token"}
-		config.ExposeHeaders = []string{"Content-Length"}
+		config.AllowMethods = httpcors.AllowMethods()
+		config.AllowHeaders = httpcors.AllowHeaders()
+		config.ExposeHeaders = httpcors.ExposeHeaders()
 		config.AllowCredentials = true
 		r.Use(cors.New(config))
 	}
@@ -194,6 +182,26 @@ func main() {
 		}
 		log.Printf("[INFO] Loaded %d external checkout plugins from %s", loaded, cfg.CheckoutPluginManifestsDir)
 	}
+
+	go func() {
+		ticker := time.NewTicker(15 * time.Minute)
+		defer ticker.Stop()
+
+		for {
+			summary, cleanupErr := checkoutservice.CleanupExpiredState(db, time.Now().UTC())
+			if cleanupErr != nil {
+				log.Printf("[ERROR] Checkout cleanup failed: %v", cleanupErr)
+			} else if summary.ExpiredSessions > 0 || summary.DeletedIdempotencyKeys > 0 {
+				log.Printf(
+					"[INFO] Checkout cleanup expired_sessions=%d deleted_idempotency_keys=%d",
+					summary.ExpiredSessions,
+					summary.DeletedIdempotencyKeys,
+				)
+			}
+
+			<-ticker.C
+		}
+	}()
 
 	apiServer, err := handlers.NewGeneratedAPIServer(db, mediaService, handlers.GeneratedAPIServerConfig{
 		JWTSecret:          jwtSecret,

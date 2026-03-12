@@ -73,6 +73,10 @@ export interface DraftPreviewSessionModel {
 	expires_at: Date | null;
 }
 
+export interface RequestOptions {
+	headers?: Record<string, string>;
+}
+
 function parseDraftPreviewSession(response: DraftPreviewSessionResponse): DraftPreviewSessionModel {
 	return {
 		active: response.active,
@@ -159,7 +163,8 @@ export class API {
 		method: string,
 		path: string,
 		data?: object,
-		params?: Record<string, unknown>
+		params?: Record<string, unknown>,
+		options?: RequestOptions
 	): Promise<T> {
 		const headers = new Headers();
 		headers.append("Content-Type", "application/json");
@@ -168,6 +173,9 @@ export class API {
 			if (csrfToken) {
 				headers.set("X-CSRF-Token", csrfToken);
 			}
+		}
+		for (const [key, value] of Object.entries(options?.headers ?? {})) {
+			headers.set(key, value);
 		}
 
 		const url = new URL(`${this.baseUrl}${API_ROUTE}${path}`);
@@ -253,15 +261,19 @@ export class API {
 		this.authStateResolved = true;
 	}
 
-	public async createOrder(data: components["schemas"]["CreateOrderRequest"]): Promise<OrderModel> {
-		return ordersDomain.createOrder(this.request.bind(this), data);
+	public async createOrder(
+		data: components["schemas"]["CreateCheckoutOrderRequest"],
+		idempotencyKey?: string
+	): Promise<OrderModel> {
+		return ordersDomain.createOrder(this.request.bind(this), data, idempotencyKey);
 	}
 
 	public async processPayment(
 		orderId: number,
-		data?: components["schemas"]["ProcessPaymentRequest"]
+		data?: components["schemas"]["ProcessPaymentRequest"],
+		idempotencyKey?: string
 	): Promise<OrderModel> {
-		return ordersDomain.processPayment(this.request.bind(this), orderId, data);
+		return ordersDomain.processPayment(this.request.bind(this), orderId, data, idempotencyKey);
 	}
 
 	public async listCheckoutPlugins(): Promise<components["schemas"]["CheckoutPluginCatalog"]> {
@@ -322,6 +334,10 @@ export class API {
 	// Cart Operations
 	public async viewCart() {
 		return cartDomain.viewCart(this.request.bind(this));
+	}
+
+	public async viewCartSummary(): Promise<number> {
+		return cartDomain.viewCartSummary(this.request.bind(this));
 	}
 
 	public async addToCart(data: components["schemas"]["AddCartItemRequest"]): Promise<CartModel> {

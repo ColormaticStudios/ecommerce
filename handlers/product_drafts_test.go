@@ -509,10 +509,10 @@ func TestPublishNormalizedProductDraftPreservesExistingVariantIDs(t *testing.T) 
 		Currency: "USD",
 	}
 	require.NoError(t, db.Create(&user).Error)
-	cart := models.Cart{UserID: user.ID}
-	require.NoError(t, db.Create(&cart).Error)
+	cart := seedCartForUser(t, db, user.ID)
 	require.NoError(t, db.Create(&models.CartItem{CartID: cart.ID, ProductVariantID: smallVariant.ID, Quantity: 1}).Error)
-	order := models.Order{UserID: user.ID, Total: models.MoneyFromFloat(11), Status: "PENDING"}
+	orderSession := seedCheckoutSession(t, db, &user.ID)
+	order := models.Order{UserID: &user.ID, CheckoutSessionID: orderSession.ID, Total: models.MoneyFromFloat(11), Status: "PENDING"}
 	require.NoError(t, db.Create(&order).Error)
 	require.NoError(t, db.Create(&models.OrderItem{
 		OrderID:          order.ID,

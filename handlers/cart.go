@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -21,35 +20,8 @@ type UpdateCartItemRequest struct {
 	Quantity int `json:"quantity" binding:"required,min=1"`
 }
 
-// getOrCreateCart gets the user's cart or creates one if it doesn't exist
-func getOrCreateCart(db *gorm.DB, userID uint) (*models.Cart, error) {
-	var cart models.Cart
-	err := db.Where("user_id = ?", userID).
-		Preload("Items.ProductVariant").
-		Preload("Items.ProductVariant.Product").
-		First(&cart).Error
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		// Create new cart
-		cart = models.Cart{UserID: userID}
-		if err := db.Create(&cart).Error; err != nil {
-			// Another request may have created the cart first.
-			if lookupErr := db.Where("user_id = ?", userID).
-				Preload("Items.ProductVariant").
-				Preload("Items.ProductVariant.Product").
-				First(&cart).Error; lookupErr == nil {
-				return &cart, nil
-			}
-			return nil, err
-		}
-		return &cart, nil
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &cart, nil
+type cartSummaryResponse struct {
+	ItemCount int `json:"item_count"`
 }
 
 func applyCartMedia(cart *models.Cart, mediaService *media.Service) {
@@ -85,10 +57,10 @@ func loadPublicVariant(db *gorm.DB, variantID uint) (models.ProductVariant, erro
 	return variant, nil
 }
 
-// AddCartItem adds an item to the user's cart
-func AddCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
+// AddCartItem adds an item to the checkout session cart.
+func AddCartItem(db *gorm.DB, mediaService *media.Service, jwtSecret string, cookieCfg AuthCookieConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user, ok := getAuthenticatedUser(db, c)
+		requestCtx, ok := resolveCheckoutRequestContext(db, c, jwtSecret, cookieCfg)
 		if !ok {
 			return
 		}
@@ -118,16 +90,9 @@ func AddCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 			return
 		}
 
-		// Get or create cart
-		cart, err := getOrCreateCart(db, user.ID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get cart"})
-			return
-		}
-
-		// Check if item already exists in cart
+		// Check if item already exists in cart.
 		var existingItem models.CartItem
-		err = db.Where("cart_id = ? AND product_variant_id = ?", cart.ID, req.ProductVariantID).First(&existingItem).Error
+		err = db.Where("cart_id = ? AND product_variant_id = ?", requestCtx.Cart.ID, req.ProductVariantID).First(&existingItem).Error
 
 		switch err {
 		case nil:
@@ -150,7 +115,7 @@ func AddCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 		case gorm.ErrRecordNotFound:
 			// Create new cart item
 			cartItem := models.CartItem{
-				CartID:           cart.ID,
+				CartID:           requestCtx.Cart.ID,
 				ProductVariantID: req.ProductVariantID,
 				Quantity:         req.Quantity,
 			}
@@ -164,9 +129,12 @@ func AddCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 		}
 
 		// Reload cart with items
-		db.Preload("Items.ProductVariant").Preload("Items.ProductVariant.Product").First(cart, cart.ID)
-		applyCartMedia(cart, mediaService)
-		response, err := buildCartResponse(db, mediaService, *cart)
+		db.Preload("CheckoutSession").
+			Preload("Items.ProductVariant").
+			Preload("Items.ProductVariant.Product").
+			First(requestCtx.Cart, requestCtx.Cart.ID)
+		applyCartMedia(requestCtx.Cart, mediaService)
+		response, err := buildCartResponse(db, mediaService, *requestCtx.Cart)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render cart"})
 			return
@@ -175,23 +143,16 @@ func AddCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	}
 }
 
-// GetCart retrieves the user's cart
-func GetCart(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
+// GetCart retrieves the checkout session cart.
+func GetCart(db *gorm.DB, mediaService *media.Service, jwtSecret string, cookieCfg AuthCookieConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user, ok := getAuthenticatedUser(db, c)
+		requestCtx, ok := resolveCheckoutRequestContext(db, c, jwtSecret, cookieCfg)
 		if !ok {
 			return
 		}
 
-		// Get or create cart
-		cart, err := getOrCreateCart(db, user.ID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get cart"})
-			return
-		}
-
-		applyCartMedia(cart, mediaService)
-		response, err := buildCartResponse(db, mediaService, *cart)
+		applyCartMedia(requestCtx.Cart, mediaService)
+		response, err := buildCartResponse(db, mediaService, *requestCtx.Cart)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to render cart"})
 			return
@@ -200,10 +161,42 @@ func GetCart(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	}
 }
 
-// UpdateCartItem updates the quantity of a cart item
-func UpdateCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
+// GetCartSummary retrieves the current checkout cart item count without creating checkout state.
+func GetCartSummary(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user, ok := getAuthenticatedUser(db, c)
+		ownerCtx, ok := resolveExistingCheckoutSessionOwnerContext(
+			db,
+			c,
+			jwtSecret,
+			cookieCfg,
+			checkoutSessionResolveOptions{},
+		)
+		if !ok {
+			return
+		}
+
+		if ownerCtx.Session == nil {
+			c.JSON(http.StatusOK, cartSummaryResponse{ItemCount: 0})
+			return
+		}
+
+		var itemCount int64
+		if err := db.Model(&models.CartItem{}).
+			Joins("JOIN carts ON carts.id = cart_items.cart_id").
+			Where("carts.checkout_session_id = ?", ownerCtx.Session.ID).
+			Count(&itemCount).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load cart summary"})
+			return
+		}
+
+		c.JSON(http.StatusOK, cartSummaryResponse{ItemCount: int(itemCount)})
+	}
+}
+
+// UpdateCartItem updates the quantity of a cart item.
+func UpdateCartItem(db *gorm.DB, mediaService *media.Service, jwtSecret string, cookieCfg AuthCookieConfig) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		requestCtx, ok := resolveCheckoutRequestContext(db, c, jwtSecret, cookieCfg)
 		if !ok {
 			return
 		}
@@ -225,7 +218,7 @@ func UpdateCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 		// Get cart item and verify it belongs to user's cart
 		var cartItem models.CartItem
 		if err := db.Joins("JOIN carts ON cart_items.cart_id = carts.id").
-			Where("cart_items.id = ? AND carts.user_id = ?", itemID, user.ID).
+			Where("cart_items.id = ? AND carts.checkout_session_id = ?", itemID, requestCtx.Session.ID).
 			First(&cartItem).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Cart item not found"})
 			return
@@ -266,10 +259,10 @@ func UpdateCartItem(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	}
 }
 
-// DeleteCartItem removes an item from the cart
-func DeleteCartItem(db *gorm.DB) gin.HandlerFunc {
+// DeleteCartItem removes an item from the cart.
+func DeleteCartItem(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user, ok := getAuthenticatedUser(db, c)
+		requestCtx, ok := resolveCheckoutRequestContext(db, c, jwtSecret, cookieCfg)
 		if !ok {
 			return
 		}
@@ -284,7 +277,7 @@ func DeleteCartItem(db *gorm.DB) gin.HandlerFunc {
 		// Get cart item and verify it belongs to user's cart
 		var cartItem models.CartItem
 		if err := db.Joins("JOIN carts ON cart_items.cart_id = carts.id").
-			Where("cart_items.id = ? AND carts.user_id = ?", itemID, user.ID).
+			Where("cart_items.id = ? AND carts.checkout_session_id = ?", itemID, requestCtx.Session.ID).
 			First(&cartItem).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Cart item not found"})
 			return

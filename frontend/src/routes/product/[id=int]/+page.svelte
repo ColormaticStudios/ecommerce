@@ -63,12 +63,6 @@
 			return;
 		}
 
-		const authenticated = await api.refreshAuthState();
-		if (!authenticated) {
-			showToast("Please log in to add items to cart.");
-			return;
-		}
-
 		const clampedQuantity = Math.min(Math.max(1, Number(quantity) || 1), product.stock);
 		quantity = clampedQuantity;
 		adding = true;
