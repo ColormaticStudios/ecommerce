@@ -36,8 +36,8 @@
 5. P4: Hardening, observability, and operational controls.
 
 ## Cross-Roadmap Alignment
-- Guest checkout:
-  - Fulfillment consumes canonical checkout order records from `roadmap/guest-checkout.md` (`/api/v1/checkout/*` for customer mutations).
+- Checkout baseline:
+  - Fulfillment consumes canonical checkout order records from the implemented session checkout flow (`/api/v1/checkout/*` for customer mutations).
   - Customer order status reads remain compatible with guest/auth order ownership model.
 - Catalog depth:
   - Product catalog depth is already the repo baseline; fulfillment line identity must use `product_variant_id` rather than `product_id`.

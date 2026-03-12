@@ -35,8 +35,8 @@
 7. P6: Localization, market variants, governance, and operational hardening.
 
 ## Cross-Roadmap Alignment
-- Guest checkout (`roadmap/guest-checkout.md`):
-  - CMS CTAs and links for cart/checkout flows must target `/api/v1/checkout/*` UX routes, not legacy `/api/v1/me/*` mutation assumptions.
+- Checkout baseline:
+  - CMS CTAs and links for cart/checkout flows must target the session checkout UX and `/api/v1/checkout/*` routes, not authenticated-only `/api/v1/me/*` mutation assumptions.
   - Guest checkout disable state must be readable by CMS rendering logic so checkout-related blocks can degrade safely.
 - Product catalog depth baseline:
   - CMS product blocks consume the implemented variant-first catalog contracts and `price_range`/variant-aware summaries.

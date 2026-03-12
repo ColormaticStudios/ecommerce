@@ -50,7 +50,7 @@
   - Translation publish and approval actions emit auditable events and respect RBAC.
 - Merchant analytics (`roadmap/merchant-analytics-reporting.md`):
   - Locale and market become reporting dimensions for funnel/conversion and communication outcomes.
-- Guest checkout (`roadmap/guest-checkout.md`):
+- Checkout baseline:
   - Canonical customer mutation surface remains `/api/v1/checkout/*`; localization must not introduce alternate checkout APIs.
 
 ## P0: Localization Domain Foundation

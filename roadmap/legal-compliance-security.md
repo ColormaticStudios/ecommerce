@@ -30,7 +30,7 @@
 6. P5: Tax/compliance evidence vault and operational hardening.
 
 ## Cross-Roadmap Alignment
-- Guest checkout (`roadmap/guest-checkout.md`):
+- Checkout baseline:
   - Privacy workflows must support both authenticated users and guest/session-bound orders (`checkout_session_id` ownership).
 - Providers (`roadmap/providers.md`):
   - Provider credential handling, webhook events, and transaction events are evidence inputs for this roadmap.

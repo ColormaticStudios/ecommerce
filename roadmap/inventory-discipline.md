@@ -38,8 +38,8 @@
   - Allocation identity is `product_variant_id` from P0 onward.
 - Product catalog depth baseline:
   - Inventory identity must align with the implemented variant-first catalog contracts (`product_variant_id`) and should not add new `product_id`-based ownership paths.
-- Guest checkout (`roadmap/guest-checkout.md`):
-  - Reservation ownership should support both `user_id` and guest checkout session/order identity.
+- Checkout baseline:
+  - Reservation ownership should support both `user_id` and checkout session/order identity, including guest-origin orders.
 - Providers (`roadmap/providers.md`):
   - No pricing/tax side effects; inventory mutations remain internal and provider-independent.
 

@@ -35,8 +35,8 @@
 - Order fulfillment operations:
   - Depends on `roadmap/order-fulfillment-ops.md` for shipment and delivered-item context.
   - Return eligibility is scoped to shipped/delivered line items and shipped quantities.
-- Guest checkout:
-  - Customer return surface must work for both authenticated and guest-origin orders where ownership is session/token based (`roadmap/guest-checkout.md`).
+- Checkout baseline:
+  - Customer return surface must work for both authenticated and guest-origin orders where ownership is session/token based in the implemented checkout flow.
 - Catalog depth:
   - Product catalog depth is already the repo baseline; return lines must use `product_variant_id` as canonical line identity.
 - Providers:
@@ -130,7 +130,7 @@
 
 ### Done Criteria
 - Customer can view return status history without admin privileges.
-- Guest-order return tracking works with same ownership model used by guest checkout roadmap.
+- Guest-order return tracking works with the same ownership model used by the implemented checkout flow.
 - Timeline is append-only and ordered by event time.
 - Regression tests cover access control and status visibility.
 

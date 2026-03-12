@@ -25,8 +25,8 @@
 5. P4: Security and operational hardening.
 
 ## Cross-Roadmap Alignment
-- Guest checkout:
-  - Use checkout-session routes from `roadmap/guest-checkout.md` (`/api/v1/checkout/*`) for customer-facing mutations.
+- Checkout baseline:
+  - Use the implemented checkout-session routes (`/api/v1/checkout/*`) for customer-facing mutations.
   - Keep `/api/v1/me/orders*` as read/account surfaces only.
 - Catalog depth:
   - Product catalog depth is already the repo baseline; snapshot and payment amounts are based on variant-backed order items (`product_variant_id`).

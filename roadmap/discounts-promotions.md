@@ -4,7 +4,7 @@
 - The catalog and checkout flows do not yet have a first-class discount or promotion engine.
 - Pricing is currently sourced from `models.Product.Price` and exposed as `price` in product/cart/order API responses.
 - Order creation snapshots current product price into `models.OrderItem.Price` in `handlers/orders.go`.
-- Current checkout quote/payment routes are still `/api/v1/me/*`, but this roadmap targets the guest-checkout replacement routes under `/api/v1/checkout/*`.
+- Session checkout routes under `/api/v1/checkout/*` are implemented and should be the baseline for new checkout integrations, even while some `/api/v1/me/*` authenticated flows still exist.
 - API routing is OpenAPI-generated (`api/openapi.yaml` -> `internal/apicontract/openapi.gen.go` -> `handlers/generated_api_server.go`).
 - Schema changes are managed by explicit versioned migrations in `internal/migrations` (migration steps may use GORM `AutoMigrate` plus data backfills).
 - There is no shared scheduling system for recurring campaign activation/deactivation.
@@ -34,7 +34,7 @@
 
 ## Cross-Roadmap Alignment
 - Checkout surface:
-  - Use session checkout endpoints from `roadmap/guest-checkout.md` (`/api/v1/checkout/*`), not legacy `/api/v1/me/checkout/*`.
+  - Use the implemented session checkout endpoints (`/api/v1/checkout/*`) as the baseline customer mutation surface.
 - Catalog depth:
   - Product catalog depth is already the repo baseline; evaluate promotions against cart/order line `product_variant_id`.
   - Campaign targets remain product/category level; variant-level eligibility is resolved through parent product/category joins.

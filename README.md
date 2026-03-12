@@ -20,7 +20,7 @@ Frontend-specific docs are in:
 
 - Authentication and authorization (local auth + OIDC)
 - Product catalog and admin product management
-- Cart and order workflows
+- Cart, guest checkout, and order workflows
 - Storefront configuration and draft/preview publishing
 - Media upload/processing pipeline
 - Runtime-extensible checkout providers (payment, shipping, tax)

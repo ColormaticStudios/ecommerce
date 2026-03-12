@@ -27,7 +27,7 @@
 5. P4: Operational hardening, alerts, and replay controls.
 
 ## Cross-Roadmap Alignment
-- Guest checkout (`roadmap/guest-checkout.md`):
+- Checkout baseline:
   - Use guest/customer contact data from canonical checkout/order records.
   - Do not create a parallel customer identity model for communications.
 - Providers (`roadmap/providers.md`):

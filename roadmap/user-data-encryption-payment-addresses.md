@@ -36,7 +36,7 @@
   - Provider credential encryption and customer payment-data encryption share the same key service primitives.
 - `roadmap/legal-compliance-security.md`
   - Audit requirements, retention classes, and access controls for decrypt operations map into centralized security controls.
-- `roadmap/guest-checkout.md`
+- Checkout baseline
   - Encryption scope for account-saved methods/addresses is separate from guest one-time checkout payload handling.
 
 ## P0: Security Baseline and Crypto Contract
