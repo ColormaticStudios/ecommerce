@@ -15,7 +15,7 @@ an already-applied migration is edited later, runners fail fast on checksum mism
    - `none` for operations that cannot run in a transaction (for example `CREATE INDEX CONCURRENTLY`).
 1. Tag each migration (`expand`, `backfill`, `contract`, etc.).
 1. Contract-tagged migrations must include `ContractBlockers` (for example `allow_contract_migrations`).
-   These blockers are enforced by `go run ./cmd/migrate guard` and related readiness checks, not by ordinary `Run()` execution used in local bootstrap/tests.
+   These blockers are enforced by `go run ./cmd/migrate guard` and any release/CI readiness checks that call it, not by ordinary `Run()` execution used in local bootstrap, snapshots, or tests.
 1. Include a validation step (query or invariant check) in the migration body when possible.
 1. Prefer `PostChecks` for migration-level invariant checks.
 1. Data backfills must be idempotent so reruns are safe if a step is retried.
@@ -38,7 +38,7 @@ an already-applied migration is edited later, runners fail fast on checksum mism
    - `gofmt -w internal/migrations/*.go`
    - `GOCACHE=/tmp/go-build go test ./internal/migrations/...`
    - `go run ./cmd/migrate lint`
-   - `go run ./cmd/migrate guard` (before applying pending contract migrations)
+   - `go run ./cmd/migrate guard` (before promoting or shipping pending contract migrations)
    - `go run ./cmd/migrate snapshot` and commit `internal/migrations/schema_snapshot.sql` when schema changes
    - `go run ./cmd/migrate drift-check`
    - Optional Postgres advisory-lock integration test:
@@ -47,7 +47,7 @@ an already-applied migration is edited later, runners fail fast on checksum mism
 ## Commands
 
 - `go run ./cmd/migrate lint`: validate migration definitions and policy checks.
-- `go run ./cmd/migrate guard`: evaluate readiness checks for pending contract-tagged migrations.
+- `go run ./cmd/migrate guard`: evaluate readiness checks for pending contract-tagged migrations before release/CI rollout.
 - `go run ./cmd/migrate snapshot [path]`: write canonical schema snapshot.
 - `go run ./cmd/migrate drift-check [path]`: compare live schema to committed snapshot.
 - `go run ./cmd/migrate new <slug>`: generate a migration stub under `internal/migrations/stubs/`.

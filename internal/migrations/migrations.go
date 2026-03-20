@@ -1084,10 +1084,6 @@ func runWithMigrations(db *gorm.DB, definitions []Migration) (runErr error) {
 		return err
 	}
 
-	if err := guardPendingMigrations(db, pending, true); err != nil {
-		return err
-	}
-
 	for _, migration := range pending {
 		start := time.Now().UTC()
 		log.Printf("migration_step_start version=%s name=%q transaction_mode=%s tags=%s", migration.Version, migration.Name, normalizeTransactionMode(migration.TransactionMode), strings.Join(migration.Tags, ","))

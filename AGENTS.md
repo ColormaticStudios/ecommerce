@@ -36,6 +36,8 @@ For isolated tests, use a per-test DSN (for example `file:<test-name>?mode=memor
 
 Migration replay tests must use frozen legacy schema structs for historical setup/assertions, not current `models.*` types. Current models can gain columns that do not exist in earlier migration states and will break replay tests with schema drift errors.
 
+Contract migration blockers are enforced by `go run ./cmd/migrate guard` and workflows that explicitly call guard, not by ordinary `migrations.Run()` / `make migrate`. Keep docs and code aligned on that distinction; local/dev DB bootstrap, snapshots, and test setup must not require `MIGRATIONS_ALLOW_CONTRACT=true`.
+
 On SQLite, `tx.Migrator().DropColumn("table_name", "column")` can panic when called with a raw table-name string during migrations. Prefer explicit SQL `ALTER TABLE ... DROP COLUMN ...` or a model-backed path instead of the string-table `DropColumn` helper.
 
 `handlers/validation_integration_test.go` defines a shared `newTestDB` helper used by many handler tests across the package. Treat its signature as package-level API: changing it can break a large number of tests outside that file.

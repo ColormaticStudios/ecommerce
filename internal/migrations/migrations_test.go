@@ -535,7 +535,7 @@ func TestGuardPendingMigrationsContractAllowed(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestRunWithMigrationsBlocksContractMigrationsWithoutAcknowledgement(t *testing.T) {
+func TestRunWithMigrationsDoesNotBlockContractMigrationsWithoutAcknowledgement(t *testing.T) {
 	db := newTestDB(t)
 	t.Setenv(contractGuardEnvVar, "false")
 
@@ -543,24 +543,6 @@ func TestRunWithMigrationsBlocksContractMigrationsWithoutAcknowledgement(t *test
 		{
 			Version:          "2026030702_contract_run_allowed",
 			Name:             "contract migration still runs",
-			Tags:             []string{"contract"},
-			ContractBlockers: []string{"allow_contract_migrations"},
-			Up: func(tx *gorm.DB) error {
-				return nil
-			},
-		},
-	})
-	require.ErrorContains(t, err, contractGuardEnvVar)
-}
-
-func TestRunWithMigrationsAllowsContractMigrationsWithAcknowledgement(t *testing.T) {
-	db := newTestDB(t)
-	t.Setenv(contractGuardEnvVar, "true")
-
-	err := runWithMigrations(db, []Migration{
-		{
-			Version:          "2026030703_contract_run_allowed",
-			Name:             "contract migration runs with acknowledgement",
 			Tags:             []string{"contract"},
 			ContractBlockers: []string{"allow_contract_migrations"},
 			Up: func(tx *gorm.DB) error {
@@ -584,7 +566,6 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 func TestRunAppliesAllOrderedMigrationsAndReplayIsIdempotent(t *testing.T) {
 	db := newTestDB(t)
-	t.Setenv(contractGuardEnvVar, "true")
 
 	require.NoError(t, Run(db))
 	require.NoError(t, Check(db))

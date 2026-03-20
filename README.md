@@ -105,6 +105,8 @@ make migrate-forward-compat
 make migrate-ci-gate
 ```
 
+`make migrate` applies pending migrations for local/dev workflows. If pending steps include contract-tagged migrations, use `make migrate-guard` in CI or release preparation to enforce the explicit readiness acknowledgement before shipping them.
+
 Note: by default, API/CLI startup checks that the database is already at the latest migration and fails if not. To auto-apply pending migrations on startup, set `AUTO_APPLY_MIGRATIONS=true`.
 
 Migration-sensitive E2E policy:

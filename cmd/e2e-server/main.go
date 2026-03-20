@@ -224,12 +224,6 @@ func main() {
 		log.Fatalf("unsupported E2E_DB_DRIVER=%q (expected sqlite or postgres)", dbDriver)
 	}
 
-	// The Playwright harness must exercise the real latest schema end-to-end, so
-	// it explicitly acknowledges contract migrations here instead of weakening the
-	// default test database helpers for every other test suite.
-	if err := os.Setenv("MIGRATIONS_ALLOW_CONTRACT", "true"); err != nil {
-		log.Fatalf("failed to configure e2e migration acknowledgement: %v", err)
-	}
 	if err := migrations.Run(db); err != nil {
 		log.Fatalf("failed to run e2e migrations: %v", err)
 	}
