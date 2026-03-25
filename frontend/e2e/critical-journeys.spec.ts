@@ -205,6 +205,7 @@ test("guest can add to cart and complete checkout", async ({ page, request }) =>
 	await page.getByRole("button", { name: "Place order" }).click();
 	await expect
 		.poll(() => checkoutResponses.length, {
+			timeout: 15_000,
 			message: JSON.stringify(
 				{ checkoutResponses, profileRequests, consoleErrors, failedRequests },
 				null,

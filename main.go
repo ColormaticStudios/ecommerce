@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,6 +16,10 @@ import (
 	"ecommerce/internal/media"
 	"ecommerce/internal/migrations"
 	checkoutservice "ecommerce/internal/services/checkout"
+	paymentservice "ecommerce/internal/services/payments"
+	providerops "ecommerce/internal/services/providerops"
+	shippingservice "ecommerce/internal/services/shipping"
+	taxservice "ecommerce/internal/services/tax"
 
 	"github.com/didip/tollbooth/v7"
 	"github.com/didip/tollbooth_gin"
@@ -203,6 +208,45 @@ func main() {
 		}
 	}()
 
+	keyring, err := providerops.ParseKeyringConfig(cfg.ProviderCredentialsKeys)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to parse provider credential keys: %v", err)
+	}
+	credentialService, err := providerops.NewCredentialService(keyring, cfg.ProviderCredentialsKeyVersion)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to initialize provider credential service: %v", err)
+	}
+	providerRuntime := providerops.NewRuntime(db, providerops.RuntimeConfig{
+		Environment:       cfg.ProviderRuntimeEnvironment,
+		Credentials:       credentialService,
+		PaymentProviders:  paymentservice.NewDefaultProviderRegistry(),
+		ShippingProviders: shippingservice.NewDefaultProviderRegistry(),
+		TaxProviders:      taxservice.NewDefaultProviderRegistry(),
+	})
+
+	if intervalText := cfg.ProviderReconciliationInterval; intervalText != "" {
+		interval, parseErr := time.ParseDuration(intervalText)
+		if parseErr != nil {
+			log.Fatalf("[ERROR] Failed to parse provider reconciliation interval: %v", parseErr)
+		}
+		if interval > 0 {
+			go func() {
+				ticker := time.NewTicker(interval)
+				defer ticker.Stop()
+				for range ticker.C {
+					summary, runErr := providerRuntime.Reconciliation.RunScheduled(context.Background())
+					if runErr != nil {
+						log.Printf("[ERROR] Provider reconciliation failed: %v", runErr)
+						continue
+					}
+					if summary.RunCount > 0 {
+						log.Printf("[INFO] Provider reconciliation completed runs=%d", summary.RunCount)
+					}
+				}
+			}()
+		}
+	}
+
 	apiServer, err := handlers.NewGeneratedAPIServer(db, mediaService, handlers.GeneratedAPIServerConfig{
 		JWTSecret:          jwtSecret,
 		DisableLocalSignIn: cfg.DisableLocalSignIn,
@@ -212,6 +256,7 @@ func main() {
 		OIDCRedirectURI:    cfg.OIDCRedirectURI,
 		MediaUploads:       http.StripPrefix("/api/v1/media/uploads", tusd),
 		CheckoutPlugins:    pluginManager,
+		ProviderRuntime:    providerRuntime,
 	})
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to initialize API server: %v", err)

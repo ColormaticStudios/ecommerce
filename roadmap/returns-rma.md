@@ -39,8 +39,8 @@
   - Customer return surface must work for both authenticated and guest-origin orders where ownership is session/token based in the implemented checkout flow.
 - Catalog depth:
   - Product catalog depth is already the repo baseline; return lines must use `product_variant_id` as canonical line identity.
-- Providers:
-  - Refund and store-credit funding flows must align with provider abstractions and idempotency patterns in `roadmap/providers.md`.
+- Provider platform baseline:
+  - Refund and store-credit funding flows must align with the implemented provider abstractions and idempotency patterns.
 - Discounts/promotions:
   - Refund calculations should consume finalized order totals/allocations from the established totals pipeline, not ad-hoc recomputation.
 

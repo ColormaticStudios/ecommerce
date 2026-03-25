@@ -488,6 +488,54 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/checkout/orders/{id}/shipping/rates": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["quoteCheckoutOrderShippingRates"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/checkout/orders/{id}/shipping/tracking": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getCheckoutOrderShippingTracking"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/checkout/orders/{id}/tax/finalize": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["finalizeCheckoutOrderTax"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/me/orders": {
 		parameters: {
 			query?: never;
@@ -530,22 +578,6 @@ export interface paths {
 		get: operations["getUserOrder"];
 		put?: never;
 		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/me/orders/{id}/pay": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		post: operations["processPayment"];
 		delete?: never;
 		options?: never;
 		head?: never;
@@ -808,6 +840,86 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/admin/orders/{id}/payments": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminOrderPayments"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/orders/{id}/shipping/labels": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["createAdminOrderShippingLabel"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/orders/{id}/payments/{intentId}/capture": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["captureAdminOrderPayment"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/orders/{id}/payments/{intentId}/void": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["voidAdminOrderPayment"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/orders/{id}/payments/{intentId}/refund": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["refundAdminOrderPayment"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/admin/orders/{id}/status": {
 		parameters: {
 			query?: never;
@@ -822,6 +934,134 @@ export interface paths {
 		options?: never;
 		head?: never;
 		patch: operations["updateOrderStatus"];
+		trace?: never;
+	};
+	"/api/v1/admin/webhooks/events": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminWebhookEvents"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/tax/reports/export": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["exportAdminTaxReport"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/providers/credentials": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminProviderCredentials"];
+		put?: never;
+		post: operations["upsertAdminProviderCredential"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/providers/overview": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminProviderOperationsOverview"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/providers/credentials/{id}/rotate": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["rotateAdminProviderCredential"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/providers/reconciliation/runs": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminProviderReconciliationRuns"];
+		put?: never;
+		post: operations["createAdminProviderReconciliationRun"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/providers/reconciliation/runs/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminProviderReconciliationRun"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/webhooks/{provider}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["receiveWebhookEvent"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
 		trace?: never;
 	};
 	"/api/v1/admin/users": {
@@ -1411,9 +1651,313 @@ export interface components {
 				[key: string]: string;
 			};
 		};
+		AuthorizeCheckoutOrderPaymentRequest: {
+			snapshot_id: number;
+		};
 		ProcessPaymentResponse: {
 			message: string;
 			order: components["schemas"]["Order"];
+		};
+		AdminOrderPaymentAmountRequest: {
+			/** Format: double */
+			amount?: number;
+		};
+		PaymentTransactionRecord: {
+			id: number;
+			/** @enum {string} */
+			operation: "AUTHORIZE" | "CAPTURE" | "VOID" | "REFUND";
+			provider_txn_id: string;
+			idempotency_key: string;
+			/** Format: double */
+			amount: number;
+			/** @enum {string} */
+			status: "PENDING" | "SUCCEEDED" | "FAILED";
+			raw_response_redacted: string;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		PaymentIntentRecord: {
+			id: number;
+			order_id: number;
+			snapshot_id: number;
+			provider: string;
+			/** @enum {string} */
+			status:
+				| "REQUIRES_ACTION"
+				| "AUTHORIZED"
+				| "PARTIALLY_CAPTURED"
+				| "CAPTURED"
+				| "VOIDED"
+				| "REFUNDED"
+				| "FAILED";
+			/** Format: double */
+			authorized_amount: number;
+			/** Format: double */
+			captured_amount: number;
+			/** Format: double */
+			refundable_amount: number;
+			currency: string;
+			version: number;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+			transactions: components["schemas"]["PaymentTransactionRecord"][];
+		};
+		OrderPaymentLedger: {
+			order_id: number;
+			intents: components["schemas"]["PaymentIntentRecord"][];
+		};
+		AdminOrderPaymentLifecycleResponse: {
+			message: string;
+			order: components["schemas"]["Order"];
+			payment_intent: components["schemas"]["PaymentIntentRecord"];
+			transaction: components["schemas"]["PaymentTransactionRecord"];
+		};
+		WebhookIngestResponse: {
+			message: string;
+			event_id: number;
+			provider_event_id: string;
+			duplicate: boolean;
+		};
+		WebhookEventRecord: {
+			id: number;
+			provider: string;
+			provider_event_id: string;
+			event_type: string;
+			signature_valid: boolean;
+			payload: string;
+			/** Format: date-time */
+			received_at: string;
+			/** Format: date-time */
+			processed_at?: string | null;
+			attempt_count: number;
+			last_error: string;
+			/** @enum {string} */
+			status: "PENDING" | "PROCESSED" | "DEAD_LETTER" | "REJECTED";
+		};
+		WebhookEventPage: {
+			data: components["schemas"]["WebhookEventRecord"][];
+			pagination: components["schemas"]["Pagination"];
+		};
+		CheckoutOrderShippingRatesRequest: {
+			snapshot_id: number;
+		};
+		ShipmentRate: {
+			id: number;
+			provider: string;
+			provider_rate_id: string;
+			service_code: string;
+			service_name: string;
+			/** Format: double */
+			amount: number;
+			currency: string;
+			selected: boolean;
+			shipment_id?: number | null;
+			/** Format: date-time */
+			expires_at?: string | null;
+		};
+		ShipmentPackage: {
+			id: number;
+			reference: string;
+			weight_grams: number;
+			length_cm: number;
+			width_cm: number;
+			height_cm: number;
+		};
+		TrackingEvent: {
+			id: number;
+			provider: string;
+			provider_event_id: string;
+			/** @enum {string} */
+			status: "LABEL_PURCHASED" | "IN_TRANSIT" | "DELIVERED" | "EXCEPTION";
+			tracking_number: string;
+			location: string;
+			description: string;
+			/** Format: date-time */
+			occurred_at: string;
+		};
+		Shipment: {
+			id: number;
+			order_id: number;
+			snapshot_id: number;
+			provider: string;
+			shipment_rate_id: number;
+			provider_shipment_id: string;
+			/** @enum {string} */
+			status: "QUOTED" | "LABEL_PURCHASED" | "IN_TRANSIT" | "DELIVERED" | "EXCEPTION";
+			currency: string;
+			service_code: string;
+			service_name: string;
+			/** Format: double */
+			amount: number;
+			shipping_address_pretty: string;
+			tracking_number: string;
+			tracking_url: string;
+			label_url: string;
+			/** Format: date-time */
+			purchased_at?: string | null;
+			/** Format: date-time */
+			finalized_at?: string | null;
+			/** Format: date-time */
+			delivered_at?: string | null;
+			rates: components["schemas"]["ShipmentRate"][];
+			packages: components["schemas"]["ShipmentPackage"][];
+			tracking_events: components["schemas"]["TrackingEvent"][];
+		};
+		CheckoutOrderShippingRatesResponse: {
+			order_id: number;
+			snapshot_id: number;
+			provider: string;
+			rates: components["schemas"]["ShipmentRate"][];
+		};
+		CheckoutOrderTrackingResponse: {
+			order_id: number;
+			shipments: components["schemas"]["Shipment"][];
+		};
+		AdminOrderShippingLabelPackageRequest: {
+			reference?: string;
+			weight_grams?: number;
+			length_cm?: number;
+			width_cm?: number;
+			height_cm?: number;
+		};
+		AdminOrderShippingLabelRequest: {
+			rate_id: number;
+			package?: components["schemas"]["AdminOrderShippingLabelPackageRequest"];
+		};
+		AdminOrderShippingLabelResponse: {
+			message: string;
+			shipment: components["schemas"]["Shipment"];
+		};
+		CheckoutOrderTaxFinalizeRequest: {
+			snapshot_id: number;
+			inclusive_pricing?: boolean;
+		};
+		TaxLine: {
+			id?: number;
+			snapshot_item_id?: number | null;
+			/** @enum {string} */
+			line_type: "ITEM" | "SHIPPING";
+			product_variant_id?: number | null;
+			quantity: number;
+			jurisdiction: string;
+			tax_code: string;
+			tax_name: string;
+			/** Format: double */
+			taxable_amount: number;
+			/** Format: double */
+			tax_amount: number;
+			tax_rate_basis_points: number;
+			inclusive: boolean;
+		};
+		CheckoutOrderTaxFinalizeResponse: {
+			message: string;
+			order_id: number;
+			snapshot_id: number;
+			provider: string;
+			currency: string;
+			inclusive_pricing: boolean;
+			/** Format: double */
+			total_tax: number;
+			lines: components["schemas"]["TaxLine"][];
+		};
+		ProviderCredentialRequest: {
+			/** @enum {string} */
+			provider_type: "payment" | "shipping" | "tax";
+			provider_id: string;
+			/** @enum {string} */
+			environment: "sandbox" | "production";
+			label?: string;
+			secret_data: {
+				[key: string]: string;
+			};
+			supported_currencies?: string[];
+			settlement_currency?: string;
+			/** @enum {string} */
+			fx_mode?: "same_currency_only" | "provider_managed";
+		};
+		ProviderCredential: {
+			id: number;
+			/** @enum {string} */
+			provider_type: "payment" | "shipping" | "tax";
+			provider_id: string;
+			/** @enum {string} */
+			environment: "sandbox" | "production";
+			label: string;
+			key_version: string;
+			supported_currencies: string[];
+			settlement_currency?: string;
+			/** @enum {string} */
+			fx_mode: "same_currency_only" | "provider_managed";
+			/** Format: date-time */
+			last_rotated_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		ProviderCredentialEnvelope: {
+			credential: components["schemas"]["ProviderCredential"];
+		};
+		ProviderCredentialListResponse: {
+			data: components["schemas"]["ProviderCredential"][];
+		};
+		ProviderWebhookStatusSummary: {
+			pending_count: number;
+			processed_count: number;
+			dead_letter_count: number;
+			rejected_count: number;
+		};
+		ProviderOperationsOverview: {
+			/** @enum {string} */
+			runtime_environment: "sandbox" | "production";
+			credential_service_configured: boolean;
+			webhook_events: components["schemas"]["ProviderWebhookStatusSummary"];
+		};
+		ProviderReconciliationRunRequest: {
+			/** @enum {string} */
+			provider_type: "payment" | "shipping" | "tax";
+			provider_id: string;
+		};
+		ProviderReconciliationDrift: {
+			id: number;
+			entity_type: string;
+			entity_id: number;
+			provider_reference: string;
+			/** @enum {string} */
+			severity: "ERROR" | "WARN";
+			field_name: string;
+			expected_value: string;
+			actual_value: string;
+			message: string;
+		};
+		ProviderReconciliationRun: {
+			id: number;
+			/** @enum {string} */
+			provider_type: "payment" | "shipping" | "tax";
+			provider_id: string;
+			/** @enum {string} */
+			environment: "sandbox" | "production";
+			/** @enum {string} */
+			trigger: "MANUAL" | "SCHEDULED";
+			/** @enum {string} */
+			status: "SUCCEEDED" | "FAILED";
+			checked_count: number;
+			drift_count: number;
+			error_count: number;
+			/** Format: date-time */
+			started_at: string;
+			/** Format: date-time */
+			finished_at?: string | null;
+			drifts?: components["schemas"]["ProviderReconciliationDrift"][];
+		};
+		ProviderReconciliationRunEnvelope: {
+			run: components["schemas"]["ProviderReconciliationRun"];
+		};
+		ProviderReconciliationRunPage: {
+			data: components["schemas"]["ProviderReconciliationRun"][];
+			pagination: components["schemas"]["Pagination"];
 		};
 		ClaimGuestOrderResponse: {
 			message: string;
@@ -1470,6 +2014,9 @@ export interface components {
 			};
 		};
 		CheckoutQuoteResponse: {
+			snapshot_id?: number | null;
+			/** Format: date-time */
+			expires_at?: string | null;
 			currency: string;
 			/** Format: double */
 			subtotal: number;
@@ -2769,7 +3316,7 @@ export interface operations {
 		};
 		requestBody?: {
 			content: {
-				"application/json": components["schemas"]["ProcessPaymentRequest"];
+				"application/json": components["schemas"]["AuthorizeCheckoutOrderPaymentRequest"];
 			};
 		};
 		responses: {
@@ -2820,6 +3367,147 @@ export interface operations {
 			};
 			/** @description Checkout submission rate limited */
 			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	quoteCheckoutOrderShippingRates: {
+		parameters: {
+			query?: never;
+			header?: {
+				"Idempotency-Key"?: string;
+			};
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CheckoutOrderShippingRatesRequest"];
+			};
+		};
+		responses: {
+			/** @description Persisted shipping rates for the checkout snapshot */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CheckoutOrderShippingRatesResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Order not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Snapshot mismatch */
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	getCheckoutOrderShippingTracking: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Shipment tracking timeline for the order */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CheckoutOrderTrackingResponse"];
+				};
+			};
+			/** @description Order not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	finalizeCheckoutOrderTax: {
+		parameters: {
+			query?: never;
+			header?: {
+				"Idempotency-Key"?: string;
+			};
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CheckoutOrderTaxFinalizeRequest"];
+			};
+		};
+		responses: {
+			/** @description Tax finalization result */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CheckoutOrderTaxFinalizeResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Order not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Snapshot mismatch */
+			409: {
 				headers: {
 					[name: string]: unknown;
 				};
@@ -2952,41 +3640,6 @@ export interface operations {
 			};
 			/** @description Not found */
 			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-		};
-	};
-	processPayment: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path: {
-				id: number;
-			};
-			cookie?: never;
-		};
-		requestBody?: {
-			content: {
-				"application/json": components["schemas"]["ProcessPaymentRequest"];
-			};
-		};
-		responses: {
-			/** @description Payment result */
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["ProcessPaymentResponse"];
-				};
-			};
-			/** @description Bad request */
-			400: {
 				headers: {
 					[name: string]: unknown;
 				};
@@ -3598,6 +4251,256 @@ export interface operations {
 			};
 		};
 	};
+	getAdminOrderPayments: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Order payment ledger */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["OrderPaymentLedger"];
+				};
+			};
+			/** @description Order not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	createAdminOrderShippingLabel: {
+		parameters: {
+			query?: never;
+			header: {
+				"Idempotency-Key": string;
+			};
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["AdminOrderShippingLabelRequest"];
+			};
+		};
+		responses: {
+			/** @description Shipping label purchased */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["AdminOrderShippingLabelResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Order or rate not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Shipment already finalized with a different service */
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	captureAdminOrderPayment: {
+		parameters: {
+			query?: never;
+			header: {
+				"Idempotency-Key": string;
+			};
+			path: {
+				id: number;
+				intentId: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": components["schemas"]["AdminOrderPaymentAmountRequest"];
+			};
+		};
+		responses: {
+			/** @description Capture result */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["AdminOrderPaymentLifecycleResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Conflict */
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	voidAdminOrderPayment: {
+		parameters: {
+			query?: never;
+			header: {
+				"Idempotency-Key": string;
+			};
+			path: {
+				id: number;
+				intentId: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Void result */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["AdminOrderPaymentLifecycleResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Conflict */
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	refundAdminOrderPayment: {
+		parameters: {
+			query?: never;
+			header: {
+				"Idempotency-Key": string;
+			};
+			path: {
+				id: number;
+				intentId: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": components["schemas"]["AdminOrderPaymentAmountRequest"];
+			};
+		};
+		responses: {
+			/** @description Refund result */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["AdminOrderPaymentLifecycleResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Conflict */
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
 	updateOrderStatus: {
 		parameters: {
 			query?: never;
@@ -3620,6 +4523,315 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["Order"];
+				};
+			};
+		};
+	};
+	listAdminWebhookEvents: {
+		parameters: {
+			query?: {
+				provider?: string;
+				status?: "PENDING" | "PROCESSED" | "DEAD_LETTER" | "REJECTED";
+				page?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Webhook event page */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["WebhookEventPage"];
+				};
+			};
+		};
+	};
+	exportAdminTaxReport: {
+		parameters: {
+			query?: {
+				provider?: string;
+				start_date?: string;
+				end_date?: string;
+				format?: "csv";
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Tax export */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"text/csv": string;
+				};
+			};
+		};
+	};
+	listAdminProviderCredentials: {
+		parameters: {
+			query?: {
+				provider_type?: "payment" | "shipping" | "tax";
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Provider credential metadata */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProviderCredentialListResponse"];
+				};
+			};
+		};
+	};
+	upsertAdminProviderCredential: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["ProviderCredentialRequest"];
+			};
+		};
+		responses: {
+			/** @description Stored provider credential metadata */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProviderCredentialEnvelope"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Credential encryption is not configured */
+			412: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	getAdminProviderOperationsOverview: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Provider operations overview */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProviderOperationsOverview"];
+				};
+			};
+		};
+	};
+	rotateAdminProviderCredential: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Rotated provider credential metadata */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProviderCredentialEnvelope"];
+				};
+			};
+			/** @description Credential not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Credential encryption is not configured */
+			412: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	listAdminProviderReconciliationRuns: {
+		parameters: {
+			query?: {
+				provider_type?: "payment" | "shipping" | "tax";
+				provider_id?: string;
+				page?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Provider reconciliation runs */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProviderReconciliationRunPage"];
+				};
+			};
+		};
+	};
+	createAdminProviderReconciliationRun: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["ProviderReconciliationRunRequest"];
+			};
+		};
+		responses: {
+			/** @description Provider reconciliation run */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProviderReconciliationRunEnvelope"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	getAdminProviderReconciliationRun: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Provider reconciliation run details */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProviderReconciliationRunEnvelope"];
+				};
+			};
+			/** @description Reconciliation run not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	receiveWebhookEvent: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				provider: string;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					[key: string]: unknown;
+				};
+			};
+		};
+		responses: {
+			/** @description Webhook accepted */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["WebhookIngestResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Invalid signature */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
 				};
 			};
 		};

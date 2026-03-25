@@ -1,6 +1,13 @@
 package handlers
 
-import "ecommerce/models"
+import (
+	"strings"
+
+	"ecommerce/models"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
 
 func checkoutMode(user *models.User) string {
 	if user == nil {
@@ -21,4 +28,21 @@ func checkoutGuestEmail(email *string) string {
 		return ""
 	}
 	return *email
+}
+
+func checkoutCorrelationID(c *gin.Context, existing string) string {
+	if trimmed := strings.TrimSpace(existing); trimmed != "" {
+		return trimmed
+	}
+	if c == nil {
+		return uuid.NewString()
+	}
+	if value, ok := c.Get("checkout_correlation_id"); ok {
+		if correlationID, ok := value.(string); ok && strings.TrimSpace(correlationID) != "" {
+			return correlationID
+		}
+	}
+	correlationID := uuid.NewString()
+	c.Set("checkout_correlation_id", correlationID)
+	return correlationID
 }

@@ -7,6 +7,11 @@ import (
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/checkoutplugins"
 	"ecommerce/internal/media"
+	paymentservice "ecommerce/internal/services/payments"
+	providerops "ecommerce/internal/services/providerops"
+	shippingservice "ecommerce/internal/services/shipping"
+	taxservice "ecommerce/internal/services/tax"
+	webhookservice "ecommerce/internal/services/webhooks"
 	"ecommerce/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -23,6 +28,8 @@ type GeneratedAPIServerConfig struct {
 	OIDCRedirectURI    string
 	MediaUploads       http.Handler
 	CheckoutPlugins    *checkoutplugins.Manager
+	WebhookService     *webhookservice.Service
+	ProviderRuntime    *providerops.Runtime
 }
 
 // GeneratedAPIServer adapts generated OpenAPI routes to existing handler implementations.
@@ -37,6 +44,9 @@ type GeneratedAPIServer struct {
 	oidcClientID       string
 	oidcRedirectURI    string
 	mediaUploads       http.Handler
+	webhookService     *webhookservice.Service
+	providerRuntime    *providerops.Runtime
+	providerOverview   *providerops.OverviewService
 }
 
 func NewGeneratedAPIServer(db *gorm.DB, mediaService *media.Service, cfg GeneratedAPIServerConfig) (*GeneratedAPIServer, error) {
@@ -47,6 +57,31 @@ func NewGeneratedAPIServer(db *gorm.DB, mediaService *media.Service, cfg Generat
 	if err := syncCheckoutProviderSettings(db, pluginManager); err != nil {
 		return nil, fmt.Errorf("sync checkout provider settings: %w", err)
 	}
+	runtime := cfg.ProviderRuntime
+	if runtime == nil {
+		runtime = providerops.NewRuntime(db, providerops.RuntimeConfig{
+			Environment:       "sandbox",
+			PaymentProviders:  paymentservice.NewDefaultProviderRegistry(),
+			ShippingProviders: shippingservice.NewDefaultProviderRegistry(),
+			TaxProviders:      taxservice.NewDefaultProviderRegistry(),
+		})
+	}
+	webhookSvc := cfg.WebhookService
+	if webhookSvc == nil {
+		webhookSvc = webhookservice.NewService(
+			db,
+			runtime.PaymentProviders,
+			runtime.ShippingProviders,
+			nil,
+		)
+	}
+	webhookSvc.StartProcessor()
+	providerOverview := providerops.NewOverviewService(
+		db,
+		runtime.Environment,
+		runtime.Credentials,
+		webhookSvc.MaxAttempts,
+	)
 
 	return &GeneratedAPIServer{
 		db:                 db,
@@ -59,6 +94,9 @@ func NewGeneratedAPIServer(db *gorm.DB, mediaService *media.Service, cfg Generat
 		oidcClientID:       cfg.OIDCClientID,
 		oidcRedirectURI:    cfg.OIDCRedirectURI,
 		mediaUploads:       cfg.MediaUploads,
+		webhookService:     webhookSvc,
+		providerRuntime:    runtime,
+		providerOverview:   providerOverview,
 	}, nil
 }
 
@@ -86,6 +124,10 @@ func (s *GeneratedAPIServer) runWithCSRF(c *gin.Context, handler gin.HandlerFunc
 	if !s.requireCSRF(c) {
 		return
 	}
+	handler(c)
+}
+
+func (s *GeneratedAPIServer) runPublic(c *gin.Context, handler gin.HandlerFunc) {
 	handler(c)
 }
 
@@ -130,9 +172,88 @@ func (s *GeneratedAPIServer) GetAdminOrder(c *gin.Context, id int) {
 	s.runProtected(c, "admin", GetAdminOrderByID(s.db, s.mediaService))
 }
 
+func (s *GeneratedAPIServer) GetAdminOrderPayments(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", GetAdminOrderPayments(s.db))
+}
+
+func (s *GeneratedAPIServer) CreateAdminOrderShippingLabel(c *gin.Context, id int, params apicontract.CreateAdminOrderShippingLabelParams) {
+	_ = id
+	_ = params
+	s.runProtected(c, "admin", CreateAdminOrderShippingLabel(s.db, s.providerRuntime.ShippingProviders))
+}
+
+func (s *GeneratedAPIServer) CaptureAdminOrderPayment(c *gin.Context, id int, intentId int, params apicontract.CaptureAdminOrderPaymentParams) {
+	_ = id
+	_ = intentId
+	_ = params
+	s.runProtected(c, "admin", CaptureAdminOrderPayment(s.db, s.providerRuntime.PaymentProviders, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) VoidAdminOrderPayment(c *gin.Context, id int, intentId int, params apicontract.VoidAdminOrderPaymentParams) {
+	_ = id
+	_ = intentId
+	_ = params
+	s.runProtected(c, "admin", VoidAdminOrderPayment(s.db, s.providerRuntime.PaymentProviders, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) RefundAdminOrderPayment(c *gin.Context, id int, intentId int, params apicontract.RefundAdminOrderPaymentParams) {
+	_ = id
+	_ = intentId
+	_ = params
+	s.runProtected(c, "admin", RefundAdminOrderPayment(s.db, s.providerRuntime.PaymentProviders, s.mediaService))
+}
+
 func (s *GeneratedAPIServer) UpdateOrderStatus(c *gin.Context, id int) {
 	_ = id
 	s.runProtected(c, "admin", UpdateOrderStatus(s.db))
+}
+
+func (s *GeneratedAPIServer) ListAdminWebhookEvents(c *gin.Context, params apicontract.ListAdminWebhookEventsParams) {
+	_ = params
+	s.runProtected(c, "admin", ListAdminWebhookEvents(s.db, s.webhookService))
+}
+
+func (s *GeneratedAPIServer) ExportAdminTaxReport(c *gin.Context, params apicontract.ExportAdminTaxReportParams) {
+	_ = params
+	s.runProtected(c, "admin", ExportAdminTaxReport(s.db, s.providerRuntime.TaxProviders))
+}
+
+func (s *GeneratedAPIServer) ListAdminProviderCredentials(c *gin.Context, params apicontract.ListAdminProviderCredentialsParams) {
+	_ = params
+	s.runProtected(c, "admin", ListAdminProviderCredentials(s.db, s.providerRuntime.Credentials))
+}
+
+func (s *GeneratedAPIServer) UpsertAdminProviderCredential(c *gin.Context) {
+	s.runProtected(c, "admin", UpsertAdminProviderCredential(s.db, s.providerRuntime.Credentials))
+}
+
+func (s *GeneratedAPIServer) RotateAdminProviderCredential(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", RotateAdminProviderCredential(s.db, s.providerRuntime.Credentials))
+}
+
+func (s *GeneratedAPIServer) GetAdminProviderOperationsOverview(c *gin.Context) {
+	s.runProtected(c, "admin", GetAdminProviderOperationsOverview(s.providerOverview))
+}
+
+func (s *GeneratedAPIServer) ListAdminProviderReconciliationRuns(c *gin.Context, params apicontract.ListAdminProviderReconciliationRunsParams) {
+	_ = params
+	s.runProtected(c, "admin", ListAdminProviderReconciliationRuns(s.providerRuntime.Reconciliation))
+}
+
+func (s *GeneratedAPIServer) CreateAdminProviderReconciliationRun(c *gin.Context) {
+	s.runProtected(c, "admin", CreateAdminProviderReconciliationRun(s.providerRuntime.Reconciliation))
+}
+
+func (s *GeneratedAPIServer) GetAdminProviderReconciliationRun(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", GetAdminProviderReconciliationRun(s.providerRuntime.Reconciliation))
+}
+
+func (s *GeneratedAPIServer) ReceiveWebhookEvent(c *gin.Context, provider string) {
+	_ = provider
+	s.runPublic(c, ReceiveWebhookEvent(s.db, s.webhookService))
 }
 
 func (s *GeneratedAPIServer) CreateProduct(c *gin.Context) {
@@ -338,7 +459,24 @@ func (s *GeneratedAPIServer) CreateCheckoutOrder(c *gin.Context, params apicontr
 func (s *GeneratedAPIServer) AuthorizeCheckoutOrderPayment(c *gin.Context, id int, params apicontract.AuthorizeCheckoutOrderPaymentParams) {
 	_ = id
 	_ = params
-	s.runWithCSRF(c, AuthorizeCheckoutOrderPayment(s.db, s.pluginManager, s.jwtSecret, s.authCookieCfg, s.mediaService))
+	s.runWithCSRF(c, AuthorizeCheckoutOrderPayment(s.db, s.providerRuntime.PaymentProviders, s.pluginManager, s.jwtSecret, s.authCookieCfg, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) QuoteCheckoutOrderShippingRates(c *gin.Context, id int, params apicontract.QuoteCheckoutOrderShippingRatesParams) {
+	_ = id
+	_ = params
+	s.runWithCSRF(c, QuoteCheckoutOrderShippingRates(s.db, s.providerRuntime.ShippingProviders, s.jwtSecret, s.authCookieCfg))
+}
+
+func (s *GeneratedAPIServer) GetCheckoutOrderShippingTracking(c *gin.Context, id int) {
+	_ = id
+	GetCheckoutOrderShippingTracking(s.db, s.jwtSecret, s.authCookieCfg)(c)
+}
+
+func (s *GeneratedAPIServer) FinalizeCheckoutOrderTax(c *gin.Context, id int, params apicontract.FinalizeCheckoutOrderTaxParams) {
+	_ = id
+	_ = params
+	s.runWithCSRF(c, FinalizeCheckoutOrderTax(s.db, s.providerRuntime.TaxProviders, s.jwtSecret, s.authCookieCfg))
 }
 
 func (s *GeneratedAPIServer) GetProfile(c *gin.Context) {
@@ -409,11 +547,6 @@ func (s *GeneratedAPIServer) QuoteCheckout(c *gin.Context) {
 func (s *GeneratedAPIServer) GetUserOrder(c *gin.Context, id int) {
 	_ = id
 	s.runProtected(c, "", GetOrderByID(s.db, s.mediaService))
-}
-
-func (s *GeneratedAPIServer) ProcessPayment(c *gin.Context, id int) {
-	_ = id
-	s.runProtected(c, "", ProcessPayment(s.db, s.pluginManager, s.mediaService))
 }
 
 func (s *GeneratedAPIServer) CancelUserOrder(c *gin.Context, id int) {

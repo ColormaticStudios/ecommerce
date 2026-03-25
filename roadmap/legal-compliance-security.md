@@ -5,7 +5,7 @@
 - Auditability exists in isolated areas, but there is no platform-wide immutable admin action log with evidence-friendly export and retention semantics.
 - Secrets usage exists for provider integrations and app config, but there is no centralized secret inventory, rotation schedule policy, or break-glass workflow.
 - Privacy rights workflows (access/export, delete/erasure, correction, objections/limits) are not yet modeled as first-class request lifecycles.
-- Tax and compliance exports are being introduced in adjacent work (`roadmap/providers.md`, `roadmap/merchant-analytics-reporting.md`) but evidence packaging and retention controls are not centralized.
+- Provider payment/shipping/tax integrations and tax/compliance exports are baseline capabilities, but evidence packaging and retention controls are not centralized.
 
 ## Goals
 - Implement fine-grained RBAC that is explicit, testable, and safe under default-deny semantics.
@@ -32,9 +32,9 @@
 ## Cross-Roadmap Alignment
 - Checkout baseline:
   - Privacy workflows must support both authenticated users and guest/session-bound orders (`checkout_session_id` ownership).
-- Providers (`roadmap/providers.md`):
+- Provider platform baseline:
   - Provider credential handling, webhook events, and transaction events are evidence inputs for this roadmap.
-  - Credential rotation metadata integrates with provider configuration lifecycle.
+  - Credential rotation metadata integrates with the existing provider configuration lifecycle.
 - Merchant analytics and reporting (`roadmap/merchant-analytics-reporting.md`):
   - Tax and finance exports generated there become signed/retained artifacts here.
 - Order fulfillment and returns (`roadmap/order-fulfillment-ops.md`, `roadmap/returns-rma.md`):
@@ -181,7 +181,7 @@
   - dual-control approval for high-impact rotations (payment/tax provider creds),
   - emergency rotate and revoke flow.
 - Integrations:
-  - provider credential tables from `roadmap/providers.md`,
+  - provider credential tables and provider event/audit records from the baseline provider platform,
   - CI/CD secret references and deploy-time validation hooks.
 - Operational assets:
   - rotation runbook,

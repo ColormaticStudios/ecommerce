@@ -40,8 +40,8 @@
   - Inventory identity must align with the implemented variant-first catalog contracts (`product_variant_id`) and should not add new `product_id`-based ownership paths.
 - Checkout baseline:
   - Reservation ownership should support both `user_id` and checkout session/order identity, including guest-origin orders.
-- Providers (`roadmap/providers.md`):
-  - No pricing/tax side effects; inventory mutations remain internal and provider-independent.
+- Provider platform baseline:
+  - No pricing/tax side effects; inventory mutations remain internal and independent of payment/shipping/tax providers.
 
 ## P0: Quantity Model and Ledger Foundation
 ### Scope

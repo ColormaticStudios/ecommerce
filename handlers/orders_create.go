@@ -442,7 +442,7 @@ func CreateCheckoutOrder(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConf
 			GuestEmail: guestEmail,
 			Items:      items,
 		}
-		handled, err := replayCheckoutIdempotency(
+		replayedRecord, handled, err := replayCheckoutIdempotency(
 			db,
 			c,
 			requestCtx.Session,
@@ -450,8 +450,10 @@ func CreateCheckoutOrder(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConf
 			idempotencyRequest,
 		)
 		if err != nil {
+			correlationID := checkoutCorrelationID(c, "")
 			log.Printf(
-				"checkout_order_create result=failure mode=%s session_id=%d user_id=%v guest_email=%q reason=%q",
+				"checkout_order_create result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q reason=%q",
+				correlationID,
 				checkoutMode(requestCtx.User),
 				requestCtx.Session.ID,
 				checkoutUserID(requestCtx.User),
@@ -462,6 +464,19 @@ func CreateCheckoutOrder(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConf
 			return
 		}
 		if handled {
+			log.Printf(
+				"checkout_order_create result=replay correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q",
+				checkoutCorrelationID(c, func() string {
+					if replayedRecord == nil {
+						return ""
+					}
+					return replayedRecord.CorrelationID
+				}()),
+				checkoutMode(requestCtx.User),
+				requestCtx.Session.ID,
+				checkoutUserID(requestCtx.User),
+				checkoutGuestEmail(guestEmail),
+			)
 			return
 		}
 
@@ -477,16 +492,19 @@ func CreateCheckoutOrder(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConf
 			return
 		}
 
+		correlationID := checkoutCorrelationID(c, "")
 		idempotencyRecord, handled, err := beginCheckoutIdempotency(
 			db,
 			c,
 			requestCtx.Session,
 			"checkout_order_create",
 			idempotencyRequest,
+			correlationID,
 		)
 		if err != nil {
 			log.Printf(
-				"checkout_order_create result=failure mode=%s session_id=%d user_id=%v guest_email=%q reason=%q",
+				"checkout_order_create result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q reason=%q",
+				correlationID,
 				checkoutMode(requestCtx.User),
 				requestCtx.Session.ID,
 				checkoutUserID(requestCtx.User),
@@ -497,6 +515,19 @@ func CreateCheckoutOrder(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConf
 			return
 		}
 		if handled {
+			log.Printf(
+				"checkout_order_create result=replay correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q",
+				checkoutCorrelationID(c, func() string {
+					if idempotencyRecord == nil {
+						return ""
+					}
+					return idempotencyRecord.CorrelationID
+				}()),
+				checkoutMode(requestCtx.User),
+				requestCtx.Session.ID,
+				checkoutUserID(requestCtx.User),
+				checkoutGuestEmail(guestEmail),
+			)
 			return
 		}
 
@@ -515,7 +546,8 @@ func CreateCheckoutOrder(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConf
 		if err != nil {
 			status, payload := createOrderErrorResponse(err)
 			log.Printf(
-				"checkout_order_create result=failure mode=%s session_id=%d user_id=%v guest_email=%q reason=%q",
+				"checkout_order_create result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q reason=%q",
+				correlationID,
 				checkoutMode(requestCtx.User),
 				requestCtx.Session.ID,
 				checkoutUserID(requestCtx.User),
@@ -534,7 +566,8 @@ func CreateCheckoutOrder(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConf
 		}())
 		if err != nil {
 			log.Printf(
-				"checkout_order_create result=failure mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d reason=%q",
+				"checkout_order_create result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d reason=%q",
+				correlationID,
 				checkoutMode(requestCtx.User),
 				requestCtx.Session.ID,
 				checkoutUserID(requestCtx.User),
@@ -547,7 +580,8 @@ func CreateCheckoutOrder(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConf
 		}
 
 		log.Printf(
-			"checkout_order_create result=success mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d reused=%t",
+			"checkout_order_create result=success correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d reused=%t",
+			correlationID,
 			checkoutMode(requestCtx.User),
 			requestCtx.Session.ID,
 			checkoutUserID(requestCtx.User),

@@ -11,6 +11,7 @@ const dbPath = process.env.E2E_DB_PATH || "/tmp/ecommerce-e2e.sqlite";
 const dbURL = process.env.E2E_DB_URL;
 const apiBaseURL = `http://127.0.0.1:${apiPort}`;
 const appBaseURL = `http://127.0.0.1:${appPort}`;
+const verboseWebServerLogs = Boolean(process.env.E2E_VERBOSE_LOGS);
 
 if (dbDriver !== "postgres" && dbDriver !== "sqlite") {
 	throw new Error(`Unsupported E2E_DB_DRIVER=${dbDriver}. Expected "postgres" or "sqlite".`);
@@ -38,6 +39,13 @@ if (dbDriver === "postgres") {
 	e2eServerEnv.E2E_DB_PATH = dbPath;
 }
 
+function withOptionalLogRedirect(command: string, logPath: string): string {
+	if (verboseWebServerLogs) {
+		return command;
+	}
+	return `${command} >${logPath} 2>&1`;
+}
+
 export default defineConfig({
 	testDir: "./e2e",
 	fullyParallel: false,
@@ -56,14 +64,20 @@ export default defineConfig({
 	],
 	webServer: [
 		{
-			command: "cd .. && GOCACHE=/tmp/go-build go run ./cmd/e2e-server",
+			command: withOptionalLogRedirect(
+				"cd .. && GOCACHE=/tmp/go-build go run ./cmd/e2e-server",
+				"/tmp/ecommerce-e2e-api.log"
+			),
 			env: e2eServerEnv,
 			url: `${apiBaseURL}/__test/summary`,
 			reuseExistingServer: !process.env.CI,
 			timeout: 120_000,
 		},
 		{
-			command: `PUBLIC_API_BASE_URL=${apiBaseURL} bun run dev --host 127.0.0.1 --port ${appPort}`,
+			command: withOptionalLogRedirect(
+				`PUBLIC_API_BASE_URL=${apiBaseURL} bun run dev --host 127.0.0.1 --port ${appPort}`,
+				"/tmp/ecommerce-e2e-frontend.log"
+			),
 			url: `${appBaseURL}/`,
 			reuseExistingServer: !process.env.CI,
 			timeout: 120_000,

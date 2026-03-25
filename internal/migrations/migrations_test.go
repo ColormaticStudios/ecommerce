@@ -560,7 +560,7 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, guestCheckoutP3Version, status.LatestAppliedVersion)
+	require.Equal(t, providersP4Version, status.LatestAppliedVersion)
 	require.Equal(t, 1, status.PendingCount)
 }
 
@@ -834,4 +834,75 @@ func TestGuestCheckoutP3AddsClaimAndIdempotencyStructures(t *testing.T) {
 
 	assert.True(t, db.Migrator().HasColumn("orders", "claimed_at"))
 	assert.True(t, db.Migrator().HasTable(&models.IdempotencyKey{}))
+}
+
+func TestProvidersP0AddsPaymentFoundationStructures(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
+
+	providersP0Index := slices.IndexFunc(orderedMigrations, func(m Migration) bool {
+		return m.Version == providersP0Version
+	})
+	require.NotEqual(t, -1, providersP0Index)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:providersP0Index+1]))
+
+	assert.True(t, db.Migrator().HasColumn("idempotency_keys", "status"))
+	assert.True(t, db.Migrator().HasColumn("idempotency_keys", "correlation_id"))
+	assert.True(t, db.Migrator().HasColumn("idempotency_keys", "payment_intent_id"))
+	assert.True(t, db.Migrator().HasTable(&models.OrderCheckoutSnapshot{}))
+	assert.True(t, db.Migrator().HasTable(&models.OrderCheckoutSnapshotItem{}))
+	assert.True(t, db.Migrator().HasTable(&models.PaymentIntent{}))
+	assert.True(t, db.Migrator().HasTable(&models.PaymentTransaction{}))
+	assert.True(t, db.Migrator().HasTable(&models.OrderStatusHistory{}))
+}
+
+func TestProvidersP2AddsWebhookEventStructures(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
+
+	providersP2Index := slices.IndexFunc(orderedMigrations, func(m Migration) bool {
+		return m.Version == providersP2Version
+	})
+	require.NotEqual(t, -1, providersP2Index)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:providersP2Index+1]))
+
+	assert.True(t, db.Migrator().HasTable(&models.WebhookEvent{}))
+}
+
+func TestProvidersP3AddsShippingAndTaxStructures(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
+
+	providersP3Index := slices.IndexFunc(orderedMigrations, func(m Migration) bool {
+		return m.Version == providersP3Version
+	})
+	require.NotEqual(t, -1, providersP3Index)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:providersP3Index+1]))
+
+	assert.True(t, db.Migrator().HasTable(&models.Shipment{}))
+	assert.True(t, db.Migrator().HasTable(&models.ShipmentRate{}))
+	assert.True(t, db.Migrator().HasTable(&models.ShipmentPackage{}))
+	assert.True(t, db.Migrator().HasTable(&models.TrackingEvent{}))
+	assert.True(t, db.Migrator().HasTable(&models.OrderTaxLine{}))
+	assert.True(t, db.Migrator().HasTable(&models.TaxNexusConfig{}))
+	assert.True(t, db.Migrator().HasTable(&models.TaxExport{}))
+}
+
+func TestProvidersP4AddsSecurityAndOpsStructures(t *testing.T) {
+	db := newTestDB(t)
+
+	providersP4Index := slices.IndexFunc(orderedMigrations, func(m Migration) bool {
+		return m.Version == providersP4Version
+	})
+	require.NotEqual(t, -1, providersP4Index)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:providersP4Index+1]))
+
+	for _, model := range []any{
+		&models.ProviderCredential{},
+		&models.ProviderCallAudit{},
+		&models.ProviderReconciliationRun{},
+		&models.ProviderReconciliationDrift{},
+	} {
+		require.True(t, db.Migrator().HasTable(model), "missing migrated table for %T", model)
+	}
 }

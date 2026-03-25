@@ -11,7 +11,8 @@ type RequestFn = <T>(
 ) => Promise<T>;
 
 type CreateOrderRequest = components["schemas"]["CreateCheckoutOrderRequest"];
-type ProcessPaymentRequest = components["schemas"]["ProcessPaymentRequest"];
+type AuthorizeCheckoutOrderPaymentRequest =
+	components["schemas"]["AuthorizeCheckoutOrderPaymentRequest"];
 type ProcessPaymentResponse = components["schemas"]["ProcessPaymentResponse"];
 type CheckoutPluginCatalog = components["schemas"]["CheckoutPluginCatalog"];
 type CheckoutQuoteRequest = components["schemas"]["CheckoutQuoteRequest"];
@@ -38,7 +39,7 @@ export async function createOrder(
 export async function processPayment(
 	request: RequestFn,
 	orderId: number,
-	data?: ProcessPaymentRequest,
+	data: AuthorizeCheckoutOrderPaymentRequest,
 	idempotencyKey?: string
 ): Promise<OrderModel> {
 	const response = await request<ProcessPaymentResponse>(

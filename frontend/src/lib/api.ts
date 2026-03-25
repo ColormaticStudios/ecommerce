@@ -42,6 +42,14 @@ type AuthResponse = components["schemas"]["AuthResponse"];
 type CheckoutPluginCatalog = components["schemas"]["CheckoutPluginCatalog"];
 type CheckoutPluginType = components["schemas"]["CheckoutPlugin"]["type"];
 type UpdateCheckoutPluginRequest = components["schemas"]["UpdateCheckoutPluginRequest"];
+type ProviderCredential = components["schemas"]["ProviderCredential"];
+type ProviderCredentialRequest = components["schemas"]["ProviderCredentialRequest"];
+type ProviderCredentialListResponse = components["schemas"]["ProviderCredentialListResponse"];
+type ProviderOperationsOverview = components["schemas"]["ProviderOperationsOverview"];
+type ProviderReconciliationRun = components["schemas"]["ProviderReconciliationRun"];
+type ProviderReconciliationRunRequest = components["schemas"]["ProviderReconciliationRunRequest"];
+type ProviderReconciliationRunPage = components["schemas"]["ProviderReconciliationRunPage"];
+type WebhookEventPage = components["schemas"]["WebhookEventPage"];
 type MessageResponse = components["schemas"]["MessageResponse"];
 type ProductUpsertInput = components["schemas"]["ProductUpsertInput"];
 type MediaIDsRequest = components["schemas"]["MediaIDsRequest"];
@@ -64,6 +72,12 @@ type ListAdminBrandsQuery = NonNullable<
 type ListAdminOrdersQuery = paths["/api/v1/admin/orders"]["get"]["parameters"]["query"];
 type ListAdminProductsQuery = paths["/api/v1/admin/products"]["get"]["parameters"]["query"];
 type ListUsersQuery = paths["/api/v1/admin/users"]["get"]["parameters"]["query"];
+type ListAdminProviderCredentialsQuery =
+	paths["/api/v1/admin/providers/credentials"]["get"]["parameters"]["query"];
+type ListAdminWebhookEventsQuery =
+	paths["/api/v1/admin/webhooks/events"]["get"]["parameters"]["query"];
+type ListAdminProviderReconciliationRunsQuery =
+	paths["/api/v1/admin/providers/reconciliation/runs"]["get"]["parameters"]["query"];
 export type ListOrdersParams = Omit<NonNullable<ListUserOrdersQuery>, "status"> & {
 	status?: NonNullable<ListUserOrdersQuery>["status"] | "";
 };
@@ -270,7 +284,7 @@ export class API {
 
 	public async processPayment(
 		orderId: number,
-		data?: components["schemas"]["ProcessPaymentRequest"],
+		data: components["schemas"]["AuthorizeCheckoutOrderPaymentRequest"],
 		idempotencyKey?: string
 	): Promise<OrderModel> {
 		return ordersDomain.processPayment(this.request.bind(this), orderId, data, idempotencyKey);
@@ -498,6 +512,82 @@ export class API {
 			`/admin/checkout/plugins/${type}/${id}`,
 			data
 		);
+	}
+
+	public async listAdminProviderCredentials(
+		params: ListAdminProviderCredentialsQuery = {}
+	): Promise<ProviderCredential[]> {
+		const response = await this.request<ProviderCredentialListResponse>(
+			"GET",
+			"/admin/providers/credentials",
+			undefined,
+			params as Record<string, unknown>
+		);
+		return response.data;
+	}
+
+	public async upsertAdminProviderCredential(
+		data: ProviderCredentialRequest
+	): Promise<ProviderCredential> {
+		const response = await this.request<components["schemas"]["ProviderCredentialEnvelope"]>(
+			"POST",
+			"/admin/providers/credentials",
+			data
+		);
+		return response.credential;
+	}
+
+	public async rotateAdminProviderCredential(id: number): Promise<ProviderCredential> {
+		const response = await this.request<components["schemas"]["ProviderCredentialEnvelope"]>(
+			"POST",
+			`/admin/providers/credentials/${id}/rotate`
+		);
+		return response.credential;
+	}
+
+	public async getAdminProviderOperationsOverview(): Promise<ProviderOperationsOverview> {
+		return await this.request<ProviderOperationsOverview>("GET", "/admin/providers/overview");
+	}
+
+	public async listAdminWebhookEvents(
+		params: ListAdminWebhookEventsQuery = {}
+	): Promise<WebhookEventPage> {
+		return await this.request<WebhookEventPage>(
+			"GET",
+			"/admin/webhooks/events",
+			undefined,
+			params as Record<string, unknown>
+		);
+	}
+
+	public async listAdminProviderReconciliationRuns(
+		params: ListAdminProviderReconciliationRunsQuery = {}
+	): Promise<ProviderReconciliationRunPage> {
+		return await this.request<ProviderReconciliationRunPage>(
+			"GET",
+			"/admin/providers/reconciliation/runs",
+			undefined,
+			params as Record<string, unknown>
+		);
+	}
+
+	public async createAdminProviderReconciliationRun(
+		data: ProviderReconciliationRunRequest
+	): Promise<ProviderReconciliationRun> {
+		const response = await this.request<components["schemas"]["ProviderReconciliationRunEnvelope"]>(
+			"POST",
+			"/admin/providers/reconciliation/runs",
+			data
+		);
+		return response.run;
+	}
+
+	public async getAdminProviderReconciliationRun(id: number): Promise<ProviderReconciliationRun> {
+		const response = await this.request<components["schemas"]["ProviderReconciliationRunEnvelope"]>(
+			"GET",
+			`/admin/providers/reconciliation/runs/${id}`
+		);
+		return response.run;
 	}
 
 	public async createProduct(data: ProductUpsertInput): Promise<ProductModel> {

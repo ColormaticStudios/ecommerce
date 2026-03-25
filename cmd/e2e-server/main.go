@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -65,6 +66,22 @@ func envInt(name string, fallback int) int {
 		return fallback
 	}
 	return parsed
+}
+
+func envBool(name string, fallback bool) bool {
+	value := strings.TrimSpace(strings.ToLower(os.Getenv(name)))
+	if value == "" {
+		return fallback
+	}
+
+	switch value {
+	case "1", "true", "yes", "on":
+		return true
+	case "0", "false", "no", "off":
+		return false
+	default:
+		return fallback
+	}
 }
 
 func ensureSeedData(db *gorm.DB) error {
@@ -189,6 +206,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	port := envInt("E2E_API_PORT", defaultE2EAPIPort)
+	verboseLogs := envBool("E2E_VERBOSE_LOGS", false)
 	dbDriver := strings.TrimSpace(strings.ToLower(os.Getenv("E2E_DB_DRIVER")))
 	if dbDriver == "" {
 		dbDriver = defaultE2EDriver
@@ -618,7 +636,11 @@ func main() {
 
 	addr := fmt.Sprintf(":%d", port)
 	log.Printf("e2e api server listening on %s", addr)
+	if !verboseLogs {
+		log.SetOutput(io.Discard)
+	}
 	if err := r.Run(addr); err != nil {
-		log.Fatalf("failed to run e2e api server: %v", err)
+		fmt.Fprintf(os.Stderr, "failed to run e2e api server: %v\n", err)
+		os.Exit(1)
 	}
 }

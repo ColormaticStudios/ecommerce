@@ -63,6 +63,32 @@ const (
 	OrderStatusSHIPPED   OrderStatus = "SHIPPED"
 )
 
+// Defines values for PaymentIntentRecordStatus.
+const (
+	PaymentIntentRecordStatusAUTHORIZED        PaymentIntentRecordStatus = "AUTHORIZED"
+	PaymentIntentRecordStatusCAPTURED          PaymentIntentRecordStatus = "CAPTURED"
+	PaymentIntentRecordStatusFAILED            PaymentIntentRecordStatus = "FAILED"
+	PaymentIntentRecordStatusPARTIALLYCAPTURED PaymentIntentRecordStatus = "PARTIALLY_CAPTURED"
+	PaymentIntentRecordStatusREFUNDED          PaymentIntentRecordStatus = "REFUNDED"
+	PaymentIntentRecordStatusREQUIRESACTION    PaymentIntentRecordStatus = "REQUIRES_ACTION"
+	PaymentIntentRecordStatusVOIDED            PaymentIntentRecordStatus = "VOIDED"
+)
+
+// Defines values for PaymentTransactionRecordOperation.
+const (
+	AUTHORIZE PaymentTransactionRecordOperation = "AUTHORIZE"
+	CAPTURE   PaymentTransactionRecordOperation = "CAPTURE"
+	REFUND    PaymentTransactionRecordOperation = "REFUND"
+	VOID      PaymentTransactionRecordOperation = "VOID"
+)
+
+// Defines values for PaymentTransactionRecordStatus.
+const (
+	PaymentTransactionRecordStatusFAILED    PaymentTransactionRecordStatus = "FAILED"
+	PaymentTransactionRecordStatusPENDING   PaymentTransactionRecordStatus = "PENDING"
+	PaymentTransactionRecordStatusSUCCEEDED PaymentTransactionRecordStatus = "SUCCEEDED"
+)
+
 // Defines values for ProductAttributeDefinitionType.
 const (
 	ProductAttributeDefinitionTypeBoolean ProductAttributeDefinitionType = "boolean"
@@ -77,6 +103,97 @@ const (
 	Enum    ProductAttributeDefinitionInputType = "enum"
 	Number  ProductAttributeDefinitionInputType = "number"
 	Text    ProductAttributeDefinitionInputType = "text"
+)
+
+// Defines values for ProviderCredentialEnvironment.
+const (
+	ProviderCredentialEnvironmentProduction ProviderCredentialEnvironment = "production"
+	ProviderCredentialEnvironmentSandbox    ProviderCredentialEnvironment = "sandbox"
+)
+
+// Defines values for ProviderCredentialFxMode.
+const (
+	ProviderCredentialFxModeProviderManaged  ProviderCredentialFxMode = "provider_managed"
+	ProviderCredentialFxModeSameCurrencyOnly ProviderCredentialFxMode = "same_currency_only"
+)
+
+// Defines values for ProviderCredentialProviderType.
+const (
+	ProviderCredentialProviderTypePayment  ProviderCredentialProviderType = "payment"
+	ProviderCredentialProviderTypeShipping ProviderCredentialProviderType = "shipping"
+	ProviderCredentialProviderTypeTax      ProviderCredentialProviderType = "tax"
+)
+
+// Defines values for ProviderCredentialRequestEnvironment.
+const (
+	ProviderCredentialRequestEnvironmentProduction ProviderCredentialRequestEnvironment = "production"
+	ProviderCredentialRequestEnvironmentSandbox    ProviderCredentialRequestEnvironment = "sandbox"
+)
+
+// Defines values for ProviderCredentialRequestFxMode.
+const (
+	ProviderCredentialRequestFxModeProviderManaged  ProviderCredentialRequestFxMode = "provider_managed"
+	ProviderCredentialRequestFxModeSameCurrencyOnly ProviderCredentialRequestFxMode = "same_currency_only"
+)
+
+// Defines values for ProviderCredentialRequestProviderType.
+const (
+	ProviderCredentialRequestProviderTypePayment  ProviderCredentialRequestProviderType = "payment"
+	ProviderCredentialRequestProviderTypeShipping ProviderCredentialRequestProviderType = "shipping"
+	ProviderCredentialRequestProviderTypeTax      ProviderCredentialRequestProviderType = "tax"
+)
+
+// Defines values for ProviderOperationsOverviewRuntimeEnvironment.
+const (
+	ProviderOperationsOverviewRuntimeEnvironmentProduction ProviderOperationsOverviewRuntimeEnvironment = "production"
+	ProviderOperationsOverviewRuntimeEnvironmentSandbox    ProviderOperationsOverviewRuntimeEnvironment = "sandbox"
+)
+
+// Defines values for ProviderReconciliationDriftSeverity.
+const (
+	ERROR ProviderReconciliationDriftSeverity = "ERROR"
+	WARN  ProviderReconciliationDriftSeverity = "WARN"
+)
+
+// Defines values for ProviderReconciliationRunEnvironment.
+const (
+	ProviderReconciliationRunEnvironmentProduction ProviderReconciliationRunEnvironment = "production"
+	ProviderReconciliationRunEnvironmentSandbox    ProviderReconciliationRunEnvironment = "sandbox"
+)
+
+// Defines values for ProviderReconciliationRunProviderType.
+const (
+	ProviderReconciliationRunProviderTypePayment  ProviderReconciliationRunProviderType = "payment"
+	ProviderReconciliationRunProviderTypeShipping ProviderReconciliationRunProviderType = "shipping"
+	ProviderReconciliationRunProviderTypeTax      ProviderReconciliationRunProviderType = "tax"
+)
+
+// Defines values for ProviderReconciliationRunStatus.
+const (
+	ProviderReconciliationRunStatusFAILED    ProviderReconciliationRunStatus = "FAILED"
+	ProviderReconciliationRunStatusSUCCEEDED ProviderReconciliationRunStatus = "SUCCEEDED"
+)
+
+// Defines values for ProviderReconciliationRunTrigger.
+const (
+	MANUAL    ProviderReconciliationRunTrigger = "MANUAL"
+	SCHEDULED ProviderReconciliationRunTrigger = "SCHEDULED"
+)
+
+// Defines values for ProviderReconciliationRunRequestProviderType.
+const (
+	ProviderReconciliationRunRequestProviderTypePayment  ProviderReconciliationRunRequestProviderType = "payment"
+	ProviderReconciliationRunRequestProviderTypeShipping ProviderReconciliationRunRequestProviderType = "shipping"
+	ProviderReconciliationRunRequestProviderTypeTax      ProviderReconciliationRunRequestProviderType = "tax"
+)
+
+// Defines values for ShipmentStatus.
+const (
+	ShipmentStatusDELIVERED      ShipmentStatus = "DELIVERED"
+	ShipmentStatusEXCEPTION      ShipmentStatus = "EXCEPTION"
+	ShipmentStatusINTRANSIT      ShipmentStatus = "IN_TRANSIT"
+	ShipmentStatusLABELPURCHASED ShipmentStatus = "LABEL_PURCHASED"
+	ShipmentStatusQUOTED         ShipmentStatus = "QUOTED"
 )
 
 // Defines values for StorefrontHomepageSectionType.
@@ -113,6 +230,20 @@ const (
 	Search StorefrontProductSectionSource = "search"
 )
 
+// Defines values for TaxLineLineType.
+const (
+	ITEM     TaxLineLineType = "ITEM"
+	SHIPPING TaxLineLineType = "SHIPPING"
+)
+
+// Defines values for TrackingEventStatus.
+const (
+	TrackingEventStatusDELIVERED      TrackingEventStatus = "DELIVERED"
+	TrackingEventStatusEXCEPTION      TrackingEventStatus = "EXCEPTION"
+	TrackingEventStatusINTRANSIT      TrackingEventStatus = "IN_TRANSIT"
+	TrackingEventStatusLABELPURCHASED TrackingEventStatus = "LABEL_PURCHASED"
+)
+
 // Defines values for UpdateOrderStatusRequestStatus.
 const (
 	UpdateOrderStatusRequestStatusCANCELLED UpdateOrderStatusRequestStatus = "CANCELLED"
@@ -136,6 +267,14 @@ const (
 	UserRoleCustomer UserRole = "customer"
 )
 
+// Defines values for WebhookEventRecordStatus.
+const (
+	WebhookEventRecordStatusDEADLETTER WebhookEventRecordStatus = "DEAD_LETTER"
+	WebhookEventRecordStatusPENDING    WebhookEventRecordStatus = "PENDING"
+	WebhookEventRecordStatusPROCESSED  WebhookEventRecordStatus = "PROCESSED"
+	WebhookEventRecordStatusREJECTED   WebhookEventRecordStatus = "REJECTED"
+)
+
 // Defines values for UpdateAdminCheckoutPluginParamsType.
 const (
 	UpdateAdminCheckoutPluginParamsTypePayment  UpdateAdminCheckoutPluginParamsType = "payment"
@@ -156,6 +295,33 @@ const (
 	ListAdminProductsParamsOrderDesc ListAdminProductsParamsOrder = "desc"
 )
 
+// Defines values for ListAdminProviderCredentialsParamsProviderType.
+const (
+	ListAdminProviderCredentialsParamsProviderTypePayment  ListAdminProviderCredentialsParamsProviderType = "payment"
+	ListAdminProviderCredentialsParamsProviderTypeShipping ListAdminProviderCredentialsParamsProviderType = "shipping"
+	ListAdminProviderCredentialsParamsProviderTypeTax      ListAdminProviderCredentialsParamsProviderType = "tax"
+)
+
+// Defines values for ListAdminProviderReconciliationRunsParamsProviderType.
+const (
+	ListAdminProviderReconciliationRunsParamsProviderTypePayment  ListAdminProviderReconciliationRunsParamsProviderType = "payment"
+	ListAdminProviderReconciliationRunsParamsProviderTypeShipping ListAdminProviderReconciliationRunsParamsProviderType = "shipping"
+	ListAdminProviderReconciliationRunsParamsProviderTypeTax      ListAdminProviderReconciliationRunsParamsProviderType = "tax"
+)
+
+// Defines values for ExportAdminTaxReportParamsFormat.
+const (
+	Csv ExportAdminTaxReportParamsFormat = "csv"
+)
+
+// Defines values for ListAdminWebhookEventsParamsStatus.
+const (
+	ListAdminWebhookEventsParamsStatusDEADLETTER ListAdminWebhookEventsParamsStatus = "DEAD_LETTER"
+	ListAdminWebhookEventsParamsStatusPENDING    ListAdminWebhookEventsParamsStatus = "PENDING"
+	ListAdminWebhookEventsParamsStatusPROCESSED  ListAdminWebhookEventsParamsStatus = "PROCESSED"
+	ListAdminWebhookEventsParamsStatusREJECTED   ListAdminWebhookEventsParamsStatus = "REJECTED"
+)
+
 // Defines values for OidcCallbackParamsFormat.
 const (
 	Json OidcCallbackParamsFormat = "json"
@@ -163,13 +329,13 @@ const (
 
 // Defines values for ListUserOrdersParamsStatus.
 const (
-	CANCELLED ListUserOrdersParamsStatus = "CANCELLED"
-	DELIVERED ListUserOrdersParamsStatus = "DELIVERED"
-	FAILED    ListUserOrdersParamsStatus = "FAILED"
-	PAID      ListUserOrdersParamsStatus = "PAID"
-	PENDING   ListUserOrdersParamsStatus = "PENDING"
-	REFUNDED  ListUserOrdersParamsStatus = "REFUNDED"
-	SHIPPED   ListUserOrdersParamsStatus = "SHIPPED"
+	ListUserOrdersParamsStatusCANCELLED ListUserOrdersParamsStatus = "CANCELLED"
+	ListUserOrdersParamsStatusDELIVERED ListUserOrdersParamsStatus = "DELIVERED"
+	ListUserOrdersParamsStatusFAILED    ListUserOrdersParamsStatus = "FAILED"
+	ListUserOrdersParamsStatusPAID      ListUserOrdersParamsStatus = "PAID"
+	ListUserOrdersParamsStatusPENDING   ListUserOrdersParamsStatus = "PENDING"
+	ListUserOrdersParamsStatusREFUNDED  ListUserOrdersParamsStatus = "REFUNDED"
+	ListUserOrdersParamsStatusSHIPPED   ListUserOrdersParamsStatus = "SHIPPED"
 )
 
 // Defines values for ListProductsParamsSort.
@@ -191,9 +357,48 @@ type AddCartItemRequest struct {
 	Quantity         int `json:"quantity"`
 }
 
+// AdminOrderPaymentAmountRequest defines model for AdminOrderPaymentAmountRequest.
+type AdminOrderPaymentAmountRequest struct {
+	Amount *float64 `json:"amount,omitempty"`
+}
+
+// AdminOrderPaymentLifecycleResponse defines model for AdminOrderPaymentLifecycleResponse.
+type AdminOrderPaymentLifecycleResponse struct {
+	Message       string                   `json:"message"`
+	Order         Order                    `json:"order"`
+	PaymentIntent PaymentIntentRecord      `json:"payment_intent"`
+	Transaction   PaymentTransactionRecord `json:"transaction"`
+}
+
+// AdminOrderShippingLabelPackageRequest defines model for AdminOrderShippingLabelPackageRequest.
+type AdminOrderShippingLabelPackageRequest struct {
+	HeightCm    *int    `json:"height_cm,omitempty"`
+	LengthCm    *int    `json:"length_cm,omitempty"`
+	Reference   *string `json:"reference,omitempty"`
+	WeightGrams *int    `json:"weight_grams,omitempty"`
+	WidthCm     *int    `json:"width_cm,omitempty"`
+}
+
+// AdminOrderShippingLabelRequest defines model for AdminOrderShippingLabelRequest.
+type AdminOrderShippingLabelRequest struct {
+	Package *AdminOrderShippingLabelPackageRequest `json:"package,omitempty"`
+	RateId  int                                    `json:"rate_id"`
+}
+
+// AdminOrderShippingLabelResponse defines model for AdminOrderShippingLabelResponse.
+type AdminOrderShippingLabelResponse struct {
+	Message  string   `json:"message"`
+	Shipment Shipment `json:"shipment"`
+}
+
 // AuthResponse defines model for AuthResponse.
 type AuthResponse struct {
 	User User `json:"user"`
+}
+
+// AuthorizeCheckoutOrderPaymentRequest defines model for AuthorizeCheckoutOrderPaymentRequest.
+type AuthorizeCheckoutOrderPaymentRequest struct {
+	SnapshotId int `json:"snapshot_id"`
 }
 
 // Brand defines model for Brand.
@@ -246,6 +451,43 @@ type CartItem struct {
 // CheckoutCartSummary defines model for CheckoutCartSummary.
 type CheckoutCartSummary struct {
 	ItemCount int `json:"item_count"`
+}
+
+// CheckoutOrderShippingRatesRequest defines model for CheckoutOrderShippingRatesRequest.
+type CheckoutOrderShippingRatesRequest struct {
+	SnapshotId int `json:"snapshot_id"`
+}
+
+// CheckoutOrderShippingRatesResponse defines model for CheckoutOrderShippingRatesResponse.
+type CheckoutOrderShippingRatesResponse struct {
+	OrderId    int            `json:"order_id"`
+	Provider   string         `json:"provider"`
+	Rates      []ShipmentRate `json:"rates"`
+	SnapshotId int            `json:"snapshot_id"`
+}
+
+// CheckoutOrderTaxFinalizeRequest defines model for CheckoutOrderTaxFinalizeRequest.
+type CheckoutOrderTaxFinalizeRequest struct {
+	InclusivePricing *bool `json:"inclusive_pricing,omitempty"`
+	SnapshotId       int   `json:"snapshot_id"`
+}
+
+// CheckoutOrderTaxFinalizeResponse defines model for CheckoutOrderTaxFinalizeResponse.
+type CheckoutOrderTaxFinalizeResponse struct {
+	Currency         string    `json:"currency"`
+	InclusivePricing bool      `json:"inclusive_pricing"`
+	Lines            []TaxLine `json:"lines"`
+	Message          string    `json:"message"`
+	OrderId          int       `json:"order_id"`
+	Provider         string    `json:"provider"`
+	SnapshotId       int       `json:"snapshot_id"`
+	TotalTax         float64   `json:"total_tax"`
+}
+
+// CheckoutOrderTrackingResponse defines model for CheckoutOrderTrackingResponse.
+type CheckoutOrderTrackingResponse struct {
+	OrderId   int        `json:"order_id"`
+	Shipments []Shipment `json:"shipments"`
 }
 
 // CheckoutPlugin defines model for CheckoutPlugin.
@@ -313,9 +555,11 @@ type CheckoutQuoteRequest struct {
 // CheckoutQuoteResponse defines model for CheckoutQuoteResponse.
 type CheckoutQuoteResponse struct {
 	Currency       string                `json:"currency"`
+	ExpiresAt      *time.Time            `json:"expires_at"`
 	PaymentStates  []CheckoutPluginState `json:"payment_states"`
 	Shipping       float64               `json:"shipping"`
 	ShippingStates []CheckoutPluginState `json:"shipping_states"`
+	SnapshotId     *int                  `json:"snapshot_id"`
 	Subtotal       float64               `json:"subtotal"`
 	Tax            float64               `json:"tax"`
 	TaxStates      []CheckoutPluginState `json:"tax_states"`
@@ -446,6 +690,12 @@ type OrderPage struct {
 	Pagination Pagination `json:"pagination"`
 }
 
+// OrderPaymentLedger defines model for OrderPaymentLedger.
+type OrderPaymentLedger struct {
+	Intents []PaymentIntentRecord `json:"intents"`
+	OrderId int                   `json:"order_id"`
+}
+
 // Pagination defines model for Pagination.
 type Pagination struct {
 	Limit      int `json:"limit"`
@@ -454,38 +704,44 @@ type Pagination struct {
 	TotalPages int `json:"total_pages"`
 }
 
-// ProcessPaymentInputAddress defines model for ProcessPaymentInputAddress.
-type ProcessPaymentInputAddress struct {
-	City       string  `json:"city"`
-	Country    string  `json:"country"`
-	FullName   string  `json:"full_name"`
-	Line1      string  `json:"line1"`
-	Line2      *string `json:"line2,omitempty"`
-	PostalCode string  `json:"postal_code"`
-	State      *string `json:"state,omitempty"`
+// PaymentIntentRecord defines model for PaymentIntentRecord.
+type PaymentIntentRecord struct {
+	AuthorizedAmount float64                    `json:"authorized_amount"`
+	CapturedAmount   float64                    `json:"captured_amount"`
+	CreatedAt        time.Time                  `json:"created_at"`
+	Currency         string                     `json:"currency"`
+	Id               int                        `json:"id"`
+	OrderId          int                        `json:"order_id"`
+	Provider         string                     `json:"provider"`
+	RefundableAmount float64                    `json:"refundable_amount"`
+	SnapshotId       int                        `json:"snapshot_id"`
+	Status           PaymentIntentRecordStatus  `json:"status"`
+	Transactions     []PaymentTransactionRecord `json:"transactions"`
+	UpdatedAt        time.Time                  `json:"updated_at"`
+	Version          int                        `json:"version"`
 }
 
-// ProcessPaymentInputMethod defines model for ProcessPaymentInputMethod.
-type ProcessPaymentInputMethod struct {
-	CardNumber     string `json:"card_number"`
-	CardholderName string `json:"cardholder_name"`
-	ExpMonth       int    `json:"exp_month"`
-	ExpYear        int    `json:"exp_year"`
+// PaymentIntentRecordStatus defines model for PaymentIntentRecord.Status.
+type PaymentIntentRecordStatus string
+
+// PaymentTransactionRecord defines model for PaymentTransactionRecord.
+type PaymentTransactionRecord struct {
+	Amount              float64                           `json:"amount"`
+	CreatedAt           time.Time                         `json:"created_at"`
+	Id                  int                               `json:"id"`
+	IdempotencyKey      string                            `json:"idempotency_key"`
+	Operation           PaymentTransactionRecordOperation `json:"operation"`
+	ProviderTxnId       string                            `json:"provider_txn_id"`
+	RawResponseRedacted string                            `json:"raw_response_redacted"`
+	Status              PaymentTransactionRecordStatus    `json:"status"`
+	UpdatedAt           time.Time                         `json:"updated_at"`
 }
 
-// ProcessPaymentRequest defines model for ProcessPaymentRequest.
-type ProcessPaymentRequest struct {
-	Address            *ProcessPaymentInputAddress `json:"address,omitempty"`
-	AddressId          *int                        `json:"address_id,omitempty"`
-	PaymentData        *map[string]string          `json:"payment_data,omitempty"`
-	PaymentMethod      *ProcessPaymentInputMethod  `json:"payment_method,omitempty"`
-	PaymentMethodId    *int                        `json:"payment_method_id,omitempty"`
-	PaymentProviderId  *string                     `json:"payment_provider_id,omitempty"`
-	ShippingData       *map[string]string          `json:"shipping_data,omitempty"`
-	ShippingProviderId *string                     `json:"shipping_provider_id,omitempty"`
-	TaxData            *map[string]string          `json:"tax_data,omitempty"`
-	TaxProviderId      *string                     `json:"tax_provider_id,omitempty"`
-}
+// PaymentTransactionRecordOperation defines model for PaymentTransactionRecord.Operation.
+type PaymentTransactionRecordOperation string
+
+// PaymentTransactionRecordStatus defines model for PaymentTransactionRecord.Status.
+type PaymentTransactionRecordStatus string
 
 // ProcessPaymentResponse defines model for ProcessPaymentResponse.
 type ProcessPaymentResponse struct {
@@ -698,6 +954,143 @@ type ProductVariantSelectionInput struct {
 	Position    *int   `json:"position,omitempty"`
 }
 
+// ProviderCredential defines model for ProviderCredential.
+type ProviderCredential struct {
+	Environment         ProviderCredentialEnvironment  `json:"environment"`
+	FxMode              ProviderCredentialFxMode       `json:"fx_mode"`
+	Id                  int                            `json:"id"`
+	KeyVersion          string                         `json:"key_version"`
+	Label               string                         `json:"label"`
+	LastRotatedAt       time.Time                      `json:"last_rotated_at"`
+	ProviderId          string                         `json:"provider_id"`
+	ProviderType        ProviderCredentialProviderType `json:"provider_type"`
+	SettlementCurrency  *string                        `json:"settlement_currency,omitempty"`
+	SupportedCurrencies []string                       `json:"supported_currencies"`
+	UpdatedAt           time.Time                      `json:"updated_at"`
+}
+
+// ProviderCredentialEnvironment defines model for ProviderCredential.Environment.
+type ProviderCredentialEnvironment string
+
+// ProviderCredentialFxMode defines model for ProviderCredential.FxMode.
+type ProviderCredentialFxMode string
+
+// ProviderCredentialProviderType defines model for ProviderCredential.ProviderType.
+type ProviderCredentialProviderType string
+
+// ProviderCredentialEnvelope defines model for ProviderCredentialEnvelope.
+type ProviderCredentialEnvelope struct {
+	Credential ProviderCredential `json:"credential"`
+}
+
+// ProviderCredentialListResponse defines model for ProviderCredentialListResponse.
+type ProviderCredentialListResponse struct {
+	Data []ProviderCredential `json:"data"`
+}
+
+// ProviderCredentialRequest defines model for ProviderCredentialRequest.
+type ProviderCredentialRequest struct {
+	Environment         ProviderCredentialRequestEnvironment  `json:"environment"`
+	FxMode              *ProviderCredentialRequestFxMode      `json:"fx_mode,omitempty"`
+	Label               *string                               `json:"label,omitempty"`
+	ProviderId          string                                `json:"provider_id"`
+	ProviderType        ProviderCredentialRequestProviderType `json:"provider_type"`
+	SecretData          map[string]string                     `json:"secret_data"`
+	SettlementCurrency  *string                               `json:"settlement_currency,omitempty"`
+	SupportedCurrencies *[]string                             `json:"supported_currencies,omitempty"`
+}
+
+// ProviderCredentialRequestEnvironment defines model for ProviderCredentialRequest.Environment.
+type ProviderCredentialRequestEnvironment string
+
+// ProviderCredentialRequestFxMode defines model for ProviderCredentialRequest.FxMode.
+type ProviderCredentialRequestFxMode string
+
+// ProviderCredentialRequestProviderType defines model for ProviderCredentialRequest.ProviderType.
+type ProviderCredentialRequestProviderType string
+
+// ProviderOperationsOverview defines model for ProviderOperationsOverview.
+type ProviderOperationsOverview struct {
+	CredentialServiceConfigured bool                                         `json:"credential_service_configured"`
+	RuntimeEnvironment          ProviderOperationsOverviewRuntimeEnvironment `json:"runtime_environment"`
+	WebhookEvents               ProviderWebhookStatusSummary                 `json:"webhook_events"`
+}
+
+// ProviderOperationsOverviewRuntimeEnvironment defines model for ProviderOperationsOverview.RuntimeEnvironment.
+type ProviderOperationsOverviewRuntimeEnvironment string
+
+// ProviderReconciliationDrift defines model for ProviderReconciliationDrift.
+type ProviderReconciliationDrift struct {
+	ActualValue       string                              `json:"actual_value"`
+	EntityId          int                                 `json:"entity_id"`
+	EntityType        string                              `json:"entity_type"`
+	ExpectedValue     string                              `json:"expected_value"`
+	FieldName         string                              `json:"field_name"`
+	Id                int                                 `json:"id"`
+	Message           string                              `json:"message"`
+	ProviderReference string                              `json:"provider_reference"`
+	Severity          ProviderReconciliationDriftSeverity `json:"severity"`
+}
+
+// ProviderReconciliationDriftSeverity defines model for ProviderReconciliationDrift.Severity.
+type ProviderReconciliationDriftSeverity string
+
+// ProviderReconciliationRun defines model for ProviderReconciliationRun.
+type ProviderReconciliationRun struct {
+	CheckedCount int                                   `json:"checked_count"`
+	DriftCount   int                                   `json:"drift_count"`
+	Drifts       *[]ProviderReconciliationDrift        `json:"drifts,omitempty"`
+	Environment  ProviderReconciliationRunEnvironment  `json:"environment"`
+	ErrorCount   int                                   `json:"error_count"`
+	FinishedAt   *time.Time                            `json:"finished_at"`
+	Id           int                                   `json:"id"`
+	ProviderId   string                                `json:"provider_id"`
+	ProviderType ProviderReconciliationRunProviderType `json:"provider_type"`
+	StartedAt    time.Time                             `json:"started_at"`
+	Status       ProviderReconciliationRunStatus       `json:"status"`
+	Trigger      ProviderReconciliationRunTrigger      `json:"trigger"`
+}
+
+// ProviderReconciliationRunEnvironment defines model for ProviderReconciliationRun.Environment.
+type ProviderReconciliationRunEnvironment string
+
+// ProviderReconciliationRunProviderType defines model for ProviderReconciliationRun.ProviderType.
+type ProviderReconciliationRunProviderType string
+
+// ProviderReconciliationRunStatus defines model for ProviderReconciliationRun.Status.
+type ProviderReconciliationRunStatus string
+
+// ProviderReconciliationRunTrigger defines model for ProviderReconciliationRun.Trigger.
+type ProviderReconciliationRunTrigger string
+
+// ProviderReconciliationRunEnvelope defines model for ProviderReconciliationRunEnvelope.
+type ProviderReconciliationRunEnvelope struct {
+	Run ProviderReconciliationRun `json:"run"`
+}
+
+// ProviderReconciliationRunPage defines model for ProviderReconciliationRunPage.
+type ProviderReconciliationRunPage struct {
+	Data       []ProviderReconciliationRun `json:"data"`
+	Pagination Pagination                  `json:"pagination"`
+}
+
+// ProviderReconciliationRunRequest defines model for ProviderReconciliationRunRequest.
+type ProviderReconciliationRunRequest struct {
+	ProviderId   string                                       `json:"provider_id"`
+	ProviderType ProviderReconciliationRunRequestProviderType `json:"provider_type"`
+}
+
+// ProviderReconciliationRunRequestProviderType defines model for ProviderReconciliationRunRequest.ProviderType.
+type ProviderReconciliationRunRequestProviderType string
+
+// ProviderWebhookStatusSummary defines model for ProviderWebhookStatusSummary.
+type ProviderWebhookStatusSummary struct {
+	DeadLetterCount int `json:"dead_letter_count"`
+	PendingCount    int `json:"pending_count"`
+	ProcessedCount  int `json:"processed_count"`
+	RejectedCount   int `json:"rejected_count"`
+}
+
 // RegisterRequest defines model for RegisterRequest.
 type RegisterRequest struct {
 	Email    string  `json:"email"`
@@ -751,6 +1144,58 @@ type SavedPaymentMethod struct {
 	Type           string     `json:"type"`
 	UpdatedAt      time.Time  `json:"updated_at"`
 	UserId         int        `json:"user_id"`
+}
+
+// Shipment defines model for Shipment.
+type Shipment struct {
+	Amount                float64           `json:"amount"`
+	Currency              string            `json:"currency"`
+	DeliveredAt           *time.Time        `json:"delivered_at"`
+	FinalizedAt           *time.Time        `json:"finalized_at"`
+	Id                    int               `json:"id"`
+	LabelUrl              string            `json:"label_url"`
+	OrderId               int               `json:"order_id"`
+	Packages              []ShipmentPackage `json:"packages"`
+	Provider              string            `json:"provider"`
+	ProviderShipmentId    string            `json:"provider_shipment_id"`
+	PurchasedAt           *time.Time        `json:"purchased_at"`
+	Rates                 []ShipmentRate    `json:"rates"`
+	ServiceCode           string            `json:"service_code"`
+	ServiceName           string            `json:"service_name"`
+	ShipmentRateId        int               `json:"shipment_rate_id"`
+	ShippingAddressPretty string            `json:"shipping_address_pretty"`
+	SnapshotId            int               `json:"snapshot_id"`
+	Status                ShipmentStatus    `json:"status"`
+	TrackingEvents        []TrackingEvent   `json:"tracking_events"`
+	TrackingNumber        string            `json:"tracking_number"`
+	TrackingUrl           string            `json:"tracking_url"`
+}
+
+// ShipmentStatus defines model for Shipment.Status.
+type ShipmentStatus string
+
+// ShipmentPackage defines model for ShipmentPackage.
+type ShipmentPackage struct {
+	HeightCm    int    `json:"height_cm"`
+	Id          int    `json:"id"`
+	LengthCm    int    `json:"length_cm"`
+	Reference   string `json:"reference"`
+	WeightGrams int    `json:"weight_grams"`
+	WidthCm     int    `json:"width_cm"`
+}
+
+// ShipmentRate defines model for ShipmentRate.
+type ShipmentRate struct {
+	Amount         float64    `json:"amount"`
+	Currency       string     `json:"currency"`
+	ExpiresAt      *time.Time `json:"expires_at"`
+	Id             int        `json:"id"`
+	Provider       string     `json:"provider"`
+	ProviderRateId string     `json:"provider_rate_id"`
+	Selected       bool       `json:"selected"`
+	ServiceCode    string     `json:"service_code"`
+	ServiceName    string     `json:"service_name"`
+	ShipmentId     *int       `json:"shipment_id"`
 }
 
 // StorefrontCheckoutSettings defines model for StorefrontCheckoutSettings.
@@ -867,6 +1312,40 @@ type StorefrontSettingsResponse struct {
 	UpdatedAt          time.Time          `json:"updated_at"`
 }
 
+// TaxLine defines model for TaxLine.
+type TaxLine struct {
+	Id                 *int            `json:"id,omitempty"`
+	Inclusive          bool            `json:"inclusive"`
+	Jurisdiction       string          `json:"jurisdiction"`
+	LineType           TaxLineLineType `json:"line_type"`
+	ProductVariantId   *int            `json:"product_variant_id"`
+	Quantity           int             `json:"quantity"`
+	SnapshotItemId     *int            `json:"snapshot_item_id"`
+	TaxAmount          float64         `json:"tax_amount"`
+	TaxCode            string          `json:"tax_code"`
+	TaxName            string          `json:"tax_name"`
+	TaxRateBasisPoints int             `json:"tax_rate_basis_points"`
+	TaxableAmount      float64         `json:"taxable_amount"`
+}
+
+// TaxLineLineType defines model for TaxLine.LineType.
+type TaxLineLineType string
+
+// TrackingEvent defines model for TrackingEvent.
+type TrackingEvent struct {
+	Description     string              `json:"description"`
+	Id              int                 `json:"id"`
+	Location        string              `json:"location"`
+	OccurredAt      time.Time           `json:"occurred_at"`
+	Provider        string              `json:"provider"`
+	ProviderEventId string              `json:"provider_event_id"`
+	Status          TrackingEventStatus `json:"status"`
+	TrackingNumber  string              `json:"tracking_number"`
+}
+
+// TrackingEventStatus defines model for TrackingEvent.Status.
+type TrackingEventStatus string
+
 // UpdateCartItemRequest defines model for UpdateCartItemRequest.
 type UpdateCartItemRequest struct {
 	Quantity int `json:"quantity"`
@@ -929,6 +1408,38 @@ type UserPage struct {
 	Pagination Pagination `json:"pagination"`
 }
 
+// WebhookEventPage defines model for WebhookEventPage.
+type WebhookEventPage struct {
+	Data       []WebhookEventRecord `json:"data"`
+	Pagination Pagination           `json:"pagination"`
+}
+
+// WebhookEventRecord defines model for WebhookEventRecord.
+type WebhookEventRecord struct {
+	AttemptCount    int                      `json:"attempt_count"`
+	EventType       string                   `json:"event_type"`
+	Id              int                      `json:"id"`
+	LastError       string                   `json:"last_error"`
+	Payload         string                   `json:"payload"`
+	ProcessedAt     *time.Time               `json:"processed_at"`
+	Provider        string                   `json:"provider"`
+	ProviderEventId string                   `json:"provider_event_id"`
+	ReceivedAt      time.Time                `json:"received_at"`
+	SignatureValid  bool                     `json:"signature_valid"`
+	Status          WebhookEventRecordStatus `json:"status"`
+}
+
+// WebhookEventRecordStatus defines model for WebhookEventRecord.Status.
+type WebhookEventRecordStatus string
+
+// WebhookIngestResponse defines model for WebhookIngestResponse.
+type WebhookIngestResponse struct {
+	Duplicate       bool   `json:"duplicate"`
+	EventId         int    `json:"event_id"`
+	Message         string `json:"message"`
+	ProviderEventId string `json:"provider_event_id"`
+}
+
 // ListAdminBrandsParams defines parameters for ListAdminBrands.
 type ListAdminBrandsParams struct {
 	Q *string `form:"q,omitempty" json:"q,omitempty"`
@@ -942,6 +1453,26 @@ type ListAdminOrdersParams struct {
 	Page  *int    `form:"page,omitempty" json:"page,omitempty"`
 	Limit *int    `form:"limit,omitempty" json:"limit,omitempty"`
 	Q     *string `form:"q,omitempty" json:"q,omitempty"`
+}
+
+// CaptureAdminOrderPaymentParams defines parameters for CaptureAdminOrderPayment.
+type CaptureAdminOrderPaymentParams struct {
+	IdempotencyKey string `json:"Idempotency-Key"`
+}
+
+// RefundAdminOrderPaymentParams defines parameters for RefundAdminOrderPayment.
+type RefundAdminOrderPaymentParams struct {
+	IdempotencyKey string `json:"Idempotency-Key"`
+}
+
+// VoidAdminOrderPaymentParams defines parameters for VoidAdminOrderPayment.
+type VoidAdminOrderPaymentParams struct {
+	IdempotencyKey string `json:"Idempotency-Key"`
+}
+
+// CreateAdminOrderShippingLabelParams defines parameters for CreateAdminOrderShippingLabel.
+type CreateAdminOrderShippingLabelParams struct {
+	IdempotencyKey string `json:"Idempotency-Key"`
 }
 
 // ListAdminProductsParams defines parameters for ListAdminProducts.
@@ -964,12 +1495,53 @@ type ListAdminProductsParamsSort string
 // ListAdminProductsParamsOrder defines parameters for ListAdminProducts.
 type ListAdminProductsParamsOrder string
 
+// ListAdminProviderCredentialsParams defines parameters for ListAdminProviderCredentials.
+type ListAdminProviderCredentialsParams struct {
+	ProviderType *ListAdminProviderCredentialsParamsProviderType `form:"provider_type,omitempty" json:"provider_type,omitempty"`
+}
+
+// ListAdminProviderCredentialsParamsProviderType defines parameters for ListAdminProviderCredentials.
+type ListAdminProviderCredentialsParamsProviderType string
+
+// ListAdminProviderReconciliationRunsParams defines parameters for ListAdminProviderReconciliationRuns.
+type ListAdminProviderReconciliationRunsParams struct {
+	ProviderType *ListAdminProviderReconciliationRunsParamsProviderType `form:"provider_type,omitempty" json:"provider_type,omitempty"`
+	ProviderId   *string                                                `form:"provider_id,omitempty" json:"provider_id,omitempty"`
+	Page         *int                                                   `form:"page,omitempty" json:"page,omitempty"`
+	Limit        *int                                                   `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ListAdminProviderReconciliationRunsParamsProviderType defines parameters for ListAdminProviderReconciliationRuns.
+type ListAdminProviderReconciliationRunsParamsProviderType string
+
+// ExportAdminTaxReportParams defines parameters for ExportAdminTaxReport.
+type ExportAdminTaxReportParams struct {
+	Provider  *string                           `form:"provider,omitempty" json:"provider,omitempty"`
+	StartDate *time.Time                        `form:"start_date,omitempty" json:"start_date,omitempty"`
+	EndDate   *time.Time                        `form:"end_date,omitempty" json:"end_date,omitempty"`
+	Format    *ExportAdminTaxReportParamsFormat `form:"format,omitempty" json:"format,omitempty"`
+}
+
+// ExportAdminTaxReportParamsFormat defines parameters for ExportAdminTaxReport.
+type ExportAdminTaxReportParamsFormat string
+
 // ListUsersParams defines parameters for ListUsers.
 type ListUsersParams struct {
 	Page  *int    `form:"page,omitempty" json:"page,omitempty"`
 	Limit *int    `form:"limit,omitempty" json:"limit,omitempty"`
 	Q     *string `form:"q,omitempty" json:"q,omitempty"`
 }
+
+// ListAdminWebhookEventsParams defines parameters for ListAdminWebhookEvents.
+type ListAdminWebhookEventsParams struct {
+	Provider *string                             `form:"provider,omitempty" json:"provider,omitempty"`
+	Status   *ListAdminWebhookEventsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+	Page     *int                                `form:"page,omitempty" json:"page,omitempty"`
+	Limit    *int                                `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ListAdminWebhookEventsParamsStatus defines parameters for ListAdminWebhookEvents.
+type ListAdminWebhookEventsParamsStatus string
 
 // OidcCallbackParams defines parameters for OidcCallback.
 type OidcCallbackParams struct {
@@ -993,6 +1565,16 @@ type CreateCheckoutOrderParams struct {
 
 // AuthorizeCheckoutOrderPaymentParams defines parameters for AuthorizeCheckoutOrderPayment.
 type AuthorizeCheckoutOrderPaymentParams struct {
+	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
+}
+
+// QuoteCheckoutOrderShippingRatesParams defines parameters for QuoteCheckoutOrderShippingRates.
+type QuoteCheckoutOrderShippingRatesParams struct {
+	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
+}
+
+// FinalizeCheckoutOrderTaxParams defines parameters for FinalizeCheckoutOrderTax.
+type FinalizeCheckoutOrderTaxParams struct {
 	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
 }
 
@@ -1040,6 +1622,9 @@ type ListProductsParamsSort string
 // ListProductsParamsOrder defines parameters for ListProducts.
 type ListProductsParamsOrder string
 
+// ReceiveWebhookEventJSONBody defines parameters for ReceiveWebhookEvent.
+type ReceiveWebhookEventJSONBody map[string]interface{}
+
 // CreateAdminBrandJSONRequestBody defines body for CreateAdminBrand for application/json ContentType.
 type CreateAdminBrandJSONRequestBody = BrandInput
 
@@ -1048,6 +1633,15 @@ type UpdateAdminBrandJSONRequestBody = BrandInput
 
 // UpdateAdminCheckoutPluginJSONRequestBody defines body for UpdateAdminCheckoutPlugin for application/json ContentType.
 type UpdateAdminCheckoutPluginJSONRequestBody = UpdateCheckoutPluginRequest
+
+// CaptureAdminOrderPaymentJSONRequestBody defines body for CaptureAdminOrderPayment for application/json ContentType.
+type CaptureAdminOrderPaymentJSONRequestBody = AdminOrderPaymentAmountRequest
+
+// RefundAdminOrderPaymentJSONRequestBody defines body for RefundAdminOrderPayment for application/json ContentType.
+type RefundAdminOrderPaymentJSONRequestBody = AdminOrderPaymentAmountRequest
+
+// CreateAdminOrderShippingLabelJSONRequestBody defines body for CreateAdminOrderShippingLabel for application/json ContentType.
+type CreateAdminOrderShippingLabelJSONRequestBody = AdminOrderShippingLabelRequest
 
 // UpdateOrderStatusJSONRequestBody defines body for UpdateOrderStatus for application/json ContentType.
 type UpdateOrderStatusJSONRequestBody = UpdateOrderStatusRequest
@@ -1073,6 +1667,12 @@ type UpdateProductMediaOrderJSONRequestBody = MediaIDsRequest
 // UpdateProductRelatedJSONRequestBody defines body for UpdateProductRelated for application/json ContentType.
 type UpdateProductRelatedJSONRequestBody = UpdateRelatedRequest
 
+// UpsertAdminProviderCredentialJSONRequestBody defines body for UpsertAdminProviderCredential for application/json ContentType.
+type UpsertAdminProviderCredentialJSONRequestBody = ProviderCredentialRequest
+
+// CreateAdminProviderReconciliationRunJSONRequestBody defines body for CreateAdminProviderReconciliationRun for application/json ContentType.
+type CreateAdminProviderReconciliationRunJSONRequestBody = ProviderReconciliationRunRequest
+
 // UpdateStorefrontSettingsJSONRequestBody defines body for UpdateStorefrontSettings for application/json ContentType.
 type UpdateStorefrontSettingsJSONRequestBody = StorefrontSettingsRequest
 
@@ -1095,7 +1695,13 @@ type UpdateCheckoutCartItemJSONRequestBody = UpdateCartItemRequest
 type CreateCheckoutOrderJSONRequestBody = CreateCheckoutOrderRequest
 
 // AuthorizeCheckoutOrderPaymentJSONRequestBody defines body for AuthorizeCheckoutOrderPayment for application/json ContentType.
-type AuthorizeCheckoutOrderPaymentJSONRequestBody = ProcessPaymentRequest
+type AuthorizeCheckoutOrderPaymentJSONRequestBody = AuthorizeCheckoutOrderPaymentRequest
+
+// QuoteCheckoutOrderShippingRatesJSONRequestBody defines body for QuoteCheckoutOrderShippingRates for application/json ContentType.
+type QuoteCheckoutOrderShippingRatesJSONRequestBody = CheckoutOrderShippingRatesRequest
+
+// FinalizeCheckoutOrderTaxJSONRequestBody defines body for FinalizeCheckoutOrderTax for application/json ContentType.
+type FinalizeCheckoutOrderTaxJSONRequestBody = CheckoutOrderTaxFinalizeRequest
 
 // QuoteCheckoutSessionJSONRequestBody defines body for QuoteCheckoutSession for application/json ContentType.
 type QuoteCheckoutSessionJSONRequestBody = CheckoutQuoteRequest
@@ -1121,14 +1727,14 @@ type CreateOrderJSONRequestBody = CreateOrderRequest
 // ClaimGuestOrderJSONRequestBody defines body for ClaimGuestOrder for application/json ContentType.
 type ClaimGuestOrderJSONRequestBody = ClaimGuestOrderRequest
 
-// ProcessPaymentJSONRequestBody defines body for ProcessPayment for application/json ContentType.
-type ProcessPaymentJSONRequestBody = ProcessPaymentRequest
-
 // CreateSavedPaymentMethodJSONRequestBody defines body for CreateSavedPaymentMethod for application/json ContentType.
 type CreateSavedPaymentMethodJSONRequestBody = CreateSavedPaymentMethodRequest
 
 // SetProfilePhotoJSONRequestBody defines body for SetProfilePhoto for application/json ContentType.
 type SetProfilePhotoJSONRequestBody SetProfilePhotoJSONBody
+
+// ReceiveWebhookEventJSONRequestBody defines body for ReceiveWebhookEvent for application/json ContentType.
+type ReceiveWebhookEventJSONRequestBody ReceiveWebhookEventJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -1156,6 +1762,21 @@ type ServerInterface interface {
 
 	// (GET /api/v1/admin/orders/{id})
 	GetAdminOrder(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/orders/{id}/payments)
+	GetAdminOrderPayments(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/orders/{id}/payments/{intentId}/capture)
+	CaptureAdminOrderPayment(c *gin.Context, id int, intentId int, params CaptureAdminOrderPaymentParams)
+
+	// (POST /api/v1/admin/orders/{id}/payments/{intentId}/refund)
+	RefundAdminOrderPayment(c *gin.Context, id int, intentId int, params RefundAdminOrderPaymentParams)
+
+	// (POST /api/v1/admin/orders/{id}/payments/{intentId}/void)
+	VoidAdminOrderPayment(c *gin.Context, id int, intentId int, params VoidAdminOrderPaymentParams)
+
+	// (POST /api/v1/admin/orders/{id}/shipping/labels)
+	CreateAdminOrderShippingLabel(c *gin.Context, id int, params CreateAdminOrderShippingLabelParams)
 
 	// (PATCH /api/v1/admin/orders/{id}/status)
 	UpdateOrderStatus(c *gin.Context, id int)
@@ -1217,6 +1838,27 @@ type ServerInterface interface {
 	// (POST /api/v1/admin/products/{id}/unpublish)
 	UnpublishProduct(c *gin.Context, id int)
 
+	// (GET /api/v1/admin/providers/credentials)
+	ListAdminProviderCredentials(c *gin.Context, params ListAdminProviderCredentialsParams)
+
+	// (POST /api/v1/admin/providers/credentials)
+	UpsertAdminProviderCredential(c *gin.Context)
+
+	// (POST /api/v1/admin/providers/credentials/{id}/rotate)
+	RotateAdminProviderCredential(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/providers/overview)
+	GetAdminProviderOperationsOverview(c *gin.Context)
+
+	// (GET /api/v1/admin/providers/reconciliation/runs)
+	ListAdminProviderReconciliationRuns(c *gin.Context, params ListAdminProviderReconciliationRunsParams)
+
+	// (POST /api/v1/admin/providers/reconciliation/runs)
+	CreateAdminProviderReconciliationRun(c *gin.Context)
+
+	// (GET /api/v1/admin/providers/reconciliation/runs/{id})
+	GetAdminProviderReconciliationRun(c *gin.Context, id int)
+
 	// (GET /api/v1/admin/storefront)
 	GetAdminStorefrontSettings(c *gin.Context)
 
@@ -1229,11 +1871,17 @@ type ServerInterface interface {
 	// (POST /api/v1/admin/storefront/publish)
 	PublishStorefrontSettings(c *gin.Context)
 
+	// (GET /api/v1/admin/tax/reports/export)
+	ExportAdminTaxReport(c *gin.Context, params ExportAdminTaxReportParams)
+
 	// (GET /api/v1/admin/users)
 	ListUsers(c *gin.Context, params ListUsersParams)
 
 	// (PATCH /api/v1/admin/users/{id}/role)
 	UpdateUserRole(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/webhooks/events)
+	ListAdminWebhookEvents(c *gin.Context, params ListAdminWebhookEventsParams)
 
 	// (POST /api/v1/auth/login)
 	Login(c *gin.Context)
@@ -1273,6 +1921,15 @@ type ServerInterface interface {
 
 	// (POST /api/v1/checkout/orders/{id}/payments/authorize)
 	AuthorizeCheckoutOrderPayment(c *gin.Context, id int, params AuthorizeCheckoutOrderPaymentParams)
+
+	// (POST /api/v1/checkout/orders/{id}/shipping/rates)
+	QuoteCheckoutOrderShippingRates(c *gin.Context, id int, params QuoteCheckoutOrderShippingRatesParams)
+
+	// (GET /api/v1/checkout/orders/{id}/shipping/tracking)
+	GetCheckoutOrderShippingTracking(c *gin.Context, id int)
+
+	// (POST /api/v1/checkout/orders/{id}/tax/finalize)
+	FinalizeCheckoutOrderTax(c *gin.Context, id int, params FinalizeCheckoutOrderTaxParams)
 
 	// (GET /api/v1/checkout/plugins)
 	ListCheckoutSessionPlugins(c *gin.Context)
@@ -1331,9 +1988,6 @@ type ServerInterface interface {
 	// (POST /api/v1/me/orders/{id}/cancel)
 	CancelUserOrder(c *gin.Context, id int)
 
-	// (POST /api/v1/me/orders/{id}/pay)
-	ProcessPayment(c *gin.Context, id int)
-
 	// (GET /api/v1/me/payment-methods)
 	ListSavedPaymentMethods(c *gin.Context)
 
@@ -1372,6 +2026,9 @@ type ServerInterface interface {
 
 	// (GET /api/v1/storefront)
 	GetStorefrontSettings(c *gin.Context)
+
+	// (POST /api/v1/webhooks/{provider})
+	ReceiveWebhookEvent(c *gin.Context, provider string)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -1612,6 +2269,281 @@ func (siw *ServerInterfaceWrapper) GetAdminOrder(c *gin.Context) {
 	}
 
 	siw.Handler.GetAdminOrder(c, id)
+}
+
+// GetAdminOrderPayments operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminOrderPayments(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminOrderPayments(c, id)
+}
+
+// CaptureAdminOrderPayment operation middleware
+func (siw *ServerInterfaceWrapper) CaptureAdminOrderPayment(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "intentId" -------------
+	var intentId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "intentId", c.Param("intentId"), &intentId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter intentId: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CaptureAdminOrderPaymentParams
+
+	headers := c.Request.Header
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Header parameter Idempotency-Key is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CaptureAdminOrderPayment(c, id, intentId, params)
+}
+
+// RefundAdminOrderPayment operation middleware
+func (siw *ServerInterfaceWrapper) RefundAdminOrderPayment(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "intentId" -------------
+	var intentId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "intentId", c.Param("intentId"), &intentId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter intentId: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RefundAdminOrderPaymentParams
+
+	headers := c.Request.Header
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Header parameter Idempotency-Key is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RefundAdminOrderPayment(c, id, intentId, params)
+}
+
+// VoidAdminOrderPayment operation middleware
+func (siw *ServerInterfaceWrapper) VoidAdminOrderPayment(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "intentId" -------------
+	var intentId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "intentId", c.Param("intentId"), &intentId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter intentId: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params VoidAdminOrderPaymentParams
+
+	headers := c.Request.Header
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Header parameter Idempotency-Key is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.VoidAdminOrderPayment(c, id, intentId, params)
+}
+
+// CreateAdminOrderShippingLabel operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminOrderShippingLabel(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CreateAdminOrderShippingLabelParams
+
+	headers := c.Request.Header
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Header parameter Idempotency-Key is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminOrderShippingLabel(c, id, params)
 }
 
 // UpdateOrderStatus operation middleware
@@ -2191,6 +3123,197 @@ func (siw *ServerInterfaceWrapper) UnpublishProduct(c *gin.Context) {
 	siw.Handler.UnpublishProduct(c, id)
 }
 
+// ListAdminProviderCredentials operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminProviderCredentials(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminProviderCredentialsParams
+
+	// ------------- Optional query parameter "provider_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "provider_type", c.Request.URL.Query(), &params.ProviderType)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter provider_type: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminProviderCredentials(c, params)
+}
+
+// UpsertAdminProviderCredential operation middleware
+func (siw *ServerInterfaceWrapper) UpsertAdminProviderCredential(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpsertAdminProviderCredential(c)
+}
+
+// RotateAdminProviderCredential operation middleware
+func (siw *ServerInterfaceWrapper) RotateAdminProviderCredential(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RotateAdminProviderCredential(c, id)
+}
+
+// GetAdminProviderOperationsOverview operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminProviderOperationsOverview(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminProviderOperationsOverview(c)
+}
+
+// ListAdminProviderReconciliationRuns operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminProviderReconciliationRuns(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminProviderReconciliationRunsParams
+
+	// ------------- Optional query parameter "provider_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "provider_type", c.Request.URL.Query(), &params.ProviderType)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter provider_type: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "provider_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "provider_id", c.Request.URL.Query(), &params.ProviderId)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter provider_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminProviderReconciliationRuns(c, params)
+}
+
+// CreateAdminProviderReconciliationRun operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminProviderReconciliationRun(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminProviderReconciliationRun(c)
+}
+
+// GetAdminProviderReconciliationRun operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminProviderReconciliationRun(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminProviderReconciliationRun(c, id)
+}
+
 // GetAdminStorefrontSettings operation middleware
 func (siw *ServerInterfaceWrapper) GetAdminStorefrontSettings(c *gin.Context) {
 
@@ -2257,6 +3380,60 @@ func (siw *ServerInterfaceWrapper) PublishStorefrontSettings(c *gin.Context) {
 	}
 
 	siw.Handler.PublishStorefrontSettings(c)
+}
+
+// ExportAdminTaxReport operation middleware
+func (siw *ServerInterfaceWrapper) ExportAdminTaxReport(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ExportAdminTaxReportParams
+
+	// ------------- Optional query parameter "provider" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "provider", c.Request.URL.Query(), &params.Provider)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter provider: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "start_date" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "start_date", c.Request.URL.Query(), &params.StartDate)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter start_date: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "end_date" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "end_date", c.Request.URL.Query(), &params.EndDate)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter end_date: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "format" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "format", c.Request.URL.Query(), &params.Format)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter format: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ExportAdminTaxReport(c, params)
 }
 
 // ListUsers operation middleware
@@ -2331,6 +3508,60 @@ func (siw *ServerInterfaceWrapper) UpdateUserRole(c *gin.Context) {
 	}
 
 	siw.Handler.UpdateUserRole(c, id)
+}
+
+// ListAdminWebhookEvents operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminWebhookEvents(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminWebhookEventsParams
+
+	// ------------- Optional query parameter "provider" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "provider", c.Request.URL.Query(), &params.Provider)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter provider: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "status", c.Request.URL.Query(), &params.Status)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter status: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminWebhookEvents(c, params)
 }
 
 // Login operation middleware
@@ -2653,6 +3884,138 @@ func (siw *ServerInterfaceWrapper) AuthorizeCheckoutOrderPayment(c *gin.Context)
 	}
 
 	siw.Handler.AuthorizeCheckoutOrderPayment(c, id, params)
+}
+
+// QuoteCheckoutOrderShippingRates operation middleware
+func (siw *ServerInterfaceWrapper) QuoteCheckoutOrderShippingRates(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params QuoteCheckoutOrderShippingRatesParams
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = &IdempotencyKey
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.QuoteCheckoutOrderShippingRates(c, id, params)
+}
+
+// GetCheckoutOrderShippingTracking operation middleware
+func (siw *ServerInterfaceWrapper) GetCheckoutOrderShippingTracking(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetCheckoutOrderShippingTracking(c, id)
+}
+
+// FinalizeCheckoutOrderTax operation middleware
+func (siw *ServerInterfaceWrapper) FinalizeCheckoutOrderTax(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params FinalizeCheckoutOrderTaxParams
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for Idempotency-Key, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter Idempotency-Key: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IdempotencyKey = &IdempotencyKey
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.FinalizeCheckoutOrderTax(c, id, params)
 }
 
 // ListCheckoutSessionPlugins operation middleware
@@ -3089,34 +4452,6 @@ func (siw *ServerInterfaceWrapper) CancelUserOrder(c *gin.Context) {
 	siw.Handler.CancelUserOrder(c, id)
 }
 
-// ProcessPayment operation middleware
-func (siw *ServerInterfaceWrapper) ProcessPayment(c *gin.Context) {
-
-	var err error
-
-	// ------------- Path parameter "id" -------------
-	var id int
-
-	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
-	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
-		return
-	}
-
-	c.Set(CookieAuthScopes, []string{})
-
-	c.Set(BearerAuthScopes, []string{})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.ProcessPayment(c, id)
-}
-
 // ListSavedPaymentMethods operation middleware
 func (siw *ServerInterfaceWrapper) ListSavedPaymentMethods(c *gin.Context) {
 
@@ -3526,6 +4861,30 @@ func (siw *ServerInterfaceWrapper) GetStorefrontSettings(c *gin.Context) {
 	siw.Handler.GetStorefrontSettings(c)
 }
 
+// ReceiveWebhookEvent operation middleware
+func (siw *ServerInterfaceWrapper) ReceiveWebhookEvent(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "provider" -------------
+	var provider string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "provider", c.Param("provider"), &provider, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter provider: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ReceiveWebhookEvent(c, provider)
+}
+
 // GinServerOptions provides options for the Gin server.
 type GinServerOptions struct {
 	BaseURL      string
@@ -3561,6 +4920,11 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.PATCH(options.BaseURL+"/api/v1/admin/checkout/plugins/:type/:id", wrapper.UpdateAdminCheckoutPlugin)
 	router.GET(options.BaseURL+"/api/v1/admin/orders", wrapper.ListAdminOrders)
 	router.GET(options.BaseURL+"/api/v1/admin/orders/:id", wrapper.GetAdminOrder)
+	router.GET(options.BaseURL+"/api/v1/admin/orders/:id/payments", wrapper.GetAdminOrderPayments)
+	router.POST(options.BaseURL+"/api/v1/admin/orders/:id/payments/:intentId/capture", wrapper.CaptureAdminOrderPayment)
+	router.POST(options.BaseURL+"/api/v1/admin/orders/:id/payments/:intentId/refund", wrapper.RefundAdminOrderPayment)
+	router.POST(options.BaseURL+"/api/v1/admin/orders/:id/payments/:intentId/void", wrapper.VoidAdminOrderPayment)
+	router.POST(options.BaseURL+"/api/v1/admin/orders/:id/shipping/labels", wrapper.CreateAdminOrderShippingLabel)
 	router.PATCH(options.BaseURL+"/api/v1/admin/orders/:id/status", wrapper.UpdateOrderStatus)
 	router.GET(options.BaseURL+"/api/v1/admin/preview", wrapper.GetAdminPreview)
 	router.POST(options.BaseURL+"/api/v1/admin/preview/start", wrapper.StartAdminPreview)
@@ -3581,12 +4945,21 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/api/v1/admin/products/:id/publish", wrapper.PublishProduct)
 	router.PATCH(options.BaseURL+"/api/v1/admin/products/:id/related", wrapper.UpdateProductRelated)
 	router.POST(options.BaseURL+"/api/v1/admin/products/:id/unpublish", wrapper.UnpublishProduct)
+	router.GET(options.BaseURL+"/api/v1/admin/providers/credentials", wrapper.ListAdminProviderCredentials)
+	router.POST(options.BaseURL+"/api/v1/admin/providers/credentials", wrapper.UpsertAdminProviderCredential)
+	router.POST(options.BaseURL+"/api/v1/admin/providers/credentials/:id/rotate", wrapper.RotateAdminProviderCredential)
+	router.GET(options.BaseURL+"/api/v1/admin/providers/overview", wrapper.GetAdminProviderOperationsOverview)
+	router.GET(options.BaseURL+"/api/v1/admin/providers/reconciliation/runs", wrapper.ListAdminProviderReconciliationRuns)
+	router.POST(options.BaseURL+"/api/v1/admin/providers/reconciliation/runs", wrapper.CreateAdminProviderReconciliationRun)
+	router.GET(options.BaseURL+"/api/v1/admin/providers/reconciliation/runs/:id", wrapper.GetAdminProviderReconciliationRun)
 	router.GET(options.BaseURL+"/api/v1/admin/storefront", wrapper.GetAdminStorefrontSettings)
 	router.PUT(options.BaseURL+"/api/v1/admin/storefront", wrapper.UpdateStorefrontSettings)
 	router.DELETE(options.BaseURL+"/api/v1/admin/storefront/draft", wrapper.DiscardStorefrontDraft)
 	router.POST(options.BaseURL+"/api/v1/admin/storefront/publish", wrapper.PublishStorefrontSettings)
+	router.GET(options.BaseURL+"/api/v1/admin/tax/reports/export", wrapper.ExportAdminTaxReport)
 	router.GET(options.BaseURL+"/api/v1/admin/users", wrapper.ListUsers)
 	router.PATCH(options.BaseURL+"/api/v1/admin/users/:id/role", wrapper.UpdateUserRole)
+	router.GET(options.BaseURL+"/api/v1/admin/webhooks/events", wrapper.ListAdminWebhookEvents)
 	router.POST(options.BaseURL+"/api/v1/auth/login", wrapper.Login)
 	router.POST(options.BaseURL+"/api/v1/auth/logout", wrapper.Logout)
 	router.GET(options.BaseURL+"/api/v1/auth/oidc/callback", wrapper.OidcCallback)
@@ -3600,6 +4973,9 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/api/v1/checkout/cart/summary", wrapper.GetCheckoutCartSummary)
 	router.POST(options.BaseURL+"/api/v1/checkout/orders", wrapper.CreateCheckoutOrder)
 	router.POST(options.BaseURL+"/api/v1/checkout/orders/:id/payments/authorize", wrapper.AuthorizeCheckoutOrderPayment)
+	router.POST(options.BaseURL+"/api/v1/checkout/orders/:id/shipping/rates", wrapper.QuoteCheckoutOrderShippingRates)
+	router.GET(options.BaseURL+"/api/v1/checkout/orders/:id/shipping/tracking", wrapper.GetCheckoutOrderShippingTracking)
+	router.POST(options.BaseURL+"/api/v1/checkout/orders/:id/tax/finalize", wrapper.FinalizeCheckoutOrderTax)
 	router.GET(options.BaseURL+"/api/v1/checkout/plugins", wrapper.ListCheckoutSessionPlugins)
 	router.POST(options.BaseURL+"/api/v1/checkout/quote", wrapper.QuoteCheckoutSession)
 	router.GET(options.BaseURL+"/api/v1/me/", wrapper.GetProfile)
@@ -3619,7 +4995,6 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/api/v1/me/orders/claim", wrapper.ClaimGuestOrder)
 	router.GET(options.BaseURL+"/api/v1/me/orders/:id", wrapper.GetUserOrder)
 	router.POST(options.BaseURL+"/api/v1/me/orders/:id/cancel", wrapper.CancelUserOrder)
-	router.POST(options.BaseURL+"/api/v1/me/orders/:id/pay", wrapper.ProcessPayment)
 	router.GET(options.BaseURL+"/api/v1/me/payment-methods", wrapper.ListSavedPaymentMethods)
 	router.POST(options.BaseURL+"/api/v1/me/payment-methods", wrapper.CreateSavedPaymentMethod)
 	router.DELETE(options.BaseURL+"/api/v1/me/payment-methods/:id", wrapper.DeleteSavedPaymentMethod)
@@ -3633,6 +5008,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/api/v1/products", wrapper.ListProducts)
 	router.GET(options.BaseURL+"/api/v1/products/:id", wrapper.GetProduct)
 	router.GET(options.BaseURL+"/api/v1/storefront", wrapper.GetStorefrontSettings)
+	router.POST(options.BaseURL+"/api/v1/webhooks/:provider", wrapper.ReceiveWebhookEvent)
 }
 
 type ListAdminBrandsRequestObject struct {
@@ -3778,6 +5154,218 @@ type GetAdminOrder200JSONResponse Order
 func (response GetAdminOrder200JSONResponse) VisitGetAdminOrderResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminOrderPaymentsRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetAdminOrderPaymentsResponseObject interface {
+	VisitGetAdminOrderPaymentsResponse(w http.ResponseWriter) error
+}
+
+type GetAdminOrderPayments200JSONResponse OrderPaymentLedger
+
+func (response GetAdminOrderPayments200JSONResponse) VisitGetAdminOrderPaymentsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminOrderPayments404JSONResponse Error
+
+func (response GetAdminOrderPayments404JSONResponse) VisitGetAdminOrderPaymentsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CaptureAdminOrderPaymentRequestObject struct {
+	Id       int `json:"id"`
+	IntentId int `json:"intentId"`
+	Params   CaptureAdminOrderPaymentParams
+	Body     *CaptureAdminOrderPaymentJSONRequestBody
+}
+
+type CaptureAdminOrderPaymentResponseObject interface {
+	VisitCaptureAdminOrderPaymentResponse(w http.ResponseWriter) error
+}
+
+type CaptureAdminOrderPayment200JSONResponse AdminOrderPaymentLifecycleResponse
+
+func (response CaptureAdminOrderPayment200JSONResponse) VisitCaptureAdminOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CaptureAdminOrderPayment400JSONResponse Error
+
+func (response CaptureAdminOrderPayment400JSONResponse) VisitCaptureAdminOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CaptureAdminOrderPayment404JSONResponse Error
+
+func (response CaptureAdminOrderPayment404JSONResponse) VisitCaptureAdminOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CaptureAdminOrderPayment409JSONResponse Error
+
+func (response CaptureAdminOrderPayment409JSONResponse) VisitCaptureAdminOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RefundAdminOrderPaymentRequestObject struct {
+	Id       int `json:"id"`
+	IntentId int `json:"intentId"`
+	Params   RefundAdminOrderPaymentParams
+	Body     *RefundAdminOrderPaymentJSONRequestBody
+}
+
+type RefundAdminOrderPaymentResponseObject interface {
+	VisitRefundAdminOrderPaymentResponse(w http.ResponseWriter) error
+}
+
+type RefundAdminOrderPayment200JSONResponse AdminOrderPaymentLifecycleResponse
+
+func (response RefundAdminOrderPayment200JSONResponse) VisitRefundAdminOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RefundAdminOrderPayment400JSONResponse Error
+
+func (response RefundAdminOrderPayment400JSONResponse) VisitRefundAdminOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RefundAdminOrderPayment404JSONResponse Error
+
+func (response RefundAdminOrderPayment404JSONResponse) VisitRefundAdminOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RefundAdminOrderPayment409JSONResponse Error
+
+func (response RefundAdminOrderPayment409JSONResponse) VisitRefundAdminOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type VoidAdminOrderPaymentRequestObject struct {
+	Id       int `json:"id"`
+	IntentId int `json:"intentId"`
+	Params   VoidAdminOrderPaymentParams
+}
+
+type VoidAdminOrderPaymentResponseObject interface {
+	VisitVoidAdminOrderPaymentResponse(w http.ResponseWriter) error
+}
+
+type VoidAdminOrderPayment200JSONResponse AdminOrderPaymentLifecycleResponse
+
+func (response VoidAdminOrderPayment200JSONResponse) VisitVoidAdminOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type VoidAdminOrderPayment400JSONResponse Error
+
+func (response VoidAdminOrderPayment400JSONResponse) VisitVoidAdminOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type VoidAdminOrderPayment404JSONResponse Error
+
+func (response VoidAdminOrderPayment404JSONResponse) VisitVoidAdminOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type VoidAdminOrderPayment409JSONResponse Error
+
+func (response VoidAdminOrderPayment409JSONResponse) VisitVoidAdminOrderPaymentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminOrderShippingLabelRequestObject struct {
+	Id     int `json:"id"`
+	Params CreateAdminOrderShippingLabelParams
+	Body   *CreateAdminOrderShippingLabelJSONRequestBody
+}
+
+type CreateAdminOrderShippingLabelResponseObject interface {
+	VisitCreateAdminOrderShippingLabelResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminOrderShippingLabel200JSONResponse AdminOrderShippingLabelResponse
+
+func (response CreateAdminOrderShippingLabel200JSONResponse) VisitCreateAdminOrderShippingLabelResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminOrderShippingLabel400JSONResponse Error
+
+func (response CreateAdminOrderShippingLabel400JSONResponse) VisitCreateAdminOrderShippingLabelResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminOrderShippingLabel404JSONResponse Error
+
+func (response CreateAdminOrderShippingLabel404JSONResponse) VisitCreateAdminOrderShippingLabelResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminOrderShippingLabel409JSONResponse Error
+
+func (response CreateAdminOrderShippingLabel409JSONResponse) VisitCreateAdminOrderShippingLabelResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -4161,6 +5749,178 @@ func (response UnpublishProduct404JSONResponse) VisitUnpublishProductResponse(w 
 	return json.NewEncoder(w).Encode(response)
 }
 
+type ListAdminProviderCredentialsRequestObject struct {
+	Params ListAdminProviderCredentialsParams
+}
+
+type ListAdminProviderCredentialsResponseObject interface {
+	VisitListAdminProviderCredentialsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminProviderCredentials200JSONResponse ProviderCredentialListResponse
+
+func (response ListAdminProviderCredentials200JSONResponse) VisitListAdminProviderCredentialsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpsertAdminProviderCredentialRequestObject struct {
+	Body *UpsertAdminProviderCredentialJSONRequestBody
+}
+
+type UpsertAdminProviderCredentialResponseObject interface {
+	VisitUpsertAdminProviderCredentialResponse(w http.ResponseWriter) error
+}
+
+type UpsertAdminProviderCredential200JSONResponse ProviderCredentialEnvelope
+
+func (response UpsertAdminProviderCredential200JSONResponse) VisitUpsertAdminProviderCredentialResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpsertAdminProviderCredential400JSONResponse Error
+
+func (response UpsertAdminProviderCredential400JSONResponse) VisitUpsertAdminProviderCredentialResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpsertAdminProviderCredential412JSONResponse Error
+
+func (response UpsertAdminProviderCredential412JSONResponse) VisitUpsertAdminProviderCredentialResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(412)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RotateAdminProviderCredentialRequestObject struct {
+	Id int `json:"id"`
+}
+
+type RotateAdminProviderCredentialResponseObject interface {
+	VisitRotateAdminProviderCredentialResponse(w http.ResponseWriter) error
+}
+
+type RotateAdminProviderCredential200JSONResponse ProviderCredentialEnvelope
+
+func (response RotateAdminProviderCredential200JSONResponse) VisitRotateAdminProviderCredentialResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RotateAdminProviderCredential404JSONResponse Error
+
+func (response RotateAdminProviderCredential404JSONResponse) VisitRotateAdminProviderCredentialResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RotateAdminProviderCredential412JSONResponse Error
+
+func (response RotateAdminProviderCredential412JSONResponse) VisitRotateAdminProviderCredentialResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(412)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminProviderOperationsOverviewRequestObject struct {
+}
+
+type GetAdminProviderOperationsOverviewResponseObject interface {
+	VisitGetAdminProviderOperationsOverviewResponse(w http.ResponseWriter) error
+}
+
+type GetAdminProviderOperationsOverview200JSONResponse ProviderOperationsOverview
+
+func (response GetAdminProviderOperationsOverview200JSONResponse) VisitGetAdminProviderOperationsOverviewResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminProviderReconciliationRunsRequestObject struct {
+	Params ListAdminProviderReconciliationRunsParams
+}
+
+type ListAdminProviderReconciliationRunsResponseObject interface {
+	VisitListAdminProviderReconciliationRunsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminProviderReconciliationRuns200JSONResponse ProviderReconciliationRunPage
+
+func (response ListAdminProviderReconciliationRuns200JSONResponse) VisitListAdminProviderReconciliationRunsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminProviderReconciliationRunRequestObject struct {
+	Body *CreateAdminProviderReconciliationRunJSONRequestBody
+}
+
+type CreateAdminProviderReconciliationRunResponseObject interface {
+	VisitCreateAdminProviderReconciliationRunResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminProviderReconciliationRun201JSONResponse ProviderReconciliationRunEnvelope
+
+func (response CreateAdminProviderReconciliationRun201JSONResponse) VisitCreateAdminProviderReconciliationRunResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminProviderReconciliationRun400JSONResponse Error
+
+func (response CreateAdminProviderReconciliationRun400JSONResponse) VisitCreateAdminProviderReconciliationRunResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminProviderReconciliationRunRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetAdminProviderReconciliationRunResponseObject interface {
+	VisitGetAdminProviderReconciliationRunResponse(w http.ResponseWriter) error
+}
+
+type GetAdminProviderReconciliationRun200JSONResponse ProviderReconciliationRunEnvelope
+
+func (response GetAdminProviderReconciliationRun200JSONResponse) VisitGetAdminProviderReconciliationRunResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminProviderReconciliationRun404JSONResponse Error
+
+func (response GetAdminProviderReconciliationRun404JSONResponse) VisitGetAdminProviderReconciliationRunResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetAdminStorefrontSettingsRequestObject struct {
 }
 
@@ -4253,6 +6013,33 @@ func (response PublishStorefrontSettings400JSONResponse) VisitPublishStorefrontS
 	return json.NewEncoder(w).Encode(response)
 }
 
+type ExportAdminTaxReportRequestObject struct {
+	Params ExportAdminTaxReportParams
+}
+
+type ExportAdminTaxReportResponseObject interface {
+	VisitExportAdminTaxReportResponse(w http.ResponseWriter) error
+}
+
+type ExportAdminTaxReport200TextcsvResponse struct {
+	Body          io.Reader
+	ContentLength int64
+}
+
+func (response ExportAdminTaxReport200TextcsvResponse) VisitExportAdminTaxReportResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/csv")
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
 type ListUsersRequestObject struct {
 	Params ListUsersParams
 }
@@ -4282,6 +6069,23 @@ type UpdateUserRoleResponseObject interface {
 type UpdateUserRole200JSONResponse User
 
 func (response UpdateUserRole200JSONResponse) VisitUpdateUserRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminWebhookEventsRequestObject struct {
+	Params ListAdminWebhookEventsParams
+}
+
+type ListAdminWebhookEventsResponseObject interface {
+	VisitListAdminWebhookEventsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminWebhookEvents200JSONResponse WebhookEventPage
+
+func (response ListAdminWebhookEvents200JSONResponse) VisitListAdminWebhookEventsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
@@ -4692,6 +6496,124 @@ type AuthorizeCheckoutOrderPayment429JSONResponse Error
 func (response AuthorizeCheckoutOrderPayment429JSONResponse) VisitAuthorizeCheckoutOrderPaymentResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(429)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type QuoteCheckoutOrderShippingRatesRequestObject struct {
+	Id     int `json:"id"`
+	Params QuoteCheckoutOrderShippingRatesParams
+	Body   *QuoteCheckoutOrderShippingRatesJSONRequestBody
+}
+
+type QuoteCheckoutOrderShippingRatesResponseObject interface {
+	VisitQuoteCheckoutOrderShippingRatesResponse(w http.ResponseWriter) error
+}
+
+type QuoteCheckoutOrderShippingRates200JSONResponse CheckoutOrderShippingRatesResponse
+
+func (response QuoteCheckoutOrderShippingRates200JSONResponse) VisitQuoteCheckoutOrderShippingRatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type QuoteCheckoutOrderShippingRates400JSONResponse Error
+
+func (response QuoteCheckoutOrderShippingRates400JSONResponse) VisitQuoteCheckoutOrderShippingRatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type QuoteCheckoutOrderShippingRates404JSONResponse Error
+
+func (response QuoteCheckoutOrderShippingRates404JSONResponse) VisitQuoteCheckoutOrderShippingRatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type QuoteCheckoutOrderShippingRates409JSONResponse Error
+
+func (response QuoteCheckoutOrderShippingRates409JSONResponse) VisitQuoteCheckoutOrderShippingRatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetCheckoutOrderShippingTrackingRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetCheckoutOrderShippingTrackingResponseObject interface {
+	VisitGetCheckoutOrderShippingTrackingResponse(w http.ResponseWriter) error
+}
+
+type GetCheckoutOrderShippingTracking200JSONResponse CheckoutOrderTrackingResponse
+
+func (response GetCheckoutOrderShippingTracking200JSONResponse) VisitGetCheckoutOrderShippingTrackingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetCheckoutOrderShippingTracking404JSONResponse Error
+
+func (response GetCheckoutOrderShippingTracking404JSONResponse) VisitGetCheckoutOrderShippingTrackingResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type FinalizeCheckoutOrderTaxRequestObject struct {
+	Id     int `json:"id"`
+	Params FinalizeCheckoutOrderTaxParams
+	Body   *FinalizeCheckoutOrderTaxJSONRequestBody
+}
+
+type FinalizeCheckoutOrderTaxResponseObject interface {
+	VisitFinalizeCheckoutOrderTaxResponse(w http.ResponseWriter) error
+}
+
+type FinalizeCheckoutOrderTax200JSONResponse CheckoutOrderTaxFinalizeResponse
+
+func (response FinalizeCheckoutOrderTax200JSONResponse) VisitFinalizeCheckoutOrderTaxResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type FinalizeCheckoutOrderTax400JSONResponse Error
+
+func (response FinalizeCheckoutOrderTax400JSONResponse) VisitFinalizeCheckoutOrderTaxResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type FinalizeCheckoutOrderTax404JSONResponse Error
+
+func (response FinalizeCheckoutOrderTax404JSONResponse) VisitFinalizeCheckoutOrderTaxResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type FinalizeCheckoutOrderTax409JSONResponse Error
+
+func (response FinalizeCheckoutOrderTax409JSONResponse) VisitFinalizeCheckoutOrderTaxResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -5141,33 +7063,6 @@ func (response CancelUserOrder404JSONResponse) VisitCancelUserOrderResponse(w ht
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ProcessPaymentRequestObject struct {
-	Id   int `json:"id"`
-	Body *ProcessPaymentJSONRequestBody
-}
-
-type ProcessPaymentResponseObject interface {
-	VisitProcessPaymentResponse(w http.ResponseWriter) error
-}
-
-type ProcessPayment200JSONResponse ProcessPaymentResponse
-
-func (response ProcessPayment200JSONResponse) VisitProcessPaymentResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type ProcessPayment400JSONResponse Error
-
-func (response ProcessPayment400JSONResponse) VisitProcessPaymentResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
 type ListSavedPaymentMethodsRequestObject struct {
 }
 
@@ -5462,6 +7357,42 @@ func (response GetStorefrontSettings500JSONResponse) VisitGetStorefrontSettingsR
 	return json.NewEncoder(w).Encode(response)
 }
 
+type ReceiveWebhookEventRequestObject struct {
+	Provider string `json:"provider"`
+	Body     *ReceiveWebhookEventJSONRequestBody
+}
+
+type ReceiveWebhookEventResponseObject interface {
+	VisitReceiveWebhookEventResponse(w http.ResponseWriter) error
+}
+
+type ReceiveWebhookEvent200JSONResponse WebhookIngestResponse
+
+func (response ReceiveWebhookEvent200JSONResponse) VisitReceiveWebhookEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReceiveWebhookEvent400JSONResponse Error
+
+func (response ReceiveWebhookEvent400JSONResponse) VisitReceiveWebhookEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReceiveWebhookEvent401JSONResponse Error
+
+func (response ReceiveWebhookEvent401JSONResponse) VisitReceiveWebhookEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
@@ -5488,6 +7419,21 @@ type StrictServerInterface interface {
 
 	// (GET /api/v1/admin/orders/{id})
 	GetAdminOrder(ctx context.Context, request GetAdminOrderRequestObject) (GetAdminOrderResponseObject, error)
+
+	// (GET /api/v1/admin/orders/{id}/payments)
+	GetAdminOrderPayments(ctx context.Context, request GetAdminOrderPaymentsRequestObject) (GetAdminOrderPaymentsResponseObject, error)
+
+	// (POST /api/v1/admin/orders/{id}/payments/{intentId}/capture)
+	CaptureAdminOrderPayment(ctx context.Context, request CaptureAdminOrderPaymentRequestObject) (CaptureAdminOrderPaymentResponseObject, error)
+
+	// (POST /api/v1/admin/orders/{id}/payments/{intentId}/refund)
+	RefundAdminOrderPayment(ctx context.Context, request RefundAdminOrderPaymentRequestObject) (RefundAdminOrderPaymentResponseObject, error)
+
+	// (POST /api/v1/admin/orders/{id}/payments/{intentId}/void)
+	VoidAdminOrderPayment(ctx context.Context, request VoidAdminOrderPaymentRequestObject) (VoidAdminOrderPaymentResponseObject, error)
+
+	// (POST /api/v1/admin/orders/{id}/shipping/labels)
+	CreateAdminOrderShippingLabel(ctx context.Context, request CreateAdminOrderShippingLabelRequestObject) (CreateAdminOrderShippingLabelResponseObject, error)
 
 	// (PATCH /api/v1/admin/orders/{id}/status)
 	UpdateOrderStatus(ctx context.Context, request UpdateOrderStatusRequestObject) (UpdateOrderStatusResponseObject, error)
@@ -5549,6 +7495,27 @@ type StrictServerInterface interface {
 	// (POST /api/v1/admin/products/{id}/unpublish)
 	UnpublishProduct(ctx context.Context, request UnpublishProductRequestObject) (UnpublishProductResponseObject, error)
 
+	// (GET /api/v1/admin/providers/credentials)
+	ListAdminProviderCredentials(ctx context.Context, request ListAdminProviderCredentialsRequestObject) (ListAdminProviderCredentialsResponseObject, error)
+
+	// (POST /api/v1/admin/providers/credentials)
+	UpsertAdminProviderCredential(ctx context.Context, request UpsertAdminProviderCredentialRequestObject) (UpsertAdminProviderCredentialResponseObject, error)
+
+	// (POST /api/v1/admin/providers/credentials/{id}/rotate)
+	RotateAdminProviderCredential(ctx context.Context, request RotateAdminProviderCredentialRequestObject) (RotateAdminProviderCredentialResponseObject, error)
+
+	// (GET /api/v1/admin/providers/overview)
+	GetAdminProviderOperationsOverview(ctx context.Context, request GetAdminProviderOperationsOverviewRequestObject) (GetAdminProviderOperationsOverviewResponseObject, error)
+
+	// (GET /api/v1/admin/providers/reconciliation/runs)
+	ListAdminProviderReconciliationRuns(ctx context.Context, request ListAdminProviderReconciliationRunsRequestObject) (ListAdminProviderReconciliationRunsResponseObject, error)
+
+	// (POST /api/v1/admin/providers/reconciliation/runs)
+	CreateAdminProviderReconciliationRun(ctx context.Context, request CreateAdminProviderReconciliationRunRequestObject) (CreateAdminProviderReconciliationRunResponseObject, error)
+
+	// (GET /api/v1/admin/providers/reconciliation/runs/{id})
+	GetAdminProviderReconciliationRun(ctx context.Context, request GetAdminProviderReconciliationRunRequestObject) (GetAdminProviderReconciliationRunResponseObject, error)
+
 	// (GET /api/v1/admin/storefront)
 	GetAdminStorefrontSettings(ctx context.Context, request GetAdminStorefrontSettingsRequestObject) (GetAdminStorefrontSettingsResponseObject, error)
 
@@ -5561,11 +7528,17 @@ type StrictServerInterface interface {
 	// (POST /api/v1/admin/storefront/publish)
 	PublishStorefrontSettings(ctx context.Context, request PublishStorefrontSettingsRequestObject) (PublishStorefrontSettingsResponseObject, error)
 
+	// (GET /api/v1/admin/tax/reports/export)
+	ExportAdminTaxReport(ctx context.Context, request ExportAdminTaxReportRequestObject) (ExportAdminTaxReportResponseObject, error)
+
 	// (GET /api/v1/admin/users)
 	ListUsers(ctx context.Context, request ListUsersRequestObject) (ListUsersResponseObject, error)
 
 	// (PATCH /api/v1/admin/users/{id}/role)
 	UpdateUserRole(ctx context.Context, request UpdateUserRoleRequestObject) (UpdateUserRoleResponseObject, error)
+
+	// (GET /api/v1/admin/webhooks/events)
+	ListAdminWebhookEvents(ctx context.Context, request ListAdminWebhookEventsRequestObject) (ListAdminWebhookEventsResponseObject, error)
 
 	// (POST /api/v1/auth/login)
 	Login(ctx context.Context, request LoginRequestObject) (LoginResponseObject, error)
@@ -5605,6 +7578,15 @@ type StrictServerInterface interface {
 
 	// (POST /api/v1/checkout/orders/{id}/payments/authorize)
 	AuthorizeCheckoutOrderPayment(ctx context.Context, request AuthorizeCheckoutOrderPaymentRequestObject) (AuthorizeCheckoutOrderPaymentResponseObject, error)
+
+	// (POST /api/v1/checkout/orders/{id}/shipping/rates)
+	QuoteCheckoutOrderShippingRates(ctx context.Context, request QuoteCheckoutOrderShippingRatesRequestObject) (QuoteCheckoutOrderShippingRatesResponseObject, error)
+
+	// (GET /api/v1/checkout/orders/{id}/shipping/tracking)
+	GetCheckoutOrderShippingTracking(ctx context.Context, request GetCheckoutOrderShippingTrackingRequestObject) (GetCheckoutOrderShippingTrackingResponseObject, error)
+
+	// (POST /api/v1/checkout/orders/{id}/tax/finalize)
+	FinalizeCheckoutOrderTax(ctx context.Context, request FinalizeCheckoutOrderTaxRequestObject) (FinalizeCheckoutOrderTaxResponseObject, error)
 
 	// (GET /api/v1/checkout/plugins)
 	ListCheckoutSessionPlugins(ctx context.Context, request ListCheckoutSessionPluginsRequestObject) (ListCheckoutSessionPluginsResponseObject, error)
@@ -5663,9 +7645,6 @@ type StrictServerInterface interface {
 	// (POST /api/v1/me/orders/{id}/cancel)
 	CancelUserOrder(ctx context.Context, request CancelUserOrderRequestObject) (CancelUserOrderResponseObject, error)
 
-	// (POST /api/v1/me/orders/{id}/pay)
-	ProcessPayment(ctx context.Context, request ProcessPaymentRequestObject) (ProcessPaymentResponseObject, error)
-
 	// (GET /api/v1/me/payment-methods)
 	ListSavedPaymentMethods(ctx context.Context, request ListSavedPaymentMethodsRequestObject) (ListSavedPaymentMethodsResponseObject, error)
 
@@ -5704,6 +7683,9 @@ type StrictServerInterface interface {
 
 	// (GET /api/v1/storefront)
 	GetStorefrontSettings(ctx context.Context, request GetStorefrontSettingsRequestObject) (GetStorefrontSettingsResponseObject, error)
+
+	// (POST /api/v1/webhooks/{provider})
+	ReceiveWebhookEvent(ctx context.Context, request ReceiveWebhookEventRequestObject) (ReceiveWebhookEventResponseObject, error)
 }
 
 type StrictHandlerFunc = strictgin.StrictGinHandlerFunc
@@ -5948,6 +7930,172 @@ func (sh *strictHandler) GetAdminOrder(ctx *gin.Context, id int) {
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(GetAdminOrderResponseObject); ok {
 		if err := validResponse.VisitGetAdminOrderResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminOrderPayments operation middleware
+func (sh *strictHandler) GetAdminOrderPayments(ctx *gin.Context, id int) {
+	var request GetAdminOrderPaymentsRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminOrderPayments(ctx, request.(GetAdminOrderPaymentsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminOrderPayments")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminOrderPaymentsResponseObject); ok {
+		if err := validResponse.VisitGetAdminOrderPaymentsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CaptureAdminOrderPayment operation middleware
+func (sh *strictHandler) CaptureAdminOrderPayment(ctx *gin.Context, id int, intentId int, params CaptureAdminOrderPaymentParams) {
+	var request CaptureAdminOrderPaymentRequestObject
+
+	request.Id = id
+	request.IntentId = intentId
+	request.Params = params
+
+	var body CaptureAdminOrderPaymentJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CaptureAdminOrderPayment(ctx, request.(CaptureAdminOrderPaymentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CaptureAdminOrderPayment")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CaptureAdminOrderPaymentResponseObject); ok {
+		if err := validResponse.VisitCaptureAdminOrderPaymentResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RefundAdminOrderPayment operation middleware
+func (sh *strictHandler) RefundAdminOrderPayment(ctx *gin.Context, id int, intentId int, params RefundAdminOrderPaymentParams) {
+	var request RefundAdminOrderPaymentRequestObject
+
+	request.Id = id
+	request.IntentId = intentId
+	request.Params = params
+
+	var body RefundAdminOrderPaymentJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RefundAdminOrderPayment(ctx, request.(RefundAdminOrderPaymentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RefundAdminOrderPayment")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(RefundAdminOrderPaymentResponseObject); ok {
+		if err := validResponse.VisitRefundAdminOrderPaymentResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// VoidAdminOrderPayment operation middleware
+func (sh *strictHandler) VoidAdminOrderPayment(ctx *gin.Context, id int, intentId int, params VoidAdminOrderPaymentParams) {
+	var request VoidAdminOrderPaymentRequestObject
+
+	request.Id = id
+	request.IntentId = intentId
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.VoidAdminOrderPayment(ctx, request.(VoidAdminOrderPaymentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "VoidAdminOrderPayment")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(VoidAdminOrderPaymentResponseObject); ok {
+		if err := validResponse.VisitVoidAdminOrderPaymentResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminOrderShippingLabel operation middleware
+func (sh *strictHandler) CreateAdminOrderShippingLabel(ctx *gin.Context, id int, params CreateAdminOrderShippingLabelParams) {
+	var request CreateAdminOrderShippingLabelRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	var body CreateAdminOrderShippingLabelJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminOrderShippingLabel(ctx, request.(CreateAdminOrderShippingLabelRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminOrderShippingLabel")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminOrderShippingLabelResponseObject); ok {
+		if err := validResponse.VisitCreateAdminOrderShippingLabelResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -6548,6 +8696,205 @@ func (sh *strictHandler) UnpublishProduct(ctx *gin.Context, id int) {
 	}
 }
 
+// ListAdminProviderCredentials operation middleware
+func (sh *strictHandler) ListAdminProviderCredentials(ctx *gin.Context, params ListAdminProviderCredentialsParams) {
+	var request ListAdminProviderCredentialsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminProviderCredentials(ctx, request.(ListAdminProviderCredentialsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminProviderCredentials")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminProviderCredentialsResponseObject); ok {
+		if err := validResponse.VisitListAdminProviderCredentialsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpsertAdminProviderCredential operation middleware
+func (sh *strictHandler) UpsertAdminProviderCredential(ctx *gin.Context) {
+	var request UpsertAdminProviderCredentialRequestObject
+
+	var body UpsertAdminProviderCredentialJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpsertAdminProviderCredential(ctx, request.(UpsertAdminProviderCredentialRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpsertAdminProviderCredential")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpsertAdminProviderCredentialResponseObject); ok {
+		if err := validResponse.VisitUpsertAdminProviderCredentialResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RotateAdminProviderCredential operation middleware
+func (sh *strictHandler) RotateAdminProviderCredential(ctx *gin.Context, id int) {
+	var request RotateAdminProviderCredentialRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RotateAdminProviderCredential(ctx, request.(RotateAdminProviderCredentialRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RotateAdminProviderCredential")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(RotateAdminProviderCredentialResponseObject); ok {
+		if err := validResponse.VisitRotateAdminProviderCredentialResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminProviderOperationsOverview operation middleware
+func (sh *strictHandler) GetAdminProviderOperationsOverview(ctx *gin.Context) {
+	var request GetAdminProviderOperationsOverviewRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminProviderOperationsOverview(ctx, request.(GetAdminProviderOperationsOverviewRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminProviderOperationsOverview")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminProviderOperationsOverviewResponseObject); ok {
+		if err := validResponse.VisitGetAdminProviderOperationsOverviewResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminProviderReconciliationRuns operation middleware
+func (sh *strictHandler) ListAdminProviderReconciliationRuns(ctx *gin.Context, params ListAdminProviderReconciliationRunsParams) {
+	var request ListAdminProviderReconciliationRunsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminProviderReconciliationRuns(ctx, request.(ListAdminProviderReconciliationRunsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminProviderReconciliationRuns")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminProviderReconciliationRunsResponseObject); ok {
+		if err := validResponse.VisitListAdminProviderReconciliationRunsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminProviderReconciliationRun operation middleware
+func (sh *strictHandler) CreateAdminProviderReconciliationRun(ctx *gin.Context) {
+	var request CreateAdminProviderReconciliationRunRequestObject
+
+	var body CreateAdminProviderReconciliationRunJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminProviderReconciliationRun(ctx, request.(CreateAdminProviderReconciliationRunRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminProviderReconciliationRun")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminProviderReconciliationRunResponseObject); ok {
+		if err := validResponse.VisitCreateAdminProviderReconciliationRunResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminProviderReconciliationRun operation middleware
+func (sh *strictHandler) GetAdminProviderReconciliationRun(ctx *gin.Context, id int) {
+	var request GetAdminProviderReconciliationRunRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminProviderReconciliationRun(ctx, request.(GetAdminProviderReconciliationRunRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminProviderReconciliationRun")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminProviderReconciliationRunResponseObject); ok {
+		if err := validResponse.VisitGetAdminProviderReconciliationRunResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // GetAdminStorefrontSettings operation middleware
 func (sh *strictHandler) GetAdminStorefrontSettings(ctx *gin.Context) {
 	var request GetAdminStorefrontSettingsRequestObject
@@ -6656,6 +9003,33 @@ func (sh *strictHandler) PublishStorefrontSettings(ctx *gin.Context) {
 	}
 }
 
+// ExportAdminTaxReport operation middleware
+func (sh *strictHandler) ExportAdminTaxReport(ctx *gin.Context, params ExportAdminTaxReportParams) {
+	var request ExportAdminTaxReportRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ExportAdminTaxReport(ctx, request.(ExportAdminTaxReportRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ExportAdminTaxReport")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ExportAdminTaxReportResponseObject); ok {
+		if err := validResponse.VisitExportAdminTaxReportResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListUsers operation middleware
 func (sh *strictHandler) ListUsers(ctx *gin.Context, params ListUsersParams) {
 	var request ListUsersRequestObject
@@ -6711,6 +9085,33 @@ func (sh *strictHandler) UpdateUserRole(ctx *gin.Context, id int) {
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(UpdateUserRoleResponseObject); ok {
 		if err := validResponse.VisitUpdateUserRoleResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminWebhookEvents operation middleware
+func (sh *strictHandler) ListAdminWebhookEvents(ctx *gin.Context, params ListAdminWebhookEventsParams) {
+	var request ListAdminWebhookEventsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminWebhookEvents(ctx, request.(ListAdminWebhookEventsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminWebhookEvents")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminWebhookEventsResponseObject); ok {
+		if err := validResponse.VisitListAdminWebhookEventsResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -7097,6 +9498,105 @@ func (sh *strictHandler) AuthorizeCheckoutOrderPayment(ctx *gin.Context, id int,
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(AuthorizeCheckoutOrderPaymentResponseObject); ok {
 		if err := validResponse.VisitAuthorizeCheckoutOrderPaymentResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// QuoteCheckoutOrderShippingRates operation middleware
+func (sh *strictHandler) QuoteCheckoutOrderShippingRates(ctx *gin.Context, id int, params QuoteCheckoutOrderShippingRatesParams) {
+	var request QuoteCheckoutOrderShippingRatesRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	var body QuoteCheckoutOrderShippingRatesJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.QuoteCheckoutOrderShippingRates(ctx, request.(QuoteCheckoutOrderShippingRatesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "QuoteCheckoutOrderShippingRates")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(QuoteCheckoutOrderShippingRatesResponseObject); ok {
+		if err := validResponse.VisitQuoteCheckoutOrderShippingRatesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetCheckoutOrderShippingTracking operation middleware
+func (sh *strictHandler) GetCheckoutOrderShippingTracking(ctx *gin.Context, id int) {
+	var request GetCheckoutOrderShippingTrackingRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetCheckoutOrderShippingTracking(ctx, request.(GetCheckoutOrderShippingTrackingRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetCheckoutOrderShippingTracking")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetCheckoutOrderShippingTrackingResponseObject); ok {
+		if err := validResponse.VisitGetCheckoutOrderShippingTrackingResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// FinalizeCheckoutOrderTax operation middleware
+func (sh *strictHandler) FinalizeCheckoutOrderTax(ctx *gin.Context, id int, params FinalizeCheckoutOrderTaxParams) {
+	var request FinalizeCheckoutOrderTaxRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	var body FinalizeCheckoutOrderTaxJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.FinalizeCheckoutOrderTax(ctx, request.(FinalizeCheckoutOrderTaxRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "FinalizeCheckoutOrderTax")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(FinalizeCheckoutOrderTaxResponseObject); ok {
+		if err := validResponse.VisitFinalizeCheckoutOrderTaxResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -7657,41 +10157,6 @@ func (sh *strictHandler) CancelUserOrder(ctx *gin.Context, id int) {
 	}
 }
 
-// ProcessPayment operation middleware
-func (sh *strictHandler) ProcessPayment(ctx *gin.Context, id int) {
-	var request ProcessPaymentRequestObject
-
-	request.Id = id
-
-	var body ProcessPaymentJSONRequestBody
-	if err := ctx.ShouldBindJSON(&body); err != nil {
-		ctx.Status(http.StatusBadRequest)
-		ctx.Error(err)
-		return
-	}
-	request.Body = &body
-
-	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.ProcessPayment(ctx, request.(ProcessPaymentRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "ProcessPayment")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		ctx.Error(err)
-		ctx.Status(http.StatusInternalServerError)
-	} else if validResponse, ok := response.(ProcessPaymentResponseObject); ok {
-		if err := validResponse.VisitProcessPaymentResponse(ctx.Writer); err != nil {
-			ctx.Error(err)
-		}
-	} else if response != nil {
-		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
 // ListSavedPaymentMethods operation middleware
 func (sh *strictHandler) ListSavedPaymentMethods(ctx *gin.Context) {
 	var request ListSavedPaymentMethodsRequestObject
@@ -8051,114 +10516,196 @@ func (sh *strictHandler) GetStorefrontSettings(ctx *gin.Context) {
 	}
 }
 
+// ReceiveWebhookEvent operation middleware
+func (sh *strictHandler) ReceiveWebhookEvent(ctx *gin.Context, provider string) {
+	var request ReceiveWebhookEventRequestObject
+
+	request.Provider = provider
+
+	var body ReceiveWebhookEventJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ReceiveWebhookEvent(ctx, request.(ReceiveWebhookEventRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ReceiveWebhookEvent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ReceiveWebhookEventResponseObject); ok {
+		if err := validResponse.VisitReceiveWebhookEventResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"g5LygyLS3z59++8AAAD//61fOFQcUQEA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

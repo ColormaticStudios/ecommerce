@@ -14,7 +14,7 @@
 	{#if title || meta || headerActions}
 		<div class="flex flex-wrap items-start justify-between gap-3">
 			{#if title}
-				<div>
+				<div class="min-w-0">
 					{#if title}
 						<h2 class="text-lg font-semibold text-stone-950 dark:text-stone-50">{title}</h2>
 					{/if}
@@ -22,7 +22,7 @@
 			{/if}
 
 			{#if meta || headerActions}
-				<div class="flex flex-wrap items-center gap-2">
+				<div class="flex max-w-full min-w-0 flex-wrap items-center gap-2">
 					{#if meta}
 						<span class="admin-page-meta mt-0">{meta}</span>
 					{/if}

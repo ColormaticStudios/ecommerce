@@ -30,9 +30,9 @@
 - Checkout baseline:
   - Use guest/customer contact data from canonical checkout/order records.
   - Do not create a parallel customer identity model for communications.
-- Providers (`roadmap/providers.md`):
-  - Reuse provider reliability patterns: idempotency, async processing, retry/backoff, dead-letter visibility.
-  - Keep communication provider interfaces separate from payment/shipping/tax interfaces, but follow similar adapter style.
+- Provider platform baseline:
+  - Reuse the established reliability patterns: idempotency, async processing, retry/backoff, dead-letter visibility.
+  - Keep communication provider interfaces separate from payment/shipping/tax interfaces, but follow the same adapter style.
 - Order fulfillment (`roadmap/order-fulfillment-ops.md`) and returns (`roadmap/returns-rma.md`):
   - Emit communications from domain events (order placed, shipped, delivery exception, return approved) instead of direct handler calls.
 

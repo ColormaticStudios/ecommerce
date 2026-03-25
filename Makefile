@@ -22,17 +22,17 @@ test:
 	@go test ./...
 
 test-services:
-	@GOCACHE=/tmp/go-build go test ./internal/services/...
+	go test ./internal/services/...
 
 test-handlers:
-	@GOCACHE=/tmp/go-build go test ./handlers
+	go test ./handlers
 
 test-integration:
-	@GOCACHE=/tmp/go-build go test ./handlers -run Integration
+	go test ./handlers -run Integration
 
 check: openapi-check
-	@GOCACHE=/tmp/go-build go test ./internal/services/...
-	@GOCACHE=/tmp/go-build go test ./handlers
+	go test ./internal/services/...
+	go test ./handlers
 
 # Apply database migrations
 migrate:
@@ -68,7 +68,7 @@ migrate-drift-check:
 
 # Migration-focused backend tests
 test-migrations:
-	@GOCACHE=/tmp/go-build go test ./internal/migrations/... ./cmd/migrate/... ./cmd/cli/commands/...
+	@go test ./internal/migrations/... ./cmd/migrate/... ./cmd/cli/commands/...
 
 # CI migration gate (tests + migrate check + replay + drift + forward-compat smoke)
 migrate-ci-gate:

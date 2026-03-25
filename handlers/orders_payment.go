@@ -8,14 +8,18 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"ecommerce/internal/checkoutplugins"
 	"ecommerce/internal/media"
 	checkoutservice "ecommerce/internal/services/checkout"
+	paymentservice "ecommerce/internal/services/payments"
+	providerops "ecommerce/internal/services/providerops"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func hasPluginCheckoutSelection(req ProcessPaymentRequest) bool {
@@ -227,19 +231,23 @@ func resolveShippingAddressForOrder(db *gorm.DB, userID *uint, req ProcessPaymen
 // AuthorizeCheckoutOrderPayment processes payment for an order owned by the current checkout session.
 func AuthorizeCheckoutOrderPayment(
 	db *gorm.DB,
+	providerRegistry paymentservice.ProviderRegistry,
 	pluginManager *checkoutplugins.Manager,
 	jwtSecret string,
 	cookieCfg AuthCookieConfig,
 	mediaServices ...*media.Service,
 ) gin.HandlerFunc {
 	mediaService := resolveMediaService(mediaServices...)
+	if providerRegistry == nil {
+		providerRegistry = paymentservice.NewDefaultProviderRegistry()
+	}
 	return func(c *gin.Context) {
 		requestCtx, ok := resolveCheckoutOrderRequestContext(db, c, jwtSecret, cookieCfg)
 		if !ok {
 			return
 		}
 
-		var req ProcessPaymentRequest
+		var req AuthorizeCheckoutOrderPaymentRequest
 		if err := bindStrictJSON(c, &req); err != nil && !errors.Is(err, io.EOF) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -260,16 +268,23 @@ func AuthorizeCheckoutOrderPayment(
 			return
 		}
 
-		handled, err := replayCheckoutIdempotency(
+		scope := fmt.Sprintf("checkout_order_payment_authorize:%d", order.ID)
+		correlationID := checkoutCorrelationID(c, "")
+
+		replayedRecord, handled, err := replayCheckoutIdempotency(
 			db,
 			c,
 			requestCtx.Session,
-			fmt.Sprintf("checkout_order_payment_authorize:%d", order.ID),
+			scope,
 			req,
 		)
 		if err != nil {
+			if replayedRecord != nil {
+				correlationID = checkoutCorrelationID(c, replayedRecord.CorrelationID)
+			}
 			log.Printf(
-				"checkout_order_payment_authorize result=failure mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d reason=%q",
+				"checkout_order_payment_authorize result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d reason=%q",
+				correlationID,
 				checkoutMode(requestCtx.User),
 				requestCtx.Session.ID,
 				checkoutUserID(requestCtx.User),
@@ -281,12 +296,32 @@ func AuthorizeCheckoutOrderPayment(
 			return
 		}
 		if handled {
+			intentID := "none"
+			if replayedRecord != nil && replayedRecord.PaymentIntentID != nil {
+				intentID = strconv.FormatUint(uint64(*replayedRecord.PaymentIntentID), 10)
+			}
+			log.Printf(
+				"checkout_order_payment_authorize result=replay correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d intent_id=%s",
+				checkoutCorrelationID(c, func() string {
+					if replayedRecord == nil {
+						return ""
+					}
+					return replayedRecord.CorrelationID
+				}()),
+				checkoutMode(requestCtx.User),
+				requestCtx.Session.ID,
+				checkoutUserID(requestCtx.User),
+				checkoutGuestEmail(order.GuestEmail),
+				order.ID,
+				intentID,
+			)
 			return
 		}
 
 		if !enforceCheckoutSubmissionRateLimit(c, requestCtx.Session, "authorize_payment") {
 			log.Printf(
-				"checkout_order_payment_authorize result=failure mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d reason=%q",
+				"checkout_order_payment_authorize result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d reason=%q",
+				correlationID,
 				checkoutMode(requestCtx.User),
 				requestCtx.Session.ID,
 				checkoutUserID(requestCtx.User),
@@ -301,12 +336,14 @@ func AuthorizeCheckoutOrderPayment(
 			db,
 			c,
 			requestCtx.Session,
-			fmt.Sprintf("checkout_order_payment_authorize:%d", order.ID),
+			scope,
 			req,
+			correlationID,
 		)
 		if err != nil {
 			log.Printf(
-				"checkout_order_payment_authorize result=failure mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d reason=%q",
+				"checkout_order_payment_authorize result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d reason=%q",
+				correlationID,
 				checkoutMode(requestCtx.User),
 				requestCtx.Session.ID,
 				checkoutUserID(requestCtx.User),
@@ -318,6 +355,25 @@ func AuthorizeCheckoutOrderPayment(
 			return
 		}
 		if handled {
+			intentID := "none"
+			if idempotencyRecord != nil && idempotencyRecord.PaymentIntentID != nil {
+				intentID = strconv.FormatUint(uint64(*idempotencyRecord.PaymentIntentID), 10)
+			}
+			log.Printf(
+				"checkout_order_payment_authorize result=replay correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d intent_id=%s",
+				checkoutCorrelationID(c, func() string {
+					if idempotencyRecord == nil {
+						return ""
+					}
+					return idempotencyRecord.CorrelationID
+				}()),
+				checkoutMode(requestCtx.User),
+				requestCtx.Session.ID,
+				checkoutUserID(requestCtx.User),
+				checkoutGuestEmail(order.GuestEmail),
+				order.ID,
+				intentID,
+			)
 			return
 		}
 
@@ -327,7 +383,8 @@ func AuthorizeCheckoutOrderPayment(
 
 		if requestCtx.User == nil && (order.GuestEmail == nil || strings.TrimSpace(*order.GuestEmail) == "") {
 			log.Printf(
-				"checkout_order_payment_authorize result=failure mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d reason=%q",
+				"checkout_order_payment_authorize result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d intent_id=none reason=%q",
+				correlationID,
 				checkoutMode(requestCtx.User),
 				requestCtx.Session.ID,
 				checkoutUserID(requestCtx.User),
@@ -338,99 +395,269 @@ func AuthorizeCheckoutOrderPayment(
 			respond(http.StatusBadRequest, gin.H{"error": "Guest email is required"})
 			return
 		}
-		if requestCtx.Session.Status == models.CheckoutSessionStatusConverted && !checkoutOrderPaymentSubmitted(order) {
-			respond(http.StatusConflict, gin.H{"error": "Checkout session has already been converted"})
-			return
-		}
-		if order.Status == models.StatusPaid {
-			respond(http.StatusBadRequest, gin.H{"error": "Order is already paid"})
-			return
-		}
-		if checkoutOrderPaymentSubmitted(order) {
-			respond(http.StatusBadRequest, gin.H{"error": "Order payment already submitted"})
-			return
-		}
-		currentOpenOrder, err := findCurrentCheckoutOpenOrder(db, requestCtx.Session.ID)
-		if err != nil {
-			respond(http.StatusInternalServerError, gin.H{"error": "Failed to load checkout order"})
-			return
-		}
-		if currentOpenOrder != nil && currentOpenOrder.ID != order.ID {
-			respond(http.StatusConflict, gin.H{"error": "Checkout order is no longer payable"})
-			return
-		}
-
-		paymentDisplay := ""
-		shippingAddress := ""
-		if hasPluginCheckoutSelection(req) {
-			resolved, err := checkoutservice.ResolveProviderSelection(pluginManager, order.Total, checkoutservice.ProviderSelection{
-				PaymentProviderID:  req.PaymentProviderID,
-				ShippingProviderID: req.ShippingProviderID,
-				TaxProviderID:      req.TaxProviderID,
-				PaymentData:        req.PaymentData,
-				ShippingData:       req.ShippingData,
-				TaxData:            req.TaxData,
-			})
-			if err != nil {
-				if err.Error() == "checkout plugins unavailable" {
-					respond(http.StatusInternalServerError, gin.H{"error": err.Error()})
-					return
+		var intent models.PaymentIntent
+		var intentIDText = "none"
+		var snapshot models.OrderCheckoutSnapshot
+		var responseStatus int
+		var responsePayload any
+		err = db.Transaction(func(tx *gorm.DB) error {
+			var lockedOrder models.Order
+			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+				Where("id = ? AND checkout_session_id = ?", order.ID, requestCtx.Session.ID).
+				Preload("Items.ProductVariant").
+				Preload("Items.ProductVariant.Product").
+				First(&lockedOrder).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					responseStatus = http.StatusNotFound
+					responsePayload = gin.H{"error": "Order not found"}
+					return nil
 				}
-				respond(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
+				return err
 			}
-			paymentDisplay = resolved.PaymentDisplay
-			shippingAddress = resolved.ShippingAddress
-			order.Total = resolved.Total
-		} else {
-			var userID *uint
-			if requestCtx.User != nil {
-				userID = &requestCtx.User.ID
-			}
-			paymentDisplay, err = resolvePaymentDisplayForOrder(db, userID, req)
-			if err != nil {
-				respond(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
-			shippingAddress, err = resolveShippingAddressForOrder(db, userID, req)
-			if err != nil {
-				respond(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
-		}
 
-		tx := db.Begin()
-		defer func() {
-			if r := recover(); r != nil {
-				tx.Rollback()
+			if requestCtx.Session.Status == models.CheckoutSessionStatusConverted && !checkoutOrderPaymentSubmitted(lockedOrder) {
+				responseStatus = http.StatusConflict
+				responsePayload = gin.H{"error": "Checkout session has already been converted"}
+				return nil
 			}
-		}()
+			if lockedOrder.Status == models.StatusPaid {
+				responseStatus = http.StatusBadRequest
+				responsePayload = gin.H{"error": "Order is already paid"}
+				return nil
+			}
+			if checkoutOrderPaymentSubmitted(lockedOrder) {
+				responseStatus = http.StatusBadRequest
+				responsePayload = gin.H{"error": "Order payment already submitted"}
+				return nil
+			}
 
-		order.Status = models.StatusPending
-		order.PaymentMethodDisplay = paymentDisplay
-		order.ShippingAddressPretty = shippingAddress
-		if err := tx.Save(&order).Error; err != nil {
-			tx.Rollback()
-			respond(http.StatusInternalServerError, gin.H{"error": "Failed to update order status"})
-			return
-		}
-		if err := checkoutservice.ClearOrderedItemsFromCart(tx, order.CheckoutSessionID, order.Items); err != nil {
-			tx.Rollback()
-			respond(http.StatusInternalServerError, gin.H{"error": "Failed to update cart"})
-			return
-		}
-		if err := tx.Model(&models.CheckoutSession{}).
-			Where("id = ?", order.CheckoutSessionID).
-			Updates(map[string]any{
-				"status":      models.CheckoutSessionStatusConverted,
-				"guest_email": order.GuestEmail,
-			}).Error; err != nil {
-			tx.Rollback()
-			respond(http.StatusInternalServerError, gin.H{"error": "Failed to update checkout session"})
-			return
-		}
-		if err := tx.Commit().Error; err != nil {
+			currentOpenOrder, err := findCurrentCheckoutOpenOrder(tx, requestCtx.Session.ID)
+			if err != nil {
+				return err
+			}
+			if currentOpenOrder != nil && currentOpenOrder.ID != lockedOrder.ID {
+				responseStatus = http.StatusConflict
+				responsePayload = gin.H{"error": "Checkout order is no longer payable"}
+				return nil
+			}
+
+			snapshot, err = paymentservice.GetCheckoutSnapshotForSession(tx, requestCtx.Session.ID, req.SnapshotID)
+			if err != nil {
+				switch {
+				case errors.Is(err, paymentservice.ErrSnapshotNotFound):
+					responseStatus = http.StatusBadRequest
+					responsePayload = gin.H{"error": "Checkout snapshot not found"}
+					return nil
+				default:
+					return err
+				}
+			}
+			switch err := paymentservice.ValidateSnapshotForOrder(&snapshot, &lockedOrder, time.Now().UTC()); {
+			case err == nil:
+			case errors.Is(err, paymentservice.ErrSnapshotExpired):
+				responseStatus = http.StatusBadRequest
+				responsePayload = gin.H{"error": "Checkout snapshot has expired"}
+				return nil
+			case errors.Is(err, paymentservice.ErrSnapshotOrderMismatch):
+				responseStatus = http.StatusConflict
+				responsePayload = gin.H{"error": "Checkout snapshot no longer matches the order"}
+				return nil
+			case errors.Is(err, paymentservice.ErrSnapshotAlreadyBound):
+				responseStatus = http.StatusConflict
+				responsePayload = gin.H{"error": "Checkout snapshot is already bound to another order"}
+				return nil
+			default:
+				return err
+			}
+			if err := paymentservice.BindSnapshotToOrder(tx, &snapshot, lockedOrder.ID, time.Now().UTC()); err != nil {
+				switch {
+				case errors.Is(err, paymentservice.ErrSnapshotAlreadyBound):
+					responseStatus = http.StatusConflict
+					responsePayload = gin.H{"error": "Checkout snapshot is already bound to another order"}
+					return nil
+				default:
+					return err
+				}
+			}
+
+			intent, _, err = paymentservice.PrepareAuthorizedPaymentIntent(
+				tx,
+				lockedOrder.ID,
+				snapshot,
+				strings.TrimSpace(c.GetHeader("Idempotency-Key")),
+			)
+			if err != nil {
+				switch {
+				case errors.Is(err, paymentservice.ErrActivePaymentIntentExists):
+					responseStatus = http.StatusConflict
+					responsePayload = gin.H{"error": "An active payment intent already exists for this order"}
+					return nil
+				case errors.Is(err, providerops.ErrProviderCredentialWrongEnvironment):
+					responseStatus = http.StatusConflict
+					responsePayload = gin.H{"error": "Provider credential is not configured for this environment"}
+					return nil
+				case errors.Is(err, providerops.ErrUnsupportedProviderCurrency):
+					responseStatus = http.StatusBadRequest
+					responsePayload = gin.H{"error": "Provider does not support the requested currency"}
+					return nil
+				default:
+					return err
+				}
+			}
+			intentIDText = strconv.FormatUint(uint64(intent.ID), 10)
+
+			if idempotencyRecord != nil {
+				if err := tx.Model(&models.IdempotencyKey{}).
+					Where("id = ?", idempotencyRecord.ID).
+					Updates(map[string]any{
+						"payment_intent_id": intent.ID,
+					}).Error; err != nil {
+					return err
+				}
+				intentIDCopy := intent.ID
+				idempotencyRecord.PaymentIntentID = &intentIDCopy
+			}
+
+			order = lockedOrder
+			return nil
+		})
+		if err != nil {
+			log.Printf(
+				"checkout_order_payment_authorize result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d intent_id=%s reason=%q",
+				correlationID,
+				checkoutMode(requestCtx.User),
+				requestCtx.Session.ID,
+				checkoutUserID(requestCtx.User),
+				checkoutGuestEmail(order.GuestEmail),
+				order.ID,
+				intentIDText,
+				err.Error(),
+			)
 			respond(http.StatusInternalServerError, gin.H{"error": "Failed to process payment"})
+			return
+		}
+		if responseStatus != 0 {
+			reason := "request_rejected"
+			if payload, ok := responsePayload.(gin.H); ok {
+				if value, ok := payload["error"].(string); ok && strings.TrimSpace(value) != "" {
+					reason = value
+				}
+			}
+			log.Printf(
+				"checkout_order_payment_authorize result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d intent_id=%s reason=%q",
+				correlationID,
+				checkoutMode(requestCtx.User),
+				requestCtx.Session.ID,
+				checkoutUserID(requestCtx.User),
+				checkoutGuestEmail(order.GuestEmail),
+				order.ID,
+				intentIDText,
+				reason,
+			)
+			respond(responseStatus, responsePayload)
+			return
+		}
+
+		if intent.Status == models.PaymentIntentStatusRequiresAction {
+			intent, _, err = paymentservice.AuthorizePreparedPaymentIntent(
+				c.Request.Context(),
+				db,
+				providerRegistry,
+				intent.ID,
+				snapshot,
+				correlationID,
+			)
+			if err != nil {
+				switch {
+				case errors.Is(err, providerops.ErrProviderCredentialWrongEnvironment):
+					respond(http.StatusConflict, gin.H{"error": "Provider credential is not configured for this environment"})
+				case errors.Is(err, providerops.ErrUnsupportedProviderCurrency):
+					respond(http.StatusBadRequest, gin.H{"error": "Provider does not support the requested currency"})
+				default:
+					log.Printf(
+						"checkout_order_payment_authorize result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d intent_id=%s reason=%q",
+						correlationID,
+						checkoutMode(requestCtx.User),
+						requestCtx.Session.ID,
+						checkoutUserID(requestCtx.User),
+						checkoutGuestEmail(order.GuestEmail),
+						order.ID,
+						intentIDText,
+						err.Error(),
+					)
+					respond(http.StatusInternalServerError, gin.H{"error": "Failed to process payment"})
+				}
+				return
+			}
+		}
+
+		err = db.Transaction(func(tx *gorm.DB) error {
+			var lockedOrder models.Order
+			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+				Where("id = ? AND checkout_session_id = ?", order.ID, requestCtx.Session.ID).
+				Preload("Items.ProductVariant").
+				Preload("Items.ProductVariant.Product").
+				First(&lockedOrder).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					responseStatus = http.StatusNotFound
+					responsePayload = gin.H{"error": "Order not found"}
+					return nil
+				}
+				return err
+			}
+
+			if lockedOrder.Status == models.StatusPaid {
+				responseStatus = http.StatusBadRequest
+				responsePayload = gin.H{"error": "Order is already paid"}
+				return nil
+			}
+			if checkoutOrderPaymentSubmitted(lockedOrder) {
+				responseStatus = http.StatusBadRequest
+				responsePayload = gin.H{"error": "Order payment already submitted"}
+				return nil
+			}
+
+			if err := paymentservice.ApplyAuthorizedCheckoutState(tx, &lockedOrder, snapshot, correlationID); err != nil {
+				return err
+			}
+
+			order = lockedOrder
+			return nil
+		})
+		if err != nil {
+			log.Printf(
+				"checkout_order_payment_authorize result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d intent_id=%s reason=%q",
+				correlationID,
+				checkoutMode(requestCtx.User),
+				requestCtx.Session.ID,
+				checkoutUserID(requestCtx.User),
+				checkoutGuestEmail(order.GuestEmail),
+				order.ID,
+				intentIDText,
+				err.Error(),
+			)
+			respond(http.StatusInternalServerError, gin.H{"error": "Failed to process payment"})
+			return
+		}
+		if responseStatus != 0 {
+			reason := "request_rejected"
+			if payload, ok := responsePayload.(gin.H); ok {
+				if value, ok := payload["error"].(string); ok && strings.TrimSpace(value) != "" {
+					reason = value
+				}
+			}
+			log.Printf(
+				"checkout_order_payment_authorize result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d intent_id=%s reason=%q",
+				correlationID,
+				checkoutMode(requestCtx.User),
+				requestCtx.Session.ID,
+				checkoutUserID(requestCtx.User),
+				checkoutGuestEmail(order.GuestEmail),
+				order.ID,
+				intentIDText,
+				reason,
+			)
+			respond(responseStatus, responsePayload)
 			return
 		}
 
@@ -453,12 +680,14 @@ func AuthorizeCheckoutOrderPayment(
 		}
 
 		log.Printf(
-			"checkout_order_payment_authorize result=success mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d",
+			"checkout_order_payment_authorize result=success correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d intent_id=%s",
+			correlationID,
 			checkoutMode(requestCtx.User),
 			requestCtx.Session.ID,
 			checkoutUserID(requestCtx.User),
 			checkoutGuestEmail(order.GuestEmail),
 			order.ID,
+			intentIDText,
 		)
 		respond(http.StatusOK, gin.H{
 			"message": "Order submitted and pending confirmation",

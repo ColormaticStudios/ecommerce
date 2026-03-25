@@ -2,8 +2,11 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"ecommerce/internal/checkoutplugins"
+	checkoutservice "ecommerce/internal/services/checkout"
+	paymentservice "ecommerce/internal/services/payments"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -76,7 +79,55 @@ func QuoteCheckout(db *gorm.DB, pluginManager *checkoutplugins.Manager, jwtSecre
 			TaxData:      req.TaxData,
 		})
 
+		var snapshotID *uint
+		var expiresAt *time.Time
+		if quote.Valid {
+			resolved, err := checkoutservice.ResolveProviderSelection(
+				pluginManager,
+				cartSubtotal(requestCtx.Cart),
+				checkoutProviderSelectionFromPaymentRequest(ProcessPaymentRequest{
+					PaymentProviderID:  req.PaymentProviderID,
+					ShippingProviderID: req.ShippingProviderID,
+					TaxProviderID:      req.TaxProviderID,
+					PaymentData:        req.PaymentData,
+					ShippingData:       req.ShippingData,
+					TaxData:            req.TaxData,
+				}),
+			)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+
+			snapshot, err := paymentservice.CreateCheckoutSnapshot(db, paymentservice.CreateCheckoutSnapshotInput{
+				CheckoutSessionID:     requestCtx.Session.ID,
+				Currency:              quote.Currency,
+				Subtotal:              quote.Subtotal,
+				ShippingAmount:        quote.Shipping,
+				TaxAmount:             quote.Tax,
+				Total:                 quote.Total,
+				PaymentProviderID:     req.PaymentProviderID,
+				ShippingProviderID:    req.ShippingProviderID,
+				TaxProviderID:         req.TaxProviderID,
+				PaymentData:           req.PaymentData,
+				ShippingData:          req.ShippingData,
+				TaxData:               req.TaxData,
+				PaymentMethodDisplay:  resolved.PaymentDisplay,
+				ShippingAddressPretty: resolved.ShippingAddress,
+				Items:                 buildSnapshotItemsFromCart(requestCtx.Cart),
+				Now:                   time.Now().UTC(),
+			})
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create checkout snapshot"})
+				return
+			}
+			snapshotID = &snapshot.ID
+			expiresAt = &snapshot.ExpiresAt
+		}
+
 		c.JSON(http.StatusOK, gin.H{
+			"snapshot_id":     snapshotID,
+			"expires_at":      expiresAt,
 			"currency":        quote.Currency,
 			"subtotal":        quote.Subtotal,
 			"shipping":        quote.Shipping,

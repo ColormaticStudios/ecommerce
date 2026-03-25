@@ -20,7 +20,10 @@ const (
 	checkoutRateLimitedCode     = "checkout_rate_limited"
 	idempotencyConflictCode     = "idempotency_key_conflict"
 	idempotencyInProgressCode   = "idempotency_in_progress"
+	idempotencyMissingCode      = "idempotency_key_required"
 	defaultIdempotencyRetention = 24 * time.Hour
+	idempotencyStatusProcessing = "processing"
+	idempotencyStatusCompleted  = "completed"
 )
 
 var checkoutSubmissionRateLimit = struct {
@@ -105,6 +108,7 @@ func beginCheckoutIdempotency(
 	session *models.CheckoutSession,
 	scope string,
 	request any,
+	correlationID string,
 ) (*models.IdempotencyKey, bool, error) {
 	key := strings.TrimSpace(c.GetHeader("Idempotency-Key"))
 	if key == "" {
@@ -121,19 +125,68 @@ func beginCheckoutIdempotency(
 		return nil, false, err
 	}
 	if found {
-		return nil, handleExistingCheckoutIdempotency(c, existing, requestHash), nil
+		return existing, handleExistingCheckoutIdempotency(c, existing, requestHash), nil
 	}
 
 	record := models.IdempotencyKey{
 		Scope:             scope,
 		Key:               key,
 		RequestHash:       requestHash,
+		Status:            idempotencyStatusProcessing,
+		CorrelationID:     correlationID,
 		CheckoutSessionID: session.ID,
 		ExpiresAt:         time.Now().UTC().Add(defaultIdempotencyRetention),
 	}
 	if err := db.Create(&record).Error; err != nil {
 		if isUniqueConstraintError(err) {
-			return beginCheckoutIdempotency(db, c, session, scope, request)
+			return beginCheckoutIdempotency(db, c, session, scope, request, correlationID)
+		}
+		return nil, false, err
+	}
+	return &record, false, nil
+}
+
+func beginScopedIdempotency(
+	db *gorm.DB,
+	c *gin.Context,
+	scope string,
+	request any,
+	correlationID string,
+) (*models.IdempotencyKey, bool, error) {
+	key := strings.TrimSpace(c.GetHeader("Idempotency-Key"))
+	if key == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Idempotency-Key header is required.",
+			"code":  idempotencyMissingCode,
+		})
+		return nil, true, nil
+	}
+
+	requestHash, err := hashCheckoutIdempotencyRequest(request)
+	if err != nil {
+		return nil, false, err
+	}
+
+	existing, found, err := lookupCheckoutIdempotencyRecord(db, 0, scope, key)
+	if err != nil {
+		return nil, false, err
+	}
+	if found {
+		return existing, handleExistingCheckoutIdempotency(c, existing, requestHash), nil
+	}
+
+	record := models.IdempotencyKey{
+		Scope:             scope,
+		Key:               key,
+		RequestHash:       requestHash,
+		Status:            idempotencyStatusProcessing,
+		CorrelationID:     correlationID,
+		CheckoutSessionID: 0,
+		ExpiresAt:         time.Now().UTC().Add(defaultIdempotencyRetention),
+	}
+	if err := db.Create(&record).Error; err != nil {
+		if isUniqueConstraintError(err) {
+			return beginScopedIdempotency(db, c, scope, request, correlationID)
 		}
 		return nil, false, err
 	}
@@ -146,26 +199,26 @@ func replayCheckoutIdempotency(
 	session *models.CheckoutSession,
 	scope string,
 	request any,
-) (bool, error) {
+) (*models.IdempotencyKey, bool, error) {
 	key := strings.TrimSpace(c.GetHeader("Idempotency-Key"))
 	if key == "" {
-		return false, nil
+		return nil, false, nil
 	}
 
 	requestHash, err := hashCheckoutIdempotencyRequest(request)
 	if err != nil {
-		return false, err
+		return nil, false, err
 	}
 
 	existing, found, err := lookupCheckoutIdempotencyRecord(db, session.ID, scope, key)
 	if err != nil {
-		return false, err
+		return nil, false, err
 	}
 	if !found {
-		return false, nil
+		return nil, false, nil
 	}
 
-	return handleExistingCheckoutIdempotency(c, existing, requestHash), nil
+	return existing, handleExistingCheckoutIdempotency(c, existing, requestHash), nil
 }
 
 func hashCheckoutIdempotencyRequest(request any) (string, error) {
@@ -230,6 +283,7 @@ func writeCheckoutJSON(
 		if err := db.Model(&models.IdempotencyKey{}).
 			Where("id = ?", record.ID).
 			Updates(map[string]any{
+				"status":        idempotencyStatusCompleted,
 				"response_code": status,
 				"response_body": string(raw),
 			}).Error; err != nil {

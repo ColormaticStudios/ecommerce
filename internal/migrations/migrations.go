@@ -74,6 +74,10 @@ const productCatalogDepthP4Version = "2026030701_catalog_depth_p4_hardening"
 const guestCheckoutP0Version = "2026031001_guest_checkout_p0"
 const guestCheckoutP1Version = "2026031002_guest_checkout_p1"
 const guestCheckoutP3Version = "2026031101_guest_checkout_p3"
+const providersP0Version = "2026031701_providers_p0_payment_foundation"
+const providersP2Version = "2026032001_providers_p2_webhook_events"
+const providersP3Version = "2026032002_providers_p3_shipping_tax"
+const providersP4Version = "2026032003_providers_p4_security_ops"
 const migrationStepAlertThresholdEnvVar = "MIGRATIONS_STEP_ALERT_THRESHOLD_MS"
 
 var versionPattern = regexp.MustCompile(`^\d{10}_[a-z0-9_]+$`)
@@ -490,6 +494,212 @@ var orderedMigrations = []Migration{
 			}
 			if err := ops.CreateIndexIfNotExists(tx, &models.IdempotencyKey{}, "idx_idempotency_keys_expires_at"); err != nil {
 				return err
+			}
+			return nil
+		},
+	},
+	{
+		Version:         providersP0Version,
+		Name:            "add provider payment foundation structures",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "checkout", "payments", "providers"},
+		PostChecks: []PostCheck{
+			{
+				Name: "providers_p0_structures_exist",
+				Check: func(tx *gorm.DB) error {
+					for _, column := range []string{"status", "correlation_id", "payment_intent_id"} {
+						if !tx.Migrator().HasColumn("idempotency_keys", column) {
+							return fmt.Errorf("missing idempotency_keys.%s", column)
+						}
+					}
+					for _, model := range []any{
+						&models.OrderCheckoutSnapshot{},
+						&models.OrderCheckoutSnapshotItem{},
+						&models.PaymentIntent{},
+						&models.PaymentTransaction{},
+						&models.OrderStatusHistory{},
+					} {
+						if !tx.Migrator().HasTable(model) {
+							return fmt.Errorf("missing table for %T", model)
+						}
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			if err := ops.AddColumnIfNotExists(tx, "idempotency_keys", "status", "TEXT NOT NULL DEFAULT 'processing'"); err != nil {
+				return err
+			}
+			if err := ops.AddColumnIfNotExists(tx, "idempotency_keys", "correlation_id", "TEXT NOT NULL DEFAULT ''"); err != nil {
+				return err
+			}
+			if err := ops.AddColumnIfNotExists(tx, "idempotency_keys", "payment_intent_id", "BIGINT"); err != nil {
+				return err
+			}
+			if err := ops.CreateTableIfNotExists(tx, &models.OrderCheckoutSnapshot{}); err != nil {
+				return err
+			}
+			if err := ops.CreateTableIfNotExists(tx, &models.OrderCheckoutSnapshotItem{}); err != nil {
+				return err
+			}
+			if err := ops.CreateTableIfNotExists(tx, &models.PaymentIntent{}); err != nil {
+				return err
+			}
+			if err := ops.CreateTableIfNotExists(tx, &models.PaymentTransaction{}); err != nil {
+				return err
+			}
+			if err := ops.CreateTableIfNotExists(tx, &models.OrderStatusHistory{}); err != nil {
+				return err
+			}
+			for _, index := range []struct {
+				model any
+				name  string
+			}{
+				{model: &models.IdempotencyKey{}, name: "idx_idempotency_keys_correlation_id"},
+				{model: &models.IdempotencyKey{}, name: "idx_idempotency_keys_payment_intent_id"},
+				{model: &models.PaymentTransaction{}, name: "idx_payment_txn_intent_operation_key"},
+			} {
+				if err := ops.CreateIndexIfNotExists(tx, index.model, index.name); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         providersP2Version,
+		Name:            "add provider webhook event store",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "providers", "payments", "webhooks"},
+		PostChecks: []PostCheck{
+			{
+				Name: "providers_p2_webhook_events_exist",
+				Check: func(tx *gorm.DB) error {
+					if !tx.Migrator().HasTable(&models.WebhookEvent{}) {
+						return fmt.Errorf("missing table for %T", &models.WebhookEvent{})
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			if err := ops.CreateTableIfNotExists(tx, &models.WebhookEvent{}); err != nil {
+				return err
+			}
+			for _, index := range []string{
+				"idx_webhook_events_provider_event",
+				"idx_webhook_events_received_at",
+				"idx_webhook_events_processed_at",
+			} {
+				if err := ops.CreateIndexIfNotExists(tx, &models.WebhookEvent{}, index); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         providersP3Version,
+		Name:            "add provider shipping and tax structures",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "providers", "shipping", "tax"},
+		PostChecks: []PostCheck{
+			{
+				Name: "providers_p3_shipping_tax_structures_exist",
+				Check: func(tx *gorm.DB) error {
+					for _, model := range []any{
+						&models.Shipment{},
+						&models.ShipmentRate{},
+						&models.ShipmentPackage{},
+						&models.TrackingEvent{},
+						&models.OrderTaxLine{},
+						&models.TaxNexusConfig{},
+						&models.TaxExport{},
+					} {
+						if !tx.Migrator().HasTable(model) {
+							return fmt.Errorf("missing table for %T", model)
+						}
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			for _, model := range []any{
+				&models.Shipment{},
+				&models.ShipmentRate{},
+				&models.ShipmentPackage{},
+				&models.TrackingEvent{},
+				&models.OrderTaxLine{},
+				&models.TaxNexusConfig{},
+				&models.TaxExport{},
+			} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			for _, index := range []struct {
+				model any
+				name  string
+			}{
+				{model: &models.Shipment{}, name: "idx_shipments_finalized_at"},
+				{model: &models.Shipment{}, name: "idx_shipments_provider"},
+				{model: &models.Shipment{}, name: "idx_shipments_shipment_rate_id"},
+				{model: &models.ShipmentRate{}, name: "idx_shipment_rates_snapshot_provider_rate"},
+				{model: &models.TrackingEvent{}, name: "idx_tracking_events_shipment_provider_event"},
+				{model: &models.TaxNexusConfig{}, name: "idx_tax_nexus_provider_region"},
+			} {
+				if err := ops.CreateIndexIfNotExists(tx, index.model, index.name); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         providersP4Version,
+		Name:            "add provider security and ops structures",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "providers", "security", "ops"},
+		PostChecks: []PostCheck{
+			{
+				Name: "providers_p4_security_ops_structures_exist",
+				Check: func(tx *gorm.DB) error {
+					for _, model := range []any{
+						&models.ProviderCredential{},
+						&models.ProviderCallAudit{},
+						&models.ProviderReconciliationRun{},
+						&models.ProviderReconciliationDrift{},
+					} {
+						if !tx.Migrator().HasTable(model) {
+							return fmt.Errorf("missing table for %T", model)
+						}
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			for _, model := range []any{
+				&models.ProviderCredential{},
+				&models.ProviderCallAudit{},
+				&models.ProviderReconciliationRun{},
+				&models.ProviderReconciliationDrift{},
+			} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			for _, index := range []struct {
+				model any
+				name  string
+			}{
+				{model: &models.ProviderCredential{}, name: "idx_provider_credentials_scope"},
+			} {
+				if err := ops.CreateIndexIfNotExists(tx, index.model, index.name); err != nil {
+					return err
+				}
 			}
 			return nil
 		},

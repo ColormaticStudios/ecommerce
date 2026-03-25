@@ -12,7 +12,8 @@ Always run tests for code you modify, read `frontend/package.json` for frontend 
 
 Create new tests where needed. Use best practices, test valid and invalid data.
 
-For your sandbox environment, you will need to prefix Go test with `GOCACHE=/tmp/go-build` because you do not have write access to `~/.cache/go-build`.
+Sandbox-only note for agents: when you run `go test` directly in this Codex sandbox, prefix it with `GOCACHE=/tmp/go-build` because the sandbox cannot write to `~/.cache/go-build`.
+Do not change `Makefile`, scripts, or other repo automation to add sandbox workarounds; those should stay focused on normal developer workflows.
 
 Always run the formatter on code you modify:
 - Backend code: `gofmt -w <file>`
@@ -38,9 +39,13 @@ Migration replay tests must use frozen legacy schema structs for historical setu
 
 Contract migration blockers are enforced by `go run ./cmd/migrate guard` and workflows that explicitly call guard, not by ordinary `migrations.Run()` / `make migrate`. Keep docs and code aligned on that distinction; local/dev DB bootstrap, snapshots, and test setup must not require `MIGRATIONS_ALLOW_CONTRACT=true`.
 
+Checkout snapshot validation can run both before and after later checkout steps update `orders.total`. If provider flows validate a snapshot against an order, compare against the pre-authorization subtotal and the finalized snapshot total as appropriate; checking only one side can incorrectly reject valid post-snapshot shipping/tax flows.
+
 On SQLite, `tx.Migrator().DropColumn("table_name", "column")` can panic when called with a raw table-name string during migrations. Prefer explicit SQL `ALTER TABLE ... DROP COLUMN ...` or a model-backed path instead of the string-table `DropColumn` helper.
 
 `handlers/validation_integration_test.go` defines a shared `newTestDB` helper used by many handler tests across the package. Treat its signature as package-level API: changing it can break a large number of tests outside that file.
+
+Several checkout/admin handlers use helper `respond(...)` closures inside `db.Transaction(...)` callbacks. If a transaction branch serializes an error response, the outer handler still needs an explicit guard before writing the normal success response; otherwise you can double-write a 200 after the error branch.
 
 GORM can silently persist `bool` fields with schema defaults instead of explicit `false` on `Create`, unless the insert explicitly selects zero-value fields. If a row must persist `false` (for example `is_published` on variant draft/live rows), prefer `tx.Select("*").Create(&row)` or another path that explicitly includes zero values.
 

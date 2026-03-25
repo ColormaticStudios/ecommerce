@@ -40,8 +40,8 @@
   - Campaign targets remain product/category level; variant-level eligibility is resolved through parent product/category joins.
 - Categories:
   - Category-targeted promotions depend on `roadmap/product-categories.md` category and product-category join model.
-- Providers:
-  - Promotion-adjusted totals flow into checkout snapshot/payment lifecycle in `roadmap/providers.md`.
+- Provider platform baseline:
+  - Promotion-adjusted totals flow into the implemented checkout snapshot and payment lifecycle.
 
 ## P0: Core Domain Model and Product Discounts
 ### Scope

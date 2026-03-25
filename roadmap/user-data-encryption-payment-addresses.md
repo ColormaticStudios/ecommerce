@@ -5,7 +5,7 @@
 - `models/saved_addresses` stores full address fields in plaintext (`line1`, `city`, `postal_code`, etc.).
 - `POST /api/v1/me/payment-methods` currently accepts raw `card_number` in request payload, then persists derived metadata.
 - There is no centralized envelope-encryption service, no key version tracking on encrypted records, and no cryptographic erasure workflow.
-- The checkout/provider roadmap supports pluggable payment providers, but customer saved payment storage is not yet hardened against DB-only compromise.
+- The provider platform baseline supports pluggable payment providers, but customer saved payment storage is not yet hardened against DB-only compromise.
 
 ## Goals
 - Encrypt saved addresses and sensitive saved payment fields at the application layer before DB writes.
@@ -19,7 +19,7 @@
 - Replacing PCI scope obligations with encryption alone.
 - Storing CVV/CVC for reuse (explicitly prohibited).
 - Building a complete HSM product in this roadmap (we integrate with KMS/HSM interfaces).
-- End-to-end provider payment lifecycle changes (covered by `roadmap/providers.md`).
+- Reworking the already-implemented provider payment lifecycle.
 - Full privacy workflow redesign (covered by `roadmap/legal-compliance-security.md`).
 
 ## Delivery Order
@@ -31,7 +31,7 @@
 6. P5: Operational hardening, monitoring, and incident readiness.
 
 ## Cross-Roadmap Alignment
-- `roadmap/providers.md`
+- Provider platform baseline
   - Saved payment records expose a provider-agnostic token/reference model used by provider adapters.
   - Provider credential encryption and customer payment-data encryption share the same key service primitives.
 - `roadmap/legal-compliance-security.md`

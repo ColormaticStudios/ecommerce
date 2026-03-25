@@ -45,9 +45,9 @@
   - Category landing blocks and navigation use canonical category slugs from `categories` and product-category joins.
 - Discounts/promotions (`roadmap/discounts-promotions.md`):
   - Promotion banners and campaign pages consume active campaign metadata and scheduled windows from promotion domain, not duplicated CMS discount logic.
-- Providers (`roadmap/providers.md`):
-  - CMS confirmation/help pages can reference payment/shipping statuses but must not bypass provider lifecycle APIs.
-  - Checkout and payment totals pipeline remains catalog -> promotions -> provider snapshot; CMS is presentation/orchestration only.
+- Provider platform baseline:
+  - CMS confirmation/help pages can reference payment/shipping statuses but must not bypass the implemented provider lifecycle APIs.
+  - Checkout and payment totals pipeline remains catalog -> promotions -> checkout snapshot/provider execution; CMS is presentation/orchestration only.
 
 ## P0: CMS Foundation and Versioned Content Model
 ### Scope

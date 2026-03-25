@@ -42,9 +42,9 @@
 - Catalog depth:
   - Product catalog depth is already the repo baseline; fulfillment line identity must use `product_variant_id` rather than `product_id`.
   - Inventory reservation/availability is variant-based.
-- Providers:
-  - Shipping label purchase/tracking should align with provider abstractions in `roadmap/providers.md`.
-  - Shipment event ingestion should reuse provider webhook reliability primitives.
+- Provider platform baseline:
+  - Shipping label purchase/tracking should align with the implemented provider abstractions and lifecycle APIs.
+  - Shipment event ingestion should reuse the established provider webhook reliability primitives.
 - Discounts/promotions:
   - Fulfillment quantities and shipment value views use already-finalized order totals; no fulfillment-time repricing.
 

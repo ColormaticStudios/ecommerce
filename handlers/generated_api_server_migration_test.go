@@ -13,6 +13,8 @@ import (
 
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/media"
+	paymentservice "ecommerce/internal/services/payments"
+	webhookservice "ecommerce/internal/services/webhooks"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -79,6 +81,313 @@ func cookieValueIfPresent(w *httptest.ResponseRecorder, name string) string {
 		}
 	}
 	return ""
+}
+
+type checkoutQuoteTestResponse struct {
+	SnapshotID *uint `json:"snapshot_id"`
+	Valid      bool  `json:"valid"`
+}
+
+type checkoutShippingRatesTestResponse struct {
+	OrderID    uint   `json:"order_id"`
+	SnapshotID uint   `json:"snapshot_id"`
+	Provider   string `json:"provider"`
+	Rates      []struct {
+		ID          uint    `json:"id"`
+		ServiceCode string  `json:"service_code"`
+		Selected    bool    `json:"selected"`
+		Amount      float64 `json:"amount"`
+	} `json:"rates"`
+}
+
+type adminShippingLabelTestResponse struct {
+	Message  string `json:"message"`
+	Shipment struct {
+		ID                 uint   `json:"id"`
+		Status             string `json:"status"`
+		ShipmentRateID     uint   `json:"shipment_rate_id"`
+		ProviderShipmentID string `json:"provider_shipment_id"`
+		TrackingNumber     string `json:"tracking_number"`
+	} `json:"shipment"`
+}
+
+type checkoutTrackingTestResponse struct {
+	OrderID   uint `json:"order_id"`
+	Shipments []struct {
+		ID                 uint   `json:"id"`
+		Status             string `json:"status"`
+		ProviderShipmentID string `json:"provider_shipment_id"`
+		TrackingEvents     []struct {
+			ProviderEventID string `json:"provider_event_id"`
+			Status          string `json:"status"`
+		} `json:"tracking_events"`
+	} `json:"shipments"`
+}
+
+type checkoutTaxFinalizeTestResponse struct {
+	Message          string  `json:"message"`
+	OrderID          uint    `json:"order_id"`
+	SnapshotID       uint    `json:"snapshot_id"`
+	Provider         string  `json:"provider"`
+	InclusivePricing bool    `json:"inclusive_pricing"`
+	TotalTax         float64 `json:"total_tax"`
+	Lines            []struct {
+		LineType       string  `json:"line_type"`
+		SnapshotItemID *uint   `json:"snapshot_item_id"`
+		TaxAmount      float64 `json:"tax_amount"`
+	} `json:"lines"`
+}
+
+type adminOrderPaymentLifecycleTestResponse struct {
+	Message string `json:"message"`
+	Order   struct {
+		ID     int    `json:"id"`
+		Status string `json:"status"`
+	} `json:"order"`
+	PaymentIntent struct {
+		ID               uint    `json:"id"`
+		Status           string  `json:"status"`
+		AuthorizedAmount float64 `json:"authorized_amount"`
+		CapturedAmount   float64 `json:"captured_amount"`
+		RefundableAmount float64 `json:"refundable_amount"`
+		Transactions     []struct {
+			ID             uint    `json:"id"`
+			Operation      string  `json:"operation"`
+			IdempotencyKey string  `json:"idempotency_key"`
+			Amount         float64 `json:"amount"`
+			Status         string  `json:"status"`
+		} `json:"transactions"`
+	} `json:"payment_intent"`
+	Transaction struct {
+		ID             uint    `json:"id"`
+		Operation      string  `json:"operation"`
+		IdempotencyKey string  `json:"idempotency_key"`
+		Amount         float64 `json:"amount"`
+		Status         string  `json:"status"`
+	} `json:"transaction"`
+}
+
+type orderPaymentLedgerTestResponse struct {
+	OrderID int `json:"order_id"`
+	Intents []struct {
+		ID               uint    `json:"id"`
+		Status           string  `json:"status"`
+		AuthorizedAmount float64 `json:"authorized_amount"`
+		CapturedAmount   float64 `json:"captured_amount"`
+		RefundableAmount float64 `json:"refundable_amount"`
+		Transactions     []struct {
+			Operation      string  `json:"operation"`
+			IdempotencyKey string  `json:"idempotency_key"`
+			Amount         float64 `json:"amount"`
+			Status         string  `json:"status"`
+		} `json:"transactions"`
+	} `json:"intents"`
+}
+
+func quoteCheckoutWithDummyProviders(
+	t *testing.T,
+	r *gin.Engine,
+	checkoutToken, csrfToken string,
+) checkoutQuoteTestResponse {
+	t.Helper()
+
+	quoteBody := `{"payment_provider_id":"dummy-card","shipping_provider_id":"dummy-ground","tax_provider_id":"dummy-us-tax","payment_data":{"cardholder_name":"Guest Buyer","card_number":"4111111111111111","exp_month":"12","exp_year":"2030"},"shipping_data":{"full_name":"Guest Buyer","line1":"1 Guest Way","city":"Austin","state":"TX","postal_code":"78701","country":"US","service_level":"standard"},"tax_data":{"state":"TX"}}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/quote", strings.NewReader(quoteBody))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-CSRF-Token", csrfToken)
+	req.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	req.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code)
+
+	return decodeJSON[checkoutQuoteTestResponse](t, w)
+}
+
+func authorizeCheckoutWithSnapshot(
+	t *testing.T,
+	r *gin.Engine,
+	orderID int,
+	snapshotID uint,
+	checkoutToken, csrfToken, idempotencyKey string,
+) *httptest.ResponseRecorder {
+	t.Helper()
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		fmt.Sprintf("/api/v1/checkout/orders/%d/payments/authorize", orderID),
+		strings.NewReader(fmt.Sprintf(`{"snapshot_id":%d}`, snapshotID)),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-CSRF-Token", csrfToken)
+	if strings.TrimSpace(idempotencyKey) != "" {
+		req.Header.Set("Idempotency-Key", idempotencyKey)
+	}
+	req.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	req.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	return w
+}
+
+func quoteShippingRatesWithSnapshot(
+	t *testing.T,
+	r *gin.Engine,
+	orderID int,
+	snapshotID uint,
+	checkoutToken, csrfToken, idempotencyKey string,
+) *httptest.ResponseRecorder {
+	t.Helper()
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		fmt.Sprintf("/api/v1/checkout/orders/%d/shipping/rates", orderID),
+		strings.NewReader(fmt.Sprintf(`{"snapshot_id":%d}`, snapshotID)),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-CSRF-Token", csrfToken)
+	if strings.TrimSpace(idempotencyKey) != "" {
+		req.Header.Set("Idempotency-Key", idempotencyKey)
+	}
+	req.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	req.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	return w
+}
+
+func finalizeCheckoutTaxWithSnapshot(
+	t *testing.T,
+	r *gin.Engine,
+	orderID int,
+	snapshotID uint,
+	checkoutToken, csrfToken, idempotencyKey string,
+	bodySuffix string,
+) *httptest.ResponseRecorder {
+	t.Helper()
+
+	body := fmt.Sprintf(`{"snapshot_id":%d%s}`, snapshotID, bodySuffix)
+	req := httptest.NewRequest(
+		http.MethodPost,
+		fmt.Sprintf("/api/v1/checkout/orders/%d/tax/finalize", orderID),
+		strings.NewReader(body),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-CSRF-Token", csrfToken)
+	if strings.TrimSpace(idempotencyKey) != "" {
+		req.Header.Set("Idempotency-Key", idempotencyKey)
+	}
+	req.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	req.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	return w
+}
+
+func checkoutTrackingRequest(
+	t *testing.T,
+	r *gin.Engine,
+	orderID int,
+	checkoutToken string,
+) *httptest.ResponseRecorder {
+	t.Helper()
+
+	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/checkout/orders/%d/shipping/tracking", orderID), nil)
+	req.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	return w
+}
+
+func adminLifecycleRequest(
+	t *testing.T,
+	r *gin.Engine,
+	method, path string,
+	body string,
+	adminToken string,
+	idempotencyKey string,
+) *httptest.ResponseRecorder {
+	t.Helper()
+
+	var reader *strings.Reader
+	if body == "" {
+		reader = strings.NewReader("")
+	} else {
+		reader = strings.NewReader(body)
+	}
+	req := httptest.NewRequest(method, path, reader)
+	if body != "" {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	if strings.TrimSpace(idempotencyKey) != "" {
+		req.Header.Set("Idempotency-Key", idempotencyKey)
+	}
+	req.Header.Set("Authorization", "Bearer "+adminToken)
+	req.Header.Set("X-CSRF-Token", "admin-csrf")
+	req.AddCookie(&http.Cookie{Name: csrfCookieName, Value: "admin-csrf"})
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	return w
+}
+
+func webhookRequest(
+	t *testing.T,
+	r *gin.Engine,
+	provider string,
+	body string,
+	signature string,
+) *httptest.ResponseRecorder {
+	t.Helper()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/webhooks/"+provider, strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	if strings.TrimSpace(signature) != "" {
+		req.Header.Set("X-Dummy-Signature", signature)
+	}
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	return w
+}
+
+func createGuestCheckoutOrder(
+	t *testing.T,
+	r *gin.Engine,
+	checkoutToken, csrfToken, guestEmail string,
+) orderResponse {
+	t.Helper()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/orders", strings.NewReader(fmt.Sprintf(`{"guest_email":%q}`, guestEmail)))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-CSRF-Token", csrfToken)
+	req.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	req.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	require.Equal(t, http.StatusCreated, w.Code)
+	return decodeJSON[orderResponse](t, w)
+}
+
+func waitForWebhookEvent(
+	t *testing.T,
+	db *gorm.DB,
+	eventID uint,
+	check func(models.WebhookEvent) bool,
+) models.WebhookEvent {
+	t.Helper()
+
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		var event models.WebhookEvent
+		if err := db.First(&event, eventID).Error; err == nil && check(event) {
+			return event
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	var event models.WebhookEvent
+	require.NoError(t, db.First(&event, eventID).Error)
+	require.True(t, check(event), "webhook event %d did not reach expected state: %+v", eventID, event)
+	return event
 }
 
 func resetCheckoutProtectionForTest(t *testing.T) {
@@ -598,13 +907,11 @@ func TestCheckoutOrderGuestFlowRequiresEmailAndConvertsSession(t *testing.T) {
 	require.NotNil(t, order.ConfirmationToken)
 	require.NotZero(t, order.CheckoutSessionID)
 
-	payReq := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/checkout/orders/%d/payments/authorize", order.ID), strings.NewReader(`{"payment_provider_id":"dummy-card","shipping_provider_id":"dummy-ground","tax_provider_id":"dummy-us-tax","payment_data":{"cardholder_name":"Guest Buyer","card_number":"4111111111111111","exp_month":"12","exp_year":"2030"},"shipping_data":{"full_name":"Guest Buyer","line1":"1 Guest Way","city":"Austin","state":"TX","postal_code":"78701","country":"US","service_level":"standard"},"tax_data":{"state":"TX"}}`))
-	payReq.Header.Set("Content-Type", "application/json")
-	payReq.Header.Set("X-CSRF-Token", csrfToken)
-	payReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
-	payReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
-	payW := httptest.NewRecorder()
-	r.ServeHTTP(payW, payReq)
+	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
+	require.True(t, quote.Valid)
+	require.NotNil(t, quote.SnapshotID)
+
+	payW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "")
 	require.Equal(t, http.StatusOK, payW.Code)
 
 	var payBody struct {
@@ -956,25 +1263,14 @@ func TestCheckoutOrderPaymentIdempotencyReplaysAfterSessionConversion(t *testing
 	require.Equal(t, http.StatusCreated, createW.Code)
 	order := decodeJSON[orderResponse](t, createW)
 
-	paymentBody := `{"payment_provider_id":"dummy-card","shipping_provider_id":"dummy-ground","tax_provider_id":"dummy-us-tax","payment_data":{"cardholder_name":"Guest Buyer","card_number":"4111111111111111","exp_month":"12","exp_year":"2030"},"shipping_data":{"full_name":"Guest Buyer","line1":"1 Guest Way","city":"Austin","state":"TX","postal_code":"78701","country":"US","service_level":"standard"},"tax_data":{"state":"TX"}}`
-	firstPayReq := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/checkout/orders/%d/payments/authorize", order.ID), strings.NewReader(paymentBody))
-	firstPayReq.Header.Set("Content-Type", "application/json")
-	firstPayReq.Header.Set("X-CSRF-Token", csrfToken)
-	firstPayReq.Header.Set("Idempotency-Key", "payment-key")
-	firstPayReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
-	firstPayReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
-	firstPayW := httptest.NewRecorder()
-	r.ServeHTTP(firstPayW, firstPayReq)
+	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
+	require.True(t, quote.Valid)
+	require.NotNil(t, quote.SnapshotID)
+
+	firstPayW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "payment-key")
 	require.Equal(t, http.StatusOK, firstPayW.Code)
 
-	secondPayReq := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/checkout/orders/%d/payments/authorize", order.ID), strings.NewReader(paymentBody))
-	secondPayReq.Header.Set("Content-Type", "application/json")
-	secondPayReq.Header.Set("X-CSRF-Token", csrfToken)
-	secondPayReq.Header.Set("Idempotency-Key", "payment-key")
-	secondPayReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
-	secondPayReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
-	secondPayW := httptest.NewRecorder()
-	r.ServeHTTP(secondPayW, secondPayReq)
+	secondPayW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "payment-key")
 	require.Equal(t, http.StatusOK, secondPayW.Code)
 
 	var firstPayload struct {
@@ -990,6 +1286,929 @@ func TestCheckoutOrderPaymentIdempotencyReplaysAfterSessionConversion(t *testing
 	var sessionCount int64
 	require.NoError(t, db.Model(&models.CheckoutSession{}).Count(&sessionCount).Error)
 	assert.EqualValues(t, 1, sessionCount)
+
+	var intentCount int64
+	require.NoError(t, db.Model(&models.PaymentIntent{}).Count(&intentCount).Error)
+	assert.EqualValues(t, 1, intentCount)
+
+	var txnCount int64
+	require.NoError(t, db.Model(&models.PaymentTransaction{}).Count(&txnCount).Error)
+	assert.EqualValues(t, 1, txnCount)
+}
+
+func TestCheckoutOrderPaymentRejectsExpiredSnapshot(t *testing.T) {
+	resetCheckoutProtectionForTest(t)
+
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.Product{},
+		&models.ProductVariant{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.CheckoutSession{},
+		&models.Order{},
+		&models.OrderItem{},
+	)
+	product := seedProduct(t, db, "sku-expired-snapshot", "Expired Snapshot Product", 12.5, 10)
+	variantID := requireDefaultVariantID(t, product)
+
+	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/checkout/cart", nil)
+	getW := httptest.NewRecorder()
+	r.ServeHTTP(getW, getReq)
+	require.Equal(t, http.StatusOK, getW.Code)
+
+	checkoutToken := cookieValueByName(t, getW, checkoutSessionCookieName)
+	csrfToken := cookieValueByName(t, getW, csrfCookieName)
+
+	addReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/cart/items", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":1}`))
+	addReq.Header.Set("Content-Type", "application/json")
+	addReq.Header.Set("X-CSRF-Token", csrfToken)
+	addReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	addReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	addW := httptest.NewRecorder()
+	r.ServeHTTP(addW, addReq)
+	require.Equal(t, http.StatusOK, addW.Code)
+
+	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
+	require.True(t, quote.Valid)
+	require.NotNil(t, quote.SnapshotID)
+
+	createReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/orders", strings.NewReader(`{"guest_email":"expired-snapshot@example.com"}`))
+	createReq.Header.Set("Content-Type", "application/json")
+	createReq.Header.Set("X-CSRF-Token", csrfToken)
+	createReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	createReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	createW := httptest.NewRecorder()
+	r.ServeHTTP(createW, createReq)
+	require.Equal(t, http.StatusCreated, createW.Code)
+	order := decodeJSON[orderResponse](t, createW)
+
+	require.NoError(t, db.Model(&models.OrderCheckoutSnapshot{}).
+		Where("id = ?", *quote.SnapshotID).
+		Update("expires_at", time.Now().Add(-time.Minute).UTC()).Error)
+
+	payW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "")
+	require.Equal(t, http.StatusBadRequest, payW.Code)
+	assert.Contains(t, payW.Body.String(), "snapshot has expired")
+}
+
+func TestCheckoutOrderPaymentRejectsChangedOrderTotals(t *testing.T) {
+	resetCheckoutProtectionForTest(t)
+
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.Product{},
+		&models.ProductVariant{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.CheckoutSession{},
+		&models.Order{},
+		&models.OrderItem{},
+	)
+	product := seedProduct(t, db, "sku-mismatch-snapshot", "Mismatch Snapshot Product", 16.25, 10)
+	variantID := requireDefaultVariantID(t, product)
+
+	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/checkout/cart", nil)
+	getW := httptest.NewRecorder()
+	r.ServeHTTP(getW, getReq)
+	require.Equal(t, http.StatusOK, getW.Code)
+
+	checkoutToken := cookieValueByName(t, getW, checkoutSessionCookieName)
+	csrfToken := cookieValueByName(t, getW, csrfCookieName)
+
+	addReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/cart/items", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":1}`))
+	addReq.Header.Set("Content-Type", "application/json")
+	addReq.Header.Set("X-CSRF-Token", csrfToken)
+	addReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	addReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	addW := httptest.NewRecorder()
+	r.ServeHTTP(addW, addReq)
+	require.Equal(t, http.StatusOK, addW.Code)
+
+	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
+	require.True(t, quote.Valid)
+	require.NotNil(t, quote.SnapshotID)
+
+	createReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/orders", strings.NewReader(`{"guest_email":"snapshot-mismatch@example.com"}`))
+	createReq.Header.Set("Content-Type", "application/json")
+	createReq.Header.Set("X-CSRF-Token", csrfToken)
+	createReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	createReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	createW := httptest.NewRecorder()
+	r.ServeHTTP(createW, createReq)
+	require.Equal(t, http.StatusCreated, createW.Code)
+	order := decodeJSON[orderResponse](t, createW)
+
+	require.NoError(t, db.Model(&models.Order{}).
+		Where("id = ?", order.ID).
+		Update("total", models.MoneyFromFloat(99.99)).Error)
+
+	payW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "")
+	require.Equal(t, http.StatusConflict, payW.Code)
+	assert.Contains(t, payW.Body.String(), "snapshot no longer matches the order")
+}
+
+func TestCheckoutShippingRatesRejectAlreadyBoundSnapshot(t *testing.T) {
+	resetCheckoutProtectionForTest(t)
+
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.Product{},
+		&models.ProductVariant{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.CheckoutSession{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.IdempotencyKey{},
+	)
+	product := seedProduct(t, db, "sku-bound-shipping-snapshot", "Bound Shipping Snapshot Product", 19.50, 5)
+	variantID := requireDefaultVariantID(t, product)
+
+	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/checkout/cart", nil)
+	getW := httptest.NewRecorder()
+	r.ServeHTTP(getW, getReq)
+	require.Equal(t, http.StatusOK, getW.Code)
+
+	checkoutToken := cookieValueByName(t, getW, checkoutSessionCookieName)
+	csrfToken := cookieValueByName(t, getW, csrfCookieName)
+
+	addReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/cart/items", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":1}`))
+	addReq.Header.Set("Content-Type", "application/json")
+	addReq.Header.Set("X-CSRF-Token", csrfToken)
+	addReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	addReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	addW := httptest.NewRecorder()
+	r.ServeHTTP(addW, addReq)
+	require.Equal(t, http.StatusOK, addW.Code)
+
+	order := createGuestCheckoutOrder(t, r, checkoutToken, csrfToken, "bound-shipping-snapshot@example.com")
+	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
+	require.NotNil(t, quote.SnapshotID)
+
+	var storedOrder models.Order
+	require.NoError(t, db.First(&storedOrder, order.ID).Error)
+
+	boundOrder := models.Order{
+		CheckoutSessionID: storedOrder.CheckoutSessionID,
+		Total:             storedOrder.Total,
+		Status:            models.StatusPending,
+	}
+	require.NoError(t, db.Create(&boundOrder).Error)
+	require.NoError(t, db.Model(&models.OrderCheckoutSnapshot{}).
+		Where("id = ?", *quote.SnapshotID).
+		Update("order_id", boundOrder.ID).Error)
+
+	ratesW := quoteShippingRatesWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "bound-shipping-rates-key")
+	require.Equal(t, http.StatusConflict, ratesW.Code)
+	assert.Contains(t, ratesW.Body.String(), "snapshot is already bound to another order")
+}
+
+func TestAdminCapturePaymentReplaysAndBlocksDoubleCapture(t *testing.T) {
+	resetCheckoutProtectionForTest(t)
+
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.Product{},
+		&models.ProductVariant{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.CheckoutSession{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.IdempotencyKey{},
+	)
+	admin := seedUser(t, db, "sub-admin-capture", "admin-capture", "admin-capture@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+	product := seedProduct(t, db, "sku-admin-capture", "Admin Capture Product", 24.5, 12)
+	variantID := requireDefaultVariantID(t, product)
+
+	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/checkout/cart", nil)
+	getW := httptest.NewRecorder()
+	r.ServeHTTP(getW, getReq)
+	require.Equal(t, http.StatusOK, getW.Code)
+
+	checkoutToken := cookieValueByName(t, getW, checkoutSessionCookieName)
+	csrfToken := cookieValueByName(t, getW, csrfCookieName)
+
+	addReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/cart/items", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":2}`))
+	addReq.Header.Set("Content-Type", "application/json")
+	addReq.Header.Set("X-CSRF-Token", csrfToken)
+	addReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	addReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	addW := httptest.NewRecorder()
+	r.ServeHTTP(addW, addReq)
+	require.Equal(t, http.StatusOK, addW.Code)
+
+	order := createGuestCheckoutOrder(t, r, checkoutToken, csrfToken, "capture-admin@example.com")
+	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
+	require.NotNil(t, quote.SnapshotID)
+	authorizeW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "authorize-admin-capture")
+	require.Equal(t, http.StatusOK, authorizeW.Code)
+
+	var intent models.PaymentIntent
+	require.NoError(t, db.First(&intent).Error)
+
+	capturePath := fmt.Sprintf("/api/v1/admin/orders/%d/payments/%d/capture", order.ID, intent.ID)
+	firstCaptureW := adminLifecycleRequest(t, r, http.MethodPost, capturePath, "", adminToken, "capture-key")
+	require.Equal(t, http.StatusOK, firstCaptureW.Code)
+	firstCapture := decodeJSON[adminOrderPaymentLifecycleTestResponse](t, firstCaptureW)
+	assert.Equal(t, "Payment captured", firstCapture.Message)
+	assert.Equal(t, models.StatusPaid, firstCapture.Order.Status)
+	assert.Equal(t, models.PaymentIntentStatusCaptured, firstCapture.PaymentIntent.Status)
+	assert.Equal(t, "CAPTURE", firstCapture.Transaction.Operation)
+
+	secondCaptureW := adminLifecycleRequest(t, r, http.MethodPost, capturePath, "", adminToken, "capture-key")
+	require.Equal(t, http.StatusOK, secondCaptureW.Code)
+	secondCapture := decodeJSON[adminOrderPaymentLifecycleTestResponse](t, secondCaptureW)
+	assert.Equal(t, firstCapture.Transaction.ID, secondCapture.Transaction.ID)
+
+	duplicateCaptureW := adminLifecycleRequest(t, r, http.MethodPost, capturePath, "", adminToken, "capture-key-2")
+	require.Equal(t, http.StatusConflict, duplicateCaptureW.Code)
+	assert.Contains(t, duplicateCaptureW.Body.String(), paymentservice.ErrCaptureNotAllowed.Error())
+
+	var refreshedOrder models.Order
+	require.NoError(t, db.First(&refreshedOrder, order.ID).Error)
+	assert.Equal(t, models.StatusPaid, refreshedOrder.Status)
+
+	var refreshedIntent models.PaymentIntent
+	require.NoError(t, db.First(&refreshedIntent, intent.ID).Error)
+	assert.Equal(t, models.PaymentIntentStatusCaptured, refreshedIntent.Status)
+
+	ledgerW := adminLifecycleRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/admin/orders/%d/payments", order.ID), "", adminToken, "")
+	require.Equal(t, http.StatusOK, ledgerW.Code)
+	ledger := decodeJSON[orderPaymentLedgerTestResponse](t, ledgerW)
+	require.Len(t, ledger.Intents, 1)
+	require.Len(t, ledger.Intents[0].Transactions, 2)
+	assert.Equal(t, "AUTHORIZE", ledger.Intents[0].Transactions[0].Operation)
+	assert.Equal(t, "CAPTURE", ledger.Intents[0].Transactions[1].Operation)
+}
+
+func TestAdminRefundPaymentReplaysAndBlocksDuplicateRefund(t *testing.T) {
+	resetCheckoutProtectionForTest(t)
+
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.Product{},
+		&models.ProductVariant{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.CheckoutSession{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.IdempotencyKey{},
+	)
+	admin := seedUser(t, db, "sub-admin-refund", "admin-refund", "admin-refund@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+	product := seedProduct(t, db, "sku-admin-refund", "Admin Refund Product", 30, 6)
+	variantID := requireDefaultVariantID(t, product)
+
+	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/checkout/cart", nil)
+	getW := httptest.NewRecorder()
+	r.ServeHTTP(getW, getReq)
+	require.Equal(t, http.StatusOK, getW.Code)
+	checkoutToken := cookieValueByName(t, getW, checkoutSessionCookieName)
+	csrfToken := cookieValueByName(t, getW, csrfCookieName)
+
+	addReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/cart/items", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":1}`))
+	addReq.Header.Set("Content-Type", "application/json")
+	addReq.Header.Set("X-CSRF-Token", csrfToken)
+	addReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	addReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	addW := httptest.NewRecorder()
+	r.ServeHTTP(addW, addReq)
+	require.Equal(t, http.StatusOK, addW.Code)
+
+	order := createGuestCheckoutOrder(t, r, checkoutToken, csrfToken, "refund-admin@example.com")
+	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
+	require.NotNil(t, quote.SnapshotID)
+	authorizeW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "authorize-admin-refund")
+	require.Equal(t, http.StatusOK, authorizeW.Code)
+
+	var intent models.PaymentIntent
+	require.NoError(t, db.First(&intent).Error)
+	capturePath := fmt.Sprintf("/api/v1/admin/orders/%d/payments/%d/capture", order.ID, intent.ID)
+	captureW := adminLifecycleRequest(t, r, http.MethodPost, capturePath, "", adminToken, "capture-before-refund")
+	require.Equal(t, http.StatusOK, captureW.Code)
+
+	refundPath := fmt.Sprintf("/api/v1/admin/orders/%d/payments/%d/refund", order.ID, intent.ID)
+	firstRefundW := adminLifecycleRequest(t, r, http.MethodPost, refundPath, "", adminToken, "refund-key")
+	require.Equal(t, http.StatusOK, firstRefundW.Code)
+	firstRefund := decodeJSON[adminOrderPaymentLifecycleTestResponse](t, firstRefundW)
+	assert.Equal(t, "Payment refunded", firstRefund.Message)
+	assert.Equal(t, models.StatusRefunded, firstRefund.Order.Status)
+	assert.Equal(t, models.PaymentIntentStatusRefunded, firstRefund.PaymentIntent.Status)
+
+	secondRefundW := adminLifecycleRequest(t, r, http.MethodPost, refundPath, "", adminToken, "refund-key")
+	require.Equal(t, http.StatusOK, secondRefundW.Code)
+	secondRefund := decodeJSON[adminOrderPaymentLifecycleTestResponse](t, secondRefundW)
+	assert.Equal(t, firstRefund.Transaction.ID, secondRefund.Transaction.ID)
+
+	duplicateRefundW := adminLifecycleRequest(t, r, http.MethodPost, refundPath, "", adminToken, "refund-key-2")
+	require.Equal(t, http.StatusConflict, duplicateRefundW.Code)
+	assert.Contains(t, duplicateRefundW.Body.String(), paymentservice.ErrAmountExceedsAvailable.Error())
+
+	ledgerW := adminLifecycleRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/admin/orders/%d/payments", order.ID), "", adminToken, "")
+	require.Equal(t, http.StatusOK, ledgerW.Code)
+	ledger := decodeJSON[orderPaymentLedgerTestResponse](t, ledgerW)
+	require.Len(t, ledger.Intents, 1)
+	require.Len(t, ledger.Intents[0].Transactions, 3)
+	assert.Equal(t, "AUTHORIZE", ledger.Intents[0].Transactions[0].Operation)
+	assert.Equal(t, "CAPTURE", ledger.Intents[0].Transactions[1].Operation)
+	assert.Equal(t, "REFUND", ledger.Intents[0].Transactions[2].Operation)
+}
+
+func TestAdminVoidPaymentRequiresIdempotencyKey(t *testing.T) {
+	resetCheckoutProtectionForTest(t)
+
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.Product{},
+		&models.ProductVariant{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.CheckoutSession{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.IdempotencyKey{},
+	)
+	admin := seedUser(t, db, "sub-admin-void", "admin-void", "admin-void@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+	product := seedProduct(t, db, "sku-admin-void", "Admin Void Product", 18, 6)
+	variantID := requireDefaultVariantID(t, product)
+
+	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/checkout/cart", nil)
+	getW := httptest.NewRecorder()
+	r.ServeHTTP(getW, getReq)
+	require.Equal(t, http.StatusOK, getW.Code)
+	checkoutToken := cookieValueByName(t, getW, checkoutSessionCookieName)
+	csrfToken := cookieValueByName(t, getW, csrfCookieName)
+
+	addReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/cart/items", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":1}`))
+	addReq.Header.Set("Content-Type", "application/json")
+	addReq.Header.Set("X-CSRF-Token", csrfToken)
+	addReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	addReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	addW := httptest.NewRecorder()
+	r.ServeHTTP(addW, addReq)
+	require.Equal(t, http.StatusOK, addW.Code)
+
+	order := createGuestCheckoutOrder(t, r, checkoutToken, csrfToken, "void-admin@example.com")
+	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
+	require.NotNil(t, quote.SnapshotID)
+	authorizeW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "authorize-admin-void")
+	require.Equal(t, http.StatusOK, authorizeW.Code)
+
+	var intent models.PaymentIntent
+	require.NoError(t, db.First(&intent).Error)
+
+	voidPath := fmt.Sprintf("/api/v1/admin/orders/%d/payments/%d/void", order.ID, intent.ID)
+	voidW := adminLifecycleRequest(t, r, http.MethodPost, voidPath, "", adminToken, "")
+	require.Equal(t, http.StatusBadRequest, voidW.Code)
+	assert.Contains(t, voidW.Body.String(), "Header parameter Idempotency-Key is required")
+}
+
+func TestWebhookRejectsInvalidSignature(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.WebhookEvent{},
+	)
+
+	resp := webhookRequest(
+		t,
+		r,
+		"dummy-card",
+		`{"id":"evt-invalid-signature","type":"payment.captured","data":{"provider_txn_id":"dummy"}}`,
+		"invalid",
+	)
+	require.Equal(t, http.StatusUnauthorized, resp.Code)
+	assert.Contains(t, resp.Body.String(), "Invalid webhook signature")
+
+	var events []models.WebhookEvent
+	require.NoError(t, db.Order("id ASC").Find(&events).Error)
+	require.Len(t, events, 1)
+	assert.Equal(t, "dummy-card", events[0].Provider)
+	assert.Contains(t, events[0].ProviderEventID, "signature.invalid.")
+	assert.Equal(t, "signature.invalid", events[0].EventType)
+	assert.False(t, events[0].SignatureValid)
+	assert.Equal(t, 1, events[0].AttemptCount)
+	assert.Contains(t, events[0].LastError, "invalid webhook signature")
+}
+
+func TestWebhookReplayIsNoOp(t *testing.T) {
+	resetCheckoutProtectionForTest(t)
+
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.Product{},
+		&models.ProductVariant{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.CheckoutSession{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.IdempotencyKey{},
+		&models.WebhookEvent{},
+	)
+	admin := seedUser(t, db, "sub-admin-webhook-replay", "admin-webhook-replay", "admin-webhook-replay@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+	product := seedProduct(t, db, "sku-webhook-replay", "Webhook Replay Product", 19.5, 8)
+	variantID := requireDefaultVariantID(t, product)
+
+	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/checkout/cart", nil)
+	getW := httptest.NewRecorder()
+	r.ServeHTTP(getW, getReq)
+	require.Equal(t, http.StatusOK, getW.Code)
+	checkoutToken := cookieValueByName(t, getW, checkoutSessionCookieName)
+	csrfToken := cookieValueByName(t, getW, csrfCookieName)
+
+	addReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/cart/items", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":1}`))
+	addReq.Header.Set("Content-Type", "application/json")
+	addReq.Header.Set("X-CSRF-Token", csrfToken)
+	addReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	addReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	addW := httptest.NewRecorder()
+	r.ServeHTTP(addW, addReq)
+	require.Equal(t, http.StatusOK, addW.Code)
+
+	order := createGuestCheckoutOrder(t, r, checkoutToken, csrfToken, "webhook-replay@example.com")
+	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
+	require.NotNil(t, quote.SnapshotID)
+	authorizeW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "authorize-webhook-replay")
+	require.Equal(t, http.StatusOK, authorizeW.Code)
+
+	var intent models.PaymentIntent
+	require.NoError(t, db.First(&intent).Error)
+	capturePath := fmt.Sprintf("/api/v1/admin/orders/%d/payments/%d/capture", order.ID, intent.ID)
+	captureW := adminLifecycleRequest(t, r, http.MethodPost, capturePath, "", adminToken, "capture-webhook-replay")
+	require.Equal(t, http.StatusOK, captureW.Code)
+
+	var captureTxn models.PaymentTransaction
+	require.NoError(t, db.Where("payment_intent_id = ? AND operation = ?", intent.ID, models.PaymentTransactionOperationCapture).First(&captureTxn).Error)
+
+	firstWebhook := webhookRequest(
+		t,
+		r,
+		"dummy-card",
+		fmt.Sprintf(`{"id":"evt-webhook-replay","type":"payment.captured","data":{"provider_txn_id":%q}}`, captureTxn.ProviderTxnID),
+		"valid",
+	)
+	require.Equal(t, http.StatusOK, firstWebhook.Code)
+
+	firstPayload := decodeJSON[map[string]any](t, firstWebhook)
+	eventID := uint(firstPayload["event_id"].(float64))
+	event := waitForWebhookEvent(t, db, eventID, func(event models.WebhookEvent) bool {
+		return event.ProcessedAt != nil && event.AttemptCount == 1
+	})
+	assert.Equal(t, "evt-webhook-replay", event.ProviderEventID)
+
+	replayWebhook := webhookRequest(
+		t,
+		r,
+		"dummy-card",
+		fmt.Sprintf(`{"id":"evt-webhook-replay","type":"payment.captured","data":{"provider_txn_id":%q}}`, captureTxn.ProviderTxnID),
+		"valid",
+	)
+	require.Equal(t, http.StatusOK, replayWebhook.Code)
+	replayPayload := decodeJSON[map[string]any](t, replayWebhook)
+	assert.Equal(t, true, replayPayload["duplicate"])
+
+	var count int64
+	require.NoError(t, db.Model(&models.WebhookEvent{}).Count(&count).Error)
+	assert.EqualValues(t, 1, count)
+}
+
+func TestPoisonWebhookEventVisibleInAdminInspection(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.WebhookEvent{},
+	)
+	admin := seedUser(t, db, "sub-admin-webhook-poison", "admin-webhook-poison", "admin-webhook-poison@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	resp := webhookRequest(
+		t,
+		r,
+		"dummy-card",
+		`{"id":"evt-poison","type":"payment.captured","data":{"provider_txn_id":"missing-provider-transaction"}}`,
+		"valid",
+	)
+	require.Equal(t, http.StatusOK, resp.Code)
+	payload := decodeJSON[map[string]any](t, resp)
+	eventID := uint(payload["event_id"].(float64))
+
+	event := waitForWebhookEvent(t, db, eventID, func(event models.WebhookEvent) bool {
+		return event.ProcessedAt == nil &&
+			event.AttemptCount >= webhookservice.DefaultMaxAttempts &&
+			strings.Contains(event.LastError, "provider transaction not found")
+	})
+	assert.Equal(t, "evt-poison", event.ProviderEventID)
+
+	listW := adminLifecycleRequest(t, r, http.MethodGet, "/api/v1/admin/webhooks/events?status=DEAD_LETTER&page=1&limit=20", "", adminToken, "")
+	require.Equal(t, http.StatusOK, listW.Code)
+
+	var page struct {
+		Data []struct {
+			ProviderEventID string `json:"provider_event_id"`
+			Status          string `json:"status"`
+			AttemptCount    int    `json:"attempt_count"`
+			LastError       string `json:"last_error"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(listW.Body.Bytes(), &page))
+	require.Len(t, page.Data, 1)
+	assert.Equal(t, "evt-poison", page.Data[0].ProviderEventID)
+	assert.Equal(t, webhookservice.EventStatusDeadLetter, page.Data[0].Status)
+	assert.Equal(t, webhookservice.DefaultMaxAttempts, page.Data[0].AttemptCount)
+	assert.Contains(t, page.Data[0].LastError, "provider transaction not found")
+}
+
+func TestRejectedWebhookEventVisibleInAdminInspection(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.WebhookEvent{},
+	)
+	admin := seedUser(t, db, "sub-admin-webhook-rejected", "admin-webhook-rejected", "admin-webhook-rejected@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	resp := webhookRequest(
+		t,
+		r,
+		"dummy-card",
+		`{"id":"evt-invalid-signature","type":"payment.captured","data":{"provider_txn_id":"missing-provider-transaction"}}`,
+		"invalid",
+	)
+	require.Equal(t, http.StatusUnauthorized, resp.Code)
+
+	secondResp := webhookRequest(
+		t,
+		r,
+		"dummy-card",
+		`{"id":"evt-invalid-signature-2","type":"payment.captured","data":{"provider_txn_id":"missing-provider-transaction-2"}}`,
+		"invalid",
+	)
+	require.Equal(t, http.StatusUnauthorized, secondResp.Code)
+
+	listW := adminLifecycleRequest(t, r, http.MethodGet, "/api/v1/admin/webhooks/events?status=REJECTED&page=1&limit=20", "", adminToken, "")
+	require.Equal(t, http.StatusOK, listW.Code)
+
+	var page struct {
+		Data []struct {
+			ProviderEventID string `json:"provider_event_id"`
+			EventType       string `json:"event_type"`
+			SignatureValid  bool   `json:"signature_valid"`
+			Status          string `json:"status"`
+			LastError       string `json:"last_error"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(listW.Body.Bytes(), &page))
+	require.Len(t, page.Data, 2)
+	assert.NotEqual(t, page.Data[0].ProviderEventID, page.Data[1].ProviderEventID)
+	for _, event := range page.Data {
+		assert.Contains(t, event.ProviderEventID, "signature.invalid.")
+		assert.Equal(t, "signature.invalid", event.EventType)
+		assert.False(t, event.SignatureValid)
+		assert.Equal(t, webhookservice.EventStatusRejected, event.Status)
+		assert.Contains(t, event.LastError, "invalid webhook signature")
+	}
+}
+
+func TestAdminShippingLabelKeepsChosenServiceImmutable(t *testing.T) {
+	resetCheckoutProtectionForTest(t)
+
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.Product{},
+		&models.ProductVariant{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.CheckoutSession{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.IdempotencyKey{},
+		&models.ShipmentRate{},
+		&models.Shipment{},
+	)
+	admin := seedUser(t, db, "sub-admin-shipping-label", "admin-shipping-label", "admin-shipping-label@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+	product := seedProduct(t, db, "sku-shipping-label", "Shipping Label Product", 22, 5)
+	variantID := requireDefaultVariantID(t, product)
+
+	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/checkout/cart", nil)
+	getW := httptest.NewRecorder()
+	r.ServeHTTP(getW, getReq)
+	require.Equal(t, http.StatusOK, getW.Code)
+	checkoutToken := cookieValueByName(t, getW, checkoutSessionCookieName)
+	csrfToken := cookieValueByName(t, getW, csrfCookieName)
+
+	addReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/cart/items", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":1}`))
+	addReq.Header.Set("Content-Type", "application/json")
+	addReq.Header.Set("X-CSRF-Token", csrfToken)
+	addReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	addReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	addW := httptest.NewRecorder()
+	r.ServeHTTP(addW, addReq)
+	require.Equal(t, http.StatusOK, addW.Code)
+
+	order := createGuestCheckoutOrder(t, r, checkoutToken, csrfToken, "shipping-label@example.com")
+	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
+	require.NotNil(t, quote.SnapshotID)
+
+	ratesW := quoteShippingRatesWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "shipping-rates-key")
+	require.Equal(t, http.StatusOK, ratesW.Code)
+	rates := decodeJSON[checkoutShippingRatesTestResponse](t, ratesW)
+	require.Len(t, rates.Rates, 2)
+
+	selectedRateID := rates.Rates[0].ID
+	alternateRateID := rates.Rates[1].ID
+	for _, rate := range rates.Rates {
+		if rate.Selected {
+			selectedRateID = rate.ID
+		} else {
+			alternateRateID = rate.ID
+		}
+	}
+
+	labelPath := fmt.Sprintf("/api/v1/admin/orders/%d/shipping/labels", order.ID)
+	firstLabelW := adminLifecycleRequest(
+		t,
+		r,
+		http.MethodPost,
+		labelPath,
+		fmt.Sprintf(`{"rate_id":%d,"package":{"reference":"box-1","weight_grams":500}}`, selectedRateID),
+		adminToken,
+		"shipping-label-key",
+	)
+	require.Equal(t, http.StatusOK, firstLabelW.Code)
+	firstLabel := decodeJSON[adminShippingLabelTestResponse](t, firstLabelW)
+	assert.Equal(t, models.ShipmentStatusLabelPurchased, firstLabel.Shipment.Status)
+
+	replayLabelW := adminLifecycleRequest(
+		t,
+		r,
+		http.MethodPost,
+		labelPath,
+		fmt.Sprintf(`{"rate_id":%d,"package":{"reference":"box-1","weight_grams":500}}`, selectedRateID),
+		adminToken,
+		"shipping-label-key",
+	)
+	require.Equal(t, http.StatusOK, replayLabelW.Code)
+	replayLabel := decodeJSON[adminShippingLabelTestResponse](t, replayLabelW)
+	assert.Equal(t, firstLabel.Shipment.ID, replayLabel.Shipment.ID)
+
+	conflictLabelW := adminLifecycleRequest(
+		t,
+		r,
+		http.MethodPost,
+		labelPath,
+		fmt.Sprintf(`{"rate_id":%d}`, alternateRateID),
+		adminToken,
+		"shipping-label-conflict",
+	)
+	require.Equal(t, http.StatusConflict, conflictLabelW.Code)
+	assert.Contains(t, conflictLabelW.Body.String(), "immutable")
+}
+
+func TestShippingTrackingWebhookUpdatesShipmentStateIdempotently(t *testing.T) {
+	resetCheckoutProtectionForTest(t)
+
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.Product{},
+		&models.ProductVariant{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.CheckoutSession{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.IdempotencyKey{},
+		&models.ShipmentRate{},
+		&models.Shipment{},
+		&models.TrackingEvent{},
+		&models.WebhookEvent{},
+	)
+	admin := seedUser(t, db, "sub-admin-tracking", "admin-tracking", "admin-tracking@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+	product := seedProduct(t, db, "sku-tracking", "Tracking Product", 24, 5)
+	variantID := requireDefaultVariantID(t, product)
+
+	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/checkout/cart", nil)
+	getW := httptest.NewRecorder()
+	r.ServeHTTP(getW, getReq)
+	require.Equal(t, http.StatusOK, getW.Code)
+	checkoutToken := cookieValueByName(t, getW, checkoutSessionCookieName)
+	csrfToken := cookieValueByName(t, getW, csrfCookieName)
+
+	addReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/cart/items", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":1}`))
+	addReq.Header.Set("Content-Type", "application/json")
+	addReq.Header.Set("X-CSRF-Token", csrfToken)
+	addReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	addReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	addW := httptest.NewRecorder()
+	r.ServeHTTP(addW, addReq)
+	require.Equal(t, http.StatusOK, addW.Code)
+
+	order := createGuestCheckoutOrder(t, r, checkoutToken, csrfToken, "tracking@example.com")
+	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
+	require.NotNil(t, quote.SnapshotID)
+
+	ratesW := quoteShippingRatesWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "tracking-rates-key")
+	require.Equal(t, http.StatusOK, ratesW.Code)
+	rates := decodeJSON[checkoutShippingRatesTestResponse](t, ratesW)
+	require.NotEmpty(t, rates.Rates)
+
+	selectedRateID := rates.Rates[0].ID
+	for _, rate := range rates.Rates {
+		if rate.Selected {
+			selectedRateID = rate.ID
+			break
+		}
+	}
+
+	labelPath := fmt.Sprintf("/api/v1/admin/orders/%d/shipping/labels", order.ID)
+	labelW := adminLifecycleRequest(
+		t,
+		r,
+		http.MethodPost,
+		labelPath,
+		fmt.Sprintf(`{"rate_id":%d}`, selectedRateID),
+		adminToken,
+		"tracking-label-key",
+	)
+	require.Equal(t, http.StatusOK, labelW.Code)
+	label := decodeJSON[adminShippingLabelTestResponse](t, labelW)
+
+	webhookBody := fmt.Sprintf(
+		`{"id":"evt-tracking-in-transit","type":"tracking.in_transit","data":{"provider_shipment_id":%q,"tracking_number":%q,"status":"IN_TRANSIT","location":"Austin, TX","description":"Accepted by carrier","occurred_at":"2026-03-20T12:00:00Z"}}`,
+		label.Shipment.ProviderShipmentID,
+		label.Shipment.TrackingNumber,
+	)
+	firstWebhook := webhookRequest(t, r, "dummy-ground", webhookBody, "valid")
+	require.Equal(t, http.StatusOK, firstWebhook.Code)
+	firstPayload := decodeJSON[map[string]any](t, firstWebhook)
+	eventID := uint(firstPayload["event_id"].(float64))
+	waitForWebhookEvent(t, db, eventID, func(event models.WebhookEvent) bool {
+		return event.ProcessedAt != nil && event.AttemptCount == 1
+	})
+
+	trackingW := checkoutTrackingRequest(t, r, order.ID, checkoutToken)
+	require.Equal(t, http.StatusOK, trackingW.Code)
+	tracking := decodeJSON[checkoutTrackingTestResponse](t, trackingW)
+	require.Len(t, tracking.Shipments, 1)
+	assert.Equal(t, models.ShipmentStatusInTransit, tracking.Shipments[0].Status)
+	require.Len(t, tracking.Shipments[0].TrackingEvents, 1)
+	assert.Equal(t, "evt-tracking-in-transit", tracking.Shipments[0].TrackingEvents[0].ProviderEventID)
+
+	replayWebhook := webhookRequest(t, r, "dummy-ground", webhookBody, "valid")
+	require.Equal(t, http.StatusOK, replayWebhook.Code)
+	replayPayload := decodeJSON[map[string]any](t, replayWebhook)
+	assert.Equal(t, true, replayPayload["duplicate"])
+
+	var trackingCount int64
+	require.NoError(t, db.Model(&models.TrackingEvent{}).Count(&trackingCount).Error)
+	assert.EqualValues(t, 1, trackingCount)
+
+	var refreshedOrder models.Order
+	require.NoError(t, db.First(&refreshedOrder, order.ID).Error)
+	assert.Equal(t, models.StatusShipped, refreshedOrder.Status)
+}
+
+func TestCheckoutTaxFinalizePersistsLineLevelSnapshotResults(t *testing.T) {
+	resetCheckoutProtectionForTest(t)
+
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.Product{},
+		&models.ProductVariant{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.CheckoutSession{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.IdempotencyKey{},
+		&models.OrderTaxLine{},
+	)
+	product := seedProduct(t, db, "sku-tax-finalize", "Tax Finalize Product", 30, 8)
+	variantID := requireDefaultVariantID(t, product)
+
+	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/checkout/cart", nil)
+	getW := httptest.NewRecorder()
+	r.ServeHTTP(getW, getReq)
+	require.Equal(t, http.StatusOK, getW.Code)
+	checkoutToken := cookieValueByName(t, getW, checkoutSessionCookieName)
+	csrfToken := cookieValueByName(t, getW, csrfCookieName)
+
+	addReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/cart/items", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":1}`))
+	addReq.Header.Set("Content-Type", "application/json")
+	addReq.Header.Set("X-CSRF-Token", csrfToken)
+	addReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	addReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	addW := httptest.NewRecorder()
+	r.ServeHTTP(addW, addReq)
+	require.Equal(t, http.StatusOK, addW.Code)
+
+	order := createGuestCheckoutOrder(t, r, checkoutToken, csrfToken, "tax-finalize@example.com")
+	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
+	require.NotNil(t, quote.SnapshotID)
+
+	finalizeW := finalizeCheckoutTaxWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "tax-finalize-key", "")
+	require.Equal(t, http.StatusOK, finalizeW.Code)
+	finalizeResp := decodeJSON[checkoutTaxFinalizeTestResponse](t, finalizeW)
+	assert.Equal(t, "dummy-us-tax", finalizeResp.Provider)
+	assert.False(t, finalizeResp.InclusivePricing)
+	require.Len(t, finalizeResp.Lines, 2)
+
+	lineTypes := []string{finalizeResp.Lines[0].LineType, finalizeResp.Lines[1].LineType}
+	assert.Contains(t, lineTypes, models.TaxLineTypeItem)
+	assert.Contains(t, lineTypes, models.TaxLineTypeShipping)
+	assert.NotZero(t, finalizeResp.TotalTax)
+
+	var storedLines []models.OrderTaxLine
+	require.NoError(t, db.Where("order_id = ? AND snapshot_id = ?", order.ID, *quote.SnapshotID).Order("id ASC").Find(&storedLines).Error)
+	require.Len(t, storedLines, 2)
+	for _, line := range storedLines {
+		assert.Equal(t, uint(order.ID), line.OrderID)
+		assert.Equal(t, *quote.SnapshotID, line.SnapshotID)
+		assert.Equal(t, "dummy-us-tax", line.TaxProviderID)
+	}
+}
+
+func TestCheckoutTaxFinalizeRejectsAlreadyBoundSnapshot(t *testing.T) {
+	resetCheckoutProtectionForTest(t)
+
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.Product{},
+		&models.ProductVariant{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.CheckoutSession{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.IdempotencyKey{},
+		&models.OrderTaxLine{},
+	)
+	product := seedProduct(t, db, "sku-bound-tax-snapshot", "Bound Tax Snapshot Product", 24.25, 8)
+	variantID := requireDefaultVariantID(t, product)
+
+	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/checkout/cart", nil)
+	getW := httptest.NewRecorder()
+	r.ServeHTTP(getW, getReq)
+	require.Equal(t, http.StatusOK, getW.Code)
+	checkoutToken := cookieValueByName(t, getW, checkoutSessionCookieName)
+	csrfToken := cookieValueByName(t, getW, csrfCookieName)
+
+	addReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/cart/items", strings.NewReader(`{"product_variant_id":`+strconv.Itoa(int(variantID))+`,"quantity":1}`))
+	addReq.Header.Set("Content-Type", "application/json")
+	addReq.Header.Set("X-CSRF-Token", csrfToken)
+	addReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
+	addReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
+	addW := httptest.NewRecorder()
+	r.ServeHTTP(addW, addReq)
+	require.Equal(t, http.StatusOK, addW.Code)
+
+	order := createGuestCheckoutOrder(t, r, checkoutToken, csrfToken, "bound-tax-snapshot@example.com")
+	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
+	require.NotNil(t, quote.SnapshotID)
+
+	var storedOrder models.Order
+	require.NoError(t, db.First(&storedOrder, order.ID).Error)
+
+	boundOrder := models.Order{
+		CheckoutSessionID: storedOrder.CheckoutSessionID,
+		Total:             storedOrder.Total,
+		Status:            models.StatusPending,
+	}
+	require.NoError(t, db.Create(&boundOrder).Error)
+	require.NoError(t, db.Model(&models.OrderCheckoutSnapshot{}).
+		Where("id = ?", *quote.SnapshotID).
+		Update("order_id", boundOrder.ID).Error)
+
+	finalizeW := finalizeCheckoutTaxWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "bound-tax-finalize-key", "")
+	require.Equal(t, http.StatusConflict, finalizeW.Code)
+	assert.Contains(t, finalizeW.Body.String(), "snapshot is already bound to another order")
 }
 
 func TestCheckoutOrderPaymentRejectsStaleDuplicateOrderAfterSessionConversion(t *testing.T) {
@@ -1079,33 +2298,18 @@ func TestCheckoutOrderPaymentRejectsStaleDuplicateOrderAfterSessionConversion(t 
 		return nil
 	}))
 
-	paymentBody := `{"payment_provider_id":"dummy-card","shipping_provider_id":"dummy-ground","tax_provider_id":"dummy-us-tax","payment_data":{"cardholder_name":"Guest Buyer","card_number":"4111111111111111","exp_month":"12","exp_year":"2030"},"shipping_data":{"full_name":"Guest Buyer","line1":"1 Guest Way","city":"Austin","state":"TX","postal_code":"78701","country":"US","service_level":"standard"},"tax_data":{"state":"TX"}}`
-	stalePayReq := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/checkout/orders/%d/payments/authorize", staleOrderID), strings.NewReader(paymentBody))
-	stalePayReq.Header.Set("Content-Type", "application/json")
-	stalePayReq.Header.Set("X-CSRF-Token", csrfToken)
-	stalePayReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
-	stalePayReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
-	stalePayW := httptest.NewRecorder()
-	r.ServeHTTP(stalePayW, stalePayReq)
+	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
+	require.True(t, quote.Valid)
+	require.NotNil(t, quote.SnapshotID)
+
+	stalePayW := authorizeCheckoutWithSnapshot(t, r, int(staleOrderID), *quote.SnapshotID, checkoutToken, csrfToken, "")
 	require.Equal(t, http.StatusConflict, stalePayW.Code)
 	assert.Contains(t, stalePayW.Body.String(), "no longer payable")
 
-	currentPayReq := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/checkout/orders/%d/payments/authorize", currentOrderID), strings.NewReader(paymentBody))
-	currentPayReq.Header.Set("Content-Type", "application/json")
-	currentPayReq.Header.Set("X-CSRF-Token", csrfToken)
-	currentPayReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
-	currentPayReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
-	currentPayW := httptest.NewRecorder()
-	r.ServeHTTP(currentPayW, currentPayReq)
+	currentPayW := authorizeCheckoutWithSnapshot(t, r, int(currentOrderID), *quote.SnapshotID, checkoutToken, csrfToken, "")
 	require.Equal(t, http.StatusOK, currentPayW.Code)
 
-	replayStalePayReq := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/checkout/orders/%d/payments/authorize", staleOrderID), strings.NewReader(paymentBody))
-	replayStalePayReq.Header.Set("Content-Type", "application/json")
-	replayStalePayReq.Header.Set("X-CSRF-Token", csrfToken)
-	replayStalePayReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
-	replayStalePayReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
-	replayStalePayW := httptest.NewRecorder()
-	r.ServeHTTP(replayStalePayW, replayStalePayReq)
+	replayStalePayW := authorizeCheckoutWithSnapshot(t, r, int(staleOrderID), *quote.SnapshotID, checkoutToken, csrfToken, "")
 	require.Equal(t, http.StatusConflict, replayStalePayW.Code)
 	assert.Contains(t, replayStalePayW.Body.String(), "already been converted")
 
@@ -1284,25 +2488,30 @@ func TestCheckoutOrderPaymentIdempotencyReplayBypassesRateLimit(t *testing.T) {
 	require.Equal(t, http.StatusCreated, createW.Code)
 	order := decodeJSON[orderResponse](t, createW)
 
-	paymentBody := `{"payment_provider_id":"dummy-card","shipping_provider_id":"dummy-ground","tax_provider_id":"dummy-us-tax","payment_data":{"cardholder_name":"Guest Buyer","card_number":"4111111111111111","exp_month":"12","exp_year":"2030"},"shipping_data":{"full_name":"Guest Buyer","line1":"1 Guest Way","city":"Austin","state":"TX","postal_code":"78701","country":"US","service_level":"standard"},"tax_data":{"state":"TX"}}`
-	firstPayReq := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/checkout/orders/%d/payments/authorize", order.ID), strings.NewReader(paymentBody))
-	firstPayReq.Header.Set("Content-Type", "application/json")
-	firstPayReq.Header.Set("X-CSRF-Token", csrfToken)
-	firstPayReq.Header.Set("Idempotency-Key", "payment-rate-limit-replay")
-	firstPayReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
-	firstPayReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
-	firstPayW := httptest.NewRecorder()
-	r.ServeHTTP(firstPayW, firstPayReq)
+	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
+	require.True(t, quote.Valid)
+	require.NotNil(t, quote.SnapshotID)
+
+	firstPayW := authorizeCheckoutWithSnapshot(
+		t,
+		r,
+		order.ID,
+		*quote.SnapshotID,
+		checkoutToken,
+		csrfToken,
+		"payment-rate-limit-replay",
+	)
 	require.Equal(t, http.StatusOK, firstPayW.Code)
 
-	secondPayReq := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/v1/checkout/orders/%d/payments/authorize", order.ID), strings.NewReader(paymentBody))
-	secondPayReq.Header.Set("Content-Type", "application/json")
-	secondPayReq.Header.Set("X-CSRF-Token", csrfToken)
-	secondPayReq.Header.Set("Idempotency-Key", "payment-rate-limit-replay")
-	secondPayReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: checkoutToken})
-	secondPayReq.AddCookie(&http.Cookie{Name: csrfCookieName, Value: csrfToken})
-	secondPayW := httptest.NewRecorder()
-	r.ServeHTTP(secondPayW, secondPayReq)
+	secondPayW := authorizeCheckoutWithSnapshot(
+		t,
+		r,
+		order.ID,
+		*quote.SnapshotID,
+		checkoutToken,
+		csrfToken,
+		"payment-rate-limit-replay",
+	)
 	require.Equal(t, http.StatusOK, secondPayW.Code)
 
 	var firstPayload struct {
@@ -2508,120 +3717,6 @@ func TestPublicEndpointsDoNotExposeDraftMetadataWithoutPreview(t *testing.T) {
 	_, hasStorefrontDraftUpdated := storefrontBody["draft_updated_at"]
 	assert.False(t, hasStorefrontDraftFlag)
 	assert.False(t, hasStorefrontDraftUpdated)
-}
-
-func TestProcessPaymentRemovesOnlyOrderedCartQuantities(t *testing.T) {
-	r, db := setupGeneratedRouterWithConfig(
-		t,
-		GeneratedAPIServerConfig{},
-		&models.User{},
-		&models.Product{},
-		&models.ProductVariant{},
-		&models.Cart{},
-		&models.CartItem{},
-		&models.Order{},
-		&models.OrderItem{},
-	)
-
-	user := seedUser(t, db, "sub-partial-checkout", "partial-checkout", "partial-checkout@example.com", "customer")
-	productA := seedProduct(t, db, "sku-partial-a", "Partial A", 10, 20)
-	productB := seedProduct(t, db, "sku-partial-b", "Partial B", 12, 20)
-	productAVariantID := requireDefaultVariantID(t, productA)
-	productBVariantID := requireDefaultVariantID(t, productB)
-	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, user.Subject, user.Role)
-
-	cart := seedCartForUser(t, db, user.ID)
-	require.NoError(t, db.Create(&models.CartItem{CartID: cart.ID, ProductVariantID: productAVariantID, Quantity: 3}).Error)
-	require.NoError(t, db.Create(&models.CartItem{CartID: cart.ID, ProductVariantID: productBVariantID, Quantity: 4}).Error)
-
-	createOrderResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/orders", map[string]any{
-		"items": []map[string]any{{"product_variant_id": productAVariantID, "quantity": 2}},
-	}, token)
-	require.Equal(t, http.StatusCreated, createOrderResp.Code)
-	order := decodeJSON[orderResponse](t, createOrderResp)
-
-	payResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/me/orders/%d/pay", order.ID), map[string]any{
-		"payment_method": map[string]any{
-			"cardholder_name": "Partial Checkout",
-			"card_number":     "4111111111111111",
-			"exp_month":       12,
-			"exp_year":        2035,
-		},
-		"address": map[string]any{
-			"full_name":   "Partial Checkout",
-			"line1":       "100 Main St",
-			"city":        "Austin",
-			"postal_code": "78701",
-			"country":     "US",
-		},
-	}, token)
-	require.Equal(t, http.StatusOK, payResp.Code)
-
-	var remaining []models.CartItem
-	require.NoError(t, db.Where("cart_id = ?", cart.ID).Order("product_variant_id asc").Find(&remaining).Error)
-	require.Len(t, remaining, 2)
-	assert.Equal(t, productAVariantID, remaining[0].ProductVariantID)
-	assert.Equal(t, 1, remaining[0].Quantity)
-	assert.Equal(t, productBVariantID, remaining[1].ProductVariantID)
-	assert.Equal(t, 4, remaining[1].Quantity)
-}
-
-func TestProcessPaymentWithPluginsPersistsQuotedTotal(t *testing.T) {
-	r, db := setupGeneratedRouterWithConfig(
-		t,
-		GeneratedAPIServerConfig{},
-		&models.User{},
-		&models.Product{},
-		&models.Cart{},
-		&models.CartItem{},
-		&models.Order{},
-		&models.OrderItem{},
-	)
-
-	user := seedUser(t, db, "sub-plugin-total", "plugin-total", "plugin-total@example.com", "customer")
-	product := seedProduct(t, db, "sku-plugin-total", "Plugin Total", 20, 10)
-	variantID := requireDefaultVariantID(t, product)
-	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, user.Subject, user.Role)
-
-	createOrderResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/me/orders", map[string]any{
-		"items": []map[string]any{{"product_variant_id": variantID, "quantity": 1}},
-	}, token)
-	require.Equal(t, http.StatusCreated, createOrderResp.Code)
-	order := decodeJSON[orderResponse](t, createOrderResp)
-
-	payResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/me/orders/%d/pay", order.ID), map[string]any{
-		"payment_provider_id":  "dummy-card",
-		"shipping_provider_id": "dummy-ground",
-		"tax_provider_id":      "dummy-us-tax",
-		"payment_data": map[string]any{
-			"cardholder_name": "Plugin Total",
-			"card_number":     "4111111111111111",
-			"exp_month":       "12",
-			"exp_year":        "2035",
-		},
-		"shipping_data": map[string]any{
-			"full_name":     "Plugin Total",
-			"line1":         "200 Plugin Way",
-			"city":          "Austin",
-			"state":         "CA",
-			"postal_code":   "78701",
-			"country":       "US",
-			"service_level": "standard",
-		},
-		"tax_data": map[string]any{
-			"state": "CA",
-		},
-	}, token)
-	require.Equal(t, http.StatusOK, payResp.Code)
-
-	var reloaded models.Order
-	require.NoError(t, db.First(&reloaded, order.ID).Error)
-
-	expectedShipping := models.MoneyFromFloat(5.99)
-	orderSubtotal := models.MoneyFromFloat(order.Total)
-	expectedTax := models.MoneyFromFloat((orderSubtotal + expectedShipping).Float64() * 0.085)
-	expectedTotal := orderSubtotal + expectedShipping + expectedTax
-	assert.Equal(t, expectedTotal, reloaded.Total)
 }
 
 func TestCreateOrderDuplicateItemsAggregateStockValidation(t *testing.T) {

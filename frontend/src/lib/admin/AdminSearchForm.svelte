@@ -39,7 +39,7 @@
 		type="search"
 		bind:value
 		{placeholder}
-		class={`min-w-[13rem] flex-1 ${inputClass}`}
+		class={`min-w-52 flex-1 ${inputClass}`}
 	/>
 	<IconButton
 		tone="admin"

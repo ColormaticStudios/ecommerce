@@ -352,6 +352,10 @@
 			if (!isQuoteValid) {
 				return;
 			}
+			if (!quote?.snapshot_id) {
+				errorMessage = "Checkout quote is missing a payment snapshot. Refresh and try again.";
+				return;
+			}
 
 			await maybeSaveProfileData();
 
@@ -373,14 +377,7 @@
 			}
 			order = await api.processPayment(
 				orderID,
-				{
-					payment_provider_id: selectedPaymentProviderId,
-					shipping_provider_id: selectedShippingProviderId,
-					tax_provider_id: "",
-					payment_data: toStringMap(paymentData),
-					shipping_data: toStringMap(shippingData),
-					tax_data: toStringMap(taxData),
-				},
+				{ snapshot_id: quote.snapshot_id },
 				paymentIdempotencyKey
 			);
 

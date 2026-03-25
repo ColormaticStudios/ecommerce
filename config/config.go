@@ -10,21 +10,25 @@ import (
 )
 
 type Config struct {
-	DBURL                      string `mapstructure:"DATABASE_URL"`
-	AutoApplyMigrations        bool   `mapstructure:"AUTO_APPLY_MIGRATIONS"`
-	Port                       string `mapstructure:"PORT"`
-	JWTSecret                  string `mapstructure:"JWT_SECRET"`
-	DisableLocalSignIn         bool   `mapstructure:"DISABLE_LOCAL_SIGN_IN"`
-	OIDCProvider               string `mapstructure:"OIDC_PROVIDER"`
-	OIDCClientID               string `mapstructure:"OIDC_CLIENT_ID"`
-	OIDCClientSecret           string `mapstructure:"OIDC_CLIENT_SECRET"`
-	OIDCRedirectURI            string `mapstructure:"OIDC_REDIRECT_URI"`
-	DevMode                    bool   `mapstructure:"DEV_MODE"`
-	PublicURL                  string `mapstructure:"PUBLIC_URL"`
-	MediaRoot                  string `mapstructure:"MEDIA_ROOT"`
-	MediaPublicURL             string `mapstructure:"MEDIA_PUBLIC_URL"`
-	ServeMedia                 bool   `mapstructure:"SERVE_MEDIA"`
-	CheckoutPluginManifestsDir string `mapstructure:"CHECKOUT_PLUGIN_MANIFESTS_DIR"`
+	DBURL                          string `mapstructure:"DATABASE_URL"`
+	AutoApplyMigrations            bool   `mapstructure:"AUTO_APPLY_MIGRATIONS"`
+	Port                           string `mapstructure:"PORT"`
+	JWTSecret                      string `mapstructure:"JWT_SECRET"`
+	DisableLocalSignIn             bool   `mapstructure:"DISABLE_LOCAL_SIGN_IN"`
+	OIDCProvider                   string `mapstructure:"OIDC_PROVIDER"`
+	OIDCClientID                   string `mapstructure:"OIDC_CLIENT_ID"`
+	OIDCClientSecret               string `mapstructure:"OIDC_CLIENT_SECRET"`
+	OIDCRedirectURI                string `mapstructure:"OIDC_REDIRECT_URI"`
+	DevMode                        bool   `mapstructure:"DEV_MODE"`
+	PublicURL                      string `mapstructure:"PUBLIC_URL"`
+	MediaRoot                      string `mapstructure:"MEDIA_ROOT"`
+	MediaPublicURL                 string `mapstructure:"MEDIA_PUBLIC_URL"`
+	ServeMedia                     bool   `mapstructure:"SERVE_MEDIA"`
+	CheckoutPluginManifestsDir     string `mapstructure:"CHECKOUT_PLUGIN_MANIFESTS_DIR"`
+	ProviderRuntimeEnvironment     string `mapstructure:"PROVIDER_RUNTIME_ENVIRONMENT"`
+	ProviderCredentialsKeys        string `mapstructure:"PROVIDER_CREDENTIALS_KEYS"`
+	ProviderCredentialsKeyVersion  string `mapstructure:"PROVIDER_CREDENTIALS_ACTIVE_KEY_VERSION"`
+	ProviderReconciliationInterval string `mapstructure:"PROVIDER_RECONCILIATION_INTERVAL"`
 }
 
 var configKeys = []string{
@@ -43,6 +47,10 @@ var configKeys = []string{
 	"MEDIA_PUBLIC_URL",
 	"SERVE_MEDIA",
 	"CHECKOUT_PLUGIN_MANIFESTS_DIR",
+	"PROVIDER_RUNTIME_ENVIRONMENT",
+	"PROVIDER_CREDENTIALS_KEYS",
+	"PROVIDER_CREDENTIALS_ACTIVE_KEY_VERSION",
+	"PROVIDER_RECONCILIATION_INTERVAL",
 }
 
 func LoadConfig() (config Config, err error) {

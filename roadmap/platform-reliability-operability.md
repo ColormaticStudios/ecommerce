@@ -31,7 +31,7 @@
 ## Cross-Roadmap Alignment
 - `roadmap/customer-communications-email-sms.md`:
   - Reuse platform job runtime for outbox delivery retries, dead-letter handling, and queue lag metrics.
-- `roadmap/providers.md`:
+- Implemented provider platform:
   - Reconciliation and webhook retry jobs run on shared worker primitives.
 - `roadmap/discounts-promotions.md`, `roadmap/ecommerce-cms.md`, checkout-session lifecycle work:
   - Scheduled activation/cleanup work migrates from ad hoc in-process loops to shared scheduler/worker model.
