@@ -25,6 +25,10 @@ type TransactionLookupProvider interface {
 	GetTransaction(ctx context.Context, providerTxnID string) (ProviderTransaction, error)
 }
 
+type StoredWebhookParser interface {
+	ParseStoredWebhook(ctx context.Context, body []byte) (VerifiedWebhookEvent, error)
+}
+
 type ProviderRegistry interface {
 	Provider(providerID string) (PaymentProvider, error)
 }
@@ -213,7 +217,14 @@ func (dummyPaymentProvider) VerifyWebhook(_ context.Context, headers map[string]
 	if strings.TrimSpace(headers["X-Dummy-Signature"]) != "valid" {
 		return VerifiedWebhookEvent{}, ErrInvalidWebhookSignature
 	}
+	return parseWebhookPayload(body)
+}
 
+func (dummyPaymentProvider) ParseStoredWebhook(_ context.Context, body []byte) (VerifiedWebhookEvent, error) {
+	return parseWebhookPayload(body)
+}
+
+func parseWebhookPayload(body []byte) (VerifiedWebhookEvent, error) {
 	var payload struct {
 		ID   string `json:"id"`
 		Type string `json:"type"`
@@ -227,7 +238,12 @@ func (dummyPaymentProvider) VerifyWebhook(_ context.Context, headers map[string]
 	if strings.TrimSpace(payload.ID) == "" || strings.TrimSpace(payload.Type) == "" {
 		return VerifiedWebhookEvent{}, fmt.Errorf("webhook id and type are required")
 	}
+	providerID := strings.TrimSpace(payload.Data.ProviderTxnID)
+	if idx := strings.Index(providerID, "|"); idx >= 0 {
+		providerID = providerID[:idx]
+	}
 	return VerifiedWebhookEvent{
+		Provider:        providerID,
 		ProviderEventID: strings.TrimSpace(payload.ID),
 		EventType:       strings.TrimSpace(payload.Type),
 		ProviderTxnID:   strings.TrimSpace(payload.Data.ProviderTxnID),

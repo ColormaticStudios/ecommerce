@@ -3,7 +3,6 @@ package webhooks
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -225,7 +224,17 @@ func (s *Service) ProcessStoredEvent(ctx context.Context, eventID uint) error {
 
 		switch {
 		case strings.HasPrefix(strings.ToLower(strings.TrimSpace(event.EventType)), "payment."):
-			parsed, err := parseStoredPaymentEventPayload(event.Provider, event.Payload)
+			provider, err := s.Providers.Provider(event.Provider)
+			if err != nil {
+				processErr = err
+				return markWebhookFailure(tx, &event, err)
+			}
+			parser, ok := provider.(paymentservice.StoredWebhookParser)
+			if !ok {
+				processErr = fmt.Errorf("payment provider %s does not support stored webhook parsing", event.Provider)
+				return markWebhookFailure(tx, &event, processErr)
+			}
+			parsed, err := parser.ParseStoredWebhook(ctx, []byte(event.Payload))
 			if err != nil {
 				processErr = err
 				return markWebhookFailure(tx, &event, err)
@@ -236,7 +245,17 @@ func (s *Service) ProcessStoredEvent(ctx context.Context, eventID uint) error {
 			}
 		case strings.HasPrefix(strings.ToLower(strings.TrimSpace(event.EventType)), "tracking."),
 			strings.HasPrefix(strings.ToLower(strings.TrimSpace(event.EventType)), "shipment."):
-			parsed, err := shippingservice.ParseStoredWebhookEvent(event.Provider, event.Payload)
+			provider, err := s.ShippingProviders.Provider(event.Provider)
+			if err != nil {
+				processErr = err
+				return markWebhookFailure(tx, &event, err)
+			}
+			parser, ok := provider.(shippingservice.StoredWebhookParser)
+			if !ok {
+				processErr = fmt.Errorf("shipping provider %s does not support stored webhook parsing", event.Provider)
+				return markWebhookFailure(tx, &event, processErr)
+			}
+			parsed, err := parser.ParseStoredWebhook(ctx, []byte(event.Payload))
 			if err != nil {
 				processErr = err
 				return markWebhookFailure(tx, &event, err)
@@ -321,30 +340,6 @@ func EventStatus(event *models.WebhookEvent, maxAttempts int) string {
 func isInvalidSignatureError(err error) bool {
 	return errors.Is(err, paymentservice.ErrInvalidWebhookSignature) ||
 		errors.Is(err, shippingservice.ErrInvalidShippingWebhookSignature)
-}
-
-func parseStoredPaymentEventPayload(provider string, payload string) (paymentservice.VerifiedWebhookEvent, error) {
-	switch strings.TrimSpace(provider) {
-	case "dummy-card", "dummy-wallet":
-		var body struct {
-			ID   string `json:"id"`
-			Type string `json:"type"`
-			Data struct {
-				ProviderTxnID string `json:"provider_txn_id"`
-			} `json:"data"`
-		}
-		if err := json.Unmarshal([]byte(payload), &body); err != nil {
-			return paymentservice.VerifiedWebhookEvent{}, err
-		}
-		return paymentservice.VerifiedWebhookEvent{
-			Provider:        provider,
-			ProviderEventID: strings.TrimSpace(body.ID),
-			EventType:       strings.TrimSpace(body.Type),
-			ProviderTxnID:   strings.TrimSpace(body.Data.ProviderTxnID),
-		}, nil
-	default:
-		return paymentservice.VerifiedWebhookEvent{}, fmt.Errorf("unsupported webhook provider: %s", provider)
-	}
 }
 
 func markWebhookFailure(tx *gorm.DB, event *models.WebhookEvent, err error) error {

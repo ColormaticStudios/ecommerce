@@ -15,6 +15,7 @@ import (
 	"ecommerce/internal/httpcors"
 	"ecommerce/internal/media"
 	"ecommerce/internal/migrations"
+	"ecommerce/internal/providerplugins"
 	checkoutservice "ecommerce/internal/services/checkout"
 	paymentservice "ecommerce/internal/services/payments"
 	providerops "ecommerce/internal/services/providerops"
@@ -188,6 +189,34 @@ func main() {
 		log.Printf("[INFO] Loaded %d external checkout plugins from %s", loaded, cfg.CheckoutPluginManifestsDir)
 	}
 
+	var paymentProviders paymentservice.ProviderRegistry = paymentservice.NewDefaultProviderRegistry()
+	var shippingProviders shippingservice.ProviderRegistry = shippingservice.NewDefaultProviderRegistry()
+	var taxProviders taxservice.ProviderRegistry = taxservice.NewDefaultProviderRegistry()
+
+	if cfg.ProviderPluginManifestsDir != "" {
+		if cfg.ProviderPluginManifestsDir != cfg.CheckoutPluginManifestsDir {
+			loaded, loadErr := pluginManager.LoadExternalPluginsFromDir(cfg.ProviderPluginManifestsDir)
+			if loadErr != nil {
+				log.Fatalf("[ERROR] Failed to load provider-backed checkout plugins: %v", loadErr)
+			}
+			log.Printf("[INFO] Loaded %d provider-backed checkout plugins from %s", loaded, cfg.ProviderPluginManifestsDir)
+		}
+
+		loadedProviders, loadErr := providerplugins.LoadRegistriesFromDir(
+			cfg.ProviderPluginManifestsDir,
+			paymentProviders,
+			shippingProviders,
+			taxProviders,
+		)
+		if loadErr != nil {
+			log.Fatalf("[ERROR] Failed to load provider plugins: %v", loadErr)
+		}
+		paymentProviders = loadedProviders.PaymentProviders
+		shippingProviders = loadedProviders.ShippingProviders
+		taxProviders = loadedProviders.TaxProviders
+		log.Printf("[INFO] Loaded %d external provider plugins from %s", loadedProviders.LoadedCount, cfg.ProviderPluginManifestsDir)
+	}
+
 	go func() {
 		ticker := time.NewTicker(15 * time.Minute)
 		defer ticker.Stop()
@@ -219,9 +248,9 @@ func main() {
 	providerRuntime := providerops.NewRuntime(db, providerops.RuntimeConfig{
 		Environment:       cfg.ProviderRuntimeEnvironment,
 		Credentials:       credentialService,
-		PaymentProviders:  paymentservice.NewDefaultProviderRegistry(),
-		ShippingProviders: shippingservice.NewDefaultProviderRegistry(),
-		TaxProviders:      taxservice.NewDefaultProviderRegistry(),
+		PaymentProviders:  paymentProviders,
+		ShippingProviders: shippingProviders,
+		TaxProviders:      taxProviders,
 	})
 
 	if intervalText := cfg.ProviderReconciliationInterval; intervalText != "" {

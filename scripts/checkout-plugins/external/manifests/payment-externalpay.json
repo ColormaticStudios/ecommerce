@@ -7,6 +7,12 @@
   "command": "go",
   "args": ["run", "../provider/main.go", "payment"],
   "timeout_ms": 4000,
+  "capabilities": {
+    "payment": {
+      "lookup_transaction": true,
+      "parse_webhook": true
+    }
+  },
   "fields": [
     {
       "key": "token",

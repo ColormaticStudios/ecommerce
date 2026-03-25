@@ -7,6 +7,12 @@
   "command": "go",
   "args": ["run", "../provider/main.go", "shipping"],
   "timeout_ms": 4000,
+  "capabilities": {
+    "shipping": {
+      "lookup_shipment": true,
+      "parse_webhook": true
+    }
+  },
   "fields": [
     {
       "key": "line1",

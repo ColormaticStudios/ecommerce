@@ -24,6 +24,7 @@ Frontend-specific docs are in:
 - Storefront configuration and draft/preview publishing
 - Media upload/processing pipeline
 - Runtime-extensible checkout providers (payment, shipping, tax)
+- Runtime-loadable provider executables for payment, shipping, and tax services
 - CLI for user and product administration
 
 ## Quick Start
@@ -61,6 +62,17 @@ scripts/populate-test-database.sh
 cd frontend
 bun install
 bun run dev
+```
+
+Provider plugin manifests:
+
+```bash
+# Legacy checkout quote/resolve-only plugins
+CHECKOUT_PLUGIN_MANIFESTS_DIR=./path/to/manifests
+
+# Full external provider runtime plugins; these are also loaded into checkout
+# plugin discovery so one manifest can back both flows.
+PROVIDER_PLUGIN_MANIFESTS_DIR=./path/to/manifests
 ```
 
 Note: the storefront placeholders that the AI generated are cringe but funny, so I left them in. The example products are certified artisan humanslop.

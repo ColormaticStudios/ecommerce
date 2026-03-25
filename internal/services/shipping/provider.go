@@ -24,6 +24,10 @@ type ShipmentLookupProvider interface {
 	GetShipment(ctx context.Context, providerShipmentID string) (ProviderShipmentState, error)
 }
 
+type StoredWebhookParser interface {
+	ParseStoredWebhook(ctx context.Context, body []byte) (TrackingWebhookEvent, error)
+}
+
 type ProviderRegistry interface {
 	Provider(providerID string) (ShippingProvider, error)
 }
@@ -175,6 +179,10 @@ func (dummyGroundProvider) VerifyWebhook(_ context.Context, headers map[string]s
 	return parseTrackingWebhookEvent("dummy-ground", body)
 }
 
+func (dummyGroundProvider) ParseStoredWebhook(_ context.Context, body []byte) (TrackingWebhookEvent, error) {
+	return parseTrackingWebhookEvent("dummy-ground", body)
+}
+
 func (dummyGroundProvider) GetShipment(_ context.Context, providerShipmentID string) (ProviderShipmentState, error) {
 	return dummyShipmentState(providerShipmentID), nil
 }
@@ -214,6 +222,10 @@ func (dummyPickupProvider) VerifyWebhook(_ context.Context, headers map[string]s
 	if strings.TrimSpace(headers["X-Dummy-Signature"]) != "valid" {
 		return TrackingWebhookEvent{}, ErrInvalidShippingWebhookSignature
 	}
+	return parseTrackingWebhookEvent("dummy-pickup", body)
+}
+
+func (dummyPickupProvider) ParseStoredWebhook(_ context.Context, body []byte) (TrackingWebhookEvent, error) {
 	return parseTrackingWebhookEvent("dummy-pickup", body)
 }
 

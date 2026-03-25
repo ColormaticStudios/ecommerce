@@ -25,6 +25,7 @@ type Config struct {
 	MediaPublicURL                 string `mapstructure:"MEDIA_PUBLIC_URL"`
 	ServeMedia                     bool   `mapstructure:"SERVE_MEDIA"`
 	CheckoutPluginManifestsDir     string `mapstructure:"CHECKOUT_PLUGIN_MANIFESTS_DIR"`
+	ProviderPluginManifestsDir     string `mapstructure:"PROVIDER_PLUGIN_MANIFESTS_DIR"`
 	ProviderRuntimeEnvironment     string `mapstructure:"PROVIDER_RUNTIME_ENVIRONMENT"`
 	ProviderCredentialsKeys        string `mapstructure:"PROVIDER_CREDENTIALS_KEYS"`
 	ProviderCredentialsKeyVersion  string `mapstructure:"PROVIDER_CREDENTIALS_ACTIVE_KEY_VERSION"`
@@ -47,6 +48,7 @@ var configKeys = []string{
 	"MEDIA_PUBLIC_URL",
 	"SERVE_MEDIA",
 	"CHECKOUT_PLUGIN_MANIFESTS_DIR",
+	"PROVIDER_PLUGIN_MANIFESTS_DIR",
 	"PROVIDER_RUNTIME_ENVIRONMENT",
 	"PROVIDER_CREDENTIALS_KEYS",
 	"PROVIDER_CREDENTIALS_ACTIVE_KEY_VERSION",

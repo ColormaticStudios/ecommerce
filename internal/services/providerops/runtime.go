@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"ecommerce/internal/dbcontext"
+	"ecommerce/internal/providercontext"
 	paymentservice "ecommerce/internal/services/payments"
 	shippingservice "ecommerce/internal/services/shipping"
 	taxservice "ecommerce/internal/services/tax"
@@ -122,37 +123,41 @@ type paymentProviderWrapper struct {
 
 func (w paymentProviderWrapper) Authorize(ctx context.Context, req paymentservice.AuthorizeRequest) (paymentservice.ProviderOperationResult, error) {
 	return recordPaymentCall(ctx, w, "authorize", req.CorrelationID, req.IdempotencyKey, req, func() (paymentservice.ProviderOperationResult, error) {
-		if err := w.validateCurrency(ctx, req.Provider, req.Currency); err != nil {
+		callCtx, err := w.prepareContext(ctx, req.Provider, req.Currency)
+		if err != nil {
 			return paymentservice.ProviderOperationResult{}, err
 		}
-		return w.PaymentProvider.Authorize(ctx, req)
+		return w.PaymentProvider.Authorize(callCtx, req)
 	})
 }
 
 func (w paymentProviderWrapper) Capture(ctx context.Context, req paymentservice.CaptureRequest) (paymentservice.ProviderOperationResult, error) {
 	return recordPaymentCall(ctx, w, "capture", req.CorrelationID, req.IdempotencyKey, req, func() (paymentservice.ProviderOperationResult, error) {
-		if err := w.validateCurrency(ctx, req.Provider, req.Currency); err != nil {
+		callCtx, err := w.prepareContext(ctx, req.Provider, req.Currency)
+		if err != nil {
 			return paymentservice.ProviderOperationResult{}, err
 		}
-		return w.PaymentProvider.Capture(ctx, req)
+		return w.PaymentProvider.Capture(callCtx, req)
 	})
 }
 
 func (w paymentProviderWrapper) Void(ctx context.Context, req paymentservice.VoidRequest) (paymentservice.ProviderOperationResult, error) {
 	return recordPaymentCall(ctx, w, "void", req.CorrelationID, req.IdempotencyKey, req, func() (paymentservice.ProviderOperationResult, error) {
-		if err := w.validateCurrency(ctx, req.Provider, req.Currency); err != nil {
+		callCtx, err := w.prepareContext(ctx, req.Provider, req.Currency)
+		if err != nil {
 			return paymentservice.ProviderOperationResult{}, err
 		}
-		return w.PaymentProvider.Void(ctx, req)
+		return w.PaymentProvider.Void(callCtx, req)
 	})
 }
 
 func (w paymentProviderWrapper) Refund(ctx context.Context, req paymentservice.RefundRequest) (paymentservice.ProviderOperationResult, error) {
 	return recordPaymentCall(ctx, w, "refund", req.CorrelationID, req.IdempotencyKey, req, func() (paymentservice.ProviderOperationResult, error) {
-		if err := w.validateCurrency(ctx, req.Provider, req.Currency); err != nil {
+		callCtx, err := w.prepareContext(ctx, req.Provider, req.Currency)
+		if err != nil {
 			return paymentservice.ProviderOperationResult{}, err
 		}
-		return w.PaymentProvider.Refund(ctx, req)
+		return w.PaymentProvider.Refund(callCtx, req)
 	})
 }
 
@@ -162,23 +167,58 @@ func (w paymentProviderWrapper) GetTransaction(ctx context.Context, providerTxnI
 		return paymentservice.ProviderTransaction{}, errors.New("payment provider transaction lookup is unsupported")
 	}
 	return recordPaymentLookup(ctx, w, "get_transaction", providerTxnID, func() (paymentservice.ProviderTransaction, error) {
-		return lookupProvider.GetTransaction(ctx, providerTxnID)
+		callCtx, err := w.prepareContext(ctx, w.providerID, "")
+		if err != nil {
+			return paymentservice.ProviderTransaction{}, err
+		}
+		return lookupProvider.GetTransaction(callCtx, providerTxnID)
 	})
 }
 
-func (w paymentProviderWrapper) validateCurrency(ctx context.Context, providerID, currency string) error {
-	if w.credentials == nil || !w.credentials.Enabled() {
-		return nil
-	}
-	db := dbcontext.GetDB(ctx)
-	if db == nil {
-		db = w.audit.db
-	}
-	credential, err := w.credentials.Resolve(dbcontext.OrBackground(ctx), db, models.ProviderTypePayment, providerID, w.environment)
+func (w paymentProviderWrapper) VerifyWebhook(ctx context.Context, headers map[string]string, body []byte) (paymentservice.VerifiedWebhookEvent, error) {
+	callCtx, err := w.prepareContext(ctx, w.providerID, "")
 	if err != nil {
-		return err
+		return paymentservice.VerifiedWebhookEvent{}, err
 	}
-	return w.credentials.ValidateCurrency(currency, credential)
+	return w.PaymentProvider.VerifyWebhook(callCtx, headers, body)
+}
+
+func (w paymentProviderWrapper) ParseStoredWebhook(ctx context.Context, body []byte) (paymentservice.VerifiedWebhookEvent, error) {
+	parser, ok := w.PaymentProvider.(paymentservice.StoredWebhookParser)
+	if !ok {
+		return paymentservice.VerifiedWebhookEvent{}, errors.New("payment provider stored webhook parsing is unsupported")
+	}
+	callCtx, err := w.prepareContext(ctx, w.providerID, "")
+	if err != nil {
+		return paymentservice.VerifiedWebhookEvent{}, err
+	}
+	return parser.ParseStoredWebhook(callCtx, body)
+}
+
+func (w paymentProviderWrapper) prepareContext(ctx context.Context, providerID, currency string) (context.Context, error) {
+	credential, err := resolveProviderCredential(
+		ctx,
+		w.audit,
+		w.credentials,
+		models.ProviderTypePayment,
+		providerID,
+		w.environment,
+	)
+	if err != nil {
+		return ctx, err
+	}
+	if credential == nil {
+		return ctx, nil
+	}
+	if currency != "" {
+		if err := w.credentials.ValidateCurrency(currency, credential); err != nil {
+			return ctx, err
+		}
+	}
+	return providercontext.WithRuntimeData(ctx, providercontext.RuntimeData{
+		Environment: w.environment,
+		Credentials: credential.SecretData,
+	}), nil
 }
 
 func recordPaymentCall(
@@ -270,7 +310,8 @@ type shippingProviderWrapper struct {
 
 func (w shippingProviderWrapper) QuoteRates(ctx context.Context, req shippingservice.QuoteRatesRequest) ([]shippingservice.QuotedRate, error) {
 	start := time.Now()
-	if err := w.validateCurrency(ctx, req.Currency); err != nil {
+	callCtx, err := w.prepareContext(ctx, req.Currency)
+	if err != nil {
 		_ = w.audit.Record(ctx, AuditRecord{
 			ProviderType:   models.ProviderTypeShipping,
 			ProviderID:     w.providerID,
@@ -283,7 +324,7 @@ func (w shippingProviderWrapper) QuoteRates(ctx context.Context, req shippingser
 		})
 		return nil, err
 	}
-	response, err := w.ShippingProvider.QuoteRates(ctx, req)
+	response, err := w.ShippingProvider.QuoteRates(callCtx, req)
 	status := models.ProviderCallStatusSucceeded
 	if err != nil {
 		status = models.ProviderCallStatusFailed
@@ -304,7 +345,8 @@ func (w shippingProviderWrapper) QuoteRates(ctx context.Context, req shippingser
 
 func (w shippingProviderWrapper) BuyLabel(ctx context.Context, req shippingservice.BuyLabelRequest) (shippingservice.ProviderShipment, error) {
 	start := time.Now()
-	if err := w.validateCurrency(ctx, req.Rate.Currency); err != nil {
+	callCtx, err := w.prepareContext(ctx, req.Rate.Currency)
+	if err != nil {
 		_ = w.audit.Record(ctx, AuditRecord{
 			ProviderType:   models.ProviderTypeShipping,
 			ProviderID:     w.providerID,
@@ -319,7 +361,7 @@ func (w shippingProviderWrapper) BuyLabel(ctx context.Context, req shippingservi
 		})
 		return shippingservice.ProviderShipment{}, err
 	}
-	response, err := w.ShippingProvider.BuyLabel(ctx, req)
+	response, err := w.ShippingProvider.BuyLabel(callCtx, req)
 	status := models.ProviderCallStatusSucceeded
 	if err != nil {
 		status = models.ProviderCallStatusFailed
@@ -346,7 +388,11 @@ func (w shippingProviderWrapper) GetShipment(ctx context.Context, providerShipme
 		return shippingservice.ProviderShipmentState{}, errors.New("shipping provider shipment lookup is unsupported")
 	}
 	start := time.Now()
-	response, err := lookupProvider.GetShipment(ctx, providerShipmentID)
+	callCtx, err := w.prepareContext(ctx, "")
+	if err != nil {
+		return shippingservice.ProviderShipmentState{}, err
+	}
+	response, err := lookupProvider.GetShipment(callCtx, providerShipmentID)
 	status := models.ProviderCallStatusSucceeded
 	if err != nil {
 		status = models.ProviderCallStatusFailed
@@ -365,19 +411,50 @@ func (w shippingProviderWrapper) GetShipment(ctx context.Context, providerShipme
 	return response, err
 }
 
-func (w shippingProviderWrapper) validateCurrency(ctx context.Context, currency string) error {
-	if w.credentials == nil || !w.credentials.Enabled() {
-		return nil
-	}
-	db := dbcontext.GetDB(ctx)
-	if db == nil {
-		db = w.audit.db
-	}
-	credential, err := w.credentials.Resolve(dbcontext.OrBackground(ctx), db, models.ProviderTypeShipping, w.providerID, w.environment)
+func (w shippingProviderWrapper) VerifyWebhook(ctx context.Context, headers map[string]string, body []byte) (shippingservice.TrackingWebhookEvent, error) {
+	callCtx, err := w.prepareContext(ctx, "")
 	if err != nil {
-		return err
+		return shippingservice.TrackingWebhookEvent{}, err
 	}
-	return w.credentials.ValidateCurrency(currency, credential)
+	return w.ShippingProvider.VerifyWebhook(callCtx, headers, body)
+}
+
+func (w shippingProviderWrapper) ParseStoredWebhook(ctx context.Context, body []byte) (shippingservice.TrackingWebhookEvent, error) {
+	parser, ok := w.ShippingProvider.(shippingservice.StoredWebhookParser)
+	if !ok {
+		return shippingservice.TrackingWebhookEvent{}, errors.New("shipping provider stored webhook parsing is unsupported")
+	}
+	callCtx, err := w.prepareContext(ctx, "")
+	if err != nil {
+		return shippingservice.TrackingWebhookEvent{}, err
+	}
+	return parser.ParseStoredWebhook(callCtx, body)
+}
+
+func (w shippingProviderWrapper) prepareContext(ctx context.Context, currency string) (context.Context, error) {
+	credential, err := resolveProviderCredential(
+		ctx,
+		w.audit,
+		w.credentials,
+		models.ProviderTypeShipping,
+		w.providerID,
+		w.environment,
+	)
+	if err != nil {
+		return ctx, err
+	}
+	if credential == nil {
+		return ctx, nil
+	}
+	if currency != "" {
+		if err := w.credentials.ValidateCurrency(currency, credential); err != nil {
+			return ctx, err
+		}
+	}
+	return providercontext.WithRuntimeData(ctx, providercontext.RuntimeData{
+		Environment: w.environment,
+		Credentials: credential.SecretData,
+	}), nil
 }
 
 type taxRegistryWrapper struct {
@@ -411,7 +488,11 @@ type taxProviderWrapper struct {
 
 func (w taxProviderWrapper) QuoteTax(ctx context.Context, req taxservice.QuoteTaxRequest) (models.Money, error) {
 	start := time.Now()
-	response, err := w.TaxProvider.QuoteTax(ctx, req)
+	callCtx, err := w.prepareContext(ctx, "")
+	if err != nil {
+		return 0, err
+	}
+	response, err := w.TaxProvider.QuoteTax(callCtx, req)
 	status := models.ProviderCallStatusSucceeded
 	if err != nil {
 		status = models.ProviderCallStatusFailed
@@ -432,7 +513,8 @@ func (w taxProviderWrapper) QuoteTax(ctx context.Context, req taxservice.QuoteTa
 
 func (w taxProviderWrapper) FinalizeTax(ctx context.Context, req taxservice.FinalizeTaxRequest) (taxservice.TaxFinalized, error) {
 	start := time.Now()
-	if err := w.validateCurrency(ctx, req.Currency); err != nil {
+	callCtx, err := w.prepareContext(ctx, req.Currency)
+	if err != nil {
 		_ = w.audit.Record(ctx, AuditRecord{
 			ProviderType:   models.ProviderTypeTax,
 			ProviderID:     w.providerID,
@@ -445,7 +527,7 @@ func (w taxProviderWrapper) FinalizeTax(ctx context.Context, req taxservice.Fina
 		})
 		return taxservice.TaxFinalized{}, err
 	}
-	response, err := w.TaxProvider.FinalizeTax(ctx, req)
+	response, err := w.TaxProvider.FinalizeTax(callCtx, req)
 	status := models.ProviderCallStatusSucceeded
 	if err != nil {
 		status = models.ProviderCallStatusFailed
@@ -466,7 +548,11 @@ func (w taxProviderWrapper) FinalizeTax(ctx context.Context, req taxservice.Fina
 
 func (w taxProviderWrapper) ExportReport(ctx context.Context, req taxservice.ExportReportRequest) (io.ReadCloser, error) {
 	start := time.Now()
-	response, err := w.TaxProvider.ExportReport(ctx, req)
+	callCtx, err := w.prepareContext(ctx, "")
+	if err != nil {
+		return nil, err
+	}
+	response, err := w.TaxProvider.ExportReport(callCtx, req)
 	status := models.ProviderCallStatusSucceeded
 	if err != nil {
 		status = models.ProviderCallStatusFailed
@@ -484,19 +570,48 @@ func (w taxProviderWrapper) ExportReport(ctx context.Context, req taxservice.Exp
 	return response, err
 }
 
-func (w taxProviderWrapper) validateCurrency(ctx context.Context, currency string) error {
-	if w.credentials == nil || !w.credentials.Enabled() {
-		return nil
+func (w taxProviderWrapper) prepareContext(ctx context.Context, currency string) (context.Context, error) {
+	credential, err := resolveProviderCredential(
+		ctx,
+		w.audit,
+		w.credentials,
+		models.ProviderTypeTax,
+		w.providerID,
+		w.environment,
+	)
+	if err != nil {
+		return ctx, err
+	}
+	if credential == nil {
+		return ctx, nil
+	}
+	if currency != "" {
+		if err := w.credentials.ValidateCurrency(currency, credential); err != nil {
+			return ctx, err
+		}
+	}
+	return providercontext.WithRuntimeData(ctx, providercontext.RuntimeData{
+		Environment: w.environment,
+		Credentials: credential.SecretData,
+	}), nil
+}
+
+func resolveProviderCredential(
+	ctx context.Context,
+	audit *AuditService,
+	credentials *CredentialService,
+	providerType string,
+	providerID string,
+	environment string,
+) (*ResolvedCredential, error) {
+	if credentials == nil || !credentials.Enabled() {
+		return nil, nil
 	}
 	db := dbcontext.GetDB(ctx)
 	if db == nil {
-		db = w.audit.db
+		db = audit.db
 	}
-	credential, err := w.credentials.Resolve(dbcontext.OrBackground(ctx), db, models.ProviderTypeTax, w.providerID, w.environment)
-	if err != nil {
-		return err
-	}
-	return w.credentials.ValidateCurrency(currency, credential)
+	return credentials.Resolve(dbcontext.OrBackground(ctx), db, providerType, providerID, environment)
 }
 
 func errorMessage(err error) string {
