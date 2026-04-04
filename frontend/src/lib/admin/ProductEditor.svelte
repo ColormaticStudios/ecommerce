@@ -180,12 +180,55 @@
 	let editorKeySeed = 0;
 
 	const splitEditorSectionClass = "admin-surface-tight";
-	const stackedEditorSectionClass = "admin-subsurface";
 	const nestedEditorSectionClass = "admin-subsurface";
 	const overlayIconButtonClass = "admin-icon-button-surface";
 
 	function editorSectionClass(layoutMode: "split" | "stacked"): string {
-		return layoutMode === "split" ? splitEditorSectionClass : stackedEditorSectionClass;
+		return layoutMode === "split" ? splitEditorSectionClass : "";
+	}
+
+	function editorCollectionClass(layoutMode: "split" | "stacked"): string {
+		return layoutMode === "split"
+			? "mt-4 space-y-4"
+			: "mt-4 divide-y divide-stone-200 dark:divide-stone-800";
+	}
+
+	function editorItemClass(layoutMode: "split" | "stacked"): string {
+		return layoutMode === "split" ? nestedEditorSectionClass : "py-4 first:pt-0 last:pb-0";
+	}
+
+	function mutedEditorPanelClass(layoutMode: "split" | "stacked"): string {
+		return layoutMode === "split" ? "admin-muted-surface" : "";
+	}
+
+	function relatedResultsClass(layoutMode: "split" | "stacked"): string {
+		return layoutMode === "split"
+			? "mt-3 space-y-2"
+			: "mt-4 divide-y divide-stone-200 dark:divide-stone-800";
+	}
+
+	function relatedResultItemClass(layoutMode: "split" | "stacked"): string {
+		return layoutMode === "split"
+			? "admin-list-item flex items-center justify-between gap-3 p-4 text-sm"
+			: "flex items-center justify-between gap-3 py-3 text-sm";
+	}
+
+	function relatedSelectedListClass(layoutMode: "split" | "stacked"): string {
+		return layoutMode === "split"
+			? "mt-4 space-y-2"
+			: "mt-4 divide-y divide-stone-200 dark:divide-stone-800";
+	}
+
+	function relatedSelectedItemClass(layoutMode: "split" | "stacked"): string {
+		return layoutMode === "split"
+			? "admin-muted-surface flex items-center justify-between px-3 py-2 text-sm"
+			: "flex items-center justify-between gap-3 py-3 text-sm";
+	}
+
+	function mediaItemClass(layoutMode: "split" | "stacked"): string {
+		return layoutMode === "split"
+			? `${nestedEditorSectionClass} relative overflow-hidden`
+			: "relative overflow-hidden rounded-[1rem]";
 	}
 
 	type MessageScope = "product" | "media" | "related";
@@ -1498,9 +1541,9 @@
 				No options yet. Add one to build a variant matrix.
 			</p>
 		{:else}
-			<div class="mt-4 space-y-4">
+			<div class={editorCollectionClass(layoutMode)}>
 				{#each options as option, optionIndex (option.key)}
-					<div class={nestedEditorSectionClass}>
+					<div class={editorItemClass(layoutMode)}>
 						<div class="flex items-start justify-between gap-3">
 							<div class="grid flex-1 gap-4 sm:grid-cols-2">
 								<div>
@@ -1596,9 +1639,9 @@
 			</Button>
 		</div>
 
-		<div class="mt-4 space-y-4">
+		<div class={editorCollectionClass(layoutMode)}>
 			{#each variants as variant, variantIndex (variant.key)}
-				<div class={nestedEditorSectionClass}>
+				<div class={editorItemClass(layoutMode)}>
 					<div class="flex items-start justify-between gap-3">
 						<div
 							class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200"
@@ -1721,9 +1764,9 @@
 		{#if attributeValues.length === 0}
 			<p class="mt-3 text-sm text-gray-500 dark:text-gray-400">No attributes assigned yet.</p>
 		{:else}
-			<div class="mt-4 space-y-4">
+			<div class={editorCollectionClass(layoutMode)}>
 				{#each attributeValues as attribute, attributeIndex (attribute.key)}
-					<div class={nestedEditorSectionClass}>
+					<div class={editorItemClass(layoutMode)}>
 						<div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
 							<div class="grid gap-4 sm:grid-cols-2">
 								<div>
@@ -2004,8 +2047,8 @@
 	{/if}
 {/snippet}
 
-{#snippet MediaUpload(showHint: boolean)}
-	<div class="admin-muted-surface">
+{#snippet MediaUpload(showHint: boolean, layoutMode: "split" | "stacked")}
+	<div class={mutedEditorPanelClass(layoutMode)}>
 		<p class="admin-label">Upload media</p>
 		<input
 			class="hidden"
@@ -2050,11 +2093,11 @@
 	</div>
 {/snippet}
 
-{#snippet MediaGrid()}
+{#snippet MediaGrid(layoutMode: "split" | "stacked")}
 	<div class="max-h-64 overflow-y-auto pr-1">
 		<div class="grid grid-cols-2 gap-3">
 			{#each mediaOrderView as image, index (image)}
-				<div class={`${nestedEditorSectionClass} relative overflow-hidden`}>
+				<div class={mediaItemClass(layoutMode)}>
 					<img
 						src={image}
 						alt={product ? `${product.name} ${index + 1}` : `Product image ${index + 1}`}
@@ -2130,7 +2173,7 @@
 	{/if}
 {/snippet}
 
-{#snippet RelatedProducts()}
+{#snippet RelatedProducts(layoutMode: "split" | "stacked")}
 	<div class="flex items-center justify-between">
 		<p class="admin-label">Related products</p>
 		{#if hasPendingRelatedChanges}
@@ -2172,9 +2215,9 @@
 	{#if relatedLoading && relatedOptions.length === 0 && relatedLastSearchedQuery !== ""}
 		<p class="admin-empty-state">Searching products...</p>
 	{:else if relatedOptions.length}
-		<div class="mt-3 space-y-2">
+		<div class={relatedResultsClass(layoutMode)}>
 			{#each relatedOptions as option (option.id)}
-				<div class="admin-list-item flex items-center justify-between gap-3 p-4 text-sm">
+				<div class={relatedResultItemClass(layoutMode)}>
 					<div class="min-w-0">
 						<p class="truncate font-semibold text-stone-950 dark:text-stone-50">{option.name}</p>
 						<p class="text-xs text-stone-500 dark:text-stone-400">SKU {option.sku}</p>
@@ -2197,9 +2240,9 @@
 	{/if}
 
 	{#if relatedSelected.length}
-		<div class="mt-4 space-y-2">
+		<div class={relatedSelectedListClass(layoutMode)}>
 			{#each relatedSelected as related (related.id)}
-				<div class="admin-muted-surface flex items-center justify-between px-3 py-2 text-sm">
+				<div class={relatedSelectedItemClass(layoutMode)}>
 					<div>
 						<p class="font-semibold text-gray-900 dark:text-gray-100">{related.name}</p>
 						<p class="text-xs text-gray-500 dark:text-gray-400">SKU {related.sku}</p>
@@ -2281,14 +2324,14 @@
 					<p class="admin-label">Images</p>
 					{#if mediaOrderView.length}
 						<div class="mt-4">
-							{@render MediaGrid()}
+							{@render MediaGrid("split")}
 						</div>
 					{:else}
 						<p class="mt-4 text-sm text-gray-500 dark:text-gray-400">No images yet.</p>
 					{/if}
 
 					<div class="mt-6">
-						{@render MediaUpload(false)}
+						{@render MediaUpload(false, "split")}
 					</div>
 					{#if showMessages}
 						{#if mediaErrorMessage}
@@ -2302,13 +2345,13 @@
 			</div>
 			<div class="mb-6 break-inside-avoid">
 				<div class="admin-surface">
-					{@render RelatedProducts()}
+					{@render RelatedProducts("split")}
 				</div>
 			</div>
 		</div>
 	</div>
 {:else}
-	<div class="admin-surface">
+	<div>
 		{#if showHeader}
 			<div class="flex items-center justify-between">
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -2347,7 +2390,7 @@
 					{@render DismissibleAlert("product", "success", productStatusMessage, "mb-4")}
 				{/if}
 			{/if}
-			{@render MediaUpload(true)}
+			{@render MediaUpload(true, "stacked")}
 			{#if showMessages}
 				{#if mediaErrorMessage}
 					{@render DismissibleAlert("media", "error", mediaErrorMessage)}
@@ -2377,12 +2420,12 @@
 		{#if mediaOrderView.length}
 			<div class="admin-divider-top mt-6 pt-6">
 				<p class="admin-label">Images</p>
-				{@render MediaGrid()}
+				{@render MediaGrid("stacked")}
 			</div>
 		{/if}
 
 		<div class="admin-divider-top mt-6 pt-6">
-			{@render RelatedProducts()}
+			{@render RelatedProducts("stacked")}
 		</div>
 	</div>
 {/if}
