@@ -139,57 +139,59 @@
 						Your cart is attached to this browser session. You can still check out as a guest.
 					</div>
 				{/if}
-				{#each cart.items as item (item.id)}
-					<div
-						class="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center dark:border-gray-800 dark:bg-gray-900"
-					>
-						<div class="h-20 w-20 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
-							{#if item.product.images?.length}
-								<img
-									src={item.product.images[0]}
-									alt={item.product.name}
-									class="h-full w-full object-cover"
+				<div
+					class="divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800"
+				>
+					{#each cart.items as item (item.id)}
+						<div class="flex flex-col gap-4 py-5 sm:flex-row sm:items-center">
+							<div class="h-20 w-20 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
+								{#if item.product.images?.length}
+									<img
+										src={item.product.images[0]}
+										alt={item.product.name}
+										class="h-full w-full object-cover"
+									/>
+								{:else}
+									<div class="flex h-full w-full items-center justify-center text-xs text-gray-500">
+										No image
+									</div>
+								{/if}
+							</div>
+
+							<div class="flex-1">
+								<h2 class="line-clamp-1 text-lg font-medium text-gray-900 dark:text-gray-100">
+									{item.product.name}
+								</h2>
+								<p class="text-sm text-gray-500 dark:text-gray-400">
+									{formatPrice(item.product_variant.price, $userStore?.currency ?? "USD")}
+								</p>
+								<p class="text-sm text-gray-500 dark:text-gray-400">{item.product_variant.title}</p>
+							</div>
+
+							<div class="flex items-center gap-2">
+								<QuantitySelector
+									value={item.quantity}
+									min={1}
+									disabled={updatingItemId === item.id}
+									onDecrease={() => decreaseQuantity(item.id, item.quantity)}
+									onIncrease={() => increaseQuantity(item.id, item.quantity)}
+									onCommit={(next) => updateItemQuantity(item.id, next)}
 								/>
-							{:else}
-								<div class="flex h-full w-full items-center justify-center text-xs text-gray-500">
-									No image
-								</div>
-							{/if}
+								<IconButton
+									variant="danger"
+									size="lg"
+									type="button"
+									disabled={updatingItemId === item.id}
+									onclick={() => removeItem(item.id)}
+									aria-label="Remove item"
+									title="Remove item"
+								>
+									<i class="bi bi-dash-lg"></i>
+								</IconButton>
+							</div>
 						</div>
-
-						<div class="flex-1">
-							<h2 class="line-clamp-1 text-lg font-medium text-gray-900 dark:text-gray-100">
-								{item.product.name}
-							</h2>
-							<p class="text-sm text-gray-500 dark:text-gray-400">
-								{formatPrice(item.product_variant.price, $userStore?.currency ?? "USD")}
-							</p>
-							<p class="text-sm text-gray-500 dark:text-gray-400">{item.product_variant.title}</p>
-						</div>
-
-						<div class="flex items-center gap-2">
-							<QuantitySelector
-								value={item.quantity}
-								min={1}
-								disabled={updatingItemId === item.id}
-								onDecrease={() => decreaseQuantity(item.id, item.quantity)}
-								onIncrease={() => increaseQuantity(item.id, item.quantity)}
-								onCommit={(next) => updateItemQuantity(item.id, next)}
-							/>
-							<IconButton
-								variant="danger"
-								size="lg"
-								type="button"
-								disabled={updatingItemId === item.id}
-								onclick={() => removeItem(item.id)}
-								aria-label="Remove item"
-								title="Remove item"
-							>
-								<i class="bi bi-dash-lg"></i>
-							</IconButton>
-						</div>
-					</div>
-				{/each}
+					{/each}
+				</div>
 			</div>
 
 			<div

@@ -543,12 +543,12 @@
 					<div>
 						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Checkout options</h3>
 						<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-							Choose your payment and shipping providers. Taxes are selected automatically.
+							Choose your payment and shipping providers.
 						</p>
 					</div>
 				</div>
 
-				<div class="mt-5 grid gap-6 lg:grid-cols-2">
+				<div class="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)] lg:gap-8">
 					<div class="space-y-3">
 						<h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Payment provider</h4>
 						{#if paymentMode === "select"}
@@ -558,7 +558,7 @@
 								{/each}
 							</div>
 						{:else if activePaymentProvider}
-							<div class="space-y-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+							<div class="space-y-3">
 								<div class="flex items-center justify-between gap-3">
 									<div class="flex items-center gap-3">
 										<div
@@ -674,6 +674,8 @@
 						{/if}
 					</div>
 
+					<div class="hidden bg-gray-200 lg:block dark:bg-gray-800"></div>
+
 					<div class="space-y-3">
 						<h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">
 							Shipping provider
@@ -687,7 +689,7 @@
 								{/each}
 							</div>
 						{:else if activeShippingProvider}
-							<div class="space-y-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+							<div class="space-y-3">
 								<div class="flex items-center justify-between gap-3">
 									<div class="flex items-center gap-3">
 										<div
@@ -795,11 +797,11 @@
 			</div>
 
 			<div class="grid items-start gap-6 lg:grid-cols-[1.6fr_0.8fr]">
-				<div class="space-y-4">
+				<div
+					class="divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800"
+				>
 					{#each cart.items as item (item.id)}
-						<div
-							class="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-4 text-sm shadow-sm dark:border-gray-800 dark:bg-gray-900"
-						>
+						<div class="flex items-center justify-between gap-4 py-5 text-sm">
 							<div>
 								<p class="font-medium text-gray-900 dark:text-gray-100">{item.product.name}</p>
 								<p class="text-gray-600 dark:text-gray-400">
@@ -807,7 +809,7 @@
 									{formatPrice(item.product_variant.price, $userStore?.currency ?? "USD")}
 								</p>
 							</div>
-							<p class="font-medium text-gray-900 dark:text-gray-100">
+							<p class="text-right font-medium text-gray-900 dark:text-gray-100">
 								{formatPrice(
 									item.product_variant.price * item.quantity,
 									$userStore?.currency ?? "USD"
