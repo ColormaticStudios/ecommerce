@@ -58,6 +58,8 @@ The search route keys search results by `product.sku`, so Storybook factories ne
 
 The E2E server uses one shared DB per Playwright run, so helper assertions must be scoped to test-owned data or they will race under multiple workers.
 
+don’t run `bun run check` in parallel with Playwright in this frontend, because `svelte-kit sync` can reload the dev client mid-suite and create false E2E failures.
+
 ## OpenAPI Contract Workflow
 - Update `api/openapi.yaml` first whenever request/response shapes change.
 - Regenerate contract artifacts with `make openapi-gen`.
