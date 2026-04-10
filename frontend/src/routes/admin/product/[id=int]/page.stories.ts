@@ -19,6 +19,12 @@ const publishedProduct = makeProduct({
 	is_published: true,
 });
 
+const unpublishedProduct = makeProduct({
+	id: 102,
+	name: "Field Jacket Draft",
+	is_published: false,
+});
+
 const meta = {
 	title: "Routes/Admin/Product Editor",
 	component: RouteStoryHarness,
@@ -60,6 +66,28 @@ export const PublishedProduct: Story = {
 			state: {
 				page: {
 					params: { id: String(publishedProduct.id) },
+				},
+			},
+		},
+	},
+};
+
+export const UnpublishedProduct: Story = {
+	render: () =>
+		renderRouteStory({
+			component: AdminProductPage,
+			componentProps: {
+				data: createData({
+					initialProduct: unpublishedProduct,
+				}),
+			},
+			api: createEditorApi(unpublishedProduct),
+		}),
+	parameters: {
+		sveltekit_experimental: {
+			state: {
+				page: {
+					params: { id: String(unpublishedProduct.id) },
 				},
 			},
 		},

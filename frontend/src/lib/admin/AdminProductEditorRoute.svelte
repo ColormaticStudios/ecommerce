@@ -15,8 +15,10 @@
 
 	let { productId = null, initialProduct = null, allowCreate = false }: Props = $props();
 
+	let currentProduct = $state<ProductModel | null>(null);
+
 	const hasProductId = $derived(productId != null && Number.isFinite(productId) && productId > 0);
-	const canViewLive = $derived(Boolean(initialProduct?.is_published));
+	const canViewLive = $derived(Boolean(currentProduct?.is_published));
 
 	let productDirty = $state(false);
 	let productSaveAction = $state<(() => Promise<void>) | null>(null);
@@ -34,9 +36,21 @@
 		notices.pushSuccess(message);
 	}
 
+	function syncCurrentProduct(product: ProductModel) {
+		currentProduct = product;
+	}
+
+	function clearCurrentProduct() {
+		currentProduct = null;
+	}
+
 	$effect(() => {
 		savePrompt.dirty = productDirty;
 		savePrompt.saveAction = productSaveAction;
+	});
+
+	$effect(() => {
+		currentProduct = initialProduct;
 	});
 </script>
 
@@ -60,8 +74,8 @@
 	<AdminPageHeader title="Product Editor" actions={productActions} />
 
 	<ProductEditor
-		{productId}
-		{initialProduct}
+		bind:productId
+		initialProduct={currentProduct}
 		{allowCreate}
 		layout="split"
 		showHeader={false}
@@ -71,6 +85,9 @@
 		onStatusMessage={setStatusMessage}
 		onDirtyChange={(dirty) => (productDirty = dirty)}
 		onSaveRequestChange={(action) => (productSaveAction = action)}
+		onProductCreated={syncCurrentProduct}
+		onProductUpdated={syncCurrentProduct}
+		onProductDeleted={clearCurrentProduct}
 	/>
 </section>
 
