@@ -29,7 +29,7 @@ export const ReauthenticationRequired: Story = {
 	render: Default.render,
 	parameters: {
 		sveltekit_experimental: {
-			stores: {
+			state: {
 				page: {
 					url: new URL("https://storybook.local/login?reason=reauth"),
 				},

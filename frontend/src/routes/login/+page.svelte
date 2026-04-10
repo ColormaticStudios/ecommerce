@@ -8,7 +8,7 @@
 	import { getContext } from "svelte";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
-	import { page } from "$app/stores";
+	import { page } from "$app/state";
 
 	let api: API = getContext("api");
 
@@ -16,7 +16,7 @@
 	let password = $state("");
 	let errorMessage = $state("");
 	let reauthMessage = $derived(
-		$page.url.searchParams.get("reason") === "reauth"
+		page.url.searchParams.get("reason") === "reauth"
 			? "Your session expired. Please sign in again."
 			: ""
 	);

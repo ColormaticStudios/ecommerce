@@ -28,6 +28,15 @@
 		success: "bi bi-check-circle-fill",
 		error: "bi bi-x-circle-fill",
 	} as const;
+
+	const closeButtonClasses = {
+		neutral:
+			"bg-white/80 text-gray-700 hover:bg-white dark:bg-gray-950/50 dark:text-gray-100 dark:hover:bg-gray-950/80",
+		success:
+			"bg-white/80 text-emerald-800 hover:bg-white dark:bg-emerald-950/45 dark:text-emerald-100 dark:hover:bg-emerald-950/75",
+		error:
+			"bg-white/80 text-red-800 hover:bg-white dark:bg-red-950/45 dark:text-red-100 dark:hover:bg-red-950/75",
+	} as const;
 </script>
 
 {#if message}
@@ -49,7 +58,8 @@
 		{#if onClose}
 			<IconButton
 				size="sm"
-				variant={tone === "error" ? "danger" : tone === "success" ? "primary" : "neutral"}
+				variant="neutral"
+				class={closeButtonClasses[tone]}
 				aria-label="Close notification"
 				title="Close"
 				onclick={onClose}

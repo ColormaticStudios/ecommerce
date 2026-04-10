@@ -36,7 +36,7 @@ function createData(overrides: Partial<CheckoutPageData> = {}): CheckoutPageData
 	};
 }
 
-export const GuestBlocked: Story = {
+export const SignInRequired: Story = {
 	render: () =>
 		renderRouteStory({
 			component: CheckoutPage,

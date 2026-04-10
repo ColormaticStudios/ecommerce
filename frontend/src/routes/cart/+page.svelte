@@ -3,6 +3,7 @@
 	import { type CartModel } from "$lib/models";
 	import Alert from "$lib/components/Alert.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
+	import CheckoutSignInRequiredBanner from "$lib/components/CheckoutSignInRequiredBanner.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import QuantitySelector from "$lib/components/QuantitySelector.svelte";
 	import { formatPrice } from "$lib/utils";
@@ -91,20 +92,7 @@
 	</div>
 
 	{#if guestCheckoutDisabled && !isAuthenticated}
-		<div
-			class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-gray-700 shadow-sm dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-50"
-		>
-			<p class="text-xl font-medium">Guest checkout is currently turned off.</p>
-			<p class="mt-2 text-sm text-gray-600 dark:text-amber-100/80">
-				Sign in or create an account to keep building your cart and continue to checkout.
-			</p>
-			<div class="mt-5 flex flex-wrap gap-3">
-				<ButtonLink href={resolve("/login")} variant="primary" size="large">Log in</ButtonLink>
-				<ButtonLink href={resolve("/signup/")} variant="regular" size="large"
-					>Create account</ButtonLink
-				>
-			</div>
-		</div>
+		<CheckoutSignInRequiredBanner />
 	{:else if errorMessage}
 		<div class="mt-4">
 			<Alert

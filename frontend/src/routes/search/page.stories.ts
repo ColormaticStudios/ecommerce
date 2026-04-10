@@ -21,6 +21,30 @@ const meta = {
 export default meta;
 type Story = StoryObj;
 
+const browseResults = [
+	makeProduct({
+		id: 101,
+		sku: "field-jacket",
+		name: "Field Jacket",
+	}),
+	makeProduct({
+		id: 102,
+		sku: "storm-shell",
+		name: "Storm Shell",
+		price: 164,
+		stock: 5,
+	}),
+	makeProduct({
+		id: 103,
+		sku: "canvas-tote",
+		name: "Canvas Tote",
+		price: 58,
+		stock: 3,
+		images: [],
+		cover_image: undefined,
+	}),
+];
+
 function createData(overrides: Partial<SearchPageData> = {}): SearchPageData {
 	return {
 		...makeRouteLayoutData(),
@@ -51,7 +75,12 @@ export const BrowseAll: Story = {
 	render: () =>
 		renderRouteStory({
 			component: SearchPage,
-			componentProps: { data: createData() },
+			componentProps: {
+				data: createData({
+					results: browseResults,
+					totalResults: browseResults.length,
+				}),
+			},
 		}),
 };
 
@@ -64,8 +93,8 @@ export const Results: Story = {
 					searchQuery: "jacket",
 					draftQuery: "jacket",
 					results: [
-						makeProduct({ id: 101, name: "Field Jacket" }),
-						makeProduct({ id: 102, name: "Storm Shell", price: 164, stock: 5 }),
+						makeProduct({ id: 101, sku: "field-jacket", name: "Field Jacket" }),
+						makeProduct({ id: 102, sku: "storm-shell", name: "Storm Shell", price: 164, stock: 5 }),
 					],
 					totalResults: 2,
 				}),

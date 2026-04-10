@@ -34,6 +34,7 @@ This project is still very early, we will take a **breaking-change first** polic
 
 If a task takes more work to complete than it should (like a simple change touching many files), report this to the user. Bad patterns throughout the codebase should be caught and not repeated. Abide by an "if you see something, say something" policy.
 
+## Repo notes:
 SQLite in-memory test DBs can leak state across tests if you use `file::memory:?cache=shared`.
 For isolated tests, use a per-test DSN (for example `file:<test-name>?mode=memory&cache=shared`) so each test gets its own database namespace.
 
@@ -52,6 +53,8 @@ Several checkout/admin handlers use helper `respond(...)` closures inside `db.Tr
 GORM can silently persist `bool` fields with schema defaults instead of explicit `false` on `Create`, unless the insert explicitly selects zero-value fields. If a row must persist `false` (for example `is_published` on variant draft/live rows), prefer `tx.Select("*").Create(&row)` or another path that explicitly includes zero values.
 
 Tailwind v4 in this frontend rejects `@apply` of project-defined custom classes during formatting/build tooling, so shared CSS tokens need to be expanded rather than composed from other local classes.
+
+The search route keys search results by `product.sku`, so Storybook factories need unique `sku` overrides whenever multiple `makeProduct()` results are shown together, or the rendered list can behave incorrectly.
 
 The E2E server uses one shared DB per Playwright run, so helper assertions must be scoped to test-owned data or they will race under multiple workers.
 

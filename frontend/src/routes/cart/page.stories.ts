@@ -50,7 +50,7 @@ function createData(overrides: Partial<CartPageData> = {}): CartPageData {
 	};
 }
 
-export const GuestBlocked: Story = {
+export const SignInRequired: Story = {
 	render: () =>
 		renderRouteStory({
 			component: CartPage,

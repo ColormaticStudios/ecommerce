@@ -47,7 +47,7 @@
 		</h2>
 
 		{#if data.brand}
-			<p class="text-xs font-semibold tracking-[0.18em] text-gray-500 uppercase dark:text-gray-400">
+			<p class="text-xs font-semibold text-gray-500 dark:text-gray-400">
 				{data.brand}
 			</p>
 		{/if}

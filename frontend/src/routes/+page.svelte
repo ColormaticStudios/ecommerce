@@ -153,29 +153,48 @@
 			<section class="mb-10 grid gap-4 md:grid-cols-3">
 				{#each (section.promo_cards ?? []).slice(0, section.promo_card_limit ?? 1) as card, index (index)}
 					<article
-						class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+						class="relative isolate min-h-[24rem] overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 					>
 						{#if card.image_url}
 							<img
 								src={card.image_url}
 								alt=""
-								class="pointer-events-none h-full w-full object-cover opacity-18"
+								class="pointer-events-none absolute inset-0 h-full w-full object-cover"
 							/>
+							<div
+								class="absolute inset-0 bg-linear-to-t from-gray-950/88 via-gray-950/62 to-gray-950/18"
+							></div>
 						{/if}
-						<div class="relative">
-							<p class="text-xs font-semibold text-gray-500 dark:text-gray-400">
+						<div class="relative z-10 flex h-full flex-col justify-end">
+							<p
+								class={card.image_url
+									? "text-xs font-semibold text-gray-200/85"
+									: "text-xs font-semibold text-gray-500 dark:text-gray-400"}
+							>
 								{card.kicker}
 							</p>
-							<h3 class="mt-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
+							<h3
+								class={card.image_url
+									? "mt-2 text-xl font-semibold text-white"
+									: "mt-2 text-xl font-semibold text-gray-900 dark:text-gray-100"}
+							>
 								{card.title}
 							</h3>
-							<p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{card.description}</p>
+							<p
+								class={card.image_url
+									? "mt-2 max-w-2xs text-sm text-gray-100/84"
+									: "mt-2 text-sm text-gray-600 dark:text-gray-300"}
+							>
+								{card.description}
+							</p>
 							{#if card.link.label && card.link.url}
 								<a
 									href={hrefFor(card.link.url)}
 									target={linkTarget(card.link.url)}
 									rel={linkRel(card.link.url)}
-									class="mt-4 inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-700"
+									class={card.image_url
+										? "mt-4 inline-flex items-center text-sm font-semibold text-white underline decoration-white/40 underline-offset-4 transition hover:decoration-white"
+										: "mt-4 inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-700"}
 								>
 									{card.link.label}
 								</a>
