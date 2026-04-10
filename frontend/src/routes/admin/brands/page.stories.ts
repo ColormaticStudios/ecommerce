@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/sveltekit";
+import { userEvent, within } from "storybook/test";
 import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
 import { createApiStub, pendingPromise } from "$lib/storybook/api";
 import { makeBrand } from "$lib/storybook/factories";
@@ -41,7 +42,7 @@ export const Empty: Story = {
 		}),
 };
 
-export const Catalog: Story = {
+export const Populated: Story = {
 	render: () =>
 		renderRouteStory({
 			component: AdminBrandsPage,
@@ -49,4 +50,20 @@ export const Catalog: Story = {
 				listAdminBrands: async () => catalog,
 			}),
 		}),
+};
+
+export const LoadError: Story = {
+	render: () =>
+		renderRouteStory({
+			component: AdminBrandsPage,
+			api: createApiStub({
+				listAdminBrands: async () => {
+					throw new Error("brands load failed");
+				},
+			}),
+		}),
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		await userEvent.click(canvas.getByRole("button", { name: "Refresh" }));
+	},
 };

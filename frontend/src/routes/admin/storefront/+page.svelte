@@ -45,6 +45,7 @@
 	let hasSavedDraft = $state(false);
 	let draftUpdatedAt = $state<Date | null>(null);
 	let publishedUpdatedAt = $state<Date | null>(null);
+	let loadErrorMessage = $state("");
 	let heroPreviewUrls = $state<Record<string, string>>({});
 	let savedSnapshot = $state("");
 	let newSectionType = $state<StorefrontHomepageSectionModel["type"]>("products");
@@ -485,6 +486,7 @@
 
 	async function loadStorefrontSettings() {
 		loading = true;
+		loadErrorMessage = "";
 		clearMessages();
 		try {
 			const response = await api.getAdminStorefrontSettings();
@@ -496,7 +498,8 @@
 			hydrateDraft(response.settings);
 		} catch (err) {
 			console.error(err);
-			notices.setError("Unable to load storefront settings.");
+			loadErrorMessage = "Unable to load storefront settings.";
+			notices.setError(loadErrorMessage);
 			lastUpdated = null;
 			hasSavedDraft = false;
 			draftUpdatedAt = null;
@@ -814,6 +817,10 @@
 			</div>
 		{:else}
 			<div class="mt-6 space-y-6">
+				{#if loadErrorMessage}
+					<div class="admin-empty-state admin-empty-state-error">{loadErrorMessage}</div>
+				{/if}
+
 				<section class="admin-subsurface">
 					<h3
 						class="text-sm font-semibold tracking-[0.18em] text-stone-500 uppercase dark:text-stone-400"

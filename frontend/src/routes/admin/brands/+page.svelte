@@ -32,6 +32,7 @@
 	let logoMediaId = $state("");
 	let logoPreviewUrl = $state<string | null>(null);
 	let isActive = $state(true);
+	let hasLoadError = $state(false);
 	let savedSnapshot = $state("");
 	const notices = createAdminNotices();
 	const savePrompt = createAdminSavePrompt({
@@ -96,6 +97,7 @@
 
 	async function loadBrands(query = appliedSearchQuery) {
 		loading = true;
+		hasLoadError = false;
 		notices.clear();
 		try {
 			const normalizedQuery = query.trim();
@@ -109,6 +111,7 @@
 			}
 		} catch (error) {
 			console.error(error);
+			hasLoadError = true;
 			notices.setError("Unable to load brands.");
 		} finally {
 			loading = false;
@@ -261,7 +264,9 @@
 		{#snippet master()}
 			<AdminPanel title="Brands" headerActions={brandActions}>
 				<div class="space-y-3">
-					{#if loading && brands.length === 0}
+					{#if hasLoadError}
+						<p class="admin-empty-state admin-empty-state-error">Failed to load brands.</p>
+					{:else if loading && brands.length === 0}
 						<p class="admin-empty-state">Loading brands...</p>
 					{:else if brands.length === 0 && hasAppliedSearch}
 						<p class="admin-empty-state">Your search didn&apos;t match any brands.</p>

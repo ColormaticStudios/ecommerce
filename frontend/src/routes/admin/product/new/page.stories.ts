@@ -9,7 +9,7 @@ import AdminNewProductPage from "./+page.svelte";
 type AdminNewProductData = ComponentProps<typeof AdminNewProductPage>["data"];
 
 const meta = {
-	title: "Routes/Admin/New Product",
+	title: "Routes/Admin/Product Editor",
 	component: RouteStoryHarness,
 } satisfies Meta;
 
@@ -24,7 +24,7 @@ function createData(overrides: Partial<AdminNewProductData> = {}): AdminNewProdu
 	};
 }
 
-export const EmptyEditor: Story = {
+export const NewProduct: Story = {
 	render: () =>
 		renderRouteStory({
 			component: AdminNewProductPage,

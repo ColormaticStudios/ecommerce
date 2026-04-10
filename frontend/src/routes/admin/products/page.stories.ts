@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/sveltekit";
 import type { ComponentProps } from "svelte";
+import { userEvent, within } from "storybook/test";
 import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
-import { createApiStub } from "$lib/storybook/api";
+import { createApiStub, pendingPromise } from "$lib/storybook/api";
 import {
 	makeAttributeDefinition,
 	makeDraftPreviewSession,
@@ -42,6 +43,24 @@ function createProductsApi() {
 	});
 }
 
+export const Loading: Story = {
+	render: () =>
+		renderRouteStory({
+			component: AdminProductsPage,
+			componentProps: { data: createData() },
+			api: createApiStub({
+				listAdminProducts: async () => pendingPromise(),
+				listAdminBrands: async () => [],
+				listAdminProductAttributes: async () => [makeAttributeDefinition()],
+				getAdminPreviewSession: async () => makeDraftPreviewSession(),
+			}),
+		}),
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		await userEvent.click(canvas.getByRole("button", { name: "Refresh" }));
+	},
+};
+
 export const Empty: Story = {
 	render: () =>
 		renderRouteStory({
@@ -51,7 +70,7 @@ export const Empty: Story = {
 		}),
 };
 
-export const CatalogWithDrafts: Story = {
+export const Populated: Story = {
 	render: () =>
 		renderRouteStory({
 			component: AdminProductsPage,

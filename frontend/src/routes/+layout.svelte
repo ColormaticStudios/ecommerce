@@ -208,7 +208,7 @@
 			aria-label="Page loading"
 		>
 			<span class="inline-flex items-center gap-2">
-				<i class="bi bi-arrow-repeat animate-spin"></i>
+				<i class="bi bi-arrow-repeat inline-block animate-spin"></i>
 				Loading...
 			</span>
 		</div>

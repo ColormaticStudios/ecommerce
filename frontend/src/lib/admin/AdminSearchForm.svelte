@@ -62,6 +62,8 @@
 		{disabled}
 		onclick={() => onRefresh?.()}
 	>
-		<i class={`bi ${refreshing ? "bi-arrow-repeat animate-spin" : "bi-arrow-clockwise"}`}></i>
+		<i
+			class={`bi inline-block ${refreshing ? "bi-arrow-repeat animate-spin" : "bi-arrow-clockwise"}`}
+		></i>
 	</IconButton>
 </form>

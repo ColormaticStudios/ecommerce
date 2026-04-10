@@ -38,6 +38,7 @@
 	let productSaveAction = $state<(() => Promise<void>) | null>(null);
 	let selectedProductId = $state<number | null>(null);
 	let mobilePanel = $state<MobileProductsPanel>("catalog");
+	let hasLoadError = $state(Boolean(initialData.errorMessage));
 	const limitOptions = [10, 20, 50, 100];
 	const mobilePanelTabs = [
 		{ id: "catalog", label: "Catalog", icon: "bi-collection" },
@@ -61,11 +62,16 @@
 		},
 		loadErrorMessage: "Unable to load products.",
 		loadPage: async ({ query, page, limit }) => {
-			return await api.listAdminProducts({
+			const response = await api.listAdminProducts({
 				q: query || undefined,
 				page,
 				limit,
 			});
+			hasLoadError = false;
+			return response;
+		},
+		onLoadError: () => {
+			hasLoadError = true;
 		},
 	});
 
@@ -116,6 +122,7 @@
 			},
 			data.errorMessage
 		);
+		hasLoadError = Boolean(data.errorMessage);
 	});
 
 	$effect(() => {
@@ -167,7 +174,11 @@
 				headerActions={catalogActions}
 				class={`${mobilePanel === "catalog" ? "block" : "hidden"} lg:block`}
 			>
-				{#if catalog.items.length === 0 && catalog.hasSearch}
+				{#if hasLoadError}
+					<p class="admin-empty-state admin-empty-state-error">Failed to load products.</p>
+				{:else if catalog.loading && catalog.items.length === 0}
+					<p class="admin-empty-state">Loading products...</p>
+				{:else if catalog.items.length === 0 && catalog.hasSearch}
 					<p class="admin-empty-state">Your search didn't match any products.</p>
 				{:else if catalog.items.length === 0}
 					<p class="admin-empty-state">No products yet. Start a new record in the editor.</p>

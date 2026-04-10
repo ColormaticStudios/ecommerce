@@ -23,6 +23,7 @@
 	let { data }: Props = $props();
 	const initialData = untrack(() => $state.snapshot(data));
 	const api: API = getContext("api");
+	let hasLoadError = $state(Boolean(initialData.errorMessage));
 
 	const limitOptions = [10, 20, 50, 100];
 	const {
@@ -39,11 +40,16 @@
 		},
 		loadErrorMessage: "Unable to load users.",
 		loadPage: async ({ query, page, limit }) => {
-			return await api.listUsers({
+			const response = await api.listUsers({
 				page,
 				limit,
 				q: query || undefined,
 			});
+			hasLoadError = false;
+			return response;
+		},
+		onLoadError: () => {
+			hasLoadError = true;
 		},
 	});
 
@@ -70,6 +76,7 @@
 			},
 			data.errorMessage
 		);
+		hasLoadError = Boolean(data.errorMessage);
 	});
 </script>
 
@@ -97,7 +104,11 @@
 		meta={`${users.items.length} shown`}
 		headerActions={userActions}
 	>
-		{#if users.items.length === 0 && users.hasSearch}
+		{#if hasLoadError}
+			<p class="admin-empty-state admin-empty-state-error">Failed to load users.</p>
+		{:else if users.loading && users.items.length === 0}
+			<p class="admin-empty-state">Loading users...</p>
+		{:else if users.items.length === 0 && users.hasSearch}
 			<p class="admin-empty-state">No users match "{users.query}".</p>
 		{:else if users.items.length === 0}
 			<p class="admin-empty-state">No users found.</p>

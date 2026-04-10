@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/sveltekit";
 import type { ComponentProps } from "svelte";
+import { userEvent, within } from "storybook/test";
 import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
+import { createApiStub, pendingPromise } from "$lib/storybook/api";
 import { makeUser } from "$lib/storybook/factories";
 import { makeAdminLayoutData } from "$lib/storybook/layout";
 import { renderRouteStory } from "$lib/storybook/render";
@@ -29,6 +31,21 @@ function createData(overrides: Partial<AdminUsersData> = {}): AdminUsersData {
 	};
 }
 
+export const Loading: Story = {
+	render: () =>
+		renderRouteStory({
+			component: AdminUsersPage,
+			componentProps: { data: createData() },
+			api: createApiStub({
+				listUsers: async () => pendingPromise(),
+			}),
+		}),
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		await userEvent.click(canvas.getByRole("button", { name: "Refresh" }));
+	},
+};
+
 export const Empty: Story = {
 	render: () =>
 		renderRouteStory({
@@ -37,7 +54,7 @@ export const Empty: Story = {
 		}),
 };
 
-export const Directory: Story = {
+export const Populated: Story = {
 	render: () =>
 		renderRouteStory({
 			component: AdminUsersPage,

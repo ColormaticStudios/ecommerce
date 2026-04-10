@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/sveltekit";
 import type { ComponentProps } from "svelte";
+import { userEvent, within } from "storybook/test";
 import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
-import { createApiStub } from "$lib/storybook/api";
+import { createApiStub, pendingPromise } from "$lib/storybook/api";
 import { makeOrder, makeProduct, makeUser } from "$lib/storybook/factories";
 import { makeAdminLayoutData } from "$lib/storybook/layout";
 import { renderRouteStory } from "$lib/storybook/render";
@@ -32,6 +33,25 @@ function createData(overrides: Partial<AdminOrdersData> = {}): AdminOrdersData {
 	};
 }
 
+export const Loading: Story = {
+	render: () =>
+		renderRouteStory({
+			component: AdminOrdersPage,
+			componentProps: { data: createData() },
+			api: createApiStub({
+				listAdminOrders: async () => pendingPromise(),
+				listUsers: async () => ({
+					data: [],
+					pagination: { page: 1, limit: 100, total_pages: 1, total: 0 },
+				}),
+			}),
+		}),
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		await userEvent.click(canvas.getByRole("button", { name: "Refresh" }));
+	},
+};
+
 export const Empty: Story = {
 	render: () =>
 		renderRouteStory({
@@ -46,7 +66,7 @@ export const Empty: Story = {
 		}),
 };
 
-export const Queue: Story = {
+export const Populated: Story = {
 	render: () =>
 		renderRouteStory({
 			component: AdminOrdersPage,

@@ -2114,7 +2114,7 @@
 						variant="danger"
 					>
 						{#if mediaDeleting && extractMediaId(image) === mediaDeleting}
-							<i class="bi bi-arrow-repeat animate-spin"></i>
+							<i class="bi bi-arrow-repeat inline-block animate-spin"></i>
 						{:else}
 							<i class="bi bi-trash"></i>
 						{/if}

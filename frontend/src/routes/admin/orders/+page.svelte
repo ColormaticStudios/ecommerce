@@ -27,6 +27,7 @@
 
 	let orderUsersById = $state<Record<number, UserModel>>({});
 	let unresolvedOrderUserIds = $state<Record<number, true>>({});
+	let hasLoadError = $state(Boolean(initialData.errorMessage));
 	const limitOptions = [10, 20, 50, 100];
 	const {
 		collection: orders,
@@ -42,11 +43,16 @@
 		},
 		loadErrorMessage: "Unable to load orders.",
 		loadPage: async ({ query, page, limit }) => {
-			return await api.listAdminOrders({
+			const response = await api.listAdminOrders({
 				page,
 				limit,
 				q: query || undefined,
 			});
+			hasLoadError = false;
+			return response;
+		},
+		onLoadError: () => {
+			hasLoadError = true;
 		},
 		afterLoad: hydrateOrderUsers,
 	});
@@ -184,6 +190,7 @@
 			},
 			data.errorMessage
 		);
+		hasLoadError = Boolean(data.errorMessage);
 	});
 </script>
 
@@ -211,7 +218,11 @@
 		meta={`${orders.items.length} shown`}
 		headerActions={orderPanelActions}
 	>
-		{#if orders.items.length === 0 && orders.hasSearch}
+		{#if hasLoadError}
+			<p class="admin-empty-state admin-empty-state-error">Failed to load orders.</p>
+		{:else if orders.loading && orders.items.length === 0}
+			<p class="admin-empty-state">Loading orders...</p>
+		{:else if orders.items.length === 0 && orders.hasSearch}
 			<p class="admin-empty-state">No orders match "{orders.query}".</p>
 		{:else if orders.items.length === 0}
 			<p class="admin-empty-state">No orders yet.</p>
