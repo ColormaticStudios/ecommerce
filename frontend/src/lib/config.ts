@@ -3,10 +3,16 @@ function normalizeBaseUrl(value: string): string {
 }
 
 function readPublicApiBaseUrl(): string {
-	const value =
-		import.meta.env.PUBLIC_API_BASE_URL ||
-		import.meta.env.STORYBOOK_PUBLIC_API_BASE_URL ||
-		"http://localhost:3000";
+	const serverValue =
+		typeof process !== "undefined"
+			? process.env.PUBLIC_API_BASE_URL || process.env.STORYBOOK_PUBLIC_API_BASE_URL
+			: undefined;
+	const clientValue =
+		(typeof __PUBLIC_API_BASE_URL__ !== "undefined" && __PUBLIC_API_BASE_URL__) ||
+		(typeof __STORYBOOK_PUBLIC_API_BASE_URL__ !== "undefined" &&
+			__STORYBOOK_PUBLIC_API_BASE_URL__) ||
+		undefined;
+	const value = serverValue || clientValue || "http://localhost:3000";
 	return String(value);
 }
 

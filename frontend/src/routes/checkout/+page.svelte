@@ -315,7 +315,7 @@
 			quote = await api.quoteCheckout({
 				payment_provider_id: selectedPaymentProviderId,
 				shipping_provider_id: selectedShippingProviderId,
-				tax_provider_id: "",
+				tax_provider_id: autoTaxProviderId,
 				payment_data: paymentPayload,
 				shipping_data: shippingPayload,
 				tax_data: taxPayload,

@@ -42,7 +42,7 @@ function appendQueryParams(url: URL, params?: Record<string, unknown>) {
 }
 
 export async function serverRequest<T>(
-	event: Pick<RequestEvent, "fetch" | "request">,
+	event: Pick<RequestEvent, "request">,
 	path: string,
 	params?: Record<string, unknown>
 ): Promise<T> {
@@ -56,7 +56,10 @@ export async function serverRequest<T>(
 		headers.set("cookie", cookie);
 	}
 
-	const response = await event.fetch(url.toString(), {
+	// Use the server runtime fetch for the external API base URL.
+	// SvelteKit's event.fetch can forward request context such as Origin,
+	// which trips the API's CORS middleware during SSR/E2E loads.
+	const response = await fetch(url.toString(), {
 		method: "GET",
 		headers,
 	});
@@ -80,7 +83,7 @@ export async function serverRequest<T>(
 }
 
 export async function serverIsAuthenticated(
-	event: Pick<RequestEvent, "fetch" | "request">
+	event: Pick<RequestEvent, "request">
 ): Promise<boolean> {
 	try {
 		await serverRequest(event, "/me/");
