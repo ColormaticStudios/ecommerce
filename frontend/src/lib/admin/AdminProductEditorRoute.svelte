@@ -11,9 +11,15 @@
 		productId?: number | null;
 		initialProduct?: ProductModel | null;
 		allowCreate?: boolean;
+		onProductCreated?: (product: ProductModel) => void;
 	}
 
-	let { productId = null, initialProduct = null, allowCreate = false }: Props = $props();
+	let {
+		productId = null,
+		initialProduct = null,
+		allowCreate = false,
+		onProductCreated,
+	}: Props = $props();
 
 	let currentProduct = $state<ProductModel | null>(null);
 
@@ -77,6 +83,7 @@
 		bind:productId
 		initialProduct={currentProduct}
 		{allowCreate}
+		{onProductCreated}
 		layout="split"
 		showHeader={false}
 		showClear={false}
