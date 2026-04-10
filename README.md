@@ -98,6 +98,7 @@ Run frontend checks:
 
 ```bash
 cd frontend
+bun run test
 bun run check
 bun run lint
 ```

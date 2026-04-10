@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import test from "node:test";
+import { expect, test } from "vitest";
 import {
 	formatProviderCurrencies,
 	parseProviderCurrencies,
@@ -11,59 +10,58 @@ import {
 test("parseProviderSecretData returns string maps for valid JSON objects", () => {
 	const result = parseProviderSecretData('{ "api_key": "sk_test", "merchant_id": "acct_123" }');
 
-	assert.equal(result.error, null);
-	assert.deepEqual(result.value, {
+	expect(result.error).toBeNull();
+	expect(result.value).toEqual({
 		api_key: "sk_test",
 		merchant_id: "acct_123",
 	});
 });
 
 test("parseProviderSecretData rejects invalid shapes and non-string values", () => {
-	assert.equal(parseProviderSecretData("").error, "Secret data is required.");
-	assert.equal(parseProviderSecretData("[]").error, "Secret data must be a JSON object.");
-	assert.equal(
-		parseProviderSecretData('{ "api_key": 7 }').error,
+	expect(parseProviderSecretData("").error).toBe("Secret data is required.");
+	expect(parseProviderSecretData("[]").error).toBe("Secret data must be a JSON object.");
+	expect(parseProviderSecretData('{ "api_key": 7 }').error).toBe(
 		"Secret data values must be strings."
 	);
 });
 
 test("parseProviderCurrencies normalizes case and removes duplicates", () => {
-	assert.deepEqual(parseProviderCurrencies("usd, eur\nUSD , cad"), ["USD", "EUR", "CAD"]);
-	assert.equal(formatProviderCurrencies(["USD", "EUR"]), "USD, EUR");
+	expect(parseProviderCurrencies("usd, eur\nUSD , cad")).toEqual(["USD", "EUR", "CAD"]);
+	expect(formatProviderCurrencies(["USD", "EUR"])).toBe("USD, EUR");
 });
 
 test("provider runbooks expose the webhook outage and reconciliation mismatch procedures", () => {
-	assert.deepEqual(
-		providerRunbooks.map((runbook) => runbook.id),
-		["webhook_outage", "reconciliation_mismatch"]
-	);
-	assert.ok(providerRunbooks.every((runbook) => runbook.steps.length >= 5));
+	expect(providerRunbooks.map((runbook) => runbook.id)).toEqual([
+		"webhook_outage",
+		"reconciliation_mismatch",
+	]);
+	expect(providerRunbooks.every((runbook) => runbook.steps.length >= 5)).toBe(true);
 });
 
 test("summarizeReconciliationMismatch classifies provider drift by provider type", () => {
-	assert.equal(
+	expect(
 		summarizeReconciliationMismatch({
 			provider_type: "payment",
 			drifts: [{ id: 1 }],
-		} as never),
+		} as never)
+	).toBe(
 		"Payment drift usually points to amount or status mismatches between the local ledger and provider transaction truth."
 	);
-	assert.equal(
+	expect(
 		summarizeReconciliationMismatch({
 			provider_type: "shipping",
 			drifts: [{ id: 1 }],
-		} as never),
-		"Shipping drift usually points to shipment status, service, or tracking mismatches."
-	);
-	assert.equal(
+		} as never)
+	).toBe("Shipping drift usually points to shipment status, service, or tracking mismatches.");
+	expect(
 		summarizeReconciliationMismatch({
 			provider_type: "tax",
 			drifts: [{ id: 1 }],
-		} as never),
+		} as never)
+	).toBe(
 		"Tax drift usually points to snapshot totals or line-level tax results no longer matching checkout inputs."
 	);
-	assert.equal(
-		summarizeReconciliationMismatch(null),
+	expect(summarizeReconciliationMismatch(null)).toBe(
 		"Select a reconciliation run to classify the mismatch."
 	);
 });
