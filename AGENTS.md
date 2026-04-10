@@ -26,6 +26,8 @@ Keep docs and tests up-to-date with new changes.
 
 For the frontend, always use the proper component (ex. NumberInput instead of TextInput with type="number").
 
+Whenever you add a new meaningful UI state to a frontend route or major view, add or update the matching Storybook route story so that state stays visible in the state catalog.
+
 Keep handlers thin where possible; shared logic should move to reusable helpers/services.
 
 This project is still very early, we will take a **breaking-change first** policy to get the project in the right shape. The project is not being used in production so there is no risk.

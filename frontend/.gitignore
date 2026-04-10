@@ -25,3 +25,6 @@ vite.config.ts.timestamp-*
 # Playwright
 playwright-report/
 test-results/
+
+*storybook.log
+storybook-static

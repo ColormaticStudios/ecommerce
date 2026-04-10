@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { page } from "$app/state";
 	import AdminProductEditorRoute from "$lib/admin/AdminProductEditorRoute.svelte";
 	import type { PageData } from "./$types";
 
@@ -8,8 +7,6 @@
 	}
 
 	let { data }: Props = $props();
-
-	const productId = $derived(Number(page.params.id));
 </script>
 
-<AdminProductEditorRoute {productId} initialProduct={data.initialProduct} />
+<AdminProductEditorRoute productId={null} initialProduct={data.initialProduct} allowCreate={true} />

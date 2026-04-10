@@ -17,6 +17,7 @@
 		removeItemById,
 		upsertItemById,
 	} from "$lib/admin/state.svelte";
+	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import TabSwitcher from "$lib/components/TabSwitcher.svelte";
 	import { type ProductModel } from "$lib/models";
@@ -137,7 +138,13 @@
 {/snippet}
 
 {#snippet headerActions()}
-	<AdminResourceActions countLabel={`${catalog.total} products`} />
+	<AdminResourceActions countLabel={`${catalog.total} products`} actions={newProductAction} />
+{/snippet}
+
+{#snippet newProductAction()}
+	<ButtonLink href={resolve("/admin/product/new")} variant="primary" tone="admin">
+		New product
+	</ButtonLink>
 {/snippet}
 
 <section class="space-y-6">
