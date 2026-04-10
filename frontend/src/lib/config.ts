@@ -1,13 +1,14 @@
+import { readServerPublicRuntimeEnv, resolvePublicApiBaseUrl } from "$lib/public-env";
+
 function normalizeBaseUrl(value: string): string {
 	return value.replace(/\/+$/, "");
 }
 
 function readPublicApiBaseUrl(): string {
-	const value =
-		import.meta.env.PUBLIC_API_BASE_URL ||
-		import.meta.env.STORYBOOK_PUBLIC_API_BASE_URL ||
-		"http://localhost:3000";
-	return String(value);
+	return resolvePublicApiBaseUrl({
+		serverEnv: typeof process !== "undefined" ? readServerPublicRuntimeEnv() : undefined,
+		clientEnv: globalThis.__PUBLIC_ENV__,
+	});
 }
 
 export const API_BASE_URL = normalizeBaseUrl(readPublicApiBaseUrl());

@@ -11,7 +11,7 @@ const dirname =
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
-	envPrefix: ["VITE_", "PUBLIC_", "STORYBOOK_PUBLIC_"],
+	envPrefix: ["VITE_", "STORYBOOK_PUBLIC_"],
 	plugins: [tailwindcss(), sveltekit()],
 	server: {
 		fs: {

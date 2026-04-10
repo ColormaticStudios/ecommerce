@@ -2,6 +2,11 @@ import type { Preview } from "@storybook/sveltekit";
 import "../src/routes/main.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
+globalThis.__PUBLIC_ENV__ = Object.freeze({
+	...globalThis.__PUBLIC_ENV__,
+	STORYBOOK_PUBLIC_API_BASE_URL: import.meta.env.STORYBOOK_PUBLIC_API_BASE_URL,
+});
+
 const preview: Preview = {
 	parameters: {
 		layout: "fullscreen",

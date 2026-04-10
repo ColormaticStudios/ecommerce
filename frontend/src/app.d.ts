@@ -2,13 +2,19 @@
 // for information about these interfaces
 declare global {
 	interface ImportMetaEnv {
-		readonly PUBLIC_API_BASE_URL?: string;
 		readonly STORYBOOK_PUBLIC_API_BASE_URL?: string;
 	}
 
 	interface ImportMeta {
 		readonly env: ImportMetaEnv;
 	}
+
+	var __PUBLIC_ENV__:
+		| {
+				PUBLIC_API_BASE_URL?: string;
+				STORYBOOK_PUBLIC_API_BASE_URL?: string;
+		  }
+		| undefined;
 
 	namespace App {
 		// interface Error {}
