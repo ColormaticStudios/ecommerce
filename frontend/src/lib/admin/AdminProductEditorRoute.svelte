@@ -46,6 +46,11 @@
 		currentProduct = product;
 	}
 
+	function handleProductCreated(product: ProductModel) {
+		syncCurrentProduct(product);
+		onProductCreated?.(product);
+	}
+
 	function clearCurrentProduct() {
 		currentProduct = null;
 	}
@@ -83,7 +88,7 @@
 		bind:productId
 		initialProduct={currentProduct}
 		{allowCreate}
-		{onProductCreated}
+		onProductCreated={handleProductCreated}
 		layout="split"
 		showHeader={false}
 		showClear={false}
@@ -92,7 +97,6 @@
 		onStatusMessage={setStatusMessage}
 		onDirtyChange={(dirty) => (productDirty = dirty)}
 		onSaveRequestChange={(action) => (productSaveAction = action)}
-		onProductCreated={syncCurrentProduct}
 		onProductUpdated={syncCurrentProduct}
 		onProductDeleted={clearCurrentProduct}
 	/>
