@@ -11,9 +11,15 @@
 		productId?: number | null;
 		initialProduct?: ProductModel | null;
 		allowCreate?: boolean;
+		onProductCreated?: (product: ProductModel) => void;
 	}
 
-	let { productId = null, initialProduct = null, allowCreate = false }: Props = $props();
+	let {
+		productId = null,
+		initialProduct = null,
+		allowCreate = false,
+		onProductCreated,
+	}: Props = $props();
 
 	const hasProductId = $derived(productId != null && Number.isFinite(productId) && productId > 0);
 	const canViewLive = $derived(Boolean(initialProduct?.is_published));
@@ -63,6 +69,7 @@
 		{productId}
 		{initialProduct}
 		{allowCreate}
+		{onProductCreated}
 		layout="split"
 		showHeader={false}
 		showClear={false}
