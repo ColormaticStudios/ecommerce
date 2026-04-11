@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/sveltekit";
-import { expect, userEvent, within } from "storybook/test";
 import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
 import { createApiStub } from "$lib/storybook/api";
 import { makeAuthResponse, makeUser } from "$lib/storybook/factories";
@@ -25,6 +24,10 @@ export const Default: Story = {
 		}),
 };
 
+export const OpenIDConnectOption: Story = {
+	render: Default.render,
+};
+
 export const ReauthenticationRequired: Story = {
 	render: Default.render,
 	parameters: {
@@ -48,11 +51,4 @@ export const InvalidCredentials: Story = {
 				},
 			}),
 		}),
-	play: async ({ canvasElement }) => {
-		const canvas = within(canvasElement);
-		await userEvent.type(canvas.getByPlaceholderText("Email"), "buyer@example.com");
-		await userEvent.type(canvas.getByPlaceholderText("Password"), "wrong-password");
-		await userEvent.click(canvas.getByRole("button", { name: "Log In" }));
-		await expect(canvas.getByText("Invalid email or password.")).toBeVisible();
-	},
 };

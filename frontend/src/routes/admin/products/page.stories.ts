@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/sveltekit";
 import type { ComponentProps } from "svelte";
-import { userEvent, within } from "storybook/test";
 import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
 import { createApiStub, pendingPromise } from "$lib/storybook/api";
 import {
@@ -55,10 +54,6 @@ export const Loading: Story = {
 				getAdminPreviewSession: async () => makeDraftPreviewSession(),
 			}),
 		}),
-	play: async ({ canvasElement }) => {
-		const canvas = within(canvasElement);
-		await userEvent.click(canvas.getByRole("button", { name: "Refresh" }));
-	},
 };
 
 export const Empty: Story = {

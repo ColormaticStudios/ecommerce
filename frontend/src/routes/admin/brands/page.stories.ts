@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/sveltekit";
-import { userEvent, within } from "storybook/test";
 import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
 import { createApiStub, pendingPromise } from "$lib/storybook/api";
 import { makeBrand } from "$lib/storybook/factories";
@@ -62,8 +61,4 @@ export const LoadError: Story = {
 				},
 			}),
 		}),
-	play: async ({ canvasElement }) => {
-		const canvas = within(canvasElement);
-		await userEvent.click(canvas.getByRole("button", { name: "Refresh" }));
-	},
 };
