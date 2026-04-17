@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/sveltekit";
+import { expect, within } from "storybook/test";
 import type { ComponentProps } from "svelte";
 import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
 import {
@@ -67,6 +68,10 @@ export const GuestReady: Story = {
 				}),
 			},
 		}),
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		await expect(canvas.getByRole("link", { name: "Claim past guest order" })).toBeVisible();
+	},
 };
 
 export const CustomerWithSavedData: Story = {

@@ -80,6 +80,7 @@
 	const activePaymentProvider = $derived(findProvider("payment", selectedPaymentProviderId));
 	const activeShippingProvider = $derived(findProvider("shipping", selectedShippingProviderId));
 	const activeTaxProvider = $derived(findProvider("tax", autoTaxProviderId));
+	const claimGuestOrderHref = `${resolve("/login")}?redirect=${encodeURIComponent("/orders")}`;
 	const subtotal = $derived(
 		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.product_variant.price, 0) : 0
 	);
@@ -519,6 +520,18 @@
 								<ButtonLink href={resolve("/signup/")} variant="regular" size="large"
 									>Create account</ButtonLink
 								>
+							</div>
+							<div class="mt-5 border-t border-sky-200/70 pt-4 dark:border-sky-900/60">
+								<p class="font-medium">Need to claim an older guest order?</p>
+								<p class="mt-2 text-sky-900/80 dark:text-sky-100/80">
+									Sign in first, then continue to your account to claim a past guest order with your
+									confirmation token.
+								</p>
+								<div class="mt-4">
+									<ButtonLink href={claimGuestOrderHref} variant="primary" size="large"
+										>Claim past guest order</ButtonLink
+									>
+								</div>
 							</div>
 						</div>
 					</div>
