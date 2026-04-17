@@ -45,6 +45,11 @@ type AuthResponse struct {
 	User models.User `json:"user"`
 }
 
+type AuthConfigResponse struct {
+	LocalSignInEnabled bool `json:"local_sign_in_enabled"`
+	OIDCEnabled        bool `json:"oidc_enabled"`
+}
+
 type oidcUserClaims struct {
 	Email             string `json:"email"`
 	Sub               string `json:"sub"`
@@ -177,6 +182,21 @@ func wantsJSONResponse(c *gin.Context) bool {
 	}
 	accept := strings.ToLower(c.GetHeader("Accept"))
 	return strings.Contains(accept, "application/json")
+}
+
+func oidcConfigured(provider string, clientID string, redirectURI string) bool {
+	return strings.TrimSpace(provider) != "" &&
+		strings.TrimSpace(clientID) != "" &&
+		strings.TrimSpace(redirectURI) != ""
+}
+
+func GetAuthConfig(disableLocalSignIn bool, oidcProvider string, clientID string, redirectURI string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.JSON(http.StatusOK, AuthConfigResponse{
+			LocalSignInEnabled: !disableLocalSignIn,
+			OIDCEnabled:        oidcConfigured(oidcProvider, clientID, redirectURI),
+		})
+	}
 }
 
 func resolveOIDCUsername(claims oidcUserClaims) string {

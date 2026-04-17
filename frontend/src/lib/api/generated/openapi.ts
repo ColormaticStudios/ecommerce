@@ -52,6 +52,22 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/auth/config": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAuthConfig"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/auth/oidc/login": {
 		parameters: {
 			query?: never;
@@ -1308,6 +1324,10 @@ export interface components {
 		AuthResponse: {
 			user: components["schemas"]["User"];
 		};
+		AuthConfigResponse: {
+			local_sign_in_enabled: boolean;
+			oidc_enabled: boolean;
+		};
 		UpdateProfileRequest: {
 			name?: string;
 			currency?: string;
@@ -2306,6 +2326,26 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["MessageResponse"];
+				};
+			};
+		};
+	};
+	getAuthConfig: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Authentication configuration */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["AuthConfigResponse"];
 				};
 			};
 		};

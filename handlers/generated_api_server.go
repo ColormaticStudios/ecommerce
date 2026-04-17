@@ -403,13 +403,25 @@ func (s *GeneratedAPIServer) Logout(c *gin.Context) {
 	Logout(s.authCookieCfg)(c)
 }
 
+func (s *GeneratedAPIServer) GetAuthConfig(c *gin.Context) {
+	GetAuthConfig(s.disableLocalSignIn, s.oidcProvider, s.oidcClientID, s.oidcRedirectURI)(c)
+}
+
 func (s *GeneratedAPIServer) OidcCallback(c *gin.Context, params apicontract.OidcCallbackParams) {
 	_ = params
+	if !oidcConfigured(s.oidcProvider, s.oidcClientID, s.oidcRedirectURI) {
+		c.Status(http.StatusNotFound)
+		return
+	}
 	OIDCCallback(s.db, s.jwtSecret, s.oidcProvider, s.oidcClientID, s.oidcRedirectURI, s.authCookieCfg)(c)
 }
 
 func (s *GeneratedAPIServer) OidcLogin(c *gin.Context, params apicontract.OidcLoginParams) {
 	_ = params
+	if !oidcConfigured(s.oidcProvider, s.oidcClientID, s.oidcRedirectURI) {
+		c.Status(http.StatusNotFound)
+		return
+	}
 	OIDCLogin(s.oidcProvider, s.oidcClientID, s.oidcRedirectURI, s.authCookieCfg)(c)
 }
 

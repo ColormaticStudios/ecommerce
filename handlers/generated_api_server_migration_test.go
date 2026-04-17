@@ -2547,6 +2547,24 @@ func TestGeneratedDisableLocalSignInAndAuthValidation(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	}
 
+	authConfigReq := httptest.NewRequest(http.MethodGet, "/api/v1/auth/config", nil)
+	authConfigW := httptest.NewRecorder()
+	rDisabled.ServeHTTP(authConfigW, authConfigReq)
+	require.Equal(t, http.StatusOK, authConfigW.Code)
+	var disabledConfig AuthConfigResponse
+	require.NoError(t, json.Unmarshal(authConfigW.Body.Bytes(), &disabledConfig))
+	assert.Equal(t, AuthConfigResponse{
+		LocalSignInEnabled: false,
+		OIDCEnabled:        false,
+	}, disabledConfig)
+
+	for _, path := range []string{"/api/v1/auth/oidc/login", "/api/v1/auth/oidc/callback?state=x&code=y"} {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		w := httptest.NewRecorder()
+		rDisabled.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	}
+
 	rEnabled, _ := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{})
 
 	registerInvalidReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", strings.NewReader(`{"username":"onlyname"}`))
@@ -2572,6 +2590,17 @@ func TestGeneratedDisableLocalSignInAndAuthValidation(t *testing.T) {
 	loginValidW := httptest.NewRecorder()
 	rEnabled.ServeHTTP(loginValidW, loginValidReq)
 	assert.Equal(t, http.StatusOK, loginValidW.Code)
+
+	authConfigEnabledReq := httptest.NewRequest(http.MethodGet, "/api/v1/auth/config", nil)
+	authConfigEnabledW := httptest.NewRecorder()
+	rEnabled.ServeHTTP(authConfigEnabledW, authConfigEnabledReq)
+	require.Equal(t, http.StatusOK, authConfigEnabledW.Code)
+	var enabledConfig AuthConfigResponse
+	require.NoError(t, json.Unmarshal(authConfigEnabledW.Body.Bytes(), &enabledConfig))
+	assert.Equal(t, AuthConfigResponse{
+		LocalSignInEnabled: true,
+		OIDCEnabled:        false,
+	}, enabledConfig)
 }
 
 func TestGeneratedMediaUploadProtectionAndSuccess(t *testing.T) {
