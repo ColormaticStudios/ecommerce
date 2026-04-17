@@ -187,6 +187,46 @@ func TestOIDCCallbackIntegrationCreatesUserWithPreferredUsername(t *testing.T) {
 	assert.Equal(t, "new-oidc@example.com", dbUser.Email)
 }
 
+func TestOIDCCallbackIntegrationDoesNotAutoClaimMatchingGuestOrders(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	const clientID = "oidc-client-id"
+	const callbackURL = "http://localhost:3000/api/v1/auth/oidc/callback"
+	provider := startOIDCIntegrationProvider(t, clientID)
+	db := newTestDB(t, &models.User{}, &models.CheckoutSession{}, &models.Order{})
+
+	guestEmail := "oidc-guest@example.com"
+	session, order := seedGuestOrderForAuthTest(t, db, guestEmail)
+	provider.registerCode("guest-claim-code", oidcUserClaims{
+		Sub:               "oidc-sub-claim-1",
+		Email:             guestEmail,
+		Name:              "OIDC Guest Claim",
+		PreferredUsername: "oidc-guest-claim",
+	})
+
+	r := gin.New()
+	r.GET("/oidc/callback", OIDCCallback(db, "jwt-secret", provider.issuer(), clientID, callbackURL, AuthCookieConfig{}))
+
+	req := httptest.NewRequest(http.MethodGet, "/oidc/callback?state=state-claim&code=guest-claim-code&format=json", nil)
+	req.AddCookie(&http.Cookie{Name: oidcStateCookieName, Value: "state-claim"})
+	w := httptest.NewRecorder()
+
+	r.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var response AuthResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+
+	var claimedOrder models.Order
+	require.NoError(t, db.First(&claimedOrder, order.ID).Error)
+	assert.Nil(t, claimedOrder.UserID)
+	assert.False(t, claimedOrder.ClaimedAt.Valid())
+
+	var claimedSession models.CheckoutSession
+	require.NoError(t, db.First(&claimedSession, session.ID).Error)
+	assert.Nil(t, claimedSession.UserID)
+}
+
 func TestOIDCCallbackIntegrationUpdatesExistingUsernameFromPreferredUsername(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

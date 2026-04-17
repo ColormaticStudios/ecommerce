@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -10,10 +12,38 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
+
+func seedGuestOrderForAuthTest(t *testing.T, db *gorm.DB, email string) (models.CheckoutSession, models.Order) {
+	t.Helper()
+
+	now := time.Now().UTC()
+	session := models.CheckoutSession{
+		PublicToken: uuid.NewString(),
+		GuestEmail:  &email,
+		Status:      models.CheckoutSessionStatusConverted,
+		ExpiresAt:   now.Add(24 * time.Hour),
+		LastSeenAt:  now,
+	}
+	require.NoError(t, db.Create(&session).Error)
+
+	token := uuid.NewString()
+	order := models.Order{
+		CheckoutSessionID: session.ID,
+		GuestEmail:        &email,
+		ConfirmationToken: &token,
+		Status:            models.StatusPending,
+		Total:             models.MoneyFromFloat(19.99),
+	}
+	require.NoError(t, db.Create(&order).Error)
+
+	return session, order
+}
 
 func TestGenerateJWT(t *testing.T) {
 	secret := "test-secret-key-for-jwt-generation"
@@ -177,6 +207,129 @@ func TestWantsJSONResponse(t *testing.T) {
 		c.Request = req
 		assert.False(t, wantsJSONResponse(c))
 	})
+}
+
+func TestOIDCConfigured(t *testing.T) {
+	t.Run("true when all required values are present", func(t *testing.T) {
+		assert.True(t, oidcConfigured("https://issuer.example", "client-id", "https://app.example/callback"))
+	})
+
+	t.Run("false when any required value is missing", func(t *testing.T) {
+		assert.False(t, oidcConfigured("", "client-id", "https://app.example/callback"))
+		assert.False(t, oidcConfigured("https://issuer.example", "", "https://app.example/callback"))
+		assert.False(t, oidcConfigured("https://issuer.example", "client-id", ""))
+	})
+}
+
+func TestGetAuthConfig(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.GET("/auth/config", GetAuthConfig(true, "https://issuer.example", "client-id", "https://app.example/callback"))
+
+	req := httptest.NewRequest(http.MethodGet, "/auth/config", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var response AuthConfigResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+	assert.Equal(t, AuthConfigResponse{
+		LocalSignInEnabled: false,
+		OIDCEnabled:        true,
+	}, response)
+}
+
+func TestRegisterDoesNotAutoClaimMatchingGuestOrders(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := newTestDB(t)
+
+	matchingEmail := "guest-register@example.com"
+	firstSession, firstOrder := seedGuestOrderForAuthTest(t, db, matchingEmail)
+	secondSession, secondOrder := seedGuestOrderForAuthTest(t, db, matchingEmail)
+	_, otherOrder := seedGuestOrderForAuthTest(t, db, "other@example.com")
+
+	r := gin.New()
+	r.POST("/auth/register", Register(db, "secret", AuthCookieConfig{}))
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/auth/register",
+		strings.NewReader(`{"username":"guest-register","email":"guest-register@example.com","password":"supersecret"}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	require.Equal(t, http.StatusCreated, w.Code)
+
+	var user models.User
+	require.NoError(t, db.Where("email = ?", matchingEmail).First(&user).Error)
+
+	for _, orderID := range []uint{firstOrder.ID, secondOrder.ID} {
+		var order models.Order
+		require.NoError(t, db.First(&order, orderID).Error)
+		assert.Nil(t, order.UserID)
+		assert.False(t, order.ClaimedAt.Valid())
+	}
+
+	for _, sessionID := range []uint{firstSession.ID, secondSession.ID} {
+		var session models.CheckoutSession
+		require.NoError(t, db.First(&session, sessionID).Error)
+		assert.Nil(t, session.UserID)
+	}
+
+	var untouched models.Order
+	require.NoError(t, db.First(&untouched, otherOrder.ID).Error)
+	assert.Nil(t, untouched.UserID)
+	assert.False(t, untouched.ClaimedAt.Valid())
+}
+
+func TestLoginDoesNotAutoClaimMatchingGuestOrders(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := newTestDB(t)
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte("supersecret"), bcrypt.DefaultCost)
+	require.NoError(t, err)
+
+	user := models.User{
+		Subject:      "sub-login-claim",
+		Username:     "login-claim-user",
+		Email:        "guest-login@example.com",
+		PasswordHash: string(passwordHash),
+		Role:         "customer",
+		Currency:     "USD",
+	}
+	require.NoError(t, db.Create(&user).Error)
+
+	matchSession, matchOrder := seedGuestOrderForAuthTest(t, db, user.Email)
+	_, otherOrder := seedGuestOrderForAuthTest(t, db, "different@example.com")
+
+	r := gin.New()
+	r.POST("/auth/login", Login(db, "secret", AuthCookieConfig{}))
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/auth/login",
+		strings.NewReader(`{"email":"guest-login@example.com","password":"supersecret"}`),
+	)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var claimedOrder models.Order
+	require.NoError(t, db.First(&claimedOrder, matchOrder.ID).Error)
+	assert.Nil(t, claimedOrder.UserID)
+	assert.False(t, claimedOrder.ClaimedAt.Valid())
+
+	var claimedSession models.CheckoutSession
+	require.NoError(t, db.First(&claimedSession, matchSession.ID).Error)
+	assert.Nil(t, claimedSession.UserID)
+
+	var untouched models.Order
+	require.NoError(t, db.First(&untouched, otherOrder.ID).Error)
+	assert.Nil(t, untouched.UserID)
+	assert.False(t, untouched.ClaimedAt.Valid())
 }
 
 func TestOIDCHandlersInvalidProvider(t *testing.T) {
