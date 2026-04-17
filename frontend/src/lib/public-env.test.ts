@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import test from "node:test";
+import { expect, test } from "vitest";
 import {
 	createPublicRuntimeEnvScript,
 	resolvePublicApiBaseUrl,
@@ -16,7 +15,7 @@ test("resolvePublicApiBaseUrl prefers runtime server env over client env", () =>
 		},
 	});
 
-	assert.equal(baseUrl, "https://server.example/");
+	expect(baseUrl).toBe("https://server.example/");
 });
 
 test("resolvePublicApiBaseUrl falls back to the client runtime env", () => {
@@ -26,11 +25,11 @@ test("resolvePublicApiBaseUrl falls back to the client runtime env", () => {
 		},
 	});
 
-	assert.equal(baseUrl, "https://storybook.example/");
+	expect(baseUrl).toBe("https://storybook.example/");
 });
 
 test("resolvePublicApiBaseUrl uses the default when no runtime env is configured", () => {
-	assert.equal(resolvePublicApiBaseUrl(), "http://localhost:3000");
+	expect(resolvePublicApiBaseUrl()).toBe("http://localhost:3000");
 });
 
 test("serializePublicRuntimeEnv escapes script-sensitive characters", () => {
@@ -38,8 +37,8 @@ test("serializePublicRuntimeEnv escapes script-sensitive characters", () => {
 		PUBLIC_API_BASE_URL: "https://example.com/</script>",
 	});
 
-	assert.equal(serialized.includes("</script>"), false);
-	assert.equal(serialized.includes("\\u003c/script>"), true);
+	expect(serialized.includes("</script>")).toBe(false);
+	expect(serialized.includes("\\u003c/script>")).toBe(true);
 });
 
 test("createPublicRuntimeEnvScript seeds the shared runtime global", () => {
@@ -47,8 +46,7 @@ test("createPublicRuntimeEnvScript seeds the shared runtime global", () => {
 		PUBLIC_API_BASE_URL: "https://runtime.example/",
 	});
 
-	assert.equal(
-		script,
+	expect(script).toBe(
 		'<script>globalThis.__PUBLIC_ENV__ = Object.freeze({"PUBLIC_API_BASE_URL":"https://runtime.example/"});</script>'
 	);
 });

@@ -390,8 +390,15 @@ func GetCheckoutOrderShippingTracking(
 			return
 		}
 
+		query := db.Select("id").Where("id = ?", orderID)
+		if requestCtx.User != nil {
+			query = query.Where("user_id = ?", requestCtx.User.ID)
+		} else {
+			query = query.Where("checkout_session_id = ?", requestCtx.Session.ID)
+		}
+
 		var order models.Order
-		if err := db.Select("id").Where("id = ? AND checkout_session_id = ?", orderID, requestCtx.Session.ID).First(&order).Error; err != nil {
+		if err := query.First(&order).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
 				return

@@ -21,7 +21,7 @@
 		onProductCreated,
 	}: Props = $props();
 
-	let currentProduct = $state<ProductModel | null>(null);
+	let currentProduct = $derived<ProductModel | null>(initialProduct);
 
 	const hasProductId = $derived(productId != null && Number.isFinite(productId) && productId > 0);
 	const canViewLive = $derived(Boolean(currentProduct?.is_published));
@@ -58,10 +58,6 @@
 	$effect(() => {
 		savePrompt.dirty = productDirty;
 		savePrompt.saveAction = productSaveAction;
-	});
-
-	$effect(() => {
-		currentProduct = initialProduct;
 	});
 </script>
 

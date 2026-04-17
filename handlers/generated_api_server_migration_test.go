@@ -2093,6 +2093,101 @@ func TestShippingTrackingWebhookUpdatesShipmentStateIdempotently(t *testing.T) {
 	assert.Equal(t, models.StatusShipped, refreshedOrder.Status)
 }
 
+func TestCheckoutOrderTrackingUsesUserOwnershipForAuthenticatedHistoricalOrders(t *testing.T) {
+	resetCheckoutProtectionForTest(t)
+
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.CheckoutSession{},
+		&models.Order{},
+		&models.ShipmentRate{},
+		&models.Shipment{},
+		&models.ShipmentPackage{},
+		&models.TrackingEvent{},
+	)
+
+	customer := seedUser(
+		t,
+		db,
+		"sub-customer-tracking-history",
+		"customer-tracking-history",
+		"customer-tracking-history@example.com",
+		"customer",
+	)
+	customerToken := issueBearerTokenWithRole(
+		t,
+		generatedTestJWTSecret,
+		customer.Subject,
+		customer.Role,
+	)
+
+	now := time.Now().UTC()
+	olderSession := models.CheckoutSession{
+		PublicToken: "historical-tracking-session-old",
+		UserID:      &customer.ID,
+		Status:      models.CheckoutSessionStatusConverted,
+		ExpiresAt:   now.Add(24 * time.Hour),
+		LastSeenAt:  now.Add(-2 * time.Hour),
+	}
+	newerSession := models.CheckoutSession{
+		PublicToken: "historical-tracking-session-new",
+		UserID:      &customer.ID,
+		Status:      models.CheckoutSessionStatusConverted,
+		ExpiresAt:   now.Add(24 * time.Hour),
+		LastSeenAt:  now.Add(-1 * time.Hour),
+	}
+	require.NoError(t, db.Create(&olderSession).Error)
+	require.NoError(t, db.Create(&newerSession).Error)
+
+	historicalOrder := models.Order{
+		UserID:            &customer.ID,
+		CheckoutSessionID: olderSession.ID,
+		Status:            models.StatusPending,
+		Total:             models.MoneyFromFloat(19.99),
+	}
+	require.NoError(t, db.Create(&historicalOrder).Error)
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		fmt.Sprintf("/api/v1/checkout/orders/%d/shipping/tracking", historicalOrder.ID),
+		nil,
+	)
+	req.Header.Set("Authorization", "Bearer "+customerToken)
+	req.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: newerSession.PublicToken})
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	tracking := decodeJSON[checkoutTrackingTestResponse](t, w)
+	assert.Equal(t, historicalOrder.ID, tracking.OrderID)
+	assert.Len(t, tracking.Shipments, 0)
+
+	guestOwnerSession := seedCheckoutSession(t, db, nil)
+	otherGuestSession := seedCheckoutSession(t, db, nil)
+	guestOrder := models.Order{
+		CheckoutSessionID: guestOwnerSession.ID,
+		Status:            models.StatusPending,
+		Total:             models.MoneyFromFloat(9.99),
+	}
+	require.NoError(t, db.Create(&guestOrder).Error)
+
+	guestReq := httptest.NewRequest(
+		http.MethodGet,
+		fmt.Sprintf("/api/v1/checkout/orders/%d/shipping/tracking", guestOrder.ID),
+		nil,
+	)
+	guestReq.AddCookie(&http.Cookie{Name: checkoutSessionCookieName, Value: otherGuestSession.PublicToken})
+
+	guestW := httptest.NewRecorder()
+	r.ServeHTTP(guestW, guestReq)
+
+	require.Equal(t, http.StatusNotFound, guestW.Code)
+	assert.Contains(t, guestW.Body.String(), "Order not found")
+}
+
 func TestCheckoutTaxFinalizePersistsLineLevelSnapshotResults(t *testing.T) {
 	resetCheckoutProtectionForTest(t)
 

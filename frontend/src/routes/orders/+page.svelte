@@ -436,8 +436,18 @@
 								{formatPrice(order.total, currency)}
 							</span>
 						</div>
-						{#if order.can_cancel}
-							<div class="mt-3 flex justify-end">
+
+						<div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+							<ButtonLink
+								href={resolve(`/orders/${order.id}`)}
+								variant="regular"
+								class="inline-flex items-center gap-2"
+							>
+								<i class="bi bi-truck"></i>
+								View details
+							</ButtonLink>
+
+							{#if order.can_cancel}
 								<Button
 									size="small"
 									type="button"
@@ -447,8 +457,8 @@
 								>
 									{cancellingOrderId === order.id ? "Cancelling..." : "Cancel order"}
 								</Button>
-							</div>
-						{/if}
+							{/if}
+						</div>
 					</div>
 				</div>
 			{/each}

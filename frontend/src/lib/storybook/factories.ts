@@ -1,6 +1,7 @@
 import type { components } from "$lib/api/generated/openapi";
 import type {
 	BrandModel,
+	CheckoutOrderTrackingModel,
 	CartItemModel,
 	CartModel,
 	OrderItemModel,
@@ -10,6 +11,8 @@ import type {
 	ProductVariantModel,
 	SavedAddressModel,
 	SavedPaymentMethodModel,
+	ShipmentModel,
+	TrackingEventModel,
 	UserModel,
 } from "$lib/models";
 import {
@@ -258,6 +261,73 @@ export function makeOrder(overrides: Partial<OrderModel> = {}): OrderModel {
 			updated_at: now,
 			deleted_at: null,
 			items: [item],
+		},
+		overrides
+	);
+}
+
+export function makeTrackingEvent(overrides: Partial<TrackingEventModel> = {}): TrackingEventModel {
+	return merge(
+		{
+			id: 901,
+			provider: "shippo",
+			provider_event_id: "evt_901",
+			status: "IN_TRANSIT",
+			tracking_number: "1Z999AA10123456784",
+			location: "Oakland, CA",
+			description: "Package departed regional facility.",
+			occurred_at: now,
+		},
+		overrides
+	);
+}
+
+export function makeShipment(overrides: Partial<ShipmentModel> = {}): ShipmentModel {
+	const trackingEvent = makeTrackingEvent();
+	return merge(
+		{
+			id: 851,
+			order_id: 501,
+			snapshot_id: 751,
+			provider: "shippo",
+			shipment_rate_id: 611,
+			provider_shipment_id: "ship_851",
+			status: "IN_TRANSIT",
+			currency: "USD",
+			service_code: "ups_ground",
+			service_name: "UPS Ground",
+			amount: 12,
+			shipping_address_pretty: "Story User, 1 Market St, San Francisco, CA 94105, US",
+			tracking_number: trackingEvent.tracking_number,
+			tracking_url: "https://example.com/track/1Z999AA10123456784",
+			label_url: "https://example.com/label/ship_851.pdf",
+			purchased_at: new Date("2026-04-05T14:30:00.000Z"),
+			finalized_at: new Date("2026-04-05T15:00:00.000Z"),
+			delivered_at: null,
+			rates: [],
+			packages: [
+				{
+					id: 771,
+					reference: "PKG-1",
+					weight_grams: 1200,
+					length_cm: 30,
+					width_cm: 20,
+					height_cm: 10,
+				},
+			],
+			tracking_events: [trackingEvent],
+		},
+		overrides
+	);
+}
+
+export function makeCheckoutOrderTracking(
+	overrides: Partial<CheckoutOrderTrackingModel> = {}
+): CheckoutOrderTrackingModel {
+	return merge(
+		{
+			order_id: 501,
+			shipments: [makeShipment()],
 		},
 		overrides
 	);

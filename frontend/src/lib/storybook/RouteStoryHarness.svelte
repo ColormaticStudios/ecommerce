@@ -47,4 +47,4 @@
 	});
 </script>
 
-<StoryComponent {...(componentProps as Record<string, never>)} />
+<StoryComponent {...componentProps as Record<string, never>} />

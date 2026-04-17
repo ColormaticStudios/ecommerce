@@ -383,6 +383,11 @@ export interface CartItemModel {
 
 type OrderItemPayload = components["schemas"]["OrderItem"];
 export type OrderPayload = components["schemas"]["Order"];
+type TrackingEventPayload = components["schemas"]["TrackingEvent"];
+type ShipmentPayload = components["schemas"]["Shipment"];
+type ShipmentRateModel = components["schemas"]["ShipmentRate"];
+type ShipmentPackageModel = components["schemas"]["ShipmentPackage"];
+type CheckoutOrderTrackingPayload = components["schemas"]["CheckoutOrderTrackingResponse"];
 
 export function parseOrder(order: OrderPayload): OrderModel {
 	return {
@@ -450,6 +455,94 @@ export interface OrderItemModel {
 	created_at: Date;
 	updated_at: Date;
 	deleted_at: Date | null;
+}
+
+export function parseTrackingEvent(event: TrackingEventPayload): TrackingEventModel {
+	return {
+		id: event.id,
+		provider: event.provider,
+		provider_event_id: event.provider_event_id,
+		status: event.status,
+		tracking_number: event.tracking_number,
+		location: event.location,
+		description: event.description,
+		occurred_at: parseDate(event.occurred_at) ?? new Date(),
+	};
+}
+
+export interface TrackingEventModel {
+	id: number;
+	provider: string;
+	provider_event_id: string;
+	status: TrackingEventPayload["status"];
+	tracking_number: string;
+	location: string;
+	description: string;
+	occurred_at: Date;
+}
+
+export function parseShipment(shipment: ShipmentPayload): ShipmentModel {
+	return {
+		id: shipment.id,
+		order_id: shipment.order_id,
+		snapshot_id: shipment.snapshot_id,
+		provider: shipment.provider,
+		shipment_rate_id: shipment.shipment_rate_id,
+		provider_shipment_id: shipment.provider_shipment_id,
+		status: shipment.status,
+		currency: shipment.currency,
+		service_code: shipment.service_code,
+		service_name: shipment.service_name,
+		amount: shipment.amount,
+		shipping_address_pretty: shipment.shipping_address_pretty,
+		tracking_number: shipment.tracking_number,
+		tracking_url: shipment.tracking_url,
+		label_url: shipment.label_url,
+		purchased_at: parseDate(shipment.purchased_at),
+		finalized_at: parseDate(shipment.finalized_at),
+		delivered_at: parseDate(shipment.delivered_at),
+		rates: shipment.rates ?? [],
+		packages: shipment.packages ?? [],
+		tracking_events: (shipment.tracking_events ?? []).map(parseTrackingEvent),
+	};
+}
+
+export interface ShipmentModel {
+	id: number;
+	order_id: number;
+	snapshot_id: number;
+	provider: string;
+	shipment_rate_id: number;
+	provider_shipment_id: string;
+	status: ShipmentPayload["status"];
+	currency: string;
+	service_code: string;
+	service_name: string;
+	amount: number;
+	shipping_address_pretty: string;
+	tracking_number: string;
+	tracking_url: string;
+	label_url: string;
+	purchased_at: Date | null;
+	finalized_at: Date | null;
+	delivered_at: Date | null;
+	rates: ShipmentRateModel[];
+	packages: ShipmentPackageModel[];
+	tracking_events: TrackingEventModel[];
+}
+
+export function parseCheckoutOrderTracking(
+	tracking: CheckoutOrderTrackingPayload
+): CheckoutOrderTrackingModel {
+	return {
+		order_id: tracking.order_id,
+		shipments: (tracking.shipments ?? []).map(parseShipment),
+	};
+}
+
+export interface CheckoutOrderTrackingModel {
+	order_id: number;
+	shipments: ShipmentModel[];
 }
 
 type SavedPaymentMethodPayload = components["schemas"]["SavedPaymentMethod"];
