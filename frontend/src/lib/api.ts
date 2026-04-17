@@ -24,6 +24,7 @@ import {
 	type StorefrontSettingsResponseModel,
 	parseStorefrontSettingsResponse,
 } from "$lib/storefront";
+import { buildOIDCLoginUrl } from "$lib/auth";
 import { appendQueryParams } from "$lib/api/http";
 import type { components, paths } from "$lib/api/generated/openapi";
 import * as cartDomain from "$lib/api/domains/cart";
@@ -273,6 +274,10 @@ export class API {
 		await this.request("POST", "/auth/logout");
 		this.authenticated = false;
 		this.authStateResolved = true;
+	}
+
+	public buildOIDCLoginURL(redirectPath?: string): string {
+		return buildOIDCLoginUrl(this.baseUrl, redirectPath);
 	}
 
 	public async createOrder(
