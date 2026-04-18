@@ -9,7 +9,9 @@ import (
 	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
 
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
+	"gorm.io/gorm"
 )
 
 func NewBrandCmd() *cobra.Command {
@@ -34,17 +36,16 @@ func newListBrandsCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List brands",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			db := getDB()
-			defer closeDB(db)
-
 			path := "/api/v1/admin/brands"
 			if trimmed := strings.TrimSpace(query); trimmed != "" {
 				path += "?q=" + url.QueryEscape(trimmed)
 			}
 
-			resp, err := invokeLocalJSON[apicontract.BrandListResponse](handlers.ListAdminBrands(db), localHandlerRequest{
+			resp, err := invokeWithDB[apicontract.BrandListResponse](localHandlerRequest{
 				Method: http.MethodGet,
 				Path:   path,
+			}, func(db *gorm.DB) gin.HandlerFunc {
+				return handlers.ListAdminBrands(db)
 			})
 			if err != nil {
 				return err
@@ -86,14 +87,13 @@ func newCreateBrandCmd() *cobra.Command {
 		Use:   "create",
 		Short: "Create a brand",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			db := getDB()
-			defer closeDB(db)
-
 			payload := input.toContract(cmd)
-			brand, err := invokeLocalJSON[apicontract.Brand](handlers.CreateAdminBrand(db), localHandlerRequest{
+			brand, err := invokeWithDB[apicontract.Brand](localHandlerRequest{
 				Method: http.MethodPost,
 				Path:   "/api/v1/admin/brands",
 				Body:   payload,
+			}, func(db *gorm.DB) gin.HandlerFunc {
+				return handlers.CreateAdminBrand(db)
 			})
 			if err != nil {
 				return err
@@ -128,15 +128,14 @@ func newUpdateBrandCmd() *cobra.Command {
 		Use:   "update",
 		Short: "Update a brand",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			db := getDB()
-			defer closeDB(db)
-
 			payload := input.toContract(cmd)
-			brand, err := invokeLocalJSON[apicontract.Brand](handlers.UpdateAdminBrand(db), localHandlerRequest{
+			brand, err := invokeWithDB[apicontract.Brand](localHandlerRequest{
 				Method:     http.MethodPatch,
 				Path:       fmt.Sprintf("/api/v1/admin/brands/%d", id),
 				PathParams: map[string]string{"id": fmt.Sprintf("%d", id)},
 				Body:       payload,
+			}, func(db *gorm.DB) gin.HandlerFunc {
+				return handlers.UpdateAdminBrand(db)
 			})
 			if err != nil {
 				return err
@@ -171,13 +170,12 @@ func newDeleteBrandCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete a brand",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			db := getDB()
-			defer closeDB(db)
-
-			resp, err := invokeLocalJSON[apicontract.MessageResponse](handlers.DeleteAdminBrand(db), localHandlerRequest{
+			resp, err := invokeWithDB[apicontract.MessageResponse](localHandlerRequest{
 				Method:     http.MethodDelete,
 				Path:       fmt.Sprintf("/api/v1/admin/brands/%d", id),
 				PathParams: map[string]string{"id": fmt.Sprintf("%d", id)},
+			}, func(db *gorm.DB) gin.HandlerFunc {
+				return handlers.DeleteAdminBrand(db)
 			})
 			if err != nil {
 				return err

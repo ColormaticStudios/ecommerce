@@ -22,6 +22,7 @@ const SessionCookieName = "session_token"
 const csrfCookieName = "csrf_token"
 const oidcStateCookieName = "oidc_state"
 const oidcRedirectCookieName = "oidc_redirect"
+const oidcResponseFormatCookieName = "oidc_response_format"
 
 type AuthCookieConfig struct {
 	Secure   bool
@@ -42,7 +43,8 @@ type LoginRequest struct {
 }
 
 type AuthResponse struct {
-	User models.User `json:"user"`
+	Token *string     `json:"token,omitempty"`
+	User  models.User `json:"user"`
 }
 
 type AuthConfigResponse struct {
@@ -165,6 +167,32 @@ func clearOIDCRedirectCookie(c *gin.Context, cfg AuthCookieConfig) {
 	)
 }
 
+func setOIDCResponseFormatCookie(c *gin.Context, value string, cfg AuthCookieConfig) {
+	c.SetSameSite(cfg.SameSite)
+	c.SetCookie(
+		oidcResponseFormatCookieName,
+		value,
+		300,
+		"/",
+		cfg.Domain,
+		cfg.Secure,
+		true,
+	)
+}
+
+func clearOIDCResponseFormatCookie(c *gin.Context, cfg AuthCookieConfig) {
+	c.SetSameSite(cfg.SameSite)
+	c.SetCookie(
+		oidcResponseFormatCookieName,
+		"",
+		-1,
+		"/",
+		cfg.Domain,
+		cfg.Secure,
+		true,
+	)
+}
+
 func sanitizeRedirectPath(path string) string {
 	path = strings.TrimSpace(path)
 	if path == "" {
@@ -178,6 +206,9 @@ func sanitizeRedirectPath(path string) string {
 
 func wantsJSONResponse(c *gin.Context) bool {
 	if strings.EqualFold(c.Query("format"), "json") {
+		return true
+	}
+	if cookieValue, err := c.Cookie(oidcResponseFormatCookieName); err == nil && strings.EqualFold(cookieValue, "json") {
 		return true
 	}
 	accept := strings.ToLower(c.GetHeader("Accept"))
@@ -292,7 +323,7 @@ func Register(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConfig) gin.Han
 
 		setSessionCookie(c, token, cookieCfg)
 		setCSRFCookie(c, uuid.NewString(), cookieCfg)
-		c.JSON(http.StatusCreated, AuthResponse{User: user})
+		c.JSON(http.StatusCreated, AuthResponse{Token: &token, User: user})
 	}
 }
 
@@ -336,7 +367,7 @@ func Login(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConfig) gin.Handle
 
 		setSessionCookie(c, token, cookieCfg)
 		setCSRFCookie(c, uuid.NewString(), cookieCfg)
-		c.JSON(http.StatusOK, AuthResponse{User: user})
+		c.JSON(http.StatusOK, AuthResponse{Token: &token, User: user})
 	}
 }
 
@@ -382,6 +413,11 @@ func OIDCLogin(oidcProvider string, clientID string, redirectURI string, cookieC
 		postLoginRedirect := sanitizeRedirectPath(c.Query("redirect"))
 		setOIDCStateCookie(c, state, cookieCfg)
 		setOIDCRedirectCookie(c, postLoginRedirect, cookieCfg)
+		if strings.EqualFold(c.Query("response_format"), "json") {
+			setOIDCResponseFormatCookie(c, "json", cookieCfg)
+		} else {
+			clearOIDCResponseFormatCookie(c, cookieCfg)
+		}
 		authURL := oauth2Config.AuthCodeURL(state)
 		c.Redirect(http.StatusFound, authURL)
 	}
@@ -487,10 +523,12 @@ func OIDCCallback(db *gorm.DB, jwtSecret string, oidcProvider string, clientID s
 		clearOIDCRedirectCookie(c, cookieCfg)
 
 		if wantsJSONResponse(c) {
-			c.JSON(http.StatusOK, AuthResponse{User: user})
+			clearOIDCResponseFormatCookie(c, cookieCfg)
+			c.JSON(http.StatusOK, AuthResponse{Token: &tokenString, User: user})
 			return
 		}
 
+		clearOIDCResponseFormatCookie(c, cookieCfg)
 		c.Redirect(http.StatusFound, postLoginRedirect)
 	}
 }

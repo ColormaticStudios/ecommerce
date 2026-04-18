@@ -200,6 +200,15 @@ func TestWantsJSONResponse(t *testing.T) {
 		assert.True(t, wantsJSONResponse(c))
 	})
 
+	t.Run("oidc response-format cookie", func(t *testing.T) {
+		c, _ := gin.CreateTestContext(httptest.NewRecorder())
+		req := httptest.NewRequest(http.MethodGet, "/auth/callback", nil)
+		req.AddCookie(&http.Cookie{Name: oidcResponseFormatCookieName, Value: "json"})
+		req.Header.Set("Accept", "text/html")
+		c.Request = req
+		assert.True(t, wantsJSONResponse(c))
+	})
+
 	t.Run("default false", func(t *testing.T) {
 		c, _ := gin.CreateTestContext(httptest.NewRecorder())
 		req := httptest.NewRequest(http.MethodGet, "/auth/callback", nil)
@@ -262,6 +271,11 @@ func TestRegisterDoesNotAutoClaimMatchingGuestOrders(t *testing.T) {
 	r.ServeHTTP(w, req)
 	require.Equal(t, http.StatusCreated, w.Code)
 
+	var authResp AuthResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &authResp))
+	require.NotNil(t, authResp.Token)
+	assert.NotEmpty(t, *authResp.Token)
+
 	var user models.User
 	require.NoError(t, db.Where("email = ?", matchingEmail).First(&user).Error)
 
@@ -316,6 +330,11 @@ func TestLoginDoesNotAutoClaimMatchingGuestOrders(t *testing.T) {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	require.Equal(t, http.StatusOK, w.Code)
+
+	var authResp AuthResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &authResp))
+	require.NotNil(t, authResp.Token)
+	assert.NotEmpty(t, *authResp.Token)
 
 	var claimedOrder models.Order
 	require.NoError(t, db.First(&claimedOrder, matchOrder.ID).Error)

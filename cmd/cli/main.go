@@ -4,27 +4,10 @@ import (
 	"ecommerce/cmd/cli/commands"
 	"log"
 	"os"
-
-	"github.com/spf13/cobra"
 )
 
 func main() {
-	var rootCmd = &cobra.Command{
-		Use:   "ecommerce-cli",
-		Short: "Ecommerce API CLI tool for administrative tasks",
-		Long:  "A command-line tool for managing users, products, and other administrative tasks for the ecommerce API.",
-	}
-
-	// Add subcommands
-	rootCmd.AddCommand(commands.NewUserCmd())
-	rootCmd.AddCommand(commands.NewProductCmd())
-	rootCmd.AddCommand(commands.NewBrandCmd())
-	rootCmd.AddCommand(commands.NewProductAttributeCmd())
-	rootCmd.AddCommand(commands.NewOrderCmd())
-	rootCmd.AddCommand(commands.NewStorefrontCmd())
-	rootCmd.AddCommand(commands.NewMigrateCmd())
-
-	if err := rootCmd.Execute(); err != nil {
+	if err := commands.Execute(); err != nil {
 		log.Fatal(err)
 		os.Exit(1)
 	}

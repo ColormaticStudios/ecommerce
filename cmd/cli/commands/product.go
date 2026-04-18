@@ -57,6 +57,35 @@ func newCreateProductCmd() *cobra.Command {
 		Short: "Create a new product",
 		Long:  "Create a new product in the catalog",
 		Run: func(cmd *cobra.Command, args []string) {
+			if isRemoteMode() {
+				var input apicontract.ProductUpsertInput
+				if strings.TrimSpace(filePath) != "" {
+					if err := loadJSONFile(filePath, &input); err != nil {
+						log.Fatalf("Error loading product JSON: %v", err)
+					}
+				} else {
+					if sku == "" || name == "" {
+						log.Fatal("SKU and name are required")
+					}
+					if price <= 0 {
+						log.Fatal("Price must be greater than 0")
+					}
+					input = buildSimpleProductUpsertInput(sku, name, description, price, stock)
+				}
+
+				product, err := invokeRemoteJSON[apicontract.Product](http.MethodPost, "/api/v1/admin/products", input)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				fmt.Printf("✓ Product created successfully:\n")
+				fmt.Printf("  ID: %d\n", product.Id)
+				fmt.Printf("  SKU: %s\n", product.Sku)
+				fmt.Printf("  Name: %s\n", product.Name)
+				fmt.Printf("  Variants: %d\n", len(product.Variants))
+				return
+			}
+
 			db := getDB()
 			defer closeDB(db)
 
@@ -159,6 +188,72 @@ func newEditProductCmd() *cobra.Command {
 		Short: "Edit an existing product",
 		Long:  "Edit an existing product by ID or SKU. Only provided fields will be updated.",
 		Run: func(cmd *cobra.Command, args []string) {
+			if isRemoteMode() {
+				product, err := findProductByIDOrSKU(nil, id, sku)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				input, err := loadCurrentProductUpsertInput(nil, nil, product.ID)
+				if err != nil {
+					log.Fatal(err)
+				}
+				previousSKU := input.Sku
+				defaultVariantSKU := previousSKU
+				if input.DefaultVariantSku != nil && strings.TrimSpace(*input.DefaultVariantSku) != "" {
+					defaultVariantSKU = *input.DefaultVariantSku
+				}
+
+				if cmd.Flags().Changed("new-sku") {
+					input.Sku = newSKU
+					if input.DefaultVariantSku != nil && *input.DefaultVariantSku == previousSKU {
+						value := newSKU
+						input.DefaultVariantSku = &value
+					}
+					for i := range input.Variants {
+						if input.Variants[i].Sku == previousSKU {
+							input.Variants[i].Sku = newSKU
+						}
+					}
+				}
+				if cmd.Flags().Changed("name") {
+					input.Name = name
+				}
+				if cmd.Flags().Changed("description") {
+					input.Description = description
+				}
+				if cmd.Flags().Changed("price") {
+					if price <= 0 {
+						log.Fatal("Price must be greater than 0")
+					}
+					for i := range input.Variants {
+						if input.Variants[i].Sku == defaultVariantSKU || len(input.Variants) == 1 {
+							input.Variants[i].Price = price
+						}
+					}
+				}
+				if cmd.Flags().Changed("stock") {
+					for i := range input.Variants {
+						if input.Variants[i].Sku == defaultVariantSKU || len(input.Variants) == 1 {
+							input.Variants[i].Stock = stock
+						}
+					}
+				}
+
+				updated, err := invokeRemoteJSON[apicontract.Product](http.MethodPatch, fmt.Sprintf("/api/v1/admin/products/%d", product.ID), input)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				fmt.Printf("✓ Product updated successfully:\n")
+				fmt.Printf("  ID: %d\n", updated.Id)
+				fmt.Printf("  SKU: %s\n", updated.Sku)
+				fmt.Printf("  Name: %s\n", updated.Name)
+				fmt.Printf("  Price: $%.2f\n", updated.Price)
+				fmt.Printf("  Stock: %d\n", updated.Stock)
+				return
+			}
+
 			db := getDB()
 			defer closeDB(db)
 
@@ -264,6 +359,30 @@ func newListProductsCmd() *cobra.Command {
 		Short: "List products",
 		Long:  "List all products in the catalog",
 		Run: func(cmd *cobra.Command, args []string) {
+			if isRemoteMode() {
+				path := "/api/v1/admin/products"
+				if limit > 0 {
+					path += "?limit=" + strconv.Itoa(limit)
+				}
+				page, err := invokeRemoteJSON[apicontract.ProductPage](http.MethodGet, path, nil)
+				if err != nil {
+					log.Fatalf("Error listing products: %v", err)
+				}
+				if len(page.Data) == 0 {
+					fmt.Println("No products found")
+					return
+				}
+
+				fmt.Printf("Found %d product(s):\n\n", len(page.Data))
+				fmt.Printf("%-5s %-15s %-30s %-10s %-10s\n", "ID", "SKU", "Name", "Price", "Stock")
+				fmt.Println("--------------------------------------------------------------------------------")
+				for _, product := range page.Data {
+					fmt.Printf("%-5d %-15s %-30s $%-9.2f %-10d\n",
+						product.Id, product.Sku, product.Name, product.Price, product.Stock)
+				}
+				return
+			}
+
 			db := getDB()
 			defer closeDB(db)
 
@@ -307,29 +426,9 @@ func newDeleteProductCmd() *cobra.Command {
 		Short: "Delete a product",
 		Long:  "Delete a product by ID or SKU",
 		Run: func(cmd *cobra.Command, args []string) {
-			db := getDB()
-			defer closeDB(db)
-
-			var product models.Product
-			var err error
-
-			if id != "" {
-				productID, err := strconv.ParseUint(id, 10, 32)
-				if err != nil {
-					log.Fatalf("Invalid product ID: %v", err)
-				}
-				err = db.First(&product, productID).Error
-			} else if sku != "" {
-				err = db.Where("sku = ?", sku).First(&product).Error
-			} else {
-				log.Fatal("Either --id or --sku must be provided")
-			}
-
+			product, err := findProductByIDOrSKU(nil, id, sku)
 			if err != nil {
-				if err == gorm.ErrRecordNotFound {
-					log.Fatalf("Product not found")
-				}
-				log.Fatalf("Error finding product: %v", err)
+				log.Fatal(err)
 			}
 
 			if !confirm {
@@ -342,6 +441,16 @@ func newDeleteProductCmd() *cobra.Command {
 				}
 			}
 
+			if isRemoteMode() {
+				if _, err := invokeRemoteJSON[apicontract.MessageResponse](http.MethodDelete, fmt.Sprintf("/api/v1/admin/products/%d", product.ID), nil); err != nil {
+					log.Fatalf("Error deleting product: %v", err)
+				}
+				fmt.Printf("✓ Product '%s' (SKU: %s) has been deleted\n", product.Name, product.SKU)
+				return
+			}
+
+			db := getDB()
+			defer closeDB(db)
 			if err := db.Delete(&product).Error; err != nil {
 				log.Fatalf("Error deleting product: %v", err)
 			}
@@ -369,13 +478,62 @@ func newSetRelatedProductsCmd() *cobra.Command {
 		Short: "Replace related products for a product",
 		Long:  "Replace the related products list using product IDs or SKUs.",
 		Run: func(cmd *cobra.Command, args []string) {
-			db := getDB()
-			defer closeDB(db)
-
-			product, err := findProductByIDOrSKU(db, id, sku)
+			product, err := findProductByIDOrSKU(nil, id, sku)
 			if err != nil {
 				log.Fatal(err)
 			}
+
+			if isRemoteMode() {
+				if clear {
+					updated, err := invokeRemoteJSON[apicontract.Product](http.MethodPatch, fmt.Sprintf("/api/v1/admin/products/%d/related", product.ID), map[string]any{
+						"related_product_ids": []int{},
+					})
+					if err != nil {
+						log.Fatalf("Error clearing related products: %v", err)
+					}
+					fmt.Printf("✓ Related products cleared for %s (ID: %d)\n", updated.Name, updated.Id)
+					return
+				}
+
+				if len(relatedIDs) == 0 && len(relatedSKUs) == 0 {
+					log.Fatal("Provide at least one --related-id or --related-sku, or use --clear")
+				}
+
+				resolvedIDs := append([]int(nil), relatedIDs...)
+				for _, relatedSKU := range relatedSKUs {
+					relatedProduct, err := findProductByIDOrSKU(nil, "", relatedSKU)
+					if err != nil {
+						log.Fatalf("Error loading related product %q: %v", relatedSKU, err)
+					}
+					resolvedIDs = append(resolvedIDs, int(relatedProduct.ID))
+				}
+
+				filteredIDs := resolvedIDs[:0]
+				seen := make(map[int]struct{}, len(resolvedIDs))
+				for _, relatedID := range resolvedIDs {
+					if relatedID == int(product.ID) {
+						continue
+					}
+					if _, ok := seen[relatedID]; ok {
+						continue
+					}
+					seen[relatedID] = struct{}{}
+					filteredIDs = append(filteredIDs, relatedID)
+				}
+
+				updated, err := invokeRemoteJSON[apicontract.Product](http.MethodPatch, fmt.Sprintf("/api/v1/admin/products/%d/related", product.ID), map[string]any{
+					"related_product_ids": filteredIDs,
+				})
+				if err != nil {
+					log.Fatalf("Error setting related products: %v", err)
+				}
+
+				fmt.Printf("✓ Related products updated for %s (ID: %d)\n", updated.Name, updated.Id)
+				return
+			}
+
+			db := getDB()
+			defer closeDB(db)
 
 			if clear {
 				if err := db.Model(&product).Association("Related").Clear(); err != nil {
@@ -444,13 +602,22 @@ func newUploadProductMediaCmd() *cobra.Command {
 				log.Fatal("File path is required")
 			}
 
-			cfg := getConfig()
-			db := getDBWithConfig(cfg)
-			defer closeDB(db)
-
-			product, err := findProductByIDOrSKU(db, id, sku)
+			product, err := findProductByIDOrSKU(nil, id, sku)
 			if err != nil {
 				log.Fatal(err)
+			}
+
+			if isRemoteMode() {
+				auth, err := currentRemoteAuth()
+				if err != nil {
+					log.Fatal(err)
+				}
+				if strings.TrimSpace(apiBase) == "" || apiBase == "http://localhost:3000" {
+					apiBase = auth.APIURL
+				}
+				if strings.TrimSpace(token) == "" {
+					token = auth.Token
+				}
 			}
 
 			if token != "" {
@@ -466,6 +633,10 @@ func newUploadProductMediaCmd() *cobra.Command {
 				fmt.Printf("✓ Uploaded media %s and attached to %s (ID: %d)\n", mediaID, product.Name, product.ID)
 				return
 			}
+
+			cfg := getConfig()
+			db := getDBWithConfig(cfg)
+			defer closeDB(db)
 
 			if err := media.CheckDependencies(); err != nil {
 				log.Fatalf("Media upload dependencies unavailable: %v", err)
@@ -502,6 +673,19 @@ func newUploadProductMediaCmd() *cobra.Command {
 }
 
 func findProductByIDOrSKU(db *gorm.DB, id string, sku string) (models.Product, error) {
+	if isRemoteMode() {
+		contract, err := findRemoteProductContractByIDOrSKU(id, sku)
+		if err != nil {
+			return models.Product{}, err
+		}
+		return contractProductToModel(contract), nil
+	}
+
+	if db == nil {
+		db = getDB()
+		defer closeDB(db)
+	}
+
 	var product models.Product
 	var err error
 
@@ -525,6 +709,67 @@ func findProductByIDOrSKU(db *gorm.DB, id string, sku string) (models.Product, e
 	}
 
 	return product, nil
+}
+
+func findRemoteProductContractByIDOrSKU(id string, sku string) (apicontract.Product, error) {
+	if strings.TrimSpace(id) != "" {
+		productID, parseErr := strconv.ParseUint(id, 10, 32)
+		if parseErr != nil {
+			return apicontract.Product{}, fmt.Errorf("invalid product ID: %w", parseErr)
+		}
+		return invokeRemoteJSON[apicontract.Product](http.MethodGet, fmt.Sprintf("/api/v1/admin/products/%d", productID), nil)
+	}
+
+	if strings.TrimSpace(sku) == "" {
+		return apicontract.Product{}, fmt.Errorf("either --id or --sku must be provided")
+	}
+
+	page, err := invokeRemoteJSON[apicontract.ProductPage](http.MethodGet, "/api/v1/admin/products?q="+url.QueryEscape(strings.TrimSpace(sku))+"&limit=100", nil)
+	if err != nil {
+		return apicontract.Product{}, err
+	}
+	for _, product := range page.Data {
+		if product.Sku == strings.TrimSpace(sku) {
+			return product, nil
+		}
+	}
+
+	return apicontract.Product{}, fmt.Errorf("product not found")
+}
+
+func contractProductToModel(product apicontract.Product) models.Product {
+	result := models.Product{
+		SKU:         product.Sku,
+		Name:        product.Name,
+		Description: product.Description,
+		Price:       models.MoneyFromFloat(product.Price),
+		Stock:       product.Stock,
+	}
+	result.ID = uint(product.Id)
+	return result
+}
+
+func buildSimpleProductUpsertInput(sku string, name string, description string, price float64, stock int) apicontract.ProductUpsertInput {
+	defaultVariantSKU := strings.TrimSpace(sku)
+	position := 1
+	isPublished := false
+
+	return apicontract.ProductUpsertInput{
+		Description:       description,
+		Name:              strings.TrimSpace(name),
+		Sku:               defaultVariantSKU,
+		DefaultVariantSku: &defaultVariantSKU,
+		Variants: []apicontract.ProductVariantInput{
+			{
+				IsPublished: &isPublished,
+				Position:    &position,
+				Price:       price,
+				Sku:         defaultVariantSKU,
+				Stock:       stock,
+				Title:       strings.TrimSpace(name),
+			},
+		},
+	}
 }
 
 func uploadFileToTus(apiBase string, token string, filePath string) (string, error) {

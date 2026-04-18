@@ -1322,6 +1322,7 @@ export interface components {
 			password: string;
 		};
 		AuthResponse: {
+			token?: string;
 			user: components["schemas"]["User"];
 		};
 		AuthConfigResponse: {
@@ -2354,6 +2355,7 @@ export interface operations {
 		parameters: {
 			query?: {
 				redirect?: string;
+				response_format?: "json";
 			};
 			header?: never;
 			path?: never;

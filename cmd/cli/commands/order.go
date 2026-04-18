@@ -2,6 +2,7 @@ package commands
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,6 +14,7 @@ import (
 	"ecommerce/internal/media"
 	"ecommerce/models"
 
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 )
@@ -70,9 +72,6 @@ func newListOrdersCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List orders",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mediaService := newMediaService()
-			defer closeMediaService(mediaService)
-
 			values := url.Values{}
 			if strings.TrimSpace(query) != "" {
 				values.Set("q", strings.TrimSpace(query))
@@ -89,9 +88,11 @@ func newListOrdersCmd() *cobra.Command {
 				path += "?" + encoded
 			}
 
-			resp, err := invokeLocalJSON[apicontract.OrderPage](handlers.GetAllOrders(mediaService.DB, mediaService), localHandlerRequest{
+			resp, err := invokeWithMediaService[apicontract.OrderPage](localHandlerRequest{
 				Method: http.MethodGet,
 				Path:   path,
+			}, func(mediaService *media.Service) gin.HandlerFunc {
+				return handlers.GetAllOrders(mediaService.DB, mediaService)
 			})
 			if err != nil {
 				return err
@@ -145,13 +146,12 @@ func newGetOrderCmd() *cobra.Command {
 		Use:   "get",
 		Short: "Get a single order",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mediaService := newMediaService()
-			defer closeMediaService(mediaService)
-
-			order, err := invokeLocalJSON[apicontract.Order](handlers.GetAdminOrderByID(mediaService.DB, mediaService), localHandlerRequest{
+			order, err := invokeWithMediaService[apicontract.Order](localHandlerRequest{
 				Method:     http.MethodGet,
 				Path:       fmt.Sprintf("/api/v1/admin/orders/%d", id),
 				PathParams: map[string]string{"id": fmt.Sprintf("%d", id)},
+			}, func(mediaService *media.Service) gin.HandlerFunc {
+				return handlers.GetAdminOrderByID(mediaService.DB, mediaService)
 			})
 			if err != nil {
 				return err
@@ -189,13 +189,12 @@ func newGetOrderPaymentsCmd() *cobra.Command {
 		Use:   "payments",
 		Short: "Get payment ledger for an order",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			db := getDB()
-			defer closeDB(db)
-
-			ledger, err := invokeLocalJSON[apicontract.OrderPaymentLedger](handlers.GetAdminOrderPayments(db), localHandlerRequest{
+			ledger, err := invokeWithDB[apicontract.OrderPaymentLedger](localHandlerRequest{
 				Method:     http.MethodGet,
 				Path:       fmt.Sprintf("/api/v1/admin/orders/%d/payments", id),
 				PathParams: map[string]string{"id": fmt.Sprintf("%d", id)},
+			}, func(db *gorm.DB) gin.HandlerFunc {
+				return handlers.GetAdminOrderPayments(db)
 			})
 			if err != nil {
 				return err
@@ -242,6 +241,10 @@ func newInspectOrderCmd() *cobra.Command {
 		Use:   "inspect",
 		Short: "Get a deep observability view for an order",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if isRemoteMode() {
+				return errors.New("order inspect is only available in local path mode because it reads internal database state that is not exposed by the admin API")
+			}
+
 			mediaService := newMediaService()
 			defer closeMediaService(mediaService)
 

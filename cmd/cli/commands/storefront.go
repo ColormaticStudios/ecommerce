@@ -5,7 +5,9 @@ import (
 	"net/http"
 
 	"ecommerce/handlers"
+	"ecommerce/internal/media"
 
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 )
 
@@ -31,12 +33,11 @@ func newPrintStorefrontCmd() *cobra.Command {
 		Use:   "print",
 		Short: "Print storefront settings including draft metadata",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mediaService := newMediaService()
-			defer closeMediaService(mediaService)
-
-			resp, err := invokeLocalJSON[handlers.StorefrontSettingsResponse](handlers.GetAdminStorefrontSettings(mediaService.DB, mediaService), localHandlerRequest{
+			resp, err := invokeWithMediaService[handlers.StorefrontSettingsResponse](localHandlerRequest{
 				Method: http.MethodGet,
 				Path:   "/api/v1/admin/storefront",
+			}, func(mediaService *media.Service) gin.HandlerFunc {
+				return handlers.GetAdminStorefrontSettings(mediaService.DB, mediaService)
 			})
 			if err != nil {
 				return err
@@ -70,12 +71,11 @@ func newExportStorefrontCmd() *cobra.Command {
 		Use:   "export",
 		Short: "Export the current storefront settings JSON payload",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mediaService := newMediaService()
-			defer closeMediaService(mediaService)
-
-			resp, err := invokeLocalJSON[handlers.StorefrontSettingsResponse](handlers.GetAdminStorefrontSettings(mediaService.DB, mediaService), localHandlerRequest{
+			resp, err := invokeWithMediaService[handlers.StorefrontSettingsResponse](localHandlerRequest{
 				Method: http.MethodGet,
 				Path:   "/api/v1/admin/storefront",
+			}, func(mediaService *media.Service) gin.HandlerFunc {
+				return handlers.GetAdminStorefrontSettings(mediaService.DB, mediaService)
 			})
 			if err != nil {
 				return err
@@ -107,27 +107,28 @@ func newImportStorefrontCmd() *cobra.Command {
 		Use:   "import",
 		Short: "Import storefront settings from JSON into the draft",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mediaService := newMediaService()
-			defer closeMediaService(mediaService)
-
 			var settings handlers.StorefrontSettingsPayload
 			if err := loadJSONFile(filePath, &settings); err != nil {
 				return err
 			}
 
-			resp, err := invokeLocalJSON[handlers.StorefrontSettingsResponse](handlers.UpsertStorefrontSettings(mediaService.DB, mediaService), localHandlerRequest{
+			resp, err := invokeWithMediaService[handlers.StorefrontSettingsResponse](localHandlerRequest{
 				Method: http.MethodPut,
 				Path:   "/api/v1/admin/storefront",
 				Body:   handlers.UpsertStorefrontSettingsRequest{Settings: settings},
+			}, func(mediaService *media.Service) gin.HandlerFunc {
+				return handlers.UpsertStorefrontSettings(mediaService.DB, mediaService)
 			})
 			if err != nil {
 				return err
 			}
 
 			if publish {
-				resp, err = invokeLocalJSON[handlers.StorefrontSettingsResponse](handlers.PublishStorefrontSettings(mediaService.DB, mediaService), localHandlerRequest{
+				resp, err = invokeWithMediaService[handlers.StorefrontSettingsResponse](localHandlerRequest{
 					Method: http.MethodPost,
 					Path:   "/api/v1/admin/storefront/publish",
+				}, func(mediaService *media.Service) gin.HandlerFunc {
+					return handlers.PublishStorefrontSettings(mediaService.DB, mediaService)
 				})
 				if err != nil {
 					return err
@@ -166,12 +167,11 @@ func newPublishStorefrontCmd() *cobra.Command {
 		Use:   "publish",
 		Short: "Publish the storefront draft",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mediaService := newMediaService()
-			defer closeMediaService(mediaService)
-
-			resp, err := invokeLocalJSON[handlers.StorefrontSettingsResponse](handlers.PublishStorefrontSettings(mediaService.DB, mediaService), localHandlerRequest{
+			resp, err := invokeWithMediaService[handlers.StorefrontSettingsResponse](localHandlerRequest{
 				Method: http.MethodPost,
 				Path:   "/api/v1/admin/storefront/publish",
+			}, func(mediaService *media.Service) gin.HandlerFunc {
+				return handlers.PublishStorefrontSettings(mediaService.DB, mediaService)
 			})
 			if err != nil {
 				return err
@@ -202,12 +202,11 @@ func newDiscardStorefrontCmd() *cobra.Command {
 		Use:   "discard",
 		Short: "Discard the storefront draft",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mediaService := newMediaService()
-			defer closeMediaService(mediaService)
-
-			resp, err := invokeLocalJSON[handlers.StorefrontSettingsResponse](handlers.DiscardStorefrontDraft(mediaService.DB, mediaService), localHandlerRequest{
+			resp, err := invokeWithMediaService[handlers.StorefrontSettingsResponse](localHandlerRequest{
 				Method: http.MethodDelete,
 				Path:   "/api/v1/admin/storefront/draft",
+			}, func(mediaService *media.Service) gin.HandlerFunc {
+				return handlers.DiscardStorefrontDraft(mediaService.DB, mediaService)
 			})
 			if err != nil {
 				return err

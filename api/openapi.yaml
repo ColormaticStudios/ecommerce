@@ -117,6 +117,11 @@ paths:
           name: redirect
           schema:
             type: string
+        - in: query
+          name: response_format
+          schema:
+            type: string
+            enum: [json]
       responses:
         "302":
           description: Redirect to provider
@@ -2641,6 +2646,8 @@ components:
       type: object
       required: [user]
       properties:
+        token:
+          type: string
         user:
           $ref: "#/components/schemas/User"
 

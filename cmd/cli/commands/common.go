@@ -136,6 +136,13 @@ func invokeLocalJSON[T any](handler gin.HandlerFunc, req localHandlerRequest) (T
 	return value, nil
 }
 
+func invokeJSON[T any](handler gin.HandlerFunc, req localHandlerRequest) (T, error) {
+	if isRemoteMode() {
+		return invokeRemoteJSON[T](req.Method, req.Path, req.Body)
+	}
+	return invokeLocalJSON[T](handler, req)
+}
+
 func invokeLocalSuccess(handler gin.HandlerFunc, req localHandlerRequest) error {
 	status, body, err := invokeLocalHandler(handler, req)
 	if err != nil {
@@ -145,6 +152,87 @@ func invokeLocalSuccess(handler gin.HandlerFunc, req localHandlerRequest) error 
 		return decodeHandlerError(status, body)
 	}
 	return nil
+}
+
+func invokeSuccess(handler gin.HandlerFunc, req localHandlerRequest) error {
+	if isRemoteMode() {
+		_, err := invokeRemoteJSON[map[string]any](req.Method, req.Path, req.Body)
+		return err
+	}
+	return invokeLocalSuccess(handler, req)
+}
+
+func invokeRemoteJSON[T any](method string, requestPath string, body any) (T, error) {
+	var zero T
+
+	auth, err := currentRemoteAuth()
+	if err != nil {
+		return zero, err
+	}
+
+	targetURL := strings.TrimRight(auth.APIURL, "/") + requestPath
+	var requestBody io.Reader = http.NoBody
+	if body != nil {
+		payload, err := json.Marshal(body)
+		if err != nil {
+			return zero, fmt.Errorf("encode request body: %w", err)
+		}
+		requestBody = bytes.NewReader(payload)
+	}
+
+	req, err := http.NewRequest(method, targetURL, requestBody)
+	if err != nil {
+		return zero, err
+	}
+	req.Header.Set("Accept", "application/json")
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	req.Header.Set("Authorization", "Bearer "+auth.Token)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return zero, err
+	}
+	defer resp.Body.Close()
+
+	payload, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return zero, err
+	}
+
+	if resp.StatusCode >= http.StatusBadRequest {
+		return zero, decodeHandlerError(resp.StatusCode, payload)
+	}
+	if len(bytes.TrimSpace(payload)) == 0 {
+		return zero, nil
+	}
+
+	var value T
+	if err := json.Unmarshal(payload, &value); err != nil {
+		return zero, fmt.Errorf("decode handler response: %w", err)
+	}
+	return value, nil
+}
+
+func invokeWithDB[T any](req localHandlerRequest, factory func(*gorm.DB) gin.HandlerFunc) (T, error) {
+	if isRemoteMode() {
+		return invokeRemoteJSON[T](req.Method, req.Path, req.Body)
+	}
+
+	db := getDB()
+	defer closeDB(db)
+	return invokeLocalJSON[T](factory(db), req)
+}
+
+func invokeWithMediaService[T any](req localHandlerRequest, factory func(*media.Service) gin.HandlerFunc) (T, error) {
+	if isRemoteMode() {
+		return invokeRemoteJSON[T](req.Method, req.Path, req.Body)
+	}
+
+	mediaService := newMediaService()
+	defer closeMediaService(mediaService)
+	return invokeLocalJSON[T](factory(mediaService), req)
 }
 
 func decodeHandlerError(status int, body []byte) error {

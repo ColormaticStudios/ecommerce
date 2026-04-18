@@ -18,6 +18,9 @@ func NewMigrateCmd() *cobra.Command {
 		Use:   "migrate",
 		Short: "Database migration commands",
 		Long:  "Run or validate schema migrations against the configured database.",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			return requireLocalMode("migrate")
+		},
 	}
 
 	migrateCmd.AddCommand(newMigrateUpCmd())

@@ -1,19 +1,19 @@
 package commands
 
 import (
-	"ecommerce/config"
-	"ecommerce/internal/migrations"
 	"ecommerce/models"
+	"errors"
 	"fmt"
 	"log"
-	"os"
-	"time"
+	"net/http"
+	"net/url"
+	"strings"
+
+	"ecommerce/internal/apicontract"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 func NewUserCmd() *cobra.Command {
@@ -41,6 +41,23 @@ func newSetAdminCmd() *cobra.Command {
 		Short: "Set a user as admin",
 		Long:  "Promote a user to admin role by email or username",
 		Run: func(cmd *cobra.Command, args []string) {
+			if isRemoteMode() {
+				user, err := findUserByEmailOrUsernameRemote(email, username)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				updated, err := invokeRemoteJSON[apicontract.User](http.MethodPatch, fmt.Sprintf("/api/v1/admin/users/%d/role", user.Id), apicontract.UpdateUserRoleRequest{
+					Role: apicontract.UpdateUserRoleRequestRole("admin"),
+				})
+				if err != nil {
+					log.Fatalf("Error updating user: %v", err)
+				}
+
+				fmt.Printf("✓ User '%s' (%s) has been set as admin\n", updated.Username, updated.Email)
+				return
+			}
+
 			db := getDB()
 			defer closeDB(db)
 
@@ -86,6 +103,10 @@ func newCreateUserCmd() *cobra.Command {
 		Short: "Create a new user",
 		Long:  "Create a new user account with email, username, and password",
 		Run: func(cmd *cobra.Command, args []string) {
+			if err := requireLocalMode("user create"); err != nil {
+				log.Fatal(err)
+			}
+
 			db := getDB()
 			defer closeDB(db)
 
@@ -160,6 +181,39 @@ func newListUsersCmd() *cobra.Command {
 		Short: "List all users",
 		Long:  "List all users in the database, optionally filtered by role",
 		Run: func(cmd *cobra.Command, args []string) {
+			if isRemoteMode() {
+				path := "/api/v1/admin/users?limit=100"
+				page, err := invokeRemoteJSON[apicontract.UserPage](http.MethodGet, path, nil)
+				if err != nil {
+					log.Fatalf("Error listing users: %v", err)
+				}
+
+				users := page.Data[:0]
+				for _, user := range page.Data {
+					if role == "" || string(user.Role) == role {
+						users = append(users, user)
+					}
+				}
+
+				if len(users) == 0 {
+					fmt.Println("No users found")
+					return
+				}
+
+				fmt.Printf("Found %d user(s):\n\n", len(users))
+				fmt.Printf("%-5s %-20s %-30s %-10s %-20s\n", "ID", "Username", "Email", "Role", "Name")
+				fmt.Println("--------------------------------------------------------------------------------")
+				for _, user := range users {
+					name := ""
+					if user.Name != nil {
+						name = *user.Name
+					}
+					fmt.Printf("%-5d %-20s %-30s %-10s %-20s\n",
+						user.Id, user.Username, user.Email, user.Role, name)
+				}
+				return
+			}
+
 			db := getDB()
 			defer closeDB(db)
 
@@ -203,6 +257,10 @@ func newDeleteUserCmd() *cobra.Command {
 		Short: "Delete a user",
 		Long:  "Delete a user account by email or username",
 		Run: func(cmd *cobra.Command, args []string) {
+			if err := requireLocalMode("user delete"); err != nil {
+				log.Fatal(err)
+			}
+
 			db := getDB()
 			defer closeDB(db)
 
@@ -249,52 +307,6 @@ func newDeleteUserCmd() *cobra.Command {
 
 	return cmd
 }
-
-// Helper functions
-
-func getConfig() config.Config {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
-	}
-	return cfg
-}
-
-func getDB() *gorm.DB {
-	return getDBWithConfig(getConfig())
-}
-
-func getDBWithConfig(cfg config.Config) *gorm.DB {
-	db, err := gorm.Open(postgres.Open(cfg.DBURL), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-	}
-
-	gormLogger := logger.New(
-		log.New(os.Stdout, "", log.LstdFlags),
-		logger.Config{
-			SlowThreshold:             200 * time.Millisecond,
-			LogLevel:                  logger.Warn,
-			IgnoreRecordNotFoundError: true,
-		},
-	)
-	db = db.Session(&gorm.Session{Logger: gormLogger})
-
-	if err := migrations.EnsureReady(db, cfg.AutoApplyMigrations); err != nil {
-		log.Fatalf("Database migration readiness check failed: %v", err)
-	}
-
-	return db
-}
-
-func closeDB(db *gorm.DB) {
-	sqlDB, err := db.DB()
-	if err != nil {
-		return
-	}
-	sqlDB.Close()
-}
-
 func generateSubjectID(email string) string {
 	hash, _ := bcrypt.GenerateFromPassword([]byte(email), bcrypt.DefaultCost)
 	subject := ""
@@ -302,4 +314,30 @@ func generateSubjectID(email string) string {
 		subject += string(rune(97 + (int(b) % 26)))
 	}
 	return subject
+}
+
+func findUserByEmailOrUsernameRemote(email string, username string) (apicontract.User, error) {
+	query := strings.TrimSpace(email)
+	if query == "" {
+		query = strings.TrimSpace(username)
+	}
+	if query == "" {
+		return apicontract.User{}, errors.New("either --email or --username must be provided")
+	}
+
+	page, err := invokeRemoteJSON[apicontract.UserPage](http.MethodGet, "/api/v1/admin/users?q="+url.QueryEscape(query)+"&limit=100", nil)
+	if err != nil {
+		return apicontract.User{}, err
+	}
+
+	for _, user := range page.Data {
+		if strings.TrimSpace(email) != "" && user.Email == strings.TrimSpace(email) {
+			return user, nil
+		}
+		if strings.TrimSpace(username) != "" && user.Username == strings.TrimSpace(username) {
+			return user, nil
+		}
+	}
+
+	return apicontract.User{}, errors.New("user not found")
 }

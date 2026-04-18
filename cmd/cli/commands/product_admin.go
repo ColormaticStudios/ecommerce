@@ -8,6 +8,7 @@ import (
 
 	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
+	"ecommerce/models"
 
 	"github.com/spf13/cobra"
 )
@@ -22,24 +23,43 @@ func newPrintProductCmd() *cobra.Command {
 		Use:   "print",
 		Short: "Print a product JSON document for CLI-driven editing",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			db := getDB()
-			defer closeDB(db)
-
-			product, err := findProductByIDOrSKU(db, id, sku)
-			if err != nil {
-				return err
-			}
-
 			var input apicontract.ProductUpsertInput
-			if live {
-				input, err = loadLiveProductUpsertInput(db, nil, product.ID)
+			var product models.Product
+
+			if isRemoteMode() {
+				var err error
+				product, err = findProductByIDOrSKU(nil, id, sku)
+				if err != nil {
+					return err
+				}
+				if live {
+					input, err = loadLiveProductUpsertInput(nil, nil, product.ID)
+				} else {
+					input, err = loadCurrentProductUpsertInput(nil, nil, product.ID)
+				}
+				if err != nil {
+					return err
+				}
 			} else {
-				mediaService := newMediaService()
-				defer closeMediaService(mediaService)
-				input, err = loadCurrentProductUpsertInput(mediaService.DB, mediaService, product.ID)
-			}
-			if err != nil {
-				return err
+				db := getDB()
+				defer closeDB(db)
+
+				var err error
+				product, err = findProductByIDOrSKU(db, id, sku)
+				if err != nil {
+					return err
+				}
+
+				if live {
+					input, err = loadLiveProductUpsertInput(db, nil, product.ID)
+				} else {
+					mediaService := newMediaService()
+					defer closeMediaService(mediaService)
+					input, err = loadCurrentProductUpsertInput(mediaService.DB, mediaService, product.ID)
+				}
+				if err != nil {
+					return err
+				}
 			}
 
 			selectedFormat, err := normalizeOutputFormat(format)
@@ -93,10 +113,7 @@ func newApplyProductDraftCmd() *cobra.Command {
 		Use:   "apply",
 		Short: "Replace a product draft from a JSON document",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			db := getDB()
-			defer closeDB(db)
-
-			product, err := findProductByIDOrSKU(db, id, sku)
+			product, err := findProductByIDOrSKU(nil, id, sku)
 			if err != nil {
 				return err
 			}
@@ -106,12 +123,21 @@ func newApplyProductDraftCmd() *cobra.Command {
 				return err
 			}
 
-			updated, err := invokeLocalJSON[apicontract.Product](handlers.UpdateProduct(db), localHandlerRequest{
+			req := localHandlerRequest{
 				Method:     http.MethodPatch,
 				Path:       fmt.Sprintf("/api/v1/admin/products/%d", product.ID),
 				PathParams: map[string]string{"id": fmt.Sprintf("%d", product.ID)},
 				Body:       input,
-			})
+			}
+
+			var updated apicontract.Product
+			if isRemoteMode() {
+				updated, err = invokeRemoteJSON[apicontract.Product](req.Method, req.Path, req.Body)
+			} else {
+				db := getDB()
+				defer closeDB(db)
+				updated, err = invokeLocalJSON[apicontract.Product](handlers.UpdateProduct(db), req)
+			}
 			if err != nil {
 				return err
 			}
@@ -151,21 +177,43 @@ func newDiffProductDraftCmd() *cobra.Command {
 		Use:   "diff",
 		Short: "Show the diff between live and current product draft state",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mediaService := newMediaService()
-			defer closeMediaService(mediaService)
+			var (
+				product      models.Product
+				liveInput    apicontract.ProductUpsertInput
+				currentInput apicontract.ProductUpsertInput
+				err          error
+			)
 
-			product, err := findProductByIDOrSKU(mediaService.DB, id, sku)
-			if err != nil {
-				return err
-			}
+			if isRemoteMode() {
+				product, err = findProductByIDOrSKU(nil, id, sku)
+				if err != nil {
+					return err
+				}
+				liveInput, err = loadLiveProductUpsertInput(nil, nil, product.ID)
+				if err != nil {
+					return err
+				}
+				currentInput, err = loadCurrentProductUpsertInput(nil, nil, product.ID)
+				if err != nil {
+					return err
+				}
+			} else {
+				mediaService := newMediaService()
+				defer closeMediaService(mediaService)
 
-			liveInput, err := loadLiveProductUpsertInput(mediaService.DB, mediaService, product.ID)
-			if err != nil {
-				return err
-			}
-			currentInput, err := loadCurrentProductUpsertInput(mediaService.DB, mediaService, product.ID)
-			if err != nil {
-				return err
+				product, err = findProductByIDOrSKU(mediaService.DB, id, sku)
+				if err != nil {
+					return err
+				}
+
+				liveInput, err = loadLiveProductUpsertInput(mediaService.DB, mediaService, product.ID)
+				if err != nil {
+					return err
+				}
+				currentInput, err = loadCurrentProductUpsertInput(mediaService.DB, mediaService, product.ID)
+				if err != nil {
+					return err
+				}
 			}
 
 			selectedFormat, err := normalizeOutputFormat(format)
@@ -212,19 +260,25 @@ func newDiscardProductDraftCmd() *cobra.Command {
 		Use:   "discard",
 		Short: "Discard a product draft",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mediaService := newMediaService()
-			defer closeMediaService(mediaService)
-
-			product, err := findProductByIDOrSKU(mediaService.DB, id, sku)
+			product, err := findProductByIDOrSKU(nil, id, sku)
 			if err != nil {
 				return err
 			}
 
-			updated, err := invokeLocalJSON[apicontract.Product](handlers.DiscardProductDraft(mediaService.DB, mediaService), localHandlerRequest{
+			req := localHandlerRequest{
 				Method:     http.MethodDelete,
 				Path:       fmt.Sprintf("/api/v1/admin/products/%d/draft", product.ID),
 				PathParams: map[string]string{"id": fmt.Sprintf("%d", product.ID)},
-			})
+			}
+
+			var updated apicontract.Product
+			if isRemoteMode() {
+				updated, err = invokeRemoteJSON[apicontract.Product](req.Method, req.Path, nil)
+			} else {
+				mediaService := newMediaService()
+				defer closeMediaService(mediaService)
+				updated, err = invokeLocalJSON[apicontract.Product](handlers.DiscardProductDraft(mediaService.DB, mediaService), req)
+			}
 			if err != nil {
 				return err
 			}
@@ -258,19 +312,25 @@ func newPublishProductCmd() *cobra.Command {
 		Use:   "publish",
 		Short: "Publish the current product draft",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mediaService := newMediaService()
-			defer closeMediaService(mediaService)
-
-			product, err := findProductByIDOrSKU(mediaService.DB, id, sku)
+			product, err := findProductByIDOrSKU(nil, id, sku)
 			if err != nil {
 				return err
 			}
 
-			updated, err := invokeLocalJSON[apicontract.Product](handlers.PublishProduct(mediaService.DB, mediaService), localHandlerRequest{
+			req := localHandlerRequest{
 				Method:     http.MethodPost,
 				Path:       fmt.Sprintf("/api/v1/admin/products/%d/publish", product.ID),
 				PathParams: map[string]string{"id": fmt.Sprintf("%d", product.ID)},
-			})
+			}
+
+			var updated apicontract.Product
+			if isRemoteMode() {
+				updated, err = invokeRemoteJSON[apicontract.Product](req.Method, req.Path, nil)
+			} else {
+				mediaService := newMediaService()
+				defer closeMediaService(mediaService)
+				updated, err = invokeLocalJSON[apicontract.Product](handlers.PublishProduct(mediaService.DB, mediaService), req)
+			}
 			if err != nil {
 				return err
 			}
@@ -307,19 +367,25 @@ func newUnpublishProductCmd() *cobra.Command {
 		Use:   "unpublish",
 		Short: "Unpublish a product while preserving its draft",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mediaService := newMediaService()
-			defer closeMediaService(mediaService)
-
-			product, err := findProductByIDOrSKU(mediaService.DB, id, sku)
+			product, err := findProductByIDOrSKU(nil, id, sku)
 			if err != nil {
 				return err
 			}
 
-			updated, err := invokeLocalJSON[apicontract.Product](handlers.UnpublishProduct(mediaService.DB, mediaService), localHandlerRequest{
+			req := localHandlerRequest{
 				Method:     http.MethodPost,
 				Path:       fmt.Sprintf("/api/v1/admin/products/%d/unpublish", product.ID),
 				PathParams: map[string]string{"id": fmt.Sprintf("%d", product.ID)},
-			})
+			}
+
+			var updated apicontract.Product
+			if isRemoteMode() {
+				updated, err = invokeRemoteJSON[apicontract.Product](req.Method, req.Path, nil)
+			} else {
+				mediaService := newMediaService()
+				defer closeMediaService(mediaService)
+				updated, err = invokeLocalJSON[apicontract.Product](handlers.UnpublishProduct(mediaService.DB, mediaService), req)
+			}
 			if err != nil {
 				return err
 			}

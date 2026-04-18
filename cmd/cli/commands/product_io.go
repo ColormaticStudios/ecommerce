@@ -3,6 +3,7 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"ecommerce/handlers"
@@ -17,6 +18,14 @@ import (
 const productSEOEntityType = "product"
 
 func loadCurrentProductUpsertInput(db *gorm.DB, mediaService *media.Service, productID uint) (apicontract.ProductUpsertInput, error) {
+	if isRemoteMode() {
+		contract, err := invokeRemoteJSON[apicontract.Product](http.MethodGet, fmt.Sprintf("/api/v1/admin/products/%d", productID), nil)
+		if err != nil {
+			return apicontract.ProductUpsertInput{}, err
+		}
+		return catalogadmin.ProductContractToUpsertInput(contract), nil
+	}
+
 	contract, err := invokeLocalJSON[apicontract.Product](handlers.GetAdminProductByID(db, mediaService), localHandlerRequest{
 		Method:     "GET",
 		Path:       fmt.Sprintf("/api/v1/admin/products/%d", productID),
@@ -29,6 +38,14 @@ func loadCurrentProductUpsertInput(db *gorm.DB, mediaService *media.Service, pro
 }
 
 func loadLiveProductUpsertInput(db *gorm.DB, mediaService *media.Service, productID uint) (apicontract.ProductUpsertInput, error) {
+	if isRemoteMode() {
+		contract, err := invokeRemoteJSON[apicontract.Product](http.MethodGet, fmt.Sprintf("/api/v1/products/%d", productID), nil)
+		if err != nil {
+			return apicontract.ProductUpsertInput{}, err
+		}
+		return catalogadmin.ProductContractToUpsertInput(contract), nil
+	}
+
 	return catalogadmin.LoadLiveProductUpsertInput(db, mediaService, productID)
 }
 
