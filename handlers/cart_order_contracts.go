@@ -7,6 +7,7 @@ import (
 	"ecommerce/internal/media"
 	"ecommerce/models"
 
+	openapi_types "github.com/oapi-codegen/runtime/types"
 	"gorm.io/gorm"
 )
 
@@ -29,43 +30,6 @@ type cartResponse struct {
 	CreatedAt time.Time          `json:"created_at"`
 	UpdatedAt time.Time          `json:"updated_at"`
 	DeletedAt *time.Time         `json:"deleted_at,omitempty"`
-}
-
-type orderItemResponse struct {
-	ID               int                        `json:"id"`
-	OrderID          int                        `json:"order_id"`
-	ProductVariantID int                        `json:"product_variant_id"`
-	VariantSKU       string                     `json:"variant_sku"`
-	VariantTitle     string                     `json:"variant_title"`
-	Quantity         int                        `json:"quantity"`
-	Price            float64                    `json:"price"`
-	ProductVariant   apicontract.ProductVariant `json:"product_variant"`
-	Product          apicontract.Product        `json:"product"`
-	CreatedAt        time.Time                  `json:"created_at"`
-	UpdatedAt        time.Time                  `json:"updated_at"`
-	DeletedAt        *time.Time                 `json:"deleted_at,omitempty"`
-}
-
-type orderResponse struct {
-	ID                    int                 `json:"id"`
-	UserID                *int                `json:"user_id"`
-	CheckoutSessionID     int                 `json:"checkout_session_id"`
-	GuestEmail            *string             `json:"guest_email,omitempty"`
-	ConfirmationToken     *string             `json:"confirmation_token,omitempty"`
-	Status                string              `json:"status"`
-	CanCancel             bool                `json:"can_cancel"`
-	Total                 float64             `json:"total"`
-	PaymentMethodDisplay  string              `json:"payment_method_display,omitempty"`
-	ShippingAddressPretty string              `json:"shipping_address_pretty,omitempty"`
-	Items                 []orderItemResponse `json:"items"`
-	CreatedAt             time.Time           `json:"created_at"`
-	UpdatedAt             time.Time           `json:"updated_at"`
-	DeletedAt             *time.Time          `json:"deleted_at,omitempty"`
-}
-
-type orderPageResponse struct {
-	Data       []orderResponse        `json:"data"`
-	Pagination apicontract.Pagination `json:"pagination"`
 }
 
 type variantSelectionRow struct {
@@ -143,46 +107,46 @@ func buildOrderResponse(
 	db *gorm.DB,
 	mediaService *media.Service,
 	order models.Order,
-) (orderResponse, error) {
+) (apicontract.Order, error) {
 	variantContracts, productContracts, err := loadCartOrderContracts(db, mediaService, order.Items)
 	if err != nil {
-		return orderResponse{}, err
+		return apicontract.Order{}, err
 	}
 
-	items := make([]orderItemResponse, 0, len(order.Items))
+	items := make([]apicontract.OrderItem, 0, len(order.Items))
 	for _, item := range order.Items {
 		product := item.ProductVariant.Product
-		items = append(items, orderItemResponse{
-			ID:               int(item.ID),
-			OrderID:          int(item.OrderID),
-			ProductVariantID: int(item.ProductVariantID),
-			VariantSKU:       item.VariantSKU,
-			VariantTitle:     item.VariantTitle,
-			Quantity:         item.Quantity,
-			Price:            item.Price.Float64(),
-			ProductVariant:   variantContracts[item.ProductVariantID],
-			Product:          productContracts[product.ID],
+		items = append(items, apicontract.OrderItem{
 			CreatedAt:        item.CreatedAt,
-			UpdatedAt:        item.UpdatedAt,
 			DeletedAt:        toContractDeletedAt(item.DeletedAt),
+			Id:               int(item.ID),
+			OrderId:          int(item.OrderID),
+			Price:            item.Price.Float64(),
+			Product:          productContracts[product.ID],
+			ProductVariant:   variantContracts[item.ProductVariantID],
+			ProductVariantId: int(item.ProductVariantID),
+			Quantity:         item.Quantity,
+			UpdatedAt:        item.UpdatedAt,
+			VariantSku:       item.VariantSKU,
+			VariantTitle:     item.VariantTitle,
 		})
 	}
 
-	return orderResponse{
-		ID:                    int(order.ID),
-		UserID:                contractOrderUserID(order.UserID),
-		CheckoutSessionID:     int(order.CheckoutSessionID),
-		GuestEmail:            order.GuestEmail,
-		ConfirmationToken:     order.ConfirmationToken,
-		Status:                order.Status,
+	return apicontract.Order{
 		CanCancel:             order.CanCancel,
-		Total:                 order.Total.Float64(),
-		PaymentMethodDisplay:  order.PaymentMethodDisplay,
-		ShippingAddressPretty: order.ShippingAddressPretty,
-		Items:                 items,
+		CheckoutSessionId:     int(order.CheckoutSessionID),
+		ConfirmationToken:     order.ConfirmationToken,
 		CreatedAt:             order.CreatedAt,
-		UpdatedAt:             order.UpdatedAt,
 		DeletedAt:             toContractDeletedAt(order.DeletedAt),
+		GuestEmail:            contractGuestEmail(order.GuestEmail),
+		Id:                    int(order.ID),
+		Items:                 items,
+		PaymentMethodDisplay:  optionalString(order.PaymentMethodDisplay),
+		ShippingAddressPretty: optionalString(order.ShippingAddressPretty),
+		Status:                apicontract.OrderStatus(order.Status),
+		Total:                 order.Total.Float64(),
+		UpdatedAt:             order.UpdatedAt,
+		UserId:                contractOrderUserID(order.UserID),
 	}, nil
 }
 
@@ -191,6 +155,14 @@ func contractOrderUserID(userID *uint) *int {
 		return nil
 	}
 	value := int(*userID)
+	return &value
+}
+
+func contractGuestEmail(email *string) *openapi_types.Email {
+	if email == nil {
+		return nil
+	}
+	value := openapi_types.Email(*email)
 	return &value
 }
 

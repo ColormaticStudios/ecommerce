@@ -18,6 +18,10 @@ func main() {
 	// Add subcommands
 	rootCmd.AddCommand(commands.NewUserCmd())
 	rootCmd.AddCommand(commands.NewProductCmd())
+	rootCmd.AddCommand(commands.NewBrandCmd())
+	rootCmd.AddCommand(commands.NewProductAttributeCmd())
+	rootCmd.AddCommand(commands.NewOrderCmd())
+	rootCmd.AddCommand(commands.NewStorefrontCmd())
 	rootCmd.AddCommand(commands.NewMigrateCmd())
 
 	if err := rootCmd.Execute(); err != nil {

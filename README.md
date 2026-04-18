@@ -25,7 +25,7 @@ Frontend-specific docs are in:
 - Media upload/processing pipeline
 - Runtime-extensible checkout providers (payment, shipping, tax)
 - Runtime-loadable provider executables for payment, shipping, and tax services
-- CLI for user and product administration
+- CLI for admin workflows, catalog drafting, storefront config, and order observability
 
 ## Quick Start
 

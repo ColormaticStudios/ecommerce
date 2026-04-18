@@ -138,52 +138,6 @@ type checkoutTaxFinalizeTestResponse struct {
 	} `json:"lines"`
 }
 
-type adminOrderPaymentLifecycleTestResponse struct {
-	Message string `json:"message"`
-	Order   struct {
-		ID     int    `json:"id"`
-		Status string `json:"status"`
-	} `json:"order"`
-	PaymentIntent struct {
-		ID               uint    `json:"id"`
-		Status           string  `json:"status"`
-		AuthorizedAmount float64 `json:"authorized_amount"`
-		CapturedAmount   float64 `json:"captured_amount"`
-		RefundableAmount float64 `json:"refundable_amount"`
-		Transactions     []struct {
-			ID             uint    `json:"id"`
-			Operation      string  `json:"operation"`
-			IdempotencyKey string  `json:"idempotency_key"`
-			Amount         float64 `json:"amount"`
-			Status         string  `json:"status"`
-		} `json:"transactions"`
-	} `json:"payment_intent"`
-	Transaction struct {
-		ID             uint    `json:"id"`
-		Operation      string  `json:"operation"`
-		IdempotencyKey string  `json:"idempotency_key"`
-		Amount         float64 `json:"amount"`
-		Status         string  `json:"status"`
-	} `json:"transaction"`
-}
-
-type orderPaymentLedgerTestResponse struct {
-	OrderID int `json:"order_id"`
-	Intents []struct {
-		ID               uint    `json:"id"`
-		Status           string  `json:"status"`
-		AuthorizedAmount float64 `json:"authorized_amount"`
-		CapturedAmount   float64 `json:"captured_amount"`
-		RefundableAmount float64 `json:"refundable_amount"`
-		Transactions     []struct {
-			Operation      string  `json:"operation"`
-			IdempotencyKey string  `json:"idempotency_key"`
-			Amount         float64 `json:"amount"`
-			Status         string  `json:"status"`
-		} `json:"transactions"`
-	} `json:"intents"`
-}
-
 func quoteCheckoutWithDummyProviders(
 	t *testing.T,
 	r *gin.Engine,
@@ -353,7 +307,7 @@ func createGuestCheckoutOrder(
 	t *testing.T,
 	r *gin.Engine,
 	checkoutToken, csrfToken, guestEmail string,
-) orderResponse {
+) apicontract.Order {
 	t.Helper()
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/orders", strings.NewReader(fmt.Sprintf(`{"guest_email":%q}`, guestEmail)))
@@ -364,7 +318,7 @@ func createGuestCheckoutOrder(
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	require.Equal(t, http.StatusCreated, w.Code)
-	return decodeJSON[orderResponse](t, w)
+	return decodeJSON[apicontract.Order](t, w)
 }
 
 func waitForWebhookEvent(
@@ -900,36 +854,36 @@ func TestCheckoutOrderGuestFlowRequiresEmailAndConvertsSession(t *testing.T) {
 	createW := httptest.NewRecorder()
 	r.ServeHTTP(createW, createReq)
 	require.Equal(t, http.StatusCreated, createW.Code)
-	order := decodeJSON[orderResponse](t, createW)
-	require.Nil(t, order.UserID)
+	order := decodeJSON[apicontract.Order](t, createW)
+	require.Nil(t, order.UserId)
 	require.NotNil(t, order.GuestEmail)
-	require.Equal(t, "guest@example.com", *order.GuestEmail)
+	require.Equal(t, "guest@example.com", string(*order.GuestEmail))
 	require.NotNil(t, order.ConfirmationToken)
-	require.NotZero(t, order.CheckoutSessionID)
+	require.NotZero(t, order.CheckoutSessionId)
 
 	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
 	require.True(t, quote.Valid)
 	require.NotNil(t, quote.SnapshotID)
 
-	payW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "")
+	payW := authorizeCheckoutWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "")
 	require.Equal(t, http.StatusOK, payW.Code)
 
 	var payBody struct {
-		Message string        `json:"message"`
-		Order   orderResponse `json:"order"`
+		Message string            `json:"message"`
+		Order   apicontract.Order `json:"order"`
 	}
 	require.NoError(t, json.Unmarshal(payW.Body.Bytes(), &payBody))
 	assert.Equal(t, "Order submitted and pending confirmation", payBody.Message)
-	require.Nil(t, payBody.Order.UserID)
+	require.Nil(t, payBody.Order.UserId)
 	require.NotNil(t, payBody.Order.GuestEmail)
-	assert.Equal(t, "guest@example.com", *payBody.Order.GuestEmail)
+	assert.Equal(t, "guest@example.com", string(*payBody.Order.GuestEmail))
 
 	var cartItems int64
 	require.NoError(t, db.Model(&models.CartItem{}).Count(&cartItems).Error)
 	assert.EqualValues(t, 0, cartItems)
 
 	var session models.CheckoutSession
-	require.NoError(t, db.First(&session, order.CheckoutSessionID).Error)
+	require.NoError(t, db.First(&session, order.CheckoutSessionId).Error)
 	assert.Equal(t, models.CheckoutSessionStatusConverted, session.Status)
 	require.NotNil(t, session.GuestEmail)
 	assert.Equal(t, "guest@example.com", *session.GuestEmail)
@@ -960,13 +914,13 @@ func TestAdminOrdersListSupportsGuestOrders(t *testing.T) {
 	require.Equal(t, http.StatusOK, resp.Code)
 
 	var payload struct {
-		Data []orderResponse `json:"data"`
+		Data []apicontract.Order `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &payload))
 	require.Len(t, payload.Data, 1)
-	assert.Nil(t, payload.Data[0].UserID)
+	assert.Nil(t, payload.Data[0].UserId)
 	require.NotNil(t, payload.Data[0].GuestEmail)
-	assert.Equal(t, email, *payload.Data[0].GuestEmail)
+	assert.Equal(t, email, string(*payload.Data[0].GuestEmail))
 }
 
 func TestCheckoutOrderCreateIdempotencyReplaysResponse(t *testing.T) {
@@ -1014,7 +968,7 @@ func TestCheckoutOrderCreateIdempotencyReplaysResponse(t *testing.T) {
 	firstW := httptest.NewRecorder()
 	r.ServeHTTP(firstW, firstReq)
 	require.Equal(t, http.StatusCreated, firstW.Code)
-	firstOrder := decodeJSON[orderResponse](t, firstW)
+	firstOrder := decodeJSON[apicontract.Order](t, firstW)
 
 	secondReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/orders", strings.NewReader(body))
 	secondReq.Header.Set("Content-Type", "application/json")
@@ -1025,9 +979,9 @@ func TestCheckoutOrderCreateIdempotencyReplaysResponse(t *testing.T) {
 	secondW := httptest.NewRecorder()
 	r.ServeHTTP(secondW, secondReq)
 	require.Equal(t, http.StatusCreated, secondW.Code)
-	secondOrder := decodeJSON[orderResponse](t, secondW)
+	secondOrder := decodeJSON[apicontract.Order](t, secondW)
 
-	assert.Equal(t, firstOrder.ID, secondOrder.ID)
+	assert.Equal(t, firstOrder.Id, secondOrder.Id)
 
 	var orderCount int64
 	require.NoError(t, db.Model(&models.Order{}).Count(&orderCount).Error)
@@ -1076,7 +1030,7 @@ func TestCheckoutOrderCreateReusesExistingOpenOrderWithoutIdempotencyKey(t *test
 	firstW := httptest.NewRecorder()
 	r.ServeHTTP(firstW, firstReq)
 	require.Equal(t, http.StatusCreated, firstW.Code)
-	firstOrder := decodeJSON[orderResponse](t, firstW)
+	firstOrder := decodeJSON[apicontract.Order](t, firstW)
 
 	secondReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/orders", strings.NewReader(`{"guest_email":"second@example.com"}`))
 	secondReq.Header.Set("Content-Type", "application/json")
@@ -1086,18 +1040,18 @@ func TestCheckoutOrderCreateReusesExistingOpenOrderWithoutIdempotencyKey(t *test
 	secondW := httptest.NewRecorder()
 	r.ServeHTTP(secondW, secondReq)
 	require.Equal(t, http.StatusOK, secondW.Code)
-	secondOrder := decodeJSON[orderResponse](t, secondW)
+	secondOrder := decodeJSON[apicontract.Order](t, secondW)
 
-	assert.Equal(t, firstOrder.ID, secondOrder.ID)
+	assert.Equal(t, firstOrder.Id, secondOrder.Id)
 	require.NotNil(t, secondOrder.GuestEmail)
-	assert.Equal(t, "second@example.com", *secondOrder.GuestEmail)
+	assert.Equal(t, "second@example.com", string(*secondOrder.GuestEmail))
 
 	var orderCount int64
 	require.NoError(t, db.Model(&models.Order{}).Count(&orderCount).Error)
 	assert.EqualValues(t, 1, orderCount)
 
 	var storedOrder models.Order
-	require.NoError(t, db.First(&storedOrder, firstOrder.ID).Error)
+	require.NoError(t, db.First(&storedOrder, firstOrder.Id).Error)
 	require.NotNil(t, storedOrder.GuestEmail)
 	assert.Equal(t, "second@example.com", *storedOrder.GuestEmail)
 }
@@ -1140,12 +1094,12 @@ func TestClaimGuestOrderLinksOrderToAuthenticatedUser(t *testing.T) {
 	require.Equal(t, http.StatusOK, resp.Code)
 
 	var claimBody struct {
-		Message string        `json:"message"`
-		Order   orderResponse `json:"order"`
+		Message string            `json:"message"`
+		Order   apicontract.Order `json:"order"`
 	}
 	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &claimBody))
-	require.NotNil(t, claimBody.Order.UserID)
-	assert.Equal(t, int(user.ID), *claimBody.Order.UserID)
+	require.NotNil(t, claimBody.Order.UserId)
+	assert.Equal(t, int(user.ID), *claimBody.Order.UserId)
 
 	var reloaded models.Order
 	require.NoError(t, db.First(&reloaded, order.ID).Error)
@@ -1261,27 +1215,27 @@ func TestCheckoutOrderPaymentIdempotencyReplaysAfterSessionConversion(t *testing
 	createW := httptest.NewRecorder()
 	r.ServeHTTP(createW, createReq)
 	require.Equal(t, http.StatusCreated, createW.Code)
-	order := decodeJSON[orderResponse](t, createW)
+	order := decodeJSON[apicontract.Order](t, createW)
 
 	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
 	require.True(t, quote.Valid)
 	require.NotNil(t, quote.SnapshotID)
 
-	firstPayW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "payment-key")
+	firstPayW := authorizeCheckoutWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "payment-key")
 	require.Equal(t, http.StatusOK, firstPayW.Code)
 
-	secondPayW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "payment-key")
+	secondPayW := authorizeCheckoutWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "payment-key")
 	require.Equal(t, http.StatusOK, secondPayW.Code)
 
 	var firstPayload struct {
-		Order orderResponse `json:"order"`
+		Order apicontract.Order `json:"order"`
 	}
 	var secondPayload struct {
-		Order orderResponse `json:"order"`
+		Order apicontract.Order `json:"order"`
 	}
 	require.NoError(t, json.Unmarshal(firstPayW.Body.Bytes(), &firstPayload))
 	require.NoError(t, json.Unmarshal(secondPayW.Body.Bytes(), &secondPayload))
-	assert.Equal(t, firstPayload.Order.ID, secondPayload.Order.ID)
+	assert.Equal(t, firstPayload.Order.Id, secondPayload.Order.Id)
 
 	var sessionCount int64
 	require.NoError(t, db.Model(&models.CheckoutSession{}).Count(&sessionCount).Error)
@@ -1342,13 +1296,13 @@ func TestCheckoutOrderPaymentRejectsExpiredSnapshot(t *testing.T) {
 	createW := httptest.NewRecorder()
 	r.ServeHTTP(createW, createReq)
 	require.Equal(t, http.StatusCreated, createW.Code)
-	order := decodeJSON[orderResponse](t, createW)
+	order := decodeJSON[apicontract.Order](t, createW)
 
 	require.NoError(t, db.Model(&models.OrderCheckoutSnapshot{}).
 		Where("id = ?", *quote.SnapshotID).
 		Update("expires_at", time.Now().Add(-time.Minute).UTC()).Error)
 
-	payW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "")
+	payW := authorizeCheckoutWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "")
 	require.Equal(t, http.StatusBadRequest, payW.Code)
 	assert.Contains(t, payW.Body.String(), "snapshot has expired")
 }
@@ -1399,13 +1353,13 @@ func TestCheckoutOrderPaymentRejectsChangedOrderTotals(t *testing.T) {
 	createW := httptest.NewRecorder()
 	r.ServeHTTP(createW, createReq)
 	require.Equal(t, http.StatusCreated, createW.Code)
-	order := decodeJSON[orderResponse](t, createW)
+	order := decodeJSON[apicontract.Order](t, createW)
 
 	require.NoError(t, db.Model(&models.Order{}).
-		Where("id = ?", order.ID).
+		Where("id = ?", order.Id).
 		Update("total", models.MoneyFromFloat(99.99)).Error)
 
-	payW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "")
+	payW := authorizeCheckoutWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "")
 	require.Equal(t, http.StatusConflict, payW.Code)
 	assert.Contains(t, payW.Body.String(), "snapshot no longer matches the order")
 }
@@ -1450,7 +1404,7 @@ func TestCheckoutShippingRatesRejectAlreadyBoundSnapshot(t *testing.T) {
 	require.NotNil(t, quote.SnapshotID)
 
 	var storedOrder models.Order
-	require.NoError(t, db.First(&storedOrder, order.ID).Error)
+	require.NoError(t, db.First(&storedOrder, order.Id).Error)
 
 	boundOrder := models.Order{
 		CheckoutSessionID: storedOrder.CheckoutSessionID,
@@ -1462,7 +1416,7 @@ func TestCheckoutShippingRatesRejectAlreadyBoundSnapshot(t *testing.T) {
 		Where("id = ?", *quote.SnapshotID).
 		Update("order_id", boundOrder.ID).Error)
 
-	ratesW := quoteShippingRatesWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "bound-shipping-rates-key")
+	ratesW := quoteShippingRatesWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "bound-shipping-rates-key")
 	require.Equal(t, http.StatusConflict, ratesW.Code)
 	assert.Contains(t, ratesW.Body.String(), "snapshot is already bound to another order")
 }
@@ -1508,45 +1462,45 @@ func TestAdminCapturePaymentReplaysAndBlocksDoubleCapture(t *testing.T) {
 	order := createGuestCheckoutOrder(t, r, checkoutToken, csrfToken, "capture-admin@example.com")
 	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
 	require.NotNil(t, quote.SnapshotID)
-	authorizeW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "authorize-admin-capture")
+	authorizeW := authorizeCheckoutWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "authorize-admin-capture")
 	require.Equal(t, http.StatusOK, authorizeW.Code)
 
 	var intent models.PaymentIntent
 	require.NoError(t, db.First(&intent).Error)
 
-	capturePath := fmt.Sprintf("/api/v1/admin/orders/%d/payments/%d/capture", order.ID, intent.ID)
+	capturePath := fmt.Sprintf("/api/v1/admin/orders/%d/payments/%d/capture", order.Id, intent.ID)
 	firstCaptureW := adminLifecycleRequest(t, r, http.MethodPost, capturePath, "", adminToken, "capture-key")
 	require.Equal(t, http.StatusOK, firstCaptureW.Code)
-	firstCapture := decodeJSON[adminOrderPaymentLifecycleTestResponse](t, firstCaptureW)
+	firstCapture := decodeJSON[apicontract.AdminOrderPaymentLifecycleResponse](t, firstCaptureW)
 	assert.Equal(t, "Payment captured", firstCapture.Message)
-	assert.Equal(t, models.StatusPaid, firstCapture.Order.Status)
-	assert.Equal(t, models.PaymentIntentStatusCaptured, firstCapture.PaymentIntent.Status)
-	assert.Equal(t, "CAPTURE", firstCapture.Transaction.Operation)
+	assert.Equal(t, string(models.StatusPaid), string(firstCapture.Order.Status))
+	assert.Equal(t, string(models.PaymentIntentStatusCaptured), string(firstCapture.PaymentIntent.Status))
+	assert.Equal(t, "CAPTURE", string(firstCapture.Transaction.Operation))
 
 	secondCaptureW := adminLifecycleRequest(t, r, http.MethodPost, capturePath, "", adminToken, "capture-key")
 	require.Equal(t, http.StatusOK, secondCaptureW.Code)
-	secondCapture := decodeJSON[adminOrderPaymentLifecycleTestResponse](t, secondCaptureW)
-	assert.Equal(t, firstCapture.Transaction.ID, secondCapture.Transaction.ID)
+	secondCapture := decodeJSON[apicontract.AdminOrderPaymentLifecycleResponse](t, secondCaptureW)
+	assert.Equal(t, firstCapture.Transaction.Id, secondCapture.Transaction.Id)
 
 	duplicateCaptureW := adminLifecycleRequest(t, r, http.MethodPost, capturePath, "", adminToken, "capture-key-2")
 	require.Equal(t, http.StatusConflict, duplicateCaptureW.Code)
 	assert.Contains(t, duplicateCaptureW.Body.String(), paymentservice.ErrCaptureNotAllowed.Error())
 
 	var refreshedOrder models.Order
-	require.NoError(t, db.First(&refreshedOrder, order.ID).Error)
+	require.NoError(t, db.First(&refreshedOrder, order.Id).Error)
 	assert.Equal(t, models.StatusPaid, refreshedOrder.Status)
 
 	var refreshedIntent models.PaymentIntent
 	require.NoError(t, db.First(&refreshedIntent, intent.ID).Error)
 	assert.Equal(t, models.PaymentIntentStatusCaptured, refreshedIntent.Status)
 
-	ledgerW := adminLifecycleRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/admin/orders/%d/payments", order.ID), "", adminToken, "")
+	ledgerW := adminLifecycleRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/admin/orders/%d/payments", order.Id), "", adminToken, "")
 	require.Equal(t, http.StatusOK, ledgerW.Code)
-	ledger := decodeJSON[orderPaymentLedgerTestResponse](t, ledgerW)
+	ledger := decodeJSON[apicontract.OrderPaymentLedger](t, ledgerW)
 	require.Len(t, ledger.Intents, 1)
 	require.Len(t, ledger.Intents[0].Transactions, 2)
-	assert.Equal(t, "AUTHORIZE", ledger.Intents[0].Transactions[0].Operation)
-	assert.Equal(t, "CAPTURE", ledger.Intents[0].Transactions[1].Operation)
+	assert.Equal(t, "AUTHORIZE", string(ledger.Intents[0].Transactions[0].Operation))
+	assert.Equal(t, "CAPTURE", string(ledger.Intents[0].Transactions[1].Operation))
 }
 
 func TestAdminRefundPaymentReplaysAndBlocksDuplicateRefund(t *testing.T) {
@@ -1589,40 +1543,40 @@ func TestAdminRefundPaymentReplaysAndBlocksDuplicateRefund(t *testing.T) {
 	order := createGuestCheckoutOrder(t, r, checkoutToken, csrfToken, "refund-admin@example.com")
 	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
 	require.NotNil(t, quote.SnapshotID)
-	authorizeW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "authorize-admin-refund")
+	authorizeW := authorizeCheckoutWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "authorize-admin-refund")
 	require.Equal(t, http.StatusOK, authorizeW.Code)
 
 	var intent models.PaymentIntent
 	require.NoError(t, db.First(&intent).Error)
-	capturePath := fmt.Sprintf("/api/v1/admin/orders/%d/payments/%d/capture", order.ID, intent.ID)
+	capturePath := fmt.Sprintf("/api/v1/admin/orders/%d/payments/%d/capture", order.Id, intent.ID)
 	captureW := adminLifecycleRequest(t, r, http.MethodPost, capturePath, "", adminToken, "capture-before-refund")
 	require.Equal(t, http.StatusOK, captureW.Code)
 
-	refundPath := fmt.Sprintf("/api/v1/admin/orders/%d/payments/%d/refund", order.ID, intent.ID)
+	refundPath := fmt.Sprintf("/api/v1/admin/orders/%d/payments/%d/refund", order.Id, intent.ID)
 	firstRefundW := adminLifecycleRequest(t, r, http.MethodPost, refundPath, "", adminToken, "refund-key")
 	require.Equal(t, http.StatusOK, firstRefundW.Code)
-	firstRefund := decodeJSON[adminOrderPaymentLifecycleTestResponse](t, firstRefundW)
+	firstRefund := decodeJSON[apicontract.AdminOrderPaymentLifecycleResponse](t, firstRefundW)
 	assert.Equal(t, "Payment refunded", firstRefund.Message)
-	assert.Equal(t, models.StatusRefunded, firstRefund.Order.Status)
-	assert.Equal(t, models.PaymentIntentStatusRefunded, firstRefund.PaymentIntent.Status)
+	assert.Equal(t, string(models.StatusRefunded), string(firstRefund.Order.Status))
+	assert.Equal(t, string(models.PaymentIntentStatusRefunded), string(firstRefund.PaymentIntent.Status))
 
 	secondRefundW := adminLifecycleRequest(t, r, http.MethodPost, refundPath, "", adminToken, "refund-key")
 	require.Equal(t, http.StatusOK, secondRefundW.Code)
-	secondRefund := decodeJSON[adminOrderPaymentLifecycleTestResponse](t, secondRefundW)
-	assert.Equal(t, firstRefund.Transaction.ID, secondRefund.Transaction.ID)
+	secondRefund := decodeJSON[apicontract.AdminOrderPaymentLifecycleResponse](t, secondRefundW)
+	assert.Equal(t, firstRefund.Transaction.Id, secondRefund.Transaction.Id)
 
 	duplicateRefundW := adminLifecycleRequest(t, r, http.MethodPost, refundPath, "", adminToken, "refund-key-2")
 	require.Equal(t, http.StatusConflict, duplicateRefundW.Code)
 	assert.Contains(t, duplicateRefundW.Body.String(), paymentservice.ErrAmountExceedsAvailable.Error())
 
-	ledgerW := adminLifecycleRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/admin/orders/%d/payments", order.ID), "", adminToken, "")
+	ledgerW := adminLifecycleRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/admin/orders/%d/payments", order.Id), "", adminToken, "")
 	require.Equal(t, http.StatusOK, ledgerW.Code)
-	ledger := decodeJSON[orderPaymentLedgerTestResponse](t, ledgerW)
+	ledger := decodeJSON[apicontract.OrderPaymentLedger](t, ledgerW)
 	require.Len(t, ledger.Intents, 1)
 	require.Len(t, ledger.Intents[0].Transactions, 3)
-	assert.Equal(t, "AUTHORIZE", ledger.Intents[0].Transactions[0].Operation)
-	assert.Equal(t, "CAPTURE", ledger.Intents[0].Transactions[1].Operation)
-	assert.Equal(t, "REFUND", ledger.Intents[0].Transactions[2].Operation)
+	assert.Equal(t, "AUTHORIZE", string(ledger.Intents[0].Transactions[0].Operation))
+	assert.Equal(t, "CAPTURE", string(ledger.Intents[0].Transactions[1].Operation))
+	assert.Equal(t, "REFUND", string(ledger.Intents[0].Transactions[2].Operation))
 }
 
 func TestAdminVoidPaymentRequiresIdempotencyKey(t *testing.T) {
@@ -1665,13 +1619,13 @@ func TestAdminVoidPaymentRequiresIdempotencyKey(t *testing.T) {
 	order := createGuestCheckoutOrder(t, r, checkoutToken, csrfToken, "void-admin@example.com")
 	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
 	require.NotNil(t, quote.SnapshotID)
-	authorizeW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "authorize-admin-void")
+	authorizeW := authorizeCheckoutWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "authorize-admin-void")
 	require.Equal(t, http.StatusOK, authorizeW.Code)
 
 	var intent models.PaymentIntent
 	require.NoError(t, db.First(&intent).Error)
 
-	voidPath := fmt.Sprintf("/api/v1/admin/orders/%d/payments/%d/void", order.ID, intent.ID)
+	voidPath := fmt.Sprintf("/api/v1/admin/orders/%d/payments/%d/void", order.Id, intent.ID)
 	voidW := adminLifecycleRequest(t, r, http.MethodPost, voidPath, "", adminToken, "")
 	require.Equal(t, http.StatusBadRequest, voidW.Code)
 	assert.Contains(t, voidW.Body.String(), "Header parameter Idempotency-Key is required")
@@ -1746,12 +1700,12 @@ func TestWebhookReplayIsNoOp(t *testing.T) {
 	order := createGuestCheckoutOrder(t, r, checkoutToken, csrfToken, "webhook-replay@example.com")
 	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
 	require.NotNil(t, quote.SnapshotID)
-	authorizeW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "authorize-webhook-replay")
+	authorizeW := authorizeCheckoutWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "authorize-webhook-replay")
 	require.Equal(t, http.StatusOK, authorizeW.Code)
 
 	var intent models.PaymentIntent
 	require.NoError(t, db.First(&intent).Error)
-	capturePath := fmt.Sprintf("/api/v1/admin/orders/%d/payments/%d/capture", order.ID, intent.ID)
+	capturePath := fmt.Sprintf("/api/v1/admin/orders/%d/payments/%d/capture", order.Id, intent.ID)
 	captureW := adminLifecycleRequest(t, r, http.MethodPost, capturePath, "", adminToken, "capture-webhook-replay")
 	require.Equal(t, http.StatusOK, captureW.Code)
 
@@ -1932,7 +1886,7 @@ func TestAdminShippingLabelKeepsChosenServiceImmutable(t *testing.T) {
 	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
 	require.NotNil(t, quote.SnapshotID)
 
-	ratesW := quoteShippingRatesWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "shipping-rates-key")
+	ratesW := quoteShippingRatesWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "shipping-rates-key")
 	require.Equal(t, http.StatusOK, ratesW.Code)
 	rates := decodeJSON[checkoutShippingRatesTestResponse](t, ratesW)
 	require.Len(t, rates.Rates, 2)
@@ -1947,7 +1901,7 @@ func TestAdminShippingLabelKeepsChosenServiceImmutable(t *testing.T) {
 		}
 	}
 
-	labelPath := fmt.Sprintf("/api/v1/admin/orders/%d/shipping/labels", order.ID)
+	labelPath := fmt.Sprintf("/api/v1/admin/orders/%d/shipping/labels", order.Id)
 	firstLabelW := adminLifecycleRequest(
 		t,
 		r,
@@ -2032,7 +1986,7 @@ func TestShippingTrackingWebhookUpdatesShipmentStateIdempotently(t *testing.T) {
 	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
 	require.NotNil(t, quote.SnapshotID)
 
-	ratesW := quoteShippingRatesWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "tracking-rates-key")
+	ratesW := quoteShippingRatesWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "tracking-rates-key")
 	require.Equal(t, http.StatusOK, ratesW.Code)
 	rates := decodeJSON[checkoutShippingRatesTestResponse](t, ratesW)
 	require.NotEmpty(t, rates.Rates)
@@ -2045,7 +1999,7 @@ func TestShippingTrackingWebhookUpdatesShipmentStateIdempotently(t *testing.T) {
 		}
 	}
 
-	labelPath := fmt.Sprintf("/api/v1/admin/orders/%d/shipping/labels", order.ID)
+	labelPath := fmt.Sprintf("/api/v1/admin/orders/%d/shipping/labels", order.Id)
 	labelW := adminLifecycleRequest(
 		t,
 		r,
@@ -2071,7 +2025,7 @@ func TestShippingTrackingWebhookUpdatesShipmentStateIdempotently(t *testing.T) {
 		return event.ProcessedAt != nil && event.AttemptCount == 1
 	})
 
-	trackingW := checkoutTrackingRequest(t, r, order.ID, checkoutToken)
+	trackingW := checkoutTrackingRequest(t, r, order.Id, checkoutToken)
 	require.Equal(t, http.StatusOK, trackingW.Code)
 	tracking := decodeJSON[checkoutTrackingTestResponse](t, trackingW)
 	require.Len(t, tracking.Shipments, 1)
@@ -2089,7 +2043,7 @@ func TestShippingTrackingWebhookUpdatesShipmentStateIdempotently(t *testing.T) {
 	assert.EqualValues(t, 1, trackingCount)
 
 	var refreshedOrder models.Order
-	require.NoError(t, db.First(&refreshedOrder, order.ID).Error)
+	require.NoError(t, db.First(&refreshedOrder, order.Id).Error)
 	assert.Equal(t, models.StatusShipped, refreshedOrder.Status)
 }
 
@@ -2227,7 +2181,7 @@ func TestCheckoutTaxFinalizePersistsLineLevelSnapshotResults(t *testing.T) {
 	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
 	require.NotNil(t, quote.SnapshotID)
 
-	finalizeW := finalizeCheckoutTaxWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "tax-finalize-key", "")
+	finalizeW := finalizeCheckoutTaxWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "tax-finalize-key", "")
 	require.Equal(t, http.StatusOK, finalizeW.Code)
 	finalizeResp := decodeJSON[checkoutTaxFinalizeTestResponse](t, finalizeW)
 	assert.Equal(t, "dummy-us-tax", finalizeResp.Provider)
@@ -2240,10 +2194,10 @@ func TestCheckoutTaxFinalizePersistsLineLevelSnapshotResults(t *testing.T) {
 	assert.NotZero(t, finalizeResp.TotalTax)
 
 	var storedLines []models.OrderTaxLine
-	require.NoError(t, db.Where("order_id = ? AND snapshot_id = ?", order.ID, *quote.SnapshotID).Order("id ASC").Find(&storedLines).Error)
+	require.NoError(t, db.Where("order_id = ? AND snapshot_id = ?", order.Id, *quote.SnapshotID).Order("id ASC").Find(&storedLines).Error)
 	require.Len(t, storedLines, 2)
 	for _, line := range storedLines {
-		assert.Equal(t, uint(order.ID), line.OrderID)
+		assert.Equal(t, uint(order.Id), line.OrderID)
 		assert.Equal(t, *quote.SnapshotID, line.SnapshotID)
 		assert.Equal(t, "dummy-us-tax", line.TaxProviderID)
 	}
@@ -2289,7 +2243,7 @@ func TestCheckoutTaxFinalizeRejectsAlreadyBoundSnapshot(t *testing.T) {
 	require.NotNil(t, quote.SnapshotID)
 
 	var storedOrder models.Order
-	require.NoError(t, db.First(&storedOrder, order.ID).Error)
+	require.NoError(t, db.First(&storedOrder, order.Id).Error)
 
 	boundOrder := models.Order{
 		CheckoutSessionID: storedOrder.CheckoutSessionID,
@@ -2301,7 +2255,7 @@ func TestCheckoutTaxFinalizeRejectsAlreadyBoundSnapshot(t *testing.T) {
 		Where("id = ?", *quote.SnapshotID).
 		Update("order_id", boundOrder.ID).Error)
 
-	finalizeW := finalizeCheckoutTaxWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "bound-tax-finalize-key", "")
+	finalizeW := finalizeCheckoutTaxWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "bound-tax-finalize-key", "")
 	require.Equal(t, http.StatusConflict, finalizeW.Code)
 	assert.Contains(t, finalizeW.Body.String(), "snapshot is already bound to another order")
 }
@@ -2520,7 +2474,7 @@ func TestCheckoutOrderCreateIdempotencyReplayBypassesRateLimit(t *testing.T) {
 	firstW := httptest.NewRecorder()
 	r.ServeHTTP(firstW, firstReq)
 	require.Equal(t, http.StatusCreated, firstW.Code)
-	firstOrder := decodeJSON[orderResponse](t, firstW)
+	firstOrder := decodeJSON[apicontract.Order](t, firstW)
 
 	secondReq := httptest.NewRequest(http.MethodPost, "/api/v1/checkout/orders", strings.NewReader(body))
 	secondReq.Header.Set("Content-Type", "application/json")
@@ -2531,9 +2485,9 @@ func TestCheckoutOrderCreateIdempotencyReplayBypassesRateLimit(t *testing.T) {
 	secondW := httptest.NewRecorder()
 	r.ServeHTTP(secondW, secondReq)
 	require.Equal(t, http.StatusCreated, secondW.Code)
-	secondOrder := decodeJSON[orderResponse](t, secondW)
+	secondOrder := decodeJSON[apicontract.Order](t, secondW)
 
-	assert.Equal(t, firstOrder.ID, secondOrder.ID)
+	assert.Equal(t, firstOrder.Id, secondOrder.Id)
 }
 
 func TestCheckoutOrderPaymentIdempotencyReplayBypassesRateLimit(t *testing.T) {
@@ -2581,7 +2535,7 @@ func TestCheckoutOrderPaymentIdempotencyReplayBypassesRateLimit(t *testing.T) {
 	createW := httptest.NewRecorder()
 	r.ServeHTTP(createW, createReq)
 	require.Equal(t, http.StatusCreated, createW.Code)
-	order := decodeJSON[orderResponse](t, createW)
+	order := decodeJSON[apicontract.Order](t, createW)
 
 	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
 	require.True(t, quote.Valid)
@@ -2590,7 +2544,7 @@ func TestCheckoutOrderPaymentIdempotencyReplayBypassesRateLimit(t *testing.T) {
 	firstPayW := authorizeCheckoutWithSnapshot(
 		t,
 		r,
-		order.ID,
+		order.Id,
 		*quote.SnapshotID,
 		checkoutToken,
 		csrfToken,
@@ -2601,7 +2555,7 @@ func TestCheckoutOrderPaymentIdempotencyReplayBypassesRateLimit(t *testing.T) {
 	secondPayW := authorizeCheckoutWithSnapshot(
 		t,
 		r,
-		order.ID,
+		order.Id,
 		*quote.SnapshotID,
 		checkoutToken,
 		csrfToken,
@@ -2610,14 +2564,14 @@ func TestCheckoutOrderPaymentIdempotencyReplayBypassesRateLimit(t *testing.T) {
 	require.Equal(t, http.StatusOK, secondPayW.Code)
 
 	var firstPayload struct {
-		Order orderResponse `json:"order"`
+		Order apicontract.Order `json:"order"`
 	}
 	var secondPayload struct {
-		Order orderResponse `json:"order"`
+		Order apicontract.Order `json:"order"`
 	}
 	require.NoError(t, json.Unmarshal(firstPayW.Body.Bytes(), &firstPayload))
 	require.NoError(t, json.Unmarshal(secondPayW.Body.Bytes(), &secondPayload))
-	assert.Equal(t, firstPayload.Order.ID, secondPayload.Order.ID)
+	assert.Equal(t, firstPayload.Order.Id, secondPayload.Order.Id)
 }
 
 func TestGeneratedDisableLocalSignInAndAuthValidation(t *testing.T) {
@@ -3268,7 +3222,7 @@ func TestOrdersDateFilterAndGetOrderValidation(t *testing.T) {
 		"items": []map[string]any{{"product_variant_id": variantID, "quantity": 1}},
 	}, token)
 	require.Equal(t, http.StatusCreated, createOrderResp.Code)
-	createdOrder := decodeJSON[orderResponse](t, createOrderResp)
+	createdOrder := decodeJSON[apicontract.Order](t, createOrderResp)
 	require.True(t, createdOrder.CanCancel)
 
 	shippedOrder := models.Order{
@@ -3297,7 +3251,7 @@ func TestOrdersDateFilterAndGetOrderValidation(t *testing.T) {
 	missingResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/orders/999999", nil, token)
 	require.Equal(t, http.StatusNotFound, missingResp.Code)
 
-	getOrderResp := performJSONRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/me/orders/%d", createdOrder.ID), nil, token)
+	getOrderResp := performJSONRequest(t, r, http.MethodGet, fmt.Sprintf("/api/v1/me/orders/%d", createdOrder.Id), nil, token)
 	require.Equal(t, http.StatusOK, getOrderResp.Code)
 	gotOrder := decodeJSON[models.Order](t, getOrderResp)
 	require.True(t, gotOrder.CanCancel)
@@ -3305,16 +3259,16 @@ func TestOrdersDateFilterAndGetOrderValidation(t *testing.T) {
 	listOrdersResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/me/orders", nil, token)
 	require.Equal(t, http.StatusOK, listOrdersResp.Code)
 	var listPayload struct {
-		Data []orderResponse `json:"data"`
+		Data []apicontract.Order `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(listOrdersResp.Body.Bytes(), &listPayload))
 
 	canCancelByID := make(map[int]bool, len(listPayload.Data))
 	for _, order := range listPayload.Data {
-		canCancelByID[order.ID] = order.CanCancel
+		canCancelByID[order.Id] = order.CanCancel
 	}
 
-	require.True(t, canCancelByID[createdOrder.ID])
+	require.True(t, canCancelByID[createdOrder.Id])
 	require.False(t, canCancelByID[int(shippedOrder.ID)])
 }
 
@@ -3431,9 +3385,9 @@ func TestUserCancelOrderRefundsAndRestocks(t *testing.T) {
 	cancelResp := performJSONRequest(t, r, http.MethodPost, fmt.Sprintf("/api/v1/me/orders/%d/cancel", order.ID), nil, customerToken)
 	require.Equal(t, http.StatusOK, cancelResp.Code)
 
-	var cancelled orderResponse
+	var cancelled apicontract.Order
 	require.NoError(t, json.Unmarshal(cancelResp.Body.Bytes(), &cancelled))
-	assert.Equal(t, models.StatusCancelled, cancelled.Status)
+	assert.Equal(t, string(models.StatusCancelled), string(cancelled.Status))
 
 	var reloadedProduct models.ProductVariant
 	require.NoError(t, db.First(&reloadedProduct, productVariantID).Error)

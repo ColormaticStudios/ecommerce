@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"ecommerce/internal/apicontract"
 	"ecommerce/internal/media"
 	"ecommerce/models"
 
@@ -350,7 +351,7 @@ func buildCreatedOrderResponse(
 	mediaService *media.Service,
 	order models.Order,
 	userID *uint,
-) (orderResponse, error) {
+) (apicontract.Order, error) {
 	applyOrderMediaToOrder(&order, mediaService)
 	applyOrderCapabilities(&order, userID)
 	return buildOrderResponse(db, mediaService, order)

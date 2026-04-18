@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
+	"ecommerce/internal/apicontract"
 	"ecommerce/internal/media"
 	orderservice "ecommerce/internal/services/orders"
 	paymentservice "ecommerce/internal/services/payments"
@@ -22,39 +22,6 @@ import (
 
 type AdminOrderPaymentAmountRequest struct {
 	Amount *models.Money `json:"amount"`
-}
-
-type paymentTransactionRecordResponse struct {
-	ID                  uint         `json:"id"`
-	Operation           string       `json:"operation"`
-	ProviderTxnID       string       `json:"provider_txn_id"`
-	IdempotencyKey      string       `json:"idempotency_key"`
-	Amount              models.Money `json:"amount"`
-	Status              string       `json:"status"`
-	RawResponseRedacted string       `json:"raw_response_redacted"`
-	CreatedAt           string       `json:"created_at"`
-	UpdatedAt           string       `json:"updated_at"`
-}
-
-type paymentIntentRecordResponse struct {
-	ID               uint                               `json:"id"`
-	OrderID          uint                               `json:"order_id"`
-	SnapshotID       uint                               `json:"snapshot_id"`
-	Provider         string                             `json:"provider"`
-	Status           string                             `json:"status"`
-	AuthorizedAmount models.Money                       `json:"authorized_amount"`
-	CapturedAmount   models.Money                       `json:"captured_amount"`
-	RefundableAmount models.Money                       `json:"refundable_amount"`
-	Currency         string                             `json:"currency"`
-	Version          int                                `json:"version"`
-	CreatedAt        string                             `json:"created_at"`
-	UpdatedAt        string                             `json:"updated_at"`
-	Transactions     []paymentTransactionRecordResponse `json:"transactions"`
-}
-
-type orderPaymentLedgerResponse struct {
-	OrderID uint                          `json:"order_id"`
-	Intents []paymentIntentRecordResponse `json:"intents"`
 }
 
 func GetAdminOrderPayments(db *gorm.DB) gin.HandlerFunc {
@@ -81,8 +48,8 @@ func GetAdminOrderPayments(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, orderPaymentLedgerResponse{
-			OrderID: order.ID,
+		c.JSON(http.StatusOK, apicontract.OrderPaymentLedger{
+			OrderId: int(order.ID),
 			Intents: serializePaymentIntents(intents),
 		})
 	}
@@ -367,11 +334,11 @@ func adminOrderPaymentLifecycle(
 			return
 		}
 
-		payload := gin.H{
-			"message":        lifecycleMessage,
-			"order":          responseOrder,
-			"payment_intent": serializePaymentIntent(intent),
-			"transaction":    serializePaymentTransaction(transaction),
+		payload := apicontract.AdminOrderPaymentLifecycleResponse{
+			Message:       lifecycleMessage,
+			Order:         responseOrder,
+			PaymentIntent: serializePaymentIntent(intent),
+			Transaction:   serializePaymentTransaction(transaction),
 		}
 		log.Printf(
 			"admin_order_payment_%s result=success correlation_id=%s admin_user_id=%d order_id=%d intent_id=%d",
@@ -385,51 +352,51 @@ func adminOrderPaymentLifecycle(
 	}
 }
 
-func serializePaymentIntents(intents []models.PaymentIntent) []paymentIntentRecordResponse {
-	serialized := make([]paymentIntentRecordResponse, 0, len(intents))
+func serializePaymentIntents(intents []models.PaymentIntent) []apicontract.PaymentIntentRecord {
+	serialized := make([]apicontract.PaymentIntentRecord, 0, len(intents))
 	for _, intent := range intents {
 		serialized = append(serialized, serializePaymentIntent(intent))
 	}
 	return serialized
 }
 
-func serializePaymentIntent(intent models.PaymentIntent) paymentIntentRecordResponse {
-	return paymentIntentRecordResponse{
-		ID:               intent.ID,
-		OrderID:          intent.OrderID,
-		SnapshotID:       intent.SnapshotID,
-		Provider:         intent.Provider,
-		Status:           intent.Status,
-		AuthorizedAmount: intent.AuthorizedAmount,
-		CapturedAmount:   intent.CapturedAmount,
-		RefundableAmount: intent.CapturedAmount - paymentservice.RefundedAmount(intent),
+func serializePaymentIntent(intent models.PaymentIntent) apicontract.PaymentIntentRecord {
+	return apicontract.PaymentIntentRecord{
+		AuthorizedAmount: intent.AuthorizedAmount.Float64(),
+		CapturedAmount:   intent.CapturedAmount.Float64(),
+		CreatedAt:        intent.CreatedAt.UTC(),
 		Currency:         intent.Currency,
-		Version:          intent.Version,
-		CreatedAt:        intent.CreatedAt.UTC().Format(time.RFC3339),
-		UpdatedAt:        intent.UpdatedAt.UTC().Format(time.RFC3339),
+		Id:               int(intent.ID),
+		OrderId:          int(intent.OrderID),
+		Provider:         intent.Provider,
+		RefundableAmount: (intent.CapturedAmount - paymentservice.RefundedAmount(intent)).Float64(),
+		SnapshotId:       int(intent.SnapshotID),
+		Status:           apicontract.PaymentIntentRecordStatus(intent.Status),
 		Transactions:     serializePaymentTransactions(intent.Transactions),
+		UpdatedAt:        intent.UpdatedAt.UTC(),
+		Version:          intent.Version,
 	}
 }
 
-func serializePaymentTransactions(transactions []models.PaymentTransaction) []paymentTransactionRecordResponse {
-	serialized := make([]paymentTransactionRecordResponse, 0, len(transactions))
+func serializePaymentTransactions(transactions []models.PaymentTransaction) []apicontract.PaymentTransactionRecord {
+	serialized := make([]apicontract.PaymentTransactionRecord, 0, len(transactions))
 	for _, txn := range transactions {
 		serialized = append(serialized, serializePaymentTransaction(txn))
 	}
 	return serialized
 }
 
-func serializePaymentTransaction(txn models.PaymentTransaction) paymentTransactionRecordResponse {
-	return paymentTransactionRecordResponse{
-		ID:                  txn.ID,
-		Operation:           txn.Operation,
-		ProviderTxnID:       txn.ProviderTxnID,
+func serializePaymentTransaction(txn models.PaymentTransaction) apicontract.PaymentTransactionRecord {
+	return apicontract.PaymentTransactionRecord{
+		Amount:              txn.Amount.Float64(),
+		CreatedAt:           txn.CreatedAt.UTC(),
+		Id:                  int(txn.ID),
 		IdempotencyKey:      txn.IdempotencyKey,
-		Amount:              txn.Amount,
-		Status:              txn.Status,
+		Operation:           apicontract.PaymentTransactionRecordOperation(txn.Operation),
+		ProviderTxnId:       txn.ProviderTxnID,
 		RawResponseRedacted: txn.RawResponseRedacted,
-		CreatedAt:           txn.CreatedAt.UTC().Format(time.RFC3339),
-		UpdatedAt:           txn.UpdatedAt.UTC().Format(time.RFC3339),
+		Status:              apicontract.PaymentTransactionRecordStatus(txn.Status),
+		UpdatedAt:           txn.UpdatedAt.UTC(),
 	}
 }
 

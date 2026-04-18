@@ -27,6 +27,8 @@ func NewUserCmd() *cobra.Command {
 	userCmd.AddCommand(newCreateUserCmd())
 	userCmd.AddCommand(newListUsersCmd())
 	userCmd.AddCommand(newDeleteUserCmd())
+	userCmd.AddCommand(newUserAddressCmd())
+	userCmd.AddCommand(newUserCardCmd())
 
 	return userCmd
 }

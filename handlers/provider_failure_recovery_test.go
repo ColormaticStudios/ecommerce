@@ -131,7 +131,7 @@ func TestCheckoutPaymentAuthorizationPersistsIntentWhenOrderFinalizeFails(t *tes
 	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
 	require.NotNil(t, quote.SnapshotID)
 
-	authorizeW := authorizeCheckoutWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "provider-auth-failure")
+	authorizeW := authorizeCheckoutWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "provider-auth-failure")
 	require.Equal(t, http.StatusInternalServerError, authorizeW.Code)
 	assert.Contains(t, authorizeW.Body.String(), "Failed to process payment")
 	assert.EqualValues(t, 1, authorizeStarted.Load())
@@ -148,7 +148,7 @@ func TestCheckoutPaymentAuthorizationPersistsIntentWhenOrderFinalizeFails(t *tes
 	assert.NotEmpty(t, intents[0].Transactions[0].ProviderTxnID)
 
 	var storedOrder models.Order
-	require.NoError(t, db.First(&storedOrder, order.ID).Error)
+	require.NoError(t, db.First(&storedOrder, order.Id).Error)
 	assert.Equal(t, models.StatusPending, storedOrder.Status)
 	assert.Empty(t, strings.TrimSpace(storedOrder.PaymentMethodDisplay))
 	assert.Empty(t, strings.TrimSpace(storedOrder.ShippingAddressPretty))
@@ -225,7 +225,7 @@ func TestShippingLabelPurchasePersistsDraftShipmentWhenFinalizeFails(t *testing.
 	quote := quoteCheckoutWithDummyProviders(t, r, checkoutToken, csrfToken)
 	require.NotNil(t, quote.SnapshotID)
 
-	ratesW := quoteShippingRatesWithSnapshot(t, r, order.ID, *quote.SnapshotID, checkoutToken, csrfToken, "shipping-failure-rates")
+	ratesW := quoteShippingRatesWithSnapshot(t, r, order.Id, *quote.SnapshotID, checkoutToken, csrfToken, "shipping-failure-rates")
 	require.Equal(t, http.StatusOK, ratesW.Code)
 	rates := decodeJSON[checkoutShippingRatesTestResponse](t, ratesW)
 	require.NotEmpty(t, rates.Rates)
@@ -238,7 +238,7 @@ func TestShippingLabelPurchasePersistsDraftShipmentWhenFinalizeFails(t *testing.
 		}
 	}
 
-	labelPath := fmt.Sprintf("/api/v1/admin/orders/%d/shipping/labels", order.ID)
+	labelPath := fmt.Sprintf("/api/v1/admin/orders/%d/shipping/labels", order.Id)
 	labelW := adminLifecycleRequest(
 		t,
 		r,

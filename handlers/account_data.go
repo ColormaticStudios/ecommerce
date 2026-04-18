@@ -7,6 +7,7 @@ import (
 	"strings"
 	"unicode"
 
+	accountdataservice "ecommerce/internal/services/accountdata"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -164,11 +165,8 @@ func GetSavedPaymentMethods(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		var methods []models.SavedPaymentMethod
-		if err := db.
-			Where("user_id = ?", user.ID).
-			Order("is_default DESC, created_at DESC").
-			Find(&methods).Error; err != nil {
+		methods, err := accountdataservice.NewService(db).ListSavedPaymentMethods(user.ID)
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load payment methods"})
 			return
 		}
@@ -195,49 +193,21 @@ func CreateSavedPaymentMethod(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		cardDigits := digitsOnly(req.CardNumber)
-		if len(cardDigits) < 12 || len(cardDigits) > 19 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Card number must be 12 to 19 digits"})
-			return
-		}
-
-		brand := detectCardBrand(cardDigits)
-		last4 := cardDigits[len(cardDigits)-4:]
-
-		var count int64
-		if err := db.Model(&models.SavedPaymentMethod{}).Where("user_id = ?", user.ID).Count(&count).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create payment method"})
-			return
-		}
-
-		method := models.SavedPaymentMethod{
-			UserID:         user.ID,
-			Type:           "card",
-			Brand:          brand,
-			Last4:          last4,
+		method, err := accountdataservice.NewService(db).CreateSavedPaymentMethod(user.ID, accountdataservice.CreateSavedPaymentMethodInput{
+			CardholderName: req.CardholderName,
+			CardNumber:     req.CardNumber,
 			ExpMonth:       req.ExpMonth,
 			ExpYear:        req.ExpYear,
-			CardholderName: strings.TrimSpace(req.CardholderName),
-			Nickname:       strings.TrimSpace(req.Nickname),
-			IsDefault:      req.SetDefault || count == 0,
-		}
-
-		tx := db.Begin()
-		if method.IsDefault {
-			if err := tx.Model(&models.SavedPaymentMethod{}).
-				Where("user_id = ?", user.ID).
-				Update("is_default", false).Error; err != nil {
-				tx.Rollback()
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create payment method"})
+			Nickname:       req.Nickname,
+			SetDefault:     req.SetDefault,
+		})
+		if err != nil {
+			if err.Error() == "Card number must be 12 to 19 digits" ||
+				err.Error() == "Expiration month is invalid" ||
+				err.Error() == "Expiration year is invalid" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
 			}
-		}
-		if err := tx.Create(&method).Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create payment method"})
-			return
-		}
-		if err := tx.Commit().Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create payment method"})
 			return
 		}
@@ -253,30 +223,17 @@ func DeleteSavedPaymentMethod(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		id := c.Param("id")
-		var method models.SavedPaymentMethod
-		if err := db.Where("id = ? AND user_id = ?", id, user.ID).First(&method).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Payment method not found"})
+		methodID, err := parseUintParam(c, "id")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payment method ID"})
 			return
 		}
 
-		tx := db.Begin()
-		if err := tx.Delete(&method).Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete payment method"})
-			return
-		}
-		if method.IsDefault {
-			var replacement models.SavedPaymentMethod
-			if err := tx.Where("user_id = ?", user.ID).Order("created_at DESC").First(&replacement).Error; err == nil {
-				if err := tx.Model(&replacement).Update("is_default", true).Error; err != nil {
-					tx.Rollback()
-					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete payment method"})
-					return
-				}
+		if err := accountdataservice.NewService(db).DeleteSavedPaymentMethod(user.ID, methodID); err != nil {
+			if err.Error() == "payment method not found" {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Payment method not found"})
+				return
 			}
-		}
-		if err := tx.Commit().Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete payment method"})
 			return
 		}
@@ -292,32 +249,21 @@ func SetDefaultPaymentMethod(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		id := c.Param("id")
-		var method models.SavedPaymentMethod
-		if err := db.Where("id = ? AND user_id = ?", id, user.ID).First(&method).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Payment method not found"})
+		methodID, err := parseUintParam(c, "id")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payment method ID"})
 			return
 		}
 
-		tx := db.Begin()
-		if err := tx.Model(&models.SavedPaymentMethod{}).
-			Where("user_id = ?", user.ID).
-			Update("is_default", false).Error; err != nil {
-			tx.Rollback()
+		method, err := accountdataservice.NewService(db).SetDefaultPaymentMethod(user.ID, methodID)
+		if err != nil {
+			if err.Error() == "payment method not found" {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Payment method not found"})
+				return
+			}
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update payment method"})
 			return
 		}
-		if err := tx.Model(&method).Update("is_default", true).Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update payment method"})
-			return
-		}
-		if err := tx.Commit().Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update payment method"})
-			return
-		}
-
-		method.IsDefault = true
 		c.JSON(http.StatusOK, method)
 	}
 }
@@ -329,11 +275,8 @@ func GetSavedAddresses(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		var addresses []models.SavedAddress
-		if err := db.
-			Where("user_id = ?", user.ID).
-			Order("is_default DESC, created_at DESC").
-			Find(&addresses).Error; err != nil {
+		addresses, err := accountdataservice.NewService(db).ListSavedAddresses(user.ID)
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load addresses"})
 			return
 		}
@@ -361,48 +304,23 @@ func CreateSavedAddress(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		country := strings.ToUpper(strings.TrimSpace(req.Country))
-		if len(country) != 2 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Country must be a 2-letter code"})
-			return
-		}
-
-		var count int64
-		if err := db.Model(&models.SavedAddress{}).Where("user_id = ?", user.ID).Count(&count).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create address"})
-			return
-		}
-
-		address := models.SavedAddress{
-			UserID:     user.ID,
-			Label:      strings.TrimSpace(req.Label),
-			FullName:   strings.TrimSpace(req.FullName),
-			Line1:      strings.TrimSpace(req.Line1),
-			Line2:      strings.TrimSpace(req.Line2),
-			City:       strings.TrimSpace(req.City),
-			State:      strings.TrimSpace(req.State),
-			PostalCode: strings.TrimSpace(req.PostalCode),
-			Country:    country,
-			Phone:      strings.TrimSpace(req.Phone),
-			IsDefault:  req.SetDefault || count == 0,
-		}
-
-		tx := db.Begin()
-		if address.IsDefault {
-			if err := tx.Model(&models.SavedAddress{}).
-				Where("user_id = ?", user.ID).
-				Update("is_default", false).Error; err != nil {
-				tx.Rollback()
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create address"})
+		address, err := accountdataservice.NewService(db).CreateSavedAddress(user.ID, accountdataservice.CreateSavedAddressInput{
+			Label:      req.Label,
+			FullName:   req.FullName,
+			Line1:      req.Line1,
+			Line2:      req.Line2,
+			City:       req.City,
+			State:      req.State,
+			PostalCode: req.PostalCode,
+			Country:    req.Country,
+			Phone:      req.Phone,
+			SetDefault: req.SetDefault,
+		})
+		if err != nil {
+			if err.Error() == "Country must be a 2-letter code" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
 			}
-		}
-		if err := tx.Create(&address).Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create address"})
-			return
-		}
-		if err := tx.Commit().Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create address"})
 			return
 		}
@@ -418,30 +336,17 @@ func DeleteSavedAddress(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		id := c.Param("id")
-		var address models.SavedAddress
-		if err := db.Where("id = ? AND user_id = ?", id, user.ID).First(&address).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Address not found"})
+		addressID, err := parseUintParam(c, "id")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid address ID"})
 			return
 		}
 
-		tx := db.Begin()
-		if err := tx.Delete(&address).Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete address"})
-			return
-		}
-		if address.IsDefault {
-			var replacement models.SavedAddress
-			if err := tx.Where("user_id = ?", user.ID).Order("created_at DESC").First(&replacement).Error; err == nil {
-				if err := tx.Model(&replacement).Update("is_default", true).Error; err != nil {
-					tx.Rollback()
-					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete address"})
-					return
-				}
+		if err := accountdataservice.NewService(db).DeleteSavedAddress(user.ID, addressID); err != nil {
+			if err.Error() == "address not found" {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Address not found"})
+				return
 			}
-		}
-		if err := tx.Commit().Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete address"})
 			return
 		}
@@ -457,32 +362,21 @@ func SetDefaultAddress(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		id := c.Param("id")
-		var address models.SavedAddress
-		if err := db.Where("id = ? AND user_id = ?", id, user.ID).First(&address).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Address not found"})
+		addressID, err := parseUintParam(c, "id")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid address ID"})
 			return
 		}
 
-		tx := db.Begin()
-		if err := tx.Model(&models.SavedAddress{}).
-			Where("user_id = ?", user.ID).
-			Update("is_default", false).Error; err != nil {
-			tx.Rollback()
+		address, err := accountdataservice.NewService(db).SetDefaultAddress(user.ID, addressID)
+		if err != nil {
+			if err.Error() == "address not found" {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Address not found"})
+				return
+			}
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update address"})
 			return
 		}
-		if err := tx.Model(&address).Update("is_default", true).Error; err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update address"})
-			return
-		}
-		if err := tx.Commit().Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update address"})
-			return
-		}
-
-		address.IsDefault = true
 		c.JSON(http.StatusOK, address)
 	}
 }

@@ -116,8 +116,8 @@ func GetUserOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc
 			totalPages++
 		}
 
-		response := orderPageResponse{
-			Data: make([]orderResponse, 0, len(orders)),
+		response := apicontract.OrderPage{
+			Data: make([]apicontract.Order, 0, len(orders)),
 			Pagination: apicontract.Pagination{
 				Page:       page,
 				Limit:      limit,
@@ -235,8 +235,8 @@ func GetAllOrders(db *gorm.DB, mediaServices ...*media.Service) gin.HandlerFunc 
 			totalPages++
 		}
 
-		response := orderPageResponse{
-			Data: make([]orderResponse, 0, len(orders)),
+		response := apicontract.OrderPage{
+			Data: make([]apicontract.Order, 0, len(orders)),
 			Pagination: apicontract.Pagination{
 				Page:       page,
 				Limit:      limit,

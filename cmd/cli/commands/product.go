@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"ecommerce/handlers"
+	"ecommerce/internal/apicontract"
 	"ecommerce/internal/media"
 	"ecommerce/models"
 
@@ -35,6 +36,12 @@ func NewProductCmd() *cobra.Command {
 	productCmd.AddCommand(newDeleteProductCmd())
 	productCmd.AddCommand(newSetRelatedProductsCmd())
 	productCmd.AddCommand(newUploadProductMediaCmd())
+	productCmd.AddCommand(newPrintProductCmd())
+	productCmd.AddCommand(newApplyProductDraftCmd())
+	productCmd.AddCommand(newDiffProductDraftCmd())
+	productCmd.AddCommand(newDiscardProductDraftCmd())
+	productCmd.AddCommand(newPublishProductCmd())
+	productCmd.AddCommand(newUnpublishProductCmd())
 
 	return productCmd
 }
@@ -43,6 +50,7 @@ func newCreateProductCmd() *cobra.Command {
 	var sku, name, description string
 	var price float64
 	var stock int
+	var filePath string
 
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -51,6 +59,29 @@ func newCreateProductCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			db := getDB()
 			defer closeDB(db)
+
+			if strings.TrimSpace(filePath) != "" {
+				var input apicontract.ProductUpsertInput
+				if err := loadJSONFile(filePath, &input); err != nil {
+					log.Fatalf("Error loading product JSON: %v", err)
+				}
+
+				product, err := invokeLocalJSON[apicontract.Product](handlers.CreateProduct(db), localHandlerRequest{
+					Method: http.MethodPost,
+					Path:   "/api/v1/admin/products",
+					Body:   input,
+				})
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				fmt.Printf("✓ Product created successfully:\n")
+				fmt.Printf("  ID: %d\n", product.Id)
+				fmt.Printf("  SKU: %s\n", product.Sku)
+				fmt.Printf("  Name: %s\n", product.Name)
+				fmt.Printf("  Variants: %d\n", len(product.Variants))
+				return
+			}
 
 			if sku == "" || name == "" {
 				log.Fatal("SKU and name are required")
@@ -107,9 +138,7 @@ func newCreateProductCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&description, "description", "d", "", "Product description")
 	cmd.Flags().Float64VarP(&price, "price", "p", 0, "Product price (required)")
 	cmd.Flags().IntVar(&stock, "stock", 0, "Initial stock quantity")
-	cmd.MarkFlagRequired("sku")
-	cmd.MarkFlagRequired("name")
-	cmd.MarkFlagRequired("price")
+	cmd.Flags().StringVar(&filePath, "file", "", "Path to a full product JSON payload")
 
 	return cmd
 }
