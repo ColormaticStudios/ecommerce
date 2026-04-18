@@ -372,6 +372,7 @@
 				);
 				orderID = created.id;
 				pendingOrderId = created.id;
+				order = created;
 			}
 
 			if (!paymentIdempotencyKey) {

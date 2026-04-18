@@ -10,10 +10,11 @@ import { serverIsAuthenticated, serverRequest, type ServerAPIError } from "$lib/
 
 type OrderPayload = components["schemas"]["Order"];
 type CheckoutOrderTrackingPayload = components["schemas"]["CheckoutOrderTrackingResponse"];
+type AuthenticationState = boolean | null;
 
 function createEmptyResponse(
 	overrides: {
-		isAuthenticated?: boolean;
+		isAuthenticated?: AuthenticationState;
 		order?: OrderModel | null;
 		shipments?: ShipmentModel[];
 		errorMessage?: string;
@@ -21,7 +22,7 @@ function createEmptyResponse(
 	} = {}
 ) {
 	return {
-		isAuthenticated: false,
+		isAuthenticated: null as AuthenticationState,
 		order: null as OrderModel | null,
 		shipments: [] as ShipmentModel[],
 		errorMessage: "",
@@ -31,17 +32,22 @@ function createEmptyResponse(
 }
 
 export const load: PageServerLoad = async (event) => {
-	const id = Number(event.params.id);
-	if (!Number.isFinite(id) || id <= 0) {
-		return createEmptyResponse({
-			errorMessage: "Order not found.",
-		});
-	}
+	let isAuthenticated: AuthenticationState = null;
 
 	try {
-		const isAuthenticated = await serverIsAuthenticated(event);
+		isAuthenticated = await serverIsAuthenticated(event);
+		const id = Number(event.params.id);
+		if (!Number.isFinite(id) || id <= 0) {
+			return createEmptyResponse({
+				isAuthenticated,
+				errorMessage: "Order not found.",
+			});
+		}
+
 		if (!isAuthenticated) {
-			return createEmptyResponse();
+			return createEmptyResponse({
+				isAuthenticated,
+			});
 		}
 
 		const [orderResult, trackingResult] = await Promise.allSettled([
@@ -55,7 +61,9 @@ export const load: PageServerLoad = async (event) => {
 		if (orderResult.status === "rejected") {
 			const error = orderResult.reason as ServerAPIError;
 			if (error.status === 401) {
-				return createEmptyResponse();
+				return createEmptyResponse({
+					isAuthenticated: false,
+				});
 			}
 			if (error.status === 404) {
 				return createEmptyResponse({
@@ -79,7 +87,9 @@ export const load: PageServerLoad = async (event) => {
 		} else {
 			const error = trackingResult.reason as ServerAPIError;
 			if (error.status === 401) {
-				return createEmptyResponse();
+				return createEmptyResponse({
+					isAuthenticated: false,
+				});
 			}
 			console.error(trackingResult.reason);
 			trackingErrorMessage = "Unable to load shipment tracking.";
@@ -94,6 +104,7 @@ export const load: PageServerLoad = async (event) => {
 	} catch (err) {
 		console.error(err);
 		return createEmptyResponse({
+			isAuthenticated,
 			errorMessage: "Unable to load this order.",
 		});
 	}

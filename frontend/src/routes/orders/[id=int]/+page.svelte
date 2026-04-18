@@ -13,6 +13,7 @@
 	import { getContext } from "svelte";
 	import { onDestroy } from "svelte";
 	import type { PageData } from "./$types";
+	import { shouldShowShipmentEmptyState } from "./page-state";
 
 	const api: API = getContext("api");
 
@@ -22,7 +23,7 @@
 
 	let { data }: Props = $props();
 
-	let isAuthenticated = $state(false);
+	let isAuthenticated = $state<boolean | null>(null);
 	let order = $state<OrderModel | null>(null);
 	let shipments = $state<ShipmentModel[]>([]);
 	let errorMessage = $state("");
@@ -186,7 +187,7 @@
 		Back to orders
 	</a>
 
-	{#if !isAuthenticated}
+	{#if isAuthenticated === false}
 		<div
 			class="mt-6 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-800 dark:bg-gray-900"
 		>
@@ -369,7 +370,7 @@
 							</div>
 						{/if}
 
-						{#if shipments.length === 0}
+						{#if shouldShowShipmentEmptyState(shipments, trackingErrorMessage)}
 							<div
 								class="mt-5 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-5 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-950/50 dark:text-gray-300"
 							>

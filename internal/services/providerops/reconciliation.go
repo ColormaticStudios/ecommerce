@@ -142,12 +142,10 @@ func (s *ReconciliationService) Run(ctx context.Context, input ReconciliationRun
 
 	if loadErr := s.db.WithContext(ctx).Preload("Drifts", func(db *gorm.DB) *gorm.DB {
 		return db.Order("id ASC")
-	}).First(&run, run.ID).Error; loadErr == nil {
-		drifts = run.Drifts
+	}).First(&run, run.ID).Error; loadErr != nil {
+		return run, drifts, loadErr
 	}
-	if err != nil {
-		return run, drifts, err
-	}
+	drifts = run.Drifts
 	return run, drifts, nil
 }
 
