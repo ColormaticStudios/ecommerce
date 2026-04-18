@@ -6,6 +6,7 @@
 		type UserModel,
 	} from "$lib/models";
 	import Alert from "$lib/components/Alert.svelte";
+	import Badge from "$lib/components/Badge.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import ButtonInput from "$lib/components/ButtonInput.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
@@ -579,11 +580,9 @@
 															{method.nickname || `${method.brand} •••• ${method.last4}`}
 														</p>
 														{#if method.is_default}
-															<span
-																class="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-green-700 uppercase dark:bg-green-900/40 dark:text-green-300"
-															>
+															<Badge tone="success" size="xs" class="tracking-wide uppercase">
 																Default
-															</span>
+															</Badge>
 														{/if}
 													</div>
 													<p class="text-xs text-gray-500 dark:text-gray-400">
@@ -680,11 +679,9 @@
 															{address.label || address.line1}
 														</p>
 														{#if address.is_default}
-															<span
-																class="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-green-700 uppercase dark:bg-green-900/40 dark:text-green-300"
-															>
+															<Badge tone="success" size="xs" class="tracking-wide uppercase">
 																Default
-															</span>
+															</Badge>
 														{/if}
 													</div>
 													<p class="text-xs text-gray-500 dark:text-gray-400">

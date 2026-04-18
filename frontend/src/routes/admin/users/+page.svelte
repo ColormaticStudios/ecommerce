@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { getContext, untrack } from "svelte";
 	import { type API } from "$lib/api";
-	import AdminBadge from "$lib/admin/AdminBadge.svelte";
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
 	import AdminPaginationControls from "$lib/admin/AdminPaginationControls.svelte";
 	import AdminPanel from "$lib/admin/AdminPanel.svelte";
 	import AdminResourceActions from "$lib/admin/AdminResourceActions.svelte";
+	import Badge from "$lib/components/Badge.svelte";
 	import {
 		createAdminPaginatedResource,
 		formatAdminDateTime,
@@ -120,10 +120,10 @@
 							<p class="flex items-center gap-2 font-semibold text-stone-950 dark:text-stone-50">
 								<span>{user.name || user.username}</span>
 								{#if user.role === "admin"}
-									<AdminBadge tone="info" title="Admin" aria-label="Admin user">
+									<Badge tone="info" title="Admin" aria-label="Admin user">
 										<i class="bi bi-shield-fill-check mr-1"></i>
 										Admin
-									</AdminBadge>
+									</Badge>
 								{/if}
 							</p>
 							<p class="admin-detail">@{user.username} · {user.email}</p>

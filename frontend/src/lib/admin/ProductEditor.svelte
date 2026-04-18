@@ -3,6 +3,7 @@
 	import { DRAFT_PREVIEW_SYNC_EVENT, DRAFT_PREVIEW_SYNC_STORAGE_KEY, type API } from "$lib/api";
 	import AdminSearchForm from "$lib/admin/AdminSearchForm.svelte";
 	import Alert from "$lib/components/Alert.svelte";
+	import Badge from "$lib/components/Badge.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import Dropdown from "$lib/components/Dropdown.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
@@ -1919,21 +1920,11 @@
 {#snippet ProductStateChips()}
 	{#if canEditProduct}
 		<div class="mt-1 flex flex-wrap items-center gap-2 text-xs">
-			<span
-				class={`rounded-full px-2 py-1 font-semibold ${
-					isPublished
-						? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
-						: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200"
-				}`}
-			>
+			<Badge tone={isPublished ? "success" : "warning"} size="sm">
 				{isPublished ? "Published" : "Unpublished"}
-			</span>
+			</Badge>
 			{#if hasDraftChanges}
-				<span
-					class="rounded-full bg-blue-100 px-2 py-1 font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-200"
-				>
-					Draft changes
-				</span>
+				<Badge tone="info" size="sm">Draft changes</Badge>
 			{/if}
 		</div>
 	{/if}

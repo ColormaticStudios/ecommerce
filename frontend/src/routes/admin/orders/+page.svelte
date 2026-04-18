@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { getContext, onMount, untrack } from "svelte";
 	import { type API } from "$lib/api";
-	import AdminBadge from "$lib/admin/AdminBadge.svelte";
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
 	import AdminPaginationControls from "$lib/admin/AdminPaginationControls.svelte";
@@ -12,7 +11,9 @@
 		formatAdminDateTime,
 		replaceItemById,
 	} from "$lib/admin/state.svelte";
+	import Badge from "$lib/components/Badge.svelte";
 	import Button from "$lib/components/Button.svelte";
+	import { formatOrderStatusLabel, getOrderStatusTone } from "$lib/components/order-status";
 	import { type OrderModel, type UserModel } from "$lib/models";
 	import { formatPrice } from "$lib/utils";
 	import type { PageData } from "./$types";
@@ -125,22 +126,6 @@
 		}
 	}
 
-	function getOrderStatusTone(status: OrderModel["status"]) {
-		switch (status) {
-			case "PAID":
-			case "DELIVERED":
-				return "success" as const;
-			case "SHIPPED":
-				return "info" as const;
-			case "FAILED":
-				return "danger" as const;
-			case "PENDING":
-				return "warning" as const;
-			default:
-				return "neutral" as const;
-		}
-	}
-
 	async function updateOrder(orderId: number, status: OrderModel["status"]) {
 		notices.clear();
 		try {
@@ -247,9 +232,9 @@
 								<p class="admin-detail">Updated {formatAdminDateTime(order.updated_at)}</p>
 							</div>
 							<div class="flex flex-col items-end gap-2">
-								<AdminBadge tone={getOrderStatusTone(order.status)} size="md">
-									{order.status}
-								</AdminBadge>
+								<Badge tone={getOrderStatusTone(order.status)} size="md">
+									{formatOrderStatusLabel(order.status)}
+								</Badge>
 								<div class="flex flex-wrap justify-end gap-2">
 									<Button
 										tone="admin"

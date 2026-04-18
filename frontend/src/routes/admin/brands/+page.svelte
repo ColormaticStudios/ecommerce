@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
-	import AdminBadge from "$lib/admin/AdminBadge.svelte";
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
 	import AdminMasterDetailLayout from "$lib/admin/AdminMasterDetailLayout.svelte";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
 	import AdminPanel from "$lib/admin/AdminPanel.svelte";
 	import AdminResourceActions from "$lib/admin/AdminResourceActions.svelte";
+	import Badge from "$lib/components/Badge.svelte";
 	import { createAdminNotices, createAdminSavePrompt } from "$lib/admin/state.svelte";
 	import { API_BASE_URL } from "$lib/config";
 	import Button from "$lib/components/Button.svelte";
@@ -288,17 +288,15 @@
 										<p class="truncate text-sm font-semibold text-stone-950 dark:text-stone-50">
 											{brand.name}
 										</p>
-										<AdminBadge tone="neutral">
-											/{brand.slug}
-										</AdminBadge>
+										<Badge tone="neutral">/{brand.slug}</Badge>
 									</div>
 									<p class="mt-1 line-clamp-2 text-xs text-stone-500 dark:text-stone-400">
 										{brand.description || "No description"}
 									</p>
 								</div>
-								<AdminBadge tone={brand.is_active ? "success" : "neutral"}>
+								<Badge tone={brand.is_active ? "success" : "neutral"}>
 									{brand.is_active ? "Active" : "Inactive"}
-								</AdminBadge>
+								</Badge>
 							</button>
 						{/each}
 					{/if}

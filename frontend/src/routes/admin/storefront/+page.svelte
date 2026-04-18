@@ -5,6 +5,7 @@
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
 	import { createAdminNotices, createAdminSavePrompt } from "$lib/admin/state.svelte";
+	import Badge from "$lib/components/Badge.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import ButtonInput from "$lib/components/ButtonInput.svelte";
 	import Dropdown from "$lib/components/Dropdown.svelte";
@@ -698,15 +699,9 @@
 		<div class="flex flex-wrap items-start justify-between gap-4">
 			<div>
 				<div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
-					<span
-						class={`rounded-full px-2 py-1 font-semibold ${
-							hasSavedDraft
-								? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200"
-								: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
-						}`}
-					>
+					<Badge tone={hasSavedDraft ? "info" : "success"} size="sm">
 						{hasSavedDraft ? "Draft saved" : "No saved draft"}
-					</span>
+					</Badge>
 				</div>
 				{#if lastUpdated}
 					<p class="mt-1 text-xs text-stone-400 dark:text-stone-500">

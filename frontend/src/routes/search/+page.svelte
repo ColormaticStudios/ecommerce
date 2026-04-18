@@ -2,6 +2,7 @@
 	import { navigating } from "$app/state";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
+	import Badge from "$lib/components/Badge.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import Dropdown from "$lib/components/Dropdown.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
@@ -290,11 +291,9 @@
 				</span>
 			{/if}
 		</div>
-		<div
-			class="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-500 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400"
-		>
+		<Badge tone="neutral" size="md" class="shadow-sm">
 			Page {currentPage} of {totalPages}
-		</div>
+		</Badge>
 	</div>
 
 	{#if !errorMessage && results.length === 0}

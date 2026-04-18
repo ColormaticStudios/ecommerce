@@ -1,5 +1,5 @@
 <script lang="ts">
-	import AdminBadge from "$lib/admin/AdminBadge.svelte";
+	import Badge from "$lib/components/Badge.svelte";
 	import AdminSearchForm from "$lib/admin/AdminSearchForm.svelte";
 
 	interface Props {
@@ -37,7 +37,7 @@
 
 <div class={`flex flex-wrap items-center gap-2 ${className}`}>
 	{#if countLabel.trim()}
-		<AdminBadge tone="neutral" size="md">{countLabel}</AdminBadge>
+		<Badge tone="neutral" size="md">{countLabel}</Badge>
 	{/if}
 
 	{#if hasSearch}

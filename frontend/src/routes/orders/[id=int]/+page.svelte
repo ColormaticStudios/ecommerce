@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
 	import Alert from "$lib/components/Alert.svelte";
+	import Badge from "$lib/components/Badge.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
+	import { formatOrderStatusLabel, getOrderStatusTone } from "$lib/components/order-status";
 	import Toast from "$lib/components/Toast.svelte";
 	import { type OrderModel, type ShipmentModel } from "$lib/models";
 	import { formatPrice } from "$lib/utils";
@@ -84,37 +86,18 @@
 			.join(" ");
 	}
 
-	function getOrderStatusClasses(status: OrderModel["status"]) {
-		switch (status) {
-			case "PAID":
-				return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200";
-			case "SHIPPED":
-				return "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-200";
-			case "DELIVERED":
-				return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200";
-			case "REFUNDED":
-				return "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-200";
-			case "CANCELLED":
-				return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200";
-			case "FAILED":
-				return "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-200";
-			default:
-				return "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-200";
-		}
-	}
-
-	function getShipmentStatusClasses(status: ShipmentModel["status"]) {
+	function getShipmentStatusTone(status: ShipmentModel["status"]) {
 		switch (status) {
 			case "DELIVERED":
-				return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200";
+				return "success" as const;
 			case "IN_TRANSIT":
-				return "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-200";
+				return "info" as const;
 			case "EXCEPTION":
-				return "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-200";
+				return "danger" as const;
 			case "LABEL_PURCHASED":
-				return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200";
+				return "neutral" as const;
 			default:
-				return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200";
+				return "neutral" as const;
 		}
 	}
 
@@ -252,11 +235,9 @@
 						<p class="text-sm font-medium text-gray-500 dark:text-gray-400">
 							Order #{order.id}, placed {formatDate(order.created_at)}.
 						</p>
-						<span
-							class={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getOrderStatusClasses(order.status)}`}
-						>
-							{formatStatusLabel(order.status)}
-						</span>
+						<Badge tone={getOrderStatusTone(order.status)}>
+							{formatOrderStatusLabel(order.status)}
+						</Badge>
 					</div>
 
 					<div
@@ -419,11 +400,9 @@
 												{/if}
 											</div>
 											<div class="flex flex-col items-start gap-2 sm:items-end">
-												<span
-													class={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getShipmentStatusClasses(shipment.status)}`}
-												>
+												<Badge tone={getShipmentStatusTone(shipment.status)}>
 													{formatStatusLabel(shipment.status)}
-												</span>
+												</Badge>
 												{#if shipment.tracking_url}
 													<ButtonLink
 														href={shipment.tracking_url}

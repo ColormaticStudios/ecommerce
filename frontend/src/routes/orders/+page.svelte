@@ -2,10 +2,12 @@
 	import { type API } from "$lib/api";
 	import { type OrderModel } from "$lib/models";
 	import Alert from "$lib/components/Alert.svelte";
+	import Badge from "$lib/components/Badge.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import Toast from "$lib/components/Toast.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import Dropdown from "$lib/components/Dropdown.svelte";
+	import { formatOrderStatusLabel, getOrderStatusTone } from "$lib/components/order-status";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
 	import { getContext } from "svelte";
@@ -132,25 +134,6 @@
 			return;
 		}
 		updateUrl({ page: nextPage });
-	}
-
-	function statusBadge(status: OrderModel["status"]) {
-		switch (status) {
-			case "PAID":
-				return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200";
-			case "SHIPPED":
-				return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200";
-			case "DELIVERED":
-				return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200";
-			case "REFUNDED":
-				return "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-200";
-			case "CANCELLED":
-				return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200";
-			case "FAILED":
-				return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200";
-			default:
-				return "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200";
-		}
 	}
 
 	async function cancelOrder(orderId: number) {
@@ -347,11 +330,9 @@
 							</p>
 						</div>
 						<div class="flex flex-col items-end gap-1 justify-self-end text-right">
-							<span
-								class={`inline-flex w-min items-center rounded-full px-3 py-1 text-xs font-medium ${statusBadge(order.status)}`}
-							>
-								{order.status}
-							</span>
+							<Badge tone={getOrderStatusTone(order.status)} class="w-min">
+								{formatOrderStatusLabel(order.status)}
+							</Badge>
 							<p class="text-sm text-gray-600 dark:text-gray-400">
 								{formatDate(order.created_at)}
 							</p>

@@ -2,7 +2,7 @@
 	import type { HTMLAttributes } from "svelte/elements";
 
 	type BadgeTone = "neutral" | "info" | "success" | "warning" | "danger";
-	type BadgeSize = "sm" | "md";
+	type BadgeSize = "xs" | "sm" | "md";
 
 	interface Props extends HTMLAttributes<HTMLSpanElement> {
 		tone?: BadgeTone;
@@ -28,9 +28,16 @@
 		}
 	});
 
-	const sizeClasses = $derived(
-		size === "md" ? "px-3 py-1 text-xs font-semibold" : "px-2.5 py-1 text-[11px] font-semibold"
-	);
+	const sizeClasses = $derived.by(() => {
+		switch (size) {
+			case "xs":
+				return "px-2 py-0.5 text-[10px] font-semibold";
+			case "md":
+				return "px-3 py-1 text-xs font-semibold";
+			default:
+				return "px-2.5 py-1 text-[11px] font-semibold";
+		}
+	});
 </script>
 
 <span

@@ -3,7 +3,6 @@
 	import { resolve } from "$app/paths";
 	import { getContext, untrack } from "svelte";
 	import { type API } from "$lib/api";
-	import AdminBadge from "$lib/admin/AdminBadge.svelte";
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
 	import AdminMasterDetailLayout from "$lib/admin/AdminMasterDetailLayout.svelte";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
@@ -18,6 +17,7 @@
 		upsertItemById,
 	} from "$lib/admin/state.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
+	import Badge from "$lib/components/Badge.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import TabSwitcher from "$lib/components/TabSwitcher.svelte";
 	import { type ProductModel } from "$lib/models";
@@ -205,15 +205,15 @@
 											SKU {product.sku} · {formatPrice(product.price)}
 										</p>
 										<div class="mt-2 flex flex-wrap items-center gap-1 text-[10px] font-semibold">
-											<AdminBadge tone={product.is_published ? "success" : "warning"}>
+											<Badge tone={product.is_published ? "success" : "warning"}>
 												{product.is_published ? "Published" : "Unpublished"}
-											</AdminBadge>
+											</Badge>
 											{#if product.has_draft_changes}
-												<AdminBadge tone="info">Draft</AdminBadge>
+												<Badge tone="info">Draft</Badge>
 											{/if}
 										</div>
 									</div>
-									<AdminBadge
+									<Badge
 										tone={product.stock === 0
 											? "danger"
 											: product.stock <= 5
@@ -222,7 +222,7 @@
 										size="md"
 									>
 										{product.stock} in stock
-									</AdminBadge>
+									</Badge>
 								</button>
 								<div class="mr-4 flex items-center gap-2">
 									<IconButton

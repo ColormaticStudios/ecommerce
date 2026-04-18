@@ -8,7 +8,6 @@
 		providerRunbooks,
 		summarizeReconciliationMismatch,
 	} from "$lib/admin/providers";
-	import AdminBadge from "$lib/admin/AdminBadge.svelte";
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
 	import AdminMasterDetailLayout from "$lib/admin/AdminMasterDetailLayout.svelte";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
@@ -16,6 +15,7 @@
 	import AdminPanel from "$lib/admin/AdminPanel.svelte";
 	import AdminResourceActions from "$lib/admin/AdminResourceActions.svelte";
 	import { createAdminNotices } from "$lib/admin/state.svelte";
+	import Badge from "$lib/components/Badge.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import Dropdown from "$lib/components/Dropdown.svelte";
 	import TabSwitcher from "$lib/components/TabSwitcher.svelte";
@@ -725,36 +725,36 @@
 	>
 		<div class="space-y-6">
 			<div class="flex flex-wrap gap-2">
-				<AdminBadge
+				<Badge
 					tone={providerOverview.runtime_environment === "production" ? "warning" : "info"}
 					size="md"
 				>
 					Runtime {providerOverview.runtime_environment}
-				</AdminBadge>
-				<AdminBadge
+				</Badge>
+				<Badge
 					tone={providerOverview.credential_service_configured ? "success" : "warning"}
 					size="md"
 				>
 					{providerOverview.credential_service_configured
 						? "Credential encryption ready"
 						: "Credential encryption off"}
-				</AdminBadge>
-				<AdminBadge
+				</Badge>
+				<Badge
 					tone={providerOverview.webhook_events.rejected_count > 0 ? "danger" : "neutral"}
 					size="md"
 				>
 					{providerOverview.webhook_events.rejected_count} rejected webhooks
-				</AdminBadge>
-				<AdminBadge
+				</Badge>
+				<Badge
 					tone={providerOverview.webhook_events.dead_letter_count > 0 ? "warning" : "neutral"}
 					size="md"
 				>
 					{providerOverview.webhook_events.dead_letter_count} dead-letter webhooks
-				</AdminBadge>
-				<AdminBadge tone="neutral" size="md">{visibleCredentialCount} credentials</AdminBadge>
-				<AdminBadge tone="neutral" size="md">
+				</Badge>
+				<Badge tone="neutral" size="md">{visibleCredentialCount} credentials</Badge>
+				<Badge tone="neutral" size="md">
 					{reconciliationRuns.pagination.total} reconciliation runs
-				</AdminBadge>
+				</Badge>
 			</div>
 
 			<div class={`space-y-0 xl:grid xl:gap-6 ${providerView === "all" ? "xl:grid-cols-3" : ""}`}>
@@ -793,9 +793,9 @@
 														{provider.description}
 													</p>
 												</div>
-												<AdminBadge tone={provider.enabled ? "success" : "neutral"}>
+												<Badge tone={provider.enabled ? "success" : "neutral"}>
 													{provider.enabled ? "Enabled" : "Disabled"}
-												</AdminBadge>
+												</Badge>
 											</div>
 											<div class="mt-4 flex flex-wrap items-center justify-between gap-3">
 												<p class="text-xs text-stone-500 dark:text-stone-400">
@@ -864,35 +864,35 @@
 							</div>
 							{#if runbook.id === "webhook_outage"}
 								<div class="flex flex-wrap gap-2">
-									<AdminBadge
+									<Badge
 										tone={providerOverview.runtime_environment === "production"
 											? "warning"
 											: "info"}
 									>
 										{providerOverview.runtime_environment}
-									</AdminBadge>
-									<AdminBadge
+									</Badge>
+									<Badge
 										tone={providerOverview.webhook_events.rejected_count > 0 ? "danger" : "neutral"}
 									>
 										{providerOverview.webhook_events.rejected_count} rejected
-									</AdminBadge>
-									<AdminBadge
+									</Badge>
+									<Badge
 										tone={providerOverview.webhook_events.pending_count > 0 ? "warning" : "neutral"}
 									>
 										{providerOverview.webhook_events.pending_count} pending
-									</AdminBadge>
-									<AdminBadge
+									</Badge>
+									<Badge
 										tone={providerOverview.webhook_events.dead_letter_count > 0
 											? "warning"
 											: "neutral"}
 									>
 										{providerOverview.webhook_events.dead_letter_count} dead-letter
-									</AdminBadge>
+									</Badge>
 								</div>
 							{:else}
-								<AdminBadge tone={selectedRunDetail?.drift_count ? "warning" : "neutral"}>
+								<Badge tone={selectedRunDetail?.drift_count ? "warning" : "neutral"}>
 									{selectedRunDetail?.drift_count ?? 0} current drifts
-								</AdminBadge>
+								</Badge>
 							{/if}
 						</div>
 
@@ -919,9 +919,9 @@
 																{formatDateTime(event.received_at)}
 															</p>
 														</div>
-														<AdminBadge tone={webhookStatusTone(event.status)}>
+														<Badge tone={webhookStatusTone(event.status)}>
 															{event.status}
-														</AdminBadge>
+														</Badge>
 													</div>
 													<p class="mt-2 text-xs break-all text-stone-600 dark:text-stone-300">
 														{event.last_error}
@@ -953,9 +953,9 @@
 																{event.provider_event_id}
 															</p>
 														</div>
-														<AdminBadge tone={webhookStatusTone(event.status)}>
+														<Badge tone={webhookStatusTone(event.status)}>
 															{event.status}
-														</AdminBadge>
+														</Badge>
 													</div>
 													<p class="mt-2 text-xs break-all text-stone-600 dark:text-stone-300">
 														{event.last_error}
@@ -1080,17 +1080,17 @@
 												</p>
 											</div>
 											<div class="flex flex-wrap gap-2">
-												<AdminBadge tone={statusTone(run.status)}>{run.status}</AdminBadge>
-												<AdminBadge tone={run.environment === "production" ? "warning" : "info"}>
+												<Badge tone={statusTone(run.status)}>{run.status}</Badge>
+												<Badge tone={run.environment === "production" ? "warning" : "info"}>
 													{run.environment}
-												</AdminBadge>
+												</Badge>
 											</div>
 										</div>
 										<div class="mt-3 flex flex-wrap gap-2">
-											<AdminBadge tone="neutral">{run.trigger}</AdminBadge>
-											<AdminBadge tone="neutral">{run.checked_count} checked</AdminBadge>
-											<AdminBadge tone="neutral">{run.drift_count} drifts</AdminBadge>
-											<AdminBadge tone="neutral">{run.error_count} errors</AdminBadge>
+											<Badge tone="neutral">{run.trigger}</Badge>
+											<Badge tone="neutral">{run.checked_count} checked</Badge>
+											<Badge tone="neutral">{run.drift_count} drifts</Badge>
+											<Badge tone="neutral">{run.error_count} errors</Badge>
 										</div>
 										<p class="mt-3 text-xs text-stone-500 dark:text-stone-400">
 											Started {formatDateTime(run.started_at)}
@@ -1164,15 +1164,13 @@
 						{#if selectedRunDetail}
 							<div class="space-y-4">
 								<div class="flex flex-wrap gap-2">
-									<AdminBadge tone={statusTone(selectedRunDetail.status)}>
+									<Badge tone={statusTone(selectedRunDetail.status)}>
 										{selectedRunDetail.status}
-									</AdminBadge>
-									<AdminBadge
-										tone={selectedRunDetail.environment === "production" ? "warning" : "info"}
-									>
+									</Badge>
+									<Badge tone={selectedRunDetail.environment === "production" ? "warning" : "info"}>
 										{selectedRunDetail.environment}
-									</AdminBadge>
-									<AdminBadge tone="neutral">{selectedRunDetail.trigger}</AdminBadge>
+									</Badge>
+									<Badge tone="neutral">{selectedRunDetail.trigger}</Badge>
 								</div>
 
 								<div class="grid gap-3 sm:grid-cols-3">
@@ -1259,9 +1257,9 @@
 																{drift.entity_type} #{drift.entity_id} • {drift.field_name}
 															</p>
 														</div>
-														<AdminBadge tone={driftTone(drift.severity)}>
+														<Badge tone={driftTone(drift.severity)}>
 															{drift.severity}
-														</AdminBadge>
+														</Badge>
 													</div>
 													<div class="mt-3 grid gap-3 md:grid-cols-2">
 														<div
@@ -1488,29 +1486,27 @@
 											</p>
 										</div>
 										<div class="flex flex-wrap gap-2">
-											<AdminBadge
-												tone={credential.environment === "production" ? "warning" : "info"}
-											>
+											<Badge tone={credential.environment === "production" ? "warning" : "info"}>
 												{credential.environment}
-											</AdminBadge>
-											<AdminBadge tone="neutral">Key {credential.key_version}</AdminBadge>
+											</Badge>
+											<Badge tone="neutral">Key {credential.key_version}</Badge>
 										</div>
 									</div>
 									<div class="mt-3 flex flex-wrap gap-2">
 										{#if credential.label}
-											<AdminBadge tone="neutral">{credential.label}</AdminBadge>
+											<Badge tone="neutral">{credential.label}</Badge>
 										{/if}
 										{#if credential.supported_currencies.length > 0}
-											<AdminBadge tone="neutral">
+											<Badge tone="neutral">
 												{formatProviderCurrencies(credential.supported_currencies)}
-											</AdminBadge>
+											</Badge>
 										{/if}
 										{#if credential.settlement_currency}
-											<AdminBadge tone="neutral">
+											<Badge tone="neutral">
 												Settles in {credential.settlement_currency}
-											</AdminBadge>
+											</Badge>
 										{/if}
-										<AdminBadge tone="neutral">{credential.fx_mode}</AdminBadge>
+										<Badge tone="neutral">{credential.fx_mode}</Badge>
 									</div>
 									<div class="mt-4 flex flex-wrap items-center justify-between gap-3">
 										<p class="text-xs text-stone-500 dark:text-stone-400">

@@ -3,6 +3,7 @@
 	import { resolve } from "$app/paths";
 	import type { PageData } from "./$types";
 	import Alert from "$lib/components/Alert.svelte";
+	import Badge from "$lib/components/Badge.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import ProductCard from "$lib/components/ProductCard.svelte";
 
@@ -206,11 +207,7 @@
 		{:else if section.type === "badges"}
 			<section class="mb-10 flex flex-wrap gap-2">
 				{#each section.badges ?? [] as badge, index (index)}
-					<span
-						class="rounded-full border border-gray-200 bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-					>
-						{badge}
-					</span>
+					<Badge tone="neutral" size="md">{badge}</Badge>
 				{/each}
 			</section>
 		{/if}
