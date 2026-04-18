@@ -103,7 +103,7 @@ test("sign up, checkout, and persist order/cart state", async ({ page, request }
 	await expect(page).toHaveURL(/\/orders$/, { timeout: 15_000 });
 	await expect(page.getByText("Order placed successfully.")).toBeVisible();
 	await expect(page.getByText(/Order #\d+/)).toBeVisible();
-	await expect(page.getByText("PENDING", { exact: true })).toBeVisible();
+	await expect(page.locator("span").filter({ hasText: "Pending" })).toBeVisible();
 
 	await page.goto("/cart");
 	await expect(page.getByText("Your cart is empty.")).toBeVisible();
