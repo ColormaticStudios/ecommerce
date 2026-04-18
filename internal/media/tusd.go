@@ -5,10 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"ecommerce/models"
-
 	"github.com/tus/tusd/v2/pkg/handler"
-	"gorm.io/gorm"
 )
 
 func (s *Service) HandleTusdComplete(info handler.FileInfo) error {
@@ -29,19 +26,8 @@ func (s *Service) HandleTusdComplete(info handler.FileInfo) error {
 
 	_ = os.Remove(filepath.Join(s.TusDir(), info.ID+".info"))
 
-	var mediaObj models.MediaObject
-	if err := s.DB.Where("id = ?", info.ID).First(&mediaObj).Error; err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
-		mediaObj = models.MediaObject{
-			ID:        info.ID,
-			SizeBytes: info.Size,
-			Status:    StatusProcessing,
-		}
-		if err := s.DB.Create(&mediaObj).Error; err != nil {
-			return err
-		}
+	if err := s.persistProcessingUpload(info.ID, info.Size); err != nil {
+		return err
 	}
 
 	s.Queue <- Job{

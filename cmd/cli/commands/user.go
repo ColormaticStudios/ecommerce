@@ -250,12 +250,19 @@ func newDeleteUserCmd() *cobra.Command {
 
 // Helper functions
 
-func getDB() *gorm.DB {
+func getConfig() config.Config {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
+	return cfg
+}
 
+func getDB() *gorm.DB {
+	return getDBWithConfig(getConfig())
+}
+
+func getDBWithConfig(cfg config.Config) *gorm.DB {
 	db, err := gorm.Open(postgres.Open(cfg.DBURL), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)

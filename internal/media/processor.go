@@ -26,9 +26,7 @@ func (s *Service) StartProcessor() {
 		for job := range s.Queue {
 			if err := s.processJob(job); err != nil {
 				s.Logger.Printf("[ERROR] Media processing failed for %s: %v", job.ID, err)
-				s.DB.Model(&models.MediaObject{}).Where("id = ?", job.ID).Updates(map[string]any{
-					"status": StatusFailed,
-				})
+				s.markJobFailed(job.ID)
 			}
 		}
 	}()
@@ -181,17 +179,7 @@ func moveFile(src string, dest string) error {
 	if err := os.Rename(src, dest); err == nil {
 		return nil
 	}
-	sourceFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer sourceFile.Close()
-	targetFile, err := os.Create(dest)
-	if err != nil {
-		return err
-	}
-	defer targetFile.Close()
-	if _, err := io.Copy(targetFile, sourceFile); err != nil {
+	if err := copyFile(src, dest); err != nil {
 		return err
 	}
 	return os.Remove(src)

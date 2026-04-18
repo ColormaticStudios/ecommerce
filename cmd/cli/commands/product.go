@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 
+	"ecommerce/handlers"
+	"ecommerce/internal/media"
 	"ecommerce/models"
 
 	"github.com/spf13/cobra"
@@ -407,16 +409,14 @@ func newUploadProductMediaCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "media-upload",
 		Short: "Upload media and attach to a product",
-		Long:  "Upload media via TUS and attach it to a product (admin only).",
+		Long:  "Upload media and attach it to a product. Without --token, the CLI imports media directly using the local config and filesystem.",
 		Run: func(cmd *cobra.Command, args []string) {
 			if filePath == "" {
 				log.Fatal("File path is required")
 			}
-			if token == "" {
-				log.Fatal("API token is required")
-			}
 
-			db := getDB()
+			cfg := getConfig()
+			db := getDBWithConfig(cfg)
 			defer closeDB(db)
 
 			product, err := findProductByIDOrSKU(db, id, sku)
@@ -424,16 +424,40 @@ func newUploadProductMediaCmd() *cobra.Command {
 				log.Fatal(err)
 			}
 
-			mediaID, err := uploadFileToTus(apiBase, token, filePath)
+			if token != "" {
+				mediaID, err := uploadFileToTus(apiBase, token, filePath)
+				if err != nil {
+					log.Fatalf("Upload failed: %v", err)
+				}
+
+				if err := attachMediaToProduct(apiBase, token, product.ID, mediaID); err != nil {
+					log.Fatalf("Failed to attach media: %v", err)
+				}
+
+				fmt.Printf("✓ Uploaded media %s and attached to %s (ID: %d)\n", mediaID, product.Name, product.ID)
+				return
+			}
+
+			if err := media.CheckDependencies(); err != nil {
+				log.Fatalf("Media upload dependencies unavailable: %v", err)
+			}
+
+			mediaService := media.NewService(db, cfg.MediaRoot, cfg.MediaPublicURL, log.Default())
+			if err := mediaService.EnsureDirs(); err != nil {
+				log.Fatalf("Failed to initialize media directories: %v", err)
+			}
+
+			mediaObj, err := mediaService.ImportFile(filePath)
 			if err != nil {
 				log.Fatalf("Upload failed: %v", err)
 			}
 
-			if err := attachMediaToProduct(apiBase, token, product.ID, mediaID); err != nil {
+			if err := handlers.AttachProductMediaToDraft(db, mediaService, &product, []string{mediaObj.ID}); err != nil {
+				_ = mediaService.DeleteIfOrphan(mediaObj.ID)
 				log.Fatalf("Failed to attach media: %v", err)
 			}
 
-			fmt.Printf("✓ Uploaded media %s and attached to %s (ID: %d)\n", mediaID, product.Name, product.ID)
+			fmt.Printf("✓ Uploaded media %s and attached to %s (ID: %d)\n", mediaObj.ID, product.Name, product.ID)
 		},
 	}
 
@@ -441,10 +465,9 @@ func newUploadProductMediaCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&sku, "sku", "s", "", "Product SKU")
 	cmd.Flags().StringVarP(&filePath, "file", "f", "", "Path to media file")
 	cmd.Flags().StringVar(&apiBase, "api-base", "http://localhost:3000", "API base URL")
-	cmd.Flags().StringVar(&token, "token", "", "Admin API token (JWT)")
+	cmd.Flags().StringVar(&token, "token", "", "Admin API token (JWT); when omitted, upload runs directly against the local media root and database")
 	cmd.MarkFlagsOneRequired("id", "sku")
 	cmd.MarkFlagRequired("file")
-	cmd.MarkFlagRequired("token")
 
 	return cmd
 }

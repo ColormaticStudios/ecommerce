@@ -1,8 +1,10 @@
 package media
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"ecommerce/models"
@@ -17,7 +19,9 @@ import (
 func setupMediaService(t *testing.T) (*Service, *gorm.DB, string) {
 	t.Helper()
 
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	dbName := strings.ReplaceAll(t.Name(), "/", "_")
+	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", dbName)
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	require.NoError(t, err)
 	require.NoError(t, db.AutoMigrate(&models.MediaObject{}, &models.MediaVariant{}, &models.MediaReference{}))
 
@@ -149,4 +153,31 @@ func TestHandleTusdCompleteRequiresUploadID(t *testing.T) {
 	err := service.HandleTusdComplete(tusdhandler.FileInfo{})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "missing upload id")
+}
+
+func TestImportFilePersistsAndProcessesLocalUpload(t *testing.T) {
+	service, db, mediaRoot := setupMediaService(t)
+
+	sourcePath := filepath.Join(t.TempDir(), "manual-upload.txt")
+	require.NoError(t, os.WriteFile(sourcePath, []byte("hello from cli"), 0o644))
+
+	mediaObj, err := service.ImportFile(sourcePath)
+	require.NoError(t, err)
+
+	assert.Equal(t, StatusReady, mediaObj.Status)
+	assert.Equal(t, "text/plain; charset=utf-8", mediaObj.MimeType)
+	assert.Equal(t, "original.txt", filepath.Base(mediaObj.OriginalPath))
+
+	var stored models.MediaObject
+	require.NoError(t, db.First(&stored, "id = ?", mediaObj.ID).Error)
+	assert.Equal(t, StatusReady, stored.Status)
+
+	outputPath := filepath.Join(mediaRoot, stored.OriginalPath)
+	content, readErr := os.ReadFile(outputPath)
+	require.NoError(t, readErr)
+	assert.Equal(t, "hello from cli", string(content))
+
+	originalContent, readErr := os.ReadFile(sourcePath)
+	require.NoError(t, readErr)
+	assert.Equal(t, "hello from cli", string(originalContent))
 }
