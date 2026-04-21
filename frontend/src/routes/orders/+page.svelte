@@ -3,6 +3,7 @@
 	import { type OrderModel } from "$lib/models";
 	import Alert from "$lib/components/Alert.svelte";
 	import Badge from "$lib/components/Badge.svelte";
+	import Card from "$lib/components/Card.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import Toast from "$lib/components/Toast.svelte";
 	import Button from "$lib/components/Button.svelte";
@@ -217,9 +218,7 @@
 	</div>
 
 	{#if isAuthenticated}
-		<div
-			class="mt-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-		>
+		<Card class="mt-6" padding="sm">
 			<div class="grid gap-3 sm:grid-cols-4">
 				<div class="sm:col-span-1">
 					<label for="statusFilter" class="mb-1 block text-sm text-gray-600 dark:text-gray-300">
@@ -283,7 +282,7 @@
 					Clear
 				</Button>
 			</div>
-		</div>
+		</Card>
 	{/if}
 
 	{#if !isAuthenticated}
@@ -304,24 +303,24 @@
 			/>
 		</div>
 	{:else if orders.length === 0}
-		<div
-			class="mt-6 flex flex-col items-center rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+		<Card
+			border="dashed"
+			padding="xl"
+			class="mt-6 flex flex-col items-center text-gray-600 dark:text-gray-300"
 		>
 			<p class="text-lg font-medium">No orders yet.</p>
 			<p class="mt-2 text-sm">Your future purchases will show up here.</p>
 			<ButtonLink href={resolve("/")} variant="primary" size="large" class="mt-4 block">
 				Start shopping
 			</ButtonLink>
-		</div>
+		</Card>
 	{:else}
 		<p class="mt-4 text-sm text-gray-600 dark:text-gray-400">
 			Showing page {page} of {totalPages} ({totalOrders} total orders)
 		</p>
 		<div class="mt-6 space-y-4">
 			{#each orders as order (order.id)}
-				<div
-					class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-				>
+				<Card padding="md">
 					<div class="grid grid-cols-[1fr_auto] items-start gap-3 sm:items-center">
 						<div>
 							<p class="text-sm text-gray-500 dark:text-gray-400">Order #{order.id}</p>
@@ -340,8 +339,12 @@
 					</div>
 
 					<div class="mt-4 border-t border-gray-200 pt-4 dark:border-gray-800">
-						<div
-							class="grid gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm sm:grid-cols-2 dark:border-gray-800 dark:bg-gray-950/40"
+						<Card
+							tone="muted"
+							radius="xl"
+							padding="sm"
+							shadow="none"
+							class="grid gap-3 text-sm sm:grid-cols-2"
 						>
 							<div class="min-w-0">
 								<p
@@ -363,7 +366,7 @@
 									{order.shipping_address_pretty || "No shipping address recorded"}
 								</p>
 							</div>
-						</div>
+						</Card>
 
 						{#if order.items.length === 0}
 							<p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
@@ -372,8 +375,12 @@
 						{:else}
 							<ul class="mt-4 space-y-3">
 								{#each order.items as item (item.id)}
-									<li
-										class="flex flex-col gap-3 rounded-xl border border-gray-200 p-3 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800"
+									<Card
+										as="li"
+										radius="xl"
+										padding="sm"
+										shadow="none"
+										class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
 									>
 										<div class="flex min-w-0 items-center gap-3">
 											<a
@@ -406,7 +413,7 @@
 										<p class="text-right font-medium text-gray-900 dark:text-gray-100">
 											{formatPrice(item.price * item.quantity, currency)}
 										</p>
-									</li>
+									</Card>
 								{/each}
 							</ul>
 						{/if}
@@ -441,7 +448,7 @@
 							{/if}
 						</div>
 					</div>
-				</div>
+				</Card>
 			{/each}
 		</div>
 

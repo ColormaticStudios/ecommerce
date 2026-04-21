@@ -2,8 +2,10 @@
 	import { resolve } from "$app/paths";
 	import { getContext, onMount } from "svelte";
 	import { DRAFT_PREVIEW_SYNC_EVENT, DRAFT_PREVIEW_SYNC_STORAGE_KEY, type API } from "$lib/api";
+	import AdminEmptyState from "$lib/admin/AdminEmptyState.svelte";
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
+	import AdminSurface from "$lib/admin/AdminSurface.svelte";
 	import { createAdminNotices, createAdminSavePrompt } from "$lib/admin/state.svelte";
 	import Badge from "$lib/components/Badge.svelte";
 	import Button from "$lib/components/Button.svelte";
@@ -695,7 +697,7 @@
 <section class="space-y-6">
 	<AdminPageHeader title="Storefront" />
 
-	<div class="admin-surface">
+	<AdminSurface as="div">
 		<div class="flex flex-wrap items-start justify-between gap-4">
 			<div>
 				<div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
@@ -807,16 +809,20 @@
 		</div>
 
 		{#if loading}
-			<div class="admin-muted-surface mt-6 text-sm text-stone-600 dark:text-stone-300">
+			<AdminSurface
+				variant="muted"
+				as="div"
+				class="mt-6 text-sm text-stone-600 dark:text-stone-300"
+			>
 				Loading storefront settings...
-			</div>
+			</AdminSurface>
 		{:else}
 			<div class="mt-6 space-y-6">
 				{#if loadErrorMessage}
-					<div class="admin-empty-state admin-empty-state-error">{loadErrorMessage}</div>
+					<AdminEmptyState tone="error">{loadErrorMessage}</AdminEmptyState>
 				{/if}
 
-				<section class="admin-subsurface">
+				<AdminSurface variant="subsurface">
 					<h3
 						class="text-sm font-semibold tracking-[0.18em] text-stone-500 uppercase dark:text-stone-400"
 					>
@@ -825,9 +831,9 @@
 					<div class="mt-4">
 						<TextInput tone="admin" placeholder="Navbar site title" bind:value={draft.site_title} />
 					</div>
-				</section>
+				</AdminSurface>
 
-				<section class="admin-subsurface">
+				<AdminSurface variant="subsurface">
 					<h3
 						class="text-sm font-semibold tracking-[0.18em] text-stone-500 uppercase dark:text-stone-400"
 					>
@@ -841,9 +847,9 @@
 						/>
 						<span> Allow guests to create carts and start checkout without signing in. </span>
 					</label>
-				</section>
+				</AdminSurface>
 
-				<section class="admin-subsurface">
+				<AdminSurface variant="subsurface">
 					<h3
 						class="text-sm font-semibold tracking-[0.18em] text-stone-500 uppercase dark:text-stone-400"
 					>
@@ -1301,7 +1307,7 @@
 							Add section
 						</Button>
 					</div>
-				</section>
+				</AdminSurface>
 
 				<section class="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
 					<h3
@@ -1486,7 +1492,7 @@
 				</section>
 			</div>
 		{/if}
-	</div>
+	</AdminSurface>
 </section>
 
 <AdminFloatingNotices

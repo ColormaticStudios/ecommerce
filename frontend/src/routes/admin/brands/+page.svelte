@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
+	import AdminEmptyState from "$lib/admin/AdminEmptyState.svelte";
+	import AdminFieldLabel from "$lib/admin/AdminFieldLabel.svelte";
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
+	import AdminListItem from "$lib/admin/AdminListItem.svelte";
 	import AdminMasterDetailLayout from "$lib/admin/AdminMasterDetailLayout.svelte";
+	import AdminSurface from "$lib/admin/AdminSurface.svelte";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
 	import AdminPanel from "$lib/admin/AdminPanel.svelte";
 	import AdminResourceActions from "$lib/admin/AdminResourceActions.svelte";
@@ -265,22 +269,20 @@
 			<AdminPanel title="Brands" headerActions={brandActions}>
 				<div class="space-y-3">
 					{#if hasLoadError}
-						<p class="admin-empty-state admin-empty-state-error">Failed to load brands.</p>
+						<AdminEmptyState tone="error">Failed to load brands.</AdminEmptyState>
 					{:else if loading && brands.length === 0}
-						<p class="admin-empty-state">Loading brands...</p>
+						<AdminEmptyState>Loading brands...</AdminEmptyState>
 					{:else if brands.length === 0 && hasAppliedSearch}
-						<p class="admin-empty-state">Your search didn&apos;t match any brands.</p>
+						<AdminEmptyState>Your search didn&apos;t match any brands.</AdminEmptyState>
 					{:else if brands.length === 0}
-						<p class="admin-empty-state">There are no brands.</p>
+						<AdminEmptyState>There are no brands.</AdminEmptyState>
 					{:else}
 						{#each brands as brand (brand.id)}
-							<button
-								type="button"
-								class={`admin-list-item flex w-full cursor-pointer items-center justify-between gap-3 p-4 text-left ${
-									selectedBrandId === brand.id
-										? "admin-list-item-active"
-										: "admin-list-item-interactive"
-								}`}
+							<AdminListItem
+								as="button"
+								active={selectedBrandId === brand.id}
+								interactive={selectedBrandId !== brand.id}
+								class="flex items-center justify-between gap-3 p-4"
 								onclick={() => loadIntoForm(brand)}
 							>
 								<div class="min-w-0">
@@ -297,7 +299,7 @@
 								<Badge tone={brand.is_active ? "success" : "neutral"}>
 									{brand.is_active ? "Active" : "Inactive"}
 								</Badge>
-							</button>
+							</AdminListItem>
 						{/each}
 					{/if}
 				</div>
@@ -311,21 +313,21 @@
 			>
 				<div class="grid gap-5 md:grid-cols-2">
 					<label class="block">
-						<span class="admin-label">Name</span>
+						<AdminFieldLabel as="span">Name</AdminFieldLabel>
 						<TextInput tone="admin" class="mt-2 w-full" type="text" bind:value={name} />
 					</label>
 
 					<label class="block">
-						<span class="admin-label">Slug</span>
+						<AdminFieldLabel as="span">Slug</AdminFieldLabel>
 						<TextInput tone="admin" class="mt-2 w-full" type="text" bind:value={slug} />
 					</label>
 
 					<label class="block md:col-span-2">
-						<span class="admin-label">Description</span>
+						<AdminFieldLabel as="span">Description</AdminFieldLabel>
 						<TextArea tone="admin" class="mt-2 min-h-32" bind:value={description} />
 					</label>
 
-					<div class="admin-muted-surface md:col-span-2">
+					<AdminSurface variant="muted" as="div" class="md:col-span-2">
 						<div class="flex flex-wrap items-center justify-between gap-3">
 							<p class="text-sm text-stone-700 dark:text-stone-200">Brand image</p>
 							<div class="flex items-center gap-2">
@@ -363,10 +365,10 @@
 								class="mt-3 h-36 w-full rounded-xl bg-stone-100 object-contain dark:bg-stone-900"
 							/>
 						{/if}
-					</div>
+					</AdminSurface>
 				</div>
 
-				<div class="admin-muted-surface mt-5">
+				<AdminSurface variant="muted" as="div" class="mt-5">
 					<label class="flex items-center justify-between gap-4">
 						<div>
 							<p class="text-sm font-semibold text-stone-950 dark:text-stone-50">
@@ -379,7 +381,7 @@
 						</div>
 						<input class="h-4 w-4 shrink-0" type="checkbox" bind:checked={isActive} />
 					</label>
-				</div>
+				</AdminSurface>
 
 				<div class="mt-6 flex flex-wrap items-center gap-3">
 					<Button

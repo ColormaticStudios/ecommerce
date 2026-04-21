@@ -1,11 +1,15 @@
 <script lang="ts">
 	import { getContext, onMount, untrack } from "svelte";
 	import { type API } from "$lib/api";
+	import AdminEmptyState from "$lib/admin/AdminEmptyState.svelte";
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
+	import AdminListItem from "$lib/admin/AdminListItem.svelte";
+	import AdminMetaText from "$lib/admin/AdminMetaText.svelte";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
 	import AdminPaginationControls from "$lib/admin/AdminPaginationControls.svelte";
 	import AdminPanel from "$lib/admin/AdminPanel.svelte";
 	import AdminResourceActions from "$lib/admin/AdminResourceActions.svelte";
+	import AdminSurface from "$lib/admin/AdminSurface.svelte";
 	import {
 		createAdminPaginatedResource,
 		formatAdminDateTime,
@@ -204,32 +208,30 @@
 		headerActions={orderPanelActions}
 	>
 		{#if hasLoadError}
-			<p class="admin-empty-state admin-empty-state-error">Failed to load orders.</p>
+			<AdminEmptyState tone="error">Failed to load orders.</AdminEmptyState>
 		{:else if orders.loading && orders.items.length === 0}
-			<p class="admin-empty-state">Loading orders...</p>
+			<AdminEmptyState>Loading orders...</AdminEmptyState>
 		{:else if orders.items.length === 0 && orders.hasSearch}
-			<p class="admin-empty-state">No orders match "{orders.query}".</p>
+			<AdminEmptyState>No orders match "{orders.query}".</AdminEmptyState>
 		{:else if orders.items.length === 0}
-			<p class="admin-empty-state">No orders yet.</p>
+			<AdminEmptyState>No orders yet.</AdminEmptyState>
 		{:else}
 			<div class="space-y-4">
 				{#each orders.items as order (order.id)}
-					<div class="admin-list-item p-4">
+					<AdminListItem class="p-4">
 						<div class="flex flex-wrap items-start justify-between gap-4">
 							<div class="space-y-1">
-								<p class="admin-detail">Order #{order.id}</p>
-								<p class="admin-detail-strong">{formatPrice(order.total)}</p>
-								<p class="admin-detail">Placed {formatAdminDateTime(order.created_at)}</p>
-								<p class="admin-detail">
+								<AdminMetaText>Order #{order.id}</AdminMetaText>
+								<AdminMetaText tone="strong">{formatPrice(order.total)}</AdminMetaText>
+								<AdminMetaText>Placed {formatAdminDateTime(order.created_at)}</AdminMetaText>
+								<AdminMetaText>
 									{getOrderCustomerLabel(order)} · {order.items.length} item{order.items.length ===
 									1
 										? ""
 										: "s"}
-								</p>
-								<p class="admin-detail">
-									Payment {order.payment_method_display || "N/A"}
-								</p>
-								<p class="admin-detail">Updated {formatAdminDateTime(order.updated_at)}</p>
+								</AdminMetaText>
+								<AdminMetaText>Payment {order.payment_method_display || "N/A"}</AdminMetaText>
+								<AdminMetaText>Updated {formatAdminDateTime(order.updated_at)}</AdminMetaText>
 							</div>
 							<div class="flex flex-col items-end gap-2">
 								<Badge tone={getOrderStatusTone(order.status)} size="md">
@@ -300,7 +302,7 @@
 								Ship to: {order.shipping_address_pretty}
 							</p>
 						{/if}
-						<details class="admin-muted-surface mt-3">
+						<AdminSurface as="details" variant="muted" class="mt-3">
 							<summary
 								class="cursor-pointer text-xs font-semibold tracking-[0.08em] text-stone-600 uppercase dark:text-stone-300"
 							>
@@ -316,8 +318,8 @@
 									</div>
 								{/each}
 							</div>
-						</details>
-					</div>
+						</AdminSurface>
+					</AdminListItem>
 				{/each}
 
 				<AdminPaginationControls

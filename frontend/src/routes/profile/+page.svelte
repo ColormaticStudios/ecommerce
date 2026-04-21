@@ -9,6 +9,7 @@
 	import Badge from "$lib/components/Badge.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import ButtonInput from "$lib/components/ButtonInput.svelte";
+	import Card from "$lib/components/Card.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
@@ -361,9 +362,7 @@
 			</p>
 		{:else}
 			<div class="mt-8 grid items-start gap-6 md:grid-cols-[280px_1fr]">
-				<div
-					class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-				>
+				<Card padding="lg">
 					<div class="flex flex-col items-center text-center">
 						<div
 							class="h-28 w-28 overflow-hidden rounded-full border border-gray-200 bg-gray-100 shadow-sm dark:border-gray-700 dark:bg-gray-800"
@@ -435,7 +434,7 @@
 							/>
 						{/if}
 					</div>
-				</div>
+				</Card>
 
 				<div class="space-y-6">
 					{#if pageError}
@@ -446,9 +445,7 @@
 							onClose={() => (pageError = "")}
 						/>
 					{/if}
-					<div
-						class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-					>
+					<Card padding="lg">
 						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Account details</h3>
 						<form class="mt-6 space-y-4" onsubmit={submit}>
 							<div class="grid gap-4 md:grid-cols-2">
@@ -522,12 +519,10 @@
 								/>
 							{/if}
 						</form>
-					</div>
+					</Card>
 
 					<div class="grid items-start gap-6 xl:grid-cols-2">
-						<div
-							class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-						>
+						<Card padding="lg">
 							<div class="flex items-center justify-between">
 								<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
 									Saved payment methods
@@ -572,7 +567,7 @@
 									<p class="text-sm text-gray-500 dark:text-gray-400">No saved payment methods.</p>
 								{:else}
 									{#each paymentMethods as method (method.id)}
-										<div class="rounded-xl border border-gray-200 p-3 dark:border-gray-800">
+										<Card radius="xl" padding="sm" shadow="none" class="dark:bg-transparent">
 											<div class="flex items-center justify-between gap-3">
 												<div>
 													<div class="flex items-center gap-2">
@@ -614,15 +609,13 @@
 													</IconButton>
 												</div>
 											</div>
-										</div>
+										</Card>
 									{/each}
 								{/if}
 							</div>
-						</div>
+						</Card>
 
-						<div
-							class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-						>
+						<Card padding="lg">
 							<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
 								Saved addresses
 							</h3>
@@ -671,7 +664,7 @@
 									<p class="text-sm text-gray-500 dark:text-gray-400">No saved addresses.</p>
 								{:else}
 									{#each addresses as address (address.id)}
-										<div class="rounded-xl border border-gray-200 p-3 dark:border-gray-800">
+										<Card radius="xl" padding="sm" shadow="none" class="dark:bg-transparent">
 											<div class="flex items-center justify-between gap-3">
 												<div>
 													<div class="flex items-center gap-2">
@@ -715,11 +708,11 @@
 													</IconButton>
 												</div>
 											</div>
-										</div>
+										</Card>
 									{/each}
 								{/if}
 							</div>
-						</div>
+						</Card>
 					</div>
 				</div>
 			</div>

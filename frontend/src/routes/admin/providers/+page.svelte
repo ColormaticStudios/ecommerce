@@ -8,7 +8,9 @@
 		providerRunbooks,
 		summarizeReconciliationMismatch,
 	} from "$lib/admin/providers";
+	import AdminEmptyState from "$lib/admin/AdminEmptyState.svelte";
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
+	import AdminListItem from "$lib/admin/AdminListItem.svelte";
 	import AdminMasterDetailLayout from "$lib/admin/AdminMasterDetailLayout.svelte";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
 	import AdminPaginationControls from "$lib/admin/AdminPaginationControls.svelte";
@@ -777,7 +779,7 @@
 
 						<div class="mt-4 space-y-3">
 							{#if section.plugins.length === 0}
-								<p class="admin-empty-state">No providers found.</p>
+								<AdminEmptyState>No providers found.</AdminEmptyState>
 							{:else}
 								<div class="border-y border-stone-200/90 dark:border-stone-800">
 									{#each section.plugins as provider, providerIndex (provider.id)}
@@ -1057,17 +1059,13 @@
 						</div>
 
 						{#if reconciliationRuns.data.length === 0}
-							<p class="admin-empty-state">No reconciliation runs found.</p>
+							<AdminEmptyState>No reconciliation runs found.</AdminEmptyState>
 						{:else}
 							<div class="space-y-3">
 								{#each reconciliationRuns.data as run (run.id)}
-									<button
-										type="button"
-										class={`admin-list-item w-full p-4 text-left ${
-											selectedRunId === run.id
-												? "ring-1 ring-stone-900/15 dark:ring-stone-100/15"
-												: ""
-										}`}
+									<AdminListItem
+										as="button"
+										class={`p-4 ${selectedRunId === run.id ? "ring-1 ring-stone-900/15 dark:ring-stone-100/15" : ""}`}
 										onclick={() => void selectRun(run.id)}
 									>
 										<div class="flex flex-wrap items-start justify-between gap-3">
@@ -1095,7 +1093,7 @@
 										<p class="mt-3 text-xs text-stone-500 dark:text-stone-400">
 											Started {formatDateTime(run.started_at)}
 										</p>
-									</button>
+									</AdminListItem>
 								{/each}
 							</div>
 						{/if}
@@ -1241,13 +1239,13 @@
 										{/if}
 									</div>
 									{#if !selectedRunHasLoadedDetail && runDetailLoading}
-										<p class="admin-empty-state">Loading drift details...</p>
+										<AdminEmptyState>Loading drift details...</AdminEmptyState>
 									{:else if (selectedRunDetail.drifts ?? []).length === 0}
-										<p class="admin-empty-state">No drifts recorded for this run.</p>
+										<AdminEmptyState>No drifts recorded for this run.</AdminEmptyState>
 									{:else}
 										<div class="space-y-3">
 											{#each selectedRunDetail.drifts ?? [] as drift (drift.id)}
-												<div class="admin-list-item p-4">
+												<AdminListItem class="p-4">
 													<div class="flex flex-wrap items-start justify-between gap-3">
 														<div>
 															<p class="text-sm font-medium text-stone-950 dark:text-stone-50">
@@ -1294,16 +1292,16 @@
 													<p class="mt-3 text-xs text-stone-500 dark:text-stone-400">
 														Provider reference: {drift.provider_reference}
 													</p>
-												</div>
+												</AdminListItem>
 											{/each}
 										</div>
 									{/if}
 								</div>
 							</div>
 						{:else}
-							<p class="admin-empty-state">
-								Select a reconciliation run to inspect its drift details.
-							</p>
+							<AdminEmptyState
+								>Select a reconciliation run to inspect its drift details.</AdminEmptyState
+							>
 						{/if}
 					</div>
 				</AdminPanel>
@@ -1466,15 +1464,11 @@
 						</div>
 
 						{#if visibleCredentials.length === 0}
-							<p class="admin-empty-state">No credentials stored for this view.</p>
+							<AdminEmptyState>No credentials stored for this view.</AdminEmptyState>
 						{:else}
 							{#each visibleCredentials as credential (credential.id)}
-								<div
-									class={`admin-list-item w-full p-4 text-left ${
-										matchingCredential?.id === credential.id
-											? "ring-1 ring-stone-900/15 dark:ring-stone-100/15"
-											: ""
-									}`}
+								<AdminListItem
+									class={`p-4 ${matchingCredential?.id === credential.id ? "ring-1 ring-stone-900/15 dark:ring-stone-100/15" : ""}`}
 								>
 									<div class="flex flex-wrap items-start justify-between gap-3">
 										<div>
@@ -1537,7 +1531,7 @@
 											</Button>
 										</div>
 									</div>
-								</div>
+								</AdminListItem>
 							{/each}
 						{/if}
 					</div>

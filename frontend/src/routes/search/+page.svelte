@@ -4,6 +4,7 @@
 	import { resolve } from "$app/paths";
 	import Badge from "$lib/components/Badge.svelte";
 	import Button from "$lib/components/Button.svelte";
+	import Card from "$lib/components/Card.svelte";
 	import Dropdown from "$lib/components/Dropdown.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
@@ -151,124 +152,124 @@
 				<h1 class="text-3xl font-semibold text-gray-900 dark:text-gray-100">Product Search</h1>
 			</div>
 
-			<form
-				class="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-gray-800 dark:bg-gray-900/70"
-				onsubmit={(event) => {
-					event.preventDefault();
-					updateUrl({
-						query: draftQuery.trim(),
-						brandSlug: selectedBrandSlug,
-						hasVariantStock,
-						attributeFilters,
-						page: 1,
-					});
-				}}
-			>
-				<div class="flex flex-row flex-wrap items-center gap-3">
-					<TextInput
-						type="search"
-						placeholder="Search products"
-						class="min-w-[16rem] flex-1"
-						bind:value={draftQuery}
-					/>
-					<Button type="submit" variant="primary" class="flex items-center gap-2">
-						<i class="bi bi-search mr-1"></i>
-						Search
-					</Button>
-				</div>
-				<div class="flex flex-wrap items-end gap-3">
-					<Dropdown
-						tone="surface"
-						full={false}
-						class="min-w-[12rem]"
-						bind:value={selectedBrandSlug}
-					>
-						<option value="">All brands</option>
-						{#each brands as brand (brand.id)}
-							<option value={brand.slug}>{brand.name}</option>
-						{/each}
-					</Dropdown>
-					<label
-						class="flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
-					>
-						<input type="checkbox" bind:checked={hasVariantStock} />
-						In stock only
-					</label>
-					<div class="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-						<span class="text-xs text-gray-600 dark:text-gray-400">Sort by</span>
-						<Dropdown
-							tone="surface"
-							full={false}
-							class="min-w-[10rem]"
-							bind:value={sortBy}
-							onchange={() => updateUrl({ page: 1 })}
-						>
-							{#each sortOptions as option, i (i)}
-								<option value={option.value}>{option.label}</option>
-							{/each}
-						</Dropdown>
-						<Button
-							type="button"
-							variant="regular"
-							class="flex items-center gap-2 whitespace-nowrap"
-							onclick={() => updateUrl({ order: sortOrder === "asc" ? "desc" : "asc", page: 1 })}
-						>
-							<i class={sortOrder === "asc" ? "bi bi-sort-up" : "bi bi-sort-down"}></i>
-							{sortOrder === "asc" ? "Ascending" : "Descending"}
+			<Card tone="soft" padding="sm">
+				<form
+					class="flex flex-col gap-3"
+					onsubmit={(event) => {
+						event.preventDefault();
+						updateUrl({
+							query: draftQuery.trim(),
+							brandSlug: selectedBrandSlug,
+							hasVariantStock,
+							attributeFilters,
+							page: 1,
+						});
+					}}
+				>
+					<div class="flex flex-row flex-wrap items-center gap-3">
+						<TextInput
+							type="search"
+							placeholder="Search products"
+							class="min-w-[16rem] flex-1"
+							bind:value={draftQuery}
+						/>
+						<Button type="submit" variant="primary" class="flex items-center gap-2">
+							<i class="bi bi-search mr-1"></i>
+							Search
 						</Button>
 					</div>
-					{#if hasActiveFilters}
-						<Button
-							type="button"
-							variant="regular"
-							class="whitespace-nowrap"
-							onclick={() =>
-								updateUrl({
-									query: "",
-									brandSlug: "",
-									hasVariantStock: false,
-									attributeFilters: {},
-									page: 1,
-								})}
+					<div class="flex flex-wrap items-end gap-3">
+						<Dropdown tone="surface" full={false} class="min-w-48" bind:value={selectedBrandSlug}>
+							<option value="">All brands</option>
+							{#each brands as brand (brand.id)}
+								<option value={brand.slug}>{brand.name}</option>
+							{/each}
+						</Dropdown>
+						<label
+							class="flex h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
 						>
-							<i class="bi bi-x-circle mr-1"></i>
-							Clear filters
-						</Button>
-					{/if}
-				</div>
-				<div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-					{#each attributes as attribute (attribute.id)}
-						{#if attribute.type === "number"}
-							<NumberInput
-								allowDecimal={true}
-								placeholder={attribute.key}
-								value={attributeFilters[attribute.slug] ?? ""}
-								oninput={(event) =>
-									updateAttributeFilter(attribute.slug, (event.target as HTMLInputElement).value)}
-							/>
-						{:else if attribute.type === "boolean"}
+							<input type="checkbox" bind:checked={hasVariantStock} />
+							In stock only
+						</label>
+						<div class="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+							<span class="text-xs text-gray-600 dark:text-gray-400">Sort by</span>
 							<Dropdown
 								tone="surface"
-								value={attributeFilters[attribute.slug] ?? ""}
-								onchange={(event) =>
-									updateAttributeFilter(attribute.slug, (event.target as HTMLSelectElement).value)}
+								full={false}
+								class="min-w-40"
+								bind:value={sortBy}
+								onchange={() => updateUrl({ page: 1 })}
 							>
-								<option value="">{attribute.key}</option>
-								<option value="true">{attribute.key}: true</option>
-								<option value="false">{attribute.key}: false</option>
+								{#each sortOptions as option, i (i)}
+									<option value={option.value}>{option.label}</option>
+								{/each}
 							</Dropdown>
-						{:else}
-							<TextInput
-								type="text"
-								placeholder={attribute.key}
-								value={attributeFilters[attribute.slug] ?? ""}
-								oninput={(event) =>
-									updateAttributeFilter(attribute.slug, (event.target as HTMLInputElement).value)}
-							/>
+							<Button
+								type="button"
+								variant="regular"
+								class="flex items-center gap-2 whitespace-nowrap"
+								onclick={() => updateUrl({ order: sortOrder === "asc" ? "desc" : "asc", page: 1 })}
+							>
+								<i class={sortOrder === "asc" ? "bi bi-sort-up" : "bi bi-sort-down"}></i>
+								{sortOrder === "asc" ? "Ascending" : "Descending"}
+							</Button>
+						</div>
+						{#if hasActiveFilters}
+							<Button
+								type="button"
+								variant="regular"
+								class="whitespace-nowrap"
+								onclick={() =>
+									updateUrl({
+										query: "",
+										brandSlug: "",
+										hasVariantStock: false,
+										attributeFilters: {},
+										page: 1,
+									})}
+							>
+								<i class="bi bi-x-circle mr-1"></i>
+								Clear filters
+							</Button>
 						{/if}
-					{/each}
-				</div>
-			</form>
+					</div>
+					<div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+						{#each attributes as attribute (attribute.id)}
+							{#if attribute.type === "number"}
+								<NumberInput
+									allowDecimal={true}
+									placeholder={attribute.key}
+									value={attributeFilters[attribute.slug] ?? ""}
+									oninput={(event) =>
+										updateAttributeFilter(attribute.slug, (event.target as HTMLInputElement).value)}
+								/>
+							{:else if attribute.type === "boolean"}
+								<Dropdown
+									tone="surface"
+									value={attributeFilters[attribute.slug] ?? ""}
+									onchange={(event) =>
+										updateAttributeFilter(
+											attribute.slug,
+											(event.target as HTMLSelectElement).value
+										)}
+								>
+									<option value="">{attribute.key}</option>
+									<option value="true">{attribute.key}: true</option>
+									<option value="false">{attribute.key}: false</option>
+								</Dropdown>
+							{:else}
+								<TextInput
+									type="text"
+									placeholder={attribute.key}
+									value={attributeFilters[attribute.slug] ?? ""}
+									oninput={(event) =>
+										updateAttributeFilter(attribute.slug, (event.target as HTMLInputElement).value)}
+								/>
+							{/if}
+						{/each}
+					</div>
+				</form>
+			</Card>
 		</div>
 	</div>
 </section>
@@ -297,9 +298,7 @@
 	</div>
 
 	{#if !errorMessage && results.length === 0}
-		<div
-			class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center sm:px-10 dark:border-gray-700 dark:bg-gray-900"
-		>
+		<Card tone="muted" border="dashed" padding="xl" class="text-center sm:px-10">
 			<h2 class="text-3xl font-semibold text-gray-900 dark:text-gray-100">No matches found.</h2>
 			<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 				Try a different keyword or clear filters.
@@ -309,7 +308,7 @@
 					Browse all products
 				</Button>
 			</div>
-		</div>
+		</Card>
 	{:else}
 		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 			{#each results as product (product.id)}

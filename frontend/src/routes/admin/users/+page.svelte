@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { getContext, untrack } from "svelte";
 	import { type API } from "$lib/api";
+	import AdminEmptyState from "$lib/admin/AdminEmptyState.svelte";
+	import AdminFieldLabel from "$lib/admin/AdminFieldLabel.svelte";
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
+	import AdminListItem from "$lib/admin/AdminListItem.svelte";
+	import AdminMetaText from "$lib/admin/AdminMetaText.svelte";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
 	import AdminPaginationControls from "$lib/admin/AdminPaginationControls.svelte";
 	import AdminPanel from "$lib/admin/AdminPanel.svelte";
@@ -105,17 +109,17 @@
 		headerActions={userActions}
 	>
 		{#if hasLoadError}
-			<p class="admin-empty-state admin-empty-state-error">Failed to load users.</p>
+			<AdminEmptyState tone="error">Failed to load users.</AdminEmptyState>
 		{:else if users.loading && users.items.length === 0}
-			<p class="admin-empty-state">Loading users...</p>
+			<AdminEmptyState>Loading users...</AdminEmptyState>
 		{:else if users.items.length === 0 && users.hasSearch}
-			<p class="admin-empty-state">No users match "{users.query}".</p>
+			<AdminEmptyState>No users match "{users.query}".</AdminEmptyState>
 		{:else if users.items.length === 0}
-			<p class="admin-empty-state">No users found.</p>
+			<AdminEmptyState>No users found.</AdminEmptyState>
 		{:else}
 			<div class="space-y-4">
 				{#each users.items as user (user.id)}
-					<div class="admin-list-item flex flex-wrap items-start justify-between gap-4 p-4 text-sm">
+					<AdminListItem class="flex flex-wrap items-start justify-between gap-4 p-4 text-sm">
 						<div class="space-y-1">
 							<p class="flex items-center gap-2 font-semibold text-stone-950 dark:text-stone-50">
 								<span>{user.name || user.username}</span>
@@ -126,14 +130,14 @@
 									</Badge>
 								{/if}
 							</p>
-							<p class="admin-detail">@{user.username} · {user.email}</p>
-							<p class="admin-detail">ID {user.id} · Currency {user.currency}</p>
-							<p class="admin-detail">
+							<AdminMetaText>@{user.username} · {user.email}</AdminMetaText>
+							<AdminMetaText>ID {user.id} · Currency {user.currency}</AdminMetaText>
+							<AdminMetaText>
 								Created {formatAdminDateTime(user.created_at)} · Updated {formatAdminDateTime(
 									user.updated_at
 								)}
-							</p>
-							<p class="admin-detail break-all">Subject {user.subject}</p>
+							</AdminMetaText>
+							<AdminMetaText class="break-all">Subject {user.subject}</AdminMetaText>
 							{#if user.deleted_at}
 								<p class="text-xs font-semibold text-rose-600 dark:text-rose-300">
 									Deleted {formatAdminDateTime(user.deleted_at)}
@@ -141,7 +145,7 @@
 							{/if}
 						</div>
 						<div class="flex items-center gap-3">
-							<span class="admin-label"> Role </span>
+							<AdminFieldLabel as="span">Role</AdminFieldLabel>
 							<Dropdown
 								tone="admin"
 								full={false}
@@ -153,7 +157,7 @@
 								<option value="admin">Admin</option>
 							</Dropdown>
 						</div>
-					</div>
+					</AdminListItem>
 				{/each}
 
 				<AdminPaginationControls

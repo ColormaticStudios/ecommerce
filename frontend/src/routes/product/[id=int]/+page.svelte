@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
+	import Card from "$lib/components/Card.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import QuantitySelector from "$lib/components/QuantitySelector.svelte";
 	import Toast from "$lib/components/Toast.svelte";
@@ -201,15 +202,19 @@
 				</div>
 
 				<!-- Metadata -->
-				<div
-					class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600 shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+				<Card
+					tone="muted"
+					radius="lg"
+					padding="sm"
+					shadow="md"
+					class="mt-6 text-sm text-gray-600 dark:text-gray-400"
 				>
 					<div><strong>SKU:</strong> {product.sku}</div>
 					<div>
 						<strong>Updated:</strong>
 						{product.updated_at.toLocaleDateString()}
 					</div>
-				</div>
+				</Card>
 			</div>
 		</div>
 

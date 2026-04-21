@@ -1,5 +1,5 @@
 <script lang="ts">
-	/* eslint-disable svelte/no-navigation-without-resolve */
+	import Card from "$lib/components/Card.svelte";
 	import { formatPrice } from "$lib/utils";
 
 	type ProductCardData = {
@@ -25,9 +25,12 @@
 	const imageClass = $derived(imageAspect === "wide" ? "aspect-[4/3]" : "aspect-square");
 </script>
 
-<a
+<Card
 	{href}
-	class="group flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-gray-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700"
+	padding="none"
+	overflowHidden={true}
+	interactive={true}
+	class="group flex h-full flex-col"
 >
 	<div class={`${imageClass} overflow-hidden bg-gray-200 dark:bg-gray-800`}>
 		{#if data.image}
@@ -75,4 +78,4 @@
 			{/if}
 		</div>
 	</div>
-</a>
+</Card>

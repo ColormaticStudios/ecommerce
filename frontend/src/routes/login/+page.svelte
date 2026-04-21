@@ -3,6 +3,7 @@
 	import { sanitizeAuthRedirectPath } from "$lib/auth";
 	import Alert from "$lib/components/Alert.svelte";
 	import Button from "$lib/components/Button.svelte";
+	import Card from "$lib/components/Card.svelte";
 	import { getProfile, userStore } from "$lib/user";
 	import Password from "$lib/components/Password.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
@@ -80,8 +81,10 @@
 			/>
 		</div>
 	{/if}
-	<div
-		class="m-4 flex w-sm flex-col items-center justify-center gap-2 rounded-lg border border-gray-300 bg-gray-100 p-4 dark:border-gray-800 dark:bg-gray-900"
+	<Card
+		radius="lg"
+		padding="sm"
+		class="m-4 flex w-sm flex-col items-center justify-center gap-2 bg-gray-100 dark:bg-gray-900"
 	>
 		{#if oidcEnabled}
 			<Button
@@ -131,5 +134,5 @@
 				/>
 			</div>
 		{/if}
-	</div>
+	</Card>
 </div>

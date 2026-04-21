@@ -5,6 +5,7 @@
 	import Alert from "$lib/components/Alert.svelte";
 	import Badge from "$lib/components/Badge.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
+	import Card from "$lib/components/Card.svelte";
 	import ProductCard from "$lib/components/ProductCard.svelte";
 
 	interface Props {
@@ -122,11 +123,14 @@
 				</div>
 
 				{#if section.products.length === 0}
-					<div
-						class="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400"
+					<Card
+						border="dashed"
+						radius="xl"
+						padding="sm"
+						class="text-sm text-gray-500 dark:text-gray-400"
 					>
 						No products found for this section.
-					</div>
+					</Card>
 				{:else}
 					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
 						{#each section.products as product (product.id)}
@@ -153,9 +157,7 @@
 		{:else if section.type === "promo_cards"}
 			<section class="mb-10 grid gap-4 md:grid-cols-3">
 				{#each (section.promo_cards ?? []).slice(0, section.promo_card_limit ?? 1) as card, index (index)}
-					<article
-						class="relative isolate min-h-[24rem] overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-					>
+					<Card as="article" padding="md" overflowHidden={true} class="relative isolate min-h-96">
 						{#if card.image_url}
 							<img
 								src={card.image_url}
@@ -201,7 +203,7 @@
 								</a>
 							{/if}
 						</div>
-					</article>
+					</Card>
 				{/each}
 			</section>
 		{:else if section.type === "badges"}

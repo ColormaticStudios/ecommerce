@@ -4,6 +4,7 @@
 	import Badge from "$lib/components/Badge.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
+	import Card from "$lib/components/Card.svelte";
 	import { formatOrderStatusLabel, getOrderStatusTone } from "$lib/components/order-status";
 	import Toast from "$lib/components/Toast.svelte";
 	import { type OrderModel, type ShipmentModel } from "$lib/models";
@@ -188,9 +189,7 @@
 	</a>
 
 	{#if isAuthenticated === false}
-		<div
-			class="mt-6 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-		>
+		<Card class="mt-6" padding="xl">
 			<h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">Order details</h1>
 			<p class="mt-3 text-gray-600 dark:text-gray-300">
 				Please
@@ -199,11 +198,9 @@
 				</a>
 				to view your order history and shipment updates.
 			</p>
-		</div>
+		</Card>
 	{:else if !order}
-		<div
-			class="mt-6 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-		>
+		<Card class="mt-6" padding="xl">
 			<h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">Order details</h1>
 			<div class="mt-4">
 				<Alert
@@ -213,7 +210,7 @@
 					onClose={() => (errorMessage = "")}
 				/>
 			</div>
-		</div>
+		</Card>
 	{:else}
 		<div class="mt-6 space-y-6">
 			{#if errorMessage}
@@ -225,9 +222,7 @@
 				/>
 			{/if}
 
-			<div
-				class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900"
-			>
+			<Card padding="none" overflowHidden={true}>
 				<div class="p-6">
 					<h1 class="mb-4 text-3xl font-semibold text-gray-900 dark:text-gray-100">
 						Order details
@@ -245,8 +240,13 @@
 						class="mt-6 grid grid-cols-[minmax(0,1fr)_11rem] items-start gap-4 sm:grid-cols-[minmax(0,1fr)_13rem]"
 					>
 						<div>
-							<dl
-								class="grid overflow-hidden rounded-xl border border-gray-200 bg-gray-100 sm:grid-cols-3 dark:border-gray-800 dark:bg-gray-800"
+							<Card
+								as="dl"
+								tone="muted"
+								radius="xl"
+								padding="none"
+								overflowHidden={true}
+								class="grid sm:grid-cols-3"
 							>
 								<div class="bg-white p-4 dark:bg-gray-900">
 									<dt class="text-sm text-gray-500 dark:text-gray-400">Items</dt>
@@ -270,10 +270,15 @@
 										{formatDate(order.created_at, false)}
 									</dd>
 								</div>
-							</dl>
+							</Card>
 
-							<div
-								class="mt-4 grid overflow-hidden rounded-xl border border-gray-200 bg-gray-100 sm:grid-cols-3 dark:border-gray-800 dark:bg-gray-800"
+							<Card
+								as="div"
+								tone="muted"
+								radius="xl"
+								padding="none"
+								overflowHidden={true}
+								class="mt-4 grid sm:grid-cols-3"
 							>
 								<div class="bg-white p-4 dark:bg-gray-900">
 									<p class="text-sm text-gray-500 dark:text-gray-400">Payment method</p>
@@ -297,13 +302,11 @@
 										{formatDate(order.updated_at)}
 									</p>
 								</div>
-							</div>
+							</Card>
 						</div>
 
 						<div class="flex flex-col gap-4">
-							<div
-								class="overflow-hidden rounded-xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-gray-800"
-							>
+							<Card tone="muted" radius="xl" padding="none" overflowHidden={true}>
 								<div class="bg-white p-5 dark:bg-gray-900">
 									<p class="text-sm text-gray-500 dark:text-gray-400">Order total</p>
 									<p class="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-100">
@@ -340,17 +343,15 @@
 										{/if}
 									</div>
 								{/if}
-							</div>
+							</Card>
 						</div>
 					</div>
 				</div>
-			</div>
+			</Card>
 
 			<div class="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
 				<div class="space-y-6">
-					<div
-						class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-					>
+					<Card padding="lg">
 						<div class="flex flex-wrap items-center justify-between gap-3">
 							<div>
 								<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -371,21 +372,23 @@
 						{/if}
 
 						{#if shouldShowShipmentEmptyState(shipments, trackingErrorMessage)}
-							<div
-								class="mt-5 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-5 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-950/50 dark:text-gray-300"
+							<Card
+								tone="muted"
+								border="dashed"
+								radius="xl"
+								padding="md"
+								class="mt-5 text-sm text-gray-600 dark:text-gray-300"
 							>
 								<p class="font-medium text-gray-900 dark:text-gray-100">
 									No shipment activity yet.
 								</p>
 								<p class="mt-2">{getShipmentEmptyMessage(order)}</p>
-							</div>
+							</Card>
 						{:else}
 							<div class="mt-5 space-y-4">
 								{#each shipments as shipment, index (shipment.id)}
 									{@const latestEvent = getLatestEvent(shipment)}
-									<article
-										class="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50/70 dark:border-gray-800 dark:bg-gray-950/50"
-									>
+									<Card as="article" tone="muted" padding="none" overflowHidden={true}>
 										<div class="flex flex-wrap items-start justify-between gap-3 p-5">
 											<div>
 												<p class="text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -521,17 +524,15 @@
 												</dl>
 											</div>
 										</div>
-									</article>
+									</Card>
 								{/each}
 							</div>
 						{/if}
-					</div>
+					</Card>
 				</div>
 
 				<aside class="space-y-6">
-					<div
-						class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-					>
+					<Card padding="lg">
 						<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Order contents</h2>
 						{#if order.items.length === 0}
 							<p class="mt-4 text-sm text-gray-600 dark:text-gray-300">
@@ -540,9 +541,7 @@
 						{:else}
 							<ul class="mt-5 space-y-3">
 								{#each order.items as item (item.id)}
-									<li
-										class="rounded-xl border border-gray-200 bg-gray-50/70 p-4 dark:border-gray-800 dark:bg-gray-950/50"
-									>
+									<Card as="li" tone="muted" radius="xl" padding="sm">
 										<div class="flex items-start gap-3">
 											<a
 												href={resolve(`/product/${item.product.id}`)}
@@ -579,11 +578,11 @@
 												</div>
 											</div>
 										</div>
-									</li>
+									</Card>
 								{/each}
 							</ul>
 						{/if}
-					</div>
+					</Card>
 				</aside>
 			</div>
 		</div>

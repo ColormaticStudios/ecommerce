@@ -9,6 +9,7 @@
 	import Alert from "$lib/components/Alert.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
+	import Card from "$lib/components/Card.svelte";
 	import CheckoutSignInRequiredBanner from "$lib/components/CheckoutSignInRequiredBanner.svelte";
 	import Dropdown from "$lib/components/Dropdown.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
@@ -439,9 +440,13 @@
 </script>
 
 {#snippet providerChoiceButton(provider: CheckoutProvider, onSelect: () => void)}
-	<button
+	<Card
+		as="button"
 		type="button"
-		class="cursor-pointer rounded-xl border border-gray-300 bg-white p-3 text-left transition hover:border-gray-400 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-gray-500"
+		radius="xl"
+		padding="sm"
+		interactive={true}
+		class="cursor-pointer text-left dark:hover:border-gray-500"
 		onclick={onSelect}
 	>
 		<div class="flex items-start gap-3">
@@ -457,7 +462,7 @@
 				</p>
 			</div>
 		</div>
-	</button>
+	</Card>
 {/snippet}
 
 <section class="mx-auto max-w-6xl px-4 py-10">
@@ -483,9 +488,7 @@
 	{:else}
 		<div class="mt-6 space-y-6">
 			{#if !isAuthenticated}
-				<div
-					class="rounded-3xl border border-sky-200 bg-sky-50 p-6 shadow-sm dark:border-sky-900/60 dark:bg-sky-950/40"
-				>
+				<Card tone="sky" radius="3xl" padding="lg">
 					<div class="grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
 						<div>
 							<h2 class="text-xl font-semibold text-sky-950 dark:text-sky-50">Guest contact</h2>
@@ -507,8 +510,10 @@
 								class="mt-2 bg-white text-gray-900 dark:bg-sky-950/20 dark:text-sky-50"
 							/>
 						</div>
-						<div
-							class="rounded-2xl border border-white/70 bg-white/80 p-4 text-sm text-sky-950 shadow-sm dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-50"
+						<Card
+							tone="soft"
+							padding="sm"
+							class="text-sm text-sky-950 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-50"
 						>
 							<p class="font-medium">Already have an account?</p>
 							<p class="mt-2 text-sky-900/80 dark:text-sky-100/80">
@@ -534,13 +539,11 @@
 									>
 								</div>
 							</div>
-						</div>
+						</Card>
 					</div>
-				</div>
+				</Card>
 			{/if}
-			<div
-				class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-			>
+			<Card padding="lg">
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<div>
 						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Checkout options</h3>
@@ -796,7 +799,7 @@
 						{/if}
 					</div>
 				</div>
-			</div>
+			</Card>
 
 			<div class="grid items-start gap-6 lg:grid-cols-[1.6fr_0.8fr]">
 				<div
@@ -821,9 +824,7 @@
 					{/each}
 				</div>
 
-				<div
-					class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-				>
+				<Card padding="lg">
 					<div class="flex items-center justify-between gap-3">
 						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Order summary</h3>
 						<Button
@@ -942,7 +943,7 @@
 							</div>
 						{/if}
 					{/if}
-				</div>
+				</Card>
 			</div>
 		</div>
 	{/if}

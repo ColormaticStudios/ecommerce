@@ -1,6 +1,16 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
 	import { DRAFT_PREVIEW_SYNC_EVENT, DRAFT_PREVIEW_SYNC_STORAGE_KEY, type API } from "$lib/api";
+	import AdminEmptyState from "$lib/admin/AdminEmptyState.svelte";
+	import AdminFieldLabel from "$lib/admin/AdminFieldLabel.svelte";
+	import AdminMetaText from "$lib/admin/AdminMetaText.svelte";
+	import AdminSurface from "$lib/admin/AdminSurface.svelte";
+	import {
+		adminDividerBottomClass,
+		adminDividerTopClass,
+		adminListItemBaseClass,
+		adminSurfaceVariantClasses,
+	} from "$lib/admin/tokens";
 	import AdminSearchForm from "$lib/admin/AdminSearchForm.svelte";
 	import Alert from "$lib/components/Alert.svelte";
 	import Badge from "$lib/components/Badge.svelte";
@@ -180,9 +190,19 @@
 	let lastSaveHandler: Props["onSaveRequestChange"] = undefined;
 	let editorKeySeed = 0;
 
-	const splitEditorSectionClass = "admin-surface-tight";
-	const nestedEditorSectionClass = "admin-subsurface";
-	const overlayIconButtonClass = "admin-icon-button-surface";
+	const splitEditorSectionClass = adminSurfaceVariantClasses["panel-tight"];
+	const nestedEditorSectionClass = adminSurfaceVariantClasses.subsurface;
+	const mediaCardClass = adminSurfaceVariantClasses.media;
+	const mutedPanelClass = adminSurfaceVariantClasses.muted;
+	const overlayIconButtonClusterClass =
+		"flex items-center gap-0 rounded-full border border-white/12 bg-stone-950/90 p-0 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.95)] ring-1 ring-black/35 backdrop-blur-md dark:border-white/12 dark:bg-stone-950/94 dark:ring-black/45";
+	const overlayIconButtonClusterItemClass =
+		"border-transparent bg-transparent shadow-none hover:bg-white/10 disabled:text-stone-500 disabled:opacity-100 disabled:hover:bg-transparent dark:hover:bg-white/10 dark:disabled:text-stone-600";
+	const overlayIconButtonMiniClass = "h-5 w-5 text-[10px]";
+	const overlayDeleteButtonClass =
+		"bg-white/94 text-rose-700 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.9)] backdrop-blur-sm hover:bg-white hover:text-rose-800 disabled:opacity-100 dark:bg-stone-100/92 dark:text-rose-500 dark:hover:bg-stone-50 dark:hover:text-rose-400";
+	const sectionDividerTopClass = adminDividerTopClass;
+	const sectionDividerBottomClass = adminDividerBottomClass;
 
 	function editorSectionClass(layoutMode: "split" | "stacked"): string {
 		return layoutMode === "split" ? splitEditorSectionClass : "";
@@ -199,7 +219,7 @@
 	}
 
 	function mutedEditorPanelClass(layoutMode: "split" | "stacked"): string {
-		return layoutMode === "split" ? "admin-muted-surface" : "";
+		return layoutMode === "split" ? mutedPanelClass : "";
 	}
 
 	function relatedResultsClass(layoutMode: "split" | "stacked"): string {
@@ -210,7 +230,7 @@
 
 	function relatedResultItemClass(layoutMode: "split" | "stacked"): string {
 		return layoutMode === "split"
-			? "admin-list-item flex items-center justify-between gap-3 p-4 text-sm"
+			? `${adminListItemBaseClass} p-4 text-sm`
 			: "flex items-center justify-between gap-3 py-3 text-sm";
 	}
 
@@ -222,13 +242,13 @@
 
 	function relatedSelectedItemClass(layoutMode: "split" | "stacked"): string {
 		return layoutMode === "split"
-			? "admin-muted-surface flex items-center justify-between px-3 py-2 text-sm"
+			? `${mutedPanelClass} flex items-center justify-between px-3 py-2 text-sm`
 			: "flex items-center justify-between gap-3 py-3 text-sm";
 	}
 
 	function mediaItemClass(layoutMode: "split" | "stacked"): string {
 		return layoutMode === "split"
-			? `${nestedEditorSectionClass} relative overflow-hidden`
+			? `${mediaCardClass} relative overflow-hidden`
 			: "relative overflow-hidden rounded-[1rem]";
 	}
 
@@ -1448,7 +1468,7 @@
 
 {#snippet BasicInfoSection()}
 	<div>
-		<label for="admin-product-name" class="admin-label">Name</label>
+		<AdminFieldLabel as="label" for="admin-product-name">Name</AdminFieldLabel>
 		<TextInput
 			tone="admin"
 			id="admin-product-name"
@@ -1459,7 +1479,7 @@
 		/>
 	</div>
 	<div>
-		<label for="admin-product-subtitle" class="admin-label">Subtitle</label>
+		<AdminFieldLabel as="label" for="admin-product-subtitle">Subtitle</AdminFieldLabel>
 		<TextInput
 			tone="admin"
 			id="admin-product-subtitle"
@@ -1470,7 +1490,7 @@
 		/>
 	</div>
 	<div>
-		<label for="admin-product-sku" class="admin-label">SKU</label>
+		<AdminFieldLabel as="label" for="admin-product-sku">SKU</AdminFieldLabel>
 		<TextInput
 			tone="admin"
 			id="admin-product-sku"
@@ -1481,7 +1501,7 @@
 		/>
 	</div>
 	<div>
-		<label for="admin-product-brand" class="admin-label">Brand</label>
+		<AdminFieldLabel as="label" for="admin-product-brand">Brand</AdminFieldLabel>
 		<Dropdown tone="admin" id="admin-product-brand" class="mt-1" bind:value={selectedBrandId}>
 			<option value="">No brand</option>
 			{#each brands as brand (brand.id)}
@@ -1490,7 +1510,7 @@
 		</Dropdown>
 	</div>
 	<div class="sm:col-span-2">
-		<label for="admin-product-description" class="admin-label">Description</label>
+		<AdminFieldLabel as="label" for="admin-product-description">Description</AdminFieldLabel>
 		<TextArea
 			tone="admin"
 			id="admin-product-description"
@@ -1506,7 +1526,7 @@
 	<div class={editorSectionClass(layoutMode)}>
 		<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 			<div>
-				<p class="admin-label">Options</p>
+				<AdminFieldLabel>Options</AdminFieldLabel>
 				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
 					Define the choice sets that can be combined into sellable variants.
 				</p>
@@ -1548,7 +1568,7 @@
 						<div class="flex items-start justify-between gap-3">
 							<div class="grid flex-1 gap-4 sm:grid-cols-2">
 								<div>
-									<p class="admin-label">Option name</p>
+									<AdminFieldLabel>Option name</AdminFieldLabel>
 									<TextInput
 										tone="admin"
 										class="mt-1"
@@ -1558,7 +1578,7 @@
 									/>
 								</div>
 								<div>
-									<p class="admin-label">Display type</p>
+									<AdminFieldLabel>Display type</AdminFieldLabel>
 									<Dropdown
 										tone="admin"
 										class="mt-1"
@@ -1623,7 +1643,7 @@
 	<div class={editorSectionClass(layoutMode)}>
 		<div class="flex items-center justify-between gap-3">
 			<div>
-				<p class="admin-label">Variants</p>
+				<AdminFieldLabel>Variants</AdminFieldLabel>
 				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
 					Product price and stock are derived from the default variant.
 				</p>
@@ -1669,7 +1689,7 @@
 
 					<div class="mt-4 grid gap-4 sm:grid-cols-2">
 						<div>
-							<p class="admin-label">Variant SKU</p>
+							<AdminFieldLabel>Variant SKU</AdminFieldLabel>
 							<TextInput
 								tone="admin"
 								class="mt-1"
@@ -1679,7 +1699,7 @@
 							/>
 						</div>
 						<div>
-							<p class="admin-label">Title</p>
+							<AdminFieldLabel>Title</AdminFieldLabel>
 							<TextInput
 								tone="admin"
 								class="mt-1"
@@ -1689,7 +1709,7 @@
 							/>
 						</div>
 						<div>
-							<p class="admin-label">Price</p>
+							<AdminFieldLabel>Price</AdminFieldLabel>
 							<NumberInput
 								tone="admin"
 								class="mt-1"
@@ -1700,7 +1720,7 @@
 							/>
 						</div>
 						<div>
-							<p class="admin-label">Stock</p>
+							<AdminFieldLabel>Stock</AdminFieldLabel>
 							<NumberInput
 								tone="admin"
 								class="mt-1"
@@ -1710,7 +1730,7 @@
 							/>
 						</div>
 						<div>
-							<p class="admin-label">Compare-at price</p>
+							<AdminFieldLabel>Compare-at price</AdminFieldLabel>
 							<NumberInput
 								tone="admin"
 								class="mt-1"
@@ -1729,9 +1749,9 @@
 					{#if variant.selections.length}
 						<div class="mt-4 flex flex-wrap gap-2">
 							{#each variant.selections as selection (selection.key)}
-								<span class="admin-chip">
+								<Badge tone="neutral" size="sm">
 									{selection.option_name}: {selection.option_value}
-								</span>
+								</Badge>
 							{/each}
 						</div>
 					{/if}
@@ -1745,7 +1765,7 @@
 	<div class={editorSectionClass(layoutMode)}>
 		<div class="flex items-center justify-between gap-3">
 			<div>
-				<p class="admin-label">Attributes</p>
+				<AdminFieldLabel>Attributes</AdminFieldLabel>
 				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
 					Assign typed merchandising attributes for filtering and discovery.
 				</p>
@@ -1771,7 +1791,7 @@
 						<div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
 							<div class="grid gap-4 sm:grid-cols-2">
 								<div>
-									<p class="admin-label">Attribute</p>
+									<AdminFieldLabel>Attribute</AdminFieldLabel>
 									<Dropdown
 										tone="admin"
 										class="mt-1"
@@ -1790,7 +1810,7 @@
 									</Dropdown>
 								</div>
 								<div>
-									<p class="admin-label">Value</p>
+									<AdminFieldLabel>Value</AdminFieldLabel>
 									{#if attribute.type === "number"}
 										<NumberInput
 											tone="admin"
@@ -1852,10 +1872,10 @@
 
 {#snippet SEOSection(layoutMode: "split" | "stacked")}
 	<div class={editorSectionClass(layoutMode)}>
-		<p class="admin-label">SEO</p>
+		<AdminFieldLabel>SEO</AdminFieldLabel>
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
 			<div>
-				<p class="admin-label">SEO title</p>
+				<AdminFieldLabel>SEO title</AdminFieldLabel>
 				<TextInput
 					tone="admin"
 					class="mt-1"
@@ -1865,7 +1885,7 @@
 				/>
 			</div>
 			<div>
-				<p class="admin-label">Canonical path</p>
+				<AdminFieldLabel>Canonical path</AdminFieldLabel>
 				<TextInput
 					tone="admin"
 					class="mt-1"
@@ -1875,7 +1895,7 @@
 				/>
 			</div>
 			<div class="sm:col-span-2">
-				<p class="admin-label">SEO description</p>
+				<AdminFieldLabel>SEO description</AdminFieldLabel>
 				<TextArea
 					tone="admin"
 					class="mt-1"
@@ -1885,7 +1905,7 @@
 				/>
 			</div>
 			<div>
-				<p class="admin-label">OG image media ID</p>
+				<AdminFieldLabel>OG image media ID</AdminFieldLabel>
 				<TextInput
 					tone="admin"
 					class="mt-1"
@@ -1905,14 +1925,14 @@
 {#snippet VariantSummarySection()}
 	<div class="grid gap-4 sm:grid-cols-2">
 		<div>
-			<p class="admin-label">Default variant</p>
-			<p class="admin-detail-strong mt-1">
+			<AdminFieldLabel>Default variant</AdminFieldLabel>
+			<AdminMetaText tone="strong" class="mt-1">
 				{defaultVariantSku || variants[0]?.sku || "No default variant selected"}
-			</p>
+			</AdminMetaText>
 		</div>
 		<div>
-			<p class="admin-label">Price range preview</p>
-			<p class="admin-detail-strong mt-1">{editorPriceRangePreview}</p>
+			<AdminFieldLabel>Price range preview</AdminFieldLabel>
+			<AdminMetaText tone="strong" class="mt-1">{editorPriceRangePreview}</AdminMetaText>
 		</div>
 	</div>
 {/snippet}
@@ -2040,7 +2060,7 @@
 
 {#snippet MediaUpload(showHint: boolean, layoutMode: "split" | "stacked")}
 	<div class={mutedEditorPanelClass(layoutMode)}>
-		<p class="admin-label">Upload media</p>
+		<AdminFieldLabel>Upload media</AdminFieldLabel>
 		<input
 			class="hidden"
 			type="file"
@@ -2092,43 +2112,42 @@
 					<img
 						src={image}
 						alt={product ? `${product.name} ${index + 1}` : `Product image ${index + 1}`}
-						class="h-28 w-full object-cover"
+						class="h-[7.7rem] w-full object-cover"
 					/>
 					<IconButton
 						tone="admin"
-						class={`absolute top-2 right-2 ${overlayIconButtonClass}`}
+						class={`absolute top-2 right-2 ${overlayDeleteButtonClass}`}
 						size="sm"
 						disabled={mediaDeleting !== null || mediaReordering}
 						onclick={() => detachMedia(image)}
 						aria-label="Remove image"
 						title="Remove image"
-						variant="danger"
 					>
 						{#if mediaDeleting && extractMediaId(image) === mediaDeleting}
 							<i class="bi bi-arrow-repeat inline-block animate-spin"></i>
 						{:else}
-							<i class="bi bi-trash"></i>
+							<i class="bi bi-trash-fill"></i>
 						{/if}
 					</IconButton>
-					<div class="absolute right-2 bottom-2 flex gap-1">
+					<div class={`absolute right-2 bottom-2 ${overlayIconButtonClusterClass}`}>
 						<IconButton
 							tone="admin"
-							class={overlayIconButtonClass}
+							class={`${overlayIconButtonClusterItemClass} ${overlayIconButtonMiniClass}`}
 							size="sm"
 							disabled={mediaReordering || index === 0}
 							onclick={() => moveMedia(index, -1)}
-							aria-label="Move image up"
+							aria-label="Move image left"
 							title="Move image left"
 						>
 							<i class="bi bi-chevron-left"></i>
 						</IconButton>
 						<IconButton
 							tone="admin"
-							class={overlayIconButtonClass}
+							class={`${overlayIconButtonClusterItemClass} ${overlayIconButtonMiniClass}`}
 							size="sm"
 							disabled={mediaReordering || index === mediaOrderView.length - 1}
 							onclick={() => moveMedia(index, 1)}
-							aria-label="Move image down"
+							aria-label="Move image right"
 							title="Move image right"
 						>
 							<i class="bi bi-chevron-right"></i>
@@ -2166,7 +2185,7 @@
 
 {#snippet RelatedProducts(layoutMode: "split" | "stacked")}
 	<div class="flex items-center justify-between">
-		<p class="admin-label">Related products</p>
+		<AdminFieldLabel>Related products</AdminFieldLabel>
 		{#if hasPendingRelatedChanges}
 			<div class="flex items-center gap-2">
 				<Button
@@ -2204,7 +2223,7 @@
 	/>
 
 	{#if relatedLoading && relatedOptions.length === 0 && relatedLastSearchedQuery !== ""}
-		<p class="admin-empty-state">Searching products...</p>
+		<AdminEmptyState>Searching products...</AdminEmptyState>
 	{:else if relatedOptions.length}
 		<div class={relatedResultsClass(layoutMode)}>
 			{#each relatedOptions as option (option.id)}
@@ -2227,7 +2246,7 @@
 			{/each}
 		</div>
 	{:else if !relatedLoading && relatedLastSearchedQuery !== "" && relatedLastSearchedQuery === relatedQuery.trim()}
-		<p class="admin-empty-state">Your search didn&apos;t match any products.</p>
+		<AdminEmptyState>Your search didn&apos;t match any products.</AdminEmptyState>
 	{/if}
 
 	{#if relatedSelected.length}
@@ -2266,19 +2285,19 @@
 {/snippet}
 
 {#if loading && !hasProduct}
-	<div class="admin-surface mt-6">
+	<AdminSurface as="div" class="mt-6">
 		<p class="text-sm text-gray-500 dark:text-gray-400">Loading product details...</p>
-	</div>
+	</AdminSurface>
 {:else if !allowCreate && !hasProduct}
 	<p class="mt-6 text-sm text-gray-500 dark:text-gray-400">Product not found.</p>
 {:else if layout === "split"}
 	<div class="mt-6 space-y-6">
-		<div class="admin-surface">
+		<AdminSurface as="div">
 			<div class="grid gap-4 text-sm sm:grid-cols-2">
 				{@render BasicInfoSection()}
 			</div>
 
-			<div class="admin-divider-top mt-6 pt-6">
+			<div class={`${sectionDividerTopClass} mt-6`}>
 				{@render VariantSummarySection()}
 			</div>
 
@@ -2295,7 +2314,7 @@
 					{@render DismissibleAlert("product", "success", productStatusMessage)}
 				{/if}
 			{/if}
-		</div>
+		</AdminSurface>
 
 		<div class="columns-1 gap-6 md:columns-2 2xl:columns-3">
 			<div class="mb-6 break-inside-avoid">
@@ -2311,8 +2330,8 @@
 				{@render SEOSection("split")}
 			</div>
 			<div class="mb-6 break-inside-avoid">
-				<div class="admin-surface">
-					<p class="admin-label">Images</p>
+				<AdminSurface as="div">
+					<AdminFieldLabel>Images</AdminFieldLabel>
 					{#if mediaOrderView.length}
 						<div class="mt-4">
 							{@render MediaGrid("split")}
@@ -2332,12 +2351,12 @@
 							{@render DismissibleAlert("media", "success", mediaStatusMessage)}
 						{/if}
 					{/if}
-				</div>
+				</AdminSurface>
 			</div>
 			<div class="mb-6 break-inside-avoid">
-				<div class="admin-surface">
+				<AdminSurface as="div">
 					{@render RelatedProducts("split")}
-				</div>
+				</AdminSurface>
 			</div>
 		</div>
 	</div>
@@ -2364,12 +2383,12 @@
 			<div class="grid gap-4 sm:grid-cols-2">
 				{@render BasicInfoSection()}
 			</div>
-			<div class="admin-divider-top pt-6">
+			<div class={sectionDividerTopClass}>
 				{@render VariantSummarySection()}
 			</div>
 			{@render ProductStateChips()}
 			<div
-				class="admin-divider-bottom mt-2 mb-6 grid grid-cols-1 gap-2 pb-6 text-base sm:grid-cols-2"
+				class={`${sectionDividerBottomClass} mt-2 mb-6 grid grid-cols-1 gap-2 text-base sm:grid-cols-2`}
 			>
 				{@render ProductActionButtons("stacked")}
 			</div>
@@ -2392,30 +2411,30 @@
 			{/if}
 		</div>
 
-		<div class="admin-divider-top mt-6 pt-6">
+		<div class={`${sectionDividerTopClass} mt-6`}>
 			{@render OptionsSection("stacked")}
 		</div>
 
-		<div class="admin-divider-top mt-6 pt-6">
+		<div class={`${sectionDividerTopClass} mt-6`}>
 			{@render VariantsSection("stacked")}
 		</div>
 
-		<div class="admin-divider-top mt-6 pt-6">
+		<div class={`${sectionDividerTopClass} mt-6`}>
 			{@render AttributesSection("stacked")}
 		</div>
 
-		<div class="admin-divider-top mt-6 pt-6">
+		<div class={`${sectionDividerTopClass} mt-6`}>
 			{@render SEOSection("stacked")}
 		</div>
 
 		{#if mediaOrderView.length}
-			<div class="admin-divider-top mt-6 pt-6">
-				<p class="admin-label">Images</p>
+			<div class={`${sectionDividerTopClass} mt-6`}>
+				<AdminFieldLabel>Images</AdminFieldLabel>
 				{@render MediaGrid("stacked")}
 			</div>
 		{/if}
 
-		<div class="admin-divider-top mt-6 pt-6">
+		<div class={`${sectionDividerTopClass} mt-6`}>
 			{@render RelatedProducts("stacked")}
 		</div>
 	</div>

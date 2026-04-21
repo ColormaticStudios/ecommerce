@@ -4,6 +4,8 @@
 	import { getContext, untrack } from "svelte";
 	import { type API } from "$lib/api";
 	import AdminFloatingNotices from "$lib/admin/AdminFloatingNotices.svelte";
+	import AdminEmptyState from "$lib/admin/AdminEmptyState.svelte";
+	import AdminListItem from "$lib/admin/AdminListItem.svelte";
 	import AdminMasterDetailLayout from "$lib/admin/AdminMasterDetailLayout.svelte";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
 	import AdminPaginationControls from "$lib/admin/AdminPaginationControls.svelte";
@@ -175,22 +177,20 @@
 				class={`${mobilePanel === "catalog" ? "block" : "hidden"} lg:block`}
 			>
 				{#if hasLoadError}
-					<p class="admin-empty-state admin-empty-state-error">Failed to load products.</p>
+					<AdminEmptyState tone="error">Failed to load products.</AdminEmptyState>
 				{:else if catalog.loading && catalog.items.length === 0}
-					<p class="admin-empty-state">Loading products...</p>
+					<AdminEmptyState>Loading products...</AdminEmptyState>
 				{:else if catalog.items.length === 0 && catalog.hasSearch}
-					<p class="admin-empty-state">Your search didn't match any products.</p>
+					<AdminEmptyState>Your search didn't match any products.</AdminEmptyState>
 				{:else if catalog.items.length === 0}
-					<p class="admin-empty-state">No products yet. Start a new record in the editor.</p>
+					<AdminEmptyState>No products yet. Start a new record in the editor.</AdminEmptyState>
 				{:else}
 					<div class="space-y-3">
 						{#each catalog.items as product (product.id)}
-							<div
-								class={`admin-list-item flex w-full items-center justify-between gap-3 ${
-									selectedProductId === product.id
-										? "admin-list-item-active"
-										: "admin-list-item-interactive"
-								}`}
+							<AdminListItem
+								active={selectedProductId === product.id}
+								interactive={selectedProductId !== product.id}
+								class="flex items-center justify-between gap-3"
 							>
 								<button
 									type="button"
@@ -236,7 +236,7 @@
 										<i class="bi bi-pencil-square"></i>
 									</IconButton>
 								</div>
-							</div>
+							</AdminListItem>
 						{/each}
 
 						<AdminPaginationControls

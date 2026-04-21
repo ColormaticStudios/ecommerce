@@ -3,6 +3,7 @@
 	import { type CartModel } from "$lib/models";
 	import Alert from "$lib/components/Alert.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
+	import Card from "$lib/components/Card.svelte";
 	import CheckoutSignInRequiredBanner from "$lib/components/CheckoutSignInRequiredBanner.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import QuantitySelector from "$lib/components/QuantitySelector.svelte";
@@ -103,9 +104,7 @@
 			/>
 		</div>
 	{:else if !cart || cart.items.length === 0}
-		<div
-			class="mt-6 rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-		>
+		<Card border="dashed" padding="xl" class="mt-6 text-center text-gray-600 dark:text-gray-300">
 			<p class="text-2xl font-medium">Your cart is empty.</p>
 			{#if !isAuthenticated}
 				<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -116,16 +115,14 @@
 				<ButtonLink href={resolve("/")} variant="primary" size="large">Continue shopping</ButtonLink
 				>
 			</div>
-		</div>
+		</Card>
 	{:else}
 		<div class="mt-6 grid items-start gap-6 lg:grid-cols-[1.6fr_0.8fr]">
 			<div class="space-y-4">
 				{#if !isAuthenticated}
-					<div
-						class="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-100"
-					>
+					<Card tone="sky" padding="sm" class="text-sm text-sky-900 dark:text-sky-100">
 						Your cart is attached to this browser session. You can still check out as a guest.
-					</div>
+					</Card>
 				{/if}
 				<div
 					class="divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800"
@@ -182,9 +179,7 @@
 				</div>
 			</div>
 
-			<div
-				class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-			>
+			<Card padding="lg">
 				<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Order summary</h3>
 				<div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-1">
 					<div class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
@@ -217,7 +212,7 @@
 						</a>
 					</div>
 				</div>
-			</div>
+			</Card>
 		</div>
 	{/if}
 </section>

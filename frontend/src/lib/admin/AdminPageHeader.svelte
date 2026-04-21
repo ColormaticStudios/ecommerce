@@ -7,9 +7,13 @@
 	let { title, actions }: Props = $props();
 </script>
 
-<div class="admin-page-header items-center">
+<div class="flex flex-wrap items-center justify-between gap-4">
 	<div class="min-w-0">
-		<h1 class="admin-page-title">{title}</h1>
+		<h1
+			class="text-[clamp(2rem,2.4vw,2.65rem)] font-semibold tracking-[-0.03em] text-stone-950 dark:text-stone-50"
+		>
+			{title}
+		</h1>
 	</div>
 
 	{#if actions}
