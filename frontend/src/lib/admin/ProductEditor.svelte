@@ -2112,7 +2112,7 @@
 					<img
 						src={image}
 						alt={product ? `${product.name} ${index + 1}` : `Product image ${index + 1}`}
-						class="h-[7.7rem] w-full object-cover"
+						class="h-42 w-full object-cover"
 					/>
 					<IconButton
 						tone="admin"
