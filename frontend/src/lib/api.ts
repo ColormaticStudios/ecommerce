@@ -305,6 +305,27 @@ export class API {
 		return ordersDomain.quoteCheckout(this.request.bind(this), data);
 	}
 
+	public async quoteOrderShippingRates(
+		orderId: number,
+		data: components["schemas"]["CheckoutOrderShippingRatesRequest"],
+		idempotencyKey?: string
+	): Promise<components["schemas"]["CheckoutOrderShippingRatesResponse"]> {
+		return ordersDomain.quoteOrderShippingRates(
+			this.request.bind(this),
+			orderId,
+			data,
+			idempotencyKey
+		);
+	}
+
+	public async finalizeOrderTax(
+		orderId: number,
+		data: components["schemas"]["CheckoutOrderTaxFinalizeRequest"],
+		idempotencyKey?: string
+	): Promise<components["schemas"]["CheckoutOrderTaxFinalizeResponse"]> {
+		return ordersDomain.finalizeOrderTax(this.request.bind(this), orderId, data, idempotencyKey);
+	}
+
 	// Product Management
 	public async listProducts(params?: ListProductsQuery): Promise<PageModel> {
 		const {

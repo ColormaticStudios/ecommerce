@@ -7,6 +7,7 @@
 		type SavedPaymentMethodModel,
 	} from "$lib/models";
 	import Alert from "$lib/components/Alert.svelte";
+	import Badge from "$lib/components/Badge.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import Card from "$lib/components/Card.svelte";
@@ -35,6 +36,8 @@
 
 	type CheckoutProvider = components["schemas"]["CheckoutPlugin"];
 	type CheckoutQuoteResponse = components["schemas"]["CheckoutQuoteResponse"];
+	type CheckoutShipmentRate = components["schemas"]["ShipmentRate"];
+	type CheckoutOrderTaxFinalizeResponse = components["schemas"]["CheckoutOrderTaxFinalizeResponse"];
 
 	interface Props {
 		data: PageData;
@@ -51,9 +54,10 @@
 	let orderPlaced = $state(false);
 	let guestCheckoutDisabled = $state(false);
 	let guestEmail = $state("");
-	let pendingOrderId = $state<number | null>(null);
-	let createOrderIdempotencyKey = $state("");
 	let paymentIdempotencyKey = $state("");
+	let loadingShippingRates = $state(false);
+	let shippingRateSelectionPendingId = $state<number | null>(null);
+	let finalizingTax = $state(false);
 
 	let paymentProviders = $state<CheckoutProvider[]>([]);
 	let shippingProviders = $state<CheckoutProvider[]>([]);
@@ -77,16 +81,28 @@
 	let shippingData = $state<Record<string, string>>({});
 	let taxData = $state<Record<string, string>>({});
 	let quote = $state<CheckoutQuoteResponse | null>(null);
+	let shippingRates = $state<CheckoutShipmentRate[]>([]);
+	let shippingRatesSnapshotId = $state<number | null>(null);
+	let taxFinalization = $state<CheckoutOrderTaxFinalizeResponse | null>(null);
 
 	const activePaymentProvider = $derived(findProvider("payment", selectedPaymentProviderId));
 	const activeShippingProvider = $derived(findProvider("shipping", selectedShippingProviderId));
 	const activeTaxProvider = $derived(findProvider("tax", autoTaxProviderId));
 	const claimGuestOrderHref = `${resolve("/login")}?redirect=${encodeURIComponent("/orders")}`;
+	const currentSnapshotId = $derived(quote?.snapshot_id ?? null);
 	const subtotal = $derived(
 		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.product_variant.price, 0) : 0
 	);
 	const paymentUsesCard = $derived(providerUsesCardFields(activePaymentProvider));
 	const shippingUsesAddress = $derived(providerUsesAddressFields(activeShippingProvider));
+	const shippingSelectionFieldKey = $derived(getShippingSelectionFieldKey(activeShippingProvider));
+	const shippingRatesLoadedForCurrentQuote = $derived(
+		currentSnapshotId !== null &&
+			shippingRatesSnapshotId === currentSnapshotId &&
+			shippingRates.length > 0
+	);
+	const shippingSelectionSupported = $derived(Boolean(shippingSelectionFieldKey));
+	const displayCurrency = $derived(quote?.currency ?? $userStore?.currency ?? "USD");
 	const selectedSavedPaymentMethod = $derived(
 		savedPaymentMethods.find(
 			(candidate) => String(candidate.id) === selectedSavedPaymentMethodId
@@ -113,7 +129,7 @@
 		const provider = findProvider("payment", providerID);
 		initDataForProvider(provider?.fields, paymentData);
 		paymentMode = "details";
-		quote = null;
+		resetQuoteState();
 	}
 
 	function selectShippingProvider(providerID: string) {
@@ -123,7 +139,7 @@
 		const provider = findProvider("shipping", providerID);
 		initDataForProvider(provider?.fields, shippingData);
 		shippingMode = "details";
-		quote = null;
+		resetQuoteState();
 	}
 
 	function applySavedPaymentMethod(paymentMethodID: string) {
@@ -170,6 +186,17 @@
 		initDataForProvider(findProvider("tax", autoTaxProviderId)?.fields, taxData);
 	}
 
+	function getShippingSelectionFieldKey(provider: CheckoutProvider | null): string | null {
+		const keys = new Set((provider?.fields ?? []).map((field) => field.key));
+		if (keys.has("service_level")) {
+			return "service_level";
+		}
+		if (keys.has("service_code")) {
+			return "service_code";
+		}
+		return null;
+	}
+
 	function toStringMap(input: Record<string, string>): Record<string, string> {
 		const output: Record<string, string> = {};
 		for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
@@ -188,6 +215,44 @@
 		return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 	}
 
+	function getQuoteSetupMessage(action: "estimate" | "shipping"): string | null {
+		if (!selectedPaymentProviderId && !selectedShippingProviderId) {
+			return action === "shipping"
+				? "Choose a payment method and a shipping method to see delivery options."
+				: "Choose a payment method and a shipping method to update your total.";
+		}
+		if (!selectedPaymentProviderId) {
+			return action === "shipping"
+				? "Choose a payment method before loading delivery options."
+				: "Choose a payment method to update your total.";
+		}
+		if (!selectedShippingProviderId) {
+			return action === "shipping"
+				? "Choose a shipping method to see delivery options."
+				: "Choose a shipping method to update your total.";
+		}
+		if (!autoTaxProviderId) {
+			return "Checkout is still getting ready. Try again in a moment.";
+		}
+		return null;
+	}
+
+	function syncSnapshotBoundState(snapshotId: number | null) {
+		if (shippingRatesSnapshotId !== snapshotId) {
+			shippingRates = [];
+			shippingRatesSnapshotId = null;
+			shippingRateSelectionPendingId = null;
+		}
+		if (taxFinalization?.snapshot_id !== snapshotId) {
+			taxFinalization = null;
+		}
+	}
+
+	function resetQuoteState() {
+		quote = null;
+		syncSnapshotBoundState(null);
+	}
+
 	function syncPaymentProviderState() {
 		const selectedExists = paymentProviders.some(
 			(provider) => provider.id === selectedPaymentProviderId
@@ -204,7 +269,7 @@
 				selectedPaymentProviderId = onlyProvider.id;
 				selectedSavedPaymentMethodId = "";
 				savePaymentMethodToProfile = false;
-				quote = null;
+				resetQuoteState();
 			}
 			initDataForProvider(onlyProvider.fields, paymentData);
 			paymentMode = "details";
@@ -235,7 +300,7 @@
 				selectedShippingProviderId = onlyProvider.id;
 				selectedSavedAddressId = "";
 				saveAddressToProfile = false;
-				quote = null;
+				resetQuoteState();
 			}
 			initDataForProvider(onlyProvider.fields, shippingData);
 			shippingMode = "details";
@@ -299,13 +364,14 @@
 		}
 	}
 
-	async function refreshQuote() {
+	async function refreshQuote(): Promise<CheckoutQuoteResponse | null> {
 		if (!cart || cart.items.length === 0) {
-			return false;
+			return null;
 		}
-		if (!selectedPaymentProviderId || !selectedShippingProviderId) {
-			errorMessage = "Select a payment and shipping option before requesting an estimate.";
-			return false;
+		const setupMessage = getQuoteSetupMessage("estimate");
+		if (setupMessage) {
+			errorMessage = setupMessage;
+			return null;
 		}
 
 		quoting = true;
@@ -314,7 +380,7 @@
 			const paymentPayload = toStringMap(paymentData);
 			const shippingPayload = toStringMap(shippingData);
 			const taxPayload = toStringMap(taxData);
-			quote = await api.quoteCheckout({
+			const nextQuote = await api.quoteCheckout({
 				payment_provider_id: selectedPaymentProviderId,
 				shipping_provider_id: selectedShippingProviderId,
 				tax_provider_id: autoTaxProviderId,
@@ -322,17 +388,105 @@
 				shipping_data: shippingPayload,
 				tax_data: taxPayload,
 			});
-			if (!quote.valid) {
+			quote = nextQuote;
+			syncSnapshotBoundState(nextQuote.snapshot_id ?? null);
+			if (!nextQuote.valid) {
 				errorMessage = "Some checkout details are invalid. Review the messages below.";
-				return false;
+				return null;
 			}
-			return true;
+			return nextQuote;
 		} catch (err) {
 			const error = err as { body?: { error?: string } };
 			errorMessage = error.body?.error ?? "Unable to calculate quote.";
-			return false;
+			return null;
 		} finally {
 			quoting = false;
+		}
+	}
+
+	async function createOrUpdatePendingOrder(): Promise<number> {
+		const created = await api.createOrder(
+			isAuthenticated ? {} : guestEmail.trim().length > 0 ? { guest_email: guestEmail.trim() } : {},
+			nextIdempotencyKey()
+		);
+		return created.id;
+	}
+
+	async function requestShippingRatesForSnapshot(
+		orderID: number,
+		snapshotID: number
+	): Promise<CheckoutShipmentRate[] | null> {
+		loadingShippingRates = true;
+		errorMessage = "";
+		try {
+			const response = await api.quoteOrderShippingRates(orderID, { snapshot_id: snapshotID });
+			shippingRates = response.rates;
+			shippingRatesSnapshotId = response.snapshot_id;
+			shippingRateSelectionPendingId = null;
+			return response.rates;
+		} catch (err) {
+			const error = err as { body?: { error?: string } };
+			errorMessage = error.body?.error ?? "Unable to load shipping options.";
+			return null;
+		} finally {
+			loadingShippingRates = false;
+			shippingRateSelectionPendingId = null;
+		}
+	}
+
+	async function loadShippingOptions(): Promise<boolean> {
+		const setupMessage = getQuoteSetupMessage("shipping");
+		if (setupMessage) {
+			errorMessage = setupMessage;
+			return false;
+		}
+
+		const currentQuote = await refreshQuote();
+		if (!currentQuote?.snapshot_id) {
+			errorMessage = "We couldn't load delivery options right now. Please try again.";
+			return false;
+		}
+
+		const orderID = await createOrUpdatePendingOrder();
+		const rates = await requestShippingRatesForSnapshot(orderID, currentQuote.snapshot_id);
+		return rates !== null;
+	}
+
+	async function chooseShippingRate(rate: CheckoutShipmentRate) {
+		if (!shippingSelectionFieldKey || shippingRateSelectionPendingId !== null) {
+			return;
+		}
+		if (shippingData[shippingSelectionFieldKey] === rate.service_code && rate.selected) {
+			return;
+		}
+
+		shippingRateSelectionPendingId = rate.id;
+		shippingData[shippingSelectionFieldKey] = rate.service_code;
+		const loaded = await loadShippingOptions();
+		if (loaded) {
+			statusMessage = `${rate.service_name} selected for shipping.`;
+		}
+	}
+
+	async function finalizeTaxForSnapshot(orderID: number, snapshotID: number): Promise<boolean> {
+		if (!activeTaxProvider) {
+			return true;
+		}
+		if (taxFinalization?.snapshot_id === snapshotID) {
+			return true;
+		}
+
+		finalizingTax = true;
+		errorMessage = "";
+		try {
+			taxFinalization = await api.finalizeOrderTax(orderID, { snapshot_id: snapshotID });
+			return true;
+		} catch (err) {
+			const error = err as { body?: { error?: string } };
+			errorMessage = error.body?.error ?? "Unable to finalize taxes.";
+			return false;
+		} finally {
+			finalizingTax = false;
 		}
 	}
 
@@ -351,29 +505,25 @@
 		orderPlaced = false;
 
 		try {
-			const isQuoteValid = await refreshQuote();
-			if (!isQuoteValid) {
+			const currentQuote = await refreshQuote();
+			if (!currentQuote) {
 				return;
 			}
-			if (!quote?.snapshot_id) {
-				errorMessage = "Checkout quote is missing a payment snapshot. Refresh and try again.";
+			if (!currentQuote.snapshot_id) {
+				errorMessage = "We couldn't prepare your checkout right now. Please try again.";
 				return;
 			}
 
 			await maybeSaveProfileData();
 
-			let orderID = pendingOrderId;
-			if (orderID === null) {
-				if (!createOrderIdempotencyKey) {
-					createOrderIdempotencyKey = nextIdempotencyKey();
-				}
-				const created = await api.createOrder(
-					isAuthenticated ? {} : { guest_email: guestEmail.trim() },
-					createOrderIdempotencyKey
-				);
-				orderID = created.id;
-				pendingOrderId = created.id;
-				order = created;
+			const orderID = await createOrUpdatePendingOrder();
+			const rates = await requestShippingRatesForSnapshot(orderID, currentQuote.snapshot_id);
+			if (!rates) {
+				return;
+			}
+			const taxReady = await finalizeTaxForSnapshot(orderID, currentQuote.snapshot_id);
+			if (!taxReady) {
+				return;
 			}
 
 			if (!paymentIdempotencyKey) {
@@ -381,7 +531,7 @@
 			}
 			order = await api.processPayment(
 				orderID,
-				{ snapshot_id: quote.snapshot_id },
+				{ snapshot_id: currentQuote.snapshot_id },
 				paymentIdempotencyKey
 			);
 
@@ -391,8 +541,6 @@
 					: "Payment processed."
 				: "Order submitted. Keep your confirmation details for reference.";
 			orderPlaced = true;
-			pendingOrderId = null;
-			createOrderIdempotencyKey = "";
 			paymentIdempotencyKey = "";
 			window.dispatchEvent(new CustomEvent("cart:updated"));
 			if (isAuthenticated && typeof window !== "undefined") {
@@ -403,9 +551,6 @@
 			}
 		} catch (err) {
 			const error = err as { status?: number; body?: { error?: string; code?: string } };
-			if (pendingOrderId === null && error.status !== undefined && error.status < 500) {
-				createOrderIdempotencyKey = "";
-			}
 			if (error.status !== undefined && error.status < 500) {
 				paymentIdempotencyKey = "";
 			}
@@ -825,35 +970,50 @@
 				</div>
 
 				<Card padding="lg">
-					<div class="flex items-center justify-between gap-3">
+					<div class="flex flex-col gap-3 sm:flex-row sm:items-center">
 						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Order summary</h3>
-						<Button
-							variant="regular"
-							size="small"
-							type="button"
-							disabled={quoting}
-							onclick={refreshQuote}
-						>
-							{quoting ? "Updating quote..." : "Refresh"}
-						</Button>
+						<div class="flex flex-wrap gap-2 sm:ml-auto sm:justify-end">
+							<Button
+								variant="regular"
+								size="small"
+								type="button"
+								disabled={quoting || loadingShippingRates || processing}
+								onclick={refreshQuote}
+							>
+								{quoting ? "Updating quote..." : "Refresh"}
+							</Button>
+							<Button
+								variant="regular"
+								size="small"
+								type="button"
+								disabled={quoting || loadingShippingRates || processing}
+								onclick={loadShippingOptions}
+							>
+								{loadingShippingRates
+									? "Loading options..."
+									: shippingRatesLoadedForCurrentQuote
+										? "Refresh shipping"
+										: "Load shipping"}
+							</Button>
+						</div>
 					</div>
 					<div class="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-300">
 						<div class="flex items-center justify-between">
 							<span>Subtotal</span>
 							<span class="font-medium text-gray-900 dark:text-gray-100">
-								{formatPrice(quote?.subtotal ?? subtotal, $userStore?.currency ?? "USD")}
+								{formatPrice(quote?.subtotal ?? subtotal, displayCurrency)}
 							</span>
 						</div>
 						<div class="flex items-center justify-between">
 							<span>Shipping</span>
 							<span class="font-medium text-gray-900 dark:text-gray-100">
-								{formatPrice(quote?.shipping ?? 0, $userStore?.currency ?? "USD")}
+								{formatPrice(quote?.shipping ?? 0, displayCurrency)}
 							</span>
 						</div>
 						<div class="flex items-center justify-between">
 							<span>Tax</span>
 							<span class="font-medium text-gray-900 dark:text-gray-100">
-								{formatPrice(quote?.tax ?? 0, $userStore?.currency ?? "USD")}
+								{formatPrice(quote?.tax ?? 0, displayCurrency)}
 							</span>
 						</div>
 						<div
@@ -861,10 +1021,84 @@
 						>
 							<span class="font-semibold text-gray-900 dark:text-gray-100">Estimated total</span>
 							<span class="font-semibold text-gray-900 dark:text-gray-100">
-								{formatPrice(quote?.total ?? subtotal, $userStore?.currency ?? "USD")}
+								{formatPrice(quote?.total ?? subtotal, displayCurrency)}
 							</span>
 						</div>
 					</div>
+
+					<Card tone="muted" padding="sm" class="mt-5">
+						<div class="flex items-start justify-between gap-3">
+							<div>
+								<h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+									Shipping options
+								</h4>
+								<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+									See available delivery methods and pick the one that works best for you.
+								</p>
+							</div>
+							{#if shippingRatesLoadedForCurrentQuote}
+								<Badge>{shippingRates.length} option{shippingRates.length === 1 ? "" : "s"}</Badge>
+							{/if}
+						</div>
+
+						{#if shippingRatesLoadedForCurrentQuote}
+							<div class="mt-3 space-y-2">
+								{#each shippingRates as rate (rate.id)}
+									<Card
+										as="button"
+										type="button"
+										tone={rate.selected ? "sky" : "soft"}
+										padding="sm"
+										radius="xl"
+										interactive={!rate.selected}
+										class={`w-full text-left ${shippingRateSelectionPendingId === rate.id ? "opacity-70" : ""}`}
+										disabled={processing ||
+											loadingShippingRates ||
+											shippingRateSelectionPendingId !== null ||
+											(!shippingSelectionSupported && !rate.selected)}
+										onclick={() => chooseShippingRate(rate)}
+									>
+										<div class="flex items-start justify-between gap-3">
+											<div>
+												<p class="font-medium text-gray-900 dark:text-gray-100">
+													{rate.service_name}
+												</p>
+												{#if rate.expires_at}
+													<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+														Price available until {new Date(rate.expires_at).toLocaleString()}
+													</p>
+												{/if}
+											</div>
+											<div class="text-right">
+												<p class="font-semibold text-gray-900 dark:text-gray-100">
+													{formatPrice(rate.amount, rate.currency || displayCurrency)}
+												</p>
+												<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+													{shippingRateSelectionPendingId === rate.id
+														? "Updating..."
+														: rate.selected
+															? "Selected"
+															: shippingSelectionSupported
+																? "Select"
+																: "Available"}
+												</p>
+											</div>
+										</div>
+									</Card>
+								{/each}
+							</div>
+							{#if !shippingSelectionSupported && shippingRates.length > 1}
+								<p class="mt-3 text-xs text-amber-700 dark:text-amber-300">
+									The shipping method will be chosen for you automatically after the rates load.
+								</p>
+							{/if}
+						{:else}
+							<p class="mt-3 text-sm text-gray-600 dark:text-gray-300">
+								Choose your shipping method and enter your delivery details to compare available
+								options.
+							</p>
+						{/if}
+					</Card>
 
 					<div class="mt-4 space-y-2">
 						{#each quote?.payment_states ?? [] as state (state.code + state.message)}
@@ -885,9 +1119,37 @@
 					</div>
 
 					{#if activeTaxProvider}
-						<p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-							Taxes are automatically calculated with {activeTaxProvider.name}.
-						</p>
+						<Card tone="muted" padding="sm" class="mt-4">
+							<div class="flex items-start justify-between gap-3">
+								<div>
+									<h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Tax status</h4>
+									<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+										{#if taxFinalization}
+											Your tax total has been confirmed and is ready for checkout.
+										{:else}
+											The tax shown above is estimated. We'll confirm the final amount before your
+											payment is processed.
+										{/if}
+									</p>
+								</div>
+								{#if taxFinalization}
+									<Badge tone="success">Ready</Badge>
+								{:else if finalizingTax}
+									<Badge tone="info">Updating...</Badge>
+								{/if}
+							</div>
+
+							{#if taxFinalization}
+								<div
+									class="mt-3 flex items-center justify-between text-sm text-gray-600 dark:text-gray-300"
+								>
+									<span>Sales tax</span>
+									<span class="font-semibold text-gray-900 dark:text-gray-100">
+										{formatPrice(taxFinalization.total_tax, taxFinalization.currency)}
+									</span>
+								</div>
+							{/if}
+						</Card>
 					{/if}
 
 					<div class="mt-4">
@@ -896,7 +1158,11 @@
 							size="large"
 							class="w-full"
 							type="button"
-							disabled={processing || quoting || orderPlaced}
+							disabled={processing ||
+								quoting ||
+								loadingShippingRates ||
+								finalizingTax ||
+								orderPlaced}
 							onclick={placeOrder}
 						>
 							{processing ? "Processing..." : orderPlaced ? "Order placed" : "Place order"}

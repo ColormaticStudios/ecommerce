@@ -17,6 +17,11 @@ type ProcessPaymentResponse = components["schemas"]["ProcessPaymentResponse"];
 type CheckoutPluginCatalog = components["schemas"]["CheckoutPluginCatalog"];
 type CheckoutQuoteRequest = components["schemas"]["CheckoutQuoteRequest"];
 type CheckoutQuoteResponse = components["schemas"]["CheckoutQuoteResponse"];
+type CheckoutOrderShippingRatesRequest = components["schemas"]["CheckoutOrderShippingRatesRequest"];
+type CheckoutOrderShippingRatesResponse =
+	components["schemas"]["CheckoutOrderShippingRatesResponse"];
+type CheckoutOrderTaxFinalizeRequest = components["schemas"]["CheckoutOrderTaxFinalizeRequest"];
+type CheckoutOrderTaxFinalizeResponse = components["schemas"]["CheckoutOrderTaxFinalizeResponse"];
 type OrderPayload = components["schemas"]["Order"];
 type OrderPagePayload = components["schemas"]["OrderPage"];
 type ListUserOrdersQuery = paths["/api/v1/me/orders"]["get"]["parameters"]["query"];
@@ -63,6 +68,40 @@ export async function quoteCheckout(
 	data: CheckoutQuoteRequest
 ): Promise<CheckoutQuoteResponse> {
 	return request<CheckoutQuoteResponse>("POST", "/checkout/quote", data);
+}
+
+export async function quoteOrderShippingRates(
+	request: RequestFn,
+	orderId: number,
+	data: CheckoutOrderShippingRatesRequest,
+	idempotencyKey?: string
+): Promise<CheckoutOrderShippingRatesResponse> {
+	return request<CheckoutOrderShippingRatesResponse>(
+		"POST",
+		`/checkout/orders/${orderId}/shipping/rates`,
+		data,
+		undefined,
+		{
+			headers: idempotencyKey ? { "Idempotency-Key": idempotencyKey } : undefined,
+		}
+	);
+}
+
+export async function finalizeOrderTax(
+	request: RequestFn,
+	orderId: number,
+	data: CheckoutOrderTaxFinalizeRequest,
+	idempotencyKey?: string
+): Promise<CheckoutOrderTaxFinalizeResponse> {
+	return request<CheckoutOrderTaxFinalizeResponse>(
+		"POST",
+		`/checkout/orders/${orderId}/tax/finalize`,
+		data,
+		undefined,
+		{
+			headers: idempotencyKey ? { "Idempotency-Key": idempotencyKey } : undefined,
+		}
+	);
 }
 
 export async function listOrders(
