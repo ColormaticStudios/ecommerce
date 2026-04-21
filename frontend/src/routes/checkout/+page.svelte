@@ -971,8 +971,10 @@
 
 				<Card padding="lg">
 					<div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Order summary</h3>
-						<div class="flex flex-wrap gap-2 sm:ml-auto sm:justify-end">
+						<h3 class="flex-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
+							Order summary
+						</h3>
+						<div class="flex flex-2 flex-wrap gap-2 sm:ml-auto sm:justify-end">
 							<Button
 								variant="regular"
 								size="small"
