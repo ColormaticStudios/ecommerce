@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	paymentservice "ecommerce/internal/services/payments"
-	providerops "ecommerce/internal/services/providerops"
 	shippingservice "ecommerce/internal/services/shipping"
 	taxservice "ecommerce/internal/services/tax"
 	"ecommerce/models"
@@ -194,11 +192,9 @@ func QuoteCheckoutOrderShippingRates(
 			return
 		}
 
-		responseWritten := false
-		respond := func(status int, payload any) {
-			responseWritten = true
+		respond := newHandlerResponseWriter(func(status int, payload any) {
 			writeCheckoutJSON(db, c, idempotencyRecord, status, payload)
-		}
+		})
 
 		var (
 			order    models.Order
@@ -210,34 +206,26 @@ func QuoteCheckoutOrderShippingRates(
 				Preload("Items.ProductVariant").
 				First(&order).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					respond(http.StatusNotFound, gin.H{"error": "Order not found"})
+					respond.Respond(http.StatusNotFound, gin.H{"error": "Order not found"})
 					return nil
 				}
 				return err
 			}
 
-			snapshot, err = paymentservice.GetCheckoutSnapshotForSession(tx, requestCtx.Session.ID, req.SnapshotID)
-			if err != nil {
-				if errors.Is(err, paymentservice.ErrSnapshotNotFound) {
-					respond(http.StatusBadRequest, gin.H{"error": "Checkout snapshot not found"})
-					return nil
-				}
-				return err
+			var handled bool
+			snapshot, handled, err = loadCheckoutSnapshotForOrder(
+				tx,
+				requestCtx.Session.ID,
+				req.SnapshotID,
+				&order,
+				time.Now().UTC(),
+				respond.Respond,
+			)
+			if handled {
+				return nil
 			}
-			if err := paymentservice.ValidateSnapshotForOrder(&snapshot, &order, time.Now().UTC()); err != nil {
-				switch {
-				case errors.Is(err, paymentservice.ErrSnapshotExpired):
-					respond(http.StatusBadRequest, gin.H{"error": "Checkout snapshot has expired"})
-					return nil
-				case errors.Is(err, paymentservice.ErrSnapshotOrderMismatch):
-					respond(http.StatusConflict, gin.H{"error": "Checkout snapshot no longer matches the order"})
-					return nil
-				case errors.Is(err, paymentservice.ErrSnapshotAlreadyBound):
-					respond(http.StatusConflict, gin.H{"error": "Checkout snapshot is already bound to another order"})
-					return nil
-				default:
-					return err
-				}
+			if err != nil {
+				return err
 			}
 
 			rates, err = shippingservice.QuoteAndPersistRates(
@@ -248,27 +236,20 @@ func QuoteCheckoutOrderShippingRates(
 				snapshot,
 				time.Now().UTC(),
 			)
-			if err != nil {
-				switch {
-				case errors.Is(err, providerops.ErrProviderCredentialWrongEnvironment):
-					respond(http.StatusConflict, gin.H{"error": "Provider credential is not configured for this environment"})
-					return nil
-				case errors.Is(err, providerops.ErrUnsupportedProviderCurrency):
-					respond(http.StatusBadRequest, gin.H{"error": "Provider does not support the requested currency"})
-					return nil
-				}
+			if err != nil && mapProviderConfigurationError(err, respond.Respond) {
+				return nil
 			}
 			return err
 		})
 		if err != nil {
-			respond(http.StatusInternalServerError, gin.H{"error": "Failed to quote shipping rates"})
+			respond.Respond(http.StatusInternalServerError, gin.H{"error": "Failed to quote shipping rates"})
 			return
 		}
-		if responseWritten {
+		if respond.Written() {
 			return
 		}
 
-		respond(http.StatusOK, checkoutOrderShippingRatesResponse{
+		respond.Respond(http.StatusOK, checkoutOrderShippingRatesResponse{
 			OrderID:    order.ID,
 			SnapshotID: snapshot.ID,
 			Provider:   snapshot.ShippingProviderID,
@@ -309,19 +290,17 @@ func CreateAdminOrderShippingLabel(db *gorm.DB, providerRegistry shippingservice
 			return
 		}
 
-		responseWritten := false
-		respond := func(status int, payload any) {
-			responseWritten = true
+		respond := newHandlerResponseWriter(func(status int, payload any) {
 			writeCheckoutJSON(db, c, idempotencyRecord, status, payload)
-		}
+		})
 
 		var order models.Order
 		if err := db.Select("id").First(&order, orderID).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				respond(http.StatusNotFound, gin.H{"error": "Order not found"})
+				respond.Respond(http.StatusNotFound, gin.H{"error": "Order not found"})
 				return
 			}
-			respond(http.StatusInternalServerError, gin.H{"error": "Failed to create shipping label"})
+			respond.Respond(http.StatusInternalServerError, gin.H{"error": "Failed to create shipping label"})
 			return
 		}
 
@@ -350,23 +329,20 @@ func CreateAdminOrderShippingLabel(db *gorm.DB, providerRegistry shippingservice
 		if err != nil {
 			switch {
 			case errors.Is(err, shippingservice.ErrShipmentRateNotFound):
-				respond(http.StatusNotFound, gin.H{"error": "Shipment rate not found"})
+				respond.Respond(http.StatusNotFound, gin.H{"error": "Shipment rate not found"})
 			case errors.Is(err, shippingservice.ErrShipmentServiceImmutable):
-				respond(http.StatusConflict, gin.H{"error": "Chosen shipping service is immutable for this finalized shipment"})
-			case errors.Is(err, providerops.ErrProviderCredentialWrongEnvironment):
-				respond(http.StatusConflict, gin.H{"error": "Provider credential is not configured for this environment"})
-			case errors.Is(err, providerops.ErrUnsupportedProviderCurrency):
-				respond(http.StatusBadRequest, gin.H{"error": "Provider does not support the requested currency"})
+				respond.Respond(http.StatusConflict, gin.H{"error": "Chosen shipping service is immutable for this finalized shipment"})
+			case mapProviderConfigurationError(err, respond.Respond):
 			default:
-				respond(http.StatusInternalServerError, gin.H{"error": "Failed to create shipping label"})
+				respond.Respond(http.StatusInternalServerError, gin.H{"error": "Failed to create shipping label"})
 			}
 			return
 		}
-		if responseWritten {
+		if respond.Written() {
 			return
 		}
 
-		respond(http.StatusOK, adminOrderShippingLabelResponse{
+		respond.Respond(http.StatusOK, adminOrderShippingLabelResponse{
 			Message:  "Shipping label purchased",
 			Shipment: serializeShipment(shipment),
 		})
@@ -478,11 +454,9 @@ func FinalizeCheckoutOrderTax(
 			return
 		}
 
-		responseWritten := false
-		respond := func(status int, payload any) {
-			responseWritten = true
+		respond := newHandlerResponseWriter(func(status int, payload any) {
 			writeCheckoutJSON(db, c, idempotencyRecord, status, payload)
-		}
+		})
 
 		var (
 			order    models.Order
@@ -494,34 +468,26 @@ func FinalizeCheckoutOrderTax(
 				Preload("Items.ProductVariant").
 				First(&order).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					respond(http.StatusNotFound, gin.H{"error": "Order not found"})
+					respond.Respond(http.StatusNotFound, gin.H{"error": "Order not found"})
 					return nil
 				}
 				return err
 			}
 
-			snapshot, err = paymentservice.GetCheckoutSnapshotForSession(tx, requestCtx.Session.ID, req.SnapshotID)
-			if err != nil {
-				if errors.Is(err, paymentservice.ErrSnapshotNotFound) {
-					respond(http.StatusBadRequest, gin.H{"error": "Checkout snapshot not found"})
-					return nil
-				}
-				return err
+			var handled bool
+			snapshot, handled, err = loadCheckoutSnapshotForOrder(
+				tx,
+				requestCtx.Session.ID,
+				req.SnapshotID,
+				&order,
+				time.Now().UTC(),
+				respond.Respond,
+			)
+			if handled {
+				return nil
 			}
-			if err := paymentservice.ValidateSnapshotForOrder(&snapshot, &order, time.Now().UTC()); err != nil {
-				switch {
-				case errors.Is(err, paymentservice.ErrSnapshotExpired):
-					respond(http.StatusBadRequest, gin.H{"error": "Checkout snapshot has expired"})
-					return nil
-				case errors.Is(err, paymentservice.ErrSnapshotOrderMismatch):
-					respond(http.StatusConflict, gin.H{"error": "Checkout snapshot no longer matches the order"})
-					return nil
-				case errors.Is(err, paymentservice.ErrSnapshotAlreadyBound):
-					respond(http.StatusConflict, gin.H{"error": "Checkout snapshot is already bound to another order"})
-					return nil
-				default:
-					return err
-				}
+			if err != nil {
+				return err
 			}
 
 			result, err = taxservice.FinalizeOrderTax(
@@ -534,27 +500,20 @@ func FinalizeCheckoutOrderTax(
 					InclusivePricing: req.InclusivePricing,
 				},
 			)
-			if err != nil {
-				switch {
-				case errors.Is(err, providerops.ErrProviderCredentialWrongEnvironment):
-					respond(http.StatusConflict, gin.H{"error": "Provider credential is not configured for this environment"})
-					return nil
-				case errors.Is(err, providerops.ErrUnsupportedProviderCurrency):
-					respond(http.StatusBadRequest, gin.H{"error": "Provider does not support the requested currency"})
-					return nil
-				}
+			if err != nil && mapProviderConfigurationError(err, respond.Respond) {
+				return nil
 			}
 			return err
 		})
 		if err != nil {
-			respond(http.StatusInternalServerError, gin.H{"error": "Failed to finalize taxes"})
+			respond.Respond(http.StatusInternalServerError, gin.H{"error": "Failed to finalize taxes"})
 			return
 		}
-		if responseWritten {
+		if respond.Written() {
 			return
 		}
 
-		respond(http.StatusOK, serializeTaxFinalizeResponse(snapshot, result))
+		respond.Respond(http.StatusOK, serializeTaxFinalizeResponse(snapshot, result))
 	}
 }
 
@@ -580,11 +539,9 @@ func ExportAdminTaxReport(db *gorm.DB, providerRegistry taxservice.ProviderRegis
 			return
 		}
 
-		responseWritten := false
-		respond := func(status int, payload any) {
-			responseWritten = true
+		respond := newHandlerResponseWriter(func(status int, payload any) {
 			c.JSON(status, payload)
-		}
+		})
 
 		var (
 			record models.TaxExport
@@ -602,15 +559,8 @@ func ExportAdminTaxReport(db *gorm.DB, providerRegistry taxservice.ProviderRegis
 					Format:   format,
 				},
 			)
-			if err != nil {
-				switch {
-				case errors.Is(err, providerops.ErrProviderCredentialWrongEnvironment):
-					respond(http.StatusConflict, gin.H{"error": "Provider credential is not configured for this environment"})
-					return nil
-				case errors.Is(err, providerops.ErrUnsupportedProviderCurrency):
-					respond(http.StatusBadRequest, gin.H{"error": "Provider does not support the requested currency"})
-					return nil
-				}
+			if err != nil && mapProviderConfigurationError(err, respond.Respond) {
+				return nil
 			}
 			return err
 		})
@@ -618,7 +568,7 @@ func ExportAdminTaxReport(db *gorm.DB, providerRegistry taxservice.ProviderRegis
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to export tax report"})
 			return
 		}
-		if responseWritten {
+		if respond.Written() {
 			return
 		}
 		defer body.Close()

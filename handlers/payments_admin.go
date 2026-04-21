@@ -12,7 +12,6 @@ import (
 	"ecommerce/internal/media"
 	orderservice "ecommerce/internal/services/orders"
 	paymentservice "ecommerce/internal/services/payments"
-	providerops "ecommerce/internal/services/providerops"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -146,8 +145,7 @@ func adminOrderPaymentLifecycle(
 			order            models.Order
 			intent           models.PaymentIntent
 			transaction      models.PaymentTransaction
-			responsePayload  any
-			responseStatus   int
+			responseCapture  handlerResponseCapture
 			lifecycleMessage string
 		)
 
@@ -157,8 +155,7 @@ func adminOrderPaymentLifecycle(
 				Preload("Items.ProductVariant.Product").
 				First(&order, orderID).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					responseStatus = http.StatusNotFound
-					responsePayload = gin.H{"error": "Order not found"}
+					responseCapture.Respond(http.StatusNotFound, gin.H{"error": "Order not found"})
 					return nil
 				}
 				return err
@@ -167,8 +164,7 @@ func adminOrderPaymentLifecycle(
 			intent, err = paymentservice.GetPaymentIntentForUpdate(tx, order.ID, intentID)
 			if err != nil {
 				if errors.Is(err, paymentservice.ErrPaymentIntentNotFound) {
-					responseStatus = http.StatusNotFound
-					responsePayload = gin.H{"error": "Payment intent not found"}
+					responseCapture.Respond(http.StatusNotFound, gin.H{"error": "Payment intent not found"})
 					return nil
 				}
 				return err
@@ -196,13 +192,13 @@ func adminOrderPaymentLifecycle(
 					correlationID,
 				)
 				if err != nil {
-					return mapLifecycleError(err, &responseStatus, &responsePayload)
+					return mapLifecycleError(err, &responseCapture)
 				}
 				lifecycleMessage = "Payment captured"
 				if order.Status != models.StatusPaid {
 					fromStatus := order.Status
 					if err := orderservice.ApplyStatusTransition(tx, &order, models.StatusPaid); err != nil {
-						return mapLifecycleError(err, &responseStatus, &responsePayload)
+						return mapLifecycleError(err, &responseCapture)
 					}
 					if err := paymentservice.AppendOrderStatusHistory(
 						tx,
@@ -227,13 +223,13 @@ func adminOrderPaymentLifecycle(
 					correlationID,
 				)
 				if err != nil {
-					return mapLifecycleError(err, &responseStatus, &responsePayload)
+					return mapLifecycleError(err, &responseCapture)
 				}
 				lifecycleMessage = "Payment voided"
 				if order.Status != models.StatusCancelled {
 					fromStatus := order.Status
 					if err := orderservice.ApplyStatusTransition(tx, &order, models.StatusCancelled); err != nil {
-						return mapLifecycleError(err, &responseStatus, &responsePayload)
+						return mapLifecycleError(err, &responseCapture)
 					}
 					if err := paymentservice.AppendOrderStatusHistory(
 						tx,
@@ -259,13 +255,13 @@ func adminOrderPaymentLifecycle(
 					correlationID,
 				)
 				if err != nil {
-					return mapLifecycleError(err, &responseStatus, &responsePayload)
+					return mapLifecycleError(err, &responseCapture)
 				}
 				lifecycleMessage = "Payment refunded"
 				if intent.Status == models.PaymentIntentStatusRefunded && order.Status != models.StatusRefunded {
 					fromStatus := order.Status
 					if err := orderservice.ApplyStatusTransition(tx, &order, models.StatusRefunded); err != nil {
-						return mapLifecycleError(err, &responseStatus, &responsePayload)
+						return mapLifecycleError(err, &responseCapture)
 					}
 					if err := paymentservice.AppendOrderStatusHistory(
 						tx,
@@ -300,13 +296,7 @@ func adminOrderPaymentLifecycle(
 			writeCheckoutJSON(db, c, idempotencyRecord, http.StatusInternalServerError, gin.H{"error": "Failed to process payment request"})
 			return
 		}
-		if responseStatus != 0 {
-			reason := "request_rejected"
-			if payload, ok := responsePayload.(gin.H); ok {
-				if value, ok := payload["error"].(string); ok && strings.TrimSpace(value) != "" {
-					reason = value
-				}
-			}
+		if responseCapture.Handled() {
 			log.Printf(
 				"admin_order_payment_%s result=failure correlation_id=%s admin_user_id=%d order_id=%d intent_id=%d reason=%q",
 				operation,
@@ -314,9 +304,9 @@ func adminOrderPaymentLifecycle(
 				adminUser.ID,
 				orderID,
 				intentID,
-				reason,
+				responseCapture.ErrorReason(),
 			)
-			writeCheckoutJSON(db, c, idempotencyRecord, responseStatus, responsePayload)
+			writeCheckoutJSON(db, c, idempotencyRecord, responseCapture.Status(), responseCapture.Payload())
 			return
 		}
 
@@ -400,44 +390,34 @@ func serializePaymentTransaction(txn models.PaymentTransaction) apicontract.Paym
 	}
 }
 
-func mapLifecycleError(err error, responseStatus *int, responsePayload *any) error {
+func mapLifecycleError(err error, responseCapture *handlerResponseCapture) error {
 	switch {
 	case err == nil:
 		return nil
 	case errors.Is(err, paymentservice.ErrPaymentIntentNotFound):
-		*responseStatus = http.StatusNotFound
-		*responsePayload = gin.H{"error": "Payment intent not found"}
+		responseCapture.Respond(http.StatusNotFound, gin.H{"error": "Payment intent not found"})
 		return nil
 	case errors.Is(err, paymentservice.ErrCaptureNotAllowed),
 		errors.Is(err, paymentservice.ErrVoidNotAllowed),
 		errors.Is(err, paymentservice.ErrRefundNotAllowed),
 		errors.Is(err, paymentservice.ErrAmountExceedsAvailable):
-		*responseStatus = http.StatusConflict
-		*responsePayload = gin.H{"error": err.Error()}
+		responseCapture.Respond(http.StatusConflict, gin.H{"error": err.Error()})
 		return nil
 	case errors.Is(err, paymentservice.ErrAmountMustBePositive):
-		*responseStatus = http.StatusBadRequest
-		*responsePayload = gin.H{"error": err.Error()}
+		responseCapture.Respond(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return nil
-	case errors.Is(err, providerops.ErrProviderCredentialWrongEnvironment):
-		*responseStatus = http.StatusConflict
-		*responsePayload = gin.H{"error": "Provider credential is not configured for this environment"}
-		return nil
-	case errors.Is(err, providerops.ErrUnsupportedProviderCurrency):
-		*responseStatus = http.StatusBadRequest
-		*responsePayload = gin.H{"error": "Provider does not support the requested currency"}
+	case mapProviderConfigurationError(err, responseCapture.Respond):
 		return nil
 	default:
 		var stockErr *orderservice.InsufficientStockError
 		if errors.As(err, &stockErr) {
-			*responseStatus = http.StatusBadRequest
-			*responsePayload = gin.H{
+			responseCapture.Respond(http.StatusBadRequest, gin.H{
 				"error":              "Insufficient stock",
 				"product_variant_id": stockErr.ProductVariantID,
 				"product_name":       stockErr.ProductName,
 				"requested":          stockErr.Requested,
 				"available":          stockErr.Available,
-			}
+			})
 			return nil
 		}
 		return err

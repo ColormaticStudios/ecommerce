@@ -50,6 +50,8 @@ On SQLite, `tx.Migrator().DropColumn("table_name", "column")` can panic when cal
 
 Several checkout/admin handlers use helper `respond(...)` closures inside `db.Transaction(...)` callbacks. If a transaction branch serializes an error response, the outer handler still needs an explicit guard before writing the normal success response; otherwise you can double-write a 200 after the error branch.
 
+When a transaction callback needs to populate an outer-scope `snapshot` (or similar state used after the transaction), do not use short declaration like `snapshot, handled, err := ...` inside the callback. That shadows the outer variable, leaves the outer snapshot zero-valued, and later provider calls can fail with blank-provider errors such as `unknown payment provider: `.
+
 GORM can silently persist `bool` fields with schema defaults instead of explicit `false` on `Create`, unless the insert explicitly selects zero-value fields. If a row must persist `false` (for example `is_published` on variant draft/live rows), prefer `tx.Select("*").Create(&row)` or another path that explicitly includes zero values.
 
 Tailwind v4 in this frontend rejects `@apply` of project-defined custom classes during formatting/build tooling, so shared CSS tokens need to be expanded rather than composed from other local classes.

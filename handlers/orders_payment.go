@@ -14,7 +14,6 @@ import (
 	"ecommerce/internal/media"
 	checkoutservice "ecommerce/internal/services/checkout"
 	paymentservice "ecommerce/internal/services/payments"
-	providerops "ecommerce/internal/services/providerops"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -398,8 +397,7 @@ func AuthorizeCheckoutOrderPayment(
 		var intent models.PaymentIntent
 		var intentIDText = "none"
 		var snapshot models.OrderCheckoutSnapshot
-		var responseStatus int
-		var responsePayload any
+		var responseCapture handlerResponseCapture
 		err = db.Transaction(func(tx *gorm.DB) error {
 			var lockedOrder models.Order
 			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
@@ -408,26 +406,22 @@ func AuthorizeCheckoutOrderPayment(
 				Preload("Items.ProductVariant.Product").
 				First(&lockedOrder).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					responseStatus = http.StatusNotFound
-					responsePayload = gin.H{"error": "Order not found"}
+					responseCapture.Respond(http.StatusNotFound, gin.H{"error": "Order not found"})
 					return nil
 				}
 				return err
 			}
 
 			if requestCtx.Session.Status == models.CheckoutSessionStatusConverted && !checkoutOrderPaymentSubmitted(lockedOrder) {
-				responseStatus = http.StatusConflict
-				responsePayload = gin.H{"error": "Checkout session has already been converted"}
+				responseCapture.Respond(http.StatusConflict, gin.H{"error": "Checkout session has already been converted"})
 				return nil
 			}
 			if lockedOrder.Status == models.StatusPaid {
-				responseStatus = http.StatusBadRequest
-				responsePayload = gin.H{"error": "Order is already paid"}
+				responseCapture.Respond(http.StatusBadRequest, gin.H{"error": "Order is already paid"})
 				return nil
 			}
 			if checkoutOrderPaymentSubmitted(lockedOrder) {
-				responseStatus = http.StatusBadRequest
-				responsePayload = gin.H{"error": "Order payment already submitted"}
+				responseCapture.Respond(http.StatusBadRequest, gin.H{"error": "Order payment already submitted"})
 				return nil
 			}
 
@@ -436,44 +430,29 @@ func AuthorizeCheckoutOrderPayment(
 				return err
 			}
 			if currentOpenOrder != nil && currentOpenOrder.ID != lockedOrder.ID {
-				responseStatus = http.StatusConflict
-				responsePayload = gin.H{"error": "Checkout order is no longer payable"}
+				responseCapture.Respond(http.StatusConflict, gin.H{"error": "Checkout order is no longer payable"})
 				return nil
 			}
 
-			snapshot, err = paymentservice.GetCheckoutSnapshotForSession(tx, requestCtx.Session.ID, req.SnapshotID)
-			if err != nil {
-				switch {
-				case errors.Is(err, paymentservice.ErrSnapshotNotFound):
-					responseStatus = http.StatusBadRequest
-					responsePayload = gin.H{"error": "Checkout snapshot not found"}
-					return nil
-				default:
-					return err
-				}
+			var handled bool
+			snapshot, handled, err = loadCheckoutSnapshotForOrder(
+				tx,
+				requestCtx.Session.ID,
+				req.SnapshotID,
+				&lockedOrder,
+				time.Now().UTC(),
+				responseCapture.Respond,
+			)
+			if handled {
+				return nil
 			}
-			switch err := paymentservice.ValidateSnapshotForOrder(&snapshot, &lockedOrder, time.Now().UTC()); {
-			case err == nil:
-			case errors.Is(err, paymentservice.ErrSnapshotExpired):
-				responseStatus = http.StatusBadRequest
-				responsePayload = gin.H{"error": "Checkout snapshot has expired"}
-				return nil
-			case errors.Is(err, paymentservice.ErrSnapshotOrderMismatch):
-				responseStatus = http.StatusConflict
-				responsePayload = gin.H{"error": "Checkout snapshot no longer matches the order"}
-				return nil
-			case errors.Is(err, paymentservice.ErrSnapshotAlreadyBound):
-				responseStatus = http.StatusConflict
-				responsePayload = gin.H{"error": "Checkout snapshot is already bound to another order"}
-				return nil
-			default:
+			if err != nil {
 				return err
 			}
 			if err := paymentservice.BindSnapshotToOrder(tx, &snapshot, lockedOrder.ID, time.Now().UTC()); err != nil {
 				switch {
 				case errors.Is(err, paymentservice.ErrSnapshotAlreadyBound):
-					responseStatus = http.StatusConflict
-					responsePayload = gin.H{"error": "Checkout snapshot is already bound to another order"}
+					responseCapture.Respond(http.StatusConflict, gin.H{"error": "Checkout snapshot is already bound to another order"})
 					return nil
 				default:
 					return err
@@ -489,16 +468,9 @@ func AuthorizeCheckoutOrderPayment(
 			if err != nil {
 				switch {
 				case errors.Is(err, paymentservice.ErrActivePaymentIntentExists):
-					responseStatus = http.StatusConflict
-					responsePayload = gin.H{"error": "An active payment intent already exists for this order"}
+					responseCapture.Respond(http.StatusConflict, gin.H{"error": "An active payment intent already exists for this order"})
 					return nil
-				case errors.Is(err, providerops.ErrProviderCredentialWrongEnvironment):
-					responseStatus = http.StatusConflict
-					responsePayload = gin.H{"error": "Provider credential is not configured for this environment"}
-					return nil
-				case errors.Is(err, providerops.ErrUnsupportedProviderCurrency):
-					responseStatus = http.StatusBadRequest
-					responsePayload = gin.H{"error": "Provider does not support the requested currency"}
+				case mapProviderConfigurationError(err, responseCapture.Respond):
 					return nil
 				default:
 					return err
@@ -536,13 +508,7 @@ func AuthorizeCheckoutOrderPayment(
 			respond(http.StatusInternalServerError, gin.H{"error": "Failed to process payment"})
 			return
 		}
-		if responseStatus != 0 {
-			reason := "request_rejected"
-			if payload, ok := responsePayload.(gin.H); ok {
-				if value, ok := payload["error"].(string); ok && strings.TrimSpace(value) != "" {
-					reason = value
-				}
-			}
+		if responseCapture.Handled() {
 			log.Printf(
 				"checkout_order_payment_authorize result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d intent_id=%s reason=%q",
 				correlationID,
@@ -552,9 +518,9 @@ func AuthorizeCheckoutOrderPayment(
 				checkoutGuestEmail(order.GuestEmail),
 				order.ID,
 				intentIDText,
-				reason,
+				responseCapture.ErrorReason(),
 			)
-			respond(responseStatus, responsePayload)
+			respond(responseCapture.Status(), responseCapture.Payload())
 			return
 		}
 
@@ -569,10 +535,7 @@ func AuthorizeCheckoutOrderPayment(
 			)
 			if err != nil {
 				switch {
-				case errors.Is(err, providerops.ErrProviderCredentialWrongEnvironment):
-					respond(http.StatusConflict, gin.H{"error": "Provider credential is not configured for this environment"})
-				case errors.Is(err, providerops.ErrUnsupportedProviderCurrency):
-					respond(http.StatusBadRequest, gin.H{"error": "Provider does not support the requested currency"})
+				case mapProviderConfigurationError(err, respond):
 				default:
 					log.Printf(
 						"checkout_order_payment_authorize result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d intent_id=%s reason=%q",
@@ -591,6 +554,7 @@ func AuthorizeCheckoutOrderPayment(
 			}
 		}
 
+		responseCapture = handlerResponseCapture{}
 		err = db.Transaction(func(tx *gorm.DB) error {
 			var lockedOrder models.Order
 			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
@@ -599,21 +563,18 @@ func AuthorizeCheckoutOrderPayment(
 				Preload("Items.ProductVariant.Product").
 				First(&lockedOrder).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					responseStatus = http.StatusNotFound
-					responsePayload = gin.H{"error": "Order not found"}
+					responseCapture.Respond(http.StatusNotFound, gin.H{"error": "Order not found"})
 					return nil
 				}
 				return err
 			}
 
 			if lockedOrder.Status == models.StatusPaid {
-				responseStatus = http.StatusBadRequest
-				responsePayload = gin.H{"error": "Order is already paid"}
+				responseCapture.Respond(http.StatusBadRequest, gin.H{"error": "Order is already paid"})
 				return nil
 			}
 			if checkoutOrderPaymentSubmitted(lockedOrder) {
-				responseStatus = http.StatusBadRequest
-				responsePayload = gin.H{"error": "Order payment already submitted"}
+				responseCapture.Respond(http.StatusBadRequest, gin.H{"error": "Order payment already submitted"})
 				return nil
 			}
 
@@ -639,13 +600,7 @@ func AuthorizeCheckoutOrderPayment(
 			respond(http.StatusInternalServerError, gin.H{"error": "Failed to process payment"})
 			return
 		}
-		if responseStatus != 0 {
-			reason := "request_rejected"
-			if payload, ok := responsePayload.(gin.H); ok {
-				if value, ok := payload["error"].(string); ok && strings.TrimSpace(value) != "" {
-					reason = value
-				}
-			}
+		if responseCapture.Handled() {
 			log.Printf(
 				"checkout_order_payment_authorize result=failure correlation_id=%s mode=%s session_id=%d user_id=%v guest_email=%q order_id=%d intent_id=%s reason=%q",
 				correlationID,
@@ -655,9 +610,9 @@ func AuthorizeCheckoutOrderPayment(
 				checkoutGuestEmail(order.GuestEmail),
 				order.ID,
 				intentIDText,
-				reason,
+				responseCapture.ErrorReason(),
 			)
-			respond(responseStatus, responsePayload)
+			respond(responseCapture.Status(), responseCapture.Payload())
 			return
 		}
 
