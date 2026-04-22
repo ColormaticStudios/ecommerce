@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 # This test data is fully human-made, no AI generated images or text.
 
