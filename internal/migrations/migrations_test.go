@@ -560,7 +560,7 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, providersP4Version, status.LatestAppliedVersion)
+	require.Equal(t, inventoryDisciplineP4Version, status.LatestAppliedVersion)
 	require.Equal(t, 1, status.PendingCount)
 }
 
@@ -854,6 +854,85 @@ func TestProvidersP0AddsPaymentFoundationStructures(t *testing.T) {
 	assert.True(t, db.Migrator().HasTable(&models.PaymentIntent{}))
 	assert.True(t, db.Migrator().HasTable(&models.PaymentTransaction{}))
 	assert.True(t, db.Migrator().HasTable(&models.OrderStatusHistory{}))
+}
+
+func TestInventoryDisciplineP0BackfillsVariantInventory(t *testing.T) {
+	db := newTestDB(t)
+
+	inventoryP0Index := slices.IndexFunc(orderedMigrations, func(m Migration) bool {
+		return m.Version == inventoryDisciplineP0Version
+	})
+	require.NotEqual(t, -1, inventoryP0Index)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:inventoryP0Index+1]))
+
+	product := models.Product{SKU: "inventory-p0", Name: "Inventory P0", Price: models.MoneyFromFloat(10), Stock: 5, IsPublished: true}
+	require.NoError(t, db.Create(&product).Error)
+	variant := models.ProductVariant{
+		ProductID:   product.ID,
+		SKU:         "inventory-p0-default",
+		Title:       "Default",
+		Price:       models.MoneyFromFloat(10),
+		Stock:       5,
+		Position:    1,
+		IsPublished: true,
+	}
+	require.NoError(t, db.Create(&variant).Error)
+	require.NoError(t, backfillInventoryItemsFromVariants(db))
+
+	var item models.InventoryItem
+	require.NoError(t, db.Where("product_variant_id = ?", variant.ID).First(&item).Error)
+
+	var level models.InventoryLevel
+	require.NoError(t, db.Where("inventory_item_id = ?", item.ID).First(&level).Error)
+	assert.Equal(t, 5, level.OnHand)
+	assert.Equal(t, 0, level.Reserved)
+	assert.Equal(t, 5, level.Available)
+}
+
+func TestInventoryDisciplineP1AddsReservations(t *testing.T) {
+	db := newTestDB(t)
+
+	inventoryP1Index := slices.IndexFunc(orderedMigrations, func(m Migration) bool {
+		return m.Version == inventoryDisciplineP1Version
+	})
+	require.NotEqual(t, -1, inventoryP1Index)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:inventoryP1Index+1]))
+
+	require.True(t, db.Migrator().HasTable(&models.InventoryReservation{}))
+	require.True(t, db.Migrator().HasIndex(&models.InventoryReservation{}, "idx_inventory_reservations_idempotency_key"))
+}
+
+func TestInventoryDisciplineP2AddsThresholdsAndAlerts(t *testing.T) {
+	db := newTestDB(t)
+
+	inventoryP2Index := slices.IndexFunc(orderedMigrations, func(m Migration) bool {
+		return m.Version == inventoryDisciplineP2Version
+	})
+	require.NotEqual(t, -1, inventoryP2Index)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:inventoryP2Index+1]))
+
+	require.True(t, db.Migrator().HasTable(&models.InventoryThreshold{}))
+	require.True(t, db.Migrator().HasTable(&models.InventoryAlert{}))
+	require.True(t, db.Migrator().HasIndex(&models.InventoryAlert{}, "idx_inventory_alerts_status"))
+
+	var threshold models.InventoryThreshold
+	require.NoError(t, db.Where("product_variant_id IS NULL").First(&threshold).Error)
+	assert.Equal(t, 5, threshold.LowStockQuantity)
+}
+
+func TestInventoryDisciplineP4AddsAdjustments(t *testing.T) {
+	db := newTestDB(t)
+
+	inventoryP4Index := slices.IndexFunc(orderedMigrations, func(m Migration) bool {
+		return m.Version == inventoryDisciplineP4Version
+	})
+	require.NotEqual(t, -1, inventoryP4Index)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:inventoryP4Index+1]))
+
+	require.True(t, db.Migrator().HasTable(&models.InventoryAdjustment{}))
+	require.True(t, db.Migrator().HasIndex(&models.InventoryAdjustment{}, "idx_inventory_adjustments_inventory_item_id"))
+	require.True(t, db.Migrator().HasIndex(&models.InventoryAdjustment{}, "idx_inventory_adjustments_product_variant_id"))
+	require.True(t, db.Migrator().HasIndex(&models.InventoryAdjustment{}, "idx_inventory_adjustments_reason_code"))
 }
 
 func TestProvidersP2AddsWebhookEventStructures(t *testing.T) {

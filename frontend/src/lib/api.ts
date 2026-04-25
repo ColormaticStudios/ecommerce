@@ -51,6 +51,21 @@ type ProviderReconciliationRun = components["schemas"]["ProviderReconciliationRu
 type ProviderReconciliationRunRequest = components["schemas"]["ProviderReconciliationRunRequest"];
 type ProviderReconciliationRunPage = components["schemas"]["ProviderReconciliationRunPage"];
 type WebhookEventPage = components["schemas"]["WebhookEventPage"];
+type InventoryReservationList = components["schemas"]["InventoryReservationList"];
+type InventoryAlert = components["schemas"]["InventoryAlert"];
+type InventoryAlertList = components["schemas"]["InventoryAlertList"];
+type InventoryThreshold = components["schemas"]["InventoryThreshold"];
+type InventoryThresholdList = components["schemas"]["InventoryThresholdList"];
+type InventoryThresholdRequest = components["schemas"]["InventoryThresholdRequest"];
+type InventoryAdjustmentRequest = components["schemas"]["InventoryAdjustmentRequest"];
+type InventoryAdjustmentResponse = components["schemas"]["InventoryAdjustmentResponse"];
+type InventoryReconciliationReport = components["schemas"]["InventoryReconciliationReport"];
+type InventoryTimeline = components["schemas"]["InventoryTimeline"];
+type PurchaseOrder = components["schemas"]["PurchaseOrder"];
+type PurchaseOrderList = components["schemas"]["PurchaseOrderList"];
+type PurchaseOrderRequest = components["schemas"]["PurchaseOrderRequest"];
+type PurchaseOrderReceiveRequest = components["schemas"]["PurchaseOrderReceiveRequest"];
+type PurchaseOrderReceiptResponse = components["schemas"]["PurchaseOrderReceiptResponse"];
 type MessageResponse = components["schemas"]["MessageResponse"];
 type ProductUpsertInput = components["schemas"]["ProductUpsertInput"];
 type MediaIDsRequest = components["schemas"]["MediaIDsRequest"];
@@ -79,6 +94,16 @@ type ListAdminWebhookEventsQuery =
 	paths["/api/v1/admin/webhooks/events"]["get"]["parameters"]["query"];
 type ListAdminProviderReconciliationRunsQuery =
 	paths["/api/v1/admin/providers/reconciliation/runs"]["get"]["parameters"]["query"];
+type ListAdminInventoryReservationsQuery =
+	paths["/api/v1/admin/inventory/reservations"]["get"]["parameters"]["query"];
+type ListAdminInventoryAlertsQuery =
+	paths["/api/v1/admin/inventory/alerts"]["get"]["parameters"]["query"];
+type ListAdminInventoryThresholdsQuery =
+	paths["/api/v1/admin/inventory/thresholds"]["get"]["parameters"]["query"];
+type GetAdminInventoryTimelineQuery =
+	paths["/api/v1/admin/inventory/variants/{product_variant_id}/timeline"]["get"]["parameters"]["query"];
+type ListAdminPurchaseOrdersQuery =
+	paths["/api/v1/admin/purchase-orders"]["get"]["parameters"]["query"];
 export type ListOrdersParams = Omit<NonNullable<ListUserOrdersQuery>, "status"> & {
 	status?: NonNullable<ListUserOrdersQuery>["status"] | "";
 };
@@ -594,6 +619,120 @@ export class API {
 			"/admin/providers/reconciliation/runs",
 			undefined,
 			params as Record<string, unknown>
+		);
+	}
+
+	public async listAdminInventoryReservations(
+		params: ListAdminInventoryReservationsQuery = {}
+	): Promise<InventoryReservationList> {
+		return await this.request<InventoryReservationList>(
+			"GET",
+			"/admin/inventory/reservations",
+			undefined,
+			params as Record<string, unknown>
+		);
+	}
+
+	public async listAdminInventoryAlerts(
+		params: ListAdminInventoryAlertsQuery = {}
+	): Promise<InventoryAlertList> {
+		return await this.request<InventoryAlertList>(
+			"GET",
+			"/admin/inventory/alerts",
+			undefined,
+			params as Record<string, unknown>
+		);
+	}
+
+	public async ackAdminInventoryAlert(id: number): Promise<InventoryAlert> {
+		return await this.request<InventoryAlert>("POST", `/admin/inventory/alerts/${id}/ack`);
+	}
+
+	public async resolveAdminInventoryAlert(id: number): Promise<InventoryAlert> {
+		return await this.request<InventoryAlert>("POST", `/admin/inventory/alerts/${id}/resolve`);
+	}
+
+	public async listAdminInventoryThresholds(
+		params: ListAdminInventoryThresholdsQuery = {}
+	): Promise<InventoryThresholdList> {
+		return await this.request<InventoryThresholdList>(
+			"GET",
+			"/admin/inventory/thresholds",
+			undefined,
+			params as Record<string, unknown>
+		);
+	}
+
+	public async upsertAdminInventoryThreshold(
+		data: InventoryThresholdRequest
+	): Promise<InventoryThreshold> {
+		return await this.request<InventoryThreshold>("PUT", "/admin/inventory/thresholds", data);
+	}
+
+	public async deleteAdminInventoryThreshold(id: number): Promise<MessageResponse> {
+		return await this.request<MessageResponse>("DELETE", `/admin/inventory/thresholds/${id}`);
+	}
+
+	public async createAdminInventoryAdjustment(
+		data: InventoryAdjustmentRequest
+	): Promise<InventoryAdjustmentResponse> {
+		return await this.request<InventoryAdjustmentResponse>(
+			"POST",
+			"/admin/inventory/adjustments",
+			data
+		);
+	}
+
+	public async runAdminInventoryReconciliation(): Promise<InventoryReconciliationReport> {
+		return await this.request<InventoryReconciliationReport>(
+			"POST",
+			"/admin/inventory/reconciliation"
+		);
+	}
+
+	public async getAdminInventoryTimeline(
+		productVariantId: number,
+		params: GetAdminInventoryTimelineQuery = {}
+	): Promise<InventoryTimeline> {
+		return await this.request<InventoryTimeline>(
+			"GET",
+			`/admin/inventory/variants/${productVariantId}/timeline`,
+			undefined,
+			params as Record<string, unknown>
+		);
+	}
+
+	public async listAdminPurchaseOrders(
+		params: ListAdminPurchaseOrdersQuery = {}
+	): Promise<PurchaseOrderList> {
+		return await this.request<PurchaseOrderList>(
+			"GET",
+			"/admin/purchase-orders",
+			undefined,
+			params as Record<string, unknown>
+		);
+	}
+
+	public async createAdminPurchaseOrder(data: PurchaseOrderRequest): Promise<PurchaseOrder> {
+		return await this.request<PurchaseOrder>("POST", "/admin/purchase-orders", data);
+	}
+
+	public async issueAdminPurchaseOrder(id: number): Promise<PurchaseOrder> {
+		return await this.request<PurchaseOrder>("POST", `/admin/purchase-orders/${id}/issue`);
+	}
+
+	public async cancelAdminPurchaseOrder(id: number): Promise<PurchaseOrder> {
+		return await this.request<PurchaseOrder>("POST", `/admin/purchase-orders/${id}/cancel`);
+	}
+
+	public async receiveAdminPurchaseOrder(
+		id: number,
+		data: PurchaseOrderReceiveRequest
+	): Promise<PurchaseOrderReceiptResponse> {
+		return await this.request<PurchaseOrderReceiptResponse>(
+			"POST",
+			`/admin/purchase-orders/${id}/receive`,
+			data
 		);
 	}
 

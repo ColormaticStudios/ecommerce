@@ -17,6 +17,7 @@ import (
 	"ecommerce/internal/migrations"
 	"ecommerce/internal/providerplugins"
 	checkoutservice "ecommerce/internal/services/checkout"
+	inventoryservice "ecommerce/internal/services/inventory"
 	paymentservice "ecommerce/internal/services/payments"
 	providerops "ecommerce/internal/services/providerops"
 	shippingservice "ecommerce/internal/services/shipping"
@@ -236,6 +237,7 @@ func main() {
 			<-ticker.C
 		}
 	}()
+	inventoryservice.StartReservationExpiryWorker(context.Background(), db, time.Minute, log.Default())
 
 	keyring, err := providerops.ParseKeyringConfig(cfg.ProviderCredentialsKeys)
 	if err != nil {

@@ -35,7 +35,7 @@
   - Reconciliation and webhook retry jobs run on shared worker primitives.
 - `roadmap/discounts-promotions.md`, `roadmap/ecommerce-cms.md`, checkout-session lifecycle work:
   - Scheduled activation/cleanup work migrates from ad hoc in-process loops to shared scheduler/worker model.
-- `roadmap/inventory-discipline.md`, `roadmap/order-fulfillment-ops.md`, `roadmap/returns-rma.md`:
+- Implemented inventory baseline, `roadmap/order-fulfillment-ops.md`, `roadmap/returns-rma.md`:
   - Reconciliation and alerting jobs adopt shared retry policy, idempotency keys, and observability conventions.
 
 ## P0: Baseline Standards and Instrumentation Contract

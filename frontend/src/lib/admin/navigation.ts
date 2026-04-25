@@ -2,6 +2,8 @@ export type AdminSectionId =
 	| "products"
 	| "brands"
 	| "orders"
+	| "inventory"
+	| "purchase-orders"
 	| "users"
 	| "providers"
 	| "storefront";
@@ -10,6 +12,8 @@ type AdminRouteHref =
 	| "/admin/products"
 	| "/admin/brands"
 	| "/admin/orders"
+	| "/admin/inventory"
+	| "/admin/purchase-orders"
 	| "/admin/users"
 	| "/admin/providers"
 	| "/admin/storefront";
@@ -43,6 +47,20 @@ export const adminNavItems: AdminNavItem[] = [
 		href: "/admin/orders",
 		icon: "bi-receipt-cutoff",
 		matchPrefixes: ["/admin/orders"],
+	},
+	{
+		id: "inventory",
+		label: "Inventory",
+		href: "/admin/inventory",
+		icon: "bi-boxes",
+		matchPrefixes: ["/admin/inventory"],
+	},
+	{
+		id: "purchase-orders",
+		label: "Purchase Orders",
+		href: "/admin/purchase-orders",
+		icon: "bi-clipboard-check",
+		matchPrefixes: ["/admin/purchase-orders"],
 	},
 	{
 		id: "users",

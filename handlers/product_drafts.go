@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"ecommerce/internal/media"
+	inventoryservice "ecommerce/internal/services/inventory"
 	"ecommerce/models"
 
 	"gorm.io/gorm"
@@ -1010,7 +1011,7 @@ func publishNormalizedProductDraft(tx *gorm.DB, product *models.Product, draft p
 		"description":        normalized.Description,
 		"price":              models.MoneyFromFloat(normalized.Price),
 		"stock":              normalized.Stock,
-		"images":             normalized.Images,
+		"images":             productImagesUpdateValue(tx, normalized.Images),
 		"brand_id":           normalized.BrandID,
 		"is_published":       true,
 		"draft_updated_at":   nil,
@@ -1031,6 +1032,25 @@ func publishNormalizedProductDraft(tx *gorm.DB, product *models.Product, draft p
 	product.DraftUpdatedAt = nil
 	product.IsPublished = true
 	return nil
+}
+
+func productImagesUpdateValue(tx *gorm.DB, images []string) any {
+	if tx.Dialector.Name() != "postgres" {
+		return images
+	}
+	return gorm.Expr("?::text[]", postgresTextArrayLiteral(images))
+}
+
+func postgresTextArrayLiteral(values []string) string {
+	if len(values) == 0 {
+		return "{}"
+	}
+	encoded := make([]string, 0, len(values))
+	for _, value := range values {
+		escaped := strings.NewReplacer(`\`, `\\`, `"`, `\"`).Replace(value)
+		encoded = append(encoded, `"`+escaped+`"`)
+	}
+	return "{" + strings.Join(encoded, ",") + "}"
 }
 
 func replacePublishedCatalogChildren(tx *gorm.DB, productID uint, draft productCatalogDraft) error {
@@ -1120,6 +1140,16 @@ func replacePublishedCatalogChildren(tx *gorm.DB, productID uint, draft productC
 					"height_cm",
 				).
 				Updates(&record).Error; err != nil {
+				return err
+			}
+			if _, err := inventoryservice.SetOnHand(tx, record.ID, variant.Stock, inventoryservice.MovementInput{
+				ProductVariantID: record.ID,
+				MovementType:     inventoryservice.MovementTypeAdminSync,
+				ReferenceType:    "PRODUCT_PUBLISH",
+				ReferenceID:      &productID,
+				ReasonCode:       "product_variant_stock_publish",
+				ActorType:        "admin",
+			}); err != nil {
 				return err
 			}
 		} else {

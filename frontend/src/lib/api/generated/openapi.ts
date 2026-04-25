@@ -1144,6 +1144,214 @@ export interface paths {
 		patch: operations["updateAdminCheckoutPlugin"];
 		trace?: never;
 	};
+	"/api/v1/admin/inventory/reservations": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminInventoryReservations"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/inventory/alerts": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminInventoryAlerts"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/inventory/alerts/{id}/ack": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["ackAdminInventoryAlert"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/inventory/alerts/{id}/resolve": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["resolveAdminInventoryAlert"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/inventory/thresholds": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminInventoryThresholds"];
+		put: operations["upsertAdminInventoryThreshold"];
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/inventory/thresholds/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete: operations["deleteAdminInventoryThreshold"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/inventory/adjustments": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["createAdminInventoryAdjustment"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/inventory/reconciliation": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["runAdminInventoryReconciliation"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/inventory/variants/{product_variant_id}/timeline": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminInventoryTimeline"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/purchase-orders": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminPurchaseOrders"];
+		put?: never;
+		post: operations["createAdminPurchaseOrder"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/purchase-orders/{id}/issue": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["issueAdminPurchaseOrder"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/purchase-orders/{id}/cancel": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["cancelAdminPurchaseOrder"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/purchase-orders/{id}/receive": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["receiveAdminPurchaseOrder"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/admin/storefront": {
 		parameters: {
 			query?: never;
@@ -1730,6 +1938,230 @@ export interface components {
 		OrderPaymentLedger: {
 			order_id: number;
 			intents: components["schemas"]["PaymentIntentRecord"][];
+		};
+		InventoryReservation: {
+			id: number;
+			product_variant_id: number;
+			quantity: number;
+			/** @enum {string} */
+			status: "ACTIVE" | "CONSUMED" | "RELEASED" | "EXPIRED";
+			/** Format: date-time */
+			expires_at: string;
+			owner_type: string;
+			owner_id?: number | null;
+			checkout_session_id?: number | null;
+			order_id?: number | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		InventoryReservationList: {
+			items: components["schemas"]["InventoryReservation"][];
+		};
+		InventoryAlert: {
+			id: number;
+			product_variant_id: number;
+			/** @enum {string} */
+			alert_type: "LOW_STOCK" | "OUT_OF_STOCK" | "RECOVERY";
+			/** @enum {string} */
+			status: "OPEN" | "ACKED" | "RESOLVED";
+			available: number;
+			threshold: number;
+			/** Format: date-time */
+			opened_at: string;
+			/** Format: date-time */
+			acked_at?: string | null;
+			acked_by_type?: string;
+			acked_by_id?: number | null;
+			/** Format: date-time */
+			resolved_at?: string | null;
+			resolved_by_type?: string;
+			resolved_by_id?: number | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		InventoryAlertList: {
+			items: components["schemas"]["InventoryAlert"][];
+		};
+		InventoryThreshold: {
+			id: number;
+			product_variant_id?: number | null;
+			low_stock_quantity: number;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		InventoryThresholdList: {
+			items: components["schemas"]["InventoryThreshold"][];
+		};
+		InventoryThresholdRequest: {
+			product_variant_id?: number | null;
+			low_stock_quantity: number;
+		};
+		InventoryMovement: {
+			id: number;
+			inventory_item_id: number;
+			movement_type: string;
+			quantity_delta: number;
+			reference_type: string;
+			reference_id?: number | null;
+			reason_code: string;
+			actor_type: string;
+			actor_id?: number | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		/** @enum {string} */
+		InventoryAdjustmentReason:
+			| "CYCLE_COUNT_GAIN"
+			| "CYCLE_COUNT_LOSS"
+			| "DAMAGE"
+			| "SHRINKAGE"
+			| "RETURN_RESTOCK"
+			| "CORRECTION";
+		InventoryAdjustment: {
+			id: number;
+			inventory_item_id: number;
+			product_variant_id: number;
+			quantity_delta: number;
+			reason_code: components["schemas"]["InventoryAdjustmentReason"];
+			notes: string;
+			actor_type: string;
+			actor_id?: number | null;
+			approved_by_type: string;
+			approved_by_id?: number | null;
+			/** Format: date-time */
+			approved_at?: string | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		InventoryAvailability: {
+			product_variant_id: number;
+			on_hand: number;
+			reserved: number;
+			available: number;
+		};
+		InventoryAdjustmentRequest: {
+			product_variant_id: number;
+			quantity_delta: number;
+			reason_code: components["schemas"]["InventoryAdjustmentReason"];
+			notes?: string;
+			approved_by_type?: string;
+			approved_by_id?: number | null;
+		};
+		InventoryAdjustmentResponse: {
+			adjustment: components["schemas"]["InventoryAdjustment"];
+			availability: components["schemas"]["InventoryAvailability"];
+		};
+		InventoryReconciliationIssue: {
+			issue_type: string;
+			inventory_item_id: number;
+			product_variant_id: number;
+			expected: number;
+			actual: number;
+			message: string;
+			entity_type: string;
+			entity_id?: number | null;
+		};
+		InventoryReconciliationReport: {
+			/** Format: date-time */
+			checked_at: string;
+			issues: components["schemas"]["InventoryReconciliationIssue"][];
+		};
+		InventoryTimeline: {
+			product_variant_id: number;
+			movements: components["schemas"]["InventoryMovement"][];
+			reservations: components["schemas"]["InventoryReservation"][];
+			adjustments: components["schemas"]["InventoryAdjustment"][];
+		};
+		Supplier: {
+			id: number;
+			name: string;
+			email: string;
+			notes: string;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		SupplierRequest: {
+			name: string;
+			email?: string;
+			notes?: string;
+		};
+		PurchaseOrderItem: {
+			id: number;
+			product_variant_id: number;
+			quantity_ordered: number;
+			quantity_received: number;
+			unit_cost: number;
+		};
+		PurchaseOrder: {
+			id: number;
+			supplier_id?: number | null;
+			supplier?: components["schemas"]["Supplier"];
+			/** @enum {string} */
+			status: "DRAFT" | "ISSUED" | "PARTIALLY_RECEIVED" | "RECEIVED" | "CANCELLED";
+			notes: string;
+			/** Format: date-time */
+			issued_at?: string | null;
+			/** Format: date-time */
+			received_at?: string | null;
+			/** Format: date-time */
+			cancelled_at?: string | null;
+			items: components["schemas"]["PurchaseOrderItem"][];
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		PurchaseOrderList: {
+			items: components["schemas"]["PurchaseOrder"][];
+		};
+		PurchaseOrderItemRequest: {
+			product_variant_id: number;
+			quantity_ordered: number;
+			unit_cost?: number;
+		};
+		PurchaseOrderRequest: {
+			supplier_id?: number | null;
+			supplier?: components["schemas"]["SupplierRequest"];
+			notes?: string;
+			items: components["schemas"]["PurchaseOrderItemRequest"][];
+		};
+		PurchaseOrderReceiveItemRequest: {
+			purchase_order_item_id: number;
+			quantity_received: number;
+		};
+		PurchaseOrderReceiveRequest: {
+			notes?: string;
+			items: components["schemas"]["PurchaseOrderReceiveItemRequest"][];
+		};
+		InventoryReceiptItem: {
+			id: number;
+			purchase_order_item_id: number;
+			product_variant_id: number;
+			quantity_received: number;
+		};
+		InventoryReceipt: {
+			id: number;
+			purchase_order_id: number;
+			/** Format: date-time */
+			received_at: string;
+			notes: string;
+			items: components["schemas"]["InventoryReceiptItem"][];
+		};
+		PurchaseOrderReceiptResponse: {
+			purchase_order: components["schemas"]["PurchaseOrder"];
+			receipt: components["schemas"]["InventoryReceipt"];
 		};
 		AdminOrderPaymentLifecycleResponse: {
 			message: string;
@@ -4974,6 +5406,456 @@ export interface operations {
 				};
 			};
 			/** @description Invalid request payload */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	listAdminInventoryReservations: {
+		parameters: {
+			query?: {
+				status?: ("ACTIVE" | "CONSUMED" | "RELEASED" | "EXPIRED")[];
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Inventory reservations */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["InventoryReservationList"];
+				};
+			};
+			/** @description Internal server error */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	listAdminInventoryAlerts: {
+		parameters: {
+			query?: {
+				status?: ("OPEN" | "ACKED" | "RESOLVED")[];
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Inventory alerts */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["InventoryAlertList"];
+				};
+			};
+			/** @description Internal server error */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	ackAdminInventoryAlert: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Acknowledged inventory alert */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["InventoryAlert"];
+				};
+			};
+			/** @description Invalid alert id */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	resolveAdminInventoryAlert: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Resolved inventory alert */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["InventoryAlert"];
+				};
+			};
+			/** @description Invalid alert id */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	listAdminInventoryThresholds: {
+		parameters: {
+			query?: {
+				product_variant_id?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Inventory thresholds */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["InventoryThresholdList"];
+				};
+			};
+		};
+	};
+	upsertAdminInventoryThreshold: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["InventoryThresholdRequest"];
+			};
+		};
+		responses: {
+			/** @description Inventory threshold */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["InventoryThreshold"];
+				};
+			};
+			/** @description Invalid threshold request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	deleteAdminInventoryThreshold: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Inventory threshold deleted */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["MessageResponse"];
+				};
+			};
+			/** @description Invalid threshold id */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	createAdminInventoryAdjustment: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["InventoryAdjustmentRequest"];
+			};
+		};
+		responses: {
+			/** @description Inventory adjustment created */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["InventoryAdjustmentResponse"];
+				};
+			};
+			/** @description Invalid adjustment */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	runAdminInventoryReconciliation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Inventory reconciliation report */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["InventoryReconciliationReport"];
+				};
+			};
+		};
+	};
+	getAdminInventoryTimeline: {
+		parameters: {
+			query?: {
+				limit?: number;
+			};
+			header?: never;
+			path: {
+				product_variant_id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Inventory timeline */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["InventoryTimeline"];
+				};
+			};
+			/** @description Invalid product variant id */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	listAdminPurchaseOrders: {
+		parameters: {
+			query?: {
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Purchase orders */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["PurchaseOrderList"];
+				};
+			};
+		};
+	};
+	createAdminPurchaseOrder: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["PurchaseOrderRequest"];
+			};
+		};
+		responses: {
+			/** @description Purchase order created */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["PurchaseOrder"];
+				};
+			};
+			/** @description Invalid purchase order */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	issueAdminPurchaseOrder: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Purchase order issued */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["PurchaseOrder"];
+				};
+			};
+			/** @description Invalid purchase order transition */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	cancelAdminPurchaseOrder: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Purchase order cancelled */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["PurchaseOrder"];
+				};
+			};
+			/** @description Invalid purchase order transition */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	receiveAdminPurchaseOrder: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["PurchaseOrderReceiveRequest"];
+			};
+		};
+		responses: {
+			/** @description Purchase order receipt */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["PurchaseOrderReceiptResponse"];
+				};
+			};
+			/** @description Invalid receipt */
 			400: {
 				headers: {
 					[name: string]: unknown;

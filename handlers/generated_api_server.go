@@ -167,6 +167,78 @@ func (s *GeneratedAPIServer) UpdateAdminCheckoutPlugin(c *gin.Context, pType api
 	s.runProtected(c, "admin", UpdateAdminCheckoutPlugin(s.db, s.pluginManager))
 }
 
+func (s *GeneratedAPIServer) ListAdminInventoryReservations(c *gin.Context, params apicontract.ListAdminInventoryReservationsParams) {
+	_ = params
+	s.runProtected(c, "admin", ListAdminInventoryReservations(s.db))
+}
+
+func (s *GeneratedAPIServer) ListAdminInventoryAlerts(c *gin.Context, params apicontract.ListAdminInventoryAlertsParams) {
+	_ = params
+	s.runProtected(c, "admin", ListAdminInventoryAlerts(s.db))
+}
+
+func (s *GeneratedAPIServer) AckAdminInventoryAlert(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", AckAdminInventoryAlert(s.db))
+}
+
+func (s *GeneratedAPIServer) ResolveAdminInventoryAlert(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", ResolveAdminInventoryAlert(s.db))
+}
+
+func (s *GeneratedAPIServer) ListAdminInventoryThresholds(c *gin.Context, params apicontract.ListAdminInventoryThresholdsParams) {
+	_ = params
+	s.runProtected(c, "admin", ListAdminInventoryThresholds(s.db))
+}
+
+func (s *GeneratedAPIServer) UpsertAdminInventoryThreshold(c *gin.Context) {
+	s.runProtected(c, "admin", UpsertAdminInventoryThreshold(s.db))
+}
+
+func (s *GeneratedAPIServer) DeleteAdminInventoryThreshold(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", DeleteAdminInventoryThreshold(s.db))
+}
+
+func (s *GeneratedAPIServer) CreateAdminInventoryAdjustment(c *gin.Context) {
+	s.runProtected(c, "admin", CreateAdminInventoryAdjustment(s.db))
+}
+
+func (s *GeneratedAPIServer) RunAdminInventoryReconciliation(c *gin.Context) {
+	s.runProtected(c, "admin", RunAdminInventoryReconciliation(s.db))
+}
+
+func (s *GeneratedAPIServer) GetAdminInventoryTimeline(c *gin.Context, productVariantId int, params apicontract.GetAdminInventoryTimelineParams) {
+	_ = productVariantId
+	_ = params
+	s.runProtected(c, "admin", GetAdminInventoryTimeline(s.db))
+}
+
+func (s *GeneratedAPIServer) ListAdminPurchaseOrders(c *gin.Context, params apicontract.ListAdminPurchaseOrdersParams) {
+	_ = params
+	s.runProtected(c, "admin", ListAdminPurchaseOrders(s.db))
+}
+
+func (s *GeneratedAPIServer) CreateAdminPurchaseOrder(c *gin.Context) {
+	s.runProtected(c, "admin", CreateAdminPurchaseOrder(s.db))
+}
+
+func (s *GeneratedAPIServer) IssueAdminPurchaseOrder(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", IssueAdminPurchaseOrder(s.db))
+}
+
+func (s *GeneratedAPIServer) CancelAdminPurchaseOrder(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", CancelAdminPurchaseOrder(s.db))
+}
+
+func (s *GeneratedAPIServer) ReceiveAdminPurchaseOrder(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", ReceiveAdminPurchaseOrder(s.db))
+}
+
 func (s *GeneratedAPIServer) GetAdminOrder(c *gin.Context, id int) {
 	_ = id
 	s.runProtected(c, "admin", GetAdminOrderByID(s.db, s.mediaService))

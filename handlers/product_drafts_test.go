@@ -128,6 +128,14 @@ func TestNormalizedProductDraftRoundTrip(t *testing.T) {
 	require.NotNil(t, stored.DraftUpdatedAt)
 }
 
+func TestPostgresTextArrayLiteralEscapesImages(t *testing.T) {
+	assert.Equal(t, "{}", postgresTextArrayLiteral(nil))
+	assert.Equal(t, `{"http://example.test/a.webp","quote\"and\\slash"}`, postgresTextArrayLiteral([]string{
+		"http://example.test/a.webp",
+		`quote"and\slash`,
+	}))
+}
+
 func TestPublishNormalizedProductDraftReplacesLiveCatalogState(t *testing.T) {
 	db := newTestDB(t)
 

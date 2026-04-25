@@ -13,6 +13,7 @@ import (
 	"ecommerce/internal/checkoutplugins"
 	"ecommerce/internal/media"
 	checkoutservice "ecommerce/internal/services/checkout"
+	inventoryservice "ecommerce/internal/services/inventory"
 	paymentservice "ecommerce/internal/services/payments"
 	"ecommerce/models"
 
@@ -20,6 +21,12 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
+
+const authorizedOrderReservationTTL = 180 * 24 * time.Hour
+
+func authorizedOrderReservationExpiresAt(now time.Time) time.Time {
+	return now.UTC().Add(authorizedOrderReservationTTL)
+}
 
 func hasPluginCheckoutSelection(req ProcessPaymentRequest) bool {
 	return checkoutservice.HasProviderSelection(checkoutservice.ProviderSelection{
@@ -458,6 +465,24 @@ func AuthorizeCheckoutOrderPayment(
 					return err
 				}
 			}
+			if err := inventoryservice.ReserveOrderItems(
+				tx,
+				lockedOrder,
+				fmt.Sprintf("checkout-payment-authorize:%d:%d:%s", lockedOrder.ID, snapshot.ID, strings.TrimSpace(c.GetHeader("Idempotency-Key"))),
+				authorizedOrderReservationExpiresAt(time.Now()),
+			); err != nil {
+				var availabilityErr *inventoryservice.InsufficientAvailabilityError
+				if errors.As(err, &availabilityErr) {
+					responseCapture.Respond(http.StatusBadRequest, gin.H{
+						"error":              "Insufficient stock",
+						"product_variant_id": availabilityErr.ProductVariantID,
+						"requested":          availabilityErr.Requested,
+						"available":          availabilityErr.Available,
+					})
+					return nil
+				}
+				return err
+			}
 
 			intent, _, err = paymentservice.PrepareAuthorizedPaymentIntent(
 				tx,
@@ -534,6 +559,16 @@ func AuthorizeCheckoutOrderPayment(
 				correlationID,
 			)
 			if err != nil {
+				if releaseErr := db.Transaction(func(tx *gorm.DB) error {
+					return inventoryservice.ReleaseReservationsForOrder(tx, order.ID, fmt.Sprintf("payment-authorize-failed:%d", order.ID))
+				}); releaseErr != nil {
+					log.Printf(
+						"checkout_order_payment_authorize reservation_release_failure correlation_id=%s order_id=%d reason=%q",
+						correlationID,
+						order.ID,
+						releaseErr.Error(),
+					)
+				}
 				switch {
 				case mapProviderConfigurationError(err, respond):
 				default:

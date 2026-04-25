@@ -1,12 +1,13 @@
 package orders
 
 import (
+	"errors"
 	"fmt"
 
+	inventoryservice "ecommerce/internal/services/inventory"
 	"ecommerce/models"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 // InsufficientStockError describes stock validation failures during stock transitions.
@@ -21,43 +22,57 @@ func (e *InsufficientStockError) Error() string {
 	return "insufficient stock"
 }
 
-// DeductStockForItems decrements stock for every order item while holding row locks.
-func DeductStockForItems(tx *gorm.DB, items []models.OrderItem) error {
+// DeductStockForItems decrements inventory for every order item.
+func DeductStockForItems(tx *gorm.DB, orderID uint, items []models.OrderItem) error {
 	for _, item := range items {
 		var variant models.ProductVariant
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Preload("Product").First(&variant, item.ProductVariantID).Error; err != nil {
+		if err := tx.Preload("Product").First(&variant, item.ProductVariantID).Error; err != nil {
 			return err
 		}
 
-		if variant.Stock < item.Quantity {
+		availability, err := inventoryservice.ApplyMovement(tx, inventoryservice.MovementInput{
+			ProductVariantID: item.ProductVariantID,
+			MovementType:     inventoryservice.MovementTypeOrderCommit,
+			QuantityDelta:    -item.Quantity,
+			ReferenceType:    inventoryservice.ReferenceTypeOrder,
+			ReferenceID:      &orderID,
+			ReasonCode:       "order_stock_commit",
+		})
+		if err != nil {
+			var availabilityErr *inventoryservice.InsufficientAvailabilityError
+			if errors.As(err, &availabilityErr) {
+				return &InsufficientStockError{
+					ProductVariantID: item.ProductVariantID,
+					ProductName:      variant.Product.Name,
+					Requested:        item.Quantity,
+					Available:        availabilityErr.Available,
+				}
+			}
+			return err
+		}
+		if availability.Available < 0 {
 			return &InsufficientStockError{
 				ProductVariantID: item.ProductVariantID,
 				ProductName:      variant.Product.Name,
 				Requested:        item.Quantity,
-				Available:        variant.Stock,
+				Available:        availability.Available,
 			}
-		}
-
-		if err := tx.Model(&models.ProductVariant{}).
-			Where("id = ? AND stock >= ?", item.ProductVariantID, item.Quantity).
-			Update("stock", gorm.Expr("stock - ?", item.Quantity)).Error; err != nil {
-			return err
 		}
 	}
 	return nil
 }
 
-// ReplenishStockForItems restores stock for every order item while holding row locks.
-func ReplenishStockForItems(tx *gorm.DB, items []models.OrderItem) error {
+// ReplenishStockForItems restores inventory for every order item.
+func ReplenishStockForItems(tx *gorm.DB, orderID uint, items []models.OrderItem) error {
 	for _, item := range items {
-		var variant models.ProductVariant
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&variant, item.ProductVariantID).Error; err != nil {
-			return err
-		}
-
-		if err := tx.Model(&models.ProductVariant{}).
-			Where("id = ?", item.ProductVariantID).
-			Update("stock", gorm.Expr("stock + ?", item.Quantity)).Error; err != nil {
+		if _, err := inventoryservice.ApplyMovement(tx, inventoryservice.MovementInput{
+			ProductVariantID: item.ProductVariantID,
+			MovementType:     inventoryservice.MovementTypeOrderRelease,
+			QuantityDelta:    item.Quantity,
+			ReferenceType:    inventoryservice.ReferenceTypeOrder,
+			ReferenceID:      &orderID,
+			ReasonCode:       "order_stock_release",
+		}); err != nil {
 			return err
 		}
 	}
@@ -82,11 +97,21 @@ func ApplyStatusTransition(tx *gorm.DB, order *models.Order, newStatus string) e
 	willCommitStock := models.IsStockCommittedOrderStatus(newStatus)
 
 	if willCommitStock && !wasStockCommitted {
-		if err := DeductStockForItems(tx, items); err != nil {
+		consumed, err := inventoryservice.ConsumeReservationsForOrder(tx, order.ID, fmt.Sprintf("order-status:%d:%s", order.ID, newStatus))
+		if err != nil {
 			return err
 		}
+		if !consumed {
+			if err := DeductStockForItems(tx, order.ID, items); err != nil {
+				return err
+			}
+		}
 	} else if !willCommitStock && wasStockCommitted {
-		if err := ReplenishStockForItems(tx, items); err != nil {
+		if err := ReplenishStockForItems(tx, order.ID, items); err != nil {
+			return err
+		}
+	} else if !willCommitStock && order.Status != newStatus {
+		if err := inventoryservice.ReleaseReservationsForOrder(tx, order.ID, fmt.Sprintf("order-status:%d:%s", order.ID, newStatus)); err != nil {
 			return err
 		}
 	}

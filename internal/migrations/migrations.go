@@ -78,6 +78,11 @@ const providersP0Version = "2026031701_providers_p0_payment_foundation"
 const providersP2Version = "2026032001_providers_p2_webhook_events"
 const providersP3Version = "2026032002_providers_p3_shipping_tax"
 const providersP4Version = "2026032003_providers_p4_security_ops"
+const inventoryDisciplineP0Version = "2026032401_inventory_discipline_p0"
+const inventoryDisciplineP1Version = "2026032402_inventory_discipline_p1_reservations"
+const inventoryDisciplineP2Version = "2026032403_inventory_discipline_p2_alerts"
+const inventoryDisciplineP3Version = "2026032404_inventory_discipline_p3_purchase_orders"
+const inventoryDisciplineP4Version = "2026032405_inventory_discipline_p4_adjustments"
 const migrationStepAlertThresholdEnvVar = "MIGRATIONS_STEP_ALERT_THRESHOLD_MS"
 
 var versionPattern = regexp.MustCompile(`^\d{10}_[a-z0-9_]+$`)
@@ -704,6 +709,257 @@ var orderedMigrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:         inventoryDisciplineP0Version,
+		Name:            "add inventory quantity model and movement ledger",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "inventory"},
+		PostChecks: []PostCheck{
+			{
+				Name: "inventory_p0_structures_exist",
+				Check: func(tx *gorm.DB) error {
+					for _, model := range []any{
+						&models.InventoryItem{},
+						&models.InventoryLevel{},
+						&models.InventoryMovement{},
+					} {
+						if !tx.Migrator().HasTable(model) {
+							return fmt.Errorf("missing table for %T", model)
+						}
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			for _, model := range []any{
+				&models.InventoryItem{},
+				&models.InventoryLevel{},
+				&models.InventoryMovement{},
+			} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			for _, index := range []struct {
+				model any
+				name  string
+			}{
+				{model: &models.InventoryItem{}, name: "idx_inventory_items_product_variant_id"},
+				{model: &models.InventoryLevel{}, name: "idx_inventory_levels_inventory_item_id"},
+				{model: &models.InventoryMovement{}, name: "idx_inventory_movements_inventory_item_id"},
+				{model: &models.InventoryMovement{}, name: "idx_inventory_movements_movement_type"},
+				{model: &models.InventoryMovement{}, name: "idx_inventory_movements_reference_type"},
+				{model: &models.InventoryMovement{}, name: "idx_inventory_movements_reference_id"},
+			} {
+				if err := ops.CreateIndexIfNotExists(tx, index.model, index.name); err != nil {
+					return err
+				}
+			}
+			return backfillInventoryItemsFromVariants(tx)
+		},
+	},
+	{
+		Version:         inventoryDisciplineP1Version,
+		Name:            "add inventory reservations",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "inventory", "checkout"},
+		PostChecks: []PostCheck{
+			{
+				Name: "inventory_p1_reservations_exist",
+				Check: func(tx *gorm.DB) error {
+					if !tx.Migrator().HasTable(&models.InventoryReservation{}) {
+						return fmt.Errorf("missing table for %T", &models.InventoryReservation{})
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			if err := ops.CreateTableIfNotExists(tx, &models.InventoryReservation{}); err != nil {
+				return err
+			}
+			for _, index := range []string{
+				"idx_inventory_reservations_inventory_item_id",
+				"idx_inventory_reservations_product_variant_id",
+				"idx_inventory_reservations_status",
+				"idx_inventory_reservations_expires_at",
+				"idx_inventory_reservations_owner_type",
+				"idx_inventory_reservations_owner_id",
+				"idx_inventory_reservations_checkout_session_id",
+				"idx_inventory_reservations_order_id",
+				"idx_inventory_reservations_idempotency_key",
+			} {
+				if err := ops.CreateIndexIfNotExists(tx, &models.InventoryReservation{}, index); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         inventoryDisciplineP2Version,
+		Name:            "add inventory thresholds and alerts",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "inventory"},
+		PostChecks: []PostCheck{
+			{
+				Name: "inventory_p2_alert_tables_exist",
+				Check: func(tx *gorm.DB) error {
+					for _, model := range []any{
+						&models.InventoryThreshold{},
+						&models.InventoryAlert{},
+					} {
+						if !tx.Migrator().HasTable(model) {
+							return fmt.Errorf("missing table for %T", model)
+						}
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			for _, model := range []any{
+				&models.InventoryThreshold{},
+				&models.InventoryAlert{},
+			} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			for _, index := range []struct {
+				model any
+				name  string
+			}{
+				{model: &models.InventoryThreshold{}, name: "idx_inventory_thresholds_product_variant_id"},
+				{model: &models.InventoryAlert{}, name: "idx_inventory_alerts_inventory_item_id"},
+				{model: &models.InventoryAlert{}, name: "idx_inventory_alerts_product_variant_id"},
+				{model: &models.InventoryAlert{}, name: "idx_inventory_alerts_alert_type"},
+				{model: &models.InventoryAlert{}, name: "idx_inventory_alerts_status"},
+				{model: &models.InventoryAlert{}, name: "idx_inventory_alerts_opened_at"},
+			} {
+				if err := ops.CreateIndexIfNotExists(tx, index.model, index.name); err != nil {
+					return err
+				}
+			}
+			return tx.FirstOrCreate(&models.InventoryThreshold{}, models.InventoryThreshold{LowStockQuantity: 5}).Error
+		},
+	},
+	{
+		Version:         inventoryDisciplineP3Version,
+		Name:            "add purchase orders and receiving",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "inventory"},
+		PostChecks: []PostCheck{
+			{
+				Name: "inventory_p3_purchase_order_tables_exist",
+				Check: func(tx *gorm.DB) error {
+					for _, model := range []any{
+						&models.Supplier{},
+						&models.PurchaseOrder{},
+						&models.PurchaseOrderItem{},
+						&models.InventoryReceipt{},
+						&models.InventoryReceiptItem{},
+					} {
+						if !tx.Migrator().HasTable(model) {
+							return fmt.Errorf("missing table for %T", model)
+						}
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			for _, model := range []any{
+				&models.Supplier{},
+				&models.PurchaseOrder{},
+				&models.PurchaseOrderItem{},
+				&models.InventoryReceipt{},
+				&models.InventoryReceiptItem{},
+			} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         inventoryDisciplineP4Version,
+		Name:            "add inventory adjustments",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "inventory"},
+		PostChecks: []PostCheck{
+			{
+				Name: "inventory_p4_adjustments_exist",
+				Check: func(tx *gorm.DB) error {
+					if !tx.Migrator().HasTable(&models.InventoryAdjustment{}) {
+						return fmt.Errorf("missing table for %T", &models.InventoryAdjustment{})
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			if err := ops.CreateTableIfNotExists(tx, &models.InventoryAdjustment{}); err != nil {
+				return err
+			}
+			for _, index := range []string{
+				"idx_inventory_adjustments_inventory_item_id",
+				"idx_inventory_adjustments_product_variant_id",
+				"idx_inventory_adjustments_reason_code",
+			} {
+				if err := ops.CreateIndexIfNotExists(tx, &models.InventoryAdjustment{}, index); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+}
+
+func backfillInventoryItemsFromVariants(tx *gorm.DB) error {
+	db := tx.Session(&gorm.Session{NewDB: true})
+	type variantInventoryBackfillRow struct {
+		ID    uint
+		Stock int
+	}
+
+	var variants []variantInventoryBackfillRow
+	if err := db.Table("product_variants").Select("id", "stock").Where("deleted_at IS NULL").Find(&variants).Error; err != nil {
+		return err
+	}
+
+	for _, variant := range variants {
+		var item models.InventoryItem
+		err := db.Where("product_variant_id = ?", variant.ID).First(&item).Error
+		if err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
+			item = models.InventoryItem{ProductVariantID: variant.ID}
+			if err := db.Create(&item).Error; err != nil {
+				return err
+			}
+		}
+
+		var count int64
+		if err := db.Model(&models.InventoryLevel{}).Where("inventory_item_id = ?", item.ID).Count(&count).Error; err != nil {
+			return err
+		}
+		if count == 0 {
+			level := models.InventoryLevel{
+				InventoryItemID: item.ID,
+				OnHand:          variant.Stock,
+				Reserved:        0,
+				Available:       variant.Stock,
+			}
+			if err := db.Create(&level).Error; err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 type legacyCartItemVariantBackfillRow struct {

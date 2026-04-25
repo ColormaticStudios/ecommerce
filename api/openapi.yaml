@@ -2345,6 +2345,370 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /api/v1/admin/inventory/reservations:
+    get:
+      tags: [admin, inventory]
+      operationId: listAdminInventoryReservations
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [ACTIVE, CONSUMED, RELEASED, EXPIRED]
+          style: form
+          explode: true
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: Inventory reservations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryReservationList"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/inventory/alerts:
+    get:
+      tags: [admin, inventory]
+      operationId: listAdminInventoryAlerts
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [OPEN, ACKED, RESOLVED]
+          style: form
+          explode: true
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: Inventory alerts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryAlertList"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/inventory/alerts/{id}/ack:
+    post:
+      tags: [admin, inventory]
+      operationId: ackAdminInventoryAlert
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Acknowledged inventory alert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryAlert"
+        "400":
+          description: Invalid alert id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/inventory/alerts/{id}/resolve:
+    post:
+      tags: [admin, inventory]
+      operationId: resolveAdminInventoryAlert
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Resolved inventory alert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryAlert"
+        "400":
+          description: Invalid alert id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/inventory/thresholds:
+    get:
+      tags: [admin, inventory]
+      operationId: listAdminInventoryThresholds
+      parameters:
+        - in: query
+          name: product_variant_id
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Inventory thresholds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryThresholdList"
+    put:
+      tags: [admin, inventory]
+      operationId: upsertAdminInventoryThreshold
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryThresholdRequest"
+      responses:
+        "200":
+          description: Inventory threshold
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryThreshold"
+        "400":
+          description: Invalid threshold request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/inventory/thresholds/{id}:
+    delete:
+      tags: [admin, inventory]
+      operationId: deleteAdminInventoryThreshold
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Inventory threshold deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid threshold id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/inventory/adjustments:
+    post:
+      tags: [admin, inventory]
+      operationId: createAdminInventoryAdjustment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryAdjustmentRequest"
+      responses:
+        "201":
+          description: Inventory adjustment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryAdjustmentResponse"
+        "400":
+          description: Invalid adjustment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/inventory/reconciliation:
+    post:
+      tags: [admin, inventory]
+      operationId: runAdminInventoryReconciliation
+      responses:
+        "200":
+          description: Inventory reconciliation report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryReconciliationReport"
+
+  /api/v1/admin/inventory/variants/{product_variant_id}/timeline:
+    get:
+      tags: [admin, inventory]
+      operationId: getAdminInventoryTimeline
+      parameters:
+        - in: path
+          name: product_variant_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: Inventory timeline
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryTimeline"
+        "400":
+          description: Invalid product variant id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/purchase-orders:
+    get:
+      tags: [admin, inventory]
+      operationId: listAdminPurchaseOrders
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: Purchase orders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrderList"
+    post:
+      tags: [admin, inventory]
+      operationId: createAdminPurchaseOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseOrderRequest"
+      responses:
+        "201":
+          description: Purchase order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrder"
+        "400":
+          description: Invalid purchase order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/purchase-orders/{id}/issue:
+    post:
+      tags: [admin, inventory]
+      operationId: issueAdminPurchaseOrder
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Purchase order issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrder"
+        "400":
+          description: Invalid purchase order transition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/purchase-orders/{id}/cancel:
+    post:
+      tags: [admin, inventory]
+      operationId: cancelAdminPurchaseOrder
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Purchase order cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrder"
+        "400":
+          description: Invalid purchase order transition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/purchase-orders/{id}/receive:
+    post:
+      tags: [admin, inventory]
+      operationId: receiveAdminPurchaseOrder
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseOrderReceiveRequest"
+      responses:
+        "200":
+          description: Purchase order receipt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseOrderReceiptResponse"
+        "400":
+          description: Invalid receipt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /api/v1/admin/storefront:
     get:
       tags: [admin, storefront]
@@ -3701,6 +4065,462 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PaymentIntentRecord"
+
+    InventoryReservation:
+      type: object
+      required:
+        - id
+        - product_variant_id
+        - quantity
+        - status
+        - expires_at
+        - owner_type
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+        product_variant_id:
+          type: integer
+        quantity:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+          enum: [ACTIVE, CONSUMED, RELEASED, EXPIRED]
+        expires_at:
+          type: string
+          format: date-time
+        owner_type:
+          type: string
+        owner_id:
+          type: integer
+          nullable: true
+        checkout_session_id:
+          type: integer
+          nullable: true
+        order_id:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    InventoryReservationList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryReservation"
+
+    InventoryAlert:
+      type: object
+      required:
+        - id
+        - product_variant_id
+        - alert_type
+        - status
+        - available
+        - threshold
+        - opened_at
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+        product_variant_id:
+          type: integer
+        alert_type:
+          type: string
+          enum: [LOW_STOCK, OUT_OF_STOCK, RECOVERY]
+        status:
+          type: string
+          enum: [OPEN, ACKED, RESOLVED]
+        available:
+          type: integer
+        threshold:
+          type: integer
+        opened_at:
+          type: string
+          format: date-time
+        acked_at:
+          type: string
+          format: date-time
+          nullable: true
+        acked_by_type:
+          type: string
+        acked_by_id:
+          type: integer
+          nullable: true
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+        resolved_by_type:
+          type: string
+        resolved_by_id:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    InventoryAlertList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryAlert"
+
+    InventoryThreshold:
+      type: object
+      required:
+        - id
+        - low_stock_quantity
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+        product_variant_id:
+          type: integer
+          nullable: true
+        low_stock_quantity:
+          type: integer
+          minimum: 0
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    InventoryThresholdList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryThreshold"
+
+    InventoryThresholdRequest:
+      type: object
+      required: [low_stock_quantity]
+      properties:
+        product_variant_id:
+          type: integer
+          nullable: true
+        low_stock_quantity:
+          type: integer
+          minimum: 0
+
+    InventoryMovement:
+      type: object
+      required:
+        - id
+        - inventory_item_id
+        - movement_type
+        - quantity_delta
+        - reference_type
+        - reason_code
+        - actor_type
+        - created_at
+        - updated_at
+      properties:
+        id: { type: integer }
+        inventory_item_id: { type: integer }
+        movement_type: { type: string }
+        quantity_delta: { type: integer }
+        reference_type: { type: string }
+        reference_id:
+          type: integer
+          nullable: true
+        reason_code: { type: string }
+        actor_type: { type: string }
+        actor_id:
+          type: integer
+          nullable: true
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    InventoryAdjustmentReason:
+      type: string
+      enum: [CYCLE_COUNT_GAIN, CYCLE_COUNT_LOSS, DAMAGE, SHRINKAGE, RETURN_RESTOCK, CORRECTION]
+
+    InventoryAdjustment:
+      type: object
+      required:
+        - id
+        - inventory_item_id
+        - product_variant_id
+        - quantity_delta
+        - reason_code
+        - notes
+        - actor_type
+        - approved_by_type
+        - created_at
+        - updated_at
+      properties:
+        id: { type: integer }
+        inventory_item_id: { type: integer }
+        product_variant_id: { type: integer }
+        quantity_delta: { type: integer }
+        reason_code:
+          $ref: "#/components/schemas/InventoryAdjustmentReason"
+        notes: { type: string }
+        actor_type: { type: string }
+        actor_id:
+          type: integer
+          nullable: true
+        approved_by_type: { type: string }
+        approved_by_id:
+          type: integer
+          nullable: true
+        approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    InventoryAvailability:
+      type: object
+      required: [product_variant_id, on_hand, reserved, available]
+      properties:
+        product_variant_id: { type: integer }
+        on_hand: { type: integer }
+        reserved: { type: integer }
+        available: { type: integer }
+
+    InventoryAdjustmentRequest:
+      type: object
+      required: [product_variant_id, quantity_delta, reason_code]
+      properties:
+        product_variant_id: { type: integer }
+        quantity_delta: { type: integer }
+        reason_code:
+          $ref: "#/components/schemas/InventoryAdjustmentReason"
+        notes: { type: string }
+        approved_by_type: { type: string }
+        approved_by_id:
+          type: integer
+          nullable: true
+
+    InventoryAdjustmentResponse:
+      type: object
+      required: [adjustment, availability]
+      properties:
+        adjustment:
+          $ref: "#/components/schemas/InventoryAdjustment"
+        availability:
+          $ref: "#/components/schemas/InventoryAvailability"
+
+    InventoryReconciliationIssue:
+      type: object
+      required:
+        - issue_type
+        - inventory_item_id
+        - product_variant_id
+        - expected
+        - actual
+        - message
+        - entity_type
+      properties:
+        issue_type: { type: string }
+        inventory_item_id: { type: integer }
+        product_variant_id: { type: integer }
+        expected: { type: integer }
+        actual: { type: integer }
+        message: { type: string }
+        entity_type: { type: string }
+        entity_id:
+          type: integer
+          nullable: true
+
+    InventoryReconciliationReport:
+      type: object
+      required: [checked_at, issues]
+      properties:
+        checked_at:
+          type: string
+          format: date-time
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryReconciliationIssue"
+
+    InventoryTimeline:
+      type: object
+      required: [product_variant_id, movements, reservations, adjustments]
+      properties:
+        product_variant_id: { type: integer }
+        movements:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryMovement"
+        reservations:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryReservation"
+        adjustments:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryAdjustment"
+
+    Supplier:
+      type: object
+      required: [id, name, email, notes, created_at, updated_at]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        notes: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    SupplierRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        email: { type: string }
+        notes: { type: string }
+
+    PurchaseOrderItem:
+      type: object
+      required: [id, product_variant_id, quantity_ordered, quantity_received, unit_cost]
+      properties:
+        id: { type: integer }
+        product_variant_id: { type: integer }
+        quantity_ordered: { type: integer }
+        quantity_received: { type: integer }
+        unit_cost: { type: number }
+
+    PurchaseOrder:
+      type: object
+      required: [id, status, notes, items, created_at, updated_at]
+      properties:
+        id: { type: integer }
+        supplier_id:
+          type: integer
+          nullable: true
+        supplier:
+          nullable: true
+          $ref: "#/components/schemas/Supplier"
+        status:
+          type: string
+          enum: [DRAFT, ISSUED, PARTIALLY_RECEIVED, RECEIVED, CANCELLED]
+        notes: { type: string }
+        issued_at:
+          type: string
+          format: date-time
+          nullable: true
+        received_at:
+          type: string
+          format: date-time
+          nullable: true
+        cancelled_at:
+          type: string
+          format: date-time
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseOrderItem"
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    PurchaseOrderList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseOrder"
+
+    PurchaseOrderItemRequest:
+      type: object
+      required: [product_variant_id, quantity_ordered]
+      properties:
+        product_variant_id: { type: integer }
+        quantity_ordered: { type: integer, minimum: 1 }
+        unit_cost: { type: number }
+
+    PurchaseOrderRequest:
+      type: object
+      required: [items]
+      properties:
+        supplier_id:
+          type: integer
+          nullable: true
+        supplier:
+          nullable: true
+          $ref: "#/components/schemas/SupplierRequest"
+        notes: { type: string }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseOrderItemRequest"
+
+    PurchaseOrderReceiveItemRequest:
+      type: object
+      required: [purchase_order_item_id, quantity_received]
+      properties:
+        purchase_order_item_id: { type: integer }
+        quantity_received: { type: integer, minimum: 1 }
+
+    PurchaseOrderReceiveRequest:
+      type: object
+      required: [items]
+      properties:
+        notes: { type: string }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseOrderReceiveItemRequest"
+
+    InventoryReceiptItem:
+      type: object
+      required: [id, purchase_order_item_id, product_variant_id, quantity_received]
+      properties:
+        id: { type: integer }
+        purchase_order_item_id: { type: integer }
+        product_variant_id: { type: integer }
+        quantity_received: { type: integer }
+
+    InventoryReceipt:
+      type: object
+      required: [id, purchase_order_id, received_at, notes, items]
+      properties:
+        id: { type: integer }
+        purchase_order_id: { type: integer }
+        received_at: { type: string, format: date-time }
+        notes: { type: string }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryReceiptItem"
+
+    PurchaseOrderReceiptResponse:
+      type: object
+      required: [purchase_order, receipt]
+      properties:
+        purchase_order:
+          $ref: "#/components/schemas/PurchaseOrder"
+        receipt:
+          $ref: "#/components/schemas/InventoryReceipt"
 
     AdminOrderPaymentLifecycleResponse:
       type: object

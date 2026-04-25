@@ -52,6 +52,38 @@ const (
 	CheckoutPluginStateSeverityWarning CheckoutPluginStateSeverity = "warning"
 )
 
+// Defines values for InventoryAdjustmentReason.
+const (
+	CORRECTION     InventoryAdjustmentReason = "CORRECTION"
+	CYCLECOUNTGAIN InventoryAdjustmentReason = "CYCLE_COUNT_GAIN"
+	CYCLECOUNTLOSS InventoryAdjustmentReason = "CYCLE_COUNT_LOSS"
+	DAMAGE         InventoryAdjustmentReason = "DAMAGE"
+	RETURNRESTOCK  InventoryAdjustmentReason = "RETURN_RESTOCK"
+	SHRINKAGE      InventoryAdjustmentReason = "SHRINKAGE"
+)
+
+// Defines values for InventoryAlertAlertType.
+const (
+	LOWSTOCK   InventoryAlertAlertType = "LOW_STOCK"
+	OUTOFSTOCK InventoryAlertAlertType = "OUT_OF_STOCK"
+	RECOVERY   InventoryAlertAlertType = "RECOVERY"
+)
+
+// Defines values for InventoryAlertStatus.
+const (
+	InventoryAlertStatusACKED    InventoryAlertStatus = "ACKED"
+	InventoryAlertStatusOPEN     InventoryAlertStatus = "OPEN"
+	InventoryAlertStatusRESOLVED InventoryAlertStatus = "RESOLVED"
+)
+
+// Defines values for InventoryReservationStatus.
+const (
+	InventoryReservationStatusACTIVE   InventoryReservationStatus = "ACTIVE"
+	InventoryReservationStatusCONSUMED InventoryReservationStatus = "CONSUMED"
+	InventoryReservationStatusEXPIRED  InventoryReservationStatus = "EXPIRED"
+	InventoryReservationStatusRELEASED InventoryReservationStatus = "RELEASED"
+)
+
 // Defines values for OrderStatus.
 const (
 	OrderStatusCANCELLED OrderStatus = "CANCELLED"
@@ -187,6 +219,15 @@ const (
 	ProviderReconciliationRunRequestProviderTypeTax      ProviderReconciliationRunRequestProviderType = "tax"
 )
 
+// Defines values for PurchaseOrderStatus.
+const (
+	PurchaseOrderStatusCANCELLED         PurchaseOrderStatus = "CANCELLED"
+	PurchaseOrderStatusDRAFT             PurchaseOrderStatus = "DRAFT"
+	PurchaseOrderStatusISSUED            PurchaseOrderStatus = "ISSUED"
+	PurchaseOrderStatusPARTIALLYRECEIVED PurchaseOrderStatus = "PARTIALLY_RECEIVED"
+	PurchaseOrderStatusRECEIVED          PurchaseOrderStatus = "RECEIVED"
+)
+
 // Defines values for ShipmentStatus.
 const (
 	ShipmentStatusDELIVERED      ShipmentStatus = "DELIVERED"
@@ -282,6 +323,21 @@ const (
 	UpdateAdminCheckoutPluginParamsTypeTax      UpdateAdminCheckoutPluginParamsType = "tax"
 )
 
+// Defines values for ListAdminInventoryAlertsParamsStatus.
+const (
+	ListAdminInventoryAlertsParamsStatusACKED    ListAdminInventoryAlertsParamsStatus = "ACKED"
+	ListAdminInventoryAlertsParamsStatusOPEN     ListAdminInventoryAlertsParamsStatus = "OPEN"
+	ListAdminInventoryAlertsParamsStatusRESOLVED ListAdminInventoryAlertsParamsStatus = "RESOLVED"
+)
+
+// Defines values for ListAdminInventoryReservationsParamsStatus.
+const (
+	ListAdminInventoryReservationsParamsStatusACTIVE   ListAdminInventoryReservationsParamsStatus = "ACTIVE"
+	ListAdminInventoryReservationsParamsStatusCONSUMED ListAdminInventoryReservationsParamsStatus = "CONSUMED"
+	ListAdminInventoryReservationsParamsStatusEXPIRED  ListAdminInventoryReservationsParamsStatus = "EXPIRED"
+	ListAdminInventoryReservationsParamsStatusRELEASED ListAdminInventoryReservationsParamsStatus = "RELEASED"
+)
+
 // Defines values for ListAdminProductsParamsSort.
 const (
 	ListAdminProductsParamsSortCreatedAt ListAdminProductsParamsSort = "created_at"
@@ -334,13 +390,13 @@ const (
 
 // Defines values for ListUserOrdersParamsStatus.
 const (
-	ListUserOrdersParamsStatusCANCELLED ListUserOrdersParamsStatus = "CANCELLED"
-	ListUserOrdersParamsStatusDELIVERED ListUserOrdersParamsStatus = "DELIVERED"
-	ListUserOrdersParamsStatusFAILED    ListUserOrdersParamsStatus = "FAILED"
-	ListUserOrdersParamsStatusPAID      ListUserOrdersParamsStatus = "PAID"
-	ListUserOrdersParamsStatusPENDING   ListUserOrdersParamsStatus = "PENDING"
-	ListUserOrdersParamsStatusREFUNDED  ListUserOrdersParamsStatus = "REFUNDED"
-	ListUserOrdersParamsStatusSHIPPED   ListUserOrdersParamsStatus = "SHIPPED"
+	CANCELLED ListUserOrdersParamsStatus = "CANCELLED"
+	DELIVERED ListUserOrdersParamsStatus = "DELIVERED"
+	FAILED    ListUserOrdersParamsStatus = "FAILED"
+	PAID      ListUserOrdersParamsStatus = "PAID"
+	PENDING   ListUserOrdersParamsStatus = "PENDING"
+	REFUNDED  ListUserOrdersParamsStatus = "REFUNDED"
+	SHIPPED   ListUserOrdersParamsStatus = "SHIPPED"
 )
 
 // Defines values for ListProductsParamsSort.
@@ -641,6 +697,181 @@ type DraftPreviewSessionResponse struct {
 type Error struct {
 	Code  *string `json:"code,omitempty"`
 	Error string  `json:"error"`
+}
+
+// InventoryAdjustment defines model for InventoryAdjustment.
+type InventoryAdjustment struct {
+	ActorId          *int                      `json:"actor_id"`
+	ActorType        string                    `json:"actor_type"`
+	ApprovedAt       *time.Time                `json:"approved_at"`
+	ApprovedById     *int                      `json:"approved_by_id"`
+	ApprovedByType   string                    `json:"approved_by_type"`
+	CreatedAt        time.Time                 `json:"created_at"`
+	Id               int                       `json:"id"`
+	InventoryItemId  int                       `json:"inventory_item_id"`
+	Notes            string                    `json:"notes"`
+	ProductVariantId int                       `json:"product_variant_id"`
+	QuantityDelta    int                       `json:"quantity_delta"`
+	ReasonCode       InventoryAdjustmentReason `json:"reason_code"`
+	UpdatedAt        time.Time                 `json:"updated_at"`
+}
+
+// InventoryAdjustmentReason defines model for InventoryAdjustmentReason.
+type InventoryAdjustmentReason string
+
+// InventoryAdjustmentRequest defines model for InventoryAdjustmentRequest.
+type InventoryAdjustmentRequest struct {
+	ApprovedById     *int                      `json:"approved_by_id"`
+	ApprovedByType   *string                   `json:"approved_by_type,omitempty"`
+	Notes            *string                   `json:"notes,omitempty"`
+	ProductVariantId int                       `json:"product_variant_id"`
+	QuantityDelta    int                       `json:"quantity_delta"`
+	ReasonCode       InventoryAdjustmentReason `json:"reason_code"`
+}
+
+// InventoryAdjustmentResponse defines model for InventoryAdjustmentResponse.
+type InventoryAdjustmentResponse struct {
+	Adjustment   InventoryAdjustment   `json:"adjustment"`
+	Availability InventoryAvailability `json:"availability"`
+}
+
+// InventoryAlert defines model for InventoryAlert.
+type InventoryAlert struct {
+	AckedAt          *time.Time              `json:"acked_at"`
+	AckedById        *int                    `json:"acked_by_id"`
+	AckedByType      *string                 `json:"acked_by_type,omitempty"`
+	AlertType        InventoryAlertAlertType `json:"alert_type"`
+	Available        int                     `json:"available"`
+	CreatedAt        time.Time               `json:"created_at"`
+	Id               int                     `json:"id"`
+	OpenedAt         time.Time               `json:"opened_at"`
+	ProductVariantId int                     `json:"product_variant_id"`
+	ResolvedAt       *time.Time              `json:"resolved_at"`
+	ResolvedById     *int                    `json:"resolved_by_id"`
+	ResolvedByType   *string                 `json:"resolved_by_type,omitempty"`
+	Status           InventoryAlertStatus    `json:"status"`
+	Threshold        int                     `json:"threshold"`
+	UpdatedAt        time.Time               `json:"updated_at"`
+}
+
+// InventoryAlertAlertType defines model for InventoryAlert.AlertType.
+type InventoryAlertAlertType string
+
+// InventoryAlertStatus defines model for InventoryAlert.Status.
+type InventoryAlertStatus string
+
+// InventoryAlertList defines model for InventoryAlertList.
+type InventoryAlertList struct {
+	Items []InventoryAlert `json:"items"`
+}
+
+// InventoryAvailability defines model for InventoryAvailability.
+type InventoryAvailability struct {
+	Available        int `json:"available"`
+	OnHand           int `json:"on_hand"`
+	ProductVariantId int `json:"product_variant_id"`
+	Reserved         int `json:"reserved"`
+}
+
+// InventoryMovement defines model for InventoryMovement.
+type InventoryMovement struct {
+	ActorId         *int      `json:"actor_id"`
+	ActorType       string    `json:"actor_type"`
+	CreatedAt       time.Time `json:"created_at"`
+	Id              int       `json:"id"`
+	InventoryItemId int       `json:"inventory_item_id"`
+	MovementType    string    `json:"movement_type"`
+	QuantityDelta   int       `json:"quantity_delta"`
+	ReasonCode      string    `json:"reason_code"`
+	ReferenceId     *int      `json:"reference_id"`
+	ReferenceType   string    `json:"reference_type"`
+	UpdatedAt       time.Time `json:"updated_at"`
+}
+
+// InventoryReceipt defines model for InventoryReceipt.
+type InventoryReceipt struct {
+	Id              int                    `json:"id"`
+	Items           []InventoryReceiptItem `json:"items"`
+	Notes           string                 `json:"notes"`
+	PurchaseOrderId int                    `json:"purchase_order_id"`
+	ReceivedAt      time.Time              `json:"received_at"`
+}
+
+// InventoryReceiptItem defines model for InventoryReceiptItem.
+type InventoryReceiptItem struct {
+	Id                  int `json:"id"`
+	ProductVariantId    int `json:"product_variant_id"`
+	PurchaseOrderItemId int `json:"purchase_order_item_id"`
+	QuantityReceived    int `json:"quantity_received"`
+}
+
+// InventoryReconciliationIssue defines model for InventoryReconciliationIssue.
+type InventoryReconciliationIssue struct {
+	Actual           int    `json:"actual"`
+	EntityId         *int   `json:"entity_id"`
+	EntityType       string `json:"entity_type"`
+	Expected         int    `json:"expected"`
+	InventoryItemId  int    `json:"inventory_item_id"`
+	IssueType        string `json:"issue_type"`
+	Message          string `json:"message"`
+	ProductVariantId int    `json:"product_variant_id"`
+}
+
+// InventoryReconciliationReport defines model for InventoryReconciliationReport.
+type InventoryReconciliationReport struct {
+	CheckedAt time.Time                      `json:"checked_at"`
+	Issues    []InventoryReconciliationIssue `json:"issues"`
+}
+
+// InventoryReservation defines model for InventoryReservation.
+type InventoryReservation struct {
+	CheckoutSessionId *int                       `json:"checkout_session_id"`
+	CreatedAt         time.Time                  `json:"created_at"`
+	ExpiresAt         time.Time                  `json:"expires_at"`
+	Id                int                        `json:"id"`
+	OrderId           *int                       `json:"order_id"`
+	OwnerId           *int                       `json:"owner_id"`
+	OwnerType         string                     `json:"owner_type"`
+	ProductVariantId  int                        `json:"product_variant_id"`
+	Quantity          int                        `json:"quantity"`
+	Status            InventoryReservationStatus `json:"status"`
+	UpdatedAt         time.Time                  `json:"updated_at"`
+}
+
+// InventoryReservationStatus defines model for InventoryReservation.Status.
+type InventoryReservationStatus string
+
+// InventoryReservationList defines model for InventoryReservationList.
+type InventoryReservationList struct {
+	Items []InventoryReservation `json:"items"`
+}
+
+// InventoryThreshold defines model for InventoryThreshold.
+type InventoryThreshold struct {
+	CreatedAt        time.Time `json:"created_at"`
+	Id               int       `json:"id"`
+	LowStockQuantity int       `json:"low_stock_quantity"`
+	ProductVariantId *int      `json:"product_variant_id"`
+	UpdatedAt        time.Time `json:"updated_at"`
+}
+
+// InventoryThresholdList defines model for InventoryThresholdList.
+type InventoryThresholdList struct {
+	Items []InventoryThreshold `json:"items"`
+}
+
+// InventoryThresholdRequest defines model for InventoryThresholdRequest.
+type InventoryThresholdRequest struct {
+	LowStockQuantity int  `json:"low_stock_quantity"`
+	ProductVariantId *int `json:"product_variant_id"`
+}
+
+// InventoryTimeline defines model for InventoryTimeline.
+type InventoryTimeline struct {
+	Adjustments      []InventoryAdjustment  `json:"adjustments"`
+	Movements        []InventoryMovement    `json:"movements"`
+	ProductVariantId int                    `json:"product_variant_id"`
+	Reservations     []InventoryReservation `json:"reservations"`
 }
 
 // LoginRequest defines model for LoginRequest.
@@ -1103,6 +1334,71 @@ type ProviderWebhookStatusSummary struct {
 	RejectedCount   int `json:"rejected_count"`
 }
 
+// PurchaseOrder defines model for PurchaseOrder.
+type PurchaseOrder struct {
+	CancelledAt *time.Time          `json:"cancelled_at"`
+	CreatedAt   time.Time           `json:"created_at"`
+	Id          int                 `json:"id"`
+	IssuedAt    *time.Time          `json:"issued_at"`
+	Items       []PurchaseOrderItem `json:"items"`
+	Notes       string              `json:"notes"`
+	ReceivedAt  *time.Time          `json:"received_at"`
+	Status      PurchaseOrderStatus `json:"status"`
+	Supplier    *Supplier           `json:"supplier,omitempty"`
+	SupplierId  *int                `json:"supplier_id"`
+	UpdatedAt   time.Time           `json:"updated_at"`
+}
+
+// PurchaseOrderStatus defines model for PurchaseOrder.Status.
+type PurchaseOrderStatus string
+
+// PurchaseOrderItem defines model for PurchaseOrderItem.
+type PurchaseOrderItem struct {
+	Id               int     `json:"id"`
+	ProductVariantId int     `json:"product_variant_id"`
+	QuantityOrdered  int     `json:"quantity_ordered"`
+	QuantityReceived int     `json:"quantity_received"`
+	UnitCost         float32 `json:"unit_cost"`
+}
+
+// PurchaseOrderItemRequest defines model for PurchaseOrderItemRequest.
+type PurchaseOrderItemRequest struct {
+	ProductVariantId int      `json:"product_variant_id"`
+	QuantityOrdered  int      `json:"quantity_ordered"`
+	UnitCost         *float32 `json:"unit_cost,omitempty"`
+}
+
+// PurchaseOrderList defines model for PurchaseOrderList.
+type PurchaseOrderList struct {
+	Items []PurchaseOrder `json:"items"`
+}
+
+// PurchaseOrderReceiptResponse defines model for PurchaseOrderReceiptResponse.
+type PurchaseOrderReceiptResponse struct {
+	PurchaseOrder PurchaseOrder    `json:"purchase_order"`
+	Receipt       InventoryReceipt `json:"receipt"`
+}
+
+// PurchaseOrderReceiveItemRequest defines model for PurchaseOrderReceiveItemRequest.
+type PurchaseOrderReceiveItemRequest struct {
+	PurchaseOrderItemId int `json:"purchase_order_item_id"`
+	QuantityReceived    int `json:"quantity_received"`
+}
+
+// PurchaseOrderReceiveRequest defines model for PurchaseOrderReceiveRequest.
+type PurchaseOrderReceiveRequest struct {
+	Items []PurchaseOrderReceiveItemRequest `json:"items"`
+	Notes *string                           `json:"notes,omitempty"`
+}
+
+// PurchaseOrderRequest defines model for PurchaseOrderRequest.
+type PurchaseOrderRequest struct {
+	Items      []PurchaseOrderItemRequest `json:"items"`
+	Notes      *string                    `json:"notes,omitempty"`
+	Supplier   *SupplierRequest           `json:"supplier,omitempty"`
+	SupplierId *int                       `json:"supplier_id"`
+}
+
 // RegisterRequest defines model for RegisterRequest.
 type RegisterRequest struct {
 	Email    string  `json:"email"`
@@ -1324,6 +1620,23 @@ type StorefrontSettingsResponse struct {
 	UpdatedAt          time.Time          `json:"updated_at"`
 }
 
+// Supplier defines model for Supplier.
+type Supplier struct {
+	CreatedAt time.Time `json:"created_at"`
+	Email     string    `json:"email"`
+	Id        int       `json:"id"`
+	Name      string    `json:"name"`
+	Notes     string    `json:"notes"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// SupplierRequest defines model for SupplierRequest.
+type SupplierRequest struct {
+	Email *string `json:"email,omitempty"`
+	Name  string  `json:"name"`
+	Notes *string `json:"notes,omitempty"`
+}
+
 // TaxLine defines model for TaxLine.
 type TaxLine struct {
 	Id                 *int            `json:"id,omitempty"`
@@ -1460,6 +1773,34 @@ type ListAdminBrandsParams struct {
 // UpdateAdminCheckoutPluginParamsType defines parameters for UpdateAdminCheckoutPlugin.
 type UpdateAdminCheckoutPluginParamsType string
 
+// ListAdminInventoryAlertsParams defines parameters for ListAdminInventoryAlerts.
+type ListAdminInventoryAlertsParams struct {
+	Status *[]ListAdminInventoryAlertsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+	Limit  *int                                    `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ListAdminInventoryAlertsParamsStatus defines parameters for ListAdminInventoryAlerts.
+type ListAdminInventoryAlertsParamsStatus string
+
+// ListAdminInventoryReservationsParams defines parameters for ListAdminInventoryReservations.
+type ListAdminInventoryReservationsParams struct {
+	Status *[]ListAdminInventoryReservationsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+	Limit  *int                                          `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ListAdminInventoryReservationsParamsStatus defines parameters for ListAdminInventoryReservations.
+type ListAdminInventoryReservationsParamsStatus string
+
+// ListAdminInventoryThresholdsParams defines parameters for ListAdminInventoryThresholds.
+type ListAdminInventoryThresholdsParams struct {
+	ProductVariantId *int `form:"product_variant_id,omitempty" json:"product_variant_id,omitempty"`
+}
+
+// GetAdminInventoryTimelineParams defines parameters for GetAdminInventoryTimeline.
+type GetAdminInventoryTimelineParams struct {
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
 // ListAdminOrdersParams defines parameters for ListAdminOrders.
 type ListAdminOrdersParams struct {
 	Page  *int    `form:"page,omitempty" json:"page,omitempty"`
@@ -1525,6 +1866,11 @@ type ListAdminProviderReconciliationRunsParams struct {
 
 // ListAdminProviderReconciliationRunsParamsProviderType defines parameters for ListAdminProviderReconciliationRuns.
 type ListAdminProviderReconciliationRunsParamsProviderType string
+
+// ListAdminPurchaseOrdersParams defines parameters for ListAdminPurchaseOrders.
+type ListAdminPurchaseOrdersParams struct {
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+}
 
 // ExportAdminTaxReportParams defines parameters for ExportAdminTaxReport.
 type ExportAdminTaxReportParams struct {
@@ -1650,6 +1996,12 @@ type UpdateAdminBrandJSONRequestBody = BrandInput
 // UpdateAdminCheckoutPluginJSONRequestBody defines body for UpdateAdminCheckoutPlugin for application/json ContentType.
 type UpdateAdminCheckoutPluginJSONRequestBody = UpdateCheckoutPluginRequest
 
+// CreateAdminInventoryAdjustmentJSONRequestBody defines body for CreateAdminInventoryAdjustment for application/json ContentType.
+type CreateAdminInventoryAdjustmentJSONRequestBody = InventoryAdjustmentRequest
+
+// UpsertAdminInventoryThresholdJSONRequestBody defines body for UpsertAdminInventoryThreshold for application/json ContentType.
+type UpsertAdminInventoryThresholdJSONRequestBody = InventoryThresholdRequest
+
 // CaptureAdminOrderPaymentJSONRequestBody defines body for CaptureAdminOrderPayment for application/json ContentType.
 type CaptureAdminOrderPaymentJSONRequestBody = AdminOrderPaymentAmountRequest
 
@@ -1688,6 +2040,12 @@ type UpsertAdminProviderCredentialJSONRequestBody = ProviderCredentialRequest
 
 // CreateAdminProviderReconciliationRunJSONRequestBody defines body for CreateAdminProviderReconciliationRun for application/json ContentType.
 type CreateAdminProviderReconciliationRunJSONRequestBody = ProviderReconciliationRunRequest
+
+// CreateAdminPurchaseOrderJSONRequestBody defines body for CreateAdminPurchaseOrder for application/json ContentType.
+type CreateAdminPurchaseOrderJSONRequestBody = PurchaseOrderRequest
+
+// ReceiveAdminPurchaseOrderJSONRequestBody defines body for ReceiveAdminPurchaseOrder for application/json ContentType.
+type ReceiveAdminPurchaseOrderJSONRequestBody = PurchaseOrderReceiveRequest
 
 // UpdateStorefrontSettingsJSONRequestBody defines body for UpdateStorefrontSettings for application/json ContentType.
 type UpdateStorefrontSettingsJSONRequestBody = StorefrontSettingsRequest
@@ -1772,6 +2130,36 @@ type ServerInterface interface {
 
 	// (PATCH /api/v1/admin/checkout/plugins/{type}/{id})
 	UpdateAdminCheckoutPlugin(c *gin.Context, pType UpdateAdminCheckoutPluginParamsType, id string)
+
+	// (POST /api/v1/admin/inventory/adjustments)
+	CreateAdminInventoryAdjustment(c *gin.Context)
+
+	// (GET /api/v1/admin/inventory/alerts)
+	ListAdminInventoryAlerts(c *gin.Context, params ListAdminInventoryAlertsParams)
+
+	// (POST /api/v1/admin/inventory/alerts/{id}/ack)
+	AckAdminInventoryAlert(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/inventory/alerts/{id}/resolve)
+	ResolveAdminInventoryAlert(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/inventory/reconciliation)
+	RunAdminInventoryReconciliation(c *gin.Context)
+
+	// (GET /api/v1/admin/inventory/reservations)
+	ListAdminInventoryReservations(c *gin.Context, params ListAdminInventoryReservationsParams)
+
+	// (GET /api/v1/admin/inventory/thresholds)
+	ListAdminInventoryThresholds(c *gin.Context, params ListAdminInventoryThresholdsParams)
+
+	// (PUT /api/v1/admin/inventory/thresholds)
+	UpsertAdminInventoryThreshold(c *gin.Context)
+
+	// (DELETE /api/v1/admin/inventory/thresholds/{id})
+	DeleteAdminInventoryThreshold(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/inventory/variants/{product_variant_id}/timeline)
+	GetAdminInventoryTimeline(c *gin.Context, productVariantId int, params GetAdminInventoryTimelineParams)
 
 	// (GET /api/v1/admin/orders)
 	ListAdminOrders(c *gin.Context, params ListAdminOrdersParams)
@@ -1874,6 +2262,21 @@ type ServerInterface interface {
 
 	// (GET /api/v1/admin/providers/reconciliation/runs/{id})
 	GetAdminProviderReconciliationRun(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/purchase-orders)
+	ListAdminPurchaseOrders(c *gin.Context, params ListAdminPurchaseOrdersParams)
+
+	// (POST /api/v1/admin/purchase-orders)
+	CreateAdminPurchaseOrder(c *gin.Context)
+
+	// (POST /api/v1/admin/purchase-orders/{id}/cancel)
+	CancelAdminPurchaseOrder(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/purchase-orders/{id}/issue)
+	IssueAdminPurchaseOrder(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/purchase-orders/{id}/receive)
+	ReceiveAdminPurchaseOrder(c *gin.Context, id int)
 
 	// (GET /api/v1/admin/storefront)
 	GetAdminStorefrontSettings(c *gin.Context)
@@ -2214,6 +2617,286 @@ func (siw *ServerInterfaceWrapper) UpdateAdminCheckoutPlugin(c *gin.Context) {
 	}
 
 	siw.Handler.UpdateAdminCheckoutPlugin(c, pType, id)
+}
+
+// CreateAdminInventoryAdjustment operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminInventoryAdjustment(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminInventoryAdjustment(c)
+}
+
+// ListAdminInventoryAlerts operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminInventoryAlerts(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminInventoryAlertsParams
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "status", c.Request.URL.Query(), &params.Status)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter status: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminInventoryAlerts(c, params)
+}
+
+// AckAdminInventoryAlert operation middleware
+func (siw *ServerInterfaceWrapper) AckAdminInventoryAlert(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AckAdminInventoryAlert(c, id)
+}
+
+// ResolveAdminInventoryAlert operation middleware
+func (siw *ServerInterfaceWrapper) ResolveAdminInventoryAlert(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ResolveAdminInventoryAlert(c, id)
+}
+
+// RunAdminInventoryReconciliation operation middleware
+func (siw *ServerInterfaceWrapper) RunAdminInventoryReconciliation(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RunAdminInventoryReconciliation(c)
+}
+
+// ListAdminInventoryReservations operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminInventoryReservations(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminInventoryReservationsParams
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "status", c.Request.URL.Query(), &params.Status)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter status: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminInventoryReservations(c, params)
+}
+
+// ListAdminInventoryThresholds operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminInventoryThresholds(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminInventoryThresholdsParams
+
+	// ------------- Optional query parameter "product_variant_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "product_variant_id", c.Request.URL.Query(), &params.ProductVariantId)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter product_variant_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminInventoryThresholds(c, params)
+}
+
+// UpsertAdminInventoryThreshold operation middleware
+func (siw *ServerInterfaceWrapper) UpsertAdminInventoryThreshold(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpsertAdminInventoryThreshold(c)
+}
+
+// DeleteAdminInventoryThreshold operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAdminInventoryThreshold(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteAdminInventoryThreshold(c, id)
+}
+
+// GetAdminInventoryTimeline operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminInventoryTimeline(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "product_variant_id" -------------
+	var productVariantId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "product_variant_id", c.Param("product_variant_id"), &productVariantId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter product_variant_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAdminInventoryTimelineParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminInventoryTimeline(c, productVariantId, params)
 }
 
 // ListAdminOrders operation middleware
@@ -3331,6 +4014,137 @@ func (siw *ServerInterfaceWrapper) GetAdminProviderReconciliationRun(c *gin.Cont
 	}
 
 	siw.Handler.GetAdminProviderReconciliationRun(c, id)
+}
+
+// ListAdminPurchaseOrders operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminPurchaseOrders(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminPurchaseOrdersParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminPurchaseOrders(c, params)
+}
+
+// CreateAdminPurchaseOrder operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminPurchaseOrder(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminPurchaseOrder(c)
+}
+
+// CancelAdminPurchaseOrder operation middleware
+func (siw *ServerInterfaceWrapper) CancelAdminPurchaseOrder(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CancelAdminPurchaseOrder(c, id)
+}
+
+// IssueAdminPurchaseOrder operation middleware
+func (siw *ServerInterfaceWrapper) IssueAdminPurchaseOrder(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.IssueAdminPurchaseOrder(c, id)
+}
+
+// ReceiveAdminPurchaseOrder operation middleware
+func (siw *ServerInterfaceWrapper) ReceiveAdminPurchaseOrder(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ReceiveAdminPurchaseOrder(c, id)
 }
 
 // GetAdminStorefrontSettings operation middleware
@@ -4958,6 +5772,16 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.PATCH(options.BaseURL+"/api/v1/admin/brands/:id", wrapper.UpdateAdminBrand)
 	router.GET(options.BaseURL+"/api/v1/admin/checkout/plugins", wrapper.ListAdminCheckoutPlugins)
 	router.PATCH(options.BaseURL+"/api/v1/admin/checkout/plugins/:type/:id", wrapper.UpdateAdminCheckoutPlugin)
+	router.POST(options.BaseURL+"/api/v1/admin/inventory/adjustments", wrapper.CreateAdminInventoryAdjustment)
+	router.GET(options.BaseURL+"/api/v1/admin/inventory/alerts", wrapper.ListAdminInventoryAlerts)
+	router.POST(options.BaseURL+"/api/v1/admin/inventory/alerts/:id/ack", wrapper.AckAdminInventoryAlert)
+	router.POST(options.BaseURL+"/api/v1/admin/inventory/alerts/:id/resolve", wrapper.ResolveAdminInventoryAlert)
+	router.POST(options.BaseURL+"/api/v1/admin/inventory/reconciliation", wrapper.RunAdminInventoryReconciliation)
+	router.GET(options.BaseURL+"/api/v1/admin/inventory/reservations", wrapper.ListAdminInventoryReservations)
+	router.GET(options.BaseURL+"/api/v1/admin/inventory/thresholds", wrapper.ListAdminInventoryThresholds)
+	router.PUT(options.BaseURL+"/api/v1/admin/inventory/thresholds", wrapper.UpsertAdminInventoryThreshold)
+	router.DELETE(options.BaseURL+"/api/v1/admin/inventory/thresholds/:id", wrapper.DeleteAdminInventoryThreshold)
+	router.GET(options.BaseURL+"/api/v1/admin/inventory/variants/:product_variant_id/timeline", wrapper.GetAdminInventoryTimeline)
 	router.GET(options.BaseURL+"/api/v1/admin/orders", wrapper.ListAdminOrders)
 	router.GET(options.BaseURL+"/api/v1/admin/orders/:id", wrapper.GetAdminOrder)
 	router.GET(options.BaseURL+"/api/v1/admin/orders/:id/payments", wrapper.GetAdminOrderPayments)
@@ -4992,6 +5816,11 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/api/v1/admin/providers/reconciliation/runs", wrapper.ListAdminProviderReconciliationRuns)
 	router.POST(options.BaseURL+"/api/v1/admin/providers/reconciliation/runs", wrapper.CreateAdminProviderReconciliationRun)
 	router.GET(options.BaseURL+"/api/v1/admin/providers/reconciliation/runs/:id", wrapper.GetAdminProviderReconciliationRun)
+	router.GET(options.BaseURL+"/api/v1/admin/purchase-orders", wrapper.ListAdminPurchaseOrders)
+	router.POST(options.BaseURL+"/api/v1/admin/purchase-orders", wrapper.CreateAdminPurchaseOrder)
+	router.POST(options.BaseURL+"/api/v1/admin/purchase-orders/:id/cancel", wrapper.CancelAdminPurchaseOrder)
+	router.POST(options.BaseURL+"/api/v1/admin/purchase-orders/:id/issue", wrapper.IssueAdminPurchaseOrder)
+	router.POST(options.BaseURL+"/api/v1/admin/purchase-orders/:id/receive", wrapper.ReceiveAdminPurchaseOrder)
 	router.GET(options.BaseURL+"/api/v1/admin/storefront", wrapper.GetAdminStorefrontSettings)
 	router.PUT(options.BaseURL+"/api/v1/admin/storefront", wrapper.UpdateStorefrontSettings)
 	router.DELETE(options.BaseURL+"/api/v1/admin/storefront/draft", wrapper.DiscardStorefrontDraft)
@@ -5159,6 +5988,248 @@ func (response UpdateAdminCheckoutPlugin200JSONResponse) VisitUpdateAdminCheckou
 type UpdateAdminCheckoutPlugin400JSONResponse Error
 
 func (response UpdateAdminCheckoutPlugin400JSONResponse) VisitUpdateAdminCheckoutPluginResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminInventoryAdjustmentRequestObject struct {
+	Body *CreateAdminInventoryAdjustmentJSONRequestBody
+}
+
+type CreateAdminInventoryAdjustmentResponseObject interface {
+	VisitCreateAdminInventoryAdjustmentResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminInventoryAdjustment201JSONResponse InventoryAdjustmentResponse
+
+func (response CreateAdminInventoryAdjustment201JSONResponse) VisitCreateAdminInventoryAdjustmentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminInventoryAdjustment400JSONResponse Error
+
+func (response CreateAdminInventoryAdjustment400JSONResponse) VisitCreateAdminInventoryAdjustmentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminInventoryAlertsRequestObject struct {
+	Params ListAdminInventoryAlertsParams
+}
+
+type ListAdminInventoryAlertsResponseObject interface {
+	VisitListAdminInventoryAlertsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminInventoryAlerts200JSONResponse InventoryAlertList
+
+func (response ListAdminInventoryAlerts200JSONResponse) VisitListAdminInventoryAlertsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminInventoryAlerts500JSONResponse Error
+
+func (response ListAdminInventoryAlerts500JSONResponse) VisitListAdminInventoryAlertsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AckAdminInventoryAlertRequestObject struct {
+	Id int `json:"id"`
+}
+
+type AckAdminInventoryAlertResponseObject interface {
+	VisitAckAdminInventoryAlertResponse(w http.ResponseWriter) error
+}
+
+type AckAdminInventoryAlert200JSONResponse InventoryAlert
+
+func (response AckAdminInventoryAlert200JSONResponse) VisitAckAdminInventoryAlertResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AckAdminInventoryAlert400JSONResponse Error
+
+func (response AckAdminInventoryAlert400JSONResponse) VisitAckAdminInventoryAlertResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ResolveAdminInventoryAlertRequestObject struct {
+	Id int `json:"id"`
+}
+
+type ResolveAdminInventoryAlertResponseObject interface {
+	VisitResolveAdminInventoryAlertResponse(w http.ResponseWriter) error
+}
+
+type ResolveAdminInventoryAlert200JSONResponse InventoryAlert
+
+func (response ResolveAdminInventoryAlert200JSONResponse) VisitResolveAdminInventoryAlertResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ResolveAdminInventoryAlert400JSONResponse Error
+
+func (response ResolveAdminInventoryAlert400JSONResponse) VisitResolveAdminInventoryAlertResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RunAdminInventoryReconciliationRequestObject struct {
+}
+
+type RunAdminInventoryReconciliationResponseObject interface {
+	VisitRunAdminInventoryReconciliationResponse(w http.ResponseWriter) error
+}
+
+type RunAdminInventoryReconciliation200JSONResponse InventoryReconciliationReport
+
+func (response RunAdminInventoryReconciliation200JSONResponse) VisitRunAdminInventoryReconciliationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminInventoryReservationsRequestObject struct {
+	Params ListAdminInventoryReservationsParams
+}
+
+type ListAdminInventoryReservationsResponseObject interface {
+	VisitListAdminInventoryReservationsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminInventoryReservations200JSONResponse InventoryReservationList
+
+func (response ListAdminInventoryReservations200JSONResponse) VisitListAdminInventoryReservationsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminInventoryReservations500JSONResponse Error
+
+func (response ListAdminInventoryReservations500JSONResponse) VisitListAdminInventoryReservationsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminInventoryThresholdsRequestObject struct {
+	Params ListAdminInventoryThresholdsParams
+}
+
+type ListAdminInventoryThresholdsResponseObject interface {
+	VisitListAdminInventoryThresholdsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminInventoryThresholds200JSONResponse InventoryThresholdList
+
+func (response ListAdminInventoryThresholds200JSONResponse) VisitListAdminInventoryThresholdsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpsertAdminInventoryThresholdRequestObject struct {
+	Body *UpsertAdminInventoryThresholdJSONRequestBody
+}
+
+type UpsertAdminInventoryThresholdResponseObject interface {
+	VisitUpsertAdminInventoryThresholdResponse(w http.ResponseWriter) error
+}
+
+type UpsertAdminInventoryThreshold200JSONResponse InventoryThreshold
+
+func (response UpsertAdminInventoryThreshold200JSONResponse) VisitUpsertAdminInventoryThresholdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpsertAdminInventoryThreshold400JSONResponse Error
+
+func (response UpsertAdminInventoryThreshold400JSONResponse) VisitUpsertAdminInventoryThresholdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminInventoryThresholdRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DeleteAdminInventoryThresholdResponseObject interface {
+	VisitDeleteAdminInventoryThresholdResponse(w http.ResponseWriter) error
+}
+
+type DeleteAdminInventoryThreshold200JSONResponse MessageResponse
+
+func (response DeleteAdminInventoryThreshold200JSONResponse) VisitDeleteAdminInventoryThresholdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminInventoryThreshold400JSONResponse Error
+
+func (response DeleteAdminInventoryThreshold400JSONResponse) VisitDeleteAdminInventoryThresholdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminInventoryTimelineRequestObject struct {
+	ProductVariantId int `json:"product_variant_id"`
+	Params           GetAdminInventoryTimelineParams
+}
+
+type GetAdminInventoryTimelineResponseObject interface {
+	VisitGetAdminInventoryTimelineResponse(w http.ResponseWriter) error
+}
+
+type GetAdminInventoryTimeline200JSONResponse InventoryTimeline
+
+func (response GetAdminInventoryTimeline200JSONResponse) VisitGetAdminInventoryTimelineResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminInventoryTimeline400JSONResponse Error
+
+func (response GetAdminInventoryTimeline400JSONResponse) VisitGetAdminInventoryTimelineResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
 
@@ -5958,6 +7029,128 @@ type GetAdminProviderReconciliationRun404JSONResponse Error
 func (response GetAdminProviderReconciliationRun404JSONResponse) VisitGetAdminProviderReconciliationRunResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminPurchaseOrdersRequestObject struct {
+	Params ListAdminPurchaseOrdersParams
+}
+
+type ListAdminPurchaseOrdersResponseObject interface {
+	VisitListAdminPurchaseOrdersResponse(w http.ResponseWriter) error
+}
+
+type ListAdminPurchaseOrders200JSONResponse PurchaseOrderList
+
+func (response ListAdminPurchaseOrders200JSONResponse) VisitListAdminPurchaseOrdersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminPurchaseOrderRequestObject struct {
+	Body *CreateAdminPurchaseOrderJSONRequestBody
+}
+
+type CreateAdminPurchaseOrderResponseObject interface {
+	VisitCreateAdminPurchaseOrderResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminPurchaseOrder201JSONResponse PurchaseOrder
+
+func (response CreateAdminPurchaseOrder201JSONResponse) VisitCreateAdminPurchaseOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminPurchaseOrder400JSONResponse Error
+
+func (response CreateAdminPurchaseOrder400JSONResponse) VisitCreateAdminPurchaseOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CancelAdminPurchaseOrderRequestObject struct {
+	Id int `json:"id"`
+}
+
+type CancelAdminPurchaseOrderResponseObject interface {
+	VisitCancelAdminPurchaseOrderResponse(w http.ResponseWriter) error
+}
+
+type CancelAdminPurchaseOrder200JSONResponse PurchaseOrder
+
+func (response CancelAdminPurchaseOrder200JSONResponse) VisitCancelAdminPurchaseOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CancelAdminPurchaseOrder400JSONResponse Error
+
+func (response CancelAdminPurchaseOrder400JSONResponse) VisitCancelAdminPurchaseOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type IssueAdminPurchaseOrderRequestObject struct {
+	Id int `json:"id"`
+}
+
+type IssueAdminPurchaseOrderResponseObject interface {
+	VisitIssueAdminPurchaseOrderResponse(w http.ResponseWriter) error
+}
+
+type IssueAdminPurchaseOrder200JSONResponse PurchaseOrder
+
+func (response IssueAdminPurchaseOrder200JSONResponse) VisitIssueAdminPurchaseOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type IssueAdminPurchaseOrder400JSONResponse Error
+
+func (response IssueAdminPurchaseOrder400JSONResponse) VisitIssueAdminPurchaseOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReceiveAdminPurchaseOrderRequestObject struct {
+	Id   int `json:"id"`
+	Body *ReceiveAdminPurchaseOrderJSONRequestBody
+}
+
+type ReceiveAdminPurchaseOrderResponseObject interface {
+	VisitReceiveAdminPurchaseOrderResponse(w http.ResponseWriter) error
+}
+
+type ReceiveAdminPurchaseOrder200JSONResponse PurchaseOrderReceiptResponse
+
+func (response ReceiveAdminPurchaseOrder200JSONResponse) VisitReceiveAdminPurchaseOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReceiveAdminPurchaseOrder400JSONResponse Error
+
+func (response ReceiveAdminPurchaseOrder400JSONResponse) VisitReceiveAdminPurchaseOrderResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -7471,6 +8664,36 @@ type StrictServerInterface interface {
 	// (PATCH /api/v1/admin/checkout/plugins/{type}/{id})
 	UpdateAdminCheckoutPlugin(ctx context.Context, request UpdateAdminCheckoutPluginRequestObject) (UpdateAdminCheckoutPluginResponseObject, error)
 
+	// (POST /api/v1/admin/inventory/adjustments)
+	CreateAdminInventoryAdjustment(ctx context.Context, request CreateAdminInventoryAdjustmentRequestObject) (CreateAdminInventoryAdjustmentResponseObject, error)
+
+	// (GET /api/v1/admin/inventory/alerts)
+	ListAdminInventoryAlerts(ctx context.Context, request ListAdminInventoryAlertsRequestObject) (ListAdminInventoryAlertsResponseObject, error)
+
+	// (POST /api/v1/admin/inventory/alerts/{id}/ack)
+	AckAdminInventoryAlert(ctx context.Context, request AckAdminInventoryAlertRequestObject) (AckAdminInventoryAlertResponseObject, error)
+
+	// (POST /api/v1/admin/inventory/alerts/{id}/resolve)
+	ResolveAdminInventoryAlert(ctx context.Context, request ResolveAdminInventoryAlertRequestObject) (ResolveAdminInventoryAlertResponseObject, error)
+
+	// (POST /api/v1/admin/inventory/reconciliation)
+	RunAdminInventoryReconciliation(ctx context.Context, request RunAdminInventoryReconciliationRequestObject) (RunAdminInventoryReconciliationResponseObject, error)
+
+	// (GET /api/v1/admin/inventory/reservations)
+	ListAdminInventoryReservations(ctx context.Context, request ListAdminInventoryReservationsRequestObject) (ListAdminInventoryReservationsResponseObject, error)
+
+	// (GET /api/v1/admin/inventory/thresholds)
+	ListAdminInventoryThresholds(ctx context.Context, request ListAdminInventoryThresholdsRequestObject) (ListAdminInventoryThresholdsResponseObject, error)
+
+	// (PUT /api/v1/admin/inventory/thresholds)
+	UpsertAdminInventoryThreshold(ctx context.Context, request UpsertAdminInventoryThresholdRequestObject) (UpsertAdminInventoryThresholdResponseObject, error)
+
+	// (DELETE /api/v1/admin/inventory/thresholds/{id})
+	DeleteAdminInventoryThreshold(ctx context.Context, request DeleteAdminInventoryThresholdRequestObject) (DeleteAdminInventoryThresholdResponseObject, error)
+
+	// (GET /api/v1/admin/inventory/variants/{product_variant_id}/timeline)
+	GetAdminInventoryTimeline(ctx context.Context, request GetAdminInventoryTimelineRequestObject) (GetAdminInventoryTimelineResponseObject, error)
+
 	// (GET /api/v1/admin/orders)
 	ListAdminOrders(ctx context.Context, request ListAdminOrdersRequestObject) (ListAdminOrdersResponseObject, error)
 
@@ -7572,6 +8795,21 @@ type StrictServerInterface interface {
 
 	// (GET /api/v1/admin/providers/reconciliation/runs/{id})
 	GetAdminProviderReconciliationRun(ctx context.Context, request GetAdminProviderReconciliationRunRequestObject) (GetAdminProviderReconciliationRunResponseObject, error)
+
+	// (GET /api/v1/admin/purchase-orders)
+	ListAdminPurchaseOrders(ctx context.Context, request ListAdminPurchaseOrdersRequestObject) (ListAdminPurchaseOrdersResponseObject, error)
+
+	// (POST /api/v1/admin/purchase-orders)
+	CreateAdminPurchaseOrder(ctx context.Context, request CreateAdminPurchaseOrderRequestObject) (CreateAdminPurchaseOrderResponseObject, error)
+
+	// (POST /api/v1/admin/purchase-orders/{id}/cancel)
+	CancelAdminPurchaseOrder(ctx context.Context, request CancelAdminPurchaseOrderRequestObject) (CancelAdminPurchaseOrderResponseObject, error)
+
+	// (POST /api/v1/admin/purchase-orders/{id}/issue)
+	IssueAdminPurchaseOrder(ctx context.Context, request IssueAdminPurchaseOrderRequestObject) (IssueAdminPurchaseOrderResponseObject, error)
+
+	// (POST /api/v1/admin/purchase-orders/{id}/receive)
+	ReceiveAdminPurchaseOrder(ctx context.Context, request ReceiveAdminPurchaseOrderRequestObject) (ReceiveAdminPurchaseOrderResponseObject, error)
 
 	// (GET /api/v1/admin/storefront)
 	GetAdminStorefrontSettings(ctx context.Context, request GetAdminStorefrontSettingsRequestObject) (GetAdminStorefrontSettingsResponseObject, error)
@@ -7936,6 +9174,287 @@ func (sh *strictHandler) UpdateAdminCheckoutPlugin(ctx *gin.Context, pType Updat
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(UpdateAdminCheckoutPluginResponseObject); ok {
 		if err := validResponse.VisitUpdateAdminCheckoutPluginResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminInventoryAdjustment operation middleware
+func (sh *strictHandler) CreateAdminInventoryAdjustment(ctx *gin.Context) {
+	var request CreateAdminInventoryAdjustmentRequestObject
+
+	var body CreateAdminInventoryAdjustmentJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminInventoryAdjustment(ctx, request.(CreateAdminInventoryAdjustmentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminInventoryAdjustment")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminInventoryAdjustmentResponseObject); ok {
+		if err := validResponse.VisitCreateAdminInventoryAdjustmentResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminInventoryAlerts operation middleware
+func (sh *strictHandler) ListAdminInventoryAlerts(ctx *gin.Context, params ListAdminInventoryAlertsParams) {
+	var request ListAdminInventoryAlertsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminInventoryAlerts(ctx, request.(ListAdminInventoryAlertsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminInventoryAlerts")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminInventoryAlertsResponseObject); ok {
+		if err := validResponse.VisitListAdminInventoryAlertsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AckAdminInventoryAlert operation middleware
+func (sh *strictHandler) AckAdminInventoryAlert(ctx *gin.Context, id int) {
+	var request AckAdminInventoryAlertRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AckAdminInventoryAlert(ctx, request.(AckAdminInventoryAlertRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AckAdminInventoryAlert")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(AckAdminInventoryAlertResponseObject); ok {
+		if err := validResponse.VisitAckAdminInventoryAlertResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ResolveAdminInventoryAlert operation middleware
+func (sh *strictHandler) ResolveAdminInventoryAlert(ctx *gin.Context, id int) {
+	var request ResolveAdminInventoryAlertRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ResolveAdminInventoryAlert(ctx, request.(ResolveAdminInventoryAlertRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ResolveAdminInventoryAlert")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ResolveAdminInventoryAlertResponseObject); ok {
+		if err := validResponse.VisitResolveAdminInventoryAlertResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RunAdminInventoryReconciliation operation middleware
+func (sh *strictHandler) RunAdminInventoryReconciliation(ctx *gin.Context) {
+	var request RunAdminInventoryReconciliationRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RunAdminInventoryReconciliation(ctx, request.(RunAdminInventoryReconciliationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RunAdminInventoryReconciliation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(RunAdminInventoryReconciliationResponseObject); ok {
+		if err := validResponse.VisitRunAdminInventoryReconciliationResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminInventoryReservations operation middleware
+func (sh *strictHandler) ListAdminInventoryReservations(ctx *gin.Context, params ListAdminInventoryReservationsParams) {
+	var request ListAdminInventoryReservationsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminInventoryReservations(ctx, request.(ListAdminInventoryReservationsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminInventoryReservations")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminInventoryReservationsResponseObject); ok {
+		if err := validResponse.VisitListAdminInventoryReservationsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminInventoryThresholds operation middleware
+func (sh *strictHandler) ListAdminInventoryThresholds(ctx *gin.Context, params ListAdminInventoryThresholdsParams) {
+	var request ListAdminInventoryThresholdsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminInventoryThresholds(ctx, request.(ListAdminInventoryThresholdsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminInventoryThresholds")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminInventoryThresholdsResponseObject); ok {
+		if err := validResponse.VisitListAdminInventoryThresholdsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpsertAdminInventoryThreshold operation middleware
+func (sh *strictHandler) UpsertAdminInventoryThreshold(ctx *gin.Context) {
+	var request UpsertAdminInventoryThresholdRequestObject
+
+	var body UpsertAdminInventoryThresholdJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpsertAdminInventoryThreshold(ctx, request.(UpsertAdminInventoryThresholdRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpsertAdminInventoryThreshold")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpsertAdminInventoryThresholdResponseObject); ok {
+		if err := validResponse.VisitUpsertAdminInventoryThresholdResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteAdminInventoryThreshold operation middleware
+func (sh *strictHandler) DeleteAdminInventoryThreshold(ctx *gin.Context, id int) {
+	var request DeleteAdminInventoryThresholdRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAdminInventoryThreshold(ctx, request.(DeleteAdminInventoryThresholdRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAdminInventoryThreshold")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteAdminInventoryThresholdResponseObject); ok {
+		if err := validResponse.VisitDeleteAdminInventoryThresholdResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminInventoryTimeline operation middleware
+func (sh *strictHandler) GetAdminInventoryTimeline(ctx *gin.Context, productVariantId int, params GetAdminInventoryTimelineParams) {
+	var request GetAdminInventoryTimelineRequestObject
+
+	request.ProductVariantId = productVariantId
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminInventoryTimeline(ctx, request.(GetAdminInventoryTimelineRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminInventoryTimeline")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminInventoryTimelineResponseObject); ok {
+		if err := validResponse.VisitGetAdminInventoryTimelineResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -8948,6 +10467,155 @@ func (sh *strictHandler) GetAdminProviderReconciliationRun(ctx *gin.Context, id 
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(GetAdminProviderReconciliationRunResponseObject); ok {
 		if err := validResponse.VisitGetAdminProviderReconciliationRunResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminPurchaseOrders operation middleware
+func (sh *strictHandler) ListAdminPurchaseOrders(ctx *gin.Context, params ListAdminPurchaseOrdersParams) {
+	var request ListAdminPurchaseOrdersRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminPurchaseOrders(ctx, request.(ListAdminPurchaseOrdersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminPurchaseOrders")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminPurchaseOrdersResponseObject); ok {
+		if err := validResponse.VisitListAdminPurchaseOrdersResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminPurchaseOrder operation middleware
+func (sh *strictHandler) CreateAdminPurchaseOrder(ctx *gin.Context) {
+	var request CreateAdminPurchaseOrderRequestObject
+
+	var body CreateAdminPurchaseOrderJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminPurchaseOrder(ctx, request.(CreateAdminPurchaseOrderRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminPurchaseOrder")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminPurchaseOrderResponseObject); ok {
+		if err := validResponse.VisitCreateAdminPurchaseOrderResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CancelAdminPurchaseOrder operation middleware
+func (sh *strictHandler) CancelAdminPurchaseOrder(ctx *gin.Context, id int) {
+	var request CancelAdminPurchaseOrderRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CancelAdminPurchaseOrder(ctx, request.(CancelAdminPurchaseOrderRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CancelAdminPurchaseOrder")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CancelAdminPurchaseOrderResponseObject); ok {
+		if err := validResponse.VisitCancelAdminPurchaseOrderResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// IssueAdminPurchaseOrder operation middleware
+func (sh *strictHandler) IssueAdminPurchaseOrder(ctx *gin.Context, id int) {
+	var request IssueAdminPurchaseOrderRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.IssueAdminPurchaseOrder(ctx, request.(IssueAdminPurchaseOrderRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "IssueAdminPurchaseOrder")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(IssueAdminPurchaseOrderResponseObject); ok {
+		if err := validResponse.VisitIssueAdminPurchaseOrderResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ReceiveAdminPurchaseOrder operation middleware
+func (sh *strictHandler) ReceiveAdminPurchaseOrder(ctx *gin.Context, id int) {
+	var request ReceiveAdminPurchaseOrderRequestObject
+
+	request.Id = id
+
+	var body ReceiveAdminPurchaseOrderJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ReceiveAdminPurchaseOrder(ctx, request.(ReceiveAdminPurchaseOrderRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ReceiveAdminPurchaseOrder")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ReceiveAdminPurchaseOrderResponseObject); ok {
+		if err := validResponse.VisitReceiveAdminPurchaseOrderResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -10639,159 +12307,188 @@ func (sh *strictHandler) ReceiveWebhookEvent(ctx *gin.Context, provider string) 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

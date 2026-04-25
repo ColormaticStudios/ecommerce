@@ -10,7 +10,7 @@ type Product struct {
 	Description      string                  `json:"description"`
 	Price            Money                   `json:"price" gorm:"type:numeric(12,2);not null"`
 	Stock            int                     `json:"stock" gorm:"default:0"`
-	Images           []string                `json:"images" gorm:"type:text[]"`
+	Images           StringArray             `json:"images" gorm:"type:text[]"`
 	BrandID          *uint                   `json:"brand_id,omitempty" gorm:"index"`
 	DefaultVariantID *uint                   `json:"default_variant_id,omitempty" gorm:"index"`
 	IsPublished      bool                    `json:"is_published" gorm:"not null;default:true;index"`
