@@ -3,8 +3,11 @@
 	import { type OrderModel } from "$lib/models";
 	import Alert from "$lib/components/Alert.svelte";
 	import Badge from "$lib/components/Badge.svelte";
-	import Card from "$lib/components/Card.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
+	import Card from "$lib/components/Card.svelte";
+	import EmptyStateCard from "$lib/components/EmptyStateCard.svelte";
+	import FilterPanel from "$lib/components/FilterPanel.svelte";
+	import MediaThumbnail from "$lib/components/MediaThumbnail.svelte";
 	import Toast from "$lib/components/Toast.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import Dropdown from "$lib/components/Dropdown.svelte";
@@ -218,7 +221,7 @@
 	</div>
 
 	{#if isAuthenticated}
-		<Card class="mt-6" padding="sm">
+		<FilterPanel class="mt-6">
 			<div class="grid gap-3 sm:grid-cols-4">
 				<div class="sm:col-span-1">
 					<label for="statusFilter" class="mb-1 block text-sm text-gray-600 dark:text-gray-300">
@@ -282,7 +285,7 @@
 					Clear
 				</Button>
 			</div>
-		</Card>
+		</FilterPanel>
 	{/if}
 
 	{#if !isAuthenticated}
@@ -303,17 +306,16 @@
 			/>
 		</div>
 	{:else if orders.length === 0}
-		<Card
-			border="dashed"
-			padding="xl"
-			class="mt-6 flex flex-col items-center text-gray-600 dark:text-gray-300"
+		<EmptyStateCard
+			title="No orders yet."
+			description="Your future purchases will show up here."
+			class="mt-6"
+			headingClass="text-lg font-medium"
 		>
-			<p class="text-lg font-medium">No orders yet.</p>
-			<p class="mt-2 text-sm">Your future purchases will show up here.</p>
 			<ButtonLink href={resolve("/")} variant="primary" size="large" class="mt-4 block">
 				Start shopping
 			</ButtonLink>
-		</Card>
+		</EmptyStateCard>
 	{:else}
 		<p class="mt-4 text-sm text-gray-600 dark:text-gray-400">
 			Showing page {page} of {totalPages} ({totalOrders} total orders)
@@ -383,21 +385,12 @@
 										class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
 									>
 										<div class="flex min-w-0 items-center gap-3">
-											<a
+											<MediaThumbnail
 												href={resolve(`/product/${item.product.id}`)}
-												class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-100 text-[10px] text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
-											>
-												{#if item.product.cover_image}
-													<img
-														src={item.product.cover_image}
-														alt={item.product.name}
-														class="h-full w-full object-cover"
-														loading="lazy"
-													/>
-												{:else}
-													No image
-												{/if}
-											</a>
+												src={item.product.cover_image}
+												alt={item.product.name}
+												class="h-14 w-14 rounded-lg text-[10px]"
+											/>
 											<div class="min-w-0">
 												<a
 													href={resolve(`/product/${item.product.id}`)}

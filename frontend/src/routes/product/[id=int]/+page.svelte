@@ -2,6 +2,7 @@
 	import { type API } from "$lib/api";
 	import Card from "$lib/components/Card.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
+	import MediaThumbnail from "$lib/components/MediaThumbnail.svelte";
 	import QuantitySelector from "$lib/components/QuantitySelector.svelte";
 	import Toast from "$lib/components/Toast.svelte";
 	import { formatPrice } from "$lib/utils";
@@ -113,37 +114,25 @@
 		<div class="grid grid-cols-1 gap-8 md:grid-cols-2">
 			<!-- Image gallery -->
 			<div class="flex flex-col gap-4">
-				<div
-					class="aspect-square overflow-hidden rounded-xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
-				>
-					{#if product.images?.length}
-						<img
-							src={product.images[selectedImage]}
-							alt={product.name}
-							class="h-full w-full object-cover"
-						/>
-					{:else}
-						<div class="flex h-full items-center justify-center text-gray-400">
-							No image available
-						</div>
-					{/if}
-				</div>
+				<MediaThumbnail
+					src={product.images?.[selectedImage]}
+					alt={product.name}
+					class="aspect-square w-full rounded-xl"
+					placeholder="No image available"
+				/>
 
 				{#if product.images?.length > 1}
 					<div class="flex gap-2">
 						{#each product.images as img, i (i)}
-							<button
+							<MediaThumbnail
 								type="button"
-								class="h-16 w-16 cursor-pointer overflow-hidden rounded-md border
-									{selectedImage === i
-									? 'border-gray-900 dark:border-gray-100'
-									: 'border-gray-300 dark:border-gray-600'}
-									bg-gray-100 dark:bg-gray-700"
+								src={img}
+								alt=""
+								class="h-16 w-16 rounded-md"
+								active={selectedImage === i}
 								onclick={() => (selectedImage = i)}
-								aria-label={`View image ${i + 1}`}
-							>
-								<img src={img} alt="" class="h-full w-full object-cover" />
-							</button>
+								label={`View image ${i + 1}`}
+							/>
 						{/each}
 					</div>
 				{/if}

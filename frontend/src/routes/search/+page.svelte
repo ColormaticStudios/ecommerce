@@ -4,8 +4,9 @@
 	import { resolve } from "$app/paths";
 	import Badge from "$lib/components/Badge.svelte";
 	import Button from "$lib/components/Button.svelte";
-	import Card from "$lib/components/Card.svelte";
 	import Dropdown from "$lib/components/Dropdown.svelte";
+	import EmptyStateCard from "$lib/components/EmptyStateCard.svelte";
+	import FilterPanel from "$lib/components/FilterPanel.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
 	import {
@@ -152,7 +153,7 @@
 				<h1 class="text-3xl font-semibold text-gray-900 dark:text-gray-100">Product Search</h1>
 			</div>
 
-			<Card tone="soft" padding="sm">
+			<FilterPanel>
 				<form
 					class="flex flex-col gap-3"
 					onsubmit={(event) => {
@@ -269,7 +270,7 @@
 						{/each}
 					</div>
 				</form>
-			</Card>
+			</FilterPanel>
 		</div>
 	</div>
 </section>
@@ -298,17 +299,18 @@
 	</div>
 
 	{#if !errorMessage && results.length === 0}
-		<Card tone="muted" border="dashed" padding="xl" class="text-center sm:px-10">
-			<h2 class="text-3xl font-semibold text-gray-900 dark:text-gray-100">No matches found.</h2>
-			<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-				Try a different keyword or clear filters.
-			</p>
+		<EmptyStateCard
+			title="No matches found."
+			description="Try a different keyword or clear filters."
+			headingClass="text-3xl font-semibold"
+			class="sm:px-10"
+		>
 			<div class="mt-4">
 				<Button type="button" variant="primary" onclick={() => updateUrl({ query: "", page: 1 })}>
 					Browse all products
 				</Button>
 			</div>
-		</Card>
+		</EmptyStateCard>
 	{:else}
 		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 			{#each results as product (product.id)}

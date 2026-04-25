@@ -5,7 +5,9 @@
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import Card from "$lib/components/Card.svelte";
 	import CheckoutSignInRequiredBanner from "$lib/components/CheckoutSignInRequiredBanner.svelte";
+	import EmptyStateCard from "$lib/components/EmptyStateCard.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
+	import MediaThumbnail from "$lib/components/MediaThumbnail.svelte";
 	import QuantitySelector from "$lib/components/QuantitySelector.svelte";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
@@ -104,8 +106,7 @@
 			/>
 		</div>
 	{:else if !cart || cart.items.length === 0}
-		<Card border="dashed" padding="xl" class="mt-6 text-center text-gray-600 dark:text-gray-300">
-			<p class="text-2xl font-medium">Your cart is empty.</p>
+		<EmptyStateCard title="Your cart is empty." class="mt-6">
 			{#if !isAuthenticated}
 				<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
 					Your selections are saved to this browser until you check out or clear them.
@@ -115,7 +116,7 @@
 				<ButtonLink href={resolve("/")} variant="primary" size="large">Continue shopping</ButtonLink
 				>
 			</div>
-		</Card>
+		</EmptyStateCard>
 	{:else}
 		<div class="mt-6 grid items-start gap-6 lg:grid-cols-[1.6fr_0.8fr]">
 			<div class="space-y-4">
@@ -129,19 +130,7 @@
 				>
 					{#each cart.items as item (item.id)}
 						<div class="flex flex-col gap-4 py-5 sm:flex-row sm:items-center">
-							<div class="h-20 w-20 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
-								{#if item.product.images?.length}
-									<img
-										src={item.product.images[0]}
-										alt={item.product.name}
-										class="h-full w-full object-cover"
-									/>
-								{:else}
-									<div class="flex h-full w-full items-center justify-center text-xs text-gray-500">
-										No image
-									</div>
-								{/if}
-							</div>
+							<MediaThumbnail src={item.product.images?.[0]} alt={item.product.name} />
 
 							<div class="flex-1">
 								<h2 class="line-clamp-1 text-lg font-medium text-gray-900 dark:text-gray-100">
