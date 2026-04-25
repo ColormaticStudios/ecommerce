@@ -253,7 +253,7 @@
 			</AdminPanel>
 		{/snippet}
 		{#snippet detail()}
-			<div class={`${mobilePanel === "editor" ? "block" : "hidden"} lg:block`}>
+			<div class={`${mobilePanel === "editor" ? "block" : "hidden"} xl:block`}>
 				<ProductEditor
 					bind:productId={selectedProductId}
 					initialProduct={selectedProduct}
