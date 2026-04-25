@@ -159,9 +159,9 @@
 <section class="space-y-6">
 	<AdminPageHeader title="Products" actions={headerActions} />
 
-	<AdminMasterDetailLayout columnsClass="lg:grid-cols-[1.15fr_0.95fr]">
+	<AdminMasterDetailLayout columnsClass="xl:grid-cols-[1.15fr_0.95fr]">
 		{#snippet lead()}
-			<div class="lg:hidden">
+			<div class="xl:hidden">
 				<TabSwitcher
 					items={mobilePanelTabs}
 					bind:value={mobilePanel}
@@ -174,7 +174,7 @@
 				title="Catalog"
 				meta={`${catalog.items.length} shown`}
 				headerActions={catalogActions}
-				class={`${mobilePanel === "catalog" ? "block" : "hidden"} lg:block`}
+				class={`${mobilePanel === "catalog" ? "block" : "hidden"} xl:block`}
 			>
 				{#if hasLoadError}
 					<AdminEmptyState tone="error">Failed to load products.</AdminEmptyState>

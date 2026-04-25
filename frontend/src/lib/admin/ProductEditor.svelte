@@ -2361,7 +2361,7 @@
 		</div>
 	</div>
 {:else}
-	<div>
+	<AdminSurface as="div">
 		{#if showHeader}
 			<div class="flex items-center justify-between">
 				<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -2437,5 +2437,5 @@
 		<div class={`${sectionDividerTopClass} mt-6`}>
 			{@render RelatedProducts("stacked")}
 		</div>
-	</div>
+	</AdminSurface>
 {/if}
