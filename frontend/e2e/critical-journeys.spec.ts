@@ -113,7 +113,7 @@ test("sign up, checkout, and persist order/cart state", async ({ page, request }
 	expect(after.orders).toBe(before.orders + 1);
 	expect(after.paid_orders).toBe(before.paid_orders);
 	expect(after.cart_items).toBe(0);
-	expect(after.product_stock).toBe(before.product_stock);
+	expect(after.product_stock).toBe(before.product_stock - 1);
 });
 
 test("guest can add to cart and complete checkout", async ({ page, request }) => {
@@ -249,7 +249,7 @@ test("guest can add to cart and complete checkout", async ({ page, request }) =>
 	expect(after.orders).toBe(before.orders + 1);
 	expect(after.paid_orders).toBe(before.paid_orders);
 	expect(after.cart_items).toBe(0);
-	expect(after.product_stock).toBe(before.product_stock);
+	expect(after.product_stock).toBe(before.product_stock - 1);
 });
 
 test("invalid data paths show user-facing errors", async ({ page, request }) => {
@@ -269,7 +269,7 @@ test("invalid data paths show user-facing errors", async ({ page, request }) => 
 
 	await page.getByRole("button", { name: "Place order" }).click();
 	await expect(
-		page.getByText("Select a payment and shipping option before requesting an estimate.")
+		page.getByText("Choose a payment method and a shipping method to update your total.")
 	).toBeVisible();
 
 	const invalidLoginResponse = await request.post(`${apiBaseURL}/api/v1/auth/login`, {

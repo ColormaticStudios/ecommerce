@@ -85,7 +85,7 @@
 	});
 </script>
 
-<section class="min-h-[calc(100vh-4rem)]">
+<section class="min-h-screen">
 	<button
 		type="button"
 		class="m-4 inline-flex cursor-pointer items-center gap-2 rounded-full border border-gray-300 bg-white/90 px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm transition hover:border-gray-400 hover:bg-gray-50 lg:hidden dark:border-gray-700 dark:bg-gray-900/90 dark:text-gray-100 dark:hover:border-gray-600 dark:hover:bg-gray-800"
@@ -95,7 +95,7 @@
 		Sections
 	</button>
 
-	<div class="grid min-h-[calc(100vh-4rem)] lg:grid-cols-[auto_minmax(0,1fr)]">
+	<div class="grid min-h-screen items-stretch lg:grid-cols-[auto_minmax(0,1fr)]">
 		<aside
 			class={`hidden border-r border-gray-200 bg-gray-100 transition-[width] duration-200 lg:block dark:border-gray-800 dark:bg-gray-900 ${
 				sidebarCollapsed ? "w-20" : "w-64"

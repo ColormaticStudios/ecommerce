@@ -26,12 +26,28 @@
 	<div
 		class="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-4 dark:border-gray-800"
 	>
-		{#if !collapsed || mobile}
-			<div>
+		<div class="min-w-0">
+			{#if !collapsed || mobile}
 				<p class="text-sm font-semibold text-gray-950 dark:text-gray-50">Admin</p>
 				<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Operations console</p>
-			</div>
-		{/if}
+				<a
+					href={resolve("/")}
+					class="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-gray-600 transition hover:text-gray-950 dark:text-gray-300 dark:hover:text-gray-50"
+				>
+					<i class="bi bi-arrow-left"></i>
+					Back to storefront
+				</a>
+			{:else}
+				<a
+					href={resolve("/")}
+					class="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-700 transition hover:bg-gray-200 hover:text-gray-950 dark:text-gray-200 dark:hover:bg-gray-800 dark:hover:text-gray-50"
+					aria-label="Back to storefront"
+					title="Back to storefront"
+				>
+					<i class="bi bi-arrow-left"></i>
+				</a>
+			{/if}
+		</div>
 
 		{#if mobile}
 			<IconButton
