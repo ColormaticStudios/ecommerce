@@ -194,13 +194,10 @@
 	const nestedEditorSectionClass = adminSurfaceVariantClasses.subsurface;
 	const mediaCardClass = adminSurfaceVariantClasses.media;
 	const mutedPanelClass = adminSurfaceVariantClasses.muted;
-	const overlayIconButtonClusterClass =
-		"flex items-center gap-0 rounded-full border border-white/12 bg-stone-950/90 p-0 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.95)] ring-1 ring-black/35 backdrop-blur-md dark:border-white/12 dark:bg-stone-950/94 dark:ring-black/45";
-	const overlayIconButtonClusterItemClass =
-		"border-transparent bg-transparent shadow-none hover:bg-white/10 disabled:text-stone-500 disabled:opacity-100 disabled:hover:bg-transparent dark:hover:bg-white/10 dark:disabled:text-stone-600";
+	const overlayIconButtonClusterClass = "flex gap-1";
+	const overlayIconButtonSurfaceClass =
+		"border border-stone-300 bg-white/95 shadow-sm backdrop-blur-sm hover:bg-stone-50 disabled:opacity-45 dark:border-stone-700 dark:bg-stone-950/85 dark:hover:bg-stone-900";
 	const overlayIconButtonMiniClass = "h-5 w-5 text-[10px]";
-	const overlayDeleteButtonClass =
-		"bg-white/94 text-rose-700 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.9)] backdrop-blur-sm hover:bg-white hover:text-rose-800 disabled:opacity-100 dark:bg-stone-100/92 dark:text-rose-500 dark:hover:bg-stone-50 dark:hover:text-rose-400";
 	const sectionDividerTopClass = adminDividerTopClass;
 	const sectionDividerBottomClass = adminDividerBottomClass;
 
@@ -2116,23 +2113,24 @@
 					/>
 					<IconButton
 						tone="admin"
-						class={`absolute top-2 right-2 ${overlayDeleteButtonClass}`}
+						class={`absolute top-2 right-2 ${overlayIconButtonSurfaceClass}`}
 						size="sm"
 						disabled={mediaDeleting !== null || mediaReordering}
 						onclick={() => detachMedia(image)}
 						aria-label="Remove image"
 						title="Remove image"
+						variant="danger"
 					>
 						{#if mediaDeleting && extractMediaId(image) === mediaDeleting}
 							<i class="bi bi-arrow-repeat inline-block animate-spin"></i>
 						{:else}
-							<i class="bi bi-trash-fill"></i>
+							<i class="bi bi-trash"></i>
 						{/if}
 					</IconButton>
 					<div class={`absolute right-2 bottom-2 ${overlayIconButtonClusterClass}`}>
 						<IconButton
 							tone="admin"
-							class={`${overlayIconButtonClusterItemClass} ${overlayIconButtonMiniClass}`}
+							class={`${overlayIconButtonSurfaceClass} ${overlayIconButtonMiniClass}`}
 							size="sm"
 							disabled={mediaReordering || index === 0}
 							onclick={() => moveMedia(index, -1)}
@@ -2143,7 +2141,7 @@
 						</IconButton>
 						<IconButton
 							tone="admin"
-							class={`${overlayIconButtonClusterItemClass} ${overlayIconButtonMiniClass}`}
+							class={`${overlayIconButtonSurfaceClass} ${overlayIconButtonMiniClass}`}
 							size="sm"
 							disabled={mediaReordering || index === mediaOrderView.length - 1}
 							onclick={() => moveMedia(index, 1)}
