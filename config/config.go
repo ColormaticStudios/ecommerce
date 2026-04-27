@@ -15,10 +15,6 @@ type Config struct {
 	Port                           string `mapstructure:"PORT"`
 	JWTSecret                      string `mapstructure:"JWT_SECRET"`
 	DisableLocalSignIn             bool   `mapstructure:"DISABLE_LOCAL_SIGN_IN"`
-	OIDCProvider                   string `mapstructure:"OIDC_PROVIDER"`
-	OIDCClientID                   string `mapstructure:"OIDC_CLIENT_ID"`
-	OIDCClientSecret               string `mapstructure:"OIDC_CLIENT_SECRET"`
-	OIDCRedirectURI                string `mapstructure:"OIDC_REDIRECT_URI"`
 	DevMode                        bool   `mapstructure:"DEV_MODE"`
 	PublicURL                      string `mapstructure:"PUBLIC_URL"`
 	MediaRoot                      string `mapstructure:"MEDIA_ROOT"`
@@ -38,10 +34,6 @@ var configKeys = []string{
 	"PORT",
 	"JWT_SECRET",
 	"DISABLE_LOCAL_SIGN_IN",
-	"OIDC_PROVIDER",
-	"OIDC_CLIENT_ID",
-	"OIDC_CLIENT_SECRET",
-	"OIDC_REDIRECT_URI",
 	"DEV_MODE",
 	"PUBLIC_URL",
 	"MEDIA_ROOT",

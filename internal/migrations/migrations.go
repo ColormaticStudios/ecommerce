@@ -20,6 +20,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // SchemaMigration tracks applied migration versions.
@@ -83,6 +84,7 @@ const inventoryDisciplineP1Version = "2026032402_inventory_discipline_p1_reserva
 const inventoryDisciplineP2Version = "2026032403_inventory_discipline_p2_alerts"
 const inventoryDisciplineP3Version = "2026032404_inventory_discipline_p3_purchase_orders"
 const inventoryDisciplineP4Version = "2026032405_inventory_discipline_p4_adjustments"
+const websiteSettingsVersion = "2026042701_website_settings"
 const migrationStepAlertThresholdEnvVar = "MIGRATIONS_STEP_ALERT_THRESHOLD_MS"
 
 var versionPattern = regexp.MustCompile(`^\d{10}_[a-z0-9_]+$`)
@@ -124,6 +126,7 @@ var orderedMigrations = []Migration{
 				&legacySavedPaymentMethod{},
 				&legacySavedAddress{},
 				&legacyStorefrontSettings{},
+				&legacyWebsiteSettings{},
 				&legacyCheckoutProviderSetting{},
 			)
 		},
@@ -916,6 +919,54 @@ var orderedMigrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:         websiteSettingsVersion,
+		Name:            "move website level settings out of storefront and environment",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "settings", "auth", "checkout"},
+		PostChecks: []PostCheck{
+			{
+				Name: "website_settings_singleton_exists",
+				Check: func(tx *gorm.DB) error {
+					if !tx.Migrator().HasTable(&legacyWebsiteSettings{}) {
+						return fmt.Errorf("missing website_settings table")
+					}
+					var count int64
+					if err := tx.Model(&legacyWebsiteSettings{}).
+						Where("id = ?", models.WebsiteSettingsSingletonID).
+						Count(&count).Error; err != nil {
+						return err
+					}
+					if count != 1 {
+						return fmt.Errorf("post-check failed: expected website_settings singleton, found %d", count)
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			if err := ops.CreateTableIfNotExists(tx, &legacyWebsiteSettings{}); err != nil {
+				return err
+			}
+			allowGuestCheckout, err := legacyAllowGuestCheckout(tx)
+			if err != nil {
+				return err
+			}
+			settings := legacyWebsiteSettings{
+				ID:                 models.WebsiteSettingsSingletonID,
+				AllowGuestCheckout: allowGuestCheckout,
+			}
+			if err := tx.Select("*").Clauses(clause.OnConflict{
+				Columns: []clause.Column{{Name: "id"}},
+				DoUpdates: clause.Assignments(map[string]any{
+					"allow_guest_checkout": allowGuestCheckout,
+				}),
+			}).Create(&settings).Error; err != nil {
+				return err
+			}
+			return stripStorefrontCheckoutSettings(tx)
+		},
+	},
 }
 
 func backfillInventoryItemsFromVariants(tx *gorm.DB) error {
@@ -1461,6 +1512,104 @@ func ensureStorefrontCheckoutConfig(raw string) (string, bool, error) {
 
 	checkoutPayload["allow_guest_checkout"] = true
 	payload["checkout"] = checkoutPayload
+	encoded, err := json.Marshal(payload)
+	if err != nil {
+		return "", false, err
+	}
+	return string(encoded), true, nil
+}
+
+func legacyAllowGuestCheckout(tx *gorm.DB) (bool, error) {
+	queryDB := tx.Session(&gorm.Session{NewDB: true})
+	var row struct {
+		ConfigJSON string
+	}
+	result := queryDB.Table("storefront_settings").
+		Select("config_json").
+		Where("id = ?", models.StorefrontSettingsSingletonID).
+		Limit(1).
+		Scan(&row)
+	if result.Error != nil {
+		return false, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return true, nil
+	}
+	return decodeLegacyAllowGuestCheckout(row.ConfigJSON)
+}
+
+func decodeLegacyAllowGuestCheckout(raw string) (bool, error) {
+	if strings.TrimSpace(raw) == "" {
+		return true, nil
+	}
+	var payload struct {
+		Checkout *struct {
+			AllowGuestCheckout *bool `json:"allow_guest_checkout"`
+		} `json:"checkout"`
+	}
+	if err := json.Unmarshal([]byte(raw), &payload); err != nil {
+		return false, err
+	}
+	if payload.Checkout == nil || payload.Checkout.AllowGuestCheckout == nil {
+		return true, nil
+	}
+	return *payload.Checkout.AllowGuestCheckout, nil
+}
+
+func stripStorefrontCheckoutSettings(tx *gorm.DB) error {
+	queryDB := tx.Session(&gorm.Session{NewDB: true})
+	type storefrontRow struct {
+		ID              uint
+		ConfigJSON      string
+		DraftConfigJSON *string
+	}
+	var rows []storefrontRow
+	if err := queryDB.Table("storefront_settings").
+		Select("id", "config_json", "draft_config_json").
+		Order("id ASC").
+		Scan(&rows).Error; err != nil {
+		return err
+	}
+	for _, row := range rows {
+		updates := map[string]any{}
+		configJSON, changed, err := stripStorefrontCheckoutConfig(row.ConfigJSON)
+		if err != nil {
+			return fmt.Errorf("strip storefront_settings.id=%d config_json: %w", row.ID, err)
+		}
+		if changed {
+			updates["config_json"] = configJSON
+		}
+		if row.DraftConfigJSON != nil {
+			draftJSON, draftChanged, err := stripStorefrontCheckoutConfig(*row.DraftConfigJSON)
+			if err != nil {
+				return fmt.Errorf("strip storefront_settings.id=%d draft_config_json: %w", row.ID, err)
+			}
+			if draftChanged {
+				updates["draft_config_json"] = draftJSON
+			}
+		}
+		if len(updates) == 0 {
+			continue
+		}
+		if err := queryDB.Table("storefront_settings").Where("id = ?", row.ID).Updates(updates).Error; err != nil {
+			return fmt.Errorf("update storefront_settings.id=%d: %w", row.ID, err)
+		}
+	}
+	return nil
+}
+
+func stripStorefrontCheckoutConfig(raw string) (string, bool, error) {
+	if strings.TrimSpace(raw) == "" {
+		return raw, false, nil
+	}
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(raw), &payload); err != nil {
+		return "", false, err
+	}
+	if _, exists := payload["checkout"]; !exists {
+		return raw, false, nil
+	}
+	delete(payload, "checkout")
 	encoded, err := json.Marshal(payload)
 	if err != nil {
 		return "", false, err

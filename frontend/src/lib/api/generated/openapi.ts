@@ -1368,6 +1368,22 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/admin/website": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminWebsiteSettings"];
+		put: operations["updateWebsiteSettings"];
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/admin/storefront/publish": {
 		parameters: {
 			query?: never;
@@ -2628,14 +2644,30 @@ export interface components {
 			social_links: components["schemas"]["StorefrontLink"][];
 			bottom_notice: string;
 		};
-		StorefrontCheckoutSettings: {
+		WebsiteSettings: {
 			allow_guest_checkout: boolean;
+			oidc_provider: string;
+			oidc_client_id: string;
+			/** @description Write-only client secret. Responses always return an empty string. */
+			oidc_client_secret: string;
+			/** @description True when an encrypted OIDC client secret is stored. */
+			oidc_client_secret_configured: boolean;
+			/** @description Set true on update to remove the stored OIDC client secret. */
+			clear_oidc_client_secret: boolean;
+			oidc_redirect_uri: string;
+		};
+		WebsiteSettingsRequest: {
+			settings: components["schemas"]["WebsiteSettings"];
+		};
+		WebsiteSettingsResponse: {
+			settings: components["schemas"]["WebsiteSettings"];
+			/** Format: date-time */
+			updated_at: string;
 		};
 		StorefrontSettings: {
 			site_title: string;
 			homepage_sections: components["schemas"]["StorefrontHomepageSection"][];
 			footer: components["schemas"]["StorefrontFooter"];
-			checkout: components["schemas"]["StorefrontCheckoutSettings"];
 		};
 		StorefrontSettingsRequest: {
 			settings: components["schemas"]["StorefrontSettings"];
@@ -5915,6 +5947,68 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["StorefrontSettingsResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	getAdminWebsiteSettings: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Website settings */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["WebsiteSettingsResponse"];
+				};
+			};
+			/** @description Internal server error */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	updateWebsiteSettings: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["WebsiteSettingsRequest"];
+			};
+		};
+		responses: {
+			/** @description Updated website settings */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["WebsiteSettingsResponse"];
 				};
 			};
 			/** @description Bad request */

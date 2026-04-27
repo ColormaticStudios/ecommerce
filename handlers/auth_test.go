@@ -232,8 +232,16 @@ func TestOIDCConfigured(t *testing.T) {
 
 func TestGetAuthConfig(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+	db := newTestDB(t, &models.WebsiteSettings{})
+	require.NoError(t, db.Select("*").Save(&models.WebsiteSettings{
+		ID:                 models.WebsiteSettingsSingletonID,
+		AllowGuestCheckout: true,
+		OIDCProvider:       "https://issuer.example",
+		OIDCClientID:       "client-id",
+		OIDCRedirectURI:    "https://app.example/callback",
+	}).Error)
 	r := gin.New()
-	r.GET("/auth/config", GetAuthConfig(true, "https://issuer.example", "client-id", "https://app.example/callback"))
+	r.GET("/auth/config", GetAuthConfig(db, true))
 
 	req := httptest.NewRequest(http.MethodGet, "/auth/config", nil)
 	w := httptest.NewRecorder()
@@ -354,9 +362,17 @@ func TestLoginDoesNotAutoClaimMatchingGuestOrders(t *testing.T) {
 func TestOIDCHandlersInvalidProvider(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
+	db := newTestDB(t, &models.WebsiteSettings{})
+	require.NoError(t, db.Select("*").Save(&models.WebsiteSettings{
+		ID:                 models.WebsiteSettingsSingletonID,
+		AllowGuestCheckout: true,
+		OIDCProvider:       "http://127.0.0.1:1",
+		OIDCClientID:       "client",
+		OIDCRedirectURI:    "http://127.0.0.1/cb",
+	}).Error)
 
-	r.GET("/oidc/login", OIDCLogin("http://127.0.0.1:1", "client", "http://127.0.0.1/cb", AuthCookieConfig{}))
-	r.GET("/oidc/callback", OIDCCallback(newTestDB(t), "secret", "http://127.0.0.1:1", "client", "http://127.0.0.1/cb", AuthCookieConfig{}))
+	r.GET("/oidc/login", OIDCLogin(db, AuthCookieConfig{}))
+	r.GET("/oidc/callback", OIDCCallback(db, "secret", AuthCookieConfig{}))
 
 	loginReq := httptest.NewRequest(http.MethodGet, "/oidc/login", nil)
 	loginW := httptest.NewRecorder()

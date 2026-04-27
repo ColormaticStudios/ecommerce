@@ -198,6 +198,22 @@ func (legacyStorefrontSettings) TableName() string {
 	return "storefront_settings"
 }
 
+type legacyWebsiteSettings struct {
+	ID                           uint   `gorm:"primaryKey;autoIncrement:false"`
+	AllowGuestCheckout           bool   `gorm:"not null;default:true"`
+	OIDCProvider                 string `gorm:"column:oidc_provider;not null;default:''"`
+	OIDCClientID                 string `gorm:"column:oidc_client_id;not null;default:''"`
+	OIDCClientSecretEnvelopeJSON string `gorm:"column:oidc_client_secret_envelope_json;type:text;not null;default:''"`
+	OIDCClientSecretKeyVersion   string `gorm:"column:oidc_client_secret_key_version;not null;default:''"`
+	OIDCRedirectURI              string `gorm:"column:oidc_redirect_uri;not null;default:''"`
+	CreatedAt                    time.Time
+	UpdatedAt                    time.Time
+}
+
+func (legacyWebsiteSettings) TableName() string {
+	return "website_settings"
+}
+
 type legacyCheckoutProviderSetting struct {
 	LegacyBaseModel
 	ProviderType string `gorm:"not null;index:idx_checkout_provider_settings_type_id,unique"`

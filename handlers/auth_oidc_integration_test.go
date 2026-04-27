@@ -19,6 +19,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 type oidcIntegrationProvider struct {
@@ -29,6 +30,17 @@ type oidcIntegrationProvider struct {
 	keyID     string
 	codeToSub map[string]oidcUserClaims
 	mu        sync.Mutex
+}
+
+func seedOIDCWebsiteSettings(t *testing.T, db *gorm.DB, issuer, clientID, callbackURL string) {
+	t.Helper()
+	require.NoError(t, db.Select("*").Save(&models.WebsiteSettings{
+		ID:                 models.WebsiteSettingsSingletonID,
+		AllowGuestCheckout: true,
+		OIDCProvider:       issuer,
+		OIDCClientID:       clientID,
+		OIDCRedirectURI:    callbackURL,
+	}).Error)
 }
 
 func startOIDCIntegrationProvider(t *testing.T, clientID string) *oidcIntegrationProvider {
@@ -156,7 +168,8 @@ func TestOIDCCallbackIntegrationCreatesUserWithPreferredUsername(t *testing.T) {
 	const clientID = "oidc-client-id"
 	const callbackURL = "http://localhost:3000/api/v1/auth/oidc/callback"
 	provider := startOIDCIntegrationProvider(t, clientID)
-	db := newTestDB(t, &models.User{})
+	db := newTestDB(t, &models.User{}, &models.WebsiteSettings{})
+	seedOIDCWebsiteSettings(t, db, provider.issuer(), clientID, callbackURL)
 
 	provider.registerCode("new-user-code", oidcUserClaims{
 		Sub:               "oidc-sub-new-1",
@@ -166,7 +179,7 @@ func TestOIDCCallbackIntegrationCreatesUserWithPreferredUsername(t *testing.T) {
 	})
 
 	r := gin.New()
-	r.GET("/oidc/callback", OIDCCallback(db, "jwt-secret", provider.issuer(), clientID, callbackURL, AuthCookieConfig{}))
+	r.GET("/oidc/callback", OIDCCallback(db, "jwt-secret", AuthCookieConfig{}))
 
 	req := httptest.NewRequest(http.MethodGet, "/oidc/callback?state=state-1&code=new-user-code&format=json", nil)
 	req.AddCookie(&http.Cookie{Name: oidcStateCookieName, Value: "state-1"})
@@ -193,7 +206,8 @@ func TestOIDCCallbackIntegrationDoesNotAutoClaimMatchingGuestOrders(t *testing.T
 	const clientID = "oidc-client-id"
 	const callbackURL = "http://localhost:3000/api/v1/auth/oidc/callback"
 	provider := startOIDCIntegrationProvider(t, clientID)
-	db := newTestDB(t, &models.User{}, &models.CheckoutSession{}, &models.Order{})
+	db := newTestDB(t, &models.User{}, &models.CheckoutSession{}, &models.Order{}, &models.WebsiteSettings{})
+	seedOIDCWebsiteSettings(t, db, provider.issuer(), clientID, callbackURL)
 
 	guestEmail := "oidc-guest@example.com"
 	session, order := seedGuestOrderForAuthTest(t, db, guestEmail)
@@ -205,7 +219,7 @@ func TestOIDCCallbackIntegrationDoesNotAutoClaimMatchingGuestOrders(t *testing.T
 	})
 
 	r := gin.New()
-	r.GET("/oidc/callback", OIDCCallback(db, "jwt-secret", provider.issuer(), clientID, callbackURL, AuthCookieConfig{}))
+	r.GET("/oidc/callback", OIDCCallback(db, "jwt-secret", AuthCookieConfig{}))
 
 	req := httptest.NewRequest(http.MethodGet, "/oidc/callback?state=state-claim&code=guest-claim-code&format=json", nil)
 	req.AddCookie(&http.Cookie{Name: oidcStateCookieName, Value: "state-claim"})
@@ -233,7 +247,8 @@ func TestOIDCCallbackIntegrationUpdatesExistingUsernameFromPreferredUsername(t *
 	const clientID = "oidc-client-id"
 	const callbackURL = "http://localhost:3000/api/v1/auth/oidc/callback"
 	provider := startOIDCIntegrationProvider(t, clientID)
-	db := newTestDB(t, &models.User{})
+	db := newTestDB(t, &models.User{}, &models.WebsiteSettings{})
+	seedOIDCWebsiteSettings(t, db, provider.issuer(), clientID, callbackURL)
 
 	existing := models.User{
 		Subject:  "oidc-sub-existing-1",
@@ -252,7 +267,7 @@ func TestOIDCCallbackIntegrationUpdatesExistingUsernameFromPreferredUsername(t *
 	})
 
 	r := gin.New()
-	r.GET("/oidc/callback", OIDCCallback(db, "jwt-secret", provider.issuer(), clientID, callbackURL, AuthCookieConfig{}))
+	r.GET("/oidc/callback", OIDCCallback(db, "jwt-secret", AuthCookieConfig{}))
 
 	req := httptest.NewRequest(http.MethodGet, "/oidc/callback?state=state-2&code=existing-user-code&format=json", nil)
 	req.AddCookie(&http.Cookie{Name: oidcStateCookieName, Value: "state-2"})
@@ -276,7 +291,8 @@ func TestOIDCCallbackIntegrationKeepsExistingUsernameWhenPreferredUsernameTaken(
 	const clientID = "oidc-client-id"
 	const callbackURL = "http://localhost:3000/api/v1/auth/oidc/callback"
 	provider := startOIDCIntegrationProvider(t, clientID)
-	db := newTestDB(t, &models.User{})
+	db := newTestDB(t, &models.User{}, &models.WebsiteSettings{})
+	seedOIDCWebsiteSettings(t, db, provider.issuer(), clientID, callbackURL)
 
 	targetUser := models.User{
 		Subject:  "oidc-sub-existing-2",
@@ -304,7 +320,7 @@ func TestOIDCCallbackIntegrationKeepsExistingUsernameWhenPreferredUsernameTaken(
 	})
 
 	r := gin.New()
-	r.GET("/oidc/callback", OIDCCallback(db, "jwt-secret", provider.issuer(), clientID, callbackURL, AuthCookieConfig{}))
+	r.GET("/oidc/callback", OIDCCallback(db, "jwt-secret", AuthCookieConfig{}))
 
 	req := httptest.NewRequest(http.MethodGet, "/oidc/callback?state=state-3&code=existing-user-code-conflict&format=json", nil)
 	req.AddCookie(&http.Cookie{Name: oidcStateCookieName, Value: "state-3"})

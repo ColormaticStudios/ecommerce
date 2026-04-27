@@ -80,6 +80,9 @@ type UserPagePayload = components["schemas"]["UserPage"];
 type UpdateOrderStatusRequest = components["schemas"]["UpdateOrderStatusRequest"];
 type StorefrontSettingsRequest = components["schemas"]["StorefrontSettingsRequest"];
 type StorefrontSettingsResponse = components["schemas"]["StorefrontSettingsResponse"];
+type WebsiteSettings = components["schemas"]["WebsiteSettings"];
+type WebsiteSettingsRequest = components["schemas"]["WebsiteSettingsRequest"];
+type WebsiteSettingsResponse = components["schemas"]["WebsiteSettingsResponse"];
 type DraftPreviewSessionResponse = components["schemas"]["DraftPreviewSessionResponse"];
 type ListUserOrdersQuery = paths["/api/v1/me/orders"]["get"]["parameters"]["query"];
 type ListAdminBrandsQuery = NonNullable<
@@ -982,6 +985,15 @@ export class API {
 		const parsed = parseStorefrontSettingsResponse(response);
 		broadcastStorefrontStateChange();
 		return parsed;
+	}
+
+	public async getAdminWebsiteSettings(): Promise<WebsiteSettingsResponse> {
+		return this.request<WebsiteSettingsResponse>("GET", "/admin/website");
+	}
+
+	public async updateWebsiteSettings(settings: WebsiteSettings): Promise<WebsiteSettingsResponse> {
+		const payload: WebsiteSettingsRequest = { settings };
+		return this.request<WebsiteSettingsResponse>("PUT", "/admin/website", payload);
 	}
 
 	public async getAdminPreviewSession(): Promise<DraftPreviewSessionModel> {

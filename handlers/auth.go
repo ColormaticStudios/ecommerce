@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"ecommerce/internal/services/providerops"
 	"ecommerce/models"
 
 	"github.com/coreos/go-oidc"
@@ -221,11 +222,20 @@ func oidcConfigured(provider string, clientID string, redirectURI string) bool {
 		strings.TrimSpace(redirectURI) != ""
 }
 
-func GetAuthConfig(disableLocalSignIn bool, oidcProvider string, clientID string, redirectURI string) gin.HandlerFunc {
+func GetAuthConfig(db *gorm.DB, disableLocalSignIn bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		settings, err := loadOrCreateWebsiteSettings(db)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load website settings"})
+			return
+		}
 		c.JSON(http.StatusOK, AuthConfigResponse{
 			LocalSignInEnabled: !disableLocalSignIn,
-			OIDCEnabled:        oidcConfigured(oidcProvider, clientID, redirectURI),
+			OIDCEnabled: oidcConfigured(
+				settings.OIDCProvider,
+				settings.OIDCClientID,
+				settings.OIDCRedirectURI,
+			),
 		})
 	}
 }
@@ -392,19 +402,33 @@ func generateSubjectID(email string) string {
 }
 
 // OIDCLogin redirects the user to the OIDC provider’s authorization endpoint
-func OIDCLogin(oidcProvider string, clientID string, redirectURI string, cookieCfg AuthCookieConfig) gin.HandlerFunc {
+func OIDCLogin(db *gorm.DB, cookieCfg AuthCookieConfig) gin.HandlerFunc {
+	return OIDCLoginWithCredentials(db, cookieCfg, nil)
+}
+
+func OIDCLoginWithCredentials(db *gorm.DB, cookieCfg AuthCookieConfig, credentials *providerops.CredentialService) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		settings, err := loadOrCreateWebsiteSettings(db)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load website settings"})
+			return
+		}
+		if !oidcConfigured(settings.OIDCProvider, settings.OIDCClientID, settings.OIDCRedirectURI) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "OIDC is not configured"})
+			return
+		}
+
 		ctx := context.Background()
-		provider, err := oidc.NewProvider(ctx, oidcProvider)
+		provider, err := oidc.NewProvider(ctx, settings.OIDCProvider)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create OIDC provider"})
 			return
 		}
 
 		oauth2Config := oauth2.Config{
-			ClientID:     clientID,
-			ClientSecret: "", // secret is not needed for implicit flow in this example
-			RedirectURL:  redirectURI,
+			ClientID:     settings.OIDCClientID,
+			ClientSecret: "",
+			RedirectURL:  settings.OIDCRedirectURI,
 			Endpoint:     provider.Endpoint(),
 			Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
 		}
@@ -425,10 +449,33 @@ func OIDCLogin(oidcProvider string, clientID string, redirectURI string, cookieC
 
 // OIDCCallback exchanges the authorization code for tokens, validates the ID token,
 // creates/updates the local user record, and returns a JWT for the API.
-func OIDCCallback(db *gorm.DB, jwtSecret string, oidcProvider string, clientID string, redirectURI string, cookieCfg AuthCookieConfig) gin.HandlerFunc {
+func OIDCCallback(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConfig) gin.HandlerFunc {
+	return OIDCCallbackWithCredentials(db, jwtSecret, cookieCfg, nil)
+}
+
+func OIDCCallbackWithCredentials(db *gorm.DB, jwtSecret string, cookieCfg AuthCookieConfig, credentials *providerops.CredentialService) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		settings, err := loadOrCreateWebsiteSettings(db)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load website settings"})
+			return
+		}
+		if !oidcConfigured(settings.OIDCProvider, settings.OIDCClientID, settings.OIDCRedirectURI) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "OIDC is not configured"})
+			return
+		}
+		clientSecret, err := decryptWebsiteOIDCClientSecret(credentials, settings)
+		if err != nil {
+			if errors.Is(err, providerops.ErrCredentialServiceUnconfigured) {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "OIDC client secret encryption is not configured"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to decrypt OIDC client secret"})
+			return
+		}
+
 		ctx := context.Background()
-		provider, err := oidc.NewProvider(ctx, oidcProvider)
+		provider, err := oidc.NewProvider(ctx, settings.OIDCProvider)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create OIDC provider"})
 			return
@@ -443,9 +490,9 @@ func OIDCCallback(db *gorm.DB, jwtSecret string, oidcProvider string, clientID s
 		clearOIDCStateCookie(c, cookieCfg)
 
 		oauth2Config := oauth2.Config{
-			ClientID:     clientID,
-			ClientSecret: "", // secret may be needed for confidential clients
-			RedirectURL:  redirectURI,
+			ClientID:     settings.OIDCClientID,
+			ClientSecret: clientSecret,
+			RedirectURL:  settings.OIDCRedirectURI,
 			Endpoint:     provider.Endpoint(),
 			Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
 		}
@@ -463,7 +510,7 @@ func OIDCCallback(db *gorm.DB, jwtSecret string, oidcProvider string, clientID s
 		}
 
 		// Validate the ID token
-		verifier := provider.Verifier(&oidc.Config{ClientID: clientID})
+		verifier := provider.Verifier(&oidc.Config{ClientID: settings.OIDCClientID})
 		rawIDToken, ok := token.Extra("id_token").(string)
 		if !ok {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "no id_token in token response"})

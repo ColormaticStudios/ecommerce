@@ -688,11 +688,11 @@ func TestCheckoutCartMutationInvalidTokenRotatesSession(t *testing.T) {
 }
 
 func TestCheckoutGuestToggleBlocksGuestsButAllowsAuthenticatedCheckout(t *testing.T) {
-	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.StorefrontSettings{}, &models.Cart{}, &models.CartItem{}, &models.CheckoutSession{})
+	r, db := setupGeneratedRouterWithConfig(t, GeneratedAPIServerConfig{}, &models.User{}, &models.WebsiteSettings{}, &models.Cart{}, &models.CartItem{}, &models.CheckoutSession{})
 	user := seedUser(t, db, "sub-guest-toggle", "guest-toggle", "guest-toggle@example.com", "customer")
-	require.NoError(t, db.Create(&models.StorefrontSettings{
-		ID:         models.StorefrontSettingsSingletonID,
-		ConfigJSON: `{"checkout":{"allow_guest_checkout":false}}`,
+	require.NoError(t, db.Select("*").Save(&models.WebsiteSettings{
+		ID:                 models.WebsiteSettingsSingletonID,
+		AllowGuestCheckout: false,
 	}).Error)
 
 	guestReq := httptest.NewRequest(http.MethodGet, "/api/v1/checkout/cart", nil)

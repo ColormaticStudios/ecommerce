@@ -177,8 +177,5 @@
       }
     ],
     "bottom_notice": "Prices and availability are subject to change."
-  },
-  "checkout": {
-    "allow_guest_checkout": true
   }
 }

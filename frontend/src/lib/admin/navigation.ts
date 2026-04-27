@@ -6,6 +6,7 @@ export type AdminSectionId =
 	| "purchase-orders"
 	| "users"
 	| "providers"
+	| "website"
 	| "storefront";
 
 type AdminRouteHref =
@@ -16,6 +17,7 @@ type AdminRouteHref =
 	| "/admin/purchase-orders"
 	| "/admin/users"
 	| "/admin/providers"
+	| "/admin/website"
 	| "/admin/storefront";
 
 export interface AdminNavItem {
@@ -75,6 +77,13 @@ export const adminNavItems: AdminNavItem[] = [
 		href: "/admin/providers",
 		icon: "bi-diagram-3",
 		matchPrefixes: ["/admin/providers"],
+	},
+	{
+		id: "website",
+		label: "Website",
+		href: "/admin/website",
+		icon: "bi-sliders",
+		matchPrefixes: ["/admin/website"],
 	},
 	{
 		id: "storefront",

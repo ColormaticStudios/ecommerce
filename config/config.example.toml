@@ -5,9 +5,6 @@
 PORT = "3000"
 AUTO_APPLY_MIGRATIONS = false
 DISABLE_LOCAL_SIGN_IN = false
-OIDC_PROVIDER = ""
-OIDC_CLIENT_ID = ""
-OIDC_REDIRECT_URI = ""
 DEV_MODE = true
 PUBLIC_URL = "api.example.com"
 MEDIA_ROOT = "media"

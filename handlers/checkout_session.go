@@ -73,11 +73,11 @@ func findAuthenticatedUserIfPresent(db *gorm.DB, c *gin.Context, jwtSecret strin
 }
 
 func isGuestCheckoutEnabled(db *gorm.DB) (bool, error) {
-	_, settings, err := loadOrCreateStorefrontSettings(db, nil, false)
+	settings, err := loadOrCreateWebsiteSettings(db)
 	if err != nil {
 		return false, err
 	}
-	return settings.Checkout.AllowGuestCheckout, nil
+	return settings.AllowGuestCheckout, nil
 }
 
 func rejectGuestCheckoutDisabled(c *gin.Context) bool {

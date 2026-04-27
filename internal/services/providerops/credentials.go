@@ -337,6 +337,39 @@ func (s *CredentialService) ValidateCurrency(currency string, credential *Resolv
 	return fmt.Errorf("%w: %s", ErrUnsupportedProviderCurrency, currency)
 }
 
+func (s *CredentialService) EncryptSecretData(scope string, secretData map[string]string) (string, string, error) {
+	if !s.Enabled() {
+		return "", "", ErrCredentialServiceUnconfigured
+	}
+	scope = strings.TrimSpace(scope)
+	if scope == "" {
+		return "", "", fmt.Errorf("credential encryption scope is required")
+	}
+	if len(secretData) == 0 {
+		return "", "", fmt.Errorf("secret_data is required")
+	}
+	envelope, err := s.encrypt("app", scope, "global", secretData)
+	if err != nil {
+		return "", "", err
+	}
+	envelopeJSON, err := json.Marshal(envelope)
+	if err != nil {
+		return "", "", err
+	}
+	return string(envelopeJSON), s.activeKeyVersion, nil
+}
+
+func (s *CredentialService) DecryptSecretData(scope string, envelopeJSON string) (map[string]string, error) {
+	if !s.Enabled() {
+		return nil, ErrCredentialServiceUnconfigured
+	}
+	scope = strings.TrimSpace(scope)
+	if scope == "" {
+		return nil, fmt.Errorf("credential encryption scope is required")
+	}
+	return s.decryptEnvelope("app", scope, "global", envelopeJSON)
+}
+
 func (s *CredentialService) hasAnyCredential(ctx context.Context, db *gorm.DB, providerType, providerID string) (bool, error) {
 	if db == nil || !db.Migrator().HasTable(&models.ProviderCredential{}) {
 		return false, nil
@@ -380,9 +413,12 @@ func (s *CredentialService) decryptRecord(record models.ProviderCredential) (map
 	if !s.Enabled() {
 		return nil, ErrCredentialServiceUnconfigured
 	}
+	return s.decryptEnvelope(record.ProviderType, record.ProviderID, record.Environment, record.SecretEnvelopeJSON)
+}
 
+func (s *CredentialService) decryptEnvelope(providerType, providerID, environment string, envelopeJSON string) (map[string]string, error) {
 	var envelope credentialEnvelope
-	if err := json.Unmarshal([]byte(record.SecretEnvelopeJSON), &envelope); err != nil {
+	if err := json.Unmarshal([]byte(envelopeJSON), &envelope); err != nil {
 		return nil, err
 	}
 	key := s.keyring[strings.TrimSpace(envelope.KeyVersion)]
@@ -407,7 +443,7 @@ func (s *CredentialService) decryptRecord(record models.ProviderCredential) (map
 	if err != nil {
 		return nil, err
 	}
-	plaintext, err := gcm.Open(nil, nonce, ciphertext, credentialAAD(record.ProviderType, record.ProviderID, record.Environment))
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, credentialAAD(providerType, providerID, environment))
 	if err != nil {
 		return nil, err
 	}

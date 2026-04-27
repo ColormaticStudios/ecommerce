@@ -23,9 +23,6 @@ type GeneratedAPIServerConfig struct {
 	JWTSecret          string
 	DisableLocalSignIn bool
 	AuthCookieConfig   AuthCookieConfig
-	OIDCProvider       string
-	OIDCClientID       string
-	OIDCRedirectURI    string
 	MediaUploads       http.Handler
 	CheckoutPlugins    *checkoutplugins.Manager
 	WebhookService     *webhookservice.Service
@@ -40,9 +37,6 @@ type GeneratedAPIServer struct {
 	jwtSecret          string
 	disableLocalSignIn bool
 	authCookieCfg      AuthCookieConfig
-	oidcProvider       string
-	oidcClientID       string
-	oidcRedirectURI    string
 	mediaUploads       http.Handler
 	webhookService     *webhookservice.Service
 	providerRuntime    *providerops.Runtime
@@ -90,9 +84,6 @@ func NewGeneratedAPIServer(db *gorm.DB, mediaService *media.Service, cfg Generat
 		jwtSecret:          cfg.JWTSecret,
 		disableLocalSignIn: cfg.DisableLocalSignIn,
 		authCookieCfg:      cfg.AuthCookieConfig,
-		oidcProvider:       cfg.OIDCProvider,
-		oidcClientID:       cfg.OIDCClientID,
-		oidcRedirectURI:    cfg.OIDCRedirectURI,
 		mediaUploads:       cfg.MediaUploads,
 		webhookService:     webhookSvc,
 		providerRuntime:    runtime,
@@ -437,6 +428,14 @@ func (s *GeneratedAPIServer) PublishStorefrontSettings(c *gin.Context) {
 	s.runProtected(c, "admin", PublishStorefrontSettings(s.db, s.mediaService))
 }
 
+func (s *GeneratedAPIServer) GetAdminWebsiteSettings(c *gin.Context) {
+	s.runProtected(c, "admin", GetAdminWebsiteSettings(s.db))
+}
+
+func (s *GeneratedAPIServer) UpdateWebsiteSettings(c *gin.Context) {
+	s.runProtected(c, "admin", UpsertWebsiteSettingsWithCredentials(s.db, s.providerRuntime.Credentials))
+}
+
 func (s *GeneratedAPIServer) DiscardStorefrontDraft(c *gin.Context) {
 	s.runProtected(c, "admin", DiscardStorefrontDraft(s.db, s.mediaService))
 }
@@ -476,25 +475,17 @@ func (s *GeneratedAPIServer) Logout(c *gin.Context) {
 }
 
 func (s *GeneratedAPIServer) GetAuthConfig(c *gin.Context) {
-	GetAuthConfig(s.disableLocalSignIn, s.oidcProvider, s.oidcClientID, s.oidcRedirectURI)(c)
+	GetAuthConfig(s.db, s.disableLocalSignIn)(c)
 }
 
 func (s *GeneratedAPIServer) OidcCallback(c *gin.Context, params apicontract.OidcCallbackParams) {
 	_ = params
-	if !oidcConfigured(s.oidcProvider, s.oidcClientID, s.oidcRedirectURI) {
-		c.Status(http.StatusNotFound)
-		return
-	}
-	OIDCCallback(s.db, s.jwtSecret, s.oidcProvider, s.oidcClientID, s.oidcRedirectURI, s.authCookieCfg)(c)
+	OIDCCallbackWithCredentials(s.db, s.jwtSecret, s.authCookieCfg, s.providerRuntime.Credentials)(c)
 }
 
 func (s *GeneratedAPIServer) OidcLogin(c *gin.Context, params apicontract.OidcLoginParams) {
 	_ = params
-	if !oidcConfigured(s.oidcProvider, s.oidcClientID, s.oidcRedirectURI) {
-		c.Status(http.StatusNotFound)
-		return
-	}
-	OIDCLogin(s.oidcProvider, s.oidcClientID, s.oidcRedirectURI, s.authCookieCfg)(c)
+	OIDCLoginWithCredentials(s.db, s.authCookieCfg, s.providerRuntime.Credentials)(c)
 }
 
 func (s *GeneratedAPIServer) Register(c *gin.Context) {

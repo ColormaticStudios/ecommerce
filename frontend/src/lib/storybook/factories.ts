@@ -35,6 +35,8 @@ type CheckoutPluginState = components["schemas"]["CheckoutPluginState"];
 type CheckoutQuoteResponse = components["schemas"]["CheckoutQuoteResponse"];
 type AuthResponse = components["schemas"]["AuthResponse"];
 type AuthUser = components["schemas"]["User"];
+type WebsiteSettings = components["schemas"]["WebsiteSettings"];
+type WebsiteSettingsResponse = components["schemas"]["WebsiteSettingsResponse"];
 type DraftPreviewSession = {
 	active: boolean;
 	expires_at: Date | null;
@@ -579,6 +581,33 @@ export function makeStorefrontResponse(
 			has_draft_changes: false,
 			draft_updated_at: null,
 			published_updated_at: now,
+		},
+		overrides
+	);
+}
+
+export function makeWebsiteSettings(overrides: Partial<WebsiteSettings> = {}): WebsiteSettings {
+	return merge(
+		{
+			allow_guest_checkout: true,
+			oidc_provider: "https://issuer.example",
+			oidc_client_id: "storefront-admin",
+			oidc_client_secret: "",
+			oidc_client_secret_configured: true,
+			clear_oidc_client_secret: false,
+			oidc_redirect_uri: "https://shop.example/api/v1/auth/oidc/callback",
+		},
+		overrides
+	);
+}
+
+export function makeWebsiteSettingsResponse(
+	overrides: Partial<WebsiteSettingsResponse> = {}
+): WebsiteSettingsResponse {
+	return merge(
+		{
+			settings: makeWebsiteSettings(),
+			updated_at: now.toISOString(),
 		},
 		overrides
 	);
