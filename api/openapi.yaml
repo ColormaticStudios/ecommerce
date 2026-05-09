@@ -194,6 +194,14 @@ paths:
           schema:
             type: string
         - in: query
+          name: category_slug
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
           name: has_variant_stock
           schema:
             type: boolean
@@ -253,6 +261,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/BrandListResponse"
+
+  /api/v1/categories:
+    get:
+      tags: [catalog]
+      operationId: listCategories
+      security: []
+      summary: List active storefront categories
+      responses:
+        "200":
+          description: Active categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryListResponse"
 
   /api/v1/product-attributes:
     get:
@@ -1231,6 +1253,27 @@ paths:
           schema:
             type: string
         - in: query
+          name: category_slug
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: category_id
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: integer
+              minimum: 1
+        - in: query
+          name: include_inactive_categories
+          schema:
+            type: boolean
+        - in: query
           name: has_variant_stock
           schema:
             type: boolean
@@ -1357,6 +1400,85 @@ paths:
       responses:
         "200":
           description: Deleted brand
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /api/v1/admin/categories:
+    get:
+      tags: [admin]
+      operationId: listAdminCategories
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: include_inactive
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Available categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryListResponse"
+    post:
+      tags: [admin]
+      operationId: createAdminCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "201":
+          description: Created category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+
+  /api/v1/admin/categories/{id}:
+    patch:
+      tags: [admin]
+      operationId: updateAdminCategory
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "200":
+          description: Updated category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+    delete:
+      tags: [admin]
+      operationId: deleteAdminCategory
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Deleted category
           content:
             application/json:
               schema:
@@ -3132,6 +3254,68 @@ components:
         is_active:
           type: boolean
 
+    Category:
+      type: object
+      required: [id, name, slug, is_active, sort_order, path, depth]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        sort_order:
+          type: integer
+        parent_id:
+          type: integer
+          nullable: true
+          minimum: 1
+        path:
+          type: string
+        depth:
+          type: integer
+          minimum: 0
+
+    CategoryListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
+
+    CategoryInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        slug:
+          type: string
+          nullable: true
+          maxLength: 120
+        description:
+          type: string
+          nullable: true
+          maxLength: 500
+        is_active:
+          type: boolean
+        sort_order:
+          type: integer
+        parent_id:
+          type: integer
+          nullable: true
+          minimum: 1
+
     ProductAttributeDefinition:
       type: object
       required: [id, key, slug, type, filterable, sortable]
@@ -3369,6 +3553,7 @@ components:
         - stock
         - images
         - related_products
+        - categories
         - options
         - variants
         - attributes
@@ -3431,6 +3616,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/RelatedProduct"
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
         created_at:
           type: string
           format: date-time
@@ -3618,6 +3807,7 @@ components:
         - description
         - images
         - related_product_ids
+        - category_ids
         - options
         - variants
         - attributes
@@ -3637,6 +3827,11 @@ components:
           items:
             type: string
         related_product_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        category_ids:
           type: array
           items:
             type: integer
@@ -5600,6 +5795,7 @@ components:
         - order
         - limit
         - brand_slug
+        - category_slug
         - has_variant_stock
         - attribute_filters
         - show_stock
@@ -5612,7 +5808,7 @@ components:
           type: string
         source:
           type: string
-          enum: [manual, newest, search]
+          enum: [manual, newest, search, category]
         query:
           type: string
         product_ids:
@@ -5631,6 +5827,8 @@ components:
           minimum: 1
           maximum: 24
         brand_slug:
+          type: string
+        category_slug:
           type: string
         has_variant_stock:
           type: boolean

@@ -1,150 +1,3 @@
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.082ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("brands")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.025ms] [34;1m[rows:1][0m SELECT * FROM PRAGMA_index_list("cart_items")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.025ms] [34;1m[rows:2][0m SELECT * FROM PRAGMA_index_list("carts")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.025ms] [34;1m[rows:2][0m SELECT * FROM PRAGMA_index_list("checkout_provider_settings")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.026ms] [34;1m[rows:2][0m SELECT * FROM PRAGMA_index_list("checkout_sessions")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.032ms] [34;1m[rows:4][0m SELECT * FROM PRAGMA_index_list("idempotency_keys")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.022ms] [34;1m[rows:1][0m SELECT * FROM PRAGMA_index_list("media_objects")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.029ms] [34;1m[rows:4][0m SELECT * FROM PRAGMA_index_list("media_references")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.023ms] [34;1m[rows:1][0m SELECT * FROM PRAGMA_index_list("media_variants")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.023ms] [34;1m[rows:1][0m SELECT * FROM PRAGMA_index_list("order_checkout_snapshot_items")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.029ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("order_checkout_snapshots")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.023ms] [34;1m[rows:1][0m SELECT * FROM PRAGMA_index_list("order_items")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.025ms] [34;1m[rows:2][0m SELECT * FROM PRAGMA_index_list("order_status_histories")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.038ms] [34;1m[rows:6][0m SELECT * FROM PRAGMA_index_list("order_tax_lines")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.029ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("orders")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.028ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("payment_intents")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.028ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("payment_transactions")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.028ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("product_attribute_value_drafts")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.040ms] [34;1m[rows:8][0m SELECT * FROM PRAGMA_index_list("product_attribute_values")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.061ms] [34;1m[rows:5][0m SELECT * FROM PRAGMA_index_list("product_attributes")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.034ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("product_drafts")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.030ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("product_option_drafts")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.028ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("product_option_value_drafts")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.034ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("product_option_values")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.028ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("product_options")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.022ms] [34;1m[rows:1][0m SELECT * FROM PRAGMA_index_list("product_related")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.028ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("product_related_drafts")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.030ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("product_variant_drafts")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.030ms] [34;1m[rows:4][0m SELECT * FROM PRAGMA_index_list("product_variant_option_value_drafts")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.030ms] [34;1m[rows:4][0m SELECT * FROM PRAGMA_index_list("product_variant_option_values")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.038ms] [34;1m[rows:7][0m SELECT * FROM PRAGMA_index_list("product_variants")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.036ms] [34;1m[rows:6][0m SELECT * FROM PRAGMA_index_list("products")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.039ms] [34;1m[rows:7][0m SELECT * FROM PRAGMA_index_list("provider_call_audits")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.030ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("provider_credentials")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.033ms] [34;1m[rows:5][0m SELECT * FROM PRAGMA_index_list("provider_reconciliation_drifts")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.035ms] [34;1m[rows:6][0m SELECT * FROM PRAGMA_index_list("provider_reconciliation_runs")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.027ms] [34;1m[rows:2][0m SELECT * FROM PRAGMA_index_list("saved_addresses")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.026ms] [34;1m[rows:2][0m SELECT * FROM PRAGMA_index_list("saved_payment_methods")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.023ms] [34;1m[rows:1][0m SELECT * FROM PRAGMA_index_list("schema_migrations")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.031ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("seo_metadata")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.023ms] [34;1m[rows:1][0m SELECT * FROM PRAGMA_index_list("shipment_packages")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.030ms] [34;1m[rows:4][0m SELECT * FROM PRAGMA_index_list("shipment_rates")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.057ms] [34;1m[rows:7][0m SELECT * FROM PRAGMA_index_list("shipments")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.017ms] [34;1m[rows:0][0m SELECT * FROM PRAGMA_index_list("storefront_settings")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.029ms] [34;1m[rows:2][0m SELECT * FROM PRAGMA_index_list("tax_exports")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.024ms] [34;1m[rows:1][0m SELECT * FROM PRAGMA_index_list("tax_nexus_configs")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.030ms] [34;1m[rows:3][0m SELECT * FROM PRAGMA_index_list("tracking_events")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.030ms] [34;1m[rows:4][0m SELECT * FROM PRAGMA_index_list("users")
-
-2026/03/20 09:50:39 [32m/home/zakarya/Projects/ecommerce/internal/migrations/snapshot.go:52
-[0m[33m[0.032ms] [34;1m[rows:4][0m SELECT * FROM PRAGMA_index_list("webhook_events")
 TABLE brands
   COLUMN created_at
   COLUMN deleted_at
@@ -176,6 +29,26 @@ TABLE carts
   COLUMN updated_at
   INDEX idx_carts_checkout_session_id columns=checkout_session_id unique=true option=
   INDEX idx_carts_deleted_at columns=deleted_at unique=false option=
+TABLE categories
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN depth
+  COLUMN description
+  COLUMN id
+  COLUMN is_active
+  COLUMN name
+  COLUMN parent_id
+  COLUMN path
+  COLUMN slug
+  COLUMN sort_order
+  COLUMN updated_at
+  INDEX idx_categories_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_categories_depth columns=depth unique=false option=
+  INDEX idx_categories_is_active columns=is_active unique=false option=
+  INDEX idx_categories_parent_id columns=parent_id unique=false option=
+  INDEX idx_categories_path columns=path unique=false option=
+  INDEX idx_categories_slug columns=slug unique=true option=
+  INDEX idx_categories_sort_order columns=sort_order unique=false option=
 TABLE checkout_provider_settings
   COLUMN created_at
   COLUMN deleted_at
@@ -185,7 +58,7 @@ TABLE checkout_provider_settings
   COLUMN provider_type
   COLUMN updated_at
   INDEX idx_checkout_provider_settings_deleted_at columns=deleted_at unique=false option=
-  INDEX idx_checkout_provider_settings_type_id columns=provider_type,provider_id unique=true option=
+  INDEX idx_checkout_provider_settings_type_id columns=provider_id,provider_type unique=true option=
 TABLE checkout_sessions
   COLUMN created_at
   COLUMN deleted_at
@@ -216,7 +89,150 @@ TABLE idempotency_keys
   INDEX idx_idempotency_keys_correlation_id columns=correlation_id unique=false option=
   INDEX idx_idempotency_keys_expires_at columns=expires_at unique=false option=
   INDEX idx_idempotency_keys_payment_intent_id columns=payment_intent_id unique=false option=
-  INDEX idx_idempotency_scope_session_key columns=scope,key,checkout_session_id unique=true option=
+  INDEX idx_idempotency_scope_session_key columns=checkout_session_id,key,scope unique=true option=
+TABLE inventory_adjustments
+  COLUMN actor_id
+  COLUMN actor_type
+  COLUMN approved_at
+  COLUMN approved_by_id
+  COLUMN approved_by_type
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN inventory_item_id
+  COLUMN notes
+  COLUMN product_variant_id
+  COLUMN quantity_delta
+  COLUMN reason_code
+  COLUMN updated_at
+  INDEX idx_inventory_adjustments_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_inventory_adjustments_inventory_item_id columns=inventory_item_id unique=false option=
+  INDEX idx_inventory_adjustments_product_variant_id columns=product_variant_id unique=false option=
+  INDEX idx_inventory_adjustments_reason_code columns=reason_code unique=false option=
+TABLE inventory_alerts
+  COLUMN acked_at
+  COLUMN acked_by_id
+  COLUMN acked_by_type
+  COLUMN alert_type
+  COLUMN available
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN inventory_item_id
+  COLUMN opened_at
+  COLUMN product_variant_id
+  COLUMN resolved_at
+  COLUMN resolved_by_id
+  COLUMN resolved_by_type
+  COLUMN status
+  COLUMN threshold
+  COLUMN updated_at
+  INDEX idx_inventory_alerts_alert_type columns=alert_type unique=false option=
+  INDEX idx_inventory_alerts_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_inventory_alerts_inventory_item_id columns=inventory_item_id unique=false option=
+  INDEX idx_inventory_alerts_opened_at columns=opened_at unique=false option=
+  INDEX idx_inventory_alerts_product_variant_id columns=product_variant_id unique=false option=
+  INDEX idx_inventory_alerts_status columns=status unique=false option=
+TABLE inventory_items
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN product_variant_id
+  COLUMN updated_at
+  INDEX idx_inventory_items_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_inventory_items_product_variant_id columns=product_variant_id unique=true option=
+TABLE inventory_levels
+  COLUMN available
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN inventory_item_id
+  COLUMN on_hand
+  COLUMN reserved
+  COLUMN updated_at
+  INDEX idx_inventory_levels_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_inventory_levels_inventory_item_id columns=inventory_item_id unique=true option=
+TABLE inventory_movements
+  COLUMN actor_id
+  COLUMN actor_type
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN inventory_item_id
+  COLUMN movement_type
+  COLUMN quantity_delta
+  COLUMN reason_code
+  COLUMN reference_id
+  COLUMN reference_type
+  COLUMN updated_at
+  INDEX idx_inventory_movements_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_inventory_movements_inventory_item_id columns=inventory_item_id unique=false option=
+  INDEX idx_inventory_movements_movement_type columns=movement_type unique=false option=
+  INDEX idx_inventory_movements_reference_id columns=reference_id unique=false option=
+  INDEX idx_inventory_movements_reference_type columns=reference_type unique=false option=
+TABLE inventory_receipt_items
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN inventory_receipt_id
+  COLUMN product_variant_id
+  COLUMN purchase_order_item_id
+  COLUMN quantity_received
+  COLUMN updated_at
+  INDEX idx_inventory_receipt_items_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_inventory_receipt_items_inventory_receipt_id columns=inventory_receipt_id unique=false option=
+  INDEX idx_inventory_receipt_items_product_variant_id columns=product_variant_id unique=false option=
+  INDEX idx_inventory_receipt_items_purchase_order_item_id columns=purchase_order_item_id unique=false option=
+TABLE inventory_receipts
+  COLUMN actor_id
+  COLUMN actor_type
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN notes
+  COLUMN purchase_order_id
+  COLUMN received_at
+  COLUMN updated_at
+  INDEX idx_inventory_receipts_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_inventory_receipts_purchase_order_id columns=purchase_order_id unique=false option=
+  INDEX idx_inventory_receipts_received_at columns=received_at unique=false option=
+TABLE inventory_reservations
+  COLUMN checkout_session_id
+  COLUMN consumed_at
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN expired_at
+  COLUMN expires_at
+  COLUMN id
+  COLUMN idempotency_key
+  COLUMN inventory_item_id
+  COLUMN order_id
+  COLUMN owner_id
+  COLUMN owner_type
+  COLUMN product_variant_id
+  COLUMN quantity
+  COLUMN released_at
+  COLUMN status
+  COLUMN updated_at
+  INDEX idx_inventory_reservations_checkout_session_id columns=checkout_session_id unique=false option=
+  INDEX idx_inventory_reservations_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_inventory_reservations_expires_at columns=expires_at unique=false option=
+  INDEX idx_inventory_reservations_idempotency_key columns=idempotency_key unique=true option=
+  INDEX idx_inventory_reservations_inventory_item_id columns=inventory_item_id unique=false option=
+  INDEX idx_inventory_reservations_order_id columns=order_id unique=false option=
+  INDEX idx_inventory_reservations_owner_id columns=owner_id unique=false option=
+  INDEX idx_inventory_reservations_owner_type columns=owner_type unique=false option=
+  INDEX idx_inventory_reservations_product_variant_id columns=product_variant_id unique=false option=
+  INDEX idx_inventory_reservations_status columns=status unique=false option=
+TABLE inventory_thresholds
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN low_stock_quantity
+  COLUMN product_variant_id
+  COLUMN updated_at
+  INDEX idx_inventory_thresholds_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_inventory_thresholds_product_variant_id columns=product_variant_id unique=true option=
 TABLE media_objects
   COLUMN created_at
   COLUMN id
@@ -378,7 +394,7 @@ TABLE payment_transactions
   COLUMN updated_at
   INDEX idx_payment_transactions_provider_txn_id columns=provider_txn_id unique=false option=
   INDEX idx_payment_transactions_status columns=status unique=false option=
-  INDEX idx_payment_txn_intent_operation_key columns=payment_intent_id,operation,idempotency_key unique=true option=
+  INDEX idx_payment_txn_intent_operation_key columns=idempotency_key,operation,payment_intent_id unique=true option=
 TABLE product_attribute_value_drafts
   COLUMN boolean_value
   COLUMN created_at
@@ -407,14 +423,14 @@ TABLE product_attribute_values
   COLUMN product_id
   COLUMN text_value
   COLUMN updated_at
-  INDEX idx_product_attribute_values_boolean_lookup columns=product_attribute_id,boolean_value,product_id unique=false option=
+  INDEX idx_product_attribute_values_boolean_lookup columns=boolean_value,product_attribute_id,product_id unique=false option=
   INDEX idx_product_attribute_values_deleted_at columns=deleted_at unique=false option=
-  INDEX idx_product_attribute_values_enum_lookup columns=product_attribute_id,enum_value,product_id unique=false option=
-  INDEX idx_product_attribute_values_number_lookup columns=product_attribute_id,number_value,product_id unique=false option=
+  INDEX idx_product_attribute_values_enum_lookup columns=enum_value,product_attribute_id,product_id unique=false option=
+  INDEX idx_product_attribute_values_number_lookup columns=number_value,product_attribute_id,product_id unique=false option=
   INDEX idx_product_attribute_values_product_attribute_id columns=product_attribute_id unique=false option=
-  INDEX idx_product_attribute_values_product_attribute_unique columns=product_id,product_attribute_id unique=true option=
+  INDEX idx_product_attribute_values_product_attribute_unique columns=product_attribute_id,product_id unique=true option=
   INDEX idx_product_attribute_values_product_id columns=product_id unique=false option=
-  INDEX idx_product_attribute_values_text_lookup columns=product_attribute_id,text_value,product_id unique=false option=
+  INDEX idx_product_attribute_values_text_lookup columns=product_attribute_id,product_id,text_value unique=false option=
 TABLE product_attributes
   COLUMN created_at
   COLUMN deleted_at
@@ -430,6 +446,22 @@ TABLE product_attributes
   INDEX idx_product_attributes_key columns=key unique=true option=
   INDEX idx_product_attributes_slug columns=slug unique=true option=
   INDEX idx_product_attributes_sortable columns=sortable unique=false option=
+TABLE product_categories
+  COLUMN category_id
+  COLUMN product_id
+  INDEX idx_product_categories_category_product columns=category_id,product_id unique=false option=
+  INDEX idx_product_categories_product_category columns=category_id,product_id unique=true option=
+TABLE product_category_drafts
+  COLUMN category_id
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN position
+  COLUMN product_draft_id
+  COLUMN updated_at
+  INDEX idx_product_category_drafts_category_id columns=category_id unique=false option=
+  INDEX idx_product_category_drafts_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_product_category_drafts_product_draft_id columns=product_draft_id unique=false option=
 TABLE product_drafts
   COLUMN brand_id
   COLUMN created_at
@@ -503,7 +535,7 @@ TABLE product_options
   COLUMN updated_at
   INDEX idx_product_options_deleted_at columns=deleted_at unique=false option=
   INDEX idx_product_options_product_id columns=product_id unique=false option=
-  INDEX idx_product_options_product_name_unique columns=product_id,name unique=true option=
+  INDEX idx_product_options_product_name_unique columns=name,product_id unique=true option=
 TABLE product_related
   COLUMN product_id
   COLUMN related_id
@@ -552,9 +584,9 @@ TABLE product_variant_option_value_drafts
   COLUMN source_product_option_value_id
   COLUMN updated_at
   INDEX idx_product_variant_option_value_drafts_deleted_at columns=deleted_at unique=false option=
-  INDEX idx_product_variant_option_value_drafts_product_option_v0bd648a0 columns=product_option_value_draft_id unique=false option=
-  INDEX idx_product_variant_option_value_drafts_product_variant_draft_id columns=product_variant_draft_id unique=false option=
-  INDEX idx_product_variant_option_value_drafts_source_product_o54f6a8e3 columns=source_product_option_value_id unique=false option=
+  INDEX idx_product_variant_option_value_drafts_product_option_0bd648a0 columns=product_option_value_draft_id unique=false option=
+  INDEX idx_product_variant_option_value_drafts_product_varianta2ba91fe columns=product_variant_draft_id unique=false option=
+  INDEX idx_product_variant_option_value_drafts_source_product_54f6a8e3 columns=source_product_option_value_id unique=false option=
 TABLE product_variant_option_values
   COLUMN created_at
   COLUMN deleted_at
@@ -565,7 +597,7 @@ TABLE product_variant_option_values
   INDEX idx_product_variant_option_values_deleted_at columns=deleted_at unique=false option=
   INDEX idx_product_variant_option_values_product_option_value_id columns=product_option_value_id unique=false option=
   INDEX idx_product_variant_option_values_product_variant_id columns=product_variant_id unique=false option=
-  INDEX idx_product_variant_option_values_variant_value_unique columns=product_variant_id,product_option_value_id unique=true option=
+  INDEX idx_product_variant_option_values_variant_value_unique columns=product_option_value_id,product_variant_id unique=true option=
 TABLE product_variants
   COLUMN compare_at_price
   COLUMN created_at
@@ -586,8 +618,8 @@ TABLE product_variants
   INDEX idx_product_variants_deleted_at columns=deleted_at unique=false option=
   INDEX idx_product_variants_is_published columns=is_published unique=false option=
   INDEX idx_product_variants_product_id columns=product_id unique=false option=
-  INDEX idx_product_variants_product_published_price columns=product_id,is_published,price unique=false option=
-  INDEX idx_product_variants_product_published_stock columns=product_id,is_published,stock unique=false option=
+  INDEX idx_product_variants_product_published_price columns=is_published,price,product_id unique=false option=
+  INDEX idx_product_variants_product_published_stock columns=is_published,product_id,stock unique=false option=
   INDEX idx_product_variants_sku columns=sku unique=false option=
   INDEX idx_product_variants_sku_unique columns=sku unique=true option=
 TABLE products
@@ -607,7 +639,7 @@ TABLE products
   COLUMN subtitle
   COLUMN updated_at
   INDEX idx_products_brand_id columns=brand_id unique=false option=
-  INDEX idx_products_brand_published_created_at columns=brand_id,is_published,created_at unique=false option=
+  INDEX idx_products_brand_published_created_at columns=brand_id,created_at,is_published unique=false option=
   INDEX idx_products_default_variant_id columns=default_variant_id unique=false option=
   INDEX idx_products_deleted_at columns=deleted_at unique=false option=
   INDEX idx_products_is_published columns=is_published unique=false option=
@@ -647,7 +679,7 @@ TABLE provider_credentials
   COLUMN updated_at
   INDEX idx_provider_credentials_key_version columns=key_version unique=false option=
   INDEX idx_provider_credentials_last_rotated_at columns=last_rotated_at unique=false option=
-  INDEX idx_provider_credentials_scope columns=provider_type,provider_id,environment unique=true option=
+  INDEX idx_provider_credentials_scope columns=environment,provider_id,provider_type unique=true option=
 TABLE provider_reconciliation_drifts
   COLUMN actual_value
   COLUMN created_at
@@ -687,6 +719,33 @@ TABLE provider_reconciliation_runs
   INDEX idx_provider_reconciliation_runs_provider_type columns=provider_type unique=false option=
   INDEX idx_provider_reconciliation_runs_status columns=status unique=false option=
   INDEX idx_provider_reconciliation_runs_trigger columns=trigger unique=false option=
+TABLE purchase_order_items
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN product_variant_id
+  COLUMN purchase_order_id
+  COLUMN quantity_ordered
+  COLUMN quantity_received
+  COLUMN unit_cost
+  COLUMN updated_at
+  INDEX idx_purchase_order_items_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_purchase_order_items_product_variant_id columns=product_variant_id unique=false option=
+  INDEX idx_purchase_order_items_purchase_order_id columns=purchase_order_id unique=false option=
+TABLE purchase_orders
+  COLUMN cancelled_at
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN issued_at
+  COLUMN notes
+  COLUMN received_at
+  COLUMN status
+  COLUMN supplier_id
+  COLUMN updated_at
+  INDEX idx_purchase_orders_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_purchase_orders_status columns=status unique=false option=
+  INDEX idx_purchase_orders_supplier_id columns=supplier_id unique=false option=
 TABLE saved_addresses
   COLUMN city
   COLUMN country
@@ -740,7 +799,7 @@ TABLE seo_metadata
   COLUMN og_image_media_id
   COLUMN title
   COLUMN updated_at
-  INDEX idx_seo_entity columns=entity_type,entity_id unique=true option=
+  INDEX idx_seo_entity columns=entity_id,entity_type unique=true option=
   INDEX idx_seo_metadata_canonical_path columns=canonical_path unique=true option=
   INDEX idx_seo_metadata_deleted_at columns=deleted_at unique=false option=
 TABLE shipment_packages
@@ -772,7 +831,7 @@ TABLE shipment_rates
   INDEX idx_shipment_rates_order_id columns=order_id unique=false option=
   INDEX idx_shipment_rates_selected columns=selected unique=false option=
   INDEX idx_shipment_rates_shipment_id columns=shipment_id unique=false option=
-  INDEX idx_shipment_rates_snapshot_provider_rate columns=snapshot_id,provider,provider_rate_id unique=true option=
+  INDEX idx_shipment_rates_snapshot_provider_rate columns=provider,provider_rate_id,snapshot_id unique=true option=
 TABLE shipments
   COLUMN amount
   COLUMN created_at
@@ -809,6 +868,16 @@ TABLE storefront_settings
   COLUMN id
   COLUMN published_updated
   COLUMN updated_at
+TABLE suppliers
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN email
+  COLUMN id
+  COLUMN name
+  COLUMN notes
+  COLUMN updated_at
+  INDEX idx_suppliers_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_suppliers_name columns=name unique=true option=
 TABLE tax_exports
   COLUMN contents
   COLUMN created_at
@@ -831,7 +900,7 @@ TABLE tax_nexus_configs
   COLUMN provider
   COLUMN state
   COLUMN updated_at
-  INDEX idx_tax_nexus_provider_region columns=provider,country,state unique=true option=
+  INDEX idx_tax_nexus_provider_region columns=country,provider,state unique=true option=
 TABLE tracking_events
   COLUMN created_at
   COLUMN description
@@ -846,7 +915,7 @@ TABLE tracking_events
   COLUMN tracking_number
   COLUMN updated_at
   INDEX idx_tracking_events_occurred_at columns=occurred_at unique=false option=
-  INDEX idx_tracking_events_shipment_provider_event columns=shipment_id,provider,provider_event_id unique=true option=
+  INDEX idx_tracking_events_shipment_provider_event columns=provider,provider_event_id,shipment_id unique=true option=
   INDEX idx_tracking_events_status columns=status unique=false option=
 TABLE users
   COLUMN created_at
@@ -882,3 +951,13 @@ TABLE webhook_events
   INDEX idx_webhook_events_processed_at columns=processed_at unique=false option=
   INDEX idx_webhook_events_provider_event columns=provider,provider_event_id unique=true option=
   INDEX idx_webhook_events_received_at columns=received_at unique=false option=
+TABLE website_settings
+  COLUMN allow_guest_checkout
+  COLUMN created_at
+  COLUMN id
+  COLUMN oidc_client_id
+  COLUMN oidc_client_secret_envelope_json
+  COLUMN oidc_client_secret_key_version
+  COLUMN oidc_provider
+  COLUMN oidc_redirect_uri
+  COLUMN updated_at

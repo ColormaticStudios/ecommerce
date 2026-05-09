@@ -23,6 +23,7 @@
 	import type { components } from "$lib/api/generated/openapi";
 	import {
 		type BrandModel,
+		type CategoryModel,
 		type ProductAttributeDefinitionModel,
 		type ProductModel,
 		type RelatedProductModel,
@@ -110,6 +111,7 @@
 
 	let product = $state<ProductModel | null>(null);
 	let brands = $state<BrandModel[]>([]);
+	let categories = $state<CategoryModel[]>([]);
 	let attributeDefinitions = $state<ProductAttributeDefinitionModel[]>([]);
 	let loading = $state(false);
 	let saving = $state(false);
@@ -136,6 +138,9 @@
 	let subtitle = $state("");
 	let description = $state("");
 	let selectedBrandId = $state("");
+	let selectedCategoryIds = $state<string[]>([]);
+	let categorySearchQuery = $state("");
+	let categoryMenuOpen = $state(false);
 	let seoTitle = $state("");
 	let seoDescription = $state("");
 	let seoCanonicalPath = $state("");
@@ -170,6 +175,28 @@
 	const isPublished = $derived(product?.is_published ?? false);
 	const hasDraftChanges = $derived(product?.has_draft_changes ?? false);
 	const relatedBaseline = $derived(product?.related_products ?? []);
+	const selectedCategories = $derived.by(() => {
+		const selected = new Set(selectedCategoryIds);
+		return categories.filter((category) => selected.has(String(category.id)));
+	});
+	const availableCategoryOptions = $derived.by(() => {
+		const selected = new Set(selectedCategoryIds);
+		const query = asTrimmedString(categorySearchQuery).toLowerCase();
+		return categories
+			.filter((category) => !selected.has(String(category.id)))
+			.filter((category) => category.is_active)
+			.filter((category) => {
+				if (!query) {
+					return true;
+				}
+				return (
+					category.name.toLowerCase().includes(query) ||
+					category.slug.toLowerCase().includes(query) ||
+					(category.description ?? "").toLowerCase().includes(query)
+				);
+			})
+			.slice(0, 8);
+	});
 	const hasPendingRelatedChanges = $derived.by(() => {
 		const selectedIds = [...relatedSelected.map((item) => item.id)].sort((a, b) => a - b).join("|");
 		const baselineIds = [...relatedBaseline.map((item) => item.id)].sort((a, b) => a - b).join("|");
@@ -401,6 +428,7 @@
 				subtitle: asTrimmedString(subtitle),
 				description: asTrimmedString(description),
 				brand_id: asTrimmedString(selectedBrandId),
+				category_ids: selectedCategoryIds.map(Number).sort((a, b) => a - b),
 				default_variant_sku: asTrimmedString(defaultVariantSku),
 			},
 			seo: {
@@ -580,6 +608,9 @@
 		subtitle = "";
 		description = "";
 		selectedBrandId = "";
+		selectedCategoryIds = [];
+		categorySearchQuery = "";
+		categoryMenuOpen = false;
 		seoTitle = "";
 		seoDescription = "";
 		seoCanonicalPath = "";
@@ -604,6 +635,9 @@
 		subtitle = value.subtitle ?? "";
 		description = value.description ?? "";
 		selectedBrandId = value.brand ? String(value.brand.id) : "";
+		selectedCategoryIds = (value.categories ?? []).map((category) => String(category.id));
+		categorySearchQuery = "";
+		categoryMenuOpen = false;
 		seoTitle = value.seo.title ?? "";
 		seoDescription = value.seo.description ?? "";
 		seoCanonicalPath = value.seo.canonical_path ?? "";
@@ -666,6 +700,14 @@
 		}
 	}
 
+	async function loadCategories() {
+		try {
+			categories = await api.listAdminCategories({ include_inactive: true });
+		} catch (err) {
+			console.error(err);
+		}
+	}
+
 	async function loadAttributeDefinitions() {
 		try {
 			attributeDefinitions = await api.listAdminProductAttributes();
@@ -678,6 +720,36 @@
 		productAttributeID: string
 	): ProductAttributeDefinitionModel | undefined {
 		return attributeDefinitions.find((attribute) => String(attribute.id) === productAttributeID);
+	}
+
+	function addCategory(category: CategoryModel) {
+		const id = String(category.id);
+		if (!selectedCategoryIds.includes(id)) {
+			selectedCategoryIds = [...selectedCategoryIds, id];
+		}
+		categorySearchQuery = "";
+		categoryMenuOpen = false;
+	}
+
+	function removeCategory(categoryId: number) {
+		const id = String(categoryId);
+		selectedCategoryIds = selectedCategoryIds.filter((selectedId) => selectedId !== id);
+	}
+
+	function handleCategorySearchKeydown(event: KeyboardEvent) {
+		if (event.key === "Escape") {
+			categoryMenuOpen = false;
+			return;
+		}
+		if (event.key !== "Enter") {
+			return;
+		}
+		const first = availableCategoryOptions[0];
+		if (!first) {
+			return;
+		}
+		event.preventDefault();
+		addCategory(first);
 	}
 
 	function optionalString(value: string): string | undefined {
@@ -721,6 +793,7 @@
 			description: asTrimmedString(description),
 			images: product?.images ?? [],
 			related_product_ids: relatedSelected.map((item) => item.id),
+			category_ids: selectedCategoryIds.map(Number).filter((id) => Number.isInteger(id) && id > 0),
 			brand_id: selectedBrandId ? Number(selectedBrandId) : undefined,
 			default_variant_sku:
 				optionalString(defaultVariantSku) ?? optionalString(variantPayload[0]?.sku ?? ""),
@@ -1424,6 +1497,7 @@
 		window.addEventListener(DRAFT_PREVIEW_SYNC_EVENT, handlePreviewSyncEvent as EventListener);
 		window.addEventListener("storage", handlePreviewStorageEvent);
 		void loadBrands();
+		void loadCategories();
 		void loadAttributeDefinitions();
 		void loadPreviewState();
 	});
@@ -1505,6 +1579,87 @@
 				<option value={String(brand.id)}>{brand.name}</option>
 			{/each}
 		</Dropdown>
+	</div>
+	<div class="sm:col-span-2">
+		<AdminFieldLabel>Categories</AdminFieldLabel>
+		{#if categories.length === 0}
+			<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">No categories exist yet.</p>
+		{:else}
+			<div
+				class="mt-2 rounded-lg border border-stone-300 bg-white p-2 dark:border-stone-700 dark:bg-stone-900"
+			>
+				<div class="flex min-h-9 flex-wrap items-center gap-2">
+					{#if selectedCategories.length === 0}
+						<p class="px-1 text-sm text-stone-500 dark:text-stone-400">No categories assigned</p>
+					{:else}
+						{#each selectedCategories as category (category.id)}
+							<span
+								class="inline-flex max-w-full items-center gap-1 rounded-full border border-stone-200 bg-stone-100 py-1 pr-1 pl-2.5 text-xs font-semibold text-stone-700 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-200"
+							>
+								<span class="truncate">{category.name}</span>
+								{#if !category.is_active}
+									<span class="text-[10px] font-medium text-stone-500 dark:text-stone-400">
+										Inactive
+									</span>
+								{/if}
+								<button
+									type="button"
+									class="inline-flex h-5 w-5 items-center justify-center rounded-full text-stone-500 hover:bg-stone-200 hover:text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-stone-500 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-50"
+									aria-label={`Remove category ${category.name}`}
+									onclick={() => removeCategory(category.id)}
+								>
+									<i class="bi bi-x text-xs"></i>
+								</button>
+							</span>
+						{/each}
+					{/if}
+				</div>
+
+				<div class="relative mt-2">
+					<TextInput
+						tone="admin"
+						type="search"
+						placeholder="Search categories to add"
+						aria-label="Search categories to add"
+						bind:value={categorySearchQuery}
+						onfocus={() => (categoryMenuOpen = true)}
+						oninput={() => (categoryMenuOpen = true)}
+						onkeydown={handleCategorySearchKeydown}
+					/>
+					{#if categoryMenuOpen}
+						<div
+							class="absolute z-20 mt-2 max-h-64 w-full overflow-y-auto rounded-lg border border-stone-200 bg-white p-1 shadow-lg dark:border-stone-800 dark:bg-stone-950"
+						>
+							{#if availableCategoryOptions.length === 0}
+								<p class="px-3 py-2 text-sm text-stone-500 dark:text-stone-400">
+									No matching categories
+								</p>
+							{:else}
+								{#each availableCategoryOptions as category (category.id)}
+									<button
+										type="button"
+										class="flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-100 focus-visible:bg-stone-100 focus-visible:outline-none dark:text-stone-200 dark:hover:bg-stone-900 dark:focus-visible:bg-stone-900"
+										onclick={() => addCategory(category)}
+									>
+										<span class="min-w-0">
+											<span class="block truncate font-medium">
+												{" ".repeat(category.depth * 2)}{category.name}
+											</span>
+											<span class="block truncate text-xs text-stone-500 dark:text-stone-400">
+												/{category.slug}
+											</span>
+										</span>
+										{#if !category.is_active}
+											<Badge tone="neutral" size="sm">Inactive</Badge>
+										{/if}
+									</button>
+								{/each}
+							{/if}
+						</div>
+					{/if}
+				</div>
+			</div>
+		{/if}
 	</div>
 	<div class="sm:col-span-2">
 		<AdminFieldLabel as="label" for="admin-product-description">Description</AdminFieldLabel>

@@ -46,6 +46,7 @@ export interface StorefrontProductSectionModel {
 	subtitle: string;
 	source: StorefrontProductSource;
 	query: string;
+	category_slug: string;
 	product_ids: number[];
 	sort: StorefrontProductSort;
 	order: StorefrontProductOrder;
@@ -215,6 +216,7 @@ function validateProductSection(value: unknown, path: string, errors: string[]):
 			"subtitle",
 			"source",
 			"query",
+			"category_slug",
 			"product_ids",
 			"sort",
 			"order",
@@ -231,6 +233,7 @@ function validateProductSection(value: unknown, path: string, errors: string[]):
 			"subtitle",
 			"source",
 			"query",
+			"category_slug",
 			"product_ids",
 			"sort",
 			"order",
@@ -249,6 +252,7 @@ function validateProductSection(value: unknown, path: string, errors: string[]):
 	expectString(value.subtitle, `${path}.subtitle`, errors);
 	expectString(value.source, `${path}.source`, errors);
 	expectString(value.query, `${path}.query`, errors);
+	expectString(value.category_slug, `${path}.category_slug`, errors);
 	expectNumber(value.limit, `${path}.limit`, errors);
 	expectString(value.brand_slug, `${path}.brand_slug`, errors);
 	expectBoolean(value.has_variant_stock, `${path}.has_variant_stock`, errors);
@@ -506,7 +510,7 @@ function normalizeHomepageSectionType(value: string | null | undefined): Storefr
 }
 
 function normalizeProductSource(value: string | null | undefined): StorefrontProductSource {
-	if (value === "manual" || value === "search" || value === "newest") {
+	if (value === "manual" || value === "search" || value === "newest" || value === "category") {
 		return value;
 	}
 	return "newest";
@@ -545,6 +549,7 @@ function parseProductSection(
 		subtitle: toStringValue(section?.subtitle),
 		source: normalizeProductSource(section?.source),
 		query: toStringValue(section?.query),
+		category_slug: toStringValue(section?.category_slug),
 		product_ids: (section?.product_ids ?? [])
 			.map((id) => Number(id))
 			.filter((id) => Number.isInteger(id) && id > 0),
@@ -676,6 +681,7 @@ const DEFAULT_PRODUCT_SECTION_TEMPLATE = DEFAULT_STOREFRONT_SETTINGS.homepage_se
 	subtitle: "",
 	source: "newest" as const,
 	query: "",
+	category_slug: "",
 	product_ids: [],
 	sort: "created_at" as const,
 	order: "desc" as const,

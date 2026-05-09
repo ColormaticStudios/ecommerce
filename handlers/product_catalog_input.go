@@ -19,6 +19,7 @@ func catalogDraftFromUpsertInput(input apicontract.ProductUpsertInput) productCa
 		Description: strings.TrimSpace(input.Description),
 		Images:      append([]string(nil), input.Images...),
 		RelatedIDs:  make([]uint, 0, len(input.RelatedProductIds)),
+		CategoryIDs: make([]uint, 0, len(input.CategoryIds)),
 		Options:     make([]productOptionDraftData, 0, len(input.Options)),
 		Variants:    make([]productVariantDraftData, 0, len(input.Variants)),
 		Attributes:  make([]productAttributeValueDraftData, 0, len(input.Attributes)),
@@ -44,6 +45,12 @@ func catalogDraftFromUpsertInput(input apicontract.ProductUpsertInput) productCa
 			continue
 		}
 		draft.RelatedIDs = append(draft.RelatedIDs, uint(id))
+	}
+	for _, id := range input.CategoryIds {
+		if id <= 0 {
+			continue
+		}
+		draft.CategoryIDs = append(draft.CategoryIDs, uint(id))
 	}
 
 	for _, option := range input.Options {
@@ -166,6 +173,9 @@ func validateProductCatalogDraft(tx *gorm.DB, draft productCatalogDraft, product
 			return errors.New("Selected brand does not exist")
 		}
 	}
+	if err := validateProductCategories(tx, normalized.CategoryIDs); err != nil {
+		return err
+	}
 	for _, relatedID := range normalized.RelatedIDs {
 		if productID != 0 && relatedID == productID {
 			return errors.New("Product cannot be related to itself")
@@ -182,6 +192,30 @@ func validateProductCatalogDraft(tx *gorm.DB, draft productCatalogDraft, product
 	}
 	if err := validateCatalogSEO(tx, normalized.SEO, productID); err != nil {
 		return err
+	}
+	return nil
+}
+
+func validateProductCategories(tx *gorm.DB, categoryIDs []uint) error {
+	if len(categoryIDs) == 0 {
+		return nil
+	}
+	var categories []models.Category
+	if err := tx.Where("id IN ?", categoryIDs).Find(&categories).Error; err != nil {
+		return err
+	}
+	byID := make(map[uint]models.Category, len(categories))
+	for _, category := range categories {
+		byID[category.ID] = category
+	}
+	for _, id := range categoryIDs {
+		category, exists := byID[id]
+		if !exists {
+			return fmt.Errorf("Category %d does not exist", id)
+		}
+		if !category.IsActive {
+			return fmt.Errorf("Category %d is inactive", id)
+		}
 	}
 	return nil
 }

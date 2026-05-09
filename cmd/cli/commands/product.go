@@ -34,6 +34,7 @@ func NewProductCmd() *cobra.Command {
 	productCmd.AddCommand(newEditProductCmd())
 	productCmd.AddCommand(newListProductsCmd())
 	productCmd.AddCommand(newDeleteProductCmd())
+	productCmd.AddCommand(newSetProductCategoriesCmd())
 	productCmd.AddCommand(newSetRelatedProductsCmd())
 	productCmd.AddCommand(newUploadProductMediaCmd())
 	productCmd.AddCommand(newPrintProductCmd())
@@ -353,6 +354,9 @@ func newEditProductCmd() *cobra.Command {
 
 func newListProductsCmd() *cobra.Command {
 	var limit int
+	var categorySlugs []string
+	var categoryIDs []int
+	var includeInactiveCategories bool
 
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -360,9 +364,26 @@ func newListProductsCmd() *cobra.Command {
 		Long:  "List all products in the catalog",
 		Run: func(cmd *cobra.Command, args []string) {
 			if isRemoteMode() {
-				path := "/api/v1/admin/products"
+				params := url.Values{}
 				if limit > 0 {
-					path += "?limit=" + strconv.Itoa(limit)
+					params.Set("limit", strconv.Itoa(limit))
+				}
+				for _, slug := range categorySlugs {
+					if trimmed := strings.TrimSpace(slug); trimmed != "" {
+						params.Add("category_slug", trimmed)
+					}
+				}
+				for _, id := range categoryIDs {
+					if id > 0 {
+						params.Add("category_id", strconv.Itoa(id))
+					}
+				}
+				if includeInactiveCategories {
+					params.Set("include_inactive_categories", "true")
+				}
+				path := "/api/v1/admin/products"
+				if encoded := params.Encode(); encoded != "" {
+					path += "?" + encoded
 				}
 				page, err := invokeRemoteJSON[apicontract.ProductPage](http.MethodGet, path, nil)
 				if err != nil {
@@ -387,7 +408,27 @@ func newListProductsCmd() *cobra.Command {
 			defer closeDB(db)
 
 			var products []models.Product
-			query := db.Model(&models.Product{})
+			query := db.Model(&models.Product{}).Preload("Categories")
+			if len(categorySlugs) > 0 || len(categoryIDs) > 0 {
+				query = query.Distinct("products.*").
+					Joins("JOIN product_categories pc ON pc.product_id = products.id").
+					Joins("JOIN categories c ON c.id = pc.category_id")
+				normalizedSlugs := make([]string, 0, len(categorySlugs))
+				for _, slug := range categorySlugs {
+					if trimmed := strings.ToLower(strings.TrimSpace(slug)); trimmed != "" {
+						normalizedSlugs = append(normalizedSlugs, trimmed)
+					}
+				}
+				if len(normalizedSlugs) > 0 {
+					query = query.Where("c.slug IN ?", normalizedSlugs)
+				}
+				if len(categoryIDs) > 0 {
+					query = query.Where("c.id IN ?", categoryIDs)
+				}
+				if !includeInactiveCategories {
+					query = query.Where("c.is_active = ?", true)
+				}
+			}
 
 			if limit > 0 {
 				query = query.Limit(limit)
@@ -413,7 +454,68 @@ func newListProductsCmd() *cobra.Command {
 	}
 
 	cmd.Flags().IntVarP(&limit, "limit", "l", 0, "Limit number of results")
+	cmd.Flags().StringSliceVar(&categorySlugs, "category-slug", nil, "Filter by category slug (repeatable or comma-separated)")
+	cmd.Flags().IntSliceVar(&categoryIDs, "category-id", nil, "Filter by category ID (repeatable or comma-separated)")
+	cmd.Flags().BoolVar(&includeInactiveCategories, "include-inactive-categories", false, "Allow inactive categories to match category filters")
 
+	return cmd
+}
+
+func newSetProductCategoriesCmd() *cobra.Command {
+	var (
+		id          string
+		sku         string
+		categoryIDs []int
+		clear       bool
+	)
+
+	cmd := &cobra.Command{
+		Use:   "set-categories",
+		Short: "Replace product category assignments",
+		Long:  "Replace a product's category assignments using category IDs. This updates the product draft when draft-aware flows apply.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if !clear && len(categoryIDs) == 0 {
+				return fmt.Errorf("provide --category-id or --clear")
+			}
+
+			product, err := findProductByIDOrSKU(nil, id, sku)
+			if err != nil {
+				return err
+			}
+			var input apicontract.ProductUpsertInput
+			if isRemoteMode() {
+				input, err = loadCurrentProductUpsertInput(nil, nil, product.ID)
+				if err != nil {
+					return err
+				}
+			} else {
+				mediaService := newMediaService()
+				defer closeMediaService(mediaService)
+				input, err = loadCurrentProductUpsertInput(mediaService.DB, mediaService, product.ID)
+				if err != nil {
+					return err
+				}
+			}
+			if clear {
+				input.CategoryIds = []int{}
+			} else {
+				input.CategoryIds = dedupePositiveInts(categoryIDs)
+			}
+
+			updated, err := invokeProductUpdate(product.ID, input)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("✓ Categories updated for %s (ID: %d): %d assigned\n", updated.Name, updated.Id, len(updated.Categories))
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVarP(&id, "id", "i", "", "Product ID")
+	cmd.Flags().StringVarP(&sku, "sku", "s", "", "Product SKU")
+	cmd.Flags().IntSliceVar(&categoryIDs, "category-id", nil, "Category IDs (repeatable or comma-separated)")
+	cmd.Flags().BoolVar(&clear, "clear", false, "Clear all category assignments")
+	cmd.MarkFlagsOneRequired("id", "sku")
 	return cmd
 }
 
@@ -749,12 +851,43 @@ func contractProductToModel(product apicontract.Product) models.Product {
 	return result
 }
 
+func invokeProductUpdate(productID uint, input apicontract.ProductUpsertInput) (apicontract.Product, error) {
+	if isRemoteMode() {
+		return invokeRemoteJSON[apicontract.Product](http.MethodPatch, fmt.Sprintf("/api/v1/admin/products/%d", productID), input)
+	}
+	db := getDB()
+	defer closeDB(db)
+	return invokeLocalJSON[apicontract.Product](handlers.UpdateProduct(db), localHandlerRequest{
+		Method:     http.MethodPatch,
+		Path:       fmt.Sprintf("/api/v1/admin/products/%d", productID),
+		PathParams: map[string]string{"id": fmt.Sprintf("%d", productID)},
+		Body:       input,
+	})
+}
+
+func dedupePositiveInts(values []int) []int {
+	result := make([]int, 0, len(values))
+	seen := make(map[int]struct{}, len(values))
+	for _, value := range values {
+		if value <= 0 {
+			continue
+		}
+		if _, exists := seen[value]; exists {
+			continue
+		}
+		seen[value] = struct{}{}
+		result = append(result, value)
+	}
+	return result
+}
+
 func buildSimpleProductUpsertInput(sku string, name string, description string, price float64, stock int) apicontract.ProductUpsertInput {
 	defaultVariantSKU := strings.TrimSpace(sku)
 	position := 1
 	isPublished := false
 
 	return apicontract.ProductUpsertInput{
+		CategoryIds:       []int{},
 		Description:       description,
 		Name:              strings.TrimSpace(name),
 		Sku:               defaultVariantSKU,

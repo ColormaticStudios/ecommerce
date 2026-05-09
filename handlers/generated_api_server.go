@@ -327,6 +327,25 @@ func (s *GeneratedAPIServer) CreateAdminBrand(c *gin.Context) {
 	s.runProtected(c, "admin", CreateAdminBrand(s.db))
 }
 
+func (s *GeneratedAPIServer) ListAdminCategories(c *gin.Context, params apicontract.ListAdminCategoriesParams) {
+	_ = params
+	s.runProtected(c, "admin", ListAdminCategories(s.db))
+}
+
+func (s *GeneratedAPIServer) CreateAdminCategory(c *gin.Context) {
+	s.runProtected(c, "admin", CreateAdminCategory(s.db))
+}
+
+func (s *GeneratedAPIServer) DeleteAdminCategory(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", DeleteAdminCategory(s.db))
+}
+
+func (s *GeneratedAPIServer) UpdateAdminCategory(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", UpdateAdminCategory(s.db))
+}
+
 func (s *GeneratedAPIServer) DeleteAdminBrand(c *gin.Context, id int) {
 	_ = id
 	s.runProtected(c, "admin", DeleteAdminBrand(s.db))
@@ -696,6 +715,10 @@ func (s *GeneratedAPIServer) ListProducts(c *gin.Context, params apicontract.Lis
 
 func (s *GeneratedAPIServer) ListBrands(c *gin.Context) {
 	ListBrands(s.db)(c)
+}
+
+func (s *GeneratedAPIServer) ListCategories(c *gin.Context) {
+	ListCategories(s.db)(c)
 }
 
 func (s *GeneratedAPIServer) ListProductAttributes(c *gin.Context) {

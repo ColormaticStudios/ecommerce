@@ -1,5 +1,6 @@
 import {
 	type BrandModel,
+	type CategoryModel,
 	type ProductModel,
 	type ProductAttributeDefinitionModel,
 	type UserModel,
@@ -12,6 +13,7 @@ import {
 	type SavedPaymentMethodModel,
 	type SavedAddressModel,
 	parseBrand,
+	parseCategory,
 	parseProductAttributeDefinition,
 	parseProduct,
 	parseOrder,
@@ -71,9 +73,11 @@ type ProductUpsertInput = components["schemas"]["ProductUpsertInput"];
 type MediaIDsRequest = components["schemas"]["MediaIDsRequest"];
 type UpdateRelatedRequest = components["schemas"]["UpdateRelatedRequest"];
 type BrandListResponse = components["schemas"]["BrandListResponse"];
+type CategoryListResponse = components["schemas"]["CategoryListResponse"];
 type ProductAttributeDefinitionListResponse =
 	components["schemas"]["ProductAttributeDefinitionListResponse"];
 type BrandInput = components["schemas"]["BrandInput"];
+type CategoryInput = components["schemas"]["CategoryInput"];
 type ProductAttributeDefinitionInput = components["schemas"]["ProductAttributeDefinitionInput"];
 type OrderPagePayload = components["schemas"]["OrderPage"];
 type UserPagePayload = components["schemas"]["UserPage"];
@@ -87,6 +91,9 @@ type DraftPreviewSessionResponse = components["schemas"]["DraftPreviewSessionRes
 type ListUserOrdersQuery = paths["/api/v1/me/orders"]["get"]["parameters"]["query"];
 type ListAdminBrandsQuery = NonNullable<
 	paths["/api/v1/admin/brands"]["get"]["parameters"]["query"]
+>;
+type ListAdminCategoriesQuery = NonNullable<
+	paths["/api/v1/admin/categories"]["get"]["parameters"]["query"]
 >;
 type ListAdminOrdersQuery = paths["/api/v1/admin/orders"]["get"]["parameters"]["query"];
 type ListAdminProductsQuery = paths["/api/v1/admin/products"]["get"]["parameters"]["query"];
@@ -134,7 +141,10 @@ function broadcastDraftPreviewState(session: DraftPreviewSessionModel): void {
 
 	window.dispatchEvent(
 		new CustomEvent(DRAFT_PREVIEW_SYNC_EVENT, {
-			detail: { active: session.active, expires_at: session.expires_at?.toISOString() ?? null },
+			detail: {
+				active: session.active,
+				expires_at: session.expires_at?.toISOString() ?? null,
+			},
 		})
 	);
 
@@ -808,9 +818,48 @@ export class API {
 		return await this.request("DELETE", `/admin/brands/${id}`);
 	}
 
+	public async listAdminCategories(
+		params: ListAdminCategoriesQuery = {}
+	): Promise<CategoryModel[]> {
+		const response = await this.request<CategoryListResponse>(
+			"GET",
+			"/admin/categories",
+			undefined,
+			params
+		);
+		return response.data.map(parseCategory);
+	}
+
+	public async createAdminCategory(data: CategoryInput): Promise<CategoryModel> {
+		const response = await this.request<components["schemas"]["Category"]>(
+			"POST",
+			"/admin/categories",
+			data
+		);
+		return parseCategory(response);
+	}
+
+	public async updateAdminCategory(id: number, data: CategoryInput): Promise<CategoryModel> {
+		const response = await this.request<components["schemas"]["Category"]>(
+			"PATCH",
+			`/admin/categories/${id}`,
+			data
+		);
+		return parseCategory(response);
+	}
+
+	public async deleteAdminCategory(id: number): Promise<MessageResponse> {
+		return await this.request("DELETE", `/admin/categories/${id}`);
+	}
+
 	public async listBrands(): Promise<BrandModel[]> {
 		const response = await this.request<BrandListResponse>("GET", "/brands");
 		return response.data.map(parseBrand);
+	}
+
+	public async listCategories(): Promise<CategoryModel[]> {
+		const response = await this.request<CategoryListResponse>("GET", "/categories");
+		return response.data.map(parseCategory);
 	}
 
 	public async listAdminProductAttributes(): Promise<ProductAttributeDefinitionModel[]> {
@@ -1019,9 +1068,10 @@ export class API {
 	}
 
 	// Order Management
-	public async listOrders(
-		params?: ListOrdersParams
-	): Promise<{ data: OrderModel[]; pagination: OrderPagePayload["pagination"] }> {
+	public async listOrders(params?: ListOrdersParams): Promise<{
+		data: OrderModel[];
+		pagination: OrderPagePayload["pagination"];
+	}> {
 		return ordersDomain.listOrders(this.request.bind(this), params);
 	}
 
@@ -1034,9 +1084,10 @@ export class API {
 	}
 
 	// Admin Order Management
-	public async listAdminOrders(
-		params?: ListAdminOrdersQuery
-	): Promise<{ data: OrderModel[]; pagination: OrderPagePayload["pagination"] }> {
+	public async listAdminOrders(params?: ListAdminOrdersQuery): Promise<{
+		data: OrderModel[];
+		pagination: OrderPagePayload["pagination"];
+	}> {
 		const response = await this.request<OrderPagePayload>(
 			"GET",
 			"/admin/orders",

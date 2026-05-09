@@ -560,7 +560,7 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, websiteSettingsVersion, status.LatestAppliedVersion)
+	require.Equal(t, productCategoriesP3Version, status.LatestAppliedVersion)
 	require.Equal(t, 1, status.PendingCount)
 }
 
@@ -933,6 +933,19 @@ func TestInventoryDisciplineP4AddsAdjustments(t *testing.T) {
 	require.True(t, db.Migrator().HasIndex(&models.InventoryAdjustment{}, "idx_inventory_adjustments_inventory_item_id"))
 	require.True(t, db.Migrator().HasIndex(&models.InventoryAdjustment{}, "idx_inventory_adjustments_product_variant_id"))
 	require.True(t, db.Migrator().HasIndex(&models.InventoryAdjustment{}, "idx_inventory_adjustments_reason_code"))
+}
+
+func TestProductCategoriesP3AddsLookupIndexes(t *testing.T) {
+	db := newTestDB(t)
+
+	productCategoriesP3Index := slices.IndexFunc(orderedMigrations, func(m Migration) bool {
+		return m.Version == productCategoriesP3Version
+	})
+	require.NotEqual(t, -1, productCategoriesP3Index)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:productCategoriesP3Index+1]))
+
+	require.True(t, db.Migrator().HasIndex("product_categories", "idx_product_categories_product_category"))
+	require.True(t, db.Migrator().HasIndex("product_categories", "idx_product_categories_category_product"))
 }
 
 func TestProvidersP2AddsWebhookEventStructures(t *testing.T) {

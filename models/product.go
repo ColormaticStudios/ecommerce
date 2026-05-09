@@ -21,6 +21,7 @@ type Product struct {
 	Options          []ProductOption         `json:"options,omitempty"`
 	Variants         []ProductVariant        `json:"variants,omitempty"`
 	AttributeValues  []ProductAttributeValue `json:"attribute_values,omitempty"`
+	Categories       []Category              `json:"categories,omitempty" gorm:"many2many:product_categories;"`
 	// Self-referential relationship for related products
 	Related []Product `json:"related_products" gorm:"many2many:product_related;"`
 }

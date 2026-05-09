@@ -35,6 +35,8 @@ func TestNormalizedProductDraftRoundTrip(t *testing.T) {
 
 	brand := models.Brand{Name: "Acme", Slug: "acme"}
 	require.NoError(t, db.Create(&brand).Error)
+	category := models.Category{Name: "Apparel", Slug: "apparel", IsActive: true, Path: "/apparel"}
+	require.NoError(t, db.Select("*").Create(&category).Error)
 
 	attribute := models.ProductAttribute{
 		Key:        "material",
@@ -57,6 +59,7 @@ func TestNormalizedProductDraftRoundTrip(t *testing.T) {
 		Stock:       7,
 		Images:      []string{"img-a", "img-b", "img-a"},
 		RelatedIDs:  []uint{related.ID, related.ID},
+		CategoryIDs: []uint{category.ID, category.ID},
 		BrandID:     &brand.ID,
 		Options: []productOptionDraftData{
 			{
@@ -115,6 +118,7 @@ func TestNormalizedProductDraftRoundTrip(t *testing.T) {
 	assert.Equal(t, "BASE-1-DRAFT", loaded.SKU)
 	assert.Equal(t, []string{"img-a", "img-b"}, loaded.Images)
 	assert.Equal(t, []uint{related.ID}, loaded.RelatedIDs)
+	assert.Equal(t, []uint{category.ID}, loaded.CategoryIDs)
 	require.Len(t, loaded.Options, 1)
 	require.Len(t, loaded.Options[0].Values, 2)
 	assert.Equal(t, "Red", loaded.Options[0].Values[0].Value)
@@ -236,6 +240,109 @@ func TestPublishNormalizedProductDraftReplacesLiveCatalogState(t *testing.T) {
 	var draftCount int64
 	require.NoError(t, db.Model(&models.ProductDraft{}).Where("product_id = ?", product.ID).Count(&draftCount).Error)
 	assert.Zero(t, draftCount)
+}
+
+func TestPublishNormalizedProductDraftAppliesCategoriesAtomically(t *testing.T) {
+	db := newTestDB(t)
+
+	liveCategory := models.Category{Name: "Live", Slug: "live", IsActive: true, Path: "/live"}
+	draftCategory := models.Category{Name: "Draft", Slug: "draft", IsActive: true, Path: "/draft"}
+	require.NoError(t, db.Select("*").Create(&liveCategory).Error)
+	require.NoError(t, db.Select("*").Create(&draftCategory).Error)
+
+	product := models.Product{
+		SKU:         "CAT-LIVE",
+		Name:        "Live",
+		Description: "live",
+		Price:       models.MoneyFromFloat(10),
+		Stock:       1,
+		IsPublished: true,
+		Categories:  []models.Category{liveCategory},
+	}
+	require.NoError(t, db.Create(&product).Error)
+
+	draft := productCatalogDraft{
+		SKU:         "CAT-LIVE",
+		Name:        "Live",
+		Description: "live",
+		Price:       10,
+		Stock:       1,
+		CategoryIDs: []uint{draftCategory.ID},
+		Variants: []productVariantDraftData{
+			{
+				SKU:         "CAT-LIVE-DEFAULT",
+				Title:       "Default",
+				Price:       10,
+				Stock:       1,
+				IsPublished: true,
+			},
+		},
+		DefaultVariantSKU: "CAT-LIVE-DEFAULT",
+	}
+
+	require.NoError(t, saveNormalizedProductDraft(db, product, draft, time.Now().UTC()))
+
+	var beforePublish models.Product
+	require.NoError(t, db.Preload("Categories").First(&beforePublish, product.ID).Error)
+	require.Len(t, beforePublish.Categories, 1)
+	assert.Equal(t, liveCategory.ID, beforePublish.Categories[0].ID)
+
+	require.NoError(t, publishNormalizedProductDraft(db, &beforePublish, draft))
+
+	var afterPublish models.Product
+	require.NoError(t, db.Preload("Categories").First(&afterPublish, product.ID).Error)
+	require.Len(t, afterPublish.Categories, 1)
+	assert.Equal(t, draftCategory.ID, afterPublish.Categories[0].ID)
+
+	var draftCount int64
+	require.NoError(t, db.Model(&models.ProductCategoryDraft{}).Count(&draftCount).Error)
+	assert.Zero(t, draftCount)
+}
+
+func TestPublishNormalizedProductDraftRejectsInactiveCategories(t *testing.T) {
+	db := newTestDB(t)
+
+	category := models.Category{Name: "Draft", Slug: "draft", IsActive: true, Path: "/draft"}
+	require.NoError(t, db.Select("*").Create(&category).Error)
+
+	product := models.Product{
+		SKU:         "CAT-INACTIVE",
+		Name:        "Live",
+		Description: "live",
+		Price:       models.MoneyFromFloat(10),
+		Stock:       1,
+		IsPublished: true,
+	}
+	require.NoError(t, db.Create(&product).Error)
+
+	draft := productCatalogDraft{
+		SKU:         "CAT-INACTIVE",
+		Name:        "Live",
+		Description: "live",
+		Price:       10,
+		Stock:       1,
+		CategoryIDs: []uint{category.ID},
+		Variants: []productVariantDraftData{
+			{
+				SKU:         "CAT-INACTIVE-DEFAULT",
+				Title:       "Default",
+				Price:       10,
+				Stock:       1,
+				IsPublished: true,
+			},
+		},
+		DefaultVariantSKU: "CAT-INACTIVE-DEFAULT",
+	}
+
+	require.NoError(t, saveNormalizedProductDraft(db, product, draft, time.Now().UTC()))
+	require.NoError(t, db.Model(&category).Update("is_active", false).Error)
+
+	err := publishNormalizedProductDraft(db, &product, draft)
+	require.ErrorContains(t, err, "inactive")
+
+	var count int64
+	require.NoError(t, db.Model(&models.ProductCategory{}).Where("product_id = ?", product.ID).Count(&count).Error)
+	assert.Zero(t, count)
 }
 
 func TestPublishNormalizedProductDraftSkipsDeletedChildren(t *testing.T) {

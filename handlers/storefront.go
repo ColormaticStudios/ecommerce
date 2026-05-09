@@ -40,6 +40,7 @@ type StorefrontProductSection struct {
 	Subtitle         string            `json:"subtitle"`
 	Source           string            `json:"source"`
 	Query            string            `json:"query"`
+	CategorySlug     string            `json:"category_slug"`
 	ProductIds       []int             `json:"product_ids"`
 	Sort             string            `json:"sort"`
 	Order            string            `json:"order"`
@@ -190,6 +191,7 @@ func defaultProductSection(title, source string) StorefrontProductSection {
 		Subtitle:         "",
 		Source:           source,
 		Query:            "",
+		CategorySlug:     "",
 		ProductIds:       []int{},
 		Sort:             "created_at",
 		Order:            "desc",
@@ -366,7 +368,7 @@ func defaultStorefrontSettings() StorefrontSettingsPayload {
 					Enabled: true,
 					ProductSection: &StorefrontProductSection{
 						Title:           "Products",
-						Source:          string(apicontract.Newest),
+						Source:          string(apicontract.StorefrontProductSectionSourceNewest),
 						Sort:            string(apicontract.StorefrontProductSectionSortCreatedAt),
 						Order:           string(apicontract.StorefrontProductSectionOrderDesc),
 						Limit:           limits().DefaultProductLimit,
@@ -418,10 +420,13 @@ func normalizeHomepageSectionType(value string) string {
 
 func normalizeProductSource(value string) string {
 	switch value {
-	case string(apicontract.Manual), string(apicontract.Newest), string(apicontract.Search):
+	case string(apicontract.StorefrontProductSectionSourceManual),
+		string(apicontract.StorefrontProductSectionSourceNewest),
+		string(apicontract.StorefrontProductSectionSourceSearch),
+		string(apicontract.StorefrontProductSectionSourceCategory):
 		return value
 	default:
-		return string(apicontract.Newest)
+		return string(apicontract.StorefrontProductSectionSourceNewest)
 	}
 }
 
@@ -467,7 +472,7 @@ func clamp(value, minValue, maxValue int) int {
 func normalizeProductSection(input *StorefrontProductSection) *StorefrontProductSection {
 	limitValues := limits()
 	if input == nil {
-		def := defaultProductSection("Products", string(apicontract.Newest))
+		def := defaultProductSection("Products", string(apicontract.StorefrontProductSectionSourceNewest))
 		return &def
 	}
 
@@ -476,6 +481,7 @@ func normalizeProductSection(input *StorefrontProductSection) *StorefrontProduct
 		Subtitle:         strings.TrimSpace(input.Subtitle),
 		Source:           normalizeProductSource(strings.TrimSpace(input.Source)),
 		Query:            strings.TrimSpace(input.Query),
+		CategorySlug:     strings.TrimSpace(input.CategorySlug),
 		Sort:             normalizeSort(strings.TrimSpace(input.Sort)),
 		Order:            normalizeOrder(strings.TrimSpace(input.Order)),
 		Limit:            clamp(input.Limit, 1, limitValues.MaxProductSectionLimit),

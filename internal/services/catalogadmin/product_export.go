@@ -20,7 +20,7 @@ type liveOptionValueRecord struct {
 
 func LoadLiveProductUpsertInput(db *gorm.DB, mediaService *media.Service, productID uint) (apicontract.ProductUpsertInput, error) {
 	var product models.Product
-	if err := db.Preload("Related").First(&product, productID).Error; err != nil {
+	if err := db.Preload("Related").Preload("Categories").First(&product, productID).Error; err != nil {
 		return apicontract.ProductUpsertInput{}, err
 	}
 
@@ -77,6 +77,7 @@ func LoadLiveProductUpsertInput(db *gorm.DB, mediaService *media.Service, produc
 		Images:            append([]string(nil), product.Images...),
 		Name:              product.Name,
 		Options:           make([]apicontract.ProductOptionInput, 0, len(options)),
+		CategoryIds:       make([]int, 0, len(product.Categories)),
 		RelatedProductIds: make([]int, 0, len(product.Related)),
 		Seo: apicontract.ProductSEOInput{
 			CanonicalPath:  seo.CanonicalPath,
@@ -98,6 +99,10 @@ func LoadLiveProductUpsertInput(db *gorm.DB, mediaService *media.Service, produc
 		input.RelatedProductIds = append(input.RelatedProductIds, int(related.ID))
 	}
 	sort.Ints(input.RelatedProductIds)
+	for _, category := range product.Categories {
+		input.CategoryIds = append(input.CategoryIds, int(category.ID))
+	}
+	sort.Ints(input.CategoryIds)
 
 	if mediaService != nil {
 		if urls, err := mediaService.ProductMediaURLsByRole(product.ID, media.RoleProductImage); err == nil && len(urls) > 0 {
@@ -188,6 +193,7 @@ func ProductContractToUpsertInput(product apicontract.Product) apicontract.Produ
 		Images:            append([]string(nil), product.Images...),
 		Name:              product.Name,
 		Options:           make([]apicontract.ProductOptionInput, 0, len(product.Options)),
+		CategoryIds:       make([]int, 0, len(product.Categories)),
 		RelatedProductIds: make([]int, 0, len(product.RelatedProducts)),
 		Seo: apicontract.ProductSEOInput{
 			CanonicalPath:  product.Seo.CanonicalPath,
@@ -213,6 +219,10 @@ func ProductContractToUpsertInput(product apicontract.Product) apicontract.Produ
 		input.RelatedProductIds = append(input.RelatedProductIds, related.Id)
 	}
 	sort.Ints(input.RelatedProductIds)
+	for _, category := range product.Categories {
+		input.CategoryIds = append(input.CategoryIds, category.Id)
+	}
+	sort.Ints(input.CategoryIds)
 
 	for _, option := range product.Options {
 		position := option.Position

@@ -134,6 +134,23 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/categories": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List active storefront categories */
+		get: operations["listCategories"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/product-attributes": {
 		parameters: {
 			query?: never;
@@ -662,6 +679,38 @@ export interface paths {
 		options?: never;
 		head?: never;
 		patch: operations["updateAdminBrand"];
+		trace?: never;
+	};
+	"/api/v1/admin/categories": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminCategories"];
+		put?: never;
+		post: operations["createAdminCategory"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/categories/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete: operations["deleteAdminCategory"];
+		options?: never;
+		head?: never;
+		patch: operations["updateAdminCategory"];
 		trace?: never;
 	};
 	"/api/v1/admin/product-attributes": {
@@ -1576,6 +1625,28 @@ export interface components {
 			logo_media_id?: string | null;
 			is_active?: boolean;
 		};
+		Category: {
+			id: number;
+			name: string;
+			slug: string;
+			description?: string | null;
+			is_active: boolean;
+			sort_order: number;
+			parent_id?: number | null;
+			path: string;
+			depth: number;
+		};
+		CategoryListResponse: {
+			data: components["schemas"]["Category"][];
+		};
+		CategoryInput: {
+			name: string;
+			slug?: string | null;
+			description?: string | null;
+			is_active?: boolean;
+			sort_order?: number;
+			parent_id?: number | null;
+		};
 		ProductAttributeDefinition: {
 			id: number;
 			key: string;
@@ -1679,6 +1750,7 @@ export interface components {
 			attributes: components["schemas"]["ProductAttributeValue"][];
 			seo: components["schemas"]["ProductSEO"];
 			related_products: components["schemas"]["RelatedProduct"][];
+			categories: components["schemas"]["Category"][];
 			/** Format: date-time */
 			created_at: string;
 			/** Format: date-time */
@@ -1757,6 +1829,7 @@ export interface components {
 			description: string;
 			images: string[];
 			related_product_ids: number[];
+			category_ids: number[];
 			brand_id?: number | null;
 			default_variant_sku?: string | null;
 			options: components["schemas"]["ProductOptionInput"][];
@@ -2596,7 +2669,7 @@ export interface components {
 			title: string;
 			subtitle: string;
 			/** @enum {string} */
-			source: "manual" | "newest" | "search";
+			source: "manual" | "newest" | "search" | "category";
 			query: string;
 			product_ids: number[];
 			/** @enum {string} */
@@ -2605,6 +2678,7 @@ export interface components {
 			order: "asc" | "desc";
 			limit: number;
 			brand_slug: string;
+			category_slug: string;
 			has_variant_stock: boolean;
 			attribute_filters: {
 				[key: string]: string;
@@ -2892,6 +2966,7 @@ export interface operations {
 				min_price?: number;
 				max_price?: number;
 				brand_slug?: string;
+				category_slug?: string[];
 				has_variant_stock?: boolean;
 				attribute?: {
 					[key: string]: string;
@@ -2943,6 +3018,26 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["BrandListResponse"];
+				};
+			};
+		};
+	};
+	listCategories: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Active categories */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CategoryListResponse"];
 				};
 			};
 		};
@@ -4202,6 +4297,9 @@ export interface operations {
 				min_price?: number;
 				max_price?: number;
 				brand_slug?: string;
+				category_slug?: string[];
+				category_id?: number[];
+				include_inactive_categories?: boolean;
 				has_variant_stock?: boolean;
 				attribute?: {
 					[key: string]: string;
@@ -4342,6 +4440,101 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["Brand"];
+				};
+			};
+		};
+	};
+	listAdminCategories: {
+		parameters: {
+			query?: {
+				q?: string;
+				include_inactive?: boolean;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Available categories */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CategoryListResponse"];
+				};
+			};
+		};
+	};
+	createAdminCategory: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CategoryInput"];
+			};
+		};
+		responses: {
+			/** @description Created category */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Category"];
+				};
+			};
+		};
+	};
+	deleteAdminCategory: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Deleted category */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["MessageResponse"];
+				};
+			};
+		};
+	};
+	updateAdminCategory: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CategoryInput"];
+			};
+		};
+		responses: {
+			/** @description Updated category */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Category"];
 				};
 			};
 		};

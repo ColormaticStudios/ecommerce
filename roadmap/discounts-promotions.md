@@ -39,7 +39,7 @@
   - Product catalog depth is already the repo baseline; evaluate promotions against cart/order line `product_variant_id`.
   - Campaign targets remain product/category level; variant-level eligibility is resolved through parent product/category joins.
 - Categories:
-  - Category-targeted promotions depend on `roadmap/product-categories.md` category and product-category join model.
+  - Category-targeted promotions depend on product category baseline and product-category join model.
 - Provider platform baseline:
   - Promotion-adjusted totals flow into the implemented checkout snapshot and payment lifecycle.
 

@@ -124,10 +124,12 @@ func TestExternalPluginArgsResolveRelativeToManifestDir(t *testing.T) {
 	script := `#!/usr/bin/env bash
 set -euo pipefail
 payload="$(cat)"
-if [[ "$payload" == *'"action":"quote"'* ]]; then
-  echo '{"valid":true,"amount":6.25}'
-  exit 0
-fi
+case "$payload" in
+  *'"action":"quote"'*)
+    echo '{"valid":true,"amount":6.25}'
+    exit 0
+    ;;
+esac
 echo '{"valid":true,"shipping_address":"42 Relative Path Way, Test City, US"}'
 `
 	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {

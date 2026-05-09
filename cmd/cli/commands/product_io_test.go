@@ -17,6 +17,8 @@ func TestLoadLiveProductUpsertInputIncludesCatalogStructures(t *testing.T) {
 		&models.ProductVariantOptionValue{},
 		&models.ProductAttribute{},
 		&models.ProductAttributeValue{},
+		&models.Category{},
+		&models.ProductCategory{},
 		&models.SEOMetadata{},
 	)
 
@@ -47,6 +49,13 @@ func TestLoadLiveProductUpsertInputIncludesCatalogStructures(t *testing.T) {
 	}
 	if err := db.Create(&product).Error; err != nil {
 		t.Fatalf("create product: %v", err)
+	}
+	category := models.Category{Name: "Apparel", Slug: "apparel", IsActive: true, Path: "/apparel"}
+	if err := db.Select("*").Create(&category).Error; err != nil {
+		t.Fatalf("create category: %v", err)
+	}
+	if err := db.Model(&product).Association("Categories").Replace(&category); err != nil {
+		t.Fatalf("assign category: %v", err)
 	}
 
 	option := models.ProductOption{ProductID: product.ID, Name: "Size", Position: 1, DisplayType: "select"}
@@ -140,6 +149,9 @@ func TestLoadLiveProductUpsertInputIncludesCatalogStructures(t *testing.T) {
 	if len(input.RelatedProductIds) != 1 || input.RelatedProductIds[0] != int(related.ID) {
 		t.Fatalf("expected related product %d, got %+v", related.ID, input.RelatedProductIds)
 	}
+	if len(input.CategoryIds) != 1 || input.CategoryIds[0] != int(category.ID) {
+		t.Fatalf("expected category %d, got %+v", category.ID, input.CategoryIds)
+	}
 }
 
 func TestProductContractToUpsertInputPreservesDraftSections(t *testing.T) {
@@ -189,6 +201,9 @@ func TestProductContractToUpsertInputPreservesDraftSections(t *testing.T) {
 		RelatedProducts: []apicontract.RelatedProduct{
 			{Id: 9},
 		},
+		Categories: []apicontract.Category{
+			{Id: 11, Name: "Apparel", Slug: "apparel", Path: "/apparel", IsActive: true},
+		},
 	}
 
 	input := productContractToUpsertInput(contract)
@@ -210,6 +225,9 @@ func TestProductContractToUpsertInputPreservesDraftSections(t *testing.T) {
 	}
 	if len(input.RelatedProductIds) != 1 || input.RelatedProductIds[0] != 9 {
 		t.Fatalf("expected related product id 9, got %+v", input.RelatedProductIds)
+	}
+	if len(input.CategoryIds) != 1 || input.CategoryIds[0] != 11 {
+		t.Fatalf("expected category id 11, got %+v", input.CategoryIds)
 	}
 }
 

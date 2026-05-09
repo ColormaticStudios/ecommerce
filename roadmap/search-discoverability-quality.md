@@ -33,7 +33,7 @@
 - Product catalog depth:
 - Use variant-first catalog entities (`product_variant_id`, attributes, brands) as canonical inputs to search documents.
 - Product categories:
-- Category hierarchy from `roadmap/product-categories.md` is the canonical taxonomy for category facets and breadcrumbs.
+- Category hierarchy from the product categories baseline is the canonical taxonomy for category facets and breadcrumbs.
 - Discounts/promotions:
 - Promotion/campaign metadata can be ranking signals and rule predicates, but pricing truth stays in totals pipeline.
 - Merchant analytics/reporting:

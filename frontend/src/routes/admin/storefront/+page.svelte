@@ -409,6 +409,9 @@
 				if (section.product_section.source === "search") {
 					addIfBlank(`${sectionLabel} search query`, section.product_section.query);
 				}
+				if (section.product_section.source === "category") {
+					addIfBlank(`${sectionLabel} category slug`, section.product_section.category_slug);
+				}
 			}
 			if (section.type === "promo_cards") {
 				const cards = (section.promo_cards ?? []).slice(0, section.promo_card_limit ?? 1);
@@ -947,6 +950,7 @@
 												<option value="newest">Source: newest</option>
 												<option value="manual">Source: manual IDs</option>
 												<option value="search">Source: search query</option>
+												<option value="category">Source: category</option>
 											</Dropdown>
 											<Dropdown tone="admin" bind:value={section.product_section.sort}>
 												<option value="created_at">Sort: created at</option>
@@ -1001,6 +1005,13 @@
 													const target = event.target as HTMLInputElement;
 													setManualProductIDsInput(section, target.value);
 												}}
+											/>
+										{/if}
+										{#if section.product_section.source === "category"}
+											<TextInput
+												tone="admin"
+												placeholder="Category slug"
+												bind:value={section.product_section.category_slug}
 											/>
 										{/if}
 

@@ -14,12 +14,14 @@ import (
 )
 
 const (
-	maxBrandNameLength        = 120
-	maxBrandDescriptionLength = 500
-	maxAttributeKeyLength     = 120
-	maxSEOTitleLength         = 70
-	maxSEODescriptionLength   = 160
-	maxSEOCanonicalPathLength = 255
+	maxBrandNameLength           = 120
+	maxBrandDescriptionLength    = 500
+	maxCategoryDescriptionLength = 500
+	maxCategoryDepth             = 5
+	maxAttributeKeyLength        = 120
+	maxSEOTitleLength            = 70
+	maxSEODescriptionLength      = 160
+	maxSEOCanonicalPathLength    = 255
 )
 
 var supportedAttributeTypes = map[string]struct{}{
@@ -105,6 +107,28 @@ func productAttributeToContract(attribute models.ProductAttribute) apicontract.P
 	}
 }
 
+func categoryToContract(category models.Category) apicontract.Category {
+	return apicontract.Category{
+		Depth:       category.Depth,
+		Description: category.Description,
+		Id:          int(category.ID),
+		IsActive:    category.IsActive,
+		Name:        category.Name,
+		ParentId:    uintPtrToIntPtr(category.ParentID),
+		Path:        category.Path,
+		Slug:        category.Slug,
+		SortOrder:   category.SortOrder,
+	}
+}
+
+func uintPtrToIntPtr(value *uint) *int {
+	if value == nil {
+		return nil
+	}
+	converted := int(*value)
+	return &converted
+}
+
 func listBrandsQuery(db *gorm.DB, activeOnly bool, searchTerm string) *gorm.DB {
 	query := db.Model(&models.Brand{})
 	if activeOnly {
@@ -120,6 +144,305 @@ func listBrandsQuery(db *gorm.DB, activeOnly bool, searchTerm string) *gorm.DB {
 		)
 	}
 	return query.Order("name asc, id asc")
+}
+
+func listCategoriesQuery(db *gorm.DB, includeInactive bool, searchTerm string) *gorm.DB {
+	query := db.Model(&models.Category{})
+	if !includeInactive {
+		query = query.Where("is_active = ?", true)
+	}
+	if searchTerm != "" {
+		like := "%" + strings.ToLower(strings.TrimSpace(searchTerm)) + "%"
+		query = query.Where(
+			`LOWER(name) LIKE ? OR
+			 LOWER(slug) LIKE ? OR
+			 LOWER(COALESCE(description, '')) LIKE ?`,
+			like, like, like,
+		)
+	}
+	return query.Order("sort_order asc, id asc")
+}
+
+func ListAdminCategories(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		searchTerm := strings.TrimSpace(c.Query("q"))
+		includeInactive := strings.EqualFold(c.Query("include_inactive"), "true")
+		var categories []models.Category
+		if err := listCategoriesQuery(db, includeInactive, searchTerm).Find(&categories).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch categories"})
+			return
+		}
+
+		response := apicontract.CategoryListResponse{Data: make([]apicontract.Category, 0, len(categories))}
+		for _, category := range categories {
+			response.Data = append(response.Data, categoryToContract(category))
+		}
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func ListCategories(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var categories []models.Category
+		if err := listCategoriesQuery(db, false, "").Find(&categories).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch categories"})
+			return
+		}
+
+		response := apicontract.CategoryListResponse{Data: make([]apicontract.Category, 0, len(categories))}
+		for _, category := range categories {
+			response.Data = append(response.Data, categoryToContract(category))
+		}
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func validateCategoryInput(tx *gorm.DB, input apicontract.CategoryInput, excludeID uint) (models.Category, error) {
+	name := strings.TrimSpace(input.Name)
+	if !categoriesservice.IsValidName(name) || len(name) > maxBrandNameLength {
+		return models.Category{}, errors.New("Category name must be between 2 and 120 characters")
+	}
+
+	slug := normalizeCatalogSlug(input.Slug, name)
+	if slug == "" {
+		return models.Category{}, errors.New("Category slug is required")
+	}
+
+	description := trimOptionalString(input.Description)
+	if description != nil && len(*description) > maxCategoryDescriptionLength {
+		return models.Category{}, errors.New("Category description must be 500 characters or fewer")
+	}
+
+	isActive := true
+	if input.IsActive != nil {
+		isActive = *input.IsActive
+	}
+
+	sortOrder := 0
+	if input.SortOrder != nil {
+		sortOrder = *input.SortOrder
+	}
+
+	var slugCount int64
+	if err := tx.Model(&models.Category{}).
+		Where("slug = ? AND id <> ?", slug, excludeID).
+		Count(&slugCount).Error; err != nil {
+		return models.Category{}, err
+	}
+	if slugCount > 0 {
+		return models.Category{}, errors.New("Category slug already exists")
+	}
+
+	var parentID *uint
+	path := "/" + slug
+	depth := 0
+	if input.ParentId != nil {
+		if *input.ParentId <= 0 {
+			return models.Category{}, errors.New("Parent category is invalid")
+		}
+		candidateParentID := uint(*input.ParentId)
+		if candidateParentID == excludeID && excludeID != 0 {
+			return models.Category{}, errors.New("Category cannot be its own parent")
+		}
+		parent, err := loadCategoryParent(tx, candidateParentID)
+		if err != nil {
+			return models.Category{}, err
+		}
+		if excludeID != 0 && categoryParentCreatesCycle(tx, parent, excludeID) {
+			return models.Category{}, errors.New("Category parent would create a cycle")
+		}
+		depth = parent.Depth + 1
+		if depth > maxCategoryDepth {
+			return models.Category{}, errors.New("Category depth exceeds the maximum")
+		}
+		parentID = &candidateParentID
+		path = strings.TrimRight(parent.Path, "/") + "/" + slug
+	}
+
+	return models.Category{
+		Name:        name,
+		Slug:        slug,
+		Description: description,
+		IsActive:    isActive,
+		SortOrder:   sortOrder,
+		ParentID:    parentID,
+		Path:        path,
+		Depth:       depth,
+	}, nil
+}
+
+func loadCategoryParent(tx *gorm.DB, parentID uint) (models.Category, error) {
+	var parent models.Category
+	if err := tx.First(&parent, parentID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return models.Category{}, errors.New("Parent category not found")
+		}
+		return models.Category{}, err
+	}
+	return parent, nil
+}
+
+func categoryParentCreatesCycle(tx *gorm.DB, parent models.Category, categoryID uint) bool {
+	for {
+		if parent.ID == categoryID {
+			return true
+		}
+		if parent.ParentID == nil {
+			return false
+		}
+		if err := tx.First(&parent, *parent.ParentID).Error; err != nil {
+			return true
+		}
+	}
+}
+
+func CreateAdminCategory(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req apicontract.CategoryInput
+		if err := bindStrictJSON(c, &req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		category, err := validateCategoryInput(db, req, 0)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if err := db.Select("*").Create(&category).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create category"})
+			return
+		}
+		c.JSON(http.StatusCreated, categoryToContract(category))
+	}
+}
+
+func UpdateAdminCategory(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req apicontract.CategoryInput
+		if err := bindStrictJSON(c, &req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		var category models.Category
+		if err := db.First(&category, c.Param("id")).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Category not found"})
+			return
+		}
+
+		normalized, err := validateCategoryInput(db, req, category.ID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if category.IsActive && !normalized.IsActive {
+			referenced, err := categoryHasPublishedProductReferences(db, category.ID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update category"})
+				return
+			}
+			if referenced {
+				c.JSON(http.StatusConflict, gin.H{"error": "Category is assigned to published products"})
+				return
+			}
+		}
+
+		category.Name = normalized.Name
+		category.Slug = normalized.Slug
+		category.Description = normalized.Description
+		category.IsActive = normalized.IsActive
+		category.SortOrder = normalized.SortOrder
+		category.ParentID = normalized.ParentID
+		category.Path = normalized.Path
+		category.Depth = normalized.Depth
+
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Save(&category).Error; err != nil {
+				return err
+			}
+			return rebuildCategoryDescendantPaths(tx, category)
+		}); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update category"})
+			return
+		}
+		c.JSON(http.StatusOK, categoryToContract(category))
+	}
+}
+
+func rebuildCategoryDescendantPaths(tx *gorm.DB, parent models.Category) error {
+	var children []models.Category
+	if err := tx.Where("parent_id = ?", parent.ID).Find(&children).Error; err != nil {
+		return err
+	}
+	for _, child := range children {
+		child.Depth = parent.Depth + 1
+		child.Path = strings.TrimRight(parent.Path, "/") + "/" + child.Slug
+		if child.Depth > maxCategoryDepth {
+			return errors.New("Category depth exceeds the maximum")
+		}
+		if err := tx.Save(&child).Error; err != nil {
+			return err
+		}
+		if err := rebuildCategoryDescendantPaths(tx, child); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func DeleteAdminCategory(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var category models.Category
+		if err := db.First(&category, c.Param("id")).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Category not found"})
+			return
+		}
+
+		var childCount int64
+		if err := db.Model(&models.Category{}).Where("parent_id = ?", category.ID).Count(&childCount).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete category"})
+			return
+		}
+		if childCount > 0 {
+			c.JSON(http.StatusConflict, gin.H{"error": "Category has child categories"})
+			return
+		}
+
+		referenced, err := categoryHasPublishedProductReferences(db, category.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete category"})
+			return
+		}
+		if referenced {
+			c.JSON(http.StatusConflict, gin.H{"error": "Category is assigned to published products"})
+			return
+		}
+
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Where("category_id = ?", category.ID).Delete(&models.ProductCategory{}).Error; err != nil {
+				return err
+			}
+			if err := tx.Where("category_id = ?", category.ID).Delete(&models.ProductCategoryDraft{}).Error; err != nil {
+				return err
+			}
+			return tx.Delete(&category).Error
+		}); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete category"})
+			return
+		}
+		c.JSON(http.StatusOK, apicontract.MessageResponse{Message: "Category deleted"})
+	}
+}
+
+func categoryHasPublishedProductReferences(db *gorm.DB, categoryID uint) (bool, error) {
+	var count int64
+	err := db.Table("product_categories pc").
+		Joins("JOIN products p ON p.id = pc.product_id").
+		Where("pc.category_id = ? AND p.is_published = ? AND p.deleted_at IS NULL", categoryID, true).
+		Count(&count).Error
+	return count > 0, err
 }
 
 func ListBrands(db *gorm.DB) gin.HandlerFunc {

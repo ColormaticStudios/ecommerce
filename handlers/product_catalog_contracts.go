@@ -14,7 +14,7 @@ import (
 
 func respondAdminProduct(c *gin.Context, db *gorm.DB, mediaService *media.Service, productID uint) {
 	var product models.Product
-	if err := db.Preload("Related").First(&product, productID).Error; err != nil {
+	if err := db.Preload("Related").Preload("Categories").First(&product, productID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}
@@ -59,6 +59,10 @@ func buildProductContract(
 	if err != nil {
 		return apicontract.Product{}, err
 	}
+	categories, err := loadCategoryContracts(db, draft.CategoryIDs)
+	if err != nil {
+		return apicontract.Product{}, err
+	}
 
 	attributeMeta, err := loadAttributeMetadata(db, draft.Attributes)
 	if err != nil {
@@ -78,6 +82,7 @@ func buildProductContract(
 	product := apicontract.Product{
 		Attributes:        buildAttributeContracts(draft, attributeMeta),
 		Brand:             brand,
+		Categories:        categories,
 		CoverImage:        coverImage,
 		CreatedAt:         source.CreatedAt,
 		DefaultVariantId:  defaultVariantID,
@@ -110,6 +115,31 @@ func buildProductContract(
 	}
 
 	return product, nil
+}
+
+func loadCategoryContracts(db *gorm.DB, categoryIDs []uint) ([]apicontract.Category, error) {
+	if len(categoryIDs) == 0 {
+		return []apicontract.Category{}, nil
+	}
+
+	var categories []models.Category
+	if err := db.Where("id IN ?", categoryIDs).Find(&categories).Error; err != nil {
+		return nil, err
+	}
+	byID := make(map[uint]models.Category, len(categories))
+	for _, category := range categories {
+		byID[category.ID] = category
+	}
+
+	result := make([]apicontract.Category, 0, len(categoryIDs))
+	for _, id := range categoryIDs {
+		category, exists := byID[id]
+		if !exists {
+			continue
+		}
+		result = append(result, categoryToContract(category))
+	}
+	return result, nil
 }
 
 func loadBrandContract(db *gorm.DB, brandID *uint) (*apicontract.Brand, error) {

@@ -168,7 +168,7 @@ func GetAdminProductByID(db *gorm.DB, mediaService *media.Service) gin.HandlerFu
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var product models.Product
-		if err := db.Preload("Related").First(&product, id).Error; err != nil {
+		if err := db.Preload("Related").Preload("Categories").First(&product, id).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}
@@ -231,7 +231,7 @@ func CreateProduct(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		if err := db.Preload("Related").First(&product, product.ID).Error; err != nil {
+		if err := db.Preload("Related").Preload("Categories").First(&product, product.ID).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load created product"})
 			return
 		}
@@ -254,7 +254,7 @@ func UpdateProduct(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var product models.Product
-		if err := db.Preload("Related").First(&product, id).Error; err != nil {
+		if err := db.Preload("Related").Preload("Categories").First(&product, id).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}
@@ -284,7 +284,7 @@ func UpdateProductRelated(db *gorm.DB, mediaService *media.Service) gin.HandlerF
 		id := c.Param("id")
 		var product models.Product
 
-		if err := db.Preload("Related").First(&product, id).Error; err != nil {
+		if err := db.Preload("Related").Preload("Categories").First(&product, id).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}
@@ -329,7 +329,7 @@ func PublishProduct(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 		publishedProductID := uint(0)
 		err := db.Transaction(func(tx *gorm.DB) error {
 			var product models.Product
-			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Preload("Related").First(&product, id).Error; err != nil {
+			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Preload("Related").Preload("Categories").First(&product, id).Error; err != nil {
 				return err
 			}
 			publishedProductID = product.ID
@@ -414,7 +414,7 @@ func UnpublishProduct(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc 
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var product models.Product
-		if err := db.Preload("Related").First(&product, id).Error; err != nil {
+		if err := db.Preload("Related").Preload("Categories").First(&product, id).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}
@@ -450,7 +450,7 @@ func DiscardProductDraft(db *gorm.DB, mediaService *media.Service) gin.HandlerFu
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var product models.Product
-		if err := db.Preload("Related").First(&product, id).Error; err != nil {
+		if err := db.Preload("Related").Preload("Categories").First(&product, id).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}

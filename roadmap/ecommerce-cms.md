@@ -41,7 +41,7 @@
 - Product catalog depth baseline:
   - CMS product blocks consume the implemented variant-first catalog contracts and `price_range`/variant-aware summaries.
   - Product pickers in CMS authoring should resolve to product IDs while storefront purchase actions remain variant-aware at runtime.
-- Product categories (`roadmap/product-categories.md`):
+- Product categories baseline:
   - Category landing blocks and navigation use canonical category slugs from `categories` and product-category joins.
 - Discounts/promotions (`roadmap/discounts-promotions.md`):
   - Promotion banners and campaign pages consume active campaign metadata and scheduled windows from promotion domain, not duplicated CMS discount logic.

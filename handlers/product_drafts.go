@@ -26,6 +26,7 @@ type productCatalogDraft struct {
 	Stock             int
 	Images            []string
 	RelatedIDs        []uint
+	CategoryIDs       []uint
 	BrandID           *uint
 	Options           []productOptionDraftData
 	Variants          []productVariantDraftData
@@ -140,6 +141,22 @@ func normalizeCatalogMerchandisingFields(
 	return normalizedSKU, normalizedName, normalizedDescription, normalizedPrice, normalizedStock, normalizedImages, normalizedRelatedIDs
 }
 
+func normalizeCatalogIDs(ids []uint) []uint {
+	normalized := make([]uint, 0, len(ids))
+	seen := make(map[uint]struct{}, len(ids))
+	for _, id := range ids {
+		if id == 0 {
+			continue
+		}
+		if _, exists := seen[id]; exists {
+			continue
+		}
+		seen[id] = struct{}{}
+		normalized = append(normalized, id)
+	}
+	return normalized
+}
+
 func normalizeProductCatalogDraft(input productCatalogDraft) productCatalogDraft {
 	normalizedSKU, normalizedName, normalizedDescription, normalizedPrice, normalizedStock, normalizedImages, normalizedRelatedIDs := normalizeCatalogMerchandisingFields(
 		input.SKU,
@@ -160,6 +177,7 @@ func normalizeProductCatalogDraft(input productCatalogDraft) productCatalogDraft
 		Stock:             normalizedStock,
 		Images:            normalizedImages,
 		RelatedIDs:        normalizedRelatedIDs,
+		CategoryIDs:       normalizeCatalogIDs(input.CategoryIDs),
 		BrandID:           input.BrandID,
 		Options:           make([]productOptionDraftData, 0, len(input.Options)),
 		Variants:          make([]productVariantDraftData, 0, len(input.Variants)),
@@ -345,6 +363,22 @@ func productRelatedIDs(product models.Product) []uint {
 	return ids
 }
 
+func productCategoryIDs(product models.Product) []uint {
+	ids := make([]uint, 0, len(product.Categories))
+	seen := make(map[uint]struct{}, len(product.Categories))
+	for _, category := range product.Categories {
+		if category.ID == 0 {
+			continue
+		}
+		if _, exists := seen[category.ID]; exists {
+			continue
+		}
+		seen[category.ID] = struct{}{}
+		ids = append(ids, category.ID)
+	}
+	return ids
+}
+
 func loadProductMediaReferences(tx *gorm.DB, productID uint, role string) ([]models.MediaReference, error) {
 	if !hasMediaReferenceTable(tx) {
 		return []models.MediaReference{}, nil
@@ -465,6 +499,7 @@ func loadNormalizedProductDraft(tx *gorm.DB, product models.Product) (productCat
 		Preload("VariantDrafts.OptionValueDraftLinks", func(db *gorm.DB) *gorm.DB { return db.Order("position asc").Order("id asc") }).
 		Preload("AttributeDrafts", func(db *gorm.DB) *gorm.DB { return db.Order("position asc").Order("id asc") }).
 		Preload("RelatedDrafts", func(db *gorm.DB) *gorm.DB { return db.Order("position asc").Order("id asc") }).
+		Preload("CategoryDrafts", func(db *gorm.DB) *gorm.DB { return db.Order("position asc").Order("id asc") }).
 		Where("product_id = ?", product.ID).
 		First(&record).Error
 	if err == nil {
@@ -655,11 +690,25 @@ func replaceProductDraftChildren(tx *gorm.DB, productDraftID uint, draft product
 		}
 	}
 
+	for idx, categoryID := range draft.CategoryIDs {
+		record := models.ProductCategoryDraft{
+			ProductDraftID: productDraftID,
+			CategoryID:     categoryID,
+			Position:       idx + 1,
+		}
+		if err := tx.Create(&record).Error; err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func deleteProductDraftChildren(tx *gorm.DB, productDraftID uint) error {
 	if err := tx.Unscoped().Where("product_draft_id = ?", productDraftID).Delete(&models.ProductRelatedDraft{}).Error; err != nil {
+		return err
+	}
+	if err := tx.Unscoped().Where("product_draft_id = ?", productDraftID).Delete(&models.ProductCategoryDraft{}).Error; err != nil {
 		return err
 	}
 	if err := tx.Unscoped().Where("product_draft_id = ?", productDraftID).Delete(&models.ProductAttributeValueDraft{}).Error; err != nil {
@@ -721,6 +770,7 @@ func normalizedDraftFromRecord(record models.ProductDraft) productCatalogDraft {
 		Variants:          make([]productVariantDraftData, 0, len(record.VariantDrafts)),
 		Attributes:        make([]productAttributeValueDraftData, 0, len(record.AttributeDrafts)),
 		RelatedIDs:        make([]uint, 0, len(record.RelatedDrafts)),
+		CategoryIDs:       make([]uint, 0, len(record.CategoryDrafts)),
 		SEO: productSEODraftData{
 			Title:          record.SeoTitle,
 			Description:    record.SeoDescription,
@@ -793,6 +843,9 @@ func normalizedDraftFromRecord(record models.ProductDraft) productCatalogDraft {
 	for _, related := range record.RelatedDrafts {
 		result.RelatedIDs = append(result.RelatedIDs, related.RelatedProductID)
 	}
+	for _, category := range record.CategoryDrafts {
+		result.CategoryIDs = append(result.CategoryIDs, category.CategoryID)
+	}
 
 	return normalizeProductCatalogDraft(result)
 }
@@ -807,6 +860,7 @@ func loadPublishedProductCatalogData(tx *gorm.DB, product models.Product, public
 		Stock:       product.Stock,
 		Images:      append([]string(nil), product.Images...),
 		RelatedIDs:  productRelatedIDs(product),
+		CategoryIDs: productCategoryIDs(product),
 		BrandID:     product.BrandID,
 	}
 
@@ -1003,6 +1057,15 @@ func publishNormalizedProductDraft(tx *gorm.DB, product *models.Product, draft p
 			return err
 		}
 	}
+	var categories []models.Category
+	if len(normalized.CategoryIDs) > 0 {
+		if err := validateProductCategories(tx, normalized.CategoryIDs); err != nil {
+			return err
+		}
+		if err := tx.Where("id IN ?", normalized.CategoryIDs).Find(&categories).Error; err != nil {
+			return err
+		}
+	}
 
 	updates := map[string]any{
 		"sku":                normalized.SKU,
@@ -1021,6 +1084,9 @@ func publishNormalizedProductDraft(tx *gorm.DB, product *models.Product, draft p
 		return err
 	}
 	if err := tx.Model(product).Association("Related").Replace(related); err != nil {
+		return err
+	}
+	if err := tx.Model(product).Association("Categories").Replace(categories); err != nil {
 		return err
 	}
 	if err := replacePublishedCatalogChildren(tx, product.ID, normalized); err != nil {

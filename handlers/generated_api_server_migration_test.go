@@ -3929,6 +3929,94 @@ func TestGeneratedProductFiltersByBrandAttributeAndVariantStock(t *testing.T) {
 	assert.Equal(t, "acme", body.Data[0].Brand.Slug)
 }
 
+func TestGeneratedProductFiltersByCategorySlug(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.Category{},
+		&models.Product{},
+		&models.ProductVariant{},
+		&models.ProductCategory{},
+		&models.ProductDraft{},
+		&models.ProductCategoryDraft{},
+	)
+
+	activeCategory := models.Category{Name: "Apparel", Slug: "apparel", Path: "/apparel", IsActive: true}
+	inactiveCategory := models.Category{Name: "Archive", Slug: "archive", Path: "/archive", IsActive: false}
+	require.NoError(t, db.Create(&activeCategory).Error)
+	require.NoError(t, db.Create(&inactiveCategory).Error)
+	require.NoError(t, db.Model(&inactiveCategory).Update("is_active", false).Error)
+
+	apparelProduct := seedProduct(t, db, "sku-category-apparel", "Category Jacket", 40, 5)
+	archiveProduct := seedProduct(t, db, "sku-category-archive", "Category Archive", 30, 5)
+	otherProduct := seedProduct(t, db, "sku-category-other", "Other Product", 20, 5)
+	require.NoError(t, db.Model(&apparelProduct).Association("Categories").Replace(&activeCategory))
+	require.NoError(t, db.Model(&archiveProduct).Association("Categories").Replace(&inactiveCategory))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/products?category_slug=apparel&q=jacket", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code)
+
+	body := decodeJSON[apicontract.ProductPage](t, w)
+	require.Len(t, body.Data, 1)
+	assert.Equal(t, apparelProduct.SKU, body.Data[0].Sku)
+
+	inactiveReq := httptest.NewRequest(http.MethodGet, "/api/v1/products?category_slug=archive", nil)
+	inactiveW := httptest.NewRecorder()
+	r.ServeHTTP(inactiveW, inactiveReq)
+	require.Equal(t, http.StatusOK, inactiveW.Code)
+
+	inactiveBody := decodeJSON[apicontract.ProductPage](t, inactiveW)
+	assert.Empty(t, inactiveBody.Data)
+	assert.NotEqual(t, otherProduct.SKU, body.Data[0].Sku)
+}
+
+func TestGeneratedAdminProductFiltersByInactiveCategory(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.Category{},
+		&models.Product{},
+		&models.ProductVariant{},
+		&models.ProductCategory{},
+	)
+	admin := seedUser(t, db, "sub-admin-category-filter", "admin-category-filter", "admin-category-filter@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	inactiveCategory := models.Category{Name: "Archive", Slug: "archive", Path: "/archive", IsActive: false}
+	require.NoError(t, db.Create(&inactiveCategory).Error)
+	require.NoError(t, db.Model(&inactiveCategory).Update("is_active", false).Error)
+	archiveProduct := seedProduct(t, db, "sku-admin-category-archive", "Admin Archive", 30, 5)
+	require.NoError(t, db.Model(&archiveProduct).Association("Categories").Replace(&inactiveCategory))
+
+	hiddenResp := performJSONRequest(
+		t,
+		r,
+		http.MethodGet,
+		fmt.Sprintf("/api/v1/admin/products?category_id=%d", inactiveCategory.ID),
+		nil,
+		adminToken,
+	)
+	require.Equal(t, http.StatusOK, hiddenResp.Code)
+	hiddenBody := decodeJSON[apicontract.ProductPage](t, hiddenResp)
+	assert.Empty(t, hiddenBody.Data)
+
+	visibleResp := performJSONRequest(
+		t,
+		r,
+		http.MethodGet,
+		fmt.Sprintf("/api/v1/admin/products?category_id=%d&include_inactive_categories=true", inactiveCategory.ID),
+		nil,
+		adminToken,
+	)
+	require.Equal(t, http.StatusOK, visibleResp.Code)
+	visibleBody := decodeJSON[apicontract.ProductPage](t, visibleResp)
+	require.Len(t, visibleBody.Data, 1)
+	assert.Equal(t, archiveProduct.SKU, visibleBody.Data[0].Sku)
+}
+
 func TestAdminBrandCRUD(t *testing.T) {
 	r, db := setupGeneratedRouterWithConfig(
 		t,
@@ -4036,6 +4124,181 @@ func TestAdminBrandListSearch(t *testing.T) {
 	descriptionResults := decodeJSON[apicontract.BrandListResponse](t, descriptionResp)
 	require.Len(t, descriptionResults.Data, 1)
 	assert.Equal(t, "Acme Labs", descriptionResults.Data[0].Name)
+}
+
+func TestAdminCategoryCRUD(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.Category{},
+	)
+	admin := seedUser(t, db, "sub-admin-category", "admin-category", "admin-category@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	createResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/admin/categories", map[string]any{
+		"name":        "Apparel",
+		"description": "Wearable catalog items",
+		"sort_order":  10,
+		"is_active":   true,
+	}, adminToken)
+	require.Equal(t, http.StatusCreated, createResp.Code)
+	created := decodeJSON[apicontract.Category](t, createResp)
+	assert.Equal(t, "apparel", created.Slug)
+	assert.Equal(t, "/apparel", created.Path)
+	assert.Zero(t, created.Depth)
+
+	childResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/admin/categories", map[string]any{
+		"name":      "Outerwear",
+		"parent_id": created.Id,
+	}, adminToken)
+	require.Equal(t, http.StatusCreated, childResp.Code)
+	child := decodeJSON[apicontract.Category](t, childResp)
+	assert.Equal(t, "/apparel/outerwear", child.Path)
+	assert.Equal(t, 1, child.Depth)
+
+	updateResp := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/categories/%d", child.Id), map[string]any{
+		"name":       "Jackets",
+		"slug":       "jackets",
+		"parent_id":  created.Id,
+		"sort_order": 5,
+		"is_active":  false,
+	}, adminToken)
+	require.Equal(t, http.StatusOK, updateResp.Code)
+	updated := decodeJSON[apicontract.Category](t, updateResp)
+	assert.Equal(t, "Jackets", updated.Name)
+	assert.Equal(t, "/apparel/jackets", updated.Path)
+	assert.False(t, updated.IsActive)
+
+	listResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/admin/categories?include_inactive=true", nil, adminToken)
+	require.Equal(t, http.StatusOK, listResp.Code)
+	listing := decodeJSON[apicontract.CategoryListResponse](t, listResp)
+	require.Len(t, listing.Data, 2)
+	assert.Equal(t, updated.Id, listing.Data[0].Id)
+
+	deleteResp := performJSONRequest(
+		t,
+		r,
+		http.MethodDelete,
+		fmt.Sprintf("/api/v1/admin/categories/%d", updated.Id),
+		nil,
+		adminToken,
+	)
+	require.Equal(t, http.StatusOK, deleteResp.Code)
+
+	var count int64
+	require.NoError(t, db.Model(&models.Category{}).Count(&count).Error)
+	assert.EqualValues(t, 1, count)
+}
+
+func TestAdminCategoryDeleteAndDisableRejectPublishedProductReferences(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.Category{},
+		&models.Product{},
+		&models.ProductVariant{},
+		&models.ProductCategory{},
+	)
+	admin := seedUser(t, db, "sub-admin-category-reference", "admin-category-reference", "admin-category-reference@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	category := models.Category{Name: "Referenced", Slug: "referenced", Path: "/referenced", IsActive: true}
+	require.NoError(t, db.Select("*").Create(&category).Error)
+	product := seedProduct(t, db, "sku-category-reference", "Referenced Product", 25, 4)
+	require.NoError(t, db.Model(&product).Association("Categories").Replace(&category))
+
+	disableResp := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/categories/%d", category.ID), map[string]any{
+		"name":      "Referenced",
+		"slug":      "referenced",
+		"is_active": false,
+	}, adminToken)
+	require.Equal(t, http.StatusConflict, disableResp.Code)
+
+	deleteResp := performJSONRequest(
+		t,
+		r,
+		http.MethodDelete,
+		fmt.Sprintf("/api/v1/admin/categories/%d", category.ID),
+		nil,
+		adminToken,
+	)
+	require.Equal(t, http.StatusConflict, deleteResp.Code)
+
+	require.NoError(t, db.Model(&models.Product{}).Where("id = ?", product.ID).Update("is_published", false).Error)
+
+	draft := models.ProductDraft{
+		ProductID:   product.ID,
+		SKU:         "draft-reference",
+		Name:        "Draft Reference",
+		Description: "draft",
+		Price:       models.MoneyFromFloat(25),
+		Stock:       4,
+	}
+	require.NoError(t, db.Create(&draft).Error)
+	require.NoError(t, db.Create(&models.ProductCategoryDraft{
+		ProductDraftID: draft.ID,
+		CategoryID:     category.ID,
+		Position:       1,
+	}).Error)
+
+	deleteUnpublishedResp := performJSONRequest(
+		t,
+		r,
+		http.MethodDelete,
+		fmt.Sprintf("/api/v1/admin/categories/%d", category.ID),
+		nil,
+		adminToken,
+	)
+	require.Equal(t, http.StatusOK, deleteUnpublishedResp.Code)
+
+	var productCategoryCount int64
+	require.NoError(t, db.Model(&models.ProductCategory{}).Where("category_id = ?", category.ID).Count(&productCategoryCount).Error)
+	assert.Zero(t, productCategoryCount)
+
+	var draftCategoryCount int64
+	require.NoError(t, db.Model(&models.ProductCategoryDraft{}).Where("category_id = ?", category.ID).Count(&draftCategoryCount).Error)
+	assert.Zero(t, draftCategoryCount)
+}
+
+func TestAdminCategoryValidationRejectsDuplicateSlugAndCycles(t *testing.T) {
+	r, db := setupGeneratedRouterWithConfig(
+		t,
+		GeneratedAPIServerConfig{},
+		&models.User{},
+		&models.Category{},
+	)
+	admin := seedUser(t, db, "sub-admin-category-validation", "admin-category-validation", "admin-category-validation@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	rootResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/admin/categories", map[string]any{
+		"name": "Root",
+		"slug": "root",
+	}, adminToken)
+	require.Equal(t, http.StatusCreated, rootResp.Code)
+	root := decodeJSON[apicontract.Category](t, rootResp)
+
+	childResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/admin/categories", map[string]any{
+		"name":      "Child",
+		"slug":      "child",
+		"parent_id": root.Id,
+	}, adminToken)
+	require.Equal(t, http.StatusCreated, childResp.Code)
+	child := decodeJSON[apicontract.Category](t, childResp)
+
+	duplicateResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/admin/categories", map[string]any{
+		"name": "Duplicate Root",
+		"slug": "root",
+	}, adminToken)
+	require.Equal(t, http.StatusBadRequest, duplicateResp.Code)
+
+	cycleResp := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/categories/%d", root.Id), map[string]any{
+		"name":      "Root",
+		"slug":      "root",
+		"parent_id": child.Id,
+	}, adminToken)
+	require.Equal(t, http.StatusBadRequest, cycleResp.Code)
 }
 
 func TestAdminProductAttributeCRUD(t *testing.T) {

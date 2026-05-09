@@ -127,7 +127,7 @@ func AttachProductMedia(db *gorm.DB, mediaService *media.Service) gin.HandlerFun
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var product models.Product
-		if err := db.Preload("Related").First(&product, id).Error; err != nil {
+		if err := db.Preload("Related").Preload("Categories").First(&product, id).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}
@@ -154,7 +154,7 @@ func UpdateProductMediaOrder(db *gorm.DB, mediaService *media.Service) gin.Handl
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var product models.Product
-		if err := db.Preload("Related").First(&product, id).Error; err != nil {
+		if err := db.Preload("Related").Preload("Categories").First(&product, id).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}
@@ -223,7 +223,7 @@ func DetachProductMedia(db *gorm.DB, mediaService *media.Service) gin.HandlerFun
 		mediaID := c.Param("mediaId")
 
 		var product models.Product
-		if err := db.Preload("Related").First(&product, id).Error; err != nil {
+		if err := db.Preload("Related").Preload("Categories").First(&product, id).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}

@@ -64,6 +64,10 @@ func toContractProduct(product models.Product) apicontract.Product {
 	for _, relatedProduct := range product.Related {
 		related = append(related, toContractRelatedProduct(relatedProduct))
 	}
+	categories := make([]apicontract.Category, 0, len(product.Categories))
+	for _, category := range product.Categories {
+		categories = append(categories, categoryToContract(category))
+	}
 
 	hasDraft := productHasDraft(product)
 	published := productIsPubliclyVisible(product)
@@ -78,6 +82,7 @@ func toContractProduct(product models.Product) apicontract.Product {
 		Images:          product.Images,
 		CoverImage:      product.CoverImage,
 		RelatedProducts: related,
+		Categories:      categories,
 		CreatedAt:       product.CreatedAt,
 		UpdatedAt:       product.UpdatedAt,
 		DeletedAt:       toContractDeletedAt(product.DeletedAt),

@@ -9,6 +9,25 @@ type Brand struct {
 	IsActive    bool    `json:"is_active" gorm:"not null;default:true;index"`
 }
 
+type Category struct {
+	BaseModel
+	Name        string     `json:"name" gorm:"not null"`
+	Slug        string     `json:"slug" gorm:"uniqueIndex;not null"`
+	Description *string    `json:"description,omitempty"`
+	IsActive    bool       `json:"is_active" gorm:"not null;default:true;index"`
+	SortOrder   int        `json:"sort_order" gorm:"not null;default:0;index"`
+	ParentID    *uint      `json:"parent_id,omitempty" gorm:"index"`
+	Parent      *Category  `json:"parent,omitempty" gorm:"foreignKey:ParentID"`
+	Children    []Category `json:"children,omitempty" gorm:"foreignKey:ParentID"`
+	Path        string     `json:"path" gorm:"not null;index"`
+	Depth       int        `json:"depth" gorm:"not null;default:0;index"`
+}
+
+type ProductCategory struct {
+	ProductID  uint `json:"product_id" gorm:"primaryKey;autoIncrement:false"`
+	CategoryID uint `json:"category_id" gorm:"primaryKey;autoIncrement:false"`
+}
+
 type ProductOption struct {
 	BaseModel
 	ProductID   uint                 `json:"product_id" gorm:"not null;index"`
@@ -103,6 +122,7 @@ type ProductDraft struct {
 	VariantDrafts     []ProductVariantDraft        `json:"variant_drafts,omitempty"`
 	AttributeDrafts   []ProductAttributeValueDraft `json:"attribute_drafts,omitempty"`
 	RelatedDrafts     []ProductRelatedDraft        `json:"related_drafts,omitempty"`
+	CategoryDrafts    []ProductCategoryDraft       `json:"category_drafts,omitempty"`
 }
 
 type ProductOptionDraft struct {
@@ -171,4 +191,11 @@ type ProductRelatedDraft struct {
 	ProductDraftID   uint `json:"product_draft_id" gorm:"not null;index"`
 	RelatedProductID uint `json:"related_product_id" gorm:"not null;index"`
 	Position         int  `json:"position" gorm:"not null;default:1"`
+}
+
+type ProductCategoryDraft struct {
+	BaseModel
+	ProductDraftID uint `json:"product_draft_id" gorm:"not null;index"`
+	CategoryID     uint `json:"category_id" gorm:"not null;index"`
+	Position       int  `json:"position" gorm:"not null;default:1"`
 }

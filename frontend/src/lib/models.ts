@@ -48,6 +48,7 @@ export interface PageModel {
 type RelatedProductPayload = components["schemas"]["RelatedProduct"];
 type ProductPayload = components["schemas"]["Product"];
 type BrandPayload = components["schemas"]["Brand"];
+type CategoryPayload = components["schemas"]["Category"];
 type ProductAttributeDefinitionPayload = components["schemas"]["ProductAttributeDefinition"];
 type ProductOptionPayload = components["schemas"]["ProductOption"];
 type ProductOptionValuePayload = components["schemas"]["ProductOptionValue"];
@@ -77,6 +78,20 @@ export function parseBrand(brand: BrandPayload): BrandModel {
 		description: brand.description ?? null,
 		logo_media_id: brand.logo_media_id ?? null,
 		is_active: brand.is_active,
+	};
+}
+
+export function parseCategory(category: CategoryPayload): CategoryModel {
+	return {
+		id: category.id,
+		name: category.name,
+		slug: category.slug,
+		description: category.description ?? null,
+		is_active: category.is_active,
+		sort_order: category.sort_order,
+		parent_id: category.parent_id ?? null,
+		path: category.path,
+		depth: category.depth,
 	};
 }
 
@@ -210,6 +225,7 @@ export function parseProduct(product: ProductPayload): ProductModel {
 		options: (product.options ?? []).map(parseProductOption),
 		variants: (product.variants ?? []).map(parseProductVariant),
 		attributes: (product.attributes ?? []).map(parseProductAttributeValue),
+		categories: (product.categories ?? []).map(parseCategory),
 		seo: parseProductSEO(product.seo),
 		related_products: (product.related_products ?? []).map(parseRelatedProduct),
 	};
@@ -238,6 +254,7 @@ export interface ProductModel {
 	options: ProductOptionModel[];
 	variants: ProductVariantModel[];
 	attributes: ProductAttributeValueModel[];
+	categories: CategoryModel[];
 	seo: ProductSEOModel;
 	related_products: RelatedProductModel[];
 }
@@ -249,6 +266,18 @@ export interface BrandModel {
 	description: string | null;
 	logo_media_id: string | null;
 	is_active: boolean;
+}
+
+export interface CategoryModel {
+	id: number;
+	name: string;
+	slug: string;
+	description: string | null;
+	is_active: boolean;
+	sort_order: number;
+	parent_id: number | null;
+	path: string;
+	depth: number;
 }
 
 export interface ProductAttributeDefinitionModel {

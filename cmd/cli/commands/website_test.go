@@ -17,6 +17,17 @@ func TestRootCommandIncludesWebsiteSettingsGroup(t *testing.T) {
 	}
 }
 
+func TestRootCommandIncludesCategoryGroup(t *testing.T) {
+	root := newRootCmd()
+	cmd, _, err := root.Find([]string{"category"})
+	if err != nil {
+		t.Fatalf("find category command: %v", err)
+	}
+	if cmd == nil || cmd.Name() != "category" {
+		t.Fatalf("expected category command, got %#v", cmd)
+	}
+}
+
 func TestWebsiteOIDCConfiguredRequiresCoreFields(t *testing.T) {
 	settings := handlers.WebsiteSettingsPayload{
 		OIDCProvider:    "https://issuer.example",

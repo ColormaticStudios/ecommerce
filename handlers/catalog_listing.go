@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"strconv"
 	"strings"
 
 	catalogservice "ecommerce/internal/services/catalog"
@@ -24,6 +25,32 @@ func parseOptionalBoolParam(c *gin.Context, key string) *bool {
 	default:
 		return nil
 	}
+}
+
+func parseStringArrayParam(c *gin.Context, key string) []string {
+	raw := c.QueryArray(key)
+	values := make([]string, 0, len(raw))
+	for _, item := range raw {
+		trimmed := strings.TrimSpace(item)
+		if trimmed == "" {
+			continue
+		}
+		values = append(values, trimmed)
+	}
+	return values
+}
+
+func parseUintArrayParam(c *gin.Context, key string) []uint {
+	raw := c.QueryArray(key)
+	values := make([]uint, 0, len(raw))
+	for _, item := range raw {
+		parsed, err := strconv.ParseUint(strings.TrimSpace(item), 10, 64)
+		if err != nil || parsed == 0 {
+			continue
+		}
+		values = append(values, uint(parsed))
+	}
+	return values
 }
 
 func parseCatalogAttributeFilters(c *gin.Context) map[string]string {
@@ -53,16 +80,19 @@ func buildCatalogListInput(c *gin.Context, preview bool, defaultLimit int) catal
 	maxPrice, _ := catalogservice.ParsePrice(c.Query("max_price"))
 
 	return catalogservice.ListProductsInput{
-		SearchTerm:      strings.TrimSpace(c.Query("q")),
-		MinPrice:        minPrice,
-		MaxPrice:        maxPrice,
-		BrandSlug:       strings.TrimSpace(c.Query("brand_slug")),
-		HasVariantStock: parseOptionalBoolParam(c, "has_variant_stock"),
-		Attribute:       parseCatalogAttributeFilters(c),
-		SortField:       c.DefaultQuery("sort", "created_at"),
-		SortOrder:       c.DefaultQuery("order", "desc"),
-		Page:            page,
-		Limit:           limit,
-		Preview:         preview,
+		SearchTerm:                strings.TrimSpace(c.Query("q")),
+		MinPrice:                  minPrice,
+		MaxPrice:                  maxPrice,
+		BrandSlug:                 strings.TrimSpace(c.Query("brand_slug")),
+		CategorySlugs:             parseStringArrayParam(c, "category_slug"),
+		CategoryIDs:               parseUintArrayParam(c, "category_id"),
+		IncludeInactiveCategories: strings.EqualFold(c.Query("include_inactive_categories"), "true"),
+		HasVariantStock:           parseOptionalBoolParam(c, "has_variant_stock"),
+		Attribute:                 parseCatalogAttributeFilters(c),
+		SortField:                 c.DefaultQuery("sort", "created_at"),
+		SortOrder:                 c.DefaultQuery("order", "desc"),
+		Page:                      page,
+		Limit:                     limit,
+		Preview:                   preview,
 	}
 }

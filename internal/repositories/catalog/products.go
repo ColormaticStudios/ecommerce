@@ -11,17 +11,20 @@ import (
 )
 
 type ProductListFilters struct {
-	SearchTerm      string
-	MinPrice        *float64
-	MaxPrice        *float64
-	BrandSlug       string
-	HasVariantStock *bool
-	Attribute       map[string]string
-	SortField       string
-	SortOrder       string
-	Page            int
-	Limit           int
-	Preview         bool
+	SearchTerm                string
+	MinPrice                  *float64
+	MaxPrice                  *float64
+	BrandSlug                 string
+	CategorySlugs             []string
+	CategoryIDs               []uint
+	IncludeInactiveCategories bool
+	HasVariantStock           *bool
+	Attribute                 map[string]string
+	SortField                 string
+	SortOrder                 string
+	Page                      int
+	Limit                     int
+	Preview                   bool
 }
 
 type ProductListResult struct {
@@ -58,6 +61,39 @@ func normalizeSort(sortField, sortOrder string) (string, string) {
 		sortOrder = "desc"
 	}
 	return sortField, sortOrder
+}
+
+func normalizedCategorySlugs(values []string) []string {
+	normalized := make([]string, 0, len(values))
+	seen := make(map[string]struct{}, len(values))
+	for _, value := range values {
+		slug := strings.ToLower(strings.TrimSpace(value))
+		if slug == "" {
+			continue
+		}
+		if _, exists := seen[slug]; exists {
+			continue
+		}
+		seen[slug] = struct{}{}
+		normalized = append(normalized, slug)
+	}
+	return normalized
+}
+
+func normalizedCategoryIDs(values []uint) []uint {
+	normalized := make([]uint, 0, len(values))
+	seen := make(map[uint]struct{}, len(values))
+	for _, value := range values {
+		if value == 0 {
+			continue
+		}
+		if _, exists := seen[value]; exists {
+			continue
+		}
+		seen[value] = struct{}{}
+		normalized = append(normalized, value)
+	}
+	return normalized
 }
 
 func parseAttributeFilterValue(definition models.ProductAttribute, raw string) (any, bool) {
@@ -106,7 +142,7 @@ func (r *Repository) ListProducts(filters ProductListFilters) (ProductListResult
 	query = query.Joins("LEFT JOIN (?) AS variant_prices ON variant_prices.product_id = products.id", variantPrices)
 
 	if term := strings.TrimSpace(filters.SearchTerm); term != "" {
-		query = query.Where("products.name ILIKE ?", "%"+term+"%")
+		query = query.Where("LOWER(products.name) LIKE ?", "%"+strings.ToLower(term)+"%")
 	}
 	if filters.MinPrice != nil {
 		query = query.Where("COALESCE(variant_prices.max_price, products.price) >= ?", *filters.MinPrice)
@@ -119,6 +155,33 @@ func (r *Repository) ListProducts(filters ProductListFilters) (ProductListResult
 		if !filters.Preview {
 			query = query.Where("brands.is_active = ?", true)
 		}
+	}
+	categorySlugs := normalizedCategorySlugs(filters.CategorySlugs)
+	categoryIDs := normalizedCategoryIDs(filters.CategoryIDs)
+	if len(categorySlugs) > 0 || len(categoryIDs) > 0 {
+		clauses := []string{
+			"pc.product_id = products.id",
+		}
+		args := make([]any, 0, 3)
+		if len(categorySlugs) > 0 {
+			clauses = append(clauses, "c.slug IN ?")
+			args = append(args, categorySlugs)
+		}
+		if len(categoryIDs) > 0 {
+			clauses = append(clauses, "c.id IN ?")
+			args = append(args, categoryIDs)
+		}
+		if !filters.Preview || !filters.IncludeInactiveCategories {
+			clauses = append(clauses, "c.is_active = ?")
+			args = append(args, true)
+		}
+		query = query.Where(
+			fmt.Sprintf(
+				"EXISTS (SELECT 1 FROM product_categories pc JOIN categories c ON c.id = pc.category_id WHERE %s)",
+				strings.Join(clauses, " AND "),
+			),
+			args...,
+		)
 	}
 	if filters.HasVariantStock != nil {
 		stockClause := "EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = products.id AND pv.stock > 0"
@@ -239,7 +302,7 @@ func (r *Repository) ListProducts(filters ProductListFilters) (ProductListResult
 
 	offset := (filters.Page - 1) * filters.Limit
 	var products []models.Product
-	if err := query.Offset(offset).Limit(filters.Limit).Find(&products).Error; err != nil {
+	if err := query.Preload("Categories").Offset(offset).Limit(filters.Limit).Find(&products).Error; err != nil {
 		return ProductListResult{}, err
 	}
 
@@ -248,7 +311,7 @@ func (r *Repository) ListProducts(filters ProductListFilters) (ProductListResult
 
 func (r *Repository) GetPublicProductByID(id string) (models.Product, error) {
 	var product models.Product
-	if err := r.db.Preload("Related", "is_published = ?", true).
+	if err := r.db.Preload("Related", "is_published = ?", true).Preload("Categories").
 		Where("products.is_published = ?", true).
 		Where(publicCatalogVariantVisibilityClause).
 		First(&product, id).Error; err != nil {
@@ -259,7 +322,7 @@ func (r *Repository) GetPublicProductByID(id string) (models.Product, error) {
 
 func (r *Repository) GetPreviewProductByID(id string) (models.Product, error) {
 	var product models.Product
-	if err := r.db.Preload("Related").First(&product, id).Error; err != nil {
+	if err := r.db.Preload("Related").Preload("Categories").First(&product, id).Error; err != nil {
 		return models.Product{}, err
 	}
 	return product, nil

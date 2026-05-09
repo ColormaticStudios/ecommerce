@@ -1,6 +1,7 @@
 import type { components } from "$lib/api/generated/openapi";
 import type {
 	BrandModel,
+	CategoryModel,
 	CheckoutOrderTrackingModel,
 	CartItemModel,
 	CartModel,
@@ -105,6 +106,23 @@ export function makeBrand(overrides: Partial<BrandModel> = {}): BrandModel {
 	);
 }
 
+export function makeCategory(overrides: Partial<CategoryModel> = {}): CategoryModel {
+	return merge(
+		{
+			id: 1,
+			name: "Apparel",
+			slug: "apparel",
+			description: "Wearable products grouped for merchandising.",
+			is_active: true,
+			sort_order: 0,
+			parent_id: null,
+			path: "/apparel",
+			depth: 0,
+		},
+		overrides
+	);
+}
+
 export function makeVariant(overrides: Partial<ProductVariantModel> = {}): ProductVariantModel {
 	return merge(
 		{
@@ -162,6 +180,7 @@ export function makeProduct(overrides: Partial<ProductModel> = {}): ProductModel
 			options: [],
 			variants: [variant],
 			attributes: [],
+			categories: [makeCategory()],
 			seo: {
 				title: null,
 				description: null,
@@ -439,8 +458,16 @@ export function makeCheckoutPlugin(overrides: Partial<CheckoutPlugin> = {}): Che
 			fields: [
 				makeCheckoutField({ key: "cardholder_name", label: "Cardholder name" }),
 				makeCheckoutField({ key: "card_number", label: "Card number" }),
-				makeCheckoutField({ key: "exp_month", label: "Exp month", type: "number" }),
-				makeCheckoutField({ key: "exp_year", label: "Exp year", type: "number" }),
+				makeCheckoutField({
+					key: "exp_month",
+					label: "Exp month",
+					type: "number",
+				}),
+				makeCheckoutField({
+					key: "exp_year",
+					label: "Exp year",
+					type: "number",
+				}),
 			],
 			states: [],
 		},
@@ -471,7 +498,11 @@ export function makeCheckoutCatalog(
 					fields: [
 						makeCheckoutField({ key: "full_name", label: "Recipient name" }),
 						makeCheckoutField({ key: "line1", label: "Address line 1" }),
-						makeCheckoutField({ key: "line2", label: "Address line 2", required: false }),
+						makeCheckoutField({
+							key: "line2",
+							label: "Address line 2",
+							required: false,
+						}),
 						makeCheckoutField({ key: "city", label: "City" }),
 						makeCheckoutField({ key: "state", label: "State/Province" }),
 						makeCheckoutField({ key: "postal_code", label: "Postal code" }),
@@ -493,7 +524,11 @@ export function makeCheckoutCatalog(
 					name: "Dummy Pickup",
 					description: "Collect pickup instructions only.",
 					fields: [
-						makeCheckoutField({ key: "pickup_code", label: "Pickup code", required: false }),
+						makeCheckoutField({
+							key: "pickup_code",
+							label: "Pickup code",
+							required: false,
+						}),
 					],
 				}),
 			],

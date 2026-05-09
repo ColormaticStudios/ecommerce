@@ -85,6 +85,9 @@ const inventoryDisciplineP2Version = "2026032403_inventory_discipline_p2_alerts"
 const inventoryDisciplineP3Version = "2026032404_inventory_discipline_p3_purchase_orders"
 const inventoryDisciplineP4Version = "2026032405_inventory_discipline_p4_adjustments"
 const websiteSettingsVersion = "2026042701_website_settings"
+const productCategoriesP0Version = "2026050701_product_categories_p0"
+const productCategoriesP1Version = "2026050702_product_categories_p1_assignment"
+const productCategoriesP3Version = "2026050703_product_categories_p3_hardening"
 const migrationStepAlertThresholdEnvVar = "MIGRATIONS_STEP_ALERT_THRESHOLD_MS"
 
 var versionPattern = regexp.MustCompile(`^\d{10}_[a-z0-9_]+$`)
@@ -965,6 +968,91 @@ var orderedMigrations = []Migration{
 				return err
 			}
 			return stripStorefrontCheckoutSettings(tx)
+		},
+	},
+	{
+		Version:         productCategoriesP0Version,
+		Name:            "add product category hierarchy",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "catalog"},
+		PostChecks: []PostCheck{
+			{
+				Name: "categories_table_exists",
+				Check: func(tx *gorm.DB) error {
+					if !tx.Migrator().HasTable(&models.Category{}) {
+						return fmt.Errorf("missing migrated table for %T", &models.Category{})
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			return ops.CreateTableIfNotExists(tx, &models.Category{})
+		},
+	},
+	{
+		Version:         productCategoriesP1Version,
+		Name:            "add product category assignments",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "catalog"},
+		PostChecks: []PostCheck{
+			{
+				Name: "product_category_assignment_tables_exist",
+				Check: func(tx *gorm.DB) error {
+					if !tx.Migrator().HasTable(&models.ProductCategory{}) {
+						return fmt.Errorf("missing table for %T", &models.ProductCategory{})
+					}
+					if !tx.Migrator().HasTable(&models.ProductCategoryDraft{}) {
+						return fmt.Errorf("missing table for %T", &models.ProductCategoryDraft{})
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			for _, model := range []any{
+				&models.ProductCategory{},
+				&models.ProductCategoryDraft{},
+			} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         productCategoriesP3Version,
+		Name:            "add product category integrity indexes",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "catalog"},
+		PostChecks: []PostCheck{
+			{
+				Name: "product_category_lookup_indexes_exist",
+				Check: func(tx *gorm.DB) error {
+					for _, index := range []string{
+						"idx_product_categories_product_category",
+						"idx_product_categories_category_product",
+					} {
+						if !tx.Migrator().HasIndex("product_categories", index) {
+							return fmt.Errorf("missing product_categories index %s", index)
+						}
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			statements := []string{
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_product_categories_product_category ON product_categories (product_id, category_id)`,
+				`CREATE INDEX IF NOT EXISTS idx_product_categories_category_product ON product_categories (category_id, product_id)`,
+			}
+			for _, statement := range statements {
+				if err := tx.Exec(statement).Error; err != nil {
+					return err
+				}
+			}
+			return nil
 		},
 	},
 }
