@@ -199,7 +199,6 @@ function parseDate(value: string | Date | null | undefined): Date | null {
 	return Number.isNaN(parsed.valueOf()) ? null : parsed;
 }
 
-// The argument `product` is technically not a product, the dates are strings. It's close enough though.
 export function parseProduct(product: ProductPayload): ProductModel {
 	const coverImage = product.cover_image ?? product.images?.[0] ?? null;
 	return {
