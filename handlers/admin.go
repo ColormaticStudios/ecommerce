@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"slices"
 	"time"
 
 	"ecommerce/internal/apicontract"
@@ -295,11 +296,9 @@ func UpdateProductRelated(db *gorm.DB, mediaService *media.Service) gin.HandlerF
 			return
 		}
 
-		for _, relatedID := range req.RelatedIDs {
-			if relatedID == product.ID {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Product cannot be related to itself"})
-				return
-			}
+		if slices.Contains(req.RelatedIDs, product.ID) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Product cannot be related to itself"})
+			return
 		}
 
 		if err := db.Transaction(func(tx *gorm.DB) error {
