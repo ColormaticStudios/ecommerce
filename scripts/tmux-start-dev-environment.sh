@@ -1,14 +1,50 @@
 #!/usr/bin/env bash
 set -e
 
+
+wait_for_dev_db() {
+  local container="ecommerce-db"
+  local state
+  local status
+
+  state="$(sudo docker inspect -f '{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}}' "$container" 2>/dev/null || true)"
+
+  if [ "$state" = "running healthy" ]; then
+    return 0
+  fi
+
+  if [[ "$state" == exited* || "$state" == dead* ]]; then
+    echo "Dev DB container stopped before becoming healthy" >&2
+    return 1
+  fi
+
+  while read -r status; do
+    case "$status" in
+      "health_status: healthy")
+        return 0
+        ;;
+      "die")
+        echo "Dev DB container stopped before becoming healthy" >&2
+        return 1
+        ;;
+    esac
+  done < <(
+    sudo docker events \
+      --filter container="$container" \
+      --filter event=health_status \
+      --filter event=die \
+      --format '{{.Status}}'
+  )
+}
+
+
 echo "Starting Docker Daemon..."
 sudo systemctl start docker
 
 echo "Starting dev DB..."
 tmux new-session -d -s "ecommerce-dev" -n "database" 'sudo scripts/run-dev-db-docker.sh'
 
-# Wait for Postgres to initialize (technically a race condition, but easier this way)
-sleep 5
+wait_for_dev_db
 
 echo "Running database migrations..."
 make migrate

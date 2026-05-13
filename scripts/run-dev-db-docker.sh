@@ -2,4 +2,15 @@
 
 # Set the database URL in .env to postgresql://ecommerce:123@localhost:5432/ecommerce
 
-docker run --rm --name=ecommerce-db -p 5432:5432 -e POSTGRES_USER=ecommerce -e POSTGRES_DB=ecommerce -e POSTGRES_PASSWORD=123 docker.io/postgres
+docker run \
+	--rm \
+	--name=ecommerce-db \
+	-p 5432:5432 \
+	-e POSTGRES_USER=ecommerce \
+	-e POSTGRES_DB=ecommerce \
+	-e POSTGRES_PASSWORD=123 \
+	--health-cmd='pg_isready  -U ecommerce -d ecommerce' \
+	--health-interval=0.25s \
+	--health-timeout=5s \
+	--health-retries=50 \
+	docker.io/postgres
