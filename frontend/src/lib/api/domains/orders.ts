@@ -22,6 +22,8 @@ type CheckoutOrderShippingRatesResponse =
 	components["schemas"]["CheckoutOrderShippingRatesResponse"];
 type CheckoutOrderTaxFinalizeRequest = components["schemas"]["CheckoutOrderTaxFinalizeRequest"];
 type CheckoutOrderTaxFinalizeResponse = components["schemas"]["CheckoutOrderTaxFinalizeResponse"];
+type ClaimGuestOrderRequest = components["schemas"]["ClaimGuestOrderRequest"];
+type ClaimGuestOrderResponse = components["schemas"]["ClaimGuestOrderResponse"];
 type OrderPayload = components["schemas"]["Order"];
 type OrderPagePayload = components["schemas"]["OrderPage"];
 type ListUserOrdersQuery = paths["/api/v1/me/orders"]["get"]["parameters"]["query"];
@@ -124,4 +126,15 @@ export async function getOrderDetails(request: RequestFn, orderId: number): Prom
 export async function cancelOrder(request: RequestFn, orderId: number): Promise<OrderModel> {
 	const response = await request<OrderPayload>("POST", `/me/orders/${orderId}/cancel`);
 	return parseOrder(response);
+}
+
+export async function claimGuestOrder(
+	request: RequestFn,
+	data: ClaimGuestOrderRequest
+): Promise<{ message: string; order: OrderModel }> {
+	const response = await request<ClaimGuestOrderResponse>("POST", "/me/orders/claim", data);
+	return {
+		message: response.message,
+		order: parseOrder(response.order),
+	};
 }

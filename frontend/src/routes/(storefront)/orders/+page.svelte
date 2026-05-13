@@ -218,6 +218,16 @@
 		<div>
 			<h1 class="text-3xl font-semibold text-gray-900 dark:text-gray-100">Your Orders</h1>
 		</div>
+		{#if isAuthenticated}
+			<ButtonLink
+				variant="regular"
+				href={resolve("/orders/claim")}
+				class="inline-flex items-center gap-2"
+			>
+				<i class="bi bi-receipt" aria-hidden="true"></i>
+				Claim guest order
+			</ButtonLink>
+		{/if}
 	</div>
 
 	{#if isAuthenticated}

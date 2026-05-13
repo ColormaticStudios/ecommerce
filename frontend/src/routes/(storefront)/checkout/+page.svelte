@@ -88,8 +88,13 @@
 	const activePaymentProvider = $derived(findProvider("payment", selectedPaymentProviderId));
 	const activeShippingProvider = $derived(findProvider("shipping", selectedShippingProviderId));
 	const activeTaxProvider = $derived(findProvider("tax", autoTaxProviderId));
-	const claimGuestOrderHref = `${resolve("/login")}?redirect=${encodeURIComponent("/orders")}`;
 	const currentSnapshotId = $derived(quote?.snapshot_id ?? null);
+	const claimGuestOrderHref = $derived(
+		`${resolve("/orders/claim")}?${new URLSearchParams({
+			email: order?.guest_email ?? guestEmail.trim(),
+			token: order?.confirmation_token ?? "",
+		}).toString()}`
+	);
 	const subtotal = $derived(
 		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.product_variant.price, 0) : 0
 	);
@@ -1208,6 +1213,11 @@
 								<p class="mt-2 text-emerald-900/80 dark:text-emerald-100/80">
 									Order confirmation was sent to {order.guest_email ?? guestEmail.trim()}.
 								</p>
+								<div class="mt-4">
+									<ButtonLink href={claimGuestOrderHref} variant="primary">
+										Claim This Order
+									</ButtonLink>
+								</div>
 							</div>
 						{/if}
 					{/if}

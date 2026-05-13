@@ -1083,6 +1083,12 @@ export class API {
 		return ordersDomain.cancelOrder(this.request.bind(this), orderId);
 	}
 
+	public async claimGuestOrder(
+		data: components["schemas"]["ClaimGuestOrderRequest"]
+	): Promise<{ message: string; order: OrderModel }> {
+		return ordersDomain.claimGuestOrder(this.request.bind(this), data);
+	}
+
 	// Admin Order Management
 	public async listAdminOrders(params?: ListAdminOrdersQuery): Promise<{
 		data: OrderModel[];
