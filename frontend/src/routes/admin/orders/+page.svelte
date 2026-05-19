@@ -17,9 +17,11 @@
 	} from "$lib/admin/state.svelte";
 	import Badge from "$lib/components/Badge.svelte";
 	import Button from "$lib/components/Button.svelte";
+	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import { formatOrderStatusLabel, getOrderStatusTone } from "$lib/components/order-status";
 	import { type OrderModel, type UserModel } from "$lib/models";
 	import { formatPrice } from "$lib/utils";
+	import { resolve } from "$app/paths";
 	import type { PageData } from "./$types";
 
 	interface Props {
@@ -238,6 +240,13 @@
 									{formatOrderStatusLabel(order.status)}
 								</Badge>
 								<div class="flex flex-wrap justify-end gap-2">
+									<ButtonLink
+										href={resolve(`/admin/orders/${order.id}`)}
+										tone="admin"
+										variant="primary"
+										size="small"
+										class="rounded-full">View</ButtonLink
+									>
 									<Button
 										tone="admin"
 										variant="regular"

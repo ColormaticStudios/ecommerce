@@ -80,6 +80,13 @@ type BrandInput = components["schemas"]["BrandInput"];
 type CategoryInput = components["schemas"]["CategoryInput"];
 type ProductAttributeDefinitionInput = components["schemas"]["ProductAttributeDefinitionInput"];
 type OrderPagePayload = components["schemas"]["OrderPage"];
+type OrderPaymentLedger = components["schemas"]["OrderPaymentLedger"];
+type AdminOrderPaymentAmountRequest = components["schemas"]["AdminOrderPaymentAmountRequest"];
+type AdminOrderPaymentLifecycleResponse =
+	components["schemas"]["AdminOrderPaymentLifecycleResponse"];
+type AdminOrderPaymentLifecycleModel = Omit<AdminOrderPaymentLifecycleResponse, "order"> & {
+	order: OrderModel;
+};
 type UserPagePayload = components["schemas"]["UserPage"];
 type UpdateOrderStatusRequest = components["schemas"]["UpdateOrderStatusRequest"];
 type StorefrontSettingsRequest = components["schemas"]["StorefrontSettingsRequest"];
@@ -1109,6 +1116,47 @@ export class API {
 	public async getAdminOrderDetails(orderId: number): Promise<OrderModel> {
 		const response = await this.request<OrderPayload>("GET", `/admin/orders/${orderId}`);
 		return parseOrder(response);
+	}
+
+	public async getAdminOrderPayments(orderId: number): Promise<OrderPaymentLedger> {
+		return await this.request<OrderPaymentLedger>("GET", `/admin/orders/${orderId}/payments`);
+	}
+
+	public async captureAdminOrderPayment(
+		orderId: number,
+		intentId: number,
+		data: AdminOrderPaymentAmountRequest = {}
+	): Promise<AdminOrderPaymentLifecycleModel> {
+		const response = await this.request<AdminOrderPaymentLifecycleResponse>(
+			"POST",
+			`/admin/orders/${orderId}/payments/${intentId}/capture`,
+			data
+		);
+		return { ...response, order: parseOrder(response.order) };
+	}
+
+	public async voidAdminOrderPayment(
+		orderId: number,
+		intentId: number
+	): Promise<AdminOrderPaymentLifecycleModel> {
+		const response = await this.request<AdminOrderPaymentLifecycleResponse>(
+			"POST",
+			`/admin/orders/${orderId}/payments/${intentId}/void`
+		);
+		return { ...response, order: parseOrder(response.order) };
+	}
+
+	public async refundAdminOrderPayment(
+		orderId: number,
+		intentId: number,
+		data: AdminOrderPaymentAmountRequest = {}
+	): Promise<AdminOrderPaymentLifecycleModel> {
+		const response = await this.request<AdminOrderPaymentLifecycleResponse>(
+			"POST",
+			`/admin/orders/${orderId}/payments/${intentId}/refund`,
+			data
+		);
+		return { ...response, order: parseOrder(response.order) };
 	}
 
 	public async updateOrderStatus(
