@@ -1,4 +1,4 @@
-.PHONY: all api cli run test test-services test-handlers test-integration check clean release openapi-gen openapi-check openapi-docs migrate migrate-plan migrate-check migrate-status migrate-lint migrate-guard migrate-snapshot migrate-drift-check migrate-ci-gate migrate-forward-compat test-migrations test-e2e-postgres test-e2e-sqlite
+.PHONY: all api cli run test test-services test-handlers test-integration check clean release openapi-gen openapi-check openapi-check-ci openapi-docs migrate migrate-plan migrate-check migrate-status migrate-lint migrate-guard migrate-snapshot migrate-drift-check migrate-ci-gate migrate-forward-compat test-migrations test-e2e-postgres test-e2e-sqlite
 
 # Build the API server and the CLI tool
 all: api cli
@@ -90,14 +90,13 @@ test-e2e-sqlite:
 openapi-gen:
 	@./scripts/generate-api-contracts.sh
 
-# Ensure generated contract files are up to date
+# Ensure generated contract files match the working tree
 openapi-check:
-	@./scripts/generate-api-contracts.sh
-	@if [ -n "$$(git status --porcelain -- internal/apicontract/openapi.gen.go frontend/src/lib/api/generated/openapi.ts)" ]; then \
-		echo "Generated API contract files are out of date."; \
-		git --no-pager diff -- internal/apicontract/openapi.gen.go frontend/src/lib/api/generated/openapi.ts; \
-		exit 1; \
-	fi
+	@./scripts/check-api-contracts-dev.sh
+
+# CI clean-tree guard for generated contract files
+openapi-check-ci:
+	@./scripts/check-api-contracts-ci.sh
 
 # Generate API documentation from OpenAPI
 openapi-docs:

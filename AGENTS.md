@@ -68,8 +68,7 @@ don’t run `bun run check` in parallel with Playwright (the E2E test) in this f
 - Commit generated files:
   - `internal/apicontract/openapi.gen.go`
   - `frontend/src/lib/api/generated/openapi.ts`
-- Run `make openapi-check` before finishing to ensure generated files are up to date.
-- `make openapi-check` is a clean-tree guard against `HEAD`, not just a regeneration smoke test. If those generated files are intentionally uncommitted in your working tree, it will still fail after a fresh `make openapi-gen`.
+- Run `make openapi-check` before finishing to ensure generated files match the working tree.
 - Prefer generated types in backend/frontend code over hand-written duplicate API payload interfaces.
 
 ## Svelte Effect Safety

@@ -103,6 +103,14 @@ bun run check
 bun run lint
 ```
 
+OpenAPI contract workflow:
+
+```bash
+make openapi-gen       # regenerate backend and frontend contract types
+make openapi-check # local idempotence check
+make openapi-check-ci  # CI clean-tree check against HEAD
+```
+
 Database migrations:
 
 ```bash
