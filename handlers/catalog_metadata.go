@@ -97,8 +97,13 @@ func brandToContract(brand models.Brand) apicontract.Brand {
 }
 
 func productAttributeToContract(attribute models.ProductAttribute) apicontract.ProductAttributeDefinition {
+	enumValues := []string(attribute.EnumValues)
+	if enumValues == nil {
+		enumValues = []string{}
+	}
 	return apicontract.ProductAttributeDefinition{
 		Filterable: attribute.Filterable,
+		EnumValues: enumValues,
 		Id:         int(attribute.ID),
 		Key:        attribute.Key,
 		Slug:       attribute.Slug,
@@ -677,6 +682,14 @@ func validateProductAttributeDefinitionInput(
 
 	filterable := input.Filterable != nil && *input.Filterable
 	sortable := input.Sortable != nil && *input.Sortable
+	if sortable && attrType != "number" {
+		return models.ProductAttribute{}, errors.New("Only number attributes can be sortable")
+	}
+
+	enumValues, err := normalizeProductAttributeEnumValues(attrType, input.EnumValues)
+	if err != nil {
+		return models.ProductAttribute{}, err
+	}
 
 	var slugCount int64
 	if err := tx.Model(&models.ProductAttribute{}).
@@ -704,7 +717,36 @@ func validateProductAttributeDefinitionInput(
 		Type:       attrType,
 		Filterable: filterable,
 		Sortable:   sortable,
+		EnumValues: enumValues,
 	}, nil
+}
+
+func normalizeProductAttributeEnumValues(attrType string, values *[]string) (models.StringArray, error) {
+	if attrType != "enum" {
+		return nil, nil
+	}
+	if values == nil || len(*values) == 0 {
+		return nil, errors.New("Enum attributes require at least one allowed value")
+	}
+
+	result := make(models.StringArray, 0, len(*values))
+	seen := map[string]struct{}{}
+	for _, raw := range *values {
+		value := strings.TrimSpace(raw)
+		if value == "" {
+			return nil, errors.New("Enum attribute values cannot be blank")
+		}
+		if len(value) > maxAttributeKeyLength {
+			return nil, errors.New("Enum attribute values must be 120 characters or less")
+		}
+		lookup := strings.ToLower(value)
+		if _, exists := seen[lookup]; exists {
+			return nil, errors.New("Enum attribute values must be unique")
+		}
+		seen[lookup] = struct{}{}
+		result = append(result, value)
+	}
+	return result, nil
 }
 
 func CreateAdminProductAttribute(db *gorm.DB) gin.HandlerFunc {
@@ -754,6 +796,7 @@ func UpdateAdminProductAttribute(db *gorm.DB) gin.HandlerFunc {
 		attribute.Type = normalized.Type
 		attribute.Filterable = normalized.Filterable
 		attribute.Sortable = normalized.Sortable
+		attribute.EnumValues = normalized.EnumValues
 
 		if err := db.Save(&attribute).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product attribute"})

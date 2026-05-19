@@ -4337,11 +4337,12 @@ func TestAdminProductAttributeCRUD(t *testing.T) {
 		http.MethodPatch,
 		fmt.Sprintf("/api/v1/admin/product-attributes/%d", created.Id),
 		map[string]any{
-			"key":        "Material Type",
-			"slug":       "material-type",
-			"type":       "enum",
-			"filterable": true,
-			"sortable":   true,
+			"key":         "Material Type",
+			"slug":        "material-type",
+			"type":        "enum",
+			"filterable":  true,
+			"sortable":    false,
+			"enum_values": []string{"Cotton", "Wool"},
 		},
 		adminToken,
 	)
@@ -4349,7 +4350,23 @@ func TestAdminProductAttributeCRUD(t *testing.T) {
 	updated := decodeJSON[apicontract.ProductAttributeDefinition](t, updateResp)
 	assert.Equal(t, "material-type", updated.Slug)
 	assert.Equal(t, apicontract.ProductAttributeDefinitionTypeEnum, updated.Type)
-	assert.True(t, updated.Sortable)
+	assert.False(t, updated.Sortable)
+	assert.Equal(t, []string{"Cotton", "Wool"}, updated.EnumValues)
+
+	invalidEnumResp := performJSONRequest(
+		t,
+		r,
+		http.MethodPatch,
+		fmt.Sprintf("/api/v1/admin/product-attributes/%d", created.Id),
+		map[string]any{
+			"key":        "Material Type",
+			"slug":       "material-type",
+			"type":       "enum",
+			"filterable": true,
+		},
+		adminToken,
+	)
+	require.Equal(t, http.StatusBadRequest, invalidEnumResp.Code)
 
 	listResp := performJSONRequest(t, r, http.MethodGet, "/api/v1/admin/product-attributes", nil, adminToken)
 	require.Equal(t, http.StatusOK, listResp.Code)

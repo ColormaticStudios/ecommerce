@@ -31,13 +31,13 @@ const publishedProduct = makeProduct({
 		},
 		{
 			product_attribute_id: 2,
-			key: "waterproof",
-			slug: "waterproof",
-			type: "boolean",
+			key: "fit",
+			slug: "fit",
+			type: "enum",
 			text_value: null,
 			number_value: null,
-			boolean_value: true,
-			enum_value: null,
+			boolean_value: null,
+			enum_value: "Regular",
 			position: 2,
 		},
 	],
@@ -68,7 +68,13 @@ function createData(overrides: Partial<AdminProductData> = {}): AdminProductData
 function createEditorApi(product = publishedProduct) {
 	const definitions = [
 		makeAttributeDefinition(),
-		makeAttributeDefinition({ id: 2, key: "waterproof", slug: "waterproof", type: "boolean" }),
+		makeAttributeDefinition({
+			id: 2,
+			key: "fit",
+			slug: "fit",
+			type: "enum",
+			enum_values: ["Regular", "Slim", "Relaxed"],
+		}),
 		makeAttributeDefinition({
 			id: 3,
 			key: "weight",
@@ -77,7 +83,7 @@ function createEditorApi(product = publishedProduct) {
 			filterable: false,
 			sortable: true,
 		}),
-		makeAttributeDefinition({ id: 4, key: "fit", slug: "fit", type: "enum" }),
+		makeAttributeDefinition({ id: 4, key: "waterproof", slug: "waterproof", type: "boolean" }),
 	];
 
 	return createApiStub({
@@ -91,6 +97,7 @@ function createEditorApi(product = publishedProduct) {
 				type: input.type,
 				filterable: input.filterable ?? false,
 				sortable: input.sortable ?? false,
+				enum_values: input.enum_values ?? [],
 			}),
 		updateAdminProductAttribute: async (id, input) =>
 			makeAttributeDefinition({
@@ -100,6 +107,7 @@ function createEditorApi(product = publishedProduct) {
 				type: input.type,
 				filterable: input.filterable ?? false,
 				sortable: input.sortable ?? false,
+				enum_values: input.enum_values ?? [],
 			}),
 		deleteAdminProductAttribute: async () => ({ message: "deleted" }),
 		getAdminPreviewSession: async () => makeDraftPreviewSession(),

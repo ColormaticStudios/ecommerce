@@ -59,17 +59,18 @@ func newListProductAttributesCmd() *cobra.Command {
 				return nil
 			}
 
-			fmt.Printf("%-5s %-24s %-24s %-10s %-10s %-10s\n", "ID", "Key", "Slug", "Type", "Filter", "Sort")
-			fmt.Println("--------------------------------------------------------------------------------")
+			fmt.Printf("%-5s %-24s %-24s %-10s %-10s %-10s %s\n", "ID", "Key", "Slug", "Type", "Filter", "Sort", "Enum values")
+			fmt.Println("------------------------------------------------------------------------------------------------")
 			for _, attribute := range resp.Data {
 				fmt.Printf(
-					"%-5d %-24s %-24s %-10s %-10t %-10t\n",
+					"%-5d %-24s %-24s %-10s %-10t %-10t %s\n",
 					attribute.Id,
 					attribute.Key,
 					attribute.Slug,
 					attribute.Type,
 					attribute.Filterable,
 					attribute.Sortable,
+					strings.Join(attribute.EnumValues, ", "),
 				)
 			}
 			return nil
@@ -197,6 +198,7 @@ type productAttributeInputFlags struct {
 	key        string
 	slug       string
 	attrType   string
+	enumValues []string
 	filterable bool
 	sortable   bool
 }
@@ -205,6 +207,7 @@ func (f *productAttributeInputFlags) bind(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&f.key, "key", "", "Product attribute key")
 	cmd.Flags().StringVar(&f.slug, "slug", "", "Product attribute slug")
 	cmd.Flags().StringVar(&f.attrType, "type", "", "Product attribute type: text, number, boolean, enum")
+	cmd.Flags().StringSliceVar(&f.enumValues, "enum-value", nil, "Allowed enum value; repeat or comma-separate for enum attributes")
 	cmd.Flags().BoolVar(&f.filterable, "filterable", false, "Whether the attribute is filterable")
 	cmd.Flags().BoolVar(&f.sortable, "sortable", false, "Whether the attribute is sortable")
 }
@@ -215,8 +218,17 @@ func (f productAttributeInputFlags) toContract(cmd *cobra.Command) apicontract.P
 		value := strings.TrimSpace(f.slug)
 		slug = &value
 	}
+	var enumValues *[]string
+	if cmd.Flags().Changed("enum-value") {
+		values := make([]string, 0, len(f.enumValues))
+		for _, value := range f.enumValues {
+			values = append(values, strings.TrimSpace(value))
+		}
+		enumValues = &values
+	}
 
 	return apicontract.ProductAttributeDefinitionInput{
+		EnumValues: enumValues,
 		Filterable: parseBoolPointerSet(cmd, "filterable", f.filterable),
 		Key:        strings.TrimSpace(f.key),
 		Slug:       slug,

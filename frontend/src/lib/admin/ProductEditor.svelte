@@ -160,6 +160,7 @@
 	let attributeDefinitionType = $state<ProductAttributeDefinitionModel["type"]>("text");
 	let attributeDefinitionFilterable = $state(true);
 	let attributeDefinitionSortable = $state(false);
+	let attributeDefinitionEnumValuesText = $state("");
 	let defaultVariantSku = $state("");
 	let mediaFiles = $state<FileList | null>(null);
 	let mediaInputRef = $state<HTMLInputElement | null>(null);
@@ -740,6 +741,7 @@
 		attributeDefinitionType = "text";
 		attributeDefinitionFilterable = true;
 		attributeDefinitionSortable = false;
+		attributeDefinitionEnumValuesText = "";
 	}
 
 	function editAttributeDefinition(definition: ProductAttributeDefinitionModel) {
@@ -749,6 +751,7 @@
 		attributeDefinitionType = definition.type;
 		attributeDefinitionFilterable = definition.filterable;
 		attributeDefinitionSortable = definition.sortable;
+		attributeDefinitionEnumValuesText = (definition.enum_values ?? []).join("\n");
 		attributeDefinitionErrorMessage = "";
 		attributeDefinitionStatusMessage = "";
 	}
@@ -758,6 +761,13 @@
 		if (nextType !== "number") {
 			attributeDefinitionSortable = false;
 		}
+	}
+
+	function parseAttributeDefinitionEnumValues(): string[] {
+		return attributeDefinitionEnumValuesText
+			.split(/\r?\n|,/)
+			.map((value) => asTrimmedString(value))
+			.filter((value) => value !== "");
 	}
 
 	function buildAttributeDefinitionPayload(): ProductAttributeDefinitionInput | null {
@@ -774,12 +784,26 @@
 			return null;
 		}
 
+		const enumValues = parseAttributeDefinitionEnumValues();
+		if (attributeDefinitionType === "enum" && enumValues.length === 0) {
+			attributeDefinitionErrorMessage = "Enum attributes need at least one allowed value.";
+			return null;
+		}
+		const normalizedEnumValues = enumValues.map((value) => value.toLowerCase());
+		if (
+			normalizedEnumValues.some((value, index) => normalizedEnumValues.indexOf(value) !== index)
+		) {
+			attributeDefinitionErrorMessage = "Enum attribute values must be unique.";
+			return null;
+		}
+
 		return {
 			key,
 			slug: slug || undefined,
 			type: attributeDefinitionType,
 			filterable: attributeDefinitionFilterable,
 			sortable: attributeDefinitionSortable,
+			enum_values: attributeDefinitionType === "enum" ? enumValues : [],
 		};
 	}
 
@@ -805,7 +829,14 @@
 						);
 			attributeValues = attributeValues.map((attribute) =>
 				Number(attribute.product_attribute_id) === saved.id
-					? { ...attribute, type: saved.type }
+					? {
+							...attribute,
+							type: saved.type,
+							enum_value:
+								saved.type === "enum" && saved.enum_values.includes(attribute.enum_value)
+									? attribute.enum_value
+									: "",
+						}
 					: attribute
 			);
 			attributeDefinitionStatusMessage =
@@ -874,6 +905,14 @@
 			}
 			if (attribute.type === "enum" && asTrimmedString(attribute.enum_value) === "") {
 				return "Enum attributes need a value.";
+			}
+			const definition = attributeDefinitionById(attribute.product_attribute_id);
+			if (
+				attribute.type === "enum" &&
+				definition &&
+				!definition.enum_values.includes(asTrimmedString(attribute.enum_value))
+			) {
+				return "Enum attributes need one of the allowed values.";
 			}
 		}
 		return null;
@@ -2108,6 +2147,7 @@
 		{:else}
 			<div class={editorCollectionClass(layoutMode)}>
 				{#each attributeValues as attribute, attributeIndex (attribute.key)}
+					{@const definition = attributeDefinitionById(attribute.product_attribute_id)}
 					<div class={editorItemClass(layoutMode)}>
 						<div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
 							<div class="grid gap-4 sm:grid-cols-2">
@@ -2153,13 +2193,17 @@
 											Enabled
 										</label>
 									{:else if attribute.type === "enum"}
-										<TextInput
+										<Dropdown
 											tone="admin"
 											class="mt-1"
-											type="text"
 											aria-label={`Attribute ${attributeIndex + 1} enum value`}
 											bind:value={attribute.enum_value}
-										/>
+										>
+											<option value="">Select value</option>
+											{#each definition?.enum_values ?? [] as enumValue (enumValue)}
+												<option value={enumValue}>{enumValue}</option>
+											{/each}
+										</Dropdown>
 									{:else}
 										<TextInput
 											tone="admin"
@@ -2274,6 +2318,18 @@
 						<option value="enum">Enum</option>
 					</Dropdown>
 				</div>
+				{#if attributeDefinitionType === "enum"}
+					<div>
+						<AdminFieldLabel>Allowed values</AdminFieldLabel>
+						<TextArea
+							tone="admin"
+							class="mt-1 min-h-24"
+							aria-label="Attribute definition enum values"
+							placeholder="One value per line"
+							bind:value={attributeDefinitionEnumValuesText}
+						/>
+					</div>
+				{/if}
 				<div class="flex flex-col justify-end gap-2 pt-2">
 					<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
 						<input type="checkbox" bind:checked={attributeDefinitionFilterable} />
@@ -2319,6 +2375,9 @@
 								>
 									<span>{definition.slug}</span>
 									<span>{definition.type}</span>
+									{#if definition.type === "enum" && definition.enum_values.length}
+										<span>{definition.enum_values.join(", ")}</span>
+									{/if}
 									{#if definition.filterable}
 										<span>filterable</span>
 									{/if}

@@ -434,6 +434,7 @@ TABLE product_attribute_values
 TABLE product_attributes
   COLUMN created_at
   COLUMN deleted_at
+  COLUMN enum_values
   COLUMN filterable
   COLUMN id
   COLUMN key

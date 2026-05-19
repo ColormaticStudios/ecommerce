@@ -105,6 +105,7 @@ export function parseProductAttributeDefinition(
 		type: attribute.type,
 		filterable: attribute.filterable,
 		sortable: attribute.sortable,
+		enum_values: attribute.enum_values ?? [],
 	};
 }
 
@@ -286,6 +287,7 @@ export interface ProductAttributeDefinitionModel {
 	type: "text" | "number" | "boolean" | "enum";
 	filterable: boolean;
 	sortable: boolean;
+	enum_values: string[];
 }
 
 export interface ProductOptionValueModel {

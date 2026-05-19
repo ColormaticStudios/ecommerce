@@ -411,6 +411,7 @@ export function makeAttributeDefinition(
 			type: "text",
 			filterable: true,
 			sortable: false,
+			enum_values: [],
 		},
 		overrides
 	);

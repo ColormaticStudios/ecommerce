@@ -3318,7 +3318,7 @@ components:
 
     ProductAttributeDefinition:
       type: object
-      required: [id, key, slug, type, filterable, sortable]
+      required: [id, key, slug, type, filterable, sortable, enum_values]
       properties:
         id:
           type: integer
@@ -3334,6 +3334,10 @@ components:
           type: boolean
         sortable:
           type: boolean
+        enum_values:
+          type: array
+          items:
+            type: string
 
     ProductAttributeDefinitionInput:
       type: object
@@ -3354,6 +3358,12 @@ components:
           type: boolean
         sortable:
           type: boolean
+        enum_values:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 120
 
     ProductAttributeDefinitionListResponse:
       type: object

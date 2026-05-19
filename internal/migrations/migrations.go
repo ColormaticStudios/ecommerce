@@ -88,6 +88,7 @@ const websiteSettingsVersion = "2026042701_website_settings"
 const productCategoriesP0Version = "2026050701_product_categories_p0"
 const productCategoriesP1Version = "2026050702_product_categories_p1_assignment"
 const productCategoriesP3Version = "2026050703_product_categories_p3_hardening"
+const productAttributeEnumsVersion = "2026051801_product_attribute_enums"
 const migrationStepAlertThresholdEnvVar = "MIGRATIONS_STEP_ALERT_THRESHOLD_MS"
 
 var versionPattern = regexp.MustCompile(`^\d{10}_[a-z0-9_]+$`)
@@ -1055,6 +1056,86 @@ var orderedMigrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:         productAttributeEnumsVersion,
+		Name:            "add enum values to product attributes",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "catalog"},
+		PostChecks: []PostCheck{
+			{
+				Name: "product_attributes_enum_values_exists",
+				Check: func(tx *gorm.DB) error {
+					if !tx.Migrator().HasColumn(&models.ProductAttribute{}, "enum_values") {
+						return errors.New("product_attributes.enum_values column missing")
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			if err := ops.AddColumnIfNotExists(tx, "product_attributes", "enum_values", "TEXT"); err != nil {
+				return err
+			}
+			return backfillProductAttributeEnumValues(tx)
+		},
+	},
+}
+
+type productAttributeEnumBackfillRow struct {
+	ProductAttributeID uint
+	EnumValue          string
+}
+
+func backfillProductAttributeEnumValues(tx *gorm.DB) error {
+	queryDB := tx.Session(&gorm.Session{NewDB: true})
+
+	var rows []productAttributeEnumBackfillRow
+	if err := queryDB.Raw(`
+		SELECT product_attribute_id, enum_value
+		FROM product_attribute_values
+		WHERE enum_value IS NOT NULL AND TRIM(enum_value) <> ''
+		UNION ALL
+		SELECT product_attribute_id, enum_value
+		FROM product_attribute_value_drafts
+		WHERE enum_value IS NOT NULL AND TRIM(enum_value) <> ''
+	`).Scan(&rows).Error; err != nil {
+		return fmt.Errorf("backfill product attribute enum values: %w", err)
+	}
+
+	valuesByAttributeID := map[uint][]string{}
+	seenByAttributeID := map[uint]map[string]struct{}{}
+	for _, row := range rows {
+		value := strings.TrimSpace(row.EnumValue)
+		if row.ProductAttributeID == 0 || value == "" {
+			continue
+		}
+		if _, exists := seenByAttributeID[row.ProductAttributeID]; !exists {
+			seenByAttributeID[row.ProductAttributeID] = map[string]struct{}{}
+		}
+		lookup := strings.ToLower(value)
+		if _, exists := seenByAttributeID[row.ProductAttributeID][lookup]; exists {
+			continue
+		}
+		seenByAttributeID[row.ProductAttributeID][lookup] = struct{}{}
+		valuesByAttributeID[row.ProductAttributeID] = append(valuesByAttributeID[row.ProductAttributeID], value)
+	}
+
+	for attributeID, values := range valuesByAttributeID {
+		sort.Strings(values)
+		encoded, err := models.StringArray(values).Value()
+		if err != nil {
+			return fmt.Errorf("encode enum values for product attribute %d: %w", attributeID, err)
+		}
+		result := queryDB.Table("product_attributes").
+			Where("id = ? AND type = ?", attributeID, "enum").
+			Update("enum_values", encoded)
+		if result.Error != nil {
+			return fmt.Errorf("backfill enum values for product attribute %d: %w", attributeID, result.Error)
+		}
+		ops.AddRowsTouched(tx, result.RowsAffected)
+	}
+
+	return nil
 }
 
 func backfillInventoryItemsFromVariants(tx *gorm.DB) error {

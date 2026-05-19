@@ -450,6 +450,28 @@ func TestPublishNormalizedProductDraftSkipsDeletedChildren(t *testing.T) {
 	assert.Equal(t, cotton, *attributes[0].TextValue)
 }
 
+func TestValidateProductAttributesRejectsUnknownEnumValue(t *testing.T) {
+	db := newTestDB(t)
+
+	attribute := models.ProductAttribute{
+		Key:        "fit",
+		Slug:       "fit",
+		Type:       "enum",
+		EnumValues: models.StringArray{"Regular", "Slim"},
+	}
+	require.NoError(t, db.Create(&attribute).Error)
+
+	relaxed := "Relaxed"
+	err := validateProductAttributes(db, []productAttributeValueDraftData{
+		{
+			ProductAttributeID: attribute.ID,
+			EnumValue:          &relaxed,
+		},
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "enum value is not allowed")
+}
+
 func TestBuildProductContractExcludesUnpublishedVariants(t *testing.T) {
 	db := newTestDB(t)
 

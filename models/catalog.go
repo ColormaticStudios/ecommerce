@@ -70,11 +70,12 @@ type ProductVariantOptionValue struct {
 
 type ProductAttribute struct {
 	BaseModel
-	Key        string `json:"key" gorm:"uniqueIndex;not null"`
-	Slug       string `json:"slug" gorm:"uniqueIndex;not null"`
-	Type       string `json:"type" gorm:"not null"`
-	Filterable bool   `json:"filterable" gorm:"not null;default:false;index"`
-	Sortable   bool   `json:"sortable" gorm:"not null;default:false;index"`
+	Key        string      `json:"key" gorm:"uniqueIndex;not null"`
+	Slug       string      `json:"slug" gorm:"uniqueIndex;not null"`
+	Type       string      `json:"type" gorm:"not null"`
+	Filterable bool        `json:"filterable" gorm:"not null;default:false;index"`
+	Sortable   bool        `json:"sortable" gorm:"not null;default:false;index"`
+	EnumValues StringArray `json:"enum_values,omitempty" gorm:"type:text[]"`
 }
 
 type ProductAttributeValue struct {

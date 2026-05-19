@@ -479,9 +479,25 @@ func validateAttributeValue(definition models.ProductAttribute, value productAtt
 		if value.EnumValue == nil {
 			return fmt.Errorf("Attribute %q requires an enum value", definition.Key)
 		}
+		if !enumAttributeValueAllowed(definition.EnumValues, *value.EnumValue) {
+			return fmt.Errorf("Attribute %q enum value is not allowed", definition.Key)
+		}
 	default:
 		return fmt.Errorf("Attribute %q has unsupported type %q", definition.Key, definition.Type)
 	}
 
 	return nil
+}
+
+func enumAttributeValueAllowed(allowedValues models.StringArray, raw string) bool {
+	value := strings.TrimSpace(raw)
+	if value == "" || len(allowedValues) == 0 {
+		return false
+	}
+	for _, allowed := range allowedValues {
+		if strings.EqualFold(strings.TrimSpace(allowed), value) {
+			return true
+		}
+	}
+	return false
 }

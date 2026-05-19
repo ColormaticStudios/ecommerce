@@ -36,9 +36,10 @@ export const NewProduct: Story = {
 					makeAttributeDefinition(),
 					makeAttributeDefinition({
 						id: 2,
-						key: "waterproof",
-						slug: "waterproof",
-						type: "boolean",
+						key: "fit",
+						slug: "fit",
+						type: "enum",
+						enum_values: ["Regular", "Slim", "Relaxed"],
 					}),
 				],
 				createAdminProductAttribute: async (input) =>
@@ -49,6 +50,7 @@ export const NewProduct: Story = {
 						type: input.type,
 						filterable: input.filterable ?? false,
 						sortable: input.sortable ?? false,
+						enum_values: input.enum_values ?? [],
 					}),
 				updateAdminProductAttribute: async (id, input) =>
 					makeAttributeDefinition({
@@ -58,6 +60,7 @@ export const NewProduct: Story = {
 						type: input.type,
 						filterable: input.filterable ?? false,
 						sortable: input.sortable ?? false,
+						enum_values: input.enum_values ?? [],
 					}),
 				deleteAdminProductAttribute: async () => ({ message: "deleted" }),
 			}),

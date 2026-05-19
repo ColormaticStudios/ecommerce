@@ -1655,6 +1655,7 @@ export interface components {
 			type: "text" | "number" | "boolean" | "enum";
 			filterable: boolean;
 			sortable: boolean;
+			enum_values: string[];
 		};
 		ProductAttributeDefinitionInput: {
 			key: string;
@@ -1663,6 +1664,7 @@ export interface components {
 			type: "text" | "number" | "boolean" | "enum";
 			filterable?: boolean;
 			sortable?: boolean;
+			enum_values?: string[];
 		};
 		ProductAttributeDefinitionListResponse: {
 			data: components["schemas"]["ProductAttributeDefinition"][];

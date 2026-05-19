@@ -38,6 +38,10 @@ func noopMigration(version, name string) Migration {
 	}
 }
 
+func testStringPtr(value string) *string {
+	return &value
+}
+
 func TestValidateMigrationsRejectsDuplicateVersion(t *testing.T) {
 	err := validateMigrations([]Migration{
 		noopMigration("2026030401_valid_name", "first"),
@@ -560,7 +564,7 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, productCategoriesP3Version, status.LatestAppliedVersion)
+	require.Equal(t, productAttributeEnumsVersion, status.LatestAppliedVersion)
 	require.Equal(t, 1, status.PendingCount)
 }
 
@@ -579,6 +583,42 @@ func TestRunAppliesAllOrderedMigrationsAndReplayIsIdempotent(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, LatestVersion(), status.LatestAppliedVersion)
 	require.Equal(t, 0, status.PendingCount)
+}
+
+func TestProductAttributeEnumsMigrationBackfillsExistingValues(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
+
+	enumMigrationIndex := slices.IndexFunc(orderedMigrations, func(migration Migration) bool {
+		return migration.Version == productAttributeEnumsVersion
+	})
+	require.Greater(t, enumMigrationIndex, 0)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:enumMigrationIndex]))
+
+	attribute := models.ProductAttribute{
+		Key:  "fit",
+		Slug: "fit",
+		Type: "enum",
+	}
+	require.NoError(t, db.Create(&attribute).Error)
+	require.NoError(t, db.Create(&models.ProductAttributeValue{
+		ProductAttributeID: attribute.ID,
+		EnumValue:          testStringPtr("Regular"),
+	}).Error)
+	require.NoError(t, db.Create(&models.ProductAttributeValueDraft{
+		ProductAttributeID: attribute.ID,
+		EnumValue:          testStringPtr("Slim"),
+	}).Error)
+	require.NoError(t, db.Create(&models.ProductAttributeValueDraft{
+		ProductAttributeID: attribute.ID,
+		EnumValue:          testStringPtr("regular"),
+	}).Error)
+
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:enumMigrationIndex+1]))
+
+	var reloaded models.ProductAttribute
+	require.NoError(t, db.First(&reloaded, attribute.ID).Error)
+	assert.Equal(t, models.StringArray{"Regular", "Slim"}, reloaded.EnumValues)
 }
 
 func TestProductPublishStateBackfillMigration(t *testing.T) {
