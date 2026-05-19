@@ -17,6 +17,30 @@ const publishedProduct = makeProduct({
 	id: 101,
 	name: "Field Jacket",
 	is_published: true,
+	attributes: [
+		{
+			product_attribute_id: 1,
+			key: "material",
+			slug: "material",
+			type: "text",
+			text_value: "Waxed cotton",
+			number_value: null,
+			boolean_value: null,
+			enum_value: null,
+			position: 1,
+		},
+		{
+			product_attribute_id: 2,
+			key: "waterproof",
+			slug: "waterproof",
+			type: "boolean",
+			text_value: null,
+			number_value: null,
+			boolean_value: true,
+			enum_value: null,
+			position: 2,
+		},
+	],
 });
 
 const unpublishedProduct = makeProduct({
@@ -42,9 +66,42 @@ function createData(overrides: Partial<AdminProductData> = {}): AdminProductData
 }
 
 function createEditorApi(product = publishedProduct) {
+	const definitions = [
+		makeAttributeDefinition(),
+		makeAttributeDefinition({ id: 2, key: "waterproof", slug: "waterproof", type: "boolean" }),
+		makeAttributeDefinition({
+			id: 3,
+			key: "weight",
+			slug: "weight",
+			type: "number",
+			filterable: false,
+			sortable: true,
+		}),
+		makeAttributeDefinition({ id: 4, key: "fit", slug: "fit", type: "enum" }),
+	];
+
 	return createApiStub({
 		listAdminBrands: async () => [],
-		listAdminProductAttributes: async () => [makeAttributeDefinition()],
+		listAdminProductAttributes: async () => definitions,
+		createAdminProductAttribute: async (input) =>
+			makeAttributeDefinition({
+				id: 99,
+				key: input.key,
+				slug: input.slug ?? input.key.toLowerCase().replaceAll(" ", "-"),
+				type: input.type,
+				filterable: input.filterable ?? false,
+				sortable: input.sortable ?? false,
+			}),
+		updateAdminProductAttribute: async (id, input) =>
+			makeAttributeDefinition({
+				id,
+				key: input.key,
+				slug: input.slug ?? input.key.toLowerCase().replaceAll(" ", "-"),
+				type: input.type,
+				filterable: input.filterable ?? false,
+				sortable: input.sortable ?? false,
+			}),
+		deleteAdminProductAttribute: async () => ({ message: "deleted" }),
 		getAdminPreviewSession: async () => makeDraftPreviewSession(),
 		getAdminProduct: async () => product,
 	});

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/sveltekit";
 import type { ComponentProps } from "svelte";
 import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
 import { createApiStub } from "$lib/storybook/api";
+import { makeAttributeDefinition } from "$lib/storybook/factories";
 import { makeAdminLayoutData } from "$lib/storybook/layout";
 import { renderRouteStory } from "$lib/storybook/render";
 import AdminNewProductPage from "./+page.svelte";
@@ -31,7 +32,34 @@ export const NewProduct: Story = {
 			componentProps: { data: createData() },
 			api: createApiStub({
 				listAdminBrands: async () => [],
-				listAdminProductAttributes: async () => [],
+				listAdminProductAttributes: async () => [
+					makeAttributeDefinition(),
+					makeAttributeDefinition({
+						id: 2,
+						key: "waterproof",
+						slug: "waterproof",
+						type: "boolean",
+					}),
+				],
+				createAdminProductAttribute: async (input) =>
+					makeAttributeDefinition({
+						id: 99,
+						key: input.key,
+						slug: input.slug ?? input.key.toLowerCase().replaceAll(" ", "-"),
+						type: input.type,
+						filterable: input.filterable ?? false,
+						sortable: input.sortable ?? false,
+					}),
+				updateAdminProductAttribute: async (id, input) =>
+					makeAttributeDefinition({
+						id,
+						key: input.key,
+						slug: input.slug ?? input.key.toLowerCase().replaceAll(" ", "-"),
+						type: input.type,
+						filterable: input.filterable ?? false,
+						sortable: input.sortable ?? false,
+					}),
+				deleteAdminProductAttribute: async () => ({ message: "deleted" }),
 			}),
 		}),
 };

@@ -70,6 +70,7 @@
 	const api: API = getContext("api");
 
 	type ProductUpsertInput = components["schemas"]["ProductUpsertInput"];
+	type ProductAttributeDefinitionInput = components["schemas"]["ProductAttributeDefinitionInput"];
 	type EditorOptionValue = {
 		key: string;
 		value: string;
@@ -132,6 +133,10 @@
 	let mediaStatusMessage = $state("");
 	let relatedErrorMessage = $state("");
 	let relatedStatusMessage = $state("");
+	let attributeDefinitionErrorMessage = $state("");
+	let attributeDefinitionStatusMessage = $state("");
+	let attributeDefinitionSaving = $state(false);
+	let attributeDefinitionDeletingId = $state<number | null>(null);
 
 	let sku = $state("");
 	let name = $state("");
@@ -149,6 +154,12 @@
 	let options = $state<EditorOption[]>([]);
 	let variants = $state<EditorVariant[]>([]);
 	let attributeValues = $state<EditorAttributeValue[]>([]);
+	let attributeDefinitionEditingId = $state<number | null>(null);
+	let attributeDefinitionKey = $state("");
+	let attributeDefinitionSlug = $state("");
+	let attributeDefinitionType = $state<ProductAttributeDefinitionModel["type"]>("text");
+	let attributeDefinitionFilterable = $state(true);
+	let attributeDefinitionSortable = $state(false);
 	let defaultVariantSku = $state("");
 	let mediaFiles = $state<FileList | null>(null);
 	let mediaInputRef = $state<HTMLInputElement | null>(null);
@@ -722,6 +733,152 @@
 		return attributeDefinitions.find((attribute) => String(attribute.id) === productAttributeID);
 	}
 
+	function resetAttributeDefinitionForm() {
+		attributeDefinitionEditingId = null;
+		attributeDefinitionKey = "";
+		attributeDefinitionSlug = "";
+		attributeDefinitionType = "text";
+		attributeDefinitionFilterable = true;
+		attributeDefinitionSortable = false;
+	}
+
+	function editAttributeDefinition(definition: ProductAttributeDefinitionModel) {
+		attributeDefinitionEditingId = definition.id;
+		attributeDefinitionKey = definition.key;
+		attributeDefinitionSlug = definition.slug;
+		attributeDefinitionType = definition.type;
+		attributeDefinitionFilterable = definition.filterable;
+		attributeDefinitionSortable = definition.sortable;
+		attributeDefinitionErrorMessage = "";
+		attributeDefinitionStatusMessage = "";
+	}
+
+	function updateAttributeDefinitionType(nextType: ProductAttributeDefinitionModel["type"]) {
+		attributeDefinitionType = nextType;
+		if (nextType !== "number") {
+			attributeDefinitionSortable = false;
+		}
+	}
+
+	function buildAttributeDefinitionPayload(): ProductAttributeDefinitionInput | null {
+		const key = asTrimmedString(attributeDefinitionKey);
+		const slug = asTrimmedString(attributeDefinitionSlug);
+
+		if (!key) {
+			attributeDefinitionErrorMessage = "Attribute name is required.";
+			return null;
+		}
+
+		if (attributeDefinitionSortable && attributeDefinitionType !== "number") {
+			attributeDefinitionErrorMessage = "Only number attributes can be sortable.";
+			return null;
+		}
+
+		return {
+			key,
+			slug: slug || undefined,
+			type: attributeDefinitionType,
+			filterable: attributeDefinitionFilterable,
+			sortable: attributeDefinitionSortable,
+		};
+	}
+
+	async function saveAttributeDefinition() {
+		attributeDefinitionErrorMessage = "";
+		attributeDefinitionStatusMessage = "";
+		const payload = buildAttributeDefinitionPayload();
+		if (!payload) {
+			return;
+		}
+
+		attributeDefinitionSaving = true;
+		try {
+			const saved =
+				attributeDefinitionEditingId == null
+					? await api.createAdminProductAttribute(payload)
+					: await api.updateAdminProductAttribute(attributeDefinitionEditingId, payload);
+			attributeDefinitions =
+				attributeDefinitionEditingId == null
+					? [...attributeDefinitions, saved]
+					: attributeDefinitions.map((definition) =>
+							definition.id === saved.id ? saved : definition
+						);
+			attributeValues = attributeValues.map((attribute) =>
+				Number(attribute.product_attribute_id) === saved.id
+					? { ...attribute, type: saved.type }
+					: attribute
+			);
+			attributeDefinitionStatusMessage =
+				attributeDefinitionEditingId == null
+					? "Attribute definition created."
+					: "Attribute definition updated.";
+			resetAttributeDefinitionForm();
+		} catch (err) {
+			console.error(err);
+			attributeDefinitionErrorMessage = readableActionError(
+				err,
+				"Unable to save attribute definition."
+			);
+		} finally {
+			attributeDefinitionSaving = false;
+		}
+	}
+
+	async function deleteAttributeDefinition(definition: ProductAttributeDefinitionModel) {
+		attributeDefinitionErrorMessage = "";
+		attributeDefinitionStatusMessage = "";
+		attributeDefinitionDeletingId = definition.id;
+		try {
+			await api.deleteAdminProductAttribute(definition.id);
+			attributeDefinitions = attributeDefinitions.filter((item) => item.id !== definition.id);
+			attributeValues = attributeValues.filter(
+				(attribute) => Number(attribute.product_attribute_id) !== definition.id
+			);
+			if (attributeDefinitionEditingId === definition.id) {
+				resetAttributeDefinitionForm();
+			}
+			attributeDefinitionStatusMessage = "Attribute definition deleted.";
+		} catch (err) {
+			console.error(err);
+			attributeDefinitionErrorMessage = readableActionError(
+				err,
+				"Unable to delete attribute definition."
+			);
+		} finally {
+			attributeDefinitionDeletingId = null;
+		}
+	}
+
+	function validateProductAttributes(): string | null {
+		const selected: number[] = [];
+		for (const attribute of attributeValues) {
+			const productAttributeID = Number(attribute.product_attribute_id);
+			if (!Number.isInteger(productAttributeID) || productAttributeID <= 0) {
+				return "Select an attribute for each assigned attribute row.";
+			}
+			if (selected.includes(productAttributeID)) {
+				return "Each product attribute can only be assigned once.";
+			}
+			selected.push(productAttributeID);
+
+			if (attribute.type === "number") {
+				if (asTrimmedString(attribute.number_value) === "") {
+					return "Number attributes need a value.";
+				}
+				if (!Number.isFinite(Number(attribute.number_value))) {
+					return "Number attributes need a valid numeric value.";
+				}
+			}
+			if (attribute.type === "text" && asTrimmedString(attribute.text_value) === "") {
+				return "Text attributes need a value.";
+			}
+			if (attribute.type === "enum" && asTrimmedString(attribute.enum_value) === "") {
+				return "Enum attributes need a value.";
+			}
+		}
+		return null;
+	}
+
 	function addCategory(category: CategoryModel) {
 		const id = String(category.id);
 		if (!selectedCategoryIds.includes(id)) {
@@ -859,6 +1016,13 @@
 						enum_value: "",
 					}
 				: attribute
+		);
+	}
+
+	function attributeDefinitionAlreadyAssigned(definitionId: number, currentKey: string): boolean {
+		return attributeValues.some(
+			(attribute) =>
+				attribute.key !== currentKey && Number(attribute.product_attribute_id) === definitionId
 		);
 	}
 
@@ -1079,6 +1243,11 @@
 				)
 			) {
 				setMessage("product", "error", "Each variant needs a valid price and stock value.");
+				return;
+			}
+			const attributeError = validateProductAttributes();
+			if (attributeError) {
+				setMessage("product", "error", attributeError);
 				return;
 			}
 
@@ -1957,7 +2126,12 @@
 									>
 										<option value="">Select attribute</option>
 										{#each attributeDefinitions as definition (definition.id)}
-											<option value={String(definition.id)}>{definition.key}</option>
+											<option
+												value={String(definition.id)}
+												disabled={attributeDefinitionAlreadyAssigned(definition.id, attribute.key)}
+											>
+												{definition.key}
+											</option>
 										{/each}
 									</Dropdown>
 								</div>
@@ -2016,9 +2190,169 @@
 
 		{#if attributeDefinitions.length === 0}
 			<p class="mt-3 text-xs text-amber-600 dark:text-amber-300">
-				No product attribute definitions exist yet. Create them via the admin product-attribute API.
+				No product attribute definitions exist yet.
 			</p>
 		{/if}
+
+		<div class={`${mutedEditorPanelClass(layoutMode)} mt-5`}>
+			<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+				<div>
+					<AdminFieldLabel>Attribute definitions</AdminFieldLabel>
+					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+						Create reusable product attributes before assigning them above.
+					</p>
+				</div>
+				{#if attributeDefinitionEditingId != null}
+					<Button
+						tone="admin"
+						variant="regular"
+						size="small"
+						type="button"
+						onclick={resetAttributeDefinitionForm}
+					>
+						Cancel edit
+					</Button>
+				{/if}
+			</div>
+
+			{#if attributeDefinitionErrorMessage}
+				<div class="mt-4">
+					<Alert
+						message={attributeDefinitionErrorMessage}
+						tone="error"
+						onClose={() => (attributeDefinitionErrorMessage = "")}
+					/>
+				</div>
+			{/if}
+			{#if attributeDefinitionStatusMessage}
+				<div class="mt-4">
+					<Alert
+						message={attributeDefinitionStatusMessage}
+						tone="success"
+						onClose={() => (attributeDefinitionStatusMessage = "")}
+					/>
+				</div>
+			{/if}
+
+			<div class="mt-4 grid gap-3 sm:grid-cols-2">
+				<div>
+					<AdminFieldLabel>Definition name</AdminFieldLabel>
+					<TextInput
+						tone="admin"
+						class="mt-1"
+						type="text"
+						aria-label="Attribute definition name"
+						bind:value={attributeDefinitionKey}
+					/>
+				</div>
+				<div>
+					<AdminFieldLabel>Slug</AdminFieldLabel>
+					<TextInput
+						tone="admin"
+						class="mt-1"
+						type="text"
+						aria-label="Attribute definition slug"
+						placeholder="Generated when blank"
+						bind:value={attributeDefinitionSlug}
+					/>
+				</div>
+				<div>
+					<AdminFieldLabel>Type</AdminFieldLabel>
+					<Dropdown
+						tone="admin"
+						class="mt-1"
+						aria-label="Attribute definition type"
+						value={attributeDefinitionType}
+						onchange={(event) =>
+							updateAttributeDefinitionType(
+								(event.target as HTMLSelectElement).value as ProductAttributeDefinitionModel["type"]
+							)}
+					>
+						<option value="text">Text</option>
+						<option value="number">Number</option>
+						<option value="boolean">Boolean</option>
+						<option value="enum">Enum</option>
+					</Dropdown>
+				</div>
+				<div class="flex flex-col justify-end gap-2 pt-2">
+					<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+						<input type="checkbox" bind:checked={attributeDefinitionFilterable} />
+						Filterable
+					</label>
+					<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+						<input
+							type="checkbox"
+							bind:checked={attributeDefinitionSortable}
+							disabled={attributeDefinitionType !== "number"}
+						/>
+						Sortable
+					</label>
+				</div>
+			</div>
+
+			<div class="mt-4 flex justify-end">
+				<Button
+					tone="admin"
+					variant="primary"
+					type="button"
+					disabled={attributeDefinitionSaving}
+					onclick={saveAttributeDefinition}
+				>
+					{attributeDefinitionSaving
+						? "Saving..."
+						: attributeDefinitionEditingId == null
+							? "Create definition"
+							: "Update definition"}
+				</Button>
+			</div>
+
+			{#if attributeDefinitions.length}
+				<div class="mt-5 divide-y divide-stone-200 dark:divide-stone-800">
+					{#each attributeDefinitions as definition (definition.id)}
+						<div class="flex items-center justify-between gap-3 py-3 text-sm">
+							<div class="min-w-0">
+								<div class="font-medium text-stone-900 dark:text-stone-100">
+									{definition.key}
+								</div>
+								<div
+									class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-500 dark:text-stone-400"
+								>
+									<span>{definition.slug}</span>
+									<span>{definition.type}</span>
+									{#if definition.filterable}
+										<span>filterable</span>
+									{/if}
+									{#if definition.sortable}
+										<span>sortable</span>
+									{/if}
+								</div>
+							</div>
+							<div class="flex shrink-0 gap-2">
+								<IconButton
+									variant="neutral"
+									type="button"
+									onclick={() => editAttributeDefinition(definition)}
+									aria-label={`Edit attribute definition ${definition.key}`}
+									title="Edit definition"
+								>
+									<i class="bi bi-pencil-fill"></i>
+								</IconButton>
+								<IconButton
+									variant="danger"
+									type="button"
+									disabled={attributeDefinitionDeletingId === definition.id}
+									onclick={() => deleteAttributeDefinition(definition)}
+									aria-label={`Delete attribute definition ${definition.key}`}
+									title="Delete definition"
+								>
+									<i class="bi bi-trash-fill"></i>
+								</IconButton>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
 	</div>
 {/snippet}
 
