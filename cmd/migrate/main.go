@@ -80,7 +80,7 @@ func main() {
 		if len(os.Args) > 2 && strings.TrimSpace(os.Args[2]) != "" {
 			path = strings.TrimSpace(os.Args[2])
 		}
-		if err := migrations.WriteSchemaSnapshot(db, path); err != nil {
+		if err := migrations.WriteCurrentSchemaSnapshot(db, path); err != nil {
 			log.Fatalf("failed to write schema snapshot: %v", err)
 		}
 		fmt.Printf("schema_snapshot_path=%s\n", path)

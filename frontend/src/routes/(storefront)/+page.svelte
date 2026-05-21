@@ -145,6 +145,9 @@
 										? product.description
 										: undefined,
 									price: product.price,
+									basePrice: product.base_price,
+									discountAmount: product.discount_amount,
+									finalPrice: product.final_price,
 									priceRange: product.price_range,
 									image: product.images?.[0],
 									stock: product.stock,

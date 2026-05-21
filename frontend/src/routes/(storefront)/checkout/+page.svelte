@@ -15,7 +15,7 @@
 	import Dropdown from "$lib/components/Dropdown.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
-	import { formatPrice } from "$lib/utils";
+	import { formatPrice, hasDiscount } from "$lib/utils";
 	import { userStore } from "$lib/user";
 	import {
 		initDataForProvider,
@@ -96,7 +96,10 @@
 		}).toString()}`
 	);
 	const subtotal = $derived(
-		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.product_variant.price, 0) : 0
+		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.final_price, 0) : 0
+	);
+	const cartDiscountTotal = $derived(
+		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.discount_amount, 0) : 0
 	);
 	const paymentUsesCard = $derived(providerUsesCardFields(activePaymentProvider));
 	const shippingUsesAddress = $derived(providerUsesAddressFields(activeShippingProvider));
@@ -961,14 +964,21 @@
 								<p class="font-medium text-gray-900 dark:text-gray-100">{item.product.name}</p>
 								<p class="text-gray-600 dark:text-gray-400">
 									Qty {item.quantity} ·
-									{formatPrice(item.product_variant.price, $userStore?.currency ?? "USD")}
+									{formatPrice(item.final_price, $userStore?.currency ?? "USD")}
+									{#if hasDiscount(item)}
+										<span class="ml-1 line-through">
+											{formatPrice(item.base_price, $userStore?.currency ?? "USD")}
+										</span>
+									{/if}
 								</p>
+								{#if item.applied_campaigns.length}
+									<p class="text-xs text-emerald-700 dark:text-emerald-300">
+										{item.applied_campaigns.map((campaign) => campaign.name).join(", ")}
+									</p>
+								{/if}
 							</div>
 							<p class="text-right font-medium text-gray-900 dark:text-gray-100">
-								{formatPrice(
-									item.product_variant.price * item.quantity,
-									$userStore?.currency ?? "USD"
-								)}
+								{formatPrice(item.final_price * item.quantity, $userStore?.currency ?? "USD")}
 							</p>
 						</div>
 					{/each}
@@ -1011,6 +1021,14 @@
 								{formatPrice(quote?.subtotal ?? subtotal, displayCurrency)}
 							</span>
 						</div>
+						{#if (quote?.discount_total ?? cartDiscountTotal) > 0}
+							<div class="flex items-center justify-between text-emerald-700 dark:text-emerald-300">
+								<span>Discounts</span>
+								<span
+									>-{formatPrice(quote?.discount_total ?? cartDiscountTotal, displayCurrency)}</span
+								>
+							</div>
+						{/if}
 						<div class="flex items-center justify-between">
 							<span>Shipping</span>
 							<span class="font-medium text-gray-900 dark:text-gray-100">

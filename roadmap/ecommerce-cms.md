@@ -43,7 +43,7 @@
   - Product pickers in CMS authoring should resolve to product IDs while storefront purchase actions remain variant-aware at runtime.
 - Product categories baseline:
   - Category landing blocks and navigation use canonical category slugs from `categories` and product-category joins.
-- Discounts/promotions (`roadmap/discounts-promotions.md`):
+- Discounts/promotions:
   - Promotion banners and campaign pages consume active campaign metadata and scheduled windows from promotion domain, not duplicated CMS discount logic.
 - Provider platform baseline:
   - CMS confirmation/help pages can reference payment/shipping statuses but must not bypass the implemented provider lifecycle APIs.

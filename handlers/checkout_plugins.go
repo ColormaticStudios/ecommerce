@@ -7,7 +7,6 @@ import (
 	"ecommerce/internal/checkoutplugins"
 	checkoutservice "ecommerce/internal/services/checkout"
 	paymentservice "ecommerce/internal/services/payments"
-	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -20,20 +19,6 @@ type CheckoutQuoteRequest struct {
 	PaymentData        map[string]string `json:"payment_data"`
 	ShippingData       map[string]string `json:"shipping_data"`
 	TaxData            map[string]string `json:"tax_data"`
-}
-
-func cartSubtotal(cart *models.Cart) models.Money {
-	var subtotal models.Money
-	if cart == nil {
-		return subtotal
-	}
-	for _, item := range cart.Items {
-		if item.Quantity <= 0 {
-			continue
-		}
-		subtotal += item.ProductVariant.Price.Mul(item.Quantity)
-	}
-	return subtotal
 }
 
 func ListCheckoutPlugins(pluginManager *checkoutplugins.Manager) gin.HandlerFunc {
@@ -69,8 +54,14 @@ func QuoteCheckout(db *gorm.DB, pluginManager *checkoutplugins.Manager, jwtSecre
 			return
 		}
 
+		discounts, err := evaluateCartDiscounts(db, requestCtx.Cart)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to evaluate discounts"})
+			return
+		}
+
 		quote := pluginManager.Quote(checkoutplugins.QuoteRequest{
-			Subtotal:     cartSubtotal(requestCtx.Cart),
+			Subtotal:     discounts.FinalSubtotal,
 			PaymentID:    req.PaymentProviderID,
 			ShippingID:   req.ShippingProviderID,
 			TaxID:        req.TaxProviderID,
@@ -84,7 +75,7 @@ func QuoteCheckout(db *gorm.DB, pluginManager *checkoutplugins.Manager, jwtSecre
 		if quote.Valid {
 			resolved, err := checkoutservice.ResolveProviderSelection(
 				pluginManager,
-				cartSubtotal(requestCtx.Cart),
+				discounts.FinalSubtotal,
 				checkoutProviderSelectionFromPaymentRequest(ProcessPaymentRequest{
 					PaymentProviderID:  req.PaymentProviderID,
 					ShippingProviderID: req.ShippingProviderID,
@@ -96,6 +87,12 @@ func QuoteCheckout(db *gorm.DB, pluginManager *checkoutplugins.Manager, jwtSecre
 			)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+
+			snapshotItems, err := buildSnapshotItemsFromCart(db, requestCtx.Cart)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to evaluate discounts"})
 				return
 			}
 
@@ -114,7 +111,7 @@ func QuoteCheckout(db *gorm.DB, pluginManager *checkoutplugins.Manager, jwtSecre
 				TaxData:               req.TaxData,
 				PaymentMethodDisplay:  resolved.PaymentDisplay,
 				ShippingAddressPretty: resolved.ShippingAddress,
-				Items:                 buildSnapshotItemsFromCart(requestCtx.Cart),
+				Items:                 snapshotItems,
 				Now:                   time.Now().UTC(),
 			})
 			if err != nil {
@@ -129,6 +126,7 @@ func QuoteCheckout(db *gorm.DB, pluginManager *checkoutplugins.Manager, jwtSecre
 			"snapshot_id":     snapshotID,
 			"expires_at":      expiresAt,
 			"currency":        quote.Currency,
+			"discount_total":  discounts.DiscountTotal.Float64(),
 			"subtotal":        quote.Subtotal,
 			"shipping":        quote.Shipping,
 			"tax":             quote.Tax,

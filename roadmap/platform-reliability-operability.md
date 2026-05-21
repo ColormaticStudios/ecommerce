@@ -33,7 +33,7 @@
   - Reuse platform job runtime for outbox delivery retries, dead-letter handling, and queue lag metrics.
 - Implemented provider platform:
   - Reconciliation and webhook retry jobs run on shared worker primitives.
-- `roadmap/discounts-promotions.md`, `roadmap/ecommerce-cms.md`, checkout-session lifecycle work:
+- discounts/promotions, `roadmap/ecommerce-cms.md`, checkout-session lifecycle work:
   - Scheduled activation/cleanup work migrates from ad hoc in-process loops to shared scheduler/worker model.
 - Implemented inventory baseline, `roadmap/order-fulfillment-ops.md`, `roadmap/returns-rma.md`:
   - Reconciliation and alerting jobs adopt shared retry policy, idempotency keys, and observability conventions.

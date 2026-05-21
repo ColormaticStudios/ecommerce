@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/checkoutplugins"
@@ -359,6 +360,85 @@ func (s *GeneratedAPIServer) UpdateAdminBrand(c *gin.Context, id int) {
 func (s *GeneratedAPIServer) ListAdminProducts(c *gin.Context, params apicontract.ListAdminProductsParams) {
 	_ = params
 	s.runProtected(c, "admin", ListAdminProducts(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) ListAdminDiscountCampaigns(c *gin.Context, params apicontract.ListAdminDiscountCampaignsParams) {
+	_ = params
+	s.runProtected(c, "admin", ListAdminDiscountCampaigns(s.db))
+}
+
+func (s *GeneratedAPIServer) CreateAdminDiscountCampaign(c *gin.Context) {
+	s.runProtected(c, "admin", CreateAdminDiscountCampaign(s.db))
+}
+
+func (s *GeneratedAPIServer) CreateAdminPromotionCampaign(c *gin.Context) {
+	s.runProtected(c, "admin", CreateAdminPromotionCampaign(s.db))
+}
+
+func (s *GeneratedAPIServer) PreviewAdminPromotion(c *gin.Context) {
+	s.runProtected(c, "admin", PreviewAdminPromotion(s.db))
+}
+
+func (s *GeneratedAPIServer) ListAdminPromotionTemplates(c *gin.Context, params apicontract.ListAdminPromotionTemplatesParams) {
+	if params.Active != nil {
+		c.Request.URL.RawQuery = "active=" + strconv.FormatBool(*params.Active)
+	}
+	s.runProtected(c, "admin", ListAdminPromotionTemplates(s.db))
+}
+
+func (s *GeneratedAPIServer) CreateAdminPromotionTemplate(c *gin.Context) {
+	s.runProtected(c, "admin", CreateAdminPromotionTemplate(s.db))
+}
+
+func (s *GeneratedAPIServer) InstantiateAdminPromotionTemplate(c *gin.Context, id int) {
+	c.Params = append(c.Params, gin.Param{Key: "id", Value: fmt.Sprint(id)})
+	s.runProtected(c, "admin", InstantiateAdminPromotionTemplate(s.db))
+}
+
+func (s *GeneratedAPIServer) UpdateAdminDiscountCampaign(c *gin.Context, id int) {
+	c.Params = append(c.Params, gin.Param{Key: "id", Value: fmt.Sprint(id)})
+	s.runProtected(c, "admin", UpdateAdminDiscountCampaign(s.db))
+}
+
+func (s *GeneratedAPIServer) DisableAdminDiscountCampaign(c *gin.Context, id int) {
+	c.Params = append(c.Params, gin.Param{Key: "id", Value: fmt.Sprint(id)})
+	s.runProtected(c, "admin", DisableAdminDiscountCampaign(s.db))
+}
+
+func (s *GeneratedAPIServer) ScheduleAdminDiscountCampaign(c *gin.Context, id int) {
+	c.Params = append(c.Params, gin.Param{Key: "id", Value: fmt.Sprint(id)})
+	s.runProtected(c, "admin", ScheduleAdminDiscountCampaign(s.db))
+}
+
+func (s *GeneratedAPIServer) ArchiveAdminDiscountCampaign(c *gin.Context, id int) {
+	c.Params = append(c.Params, gin.Param{Key: "id", Value: fmt.Sprint(id)})
+	s.runProtected(c, "admin", ArchiveAdminDiscountCampaign(s.db))
+}
+
+func (s *GeneratedAPIServer) RunAdminDiscountLifecycle(c *gin.Context) {
+	s.runProtected(c, "admin", RunAdminDiscountLifecycle(s.db))
+}
+
+func (s *GeneratedAPIServer) ListAdminDiscountHistory(c *gin.Context, params apicontract.ListAdminDiscountHistoryParams) {
+	if params.CampaignId != nil {
+		c.Request.URL.RawQuery = "campaign_id=" + fmt.Sprint(*params.CampaignId)
+	}
+	s.runProtected(c, "admin", ListAdminDiscountHistory(s.db))
+}
+
+func (s *GeneratedAPIServer) ListAdminDiscountAudit(c *gin.Context, params apicontract.ListAdminDiscountAuditParams) {
+	if params.CampaignId != nil {
+		c.Request.URL.RawQuery = "campaign_id=" + fmt.Sprint(*params.CampaignId)
+	}
+	s.runProtected(c, "admin", ListAdminDiscountAudit(s.db))
+}
+
+func (s *GeneratedAPIServer) GetAdminDiscountMetrics(c *gin.Context) {
+	s.runProtected(c, "admin", GetAdminDiscountMetrics())
+}
+
+func (s *GeneratedAPIServer) RunAdminDiscountReconciliation(c *gin.Context) {
+	s.runProtected(c, "admin", RunAdminDiscountReconciliation(s.db))
 }
 
 func (s *GeneratedAPIServer) ListAdminBrands(c *gin.Context, params apicontract.ListAdminBrandsParams) {

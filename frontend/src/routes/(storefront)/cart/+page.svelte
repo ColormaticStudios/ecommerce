@@ -9,7 +9,7 @@
 	import IconButton from "$lib/components/IconButton.svelte";
 	import MediaThumbnail from "$lib/components/MediaThumbnail.svelte";
 	import QuantitySelector from "$lib/components/QuantitySelector.svelte";
-	import { formatPrice } from "$lib/utils";
+	import { formatPrice, hasDiscount } from "$lib/utils";
 	import { userStore } from "$lib/user";
 	import { getContext } from "svelte";
 	import { resolve } from "$app/paths";
@@ -28,7 +28,10 @@
 	let guestCheckoutDisabled = $state(false);
 
 	const total = $derived(
-		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.product_variant.price, 0) : 0
+		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.final_price, 0) : 0
+	);
+	const discountTotal = $derived(
+		cart ? cart.items.reduce((sum, item) => sum + item.quantity * item.discount_amount, 0) : 0
 	);
 
 	async function updateItemQuantity(itemId: number, quantity: number) {
@@ -136,9 +139,21 @@
 								<h2 class="line-clamp-1 text-lg font-medium text-gray-900 dark:text-gray-100">
 									{item.product.name}
 								</h2>
-								<p class="text-sm text-gray-500 dark:text-gray-400">
-									{formatPrice(item.product_variant.price, $userStore?.currency ?? "USD")}
+								<p
+									class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
+								>
+									<span>{formatPrice(item.final_price, $userStore?.currency ?? "USD")}</span>
+									{#if hasDiscount(item)}
+										<span class="line-through">
+											{formatPrice(item.base_price, $userStore?.currency ?? "USD")}
+										</span>
+									{/if}
 								</p>
+								{#if item.applied_campaigns.length}
+									<p class="text-xs text-emerald-700 dark:text-emerald-300">
+										{item.applied_campaigns.map((campaign) => campaign.name).join(", ")}
+									</p>
+								{/if}
 								<p class="text-sm text-gray-500 dark:text-gray-400">{item.product_variant.title}</p>
 							</div>
 
@@ -178,6 +193,12 @@
 								{formatPrice(total, $userStore?.currency ?? "USD")}
 							</span>
 						</div>
+						{#if discountTotal > 0}
+							<div class="flex items-center justify-between text-emerald-700 dark:text-emerald-300">
+								<span>Discounts</span>
+								<span>-{formatPrice(discountTotal, $userStore?.currency ?? "USD")}</span>
+							</div>
+						{/if}
 						<div class="flex items-center justify-between">
 							<span>Shipping</span>
 							<span>Calculated at checkout</span>

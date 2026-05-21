@@ -5,7 +5,7 @@
 	import MediaThumbnail from "$lib/components/MediaThumbnail.svelte";
 	import QuantitySelector from "$lib/components/QuantitySelector.svelte";
 	import Toast from "$lib/components/Toast.svelte";
-	import { formatPrice } from "$lib/utils";
+	import { formatPrice, hasDiscount } from "$lib/utils";
 	import ProductCard from "$lib/components/ProductCard.svelte";
 	import { userStore } from "$lib/user";
 	import { getContext, onDestroy } from "svelte";
@@ -20,6 +20,7 @@
 	let { data }: Props = $props();
 
 	const product = $derived(data.product);
+	const productDiscounted = $derived(Boolean(product && hasDiscount(product)));
 	let selectedImage = $state(0);
 	let lastProductId = $state<number | null>(null);
 	let adding = $state(false);
@@ -161,9 +162,16 @@
 					{product.description}
 				</p>
 
-				<div class="flex items-center gap-4">
-					<span class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-						{formatPrice(product.price)}
+				<div class="flex flex-wrap items-center gap-4">
+					<span
+						class="flex items-baseline gap-3 text-3xl font-bold text-gray-900 dark:text-gray-100"
+					>
+						{formatPrice(product.final_price)}
+						{#if productDiscounted}
+							<span class="text-lg font-medium text-gray-500 line-through dark:text-gray-400">
+								{formatPrice(product.base_price)}
+							</span>
+						{/if}
 					</span>
 
 					{#if product.stock === 0}

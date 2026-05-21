@@ -3,9 +3,11 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/media"
+	discountservice "ecommerce/internal/services/discounts"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -75,12 +77,22 @@ func buildProductContract(
 		return apicontract.Product{}, err
 	}
 
+	price, err := discountservice.PriceForProduct(db, source.ID, models.MoneyFromFloat(draft.Price), time.Now().UTC())
+	if err != nil {
+		return apicontract.Product{}, err
+	}
 	priceRange := buildProductPriceRange(draft)
 	defaultVariantID := contractDefaultVariantID(source, draft, preview)
 	defaultVariantSKU := optionalString(draft.DefaultVariantSKU)
+	appliedCampaigns := appliedCampaignContracts(price.AppliedCampaigns)
+	basePrice := price.BasePrice.Float64()
+	discountAmount := price.DiscountAmount.Float64()
+	finalPrice := price.FinalPrice.Float64()
 
 	product := apicontract.Product{
+		AppliedCampaigns:  &appliedCampaigns,
 		Attributes:        buildAttributeContracts(draft, attributeMeta),
+		BasePrice:         &basePrice,
 		Brand:             brand,
 		Categories:        categories,
 		CoverImage:        coverImage,
@@ -89,20 +101,28 @@ func buildProductContract(
 		DefaultVariantSku: defaultVariantSKU,
 		DeletedAt:         toContractDeletedAt(source.DeletedAt),
 		Description:       draft.Description,
+		DiscountAmount:    &discountAmount,
 		DraftUpdatedAt:    source.DraftUpdatedAt,
+		FinalPrice:        &finalPrice,
 		Id:                int(source.ID),
 		Images:            images,
 		Name:              draft.Name,
 		Options:           buildOptionContracts(draft),
-		Price:             draft.Price,
-		PriceRange:        priceRange,
-		RelatedProducts:   related,
-		Seo:               buildSEOContract(draft.SEO),
-		Sku:               draft.SKU,
-		Stock:             draft.Stock,
-		Subtitle:          draft.Subtitle,
-		UpdatedAt:         source.UpdatedAt,
-		Variants:          buildVariantContracts(draft),
+		Price:             price.FinalPrice.Float64(),
+		PriceBreakdown: &apicontract.PriceBreakdown{
+			AppliedCampaigns: appliedCampaigns,
+			BasePrice:        basePrice,
+			DiscountAmount:   discountAmount,
+			FinalPrice:       finalPrice,
+		},
+		PriceRange:      priceRange,
+		RelatedProducts: related,
+		Seo:             buildSEOContract(draft.SEO),
+		Sku:             draft.SKU,
+		Stock:           draft.Stock,
+		Subtitle:        draft.Subtitle,
+		UpdatedAt:       source.UpdatedAt,
+		Variants:        buildVariantContracts(draft),
 	}
 
 	if includeDraftMeta {

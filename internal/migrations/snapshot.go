@@ -93,6 +93,13 @@ func WriteSchemaSnapshot(db *gorm.DB, path string) error {
 	return os.WriteFile(path, []byte(snapshot), 0o644)
 }
 
+func WriteCurrentSchemaSnapshot(db *gorm.DB, path string) error {
+	if err := Check(db); err != nil {
+		return fmt.Errorf("database must be at latest migration before writing schema snapshot: %w", err)
+	}
+	return WriteSchemaSnapshot(db, path)
+}
+
 func DriftCheck(db *gorm.DB, path string) error {
 	expected, err := os.ReadFile(path)
 	if err != nil {

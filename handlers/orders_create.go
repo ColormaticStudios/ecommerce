@@ -10,6 +10,7 @@ import (
 
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/media"
+	discountservice "ecommerce/internal/services/discounts"
 	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
@@ -48,6 +49,12 @@ func (e *orderStockError) Error() string {
 
 var errOrderRequiresItems = errors.New("order must contain at least one item")
 
+type pricedOrderItems struct {
+	Total     models.Money
+	Items     []models.OrderItem
+	Discounts discountservice.EvaluationResult
+}
+
 func collectOrderVariantQuantities(items []orderVariantQuantity) (map[uint]int, []uint, error) {
 	if len(items) == 0 {
 		return nil, nil, errOrderRequiresItems
@@ -70,40 +77,74 @@ func collectOrderVariantQuantities(items []orderVariantQuantity) (map[uint]int, 
 func buildOrderItemsForVariants(
 	db *gorm.DB,
 	items []orderVariantQuantity,
-) (models.Money, []models.OrderItem, error) {
+) (pricedOrderItems, error) {
 	requestedByVariant, orderedVariantIDs, err := collectOrderVariantQuantities(items)
 	if err != nil {
-		return 0, nil, err
+		return pricedOrderItems{}, err
 	}
 
 	var total models.Money
 	orderItems := make([]models.OrderItem, 0, len(orderedVariantIDs))
+	variantByID := make(map[uint]models.ProductVariant, len(orderedVariantIDs))
+	productIDs := make([]uint, 0, len(orderedVariantIDs))
 	for _, variantID := range orderedVariantIDs {
 		quantity := requestedByVariant[variantID]
 		variant, err := loadPublicVariant(db, variantID)
 		if err != nil {
-			return 0, nil, err
+			return pricedOrderItems{}, err
 		}
 		if variant.Stock < quantity {
-			return 0, nil, &orderStockError{
+			return pricedOrderItems{}, &orderStockError{
 				ProductVariantID: variantID,
 				ProductName:      variant.Product.Name,
 				Requested:        quantity,
 				Available:        variant.Stock,
 			}
 		}
+		variantByID[variantID] = variant
+		productIDs = append(productIDs, variant.ProductID)
+	}
 
-		total += variant.Price.Mul(quantity)
+	categoriesByProduct, err := productCategoryIDsByProduct(db, productIDs)
+	if err != nil {
+		return pricedOrderItems{}, err
+	}
+	lines := make([]discountservice.CartLine, 0, len(orderedVariantIDs))
+	for _, variantID := range orderedVariantIDs {
+		variant := variantByID[variantID]
+		lines = append(lines, discountservice.CartLine{
+			ProductID:        variant.ProductID,
+			ProductVariantID: variantID,
+			BrandID:          variant.Product.BrandID,
+			CategoryIDs:      categoriesByProduct[variant.ProductID],
+			SKU:              variant.SKU,
+			Quantity:         requestedByVariant[variantID],
+			UnitPrice:        variant.Price,
+		})
+	}
+	discounts, err := discountservice.EvaluateCart(db, lines, time.Now().UTC())
+	if err != nil {
+		return pricedOrderItems{}, err
+	}
+	priceByVariant := make(map[uint]models.Money, len(discounts.Lines))
+	for _, line := range discounts.Lines {
+		priceByVariant[line.ProductVariantID] = line.FinalPrice
+	}
+	for _, variantID := range orderedVariantIDs {
+		quantity := requestedByVariant[variantID]
+		variant := variantByID[variantID]
+		price := priceByVariant[variantID]
+		total += price.Mul(quantity)
 		orderItems = append(orderItems, models.OrderItem{
 			ProductVariantID: variantID,
 			VariantSKU:       variant.SKU,
 			VariantTitle:     variant.Title,
 			Quantity:         quantity,
-			Price:            variant.Price,
+			Price:            price,
 		})
 	}
 
-	return total, orderItems, nil
+	return pricedOrderItems{Total: total, Items: orderItems, Discounts: discounts}, nil
 }
 
 func createOrderRecord(
@@ -113,7 +154,7 @@ func createOrderRecord(
 	guestEmail *string,
 	items []orderVariantQuantity,
 ) (models.Order, error) {
-	total, orderItems, err := buildOrderItemsForVariants(db, items)
+	priced, err := buildOrderItemsForVariants(db, items)
 	if err != nil {
 		return models.Order{}, err
 	}
@@ -121,9 +162,9 @@ func createOrderRecord(
 	order := models.Order{
 		CheckoutSessionID: session.ID,
 		GuestEmail:        guestEmail,
-		Total:             total,
+		Total:             priced.Total,
 		Status:            models.StatusPending,
-		Items:             orderItems,
+		Items:             priced.Items,
 	}
 	if userID != nil {
 		order.UserID = userID
@@ -143,7 +184,13 @@ func createOrderRecord(
 			Updates(updates).Error; err != nil {
 			return err
 		}
-		return tx.Create(&order).Error
+		if err := discountservice.VerifyUsageCaps(tx, priced.Discounts, userID); err != nil {
+			return err
+		}
+		if err := tx.Create(&order).Error; err != nil {
+			return err
+		}
+		return discountservice.RecordRedemptions(tx, order.ID, userID, priced.Discounts, now)
 	})
 	if err != nil {
 		return models.Order{}, err
@@ -183,6 +230,8 @@ func createOrderErrorResponse(err error) (int, gin.H) {
 			return http.StatusBadRequest, gin.H{"error": err.Error()}
 		case errors.Is(err, gorm.ErrRecordNotFound):
 			return http.StatusBadRequest, gin.H{"error": "Product variant not found"}
+		case errors.Is(err, discountservice.ErrUsageCapExceeded):
+			return http.StatusConflict, gin.H{"error": "Discount usage cap exceeded"}
 		default:
 			return http.StatusInternalServerError, gin.H{"error": "Failed to create order"}
 		}
@@ -254,7 +303,7 @@ func createOrUpdateCheckoutOrderRecord(
 	guestEmail *string,
 	items []orderVariantQuantity,
 ) (models.Order, bool, error) {
-	total, orderItems, err := buildOrderItemsForVariants(db, items)
+	priced, err := buildOrderItemsForVariants(db, items)
 	if err != nil {
 		return models.Order{}, false, err
 	}
@@ -279,7 +328,7 @@ func createOrUpdateCheckoutOrderRecord(
 		}
 		if existing != nil {
 			order = *existing
-			order.Total = total
+			order.Total = priced.Total
 			order.GuestEmail = guestEmail
 			if userID != nil {
 				order.UserID = userID
@@ -288,7 +337,7 @@ func createOrUpdateCheckoutOrderRecord(
 			if err := tx.Model(&models.Order{}).
 				Where("id = ?", order.ID).
 				Updates(map[string]any{
-					"total":              total,
+					"total":              priced.Total,
 					"guest_email":        guestEmail,
 					"user_id":            userID,
 					"confirmation_token": order.ConfirmationToken,
@@ -298,11 +347,20 @@ func createOrUpdateCheckoutOrderRecord(
 			if err := tx.Where("order_id = ?", order.ID).Delete(&models.OrderItem{}).Error; err != nil {
 				return err
 			}
-			for i := range orderItems {
-				orderItems[i].OrderID = order.ID
+			if err := tx.Where("order_id = ?", order.ID).Delete(&models.DiscountRedemption{}).Error; err != nil {
+				return err
 			}
-			if len(orderItems) > 0 {
-				if err := tx.Create(&orderItems).Error; err != nil {
+			for i := range priced.Items {
+				priced.Items[i].OrderID = order.ID
+			}
+			if len(priced.Items) > 0 {
+				if err := discountservice.VerifyUsageCaps(tx, priced.Discounts, userID); err != nil {
+					return err
+				}
+				if err := tx.Create(&priced.Items).Error; err != nil {
+					return err
+				}
+				if err := discountservice.RecordRedemptions(tx, order.ID, userID, priced.Discounts, now); err != nil {
 					return err
 				}
 			}
@@ -312,9 +370,9 @@ func createOrUpdateCheckoutOrderRecord(
 		order = models.Order{
 			CheckoutSessionID: session.ID,
 			GuestEmail:        guestEmail,
-			Total:             total,
+			Total:             priced.Total,
 			Status:            models.StatusPending,
-			Items:             orderItems,
+			Items:             priced.Items,
 		}
 		if userID != nil {
 			order.UserID = userID
@@ -323,7 +381,13 @@ func createOrUpdateCheckoutOrderRecord(
 			order.ConfirmationToken = &token
 		}
 		created = true
-		return tx.Create(&order).Error
+		if err := discountservice.VerifyUsageCaps(tx, priced.Discounts, userID); err != nil {
+			return err
+		}
+		if err := tx.Create(&order).Error; err != nil {
+			return err
+		}
+		return discountservice.RecordRedemptions(tx, order.ID, userID, priced.Discounts, now)
 	})
 	if err != nil {
 		return models.Order{}, false, err

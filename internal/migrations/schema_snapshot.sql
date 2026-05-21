@@ -72,6 +72,156 @@ TABLE checkout_sessions
   COLUMN user_id
   INDEX idx_checkout_sessions_deleted_at columns=deleted_at unique=false option=
   INDEX idx_checkout_sessions_public_token columns=public_token unique=true option=
+TABLE discount_campaign_audits
+  COLUMN actor
+  COLUMN after_json
+  COLUMN before_json
+  COLUMN campaign_id
+  COLUMN changed_at
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN event_type
+  COLUMN id
+  COLUMN source
+  COLUMN summary
+  COLUMN updated_at
+  INDEX idx_discount_campaign_audits_campaign_changed columns=campaign_id,changed_at unique=false option=
+  INDEX idx_discount_campaign_audits_campaign_id columns=campaign_id unique=false option=
+  INDEX idx_discount_campaign_audits_changed_at columns=changed_at unique=false option=
+  INDEX idx_discount_campaign_audits_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_discount_campaign_audits_event_type columns=event_type unique=false option=
+TABLE discount_campaigns
+  COLUMN channels_json
+  COLUMN coupon_code
+  COLUMN created_at
+  COLUMN created_by
+  COLUMN customer_segment
+  COLUMN deleted_at
+  COLUMN discount_mode
+  COLUMN discount_value
+  COLUMN ends_at
+  COLUMN global_usage_cap
+  COLUMN id
+  COLUMN is_archived
+  COLUMN is_exclusive
+  COLUMN metadata_json
+  COLUMN name
+  COLUMN per_customer_usage_cap
+  COLUMN priority
+  COLUMN starts_at
+  COLUMN status
+  COLUMN timezone
+  COLUMN type
+  COLUMN updated_at
+  COLUMN updated_by
+  INDEX idx_discount_campaigns_active_window columns=ends_at,is_archived,starts_at,status,type unique=false option=
+  INDEX idx_discount_campaigns_coupon_code columns=coupon_code unique=true option=
+  INDEX idx_discount_campaigns_created_by columns=created_by unique=false option=
+  INDEX idx_discount_campaigns_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_discount_campaigns_ends_at columns=ends_at unique=false option=
+  INDEX idx_discount_campaigns_is_archived columns=is_archived unique=false option=
+  INDEX idx_discount_campaigns_priority columns=priority unique=false option=
+  INDEX idx_discount_campaigns_runtime_lookup columns=ends_at,id,is_archived,priority,starts_at,status unique=false option=
+  INDEX idx_discount_campaigns_starts_at columns=starts_at unique=false option=
+  INDEX idx_discount_campaigns_status columns=status unique=false option=
+  INDEX idx_discount_campaigns_type columns=type unique=false option=
+  INDEX idx_discount_campaigns_updated_by columns=updated_by unique=false option=
+TABLE discount_levels
+  COLUMN action_json
+  COLUMN campaign_id
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN max_applications_per_order
+  COLUMN name
+  COLUMN priority
+  COLUMN stack_policy
+  COLUMN updated_at
+  INDEX idx_discount_levels_campaign_id columns=campaign_id unique=false option=
+  INDEX idx_discount_levels_deleted_at columns=deleted_at unique=false option=
+TABLE discount_redemptions
+  COLUMN applied_amount
+  COLUMN applied_at
+  COLUMN campaign_id
+  COLUMN created_at
+  COLUMN customer_id
+  COLUMN deleted_at
+  COLUMN evaluation_snapshot_hash
+  COLUMN id
+  COLUMN level_id
+  COLUMN order_id
+  COLUMN updated_at
+  INDEX idx_discount_redemptions_applied_at columns=applied_at unique=false option=
+  INDEX idx_discount_redemptions_campaign_customer columns=campaign_id,customer_id unique=false option=
+  INDEX idx_discount_redemptions_campaign_order columns=campaign_id,order_id unique=true option=
+  INDEX idx_discount_redemptions_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_discount_redemptions_level_id columns=level_id unique=false option=
+  INDEX idx_discount_redemptions_order_id columns=order_id unique=false option=
+TABLE discount_rules
+  COLUMN action_json
+  COLUMN campaign_id
+  COLUMN condition_json
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN max_applications_per_order
+  COLUMN stack_policy
+  COLUMN updated_at
+  INDEX idx_discount_rules_campaign_id columns=campaign_id unique=false option=
+  INDEX idx_discount_rules_deleted_at columns=deleted_at unique=false option=
+TABLE discount_schedules
+  COLUMN campaign_id
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN last_run_at
+  COLUMN next_run_at
+  COLUMN r_rule
+  COLUMN schedule_type
+  COLUMN timezone
+  COLUMN until_at
+  COLUMN updated_at
+  COLUMN window_end
+  COLUMN window_start
+  INDEX idx_discount_schedules_campaign_id columns=campaign_id unique=true option=
+  INDEX idx_discount_schedules_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_discount_schedules_next_run columns=next_run_at,schedule_type unique=false option=
+  INDEX idx_discount_schedules_next_run_at columns=next_run_at unique=false option=
+  INDEX idx_discount_schedules_schedule_type columns=schedule_type unique=false option=
+  INDEX idx_discount_schedules_until_at columns=until_at unique=false option=
+  INDEX idx_discount_schedules_window_end columns=window_end unique=false option=
+  INDEX idx_discount_schedules_window_start columns=window_start unique=false option=
+TABLE discount_state_histories
+  COLUMN actor
+  COLUMN campaign_id
+  COLUMN changed_at
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN from_status
+  COLUMN id
+  COLUMN reason
+  COLUMN source
+  COLUMN to_status
+  COLUMN updated_at
+  INDEX idx_discount_state_histories_campaign_id columns=campaign_id unique=false option=
+  INDEX idx_discount_state_histories_changed_at columns=changed_at unique=false option=
+  INDEX idx_discount_state_histories_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_discount_state_history_campaign_changed columns=campaign_id,changed_at unique=false option=
+TABLE discount_targets
+  COLUMN campaign_id
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN level_id
+  COLUMN target_id
+  COLUMN target_type
+  COLUMN updated_at
+  INDEX idx_discount_target columns=campaign_id,level_id,target_id,target_type unique=true option=
+  INDEX idx_discount_targets_category_lookup columns=campaign_id,level_id,target_id,target_type unique=false option=
+  INDEX idx_discount_targets_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_discount_targets_level_id columns=level_id unique=false option=
+  INDEX idx_discount_targets_level_lookup columns=level_id,target_id,target_type unique=false option=
+  INDEX idx_discount_targets_product_lookup columns=campaign_id,target_id,target_type unique=false option=
 TABLE idempotency_keys
   COLUMN checkout_session_id
   COLUMN correlation_id
@@ -644,6 +794,17 @@ TABLE products
   INDEX idx_products_default_variant_id columns=default_variant_id unique=false option=
   INDEX idx_products_deleted_at columns=deleted_at unique=false option=
   INDEX idx_products_is_published columns=is_published unique=false option=
+TABLE promotion_templates
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN description
+  COLUMN id
+  COLUMN is_active
+  COLUMN name
+  COLUMN template_json
+  COLUMN updated_at
+  INDEX idx_promotion_templates_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_promotion_templates_is_active columns=is_active unique=false option=
 TABLE provider_call_audits
   COLUMN correlation_id
   COLUMN created_at

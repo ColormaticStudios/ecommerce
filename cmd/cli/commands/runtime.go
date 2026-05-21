@@ -67,6 +67,7 @@ func newRootCmd() *cobra.Command {
 	rootCmd.AddCommand(NewCategoryCmd())
 	rootCmd.AddCommand(NewProductAttributeCmd())
 	rootCmd.AddCommand(NewOrderCmd())
+	rootCmd.AddCommand(NewDiscountCmd())
 	rootCmd.AddCommand(NewInventoryCmd())
 	rootCmd.AddCommand(NewStorefrontCmd())
 	rootCmd.AddCommand(NewWebsiteCmd())

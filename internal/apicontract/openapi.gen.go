@@ -52,6 +52,60 @@ const (
 	CheckoutPluginStateSeverityWarning CheckoutPluginStateSeverity = "warning"
 )
 
+// Defines values for DiscountCampaignChannels.
+const (
+	DiscountCampaignChannelsAdmin DiscountCampaignChannels = "admin"
+	DiscountCampaignChannelsApp   DiscountCampaignChannels = "app"
+	DiscountCampaignChannelsWeb   DiscountCampaignChannels = "web"
+)
+
+// Defines values for DiscountCampaignDiscountMode.
+const (
+	DiscountCampaignDiscountModeFixed   DiscountCampaignDiscountMode = "fixed"
+	DiscountCampaignDiscountModePercent DiscountCampaignDiscountMode = "percent"
+)
+
+// Defines values for DiscountCampaignStatus.
+const (
+	DiscountCampaignStatusActive    DiscountCampaignStatus = "active"
+	DiscountCampaignStatusArchived  DiscountCampaignStatus = "archived"
+	DiscountCampaignStatusDisabled  DiscountCampaignStatus = "disabled"
+	DiscountCampaignStatusScheduled DiscountCampaignStatus = "scheduled"
+)
+
+// Defines values for DiscountCampaignType.
+const (
+	ProductDiscount DiscountCampaignType = "product_discount"
+	Promotion       DiscountCampaignType = "promotion"
+)
+
+// Defines values for DiscountScheduleScheduleType.
+const (
+	DiscountScheduleScheduleTypeOneTime   DiscountScheduleScheduleType = "one_time"
+	DiscountScheduleScheduleTypeRecurring DiscountScheduleScheduleType = "recurring"
+)
+
+// Defines values for DiscountScheduleInputRecurrence.
+const (
+	Daily   DiscountScheduleInputRecurrence = "daily"
+	Monthly DiscountScheduleInputRecurrence = "monthly"
+	Weekly  DiscountScheduleInputRecurrence = "weekly"
+)
+
+// Defines values for DiscountScheduleInputScheduleType.
+const (
+	DiscountScheduleInputScheduleTypeOneTime   DiscountScheduleInputScheduleType = "one_time"
+	DiscountScheduleInputScheduleTypeRecurring DiscountScheduleInputScheduleType = "recurring"
+)
+
+// Defines values for DiscountTargetTargetType.
+const (
+	DiscountTargetTargetTypeBrand    DiscountTargetTargetType = "brand"
+	DiscountTargetTargetTypeCategory DiscountTargetTargetType = "category"
+	DiscountTargetTargetTypeProduct  DiscountTargetTargetType = "product"
+	DiscountTargetTargetTypeVariant  DiscountTargetTargetType = "variant"
+)
+
 // Defines values for InventoryAdjustmentReason.
 const (
 	CORRECTION     InventoryAdjustmentReason = "CORRECTION"
@@ -135,6 +189,90 @@ const (
 	Enum    ProductAttributeDefinitionInputType = "enum"
 	Number  ProductAttributeDefinitionInputType = "number"
 	Text    ProductAttributeDefinitionInputType = "text"
+)
+
+// Defines values for ProductDiscountInputChannels.
+const (
+	ProductDiscountInputChannelsAdmin ProductDiscountInputChannels = "admin"
+	ProductDiscountInputChannelsApp   ProductDiscountInputChannels = "app"
+	ProductDiscountInputChannelsWeb   ProductDiscountInputChannels = "web"
+)
+
+// Defines values for ProductDiscountInputDiscountMode.
+const (
+	ProductDiscountInputDiscountModeFixed   ProductDiscountInputDiscountMode = "fixed"
+	ProductDiscountInputDiscountModePercent ProductDiscountInputDiscountMode = "percent"
+)
+
+// Defines values for ProductDiscountInputStatus.
+const (
+	ProductDiscountInputStatusActive   ProductDiscountInputStatus = "active"
+	ProductDiscountInputStatusDisabled ProductDiscountInputStatus = "disabled"
+)
+
+// Defines values for PromotionActionMode.
+const (
+	Fixed      PromotionActionMode = "fixed"
+	FixedPrice PromotionActionMode = "fixed_price"
+	FreeItem   PromotionActionMode = "free_item"
+	Percent    PromotionActionMode = "percent"
+)
+
+// Defines values for PromotionActionTargetType.
+const (
+	PromotionActionTargetTypeBrand    PromotionActionTargetType = "brand"
+	PromotionActionTargetTypeCart     PromotionActionTargetType = "cart"
+	PromotionActionTargetTypeCategory PromotionActionTargetType = "category"
+	PromotionActionTargetTypeProduct  PromotionActionTargetType = "product"
+	PromotionActionTargetTypeVariant  PromotionActionTargetType = "variant"
+)
+
+// Defines values for PromotionEvaluationRequestChannel.
+const (
+	PromotionEvaluationRequestChannelAdmin PromotionEvaluationRequestChannel = "admin"
+	PromotionEvaluationRequestChannelApp   PromotionEvaluationRequestChannel = "app"
+	PromotionEvaluationRequestChannelWeb   PromotionEvaluationRequestChannel = "web"
+)
+
+// Defines values for PromotionInputChannels.
+const (
+	PromotionInputChannelsAdmin PromotionInputChannels = "admin"
+	PromotionInputChannelsApp   PromotionInputChannels = "app"
+	PromotionInputChannelsWeb   PromotionInputChannels = "web"
+)
+
+// Defines values for PromotionInputStatus.
+const (
+	PromotionInputStatusActive    PromotionInputStatus = "active"
+	PromotionInputStatusDisabled  PromotionInputStatus = "disabled"
+	PromotionInputStatusScheduled PromotionInputStatus = "scheduled"
+)
+
+// Defines values for PromotionLevelInputStackPolicy.
+const (
+	PromotionLevelInputStackPolicyAdditive PromotionLevelInputStackPolicy = "additive"
+	PromotionLevelInputStackPolicyNone     PromotionLevelInputStackPolicy = "none"
+)
+
+// Defines values for PromotionRuleInputStackPolicy.
+const (
+	PromotionRuleInputStackPolicyAdditive PromotionRuleInputStackPolicy = "additive"
+	PromotionRuleInputStackPolicyNone     PromotionRuleInputStackPolicy = "none"
+)
+
+// Defines values for PromotionTargetInputTargetType.
+const (
+	PromotionTargetInputTargetTypeBrand    PromotionTargetInputTargetType = "brand"
+	PromotionTargetInputTargetTypeCategory PromotionTargetInputTargetType = "category"
+	PromotionTargetInputTargetTypeProduct  PromotionTargetInputTargetType = "product"
+	PromotionTargetInputTargetTypeVariant  PromotionTargetInputTargetType = "variant"
+)
+
+// Defines values for PromotionTemplateInstantiateInputChannels.
+const (
+	PromotionTemplateInstantiateInputChannelsAdmin PromotionTemplateInstantiateInputChannels = "admin"
+	PromotionTemplateInstantiateInputChannelsApp   PromotionTemplateInstantiateInputChannels = "app"
+	PromotionTemplateInstantiateInputChannelsWeb   PromotionTemplateInstantiateInputChannels = "web"
 )
 
 // Defines values for ProviderCredentialEnvironment.
@@ -305,8 +443,8 @@ const (
 
 // Defines values for UserRole.
 const (
-	UserRoleAdmin    UserRole = "admin"
-	UserRoleCustomer UserRole = "customer"
+	Admin    UserRole = "admin"
+	Customer UserRole = "customer"
 )
 
 // Defines values for WebhookEventRecordStatus.
@@ -322,6 +460,14 @@ const (
 	UpdateAdminCheckoutPluginParamsTypePayment  UpdateAdminCheckoutPluginParamsType = "payment"
 	UpdateAdminCheckoutPluginParamsTypeShipping UpdateAdminCheckoutPluginParamsType = "shipping"
 	UpdateAdminCheckoutPluginParamsTypeTax      UpdateAdminCheckoutPluginParamsType = "tax"
+)
+
+// Defines values for ListAdminDiscountCampaignsParamsStatus.
+const (
+	ListAdminDiscountCampaignsParamsStatusActive    ListAdminDiscountCampaignsParamsStatus = "active"
+	ListAdminDiscountCampaignsParamsStatusArchived  ListAdminDiscountCampaignsParamsStatus = "archived"
+	ListAdminDiscountCampaignsParamsStatusDisabled  ListAdminDiscountCampaignsParamsStatus = "disabled"
+	ListAdminDiscountCampaignsParamsStatusScheduled ListAdminDiscountCampaignsParamsStatus = "scheduled"
 )
 
 // Defines values for ListAdminInventoryAlertsParamsStatus.
@@ -453,6 +599,14 @@ type AdminOrderShippingLabelResponse struct {
 	Shipment Shipment `json:"shipment"`
 }
 
+// AppliedCampaign defines model for AppliedCampaign.
+type AppliedCampaign struct {
+	DiscountAmount float64 `json:"discount_amount"`
+	Id             int     `json:"id"`
+	LevelId        *int    `json:"level_id"`
+	Name           string  `json:"name"`
+}
+
 // AuthConfigResponse defines model for AuthConfigResponse.
 type AuthConfigResponse struct {
 	LocalSignInEnabled bool `json:"local_sign_in_enabled"`
@@ -506,15 +660,19 @@ type Cart struct {
 
 // CartItem defines model for CartItem.
 type CartItem struct {
-	CartId           int            `json:"cart_id"`
-	CreatedAt        time.Time      `json:"created_at"`
-	DeletedAt        *time.Time     `json:"deleted_at"`
-	Id               int            `json:"id"`
-	Product          Product        `json:"product"`
-	ProductVariant   ProductVariant `json:"product_variant"`
-	ProductVariantId int            `json:"product_variant_id"`
-	Quantity         int            `json:"quantity"`
-	UpdatedAt        time.Time      `json:"updated_at"`
+	AppliedCampaigns *[]AppliedCampaign `json:"applied_campaigns,omitempty"`
+	BasePrice        *float64           `json:"base_price,omitempty"`
+	CartId           int                `json:"cart_id"`
+	CreatedAt        time.Time          `json:"created_at"`
+	DeletedAt        *time.Time         `json:"deleted_at"`
+	DiscountAmount   *float64           `json:"discount_amount,omitempty"`
+	FinalPrice       *float64           `json:"final_price,omitempty"`
+	Id               int                `json:"id"`
+	Product          Product            `json:"product"`
+	ProductVariant   ProductVariant     `json:"product_variant"`
+	ProductVariantId int                `json:"product_variant_id"`
+	Quantity         int                `json:"quantity"`
+	UpdatedAt        time.Time          `json:"updated_at"`
 }
 
 // Category defines model for Category.
@@ -652,6 +810,7 @@ type CheckoutQuoteRequest struct {
 // CheckoutQuoteResponse defines model for CheckoutQuoteResponse.
 type CheckoutQuoteResponse struct {
 	Currency       string                `json:"currency"`
+	DiscountTotal  *float64              `json:"discount_total,omitempty"`
 	ExpiresAt      *time.Time            `json:"expires_at"`
 	PaymentStates  []CheckoutPluginState `json:"payment_states"`
 	Shipping       float64               `json:"shipping"`
@@ -715,6 +874,164 @@ type CreateSavedPaymentMethodRequest struct {
 	Nickname       *string `json:"nickname,omitempty"`
 	SetDefault     *bool   `json:"set_default,omitempty"`
 }
+
+// DiscountCampaign defines model for DiscountCampaign.
+type DiscountCampaign struct {
+	Channels            *[]DiscountCampaignChannels  `json:"channels,omitempty"`
+	CouponCode          *string                      `json:"coupon_code"`
+	CreatedAt           time.Time                    `json:"created_at"`
+	CustomerSegment     *string                      `json:"customer_segment"`
+	DiscountMode        DiscountCampaignDiscountMode `json:"discount_mode"`
+	DiscountValue       float64                      `json:"discount_value"`
+	EndsAt              *time.Time                   `json:"ends_at"`
+	GlobalUsageCap      *int                         `json:"global_usage_cap"`
+	Id                  int                          `json:"id"`
+	IsExclusive         bool                         `json:"is_exclusive"`
+	Metadata            *map[string]interface{}      `json:"metadata,omitempty"`
+	Name                string                       `json:"name"`
+	PerCustomerUsageCap *int                         `json:"per_customer_usage_cap"`
+	Priority            int                          `json:"priority"`
+	StartsAt            time.Time                    `json:"starts_at"`
+	Status              DiscountCampaignStatus       `json:"status"`
+	Targets             []DiscountTarget             `json:"targets"`
+	Type                DiscountCampaignType         `json:"type"`
+	UpdatedAt           time.Time                    `json:"updated_at"`
+}
+
+// DiscountCampaignChannels defines model for DiscountCampaign.Channels.
+type DiscountCampaignChannels string
+
+// DiscountCampaignDiscountMode defines model for DiscountCampaign.DiscountMode.
+type DiscountCampaignDiscountMode string
+
+// DiscountCampaignStatus defines model for DiscountCampaign.Status.
+type DiscountCampaignStatus string
+
+// DiscountCampaignType defines model for DiscountCampaign.Type.
+type DiscountCampaignType string
+
+// DiscountCampaignAudit defines model for DiscountCampaignAudit.
+type DiscountCampaignAudit struct {
+	Actor      string    `json:"actor"`
+	AfterJson  string    `json:"after_json"`
+	BeforeJson string    `json:"before_json"`
+	CampaignId int       `json:"campaign_id"`
+	ChangedAt  time.Time `json:"changed_at"`
+	EventType  string    `json:"event_type"`
+	Id         int       `json:"id"`
+	Source     string    `json:"source"`
+	Summary    string    `json:"summary"`
+}
+
+// DiscountCampaignAuditListResponse defines model for DiscountCampaignAuditListResponse.
+type DiscountCampaignAuditListResponse struct {
+	Audit []DiscountCampaignAudit `json:"audit"`
+}
+
+// DiscountCampaignListResponse defines model for DiscountCampaignListResponse.
+type DiscountCampaignListResponse struct {
+	Campaigns []DiscountCampaign `json:"campaigns"`
+}
+
+// DiscountEvaluationMetrics defines model for DiscountEvaluationMetrics.
+type DiscountEvaluationMetrics struct {
+	FailedEvaluations      int64      `json:"failed_evaluations"`
+	LastCandidateCampaigns int64      `json:"last_candidate_campaigns"`
+	LastError              string     `json:"last_error"`
+	LastEvaluatedAt        *time.Time `json:"last_evaluated_at"`
+	LastLatencyMs          int64      `json:"last_latency_ms"`
+	LastLineCount          int64      `json:"last_line_count"`
+	LastMatchedCampaigns   int64      `json:"last_matched_campaigns"`
+	MatchedEvaluations     int64      `json:"matched_evaluations"`
+	TotalEvaluations       int64      `json:"total_evaluations"`
+	TotalLatencyMs         int64      `json:"total_latency_ms"`
+}
+
+// DiscountLifecycleRunResponse defines model for DiscountLifecycleRunResponse.
+type DiscountLifecycleRunResponse struct {
+	Activated   int `json:"activated"`
+	Archived    int `json:"archived"`
+	Deactivated int `json:"deactivated"`
+}
+
+// DiscountReconciliationIssue defines model for DiscountReconciliationIssue.
+type DiscountReconciliationIssue struct {
+	ActualEnd      *time.Time `json:"actual_end"`
+	ActualStart    *time.Time `json:"actual_start,omitempty"`
+	ActualStatus   string     `json:"actual_status"`
+	CampaignId     int        `json:"campaign_id"`
+	ExpectedEnd    *time.Time `json:"expected_end"`
+	ExpectedStart  *time.Time `json:"expected_start,omitempty"`
+	ExpectedStatus string     `json:"expected_status"`
+	Message        string     `json:"message"`
+	ScheduleId     int        `json:"schedule_id"`
+}
+
+// DiscountReconciliationReport defines model for DiscountReconciliationReport.
+type DiscountReconciliationReport struct {
+	CheckedAt time.Time                     `json:"checked_at"`
+	Issues    []DiscountReconciliationIssue `json:"issues"`
+}
+
+// DiscountSchedule defines model for DiscountSchedule.
+type DiscountSchedule struct {
+	CampaignId   int                          `json:"campaign_id"`
+	Id           int                          `json:"id"`
+	LastRunAt    *time.Time                   `json:"last_run_at"`
+	NextRunAt    *time.Time                   `json:"next_run_at"`
+	Recurrence   *string                      `json:"recurrence"`
+	ScheduleType DiscountScheduleScheduleType `json:"schedule_type"`
+	Timezone     string                       `json:"timezone"`
+	UntilAt      *time.Time                   `json:"until_at"`
+	WindowEnd    time.Time                    `json:"window_end"`
+	WindowStart  time.Time                    `json:"window_start"`
+}
+
+// DiscountScheduleScheduleType defines model for DiscountSchedule.ScheduleType.
+type DiscountScheduleScheduleType string
+
+// DiscountScheduleInput defines model for DiscountScheduleInput.
+type DiscountScheduleInput struct {
+	Recurrence   *DiscountScheduleInputRecurrence  `json:"recurrence,omitempty"`
+	ScheduleType DiscountScheduleInputScheduleType `json:"schedule_type"`
+	Timezone     *string                           `json:"timezone,omitempty"`
+	UntilAt      *time.Time                        `json:"until_at"`
+	WindowEnd    time.Time                         `json:"window_end"`
+	WindowStart  time.Time                         `json:"window_start"`
+}
+
+// DiscountScheduleInputRecurrence defines model for DiscountScheduleInput.Recurrence.
+type DiscountScheduleInputRecurrence string
+
+// DiscountScheduleInputScheduleType defines model for DiscountScheduleInput.ScheduleType.
+type DiscountScheduleInputScheduleType string
+
+// DiscountStateHistory defines model for DiscountStateHistory.
+type DiscountStateHistory struct {
+	Actor      string    `json:"actor"`
+	CampaignId int       `json:"campaign_id"`
+	ChangedAt  time.Time `json:"changed_at"`
+	FromStatus string    `json:"from_status"`
+	Id         int       `json:"id"`
+	Reason     string    `json:"reason"`
+	Source     string    `json:"source"`
+	ToStatus   string    `json:"to_status"`
+}
+
+// DiscountStateHistoryListResponse defines model for DiscountStateHistoryListResponse.
+type DiscountStateHistoryListResponse struct {
+	History []DiscountStateHistory `json:"history"`
+}
+
+// DiscountTarget defines model for DiscountTarget.
+type DiscountTarget struct {
+	Id         int                      `json:"id"`
+	TargetId   int                      `json:"target_id"`
+	TargetType DiscountTargetTargetType `json:"target_type"`
+}
+
+// DiscountTargetTargetType defines model for DiscountTarget.TargetType.
+type DiscountTargetTargetType string
 
 // DraftPreviewSessionResponse defines model for DraftPreviewSessionResponse.
 type DraftPreviewSessionResponse struct {
@@ -1015,6 +1332,14 @@ type PaymentTransactionRecordOperation string
 // PaymentTransactionRecordStatus defines model for PaymentTransactionRecord.Status.
 type PaymentTransactionRecordStatus string
 
+// PriceBreakdown defines model for PriceBreakdown.
+type PriceBreakdown struct {
+	AppliedCampaigns []AppliedCampaign `json:"applied_campaigns"`
+	BasePrice        float64           `json:"base_price"`
+	DiscountAmount   float64           `json:"discount_amount"`
+	FinalPrice       float64           `json:"final_price"`
+}
+
 // ProcessPaymentResponse defines model for ProcessPaymentResponse.
 type ProcessPaymentResponse struct {
 	Message string `json:"message"`
@@ -1023,7 +1348,9 @@ type ProcessPaymentResponse struct {
 
 // Product defines model for Product.
 type Product struct {
+	AppliedCampaigns  *[]AppliedCampaign      `json:"applied_campaigns,omitempty"`
 	Attributes        []ProductAttributeValue `json:"attributes"`
+	BasePrice         *float64                `json:"base_price,omitempty"`
 	Brand             *Brand                  `json:"brand,omitempty"`
 	Categories        []Category              `json:"categories"`
 	CoverImage        *string                 `json:"cover_image"`
@@ -1032,7 +1359,9 @@ type Product struct {
 	DefaultVariantSku *string                 `json:"default_variant_sku"`
 	DeletedAt         *time.Time              `json:"deleted_at"`
 	Description       string                  `json:"description"`
+	DiscountAmount    *float64                `json:"discount_amount,omitempty"`
 	DraftUpdatedAt    *time.Time              `json:"draft_updated_at"`
+	FinalPrice        *float64                `json:"final_price,omitempty"`
 	HasDraftChanges   *bool                   `json:"has_draft_changes,omitempty"`
 	Id                int                     `json:"id"`
 	Images            []string                `json:"images"`
@@ -1040,6 +1369,7 @@ type Product struct {
 	Name              string                  `json:"name"`
 	Options           []ProductOption         `json:"options"`
 	Price             float64                 `json:"price"`
+	PriceBreakdown    *PriceBreakdown         `json:"price_breakdown,omitempty"`
 	PriceRange        ProductPriceRange       `json:"price_range"`
 	RelatedProducts   []RelatedProduct        `json:"related_products"`
 	Seo               ProductSEO              `json:"seo"`
@@ -1104,6 +1434,34 @@ type ProductAttributeValueInput struct {
 	ProductAttributeId int      `json:"product_attribute_id"`
 	TextValue          *string  `json:"text_value"`
 }
+
+// ProductDiscountInput defines model for ProductDiscountInput.
+type ProductDiscountInput struct {
+	Channels            *[]ProductDiscountInputChannels  `json:"channels,omitempty"`
+	CouponCode          *string                          `json:"coupon_code"`
+	CustomerSegment     *string                          `json:"customer_segment,omitempty"`
+	DiscountMode        ProductDiscountInputDiscountMode `json:"discount_mode"`
+	DiscountValue       float64                          `json:"discount_value"`
+	EndsAt              *time.Time                       `json:"ends_at"`
+	GlobalUsageCap      *int                             `json:"global_usage_cap"`
+	IsExclusive         *bool                            `json:"is_exclusive,omitempty"`
+	Metadata            *map[string]interface{}          `json:"metadata,omitempty"`
+	Name                string                           `json:"name"`
+	PerCustomerUsageCap *int                             `json:"per_customer_usage_cap"`
+	Priority            *int                             `json:"priority,omitempty"`
+	ProductIds          []int                            `json:"product_ids"`
+	StartsAt            time.Time                        `json:"starts_at"`
+	Status              *ProductDiscountInputStatus      `json:"status,omitempty"`
+}
+
+// ProductDiscountInputChannels defines model for ProductDiscountInput.Channels.
+type ProductDiscountInputChannels string
+
+// ProductDiscountInputDiscountMode defines model for ProductDiscountInput.DiscountMode.
+type ProductDiscountInputDiscountMode string
+
+// ProductDiscountInputStatus defines model for ProductDiscountInput.Status.
+type ProductDiscountInputStatus string
 
 // ProductOption defines model for ProductOption.
 type ProductOption struct {
@@ -1228,6 +1586,173 @@ type ProductVariantSelectionInput struct {
 	OptionName  string `json:"option_name"`
 	OptionValue string `json:"option_value"`
 	Position    *int   `json:"position,omitempty"`
+}
+
+// PromotionAction defines model for PromotionAction.
+type PromotionAction struct {
+	BrandIds          *[]int                     `json:"brand_ids,omitempty"`
+	CategoryIds       *[]int                     `json:"category_ids,omitempty"`
+	Mode              PromotionActionMode        `json:"mode"`
+	ProductIds        *[]int                     `json:"product_ids,omitempty"`
+	ProductVariantIds *[]int                     `json:"product_variant_ids,omitempty"`
+	Sku               *string                    `json:"sku,omitempty"`
+	TargetIds         *[]int                     `json:"target_ids,omitempty"`
+	TargetType        *PromotionActionTargetType `json:"target_type,omitempty"`
+	Value             *float64                   `json:"value,omitempty"`
+}
+
+// PromotionActionMode defines model for PromotionAction.Mode.
+type PromotionActionMode string
+
+// PromotionActionTargetType defines model for PromotionAction.TargetType.
+type PromotionActionTargetType string
+
+// PromotionCondition defines model for PromotionCondition.
+type PromotionCondition struct {
+	BrandIds          *[]int   `json:"brand_ids,omitempty"`
+	CategoryIds       *[]int   `json:"category_ids,omitempty"`
+	MinQuantity       *int     `json:"min_quantity,omitempty"`
+	MinSubtotal       *float64 `json:"min_subtotal,omitempty"`
+	ProductIds        *[]int   `json:"product_ids,omitempty"`
+	ProductVariantIds *[]int   `json:"product_variant_ids,omitempty"`
+}
+
+// PromotionEvaluationLine defines model for PromotionEvaluationLine.
+type PromotionEvaluationLine struct {
+	AppliedCampaigns []AppliedCampaign `json:"applied_campaigns"`
+	BasePrice        float64           `json:"base_price"`
+	DiscountAmount   float64           `json:"discount_amount"`
+	FinalPrice       float64           `json:"final_price"`
+	ProductId        int               `json:"product_id"`
+	ProductVariantId int               `json:"product_variant_id"`
+	Quantity         int               `json:"quantity"`
+}
+
+// PromotionEvaluationRequest defines model for PromotionEvaluationRequest.
+type PromotionEvaluationRequest struct {
+	Channel         *PromotionEvaluationRequestChannel `json:"channel,omitempty"`
+	CouponCode      *string                            `json:"coupon_code,omitempty"`
+	CustomerSegment *string                            `json:"customer_segment,omitempty"`
+	Lines           []PromotionEvaluationRequestLine   `json:"lines"`
+}
+
+// PromotionEvaluationRequestChannel defines model for PromotionEvaluationRequest.Channel.
+type PromotionEvaluationRequestChannel string
+
+// PromotionEvaluationRequestLine defines model for PromotionEvaluationRequestLine.
+type PromotionEvaluationRequestLine struct {
+	BrandId          *int    `json:"brand_id"`
+	CategoryIds      *[]int  `json:"category_ids,omitempty"`
+	ProductId        int     `json:"product_id"`
+	ProductVariantId int     `json:"product_variant_id"`
+	Quantity         int     `json:"quantity"`
+	Sku              *string `json:"sku,omitempty"`
+	UnitPrice        float64 `json:"unit_price"`
+}
+
+// PromotionEvaluationResponse defines model for PromotionEvaluationResponse.
+type PromotionEvaluationResponse struct {
+	DiscountTotal float64                   `json:"discount_total"`
+	FinalSubtotal float64                   `json:"final_subtotal"`
+	Lines         []PromotionEvaluationLine `json:"lines"`
+	Subtotal      float64                   `json:"subtotal"`
+}
+
+// PromotionInput defines model for PromotionInput.
+type PromotionInput struct {
+	Channels            *[]PromotionInputChannels `json:"channels,omitempty"`
+	CouponCode          *string                   `json:"coupon_code"`
+	CustomerSegment     *string                   `json:"customer_segment,omitempty"`
+	EndsAt              *time.Time                `json:"ends_at"`
+	GlobalUsageCap      *int                      `json:"global_usage_cap"`
+	IsExclusive         *bool                     `json:"is_exclusive,omitempty"`
+	Levels              *[]PromotionLevelInput    `json:"levels,omitempty"`
+	Metadata            *map[string]interface{}   `json:"metadata,omitempty"`
+	Name                string                    `json:"name"`
+	PerCustomerUsageCap *int                      `json:"per_customer_usage_cap"`
+	Priority            *int                      `json:"priority,omitempty"`
+	Rules               *[]PromotionRuleInput     `json:"rules,omitempty"`
+	StartsAt            time.Time                 `json:"starts_at"`
+	Status              *PromotionInputStatus     `json:"status,omitempty"`
+}
+
+// PromotionInputChannels defines model for PromotionInput.Channels.
+type PromotionInputChannels string
+
+// PromotionInputStatus defines model for PromotionInput.Status.
+type PromotionInputStatus string
+
+// PromotionLevelInput defines model for PromotionLevelInput.
+type PromotionLevelInput struct {
+	Action                  PromotionAction                 `json:"action"`
+	MaxApplicationsPerOrder *int                            `json:"max_applications_per_order"`
+	Name                    string                          `json:"name"`
+	Priority                *int                            `json:"priority,omitempty"`
+	StackPolicy             *PromotionLevelInputStackPolicy `json:"stack_policy,omitempty"`
+	Targets                 []PromotionTargetInput          `json:"targets"`
+}
+
+// PromotionLevelInputStackPolicy defines model for PromotionLevelInput.StackPolicy.
+type PromotionLevelInputStackPolicy string
+
+// PromotionRuleInput defines model for PromotionRuleInput.
+type PromotionRuleInput struct {
+	Action                  PromotionAction                `json:"action"`
+	Condition               PromotionCondition             `json:"condition"`
+	MaxApplicationsPerOrder *int                           `json:"max_applications_per_order"`
+	StackPolicy             *PromotionRuleInputStackPolicy `json:"stack_policy,omitempty"`
+}
+
+// PromotionRuleInputStackPolicy defines model for PromotionRuleInput.StackPolicy.
+type PromotionRuleInputStackPolicy string
+
+// PromotionTargetInput defines model for PromotionTargetInput.
+type PromotionTargetInput struct {
+	TargetId   int                            `json:"target_id"`
+	TargetType PromotionTargetInputTargetType `json:"target_type"`
+}
+
+// PromotionTargetInputTargetType defines model for PromotionTargetInput.TargetType.
+type PromotionTargetInputTargetType string
+
+// PromotionTemplate defines model for PromotionTemplate.
+type PromotionTemplate struct {
+	CreatedAt    time.Time              `json:"created_at"`
+	Description  string                 `json:"description"`
+	Id           int                    `json:"id"`
+	IsActive     bool                   `json:"is_active"`
+	Name         string                 `json:"name"`
+	Template     map[string]interface{} `json:"template"`
+	TemplateJson string                 `json:"template_json"`
+	UpdatedAt    time.Time              `json:"updated_at"`
+}
+
+// PromotionTemplateInput defines model for PromotionTemplateInput.
+type PromotionTemplateInput struct {
+	Description *string        `json:"description,omitempty"`
+	IsActive    *bool          `json:"is_active"`
+	Name        string         `json:"name"`
+	Template    PromotionInput `json:"template"`
+}
+
+// PromotionTemplateInstantiateInput defines model for PromotionTemplateInstantiateInput.
+type PromotionTemplateInstantiateInput struct {
+	Channels            *[]PromotionTemplateInstantiateInputChannels `json:"channels,omitempty"`
+	CouponCode          *string                                      `json:"coupon_code"`
+	CustomerSegment     *string                                      `json:"customer_segment"`
+	EndsAt              *time.Time                                   `json:"ends_at"`
+	GlobalUsageCap      *int                                         `json:"global_usage_cap"`
+	Name                *string                                      `json:"name"`
+	PerCustomerUsageCap *int                                         `json:"per_customer_usage_cap"`
+	StartsAt            *time.Time                                   `json:"starts_at"`
+}
+
+// PromotionTemplateInstantiateInputChannels defines model for PromotionTemplateInstantiateInput.Channels.
+type PromotionTemplateInstantiateInputChannels string
+
+// PromotionTemplateListResponse defines model for PromotionTemplateListResponse.
+type PromotionTemplateListResponse struct {
+	Templates []PromotionTemplate `json:"templates"`
 }
 
 // ProviderCredential defines model for ProviderCredential.
@@ -1835,6 +2360,29 @@ type ListAdminCategoriesParams struct {
 // UpdateAdminCheckoutPluginParamsType defines parameters for UpdateAdminCheckoutPlugin.
 type UpdateAdminCheckoutPluginParamsType string
 
+// ListAdminDiscountAuditParams defines parameters for ListAdminDiscountAudit.
+type ListAdminDiscountAuditParams struct {
+	CampaignId *int `form:"campaign_id,omitempty" json:"campaign_id,omitempty"`
+}
+
+// ListAdminDiscountCampaignsParams defines parameters for ListAdminDiscountCampaigns.
+type ListAdminDiscountCampaignsParams struct {
+	Status *ListAdminDiscountCampaignsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+}
+
+// ListAdminDiscountCampaignsParamsStatus defines parameters for ListAdminDiscountCampaigns.
+type ListAdminDiscountCampaignsParamsStatus string
+
+// ListAdminDiscountHistoryParams defines parameters for ListAdminDiscountHistory.
+type ListAdminDiscountHistoryParams struct {
+	CampaignId *int `form:"campaign_id,omitempty" json:"campaign_id,omitempty"`
+}
+
+// ListAdminPromotionTemplatesParams defines parameters for ListAdminPromotionTemplates.
+type ListAdminPromotionTemplatesParams struct {
+	Active *bool `form:"active,omitempty" json:"active,omitempty"`
+}
+
 // ListAdminInventoryAlertsParams defines parameters for ListAdminInventoryAlerts.
 type ListAdminInventoryAlertsParams struct {
 	Status *[]ListAdminInventoryAlertsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
@@ -2068,6 +2616,27 @@ type UpdateAdminCategoryJSONRequestBody = CategoryInput
 // UpdateAdminCheckoutPluginJSONRequestBody defines body for UpdateAdminCheckoutPlugin for application/json ContentType.
 type UpdateAdminCheckoutPluginJSONRequestBody = UpdateCheckoutPluginRequest
 
+// CreateAdminDiscountCampaignJSONRequestBody defines body for CreateAdminDiscountCampaign for application/json ContentType.
+type CreateAdminDiscountCampaignJSONRequestBody = ProductDiscountInput
+
+// UpdateAdminDiscountCampaignJSONRequestBody defines body for UpdateAdminDiscountCampaign for application/json ContentType.
+type UpdateAdminDiscountCampaignJSONRequestBody = ProductDiscountInput
+
+// ScheduleAdminDiscountCampaignJSONRequestBody defines body for ScheduleAdminDiscountCampaign for application/json ContentType.
+type ScheduleAdminDiscountCampaignJSONRequestBody = DiscountScheduleInput
+
+// CreateAdminPromotionCampaignJSONRequestBody defines body for CreateAdminPromotionCampaign for application/json ContentType.
+type CreateAdminPromotionCampaignJSONRequestBody = PromotionInput
+
+// PreviewAdminPromotionJSONRequestBody defines body for PreviewAdminPromotion for application/json ContentType.
+type PreviewAdminPromotionJSONRequestBody = PromotionEvaluationRequest
+
+// CreateAdminPromotionTemplateJSONRequestBody defines body for CreateAdminPromotionTemplate for application/json ContentType.
+type CreateAdminPromotionTemplateJSONRequestBody = PromotionTemplateInput
+
+// InstantiateAdminPromotionTemplateJSONRequestBody defines body for InstantiateAdminPromotionTemplate for application/json ContentType.
+type InstantiateAdminPromotionTemplateJSONRequestBody = PromotionTemplateInstantiateInput
+
 // CreateAdminInventoryAdjustmentJSONRequestBody defines body for CreateAdminInventoryAdjustment for application/json ContentType.
 type CreateAdminInventoryAdjustmentJSONRequestBody = InventoryAdjustmentRequest
 
@@ -2217,6 +2786,54 @@ type ServerInterface interface {
 
 	// (PATCH /api/v1/admin/checkout/plugins/{type}/{id})
 	UpdateAdminCheckoutPlugin(c *gin.Context, pType UpdateAdminCheckoutPluginParamsType, id string)
+
+	// (GET /api/v1/admin/discounts/audit)
+	ListAdminDiscountAudit(c *gin.Context, params ListAdminDiscountAuditParams)
+
+	// (GET /api/v1/admin/discounts/campaigns)
+	ListAdminDiscountCampaigns(c *gin.Context, params ListAdminDiscountCampaignsParams)
+
+	// (POST /api/v1/admin/discounts/campaigns)
+	CreateAdminDiscountCampaign(c *gin.Context)
+
+	// (PATCH /api/v1/admin/discounts/campaigns/{id})
+	UpdateAdminDiscountCampaign(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/discounts/campaigns/{id}/archive)
+	ArchiveAdminDiscountCampaign(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/discounts/campaigns/{id}/disable)
+	DisableAdminDiscountCampaign(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/discounts/campaigns/{id}/schedule)
+	ScheduleAdminDiscountCampaign(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/discounts/history)
+	ListAdminDiscountHistory(c *gin.Context, params ListAdminDiscountHistoryParams)
+
+	// (POST /api/v1/admin/discounts/lifecycle/run)
+	RunAdminDiscountLifecycle(c *gin.Context)
+
+	// (GET /api/v1/admin/discounts/metrics)
+	GetAdminDiscountMetrics(c *gin.Context)
+
+	// (POST /api/v1/admin/discounts/promotions)
+	CreateAdminPromotionCampaign(c *gin.Context)
+
+	// (POST /api/v1/admin/discounts/promotions/preview)
+	PreviewAdminPromotion(c *gin.Context)
+
+	// (POST /api/v1/admin/discounts/reconciliation/run)
+	RunAdminDiscountReconciliation(c *gin.Context)
+
+	// (GET /api/v1/admin/discounts/templates)
+	ListAdminPromotionTemplates(c *gin.Context, params ListAdminPromotionTemplatesParams)
+
+	// (POST /api/v1/admin/discounts/templates)
+	CreateAdminPromotionTemplate(c *gin.Context)
+
+	// (POST /api/v1/admin/discounts/templates/{id}/instantiate)
+	InstantiateAdminPromotionTemplate(c *gin.Context, id int)
 
 	// (POST /api/v1/admin/inventory/adjustments)
 	CreateAdminInventoryAdjustment(c *gin.Context)
@@ -2824,6 +3441,385 @@ func (siw *ServerInterfaceWrapper) UpdateAdminCheckoutPlugin(c *gin.Context) {
 	}
 
 	siw.Handler.UpdateAdminCheckoutPlugin(c, pType, id)
+}
+
+// ListAdminDiscountAudit operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminDiscountAudit(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminDiscountAuditParams
+
+	// ------------- Optional query parameter "campaign_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "campaign_id", c.Request.URL.Query(), &params.CampaignId)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter campaign_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminDiscountAudit(c, params)
+}
+
+// ListAdminDiscountCampaigns operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminDiscountCampaigns(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminDiscountCampaignsParams
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "status", c.Request.URL.Query(), &params.Status)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter status: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminDiscountCampaigns(c, params)
+}
+
+// CreateAdminDiscountCampaign operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminDiscountCampaign(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminDiscountCampaign(c)
+}
+
+// UpdateAdminDiscountCampaign operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminDiscountCampaign(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminDiscountCampaign(c, id)
+}
+
+// ArchiveAdminDiscountCampaign operation middleware
+func (siw *ServerInterfaceWrapper) ArchiveAdminDiscountCampaign(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ArchiveAdminDiscountCampaign(c, id)
+}
+
+// DisableAdminDiscountCampaign operation middleware
+func (siw *ServerInterfaceWrapper) DisableAdminDiscountCampaign(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DisableAdminDiscountCampaign(c, id)
+}
+
+// ScheduleAdminDiscountCampaign operation middleware
+func (siw *ServerInterfaceWrapper) ScheduleAdminDiscountCampaign(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ScheduleAdminDiscountCampaign(c, id)
+}
+
+// ListAdminDiscountHistory operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminDiscountHistory(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminDiscountHistoryParams
+
+	// ------------- Optional query parameter "campaign_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "campaign_id", c.Request.URL.Query(), &params.CampaignId)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter campaign_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminDiscountHistory(c, params)
+}
+
+// RunAdminDiscountLifecycle operation middleware
+func (siw *ServerInterfaceWrapper) RunAdminDiscountLifecycle(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RunAdminDiscountLifecycle(c)
+}
+
+// GetAdminDiscountMetrics operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminDiscountMetrics(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminDiscountMetrics(c)
+}
+
+// CreateAdminPromotionCampaign operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminPromotionCampaign(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminPromotionCampaign(c)
+}
+
+// PreviewAdminPromotion operation middleware
+func (siw *ServerInterfaceWrapper) PreviewAdminPromotion(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PreviewAdminPromotion(c)
+}
+
+// RunAdminDiscountReconciliation operation middleware
+func (siw *ServerInterfaceWrapper) RunAdminDiscountReconciliation(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RunAdminDiscountReconciliation(c)
+}
+
+// ListAdminPromotionTemplates operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminPromotionTemplates(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminPromotionTemplatesParams
+
+	// ------------- Optional query parameter "active" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "active", c.Request.URL.Query(), &params.Active)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter active: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminPromotionTemplates(c, params)
+}
+
+// CreateAdminPromotionTemplate operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminPromotionTemplate(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminPromotionTemplate(c)
+}
+
+// InstantiateAdminPromotionTemplate operation middleware
+func (siw *ServerInterfaceWrapper) InstantiateAdminPromotionTemplate(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.InstantiateAdminPromotionTemplate(c, id)
 }
 
 // CreateAdminInventoryAdjustment operation middleware
@@ -6062,6 +7058,22 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.PATCH(options.BaseURL+"/api/v1/admin/categories/:id", wrapper.UpdateAdminCategory)
 	router.GET(options.BaseURL+"/api/v1/admin/checkout/plugins", wrapper.ListAdminCheckoutPlugins)
 	router.PATCH(options.BaseURL+"/api/v1/admin/checkout/plugins/:type/:id", wrapper.UpdateAdminCheckoutPlugin)
+	router.GET(options.BaseURL+"/api/v1/admin/discounts/audit", wrapper.ListAdminDiscountAudit)
+	router.GET(options.BaseURL+"/api/v1/admin/discounts/campaigns", wrapper.ListAdminDiscountCampaigns)
+	router.POST(options.BaseURL+"/api/v1/admin/discounts/campaigns", wrapper.CreateAdminDiscountCampaign)
+	router.PATCH(options.BaseURL+"/api/v1/admin/discounts/campaigns/:id", wrapper.UpdateAdminDiscountCampaign)
+	router.POST(options.BaseURL+"/api/v1/admin/discounts/campaigns/:id/archive", wrapper.ArchiveAdminDiscountCampaign)
+	router.POST(options.BaseURL+"/api/v1/admin/discounts/campaigns/:id/disable", wrapper.DisableAdminDiscountCampaign)
+	router.POST(options.BaseURL+"/api/v1/admin/discounts/campaigns/:id/schedule", wrapper.ScheduleAdminDiscountCampaign)
+	router.GET(options.BaseURL+"/api/v1/admin/discounts/history", wrapper.ListAdminDiscountHistory)
+	router.POST(options.BaseURL+"/api/v1/admin/discounts/lifecycle/run", wrapper.RunAdminDiscountLifecycle)
+	router.GET(options.BaseURL+"/api/v1/admin/discounts/metrics", wrapper.GetAdminDiscountMetrics)
+	router.POST(options.BaseURL+"/api/v1/admin/discounts/promotions", wrapper.CreateAdminPromotionCampaign)
+	router.POST(options.BaseURL+"/api/v1/admin/discounts/promotions/preview", wrapper.PreviewAdminPromotion)
+	router.POST(options.BaseURL+"/api/v1/admin/discounts/reconciliation/run", wrapper.RunAdminDiscountReconciliation)
+	router.GET(options.BaseURL+"/api/v1/admin/discounts/templates", wrapper.ListAdminPromotionTemplates)
+	router.POST(options.BaseURL+"/api/v1/admin/discounts/templates", wrapper.CreateAdminPromotionTemplate)
+	router.POST(options.BaseURL+"/api/v1/admin/discounts/templates/:id/instantiate", wrapper.InstantiateAdminPromotionTemplate)
 	router.POST(options.BaseURL+"/api/v1/admin/inventory/adjustments", wrapper.CreateAdminInventoryAdjustment)
 	router.GET(options.BaseURL+"/api/v1/admin/inventory/alerts", wrapper.ListAdminInventoryAlerts)
 	router.POST(options.BaseURL+"/api/v1/admin/inventory/alerts/:id/ack", wrapper.AckAdminInventoryAlert)
@@ -6352,6 +7364,386 @@ type UpdateAdminCheckoutPlugin400JSONResponse Error
 func (response UpdateAdminCheckoutPlugin400JSONResponse) VisitUpdateAdminCheckoutPluginResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminDiscountAuditRequestObject struct {
+	Params ListAdminDiscountAuditParams
+}
+
+type ListAdminDiscountAuditResponseObject interface {
+	VisitListAdminDiscountAuditResponse(w http.ResponseWriter) error
+}
+
+type ListAdminDiscountAudit200JSONResponse DiscountCampaignAuditListResponse
+
+func (response ListAdminDiscountAudit200JSONResponse) VisitListAdminDiscountAuditResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminDiscountCampaignsRequestObject struct {
+	Params ListAdminDiscountCampaignsParams
+}
+
+type ListAdminDiscountCampaignsResponseObject interface {
+	VisitListAdminDiscountCampaignsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminDiscountCampaigns200JSONResponse DiscountCampaignListResponse
+
+func (response ListAdminDiscountCampaigns200JSONResponse) VisitListAdminDiscountCampaignsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminDiscountCampaignRequestObject struct {
+	Body *CreateAdminDiscountCampaignJSONRequestBody
+}
+
+type CreateAdminDiscountCampaignResponseObject interface {
+	VisitCreateAdminDiscountCampaignResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminDiscountCampaign201JSONResponse DiscountCampaign
+
+func (response CreateAdminDiscountCampaign201JSONResponse) VisitCreateAdminDiscountCampaignResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminDiscountCampaign400JSONResponse Error
+
+func (response CreateAdminDiscountCampaign400JSONResponse) VisitCreateAdminDiscountCampaignResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminDiscountCampaignRequestObject struct {
+	Id   int `json:"id"`
+	Body *UpdateAdminDiscountCampaignJSONRequestBody
+}
+
+type UpdateAdminDiscountCampaignResponseObject interface {
+	VisitUpdateAdminDiscountCampaignResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminDiscountCampaign200JSONResponse DiscountCampaign
+
+func (response UpdateAdminDiscountCampaign200JSONResponse) VisitUpdateAdminDiscountCampaignResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminDiscountCampaign400JSONResponse Error
+
+func (response UpdateAdminDiscountCampaign400JSONResponse) VisitUpdateAdminDiscountCampaignResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminDiscountCampaign404JSONResponse Error
+
+func (response UpdateAdminDiscountCampaign404JSONResponse) VisitUpdateAdminDiscountCampaignResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ArchiveAdminDiscountCampaignRequestObject struct {
+	Id int `json:"id"`
+}
+
+type ArchiveAdminDiscountCampaignResponseObject interface {
+	VisitArchiveAdminDiscountCampaignResponse(w http.ResponseWriter) error
+}
+
+type ArchiveAdminDiscountCampaign200JSONResponse DiscountCampaign
+
+func (response ArchiveAdminDiscountCampaign200JSONResponse) VisitArchiveAdminDiscountCampaignResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ArchiveAdminDiscountCampaign404JSONResponse Error
+
+func (response ArchiveAdminDiscountCampaign404JSONResponse) VisitArchiveAdminDiscountCampaignResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DisableAdminDiscountCampaignRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DisableAdminDiscountCampaignResponseObject interface {
+	VisitDisableAdminDiscountCampaignResponse(w http.ResponseWriter) error
+}
+
+type DisableAdminDiscountCampaign200JSONResponse DiscountCampaign
+
+func (response DisableAdminDiscountCampaign200JSONResponse) VisitDisableAdminDiscountCampaignResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DisableAdminDiscountCampaign404JSONResponse Error
+
+func (response DisableAdminDiscountCampaign404JSONResponse) VisitDisableAdminDiscountCampaignResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScheduleAdminDiscountCampaignRequestObject struct {
+	Id   int `json:"id"`
+	Body *ScheduleAdminDiscountCampaignJSONRequestBody
+}
+
+type ScheduleAdminDiscountCampaignResponseObject interface {
+	VisitScheduleAdminDiscountCampaignResponse(w http.ResponseWriter) error
+}
+
+type ScheduleAdminDiscountCampaign200JSONResponse DiscountSchedule
+
+func (response ScheduleAdminDiscountCampaign200JSONResponse) VisitScheduleAdminDiscountCampaignResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScheduleAdminDiscountCampaign400JSONResponse Error
+
+func (response ScheduleAdminDiscountCampaign400JSONResponse) VisitScheduleAdminDiscountCampaignResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScheduleAdminDiscountCampaign404JSONResponse Error
+
+func (response ScheduleAdminDiscountCampaign404JSONResponse) VisitScheduleAdminDiscountCampaignResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminDiscountHistoryRequestObject struct {
+	Params ListAdminDiscountHistoryParams
+}
+
+type ListAdminDiscountHistoryResponseObject interface {
+	VisitListAdminDiscountHistoryResponse(w http.ResponseWriter) error
+}
+
+type ListAdminDiscountHistory200JSONResponse DiscountStateHistoryListResponse
+
+func (response ListAdminDiscountHistory200JSONResponse) VisitListAdminDiscountHistoryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RunAdminDiscountLifecycleRequestObject struct {
+}
+
+type RunAdminDiscountLifecycleResponseObject interface {
+	VisitRunAdminDiscountLifecycleResponse(w http.ResponseWriter) error
+}
+
+type RunAdminDiscountLifecycle200JSONResponse DiscountLifecycleRunResponse
+
+func (response RunAdminDiscountLifecycle200JSONResponse) VisitRunAdminDiscountLifecycleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminDiscountMetricsRequestObject struct {
+}
+
+type GetAdminDiscountMetricsResponseObject interface {
+	VisitGetAdminDiscountMetricsResponse(w http.ResponseWriter) error
+}
+
+type GetAdminDiscountMetrics200JSONResponse DiscountEvaluationMetrics
+
+func (response GetAdminDiscountMetrics200JSONResponse) VisitGetAdminDiscountMetricsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminPromotionCampaignRequestObject struct {
+	Body *CreateAdminPromotionCampaignJSONRequestBody
+}
+
+type CreateAdminPromotionCampaignResponseObject interface {
+	VisitCreateAdminPromotionCampaignResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminPromotionCampaign201JSONResponse DiscountCampaign
+
+func (response CreateAdminPromotionCampaign201JSONResponse) VisitCreateAdminPromotionCampaignResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminPromotionCampaign400JSONResponse Error
+
+func (response CreateAdminPromotionCampaign400JSONResponse) VisitCreateAdminPromotionCampaignResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PreviewAdminPromotionRequestObject struct {
+	Body *PreviewAdminPromotionJSONRequestBody
+}
+
+type PreviewAdminPromotionResponseObject interface {
+	VisitPreviewAdminPromotionResponse(w http.ResponseWriter) error
+}
+
+type PreviewAdminPromotion200JSONResponse PromotionEvaluationResponse
+
+func (response PreviewAdminPromotion200JSONResponse) VisitPreviewAdminPromotionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PreviewAdminPromotion400JSONResponse Error
+
+func (response PreviewAdminPromotion400JSONResponse) VisitPreviewAdminPromotionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RunAdminDiscountReconciliationRequestObject struct {
+}
+
+type RunAdminDiscountReconciliationResponseObject interface {
+	VisitRunAdminDiscountReconciliationResponse(w http.ResponseWriter) error
+}
+
+type RunAdminDiscountReconciliation200JSONResponse DiscountReconciliationReport
+
+func (response RunAdminDiscountReconciliation200JSONResponse) VisitRunAdminDiscountReconciliationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminPromotionTemplatesRequestObject struct {
+	Params ListAdminPromotionTemplatesParams
+}
+
+type ListAdminPromotionTemplatesResponseObject interface {
+	VisitListAdminPromotionTemplatesResponse(w http.ResponseWriter) error
+}
+
+type ListAdminPromotionTemplates200JSONResponse PromotionTemplateListResponse
+
+func (response ListAdminPromotionTemplates200JSONResponse) VisitListAdminPromotionTemplatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminPromotionTemplateRequestObject struct {
+	Body *CreateAdminPromotionTemplateJSONRequestBody
+}
+
+type CreateAdminPromotionTemplateResponseObject interface {
+	VisitCreateAdminPromotionTemplateResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminPromotionTemplate201JSONResponse PromotionTemplate
+
+func (response CreateAdminPromotionTemplate201JSONResponse) VisitCreateAdminPromotionTemplateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminPromotionTemplate400JSONResponse Error
+
+func (response CreateAdminPromotionTemplate400JSONResponse) VisitCreateAdminPromotionTemplateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type InstantiateAdminPromotionTemplateRequestObject struct {
+	Id   int `json:"id"`
+	Body *InstantiateAdminPromotionTemplateJSONRequestBody
+}
+
+type InstantiateAdminPromotionTemplateResponseObject interface {
+	VisitInstantiateAdminPromotionTemplateResponse(w http.ResponseWriter) error
+}
+
+type InstantiateAdminPromotionTemplate201JSONResponse DiscountCampaign
+
+func (response InstantiateAdminPromotionTemplate201JSONResponse) VisitInstantiateAdminPromotionTemplateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type InstantiateAdminPromotionTemplate400JSONResponse Error
+
+func (response InstantiateAdminPromotionTemplate400JSONResponse) VisitInstantiateAdminPromotionTemplateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type InstantiateAdminPromotionTemplate404JSONResponse Error
+
+func (response InstantiateAdminPromotionTemplate404JSONResponse) VisitInstantiateAdminPromotionTemplateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -9105,6 +10497,54 @@ type StrictServerInterface interface {
 	// (PATCH /api/v1/admin/checkout/plugins/{type}/{id})
 	UpdateAdminCheckoutPlugin(ctx context.Context, request UpdateAdminCheckoutPluginRequestObject) (UpdateAdminCheckoutPluginResponseObject, error)
 
+	// (GET /api/v1/admin/discounts/audit)
+	ListAdminDiscountAudit(ctx context.Context, request ListAdminDiscountAuditRequestObject) (ListAdminDiscountAuditResponseObject, error)
+
+	// (GET /api/v1/admin/discounts/campaigns)
+	ListAdminDiscountCampaigns(ctx context.Context, request ListAdminDiscountCampaignsRequestObject) (ListAdminDiscountCampaignsResponseObject, error)
+
+	// (POST /api/v1/admin/discounts/campaigns)
+	CreateAdminDiscountCampaign(ctx context.Context, request CreateAdminDiscountCampaignRequestObject) (CreateAdminDiscountCampaignResponseObject, error)
+
+	// (PATCH /api/v1/admin/discounts/campaigns/{id})
+	UpdateAdminDiscountCampaign(ctx context.Context, request UpdateAdminDiscountCampaignRequestObject) (UpdateAdminDiscountCampaignResponseObject, error)
+
+	// (POST /api/v1/admin/discounts/campaigns/{id}/archive)
+	ArchiveAdminDiscountCampaign(ctx context.Context, request ArchiveAdminDiscountCampaignRequestObject) (ArchiveAdminDiscountCampaignResponseObject, error)
+
+	// (POST /api/v1/admin/discounts/campaigns/{id}/disable)
+	DisableAdminDiscountCampaign(ctx context.Context, request DisableAdminDiscountCampaignRequestObject) (DisableAdminDiscountCampaignResponseObject, error)
+
+	// (POST /api/v1/admin/discounts/campaigns/{id}/schedule)
+	ScheduleAdminDiscountCampaign(ctx context.Context, request ScheduleAdminDiscountCampaignRequestObject) (ScheduleAdminDiscountCampaignResponseObject, error)
+
+	// (GET /api/v1/admin/discounts/history)
+	ListAdminDiscountHistory(ctx context.Context, request ListAdminDiscountHistoryRequestObject) (ListAdminDiscountHistoryResponseObject, error)
+
+	// (POST /api/v1/admin/discounts/lifecycle/run)
+	RunAdminDiscountLifecycle(ctx context.Context, request RunAdminDiscountLifecycleRequestObject) (RunAdminDiscountLifecycleResponseObject, error)
+
+	// (GET /api/v1/admin/discounts/metrics)
+	GetAdminDiscountMetrics(ctx context.Context, request GetAdminDiscountMetricsRequestObject) (GetAdminDiscountMetricsResponseObject, error)
+
+	// (POST /api/v1/admin/discounts/promotions)
+	CreateAdminPromotionCampaign(ctx context.Context, request CreateAdminPromotionCampaignRequestObject) (CreateAdminPromotionCampaignResponseObject, error)
+
+	// (POST /api/v1/admin/discounts/promotions/preview)
+	PreviewAdminPromotion(ctx context.Context, request PreviewAdminPromotionRequestObject) (PreviewAdminPromotionResponseObject, error)
+
+	// (POST /api/v1/admin/discounts/reconciliation/run)
+	RunAdminDiscountReconciliation(ctx context.Context, request RunAdminDiscountReconciliationRequestObject) (RunAdminDiscountReconciliationResponseObject, error)
+
+	// (GET /api/v1/admin/discounts/templates)
+	ListAdminPromotionTemplates(ctx context.Context, request ListAdminPromotionTemplatesRequestObject) (ListAdminPromotionTemplatesResponseObject, error)
+
+	// (POST /api/v1/admin/discounts/templates)
+	CreateAdminPromotionTemplate(ctx context.Context, request CreateAdminPromotionTemplateRequestObject) (CreateAdminPromotionTemplateResponseObject, error)
+
+	// (POST /api/v1/admin/discounts/templates/{id}/instantiate)
+	InstantiateAdminPromotionTemplate(ctx context.Context, request InstantiateAdminPromotionTemplateRequestObject) (InstantiateAdminPromotionTemplateResponseObject, error)
+
 	// (POST /api/v1/admin/inventory/adjustments)
 	CreateAdminInventoryAdjustment(ctx context.Context, request CreateAdminInventoryAdjustmentRequestObject) (CreateAdminInventoryAdjustmentResponseObject, error)
 
@@ -9746,6 +11186,480 @@ func (sh *strictHandler) UpdateAdminCheckoutPlugin(ctx *gin.Context, pType Updat
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(UpdateAdminCheckoutPluginResponseObject); ok {
 		if err := validResponse.VisitUpdateAdminCheckoutPluginResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminDiscountAudit operation middleware
+func (sh *strictHandler) ListAdminDiscountAudit(ctx *gin.Context, params ListAdminDiscountAuditParams) {
+	var request ListAdminDiscountAuditRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminDiscountAudit(ctx, request.(ListAdminDiscountAuditRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminDiscountAudit")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminDiscountAuditResponseObject); ok {
+		if err := validResponse.VisitListAdminDiscountAuditResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminDiscountCampaigns operation middleware
+func (sh *strictHandler) ListAdminDiscountCampaigns(ctx *gin.Context, params ListAdminDiscountCampaignsParams) {
+	var request ListAdminDiscountCampaignsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminDiscountCampaigns(ctx, request.(ListAdminDiscountCampaignsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminDiscountCampaigns")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminDiscountCampaignsResponseObject); ok {
+		if err := validResponse.VisitListAdminDiscountCampaignsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminDiscountCampaign operation middleware
+func (sh *strictHandler) CreateAdminDiscountCampaign(ctx *gin.Context) {
+	var request CreateAdminDiscountCampaignRequestObject
+
+	var body CreateAdminDiscountCampaignJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminDiscountCampaign(ctx, request.(CreateAdminDiscountCampaignRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminDiscountCampaign")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminDiscountCampaignResponseObject); ok {
+		if err := validResponse.VisitCreateAdminDiscountCampaignResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminDiscountCampaign operation middleware
+func (sh *strictHandler) UpdateAdminDiscountCampaign(ctx *gin.Context, id int) {
+	var request UpdateAdminDiscountCampaignRequestObject
+
+	request.Id = id
+
+	var body UpdateAdminDiscountCampaignJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminDiscountCampaign(ctx, request.(UpdateAdminDiscountCampaignRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminDiscountCampaign")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminDiscountCampaignResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminDiscountCampaignResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ArchiveAdminDiscountCampaign operation middleware
+func (sh *strictHandler) ArchiveAdminDiscountCampaign(ctx *gin.Context, id int) {
+	var request ArchiveAdminDiscountCampaignRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ArchiveAdminDiscountCampaign(ctx, request.(ArchiveAdminDiscountCampaignRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ArchiveAdminDiscountCampaign")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ArchiveAdminDiscountCampaignResponseObject); ok {
+		if err := validResponse.VisitArchiveAdminDiscountCampaignResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DisableAdminDiscountCampaign operation middleware
+func (sh *strictHandler) DisableAdminDiscountCampaign(ctx *gin.Context, id int) {
+	var request DisableAdminDiscountCampaignRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DisableAdminDiscountCampaign(ctx, request.(DisableAdminDiscountCampaignRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DisableAdminDiscountCampaign")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DisableAdminDiscountCampaignResponseObject); ok {
+		if err := validResponse.VisitDisableAdminDiscountCampaignResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ScheduleAdminDiscountCampaign operation middleware
+func (sh *strictHandler) ScheduleAdminDiscountCampaign(ctx *gin.Context, id int) {
+	var request ScheduleAdminDiscountCampaignRequestObject
+
+	request.Id = id
+
+	var body ScheduleAdminDiscountCampaignJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ScheduleAdminDiscountCampaign(ctx, request.(ScheduleAdminDiscountCampaignRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ScheduleAdminDiscountCampaign")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ScheduleAdminDiscountCampaignResponseObject); ok {
+		if err := validResponse.VisitScheduleAdminDiscountCampaignResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminDiscountHistory operation middleware
+func (sh *strictHandler) ListAdminDiscountHistory(ctx *gin.Context, params ListAdminDiscountHistoryParams) {
+	var request ListAdminDiscountHistoryRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminDiscountHistory(ctx, request.(ListAdminDiscountHistoryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminDiscountHistory")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminDiscountHistoryResponseObject); ok {
+		if err := validResponse.VisitListAdminDiscountHistoryResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RunAdminDiscountLifecycle operation middleware
+func (sh *strictHandler) RunAdminDiscountLifecycle(ctx *gin.Context) {
+	var request RunAdminDiscountLifecycleRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RunAdminDiscountLifecycle(ctx, request.(RunAdminDiscountLifecycleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RunAdminDiscountLifecycle")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(RunAdminDiscountLifecycleResponseObject); ok {
+		if err := validResponse.VisitRunAdminDiscountLifecycleResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminDiscountMetrics operation middleware
+func (sh *strictHandler) GetAdminDiscountMetrics(ctx *gin.Context) {
+	var request GetAdminDiscountMetricsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminDiscountMetrics(ctx, request.(GetAdminDiscountMetricsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminDiscountMetrics")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminDiscountMetricsResponseObject); ok {
+		if err := validResponse.VisitGetAdminDiscountMetricsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminPromotionCampaign operation middleware
+func (sh *strictHandler) CreateAdminPromotionCampaign(ctx *gin.Context) {
+	var request CreateAdminPromotionCampaignRequestObject
+
+	var body CreateAdminPromotionCampaignJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminPromotionCampaign(ctx, request.(CreateAdminPromotionCampaignRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminPromotionCampaign")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminPromotionCampaignResponseObject); ok {
+		if err := validResponse.VisitCreateAdminPromotionCampaignResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PreviewAdminPromotion operation middleware
+func (sh *strictHandler) PreviewAdminPromotion(ctx *gin.Context) {
+	var request PreviewAdminPromotionRequestObject
+
+	var body PreviewAdminPromotionJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PreviewAdminPromotion(ctx, request.(PreviewAdminPromotionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PreviewAdminPromotion")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PreviewAdminPromotionResponseObject); ok {
+		if err := validResponse.VisitPreviewAdminPromotionResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RunAdminDiscountReconciliation operation middleware
+func (sh *strictHandler) RunAdminDiscountReconciliation(ctx *gin.Context) {
+	var request RunAdminDiscountReconciliationRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RunAdminDiscountReconciliation(ctx, request.(RunAdminDiscountReconciliationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RunAdminDiscountReconciliation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(RunAdminDiscountReconciliationResponseObject); ok {
+		if err := validResponse.VisitRunAdminDiscountReconciliationResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminPromotionTemplates operation middleware
+func (sh *strictHandler) ListAdminPromotionTemplates(ctx *gin.Context, params ListAdminPromotionTemplatesParams) {
+	var request ListAdminPromotionTemplatesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminPromotionTemplates(ctx, request.(ListAdminPromotionTemplatesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminPromotionTemplates")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminPromotionTemplatesResponseObject); ok {
+		if err := validResponse.VisitListAdminPromotionTemplatesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminPromotionTemplate operation middleware
+func (sh *strictHandler) CreateAdminPromotionTemplate(ctx *gin.Context) {
+	var request CreateAdminPromotionTemplateRequestObject
+
+	var body CreateAdminPromotionTemplateJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminPromotionTemplate(ctx, request.(CreateAdminPromotionTemplateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminPromotionTemplate")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminPromotionTemplateResponseObject); ok {
+		if err := validResponse.VisitCreateAdminPromotionTemplateResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// InstantiateAdminPromotionTemplate operation middleware
+func (sh *strictHandler) InstantiateAdminPromotionTemplate(ctx *gin.Context, id int) {
+	var request InstantiateAdminPromotionTemplateRequestObject
+
+	request.Id = id
+
+	var body InstantiateAdminPromotionTemplateJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.InstantiateAdminPromotionTemplate(ctx, request.(InstantiateAdminPromotionTemplateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "InstantiateAdminPromotionTemplate")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(InstantiateAdminPromotionTemplateResponseObject); ok {
+		if err := validResponse.VisitInstantiateAdminPromotionTemplateResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -12962,198 +14876,234 @@ func (sh *strictHandler) ReceiveWebhookEvent(ctx *gin.Context, provider string) 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"P6Apf1BUWvmrbA/x5c8v/y8AAP//QO/Yhl6rAQA=",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -1330,6 +1330,366 @@ paths:
               schema:
                 $ref: "#/components/schemas/Product"
 
+  /api/v1/admin/discounts/campaigns:
+    get:
+      tags: [admin]
+      operationId: listAdminDiscountCampaigns
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, scheduled, disabled, archived]
+      responses:
+        "200":
+          description: Product discount campaigns
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscountCampaignListResponse"
+    post:
+      tags: [admin]
+      operationId: createAdminDiscountCampaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductDiscountInput"
+      responses:
+        "201":
+          description: Created product discount campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscountCampaign"
+        "400":
+          description: Invalid discount campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/discounts/promotions:
+    post:
+      tags: [admin]
+      operationId: createAdminPromotionCampaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PromotionInput"
+      responses:
+        "201":
+          description: Created promotion campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscountCampaign"
+        "400":
+          description: Invalid promotion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/discounts/promotions/preview:
+    post:
+      tags: [admin]
+      operationId: previewAdminPromotion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PromotionEvaluationRequest"
+      responses:
+        "200":
+          description: Promotion evaluation preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PromotionEvaluationResponse"
+        "400":
+          description: Invalid preview request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/discounts/templates:
+    get:
+      tags: [admin]
+      operationId: listAdminPromotionTemplates
+      parameters:
+        - in: query
+          name: active
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Promotion templates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PromotionTemplateListResponse"
+    post:
+      tags: [admin]
+      operationId: createAdminPromotionTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PromotionTemplateInput"
+      responses:
+        "201":
+          description: Created promotion template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PromotionTemplate"
+        "400":
+          description: Invalid template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/discounts/templates/{id}/instantiate:
+    post:
+      tags: [admin]
+      operationId: instantiateAdminPromotionTemplate
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PromotionTemplateInstantiateInput"
+      responses:
+        "201":
+          description: Created promotion campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscountCampaign"
+        "400":
+          description: Invalid template instantiation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Promotion template not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/discounts/campaigns/{id}:
+    patch:
+      tags: [admin]
+      operationId: updateAdminDiscountCampaign
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductDiscountInput"
+      responses:
+        "200":
+          description: Updated product discount campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscountCampaign"
+        "400":
+          description: Invalid discount campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Discount campaign not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/discounts/campaigns/{id}/disable:
+    post:
+      tags: [admin]
+      operationId: disableAdminDiscountCampaign
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Disabled product discount campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscountCampaign"
+        "404":
+          description: Discount campaign not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/discounts/campaigns/{id}/schedule:
+    post:
+      tags: [admin]
+      operationId: scheduleAdminDiscountCampaign
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiscountScheduleInput"
+      responses:
+        "200":
+          description: Saved discount schedule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscountSchedule"
+        "400":
+          description: Invalid schedule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Discount campaign not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/discounts/campaigns/{id}/archive:
+    post:
+      tags: [admin]
+      operationId: archiveAdminDiscountCampaign
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Archived discount campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscountCampaign"
+        "404":
+          description: Discount campaign not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/discounts/lifecycle/run:
+    post:
+      tags: [admin]
+      operationId: runAdminDiscountLifecycle
+      responses:
+        "200":
+          description: Discount lifecycle run summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscountLifecycleRunResponse"
+
+  /api/v1/admin/discounts/history:
+    get:
+      tags: [admin]
+      operationId: listAdminDiscountHistory
+      parameters:
+        - in: query
+          name: campaign_id
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Discount lifecycle history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscountStateHistoryListResponse"
+
+  /api/v1/admin/discounts/audit:
+    get:
+      tags: [admin]
+      operationId: listAdminDiscountAudit
+      parameters:
+        - in: query
+          name: campaign_id
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Discount campaign audit entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscountCampaignAuditListResponse"
+
+  /api/v1/admin/discounts/metrics:
+    get:
+      tags: [admin]
+      operationId: getAdminDiscountMetrics
+      responses:
+        "200":
+          description: Discount evaluation metrics snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscountEvaluationMetrics"
+
+  /api/v1/admin/discounts/reconciliation/run:
+    post:
+      tags: [admin]
+      operationId: runAdminDiscountReconciliation
+      responses:
+        "200":
+          description: Discount schedule reconciliation report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscountReconciliationReport"
+
   /api/v1/admin/brands:
     get:
       tags: [admin]
@@ -3552,6 +3912,808 @@ components:
           type: number
           format: double
 
+    AppliedCampaign:
+      type: object
+      required: [id, name, discount_amount]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        level_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        name:
+          type: string
+        discount_amount:
+          type: number
+          format: double
+
+    PriceBreakdown:
+      type: object
+      required: [base_price, discount_amount, final_price, applied_campaigns]
+      properties:
+        base_price:
+          type: number
+          format: double
+        discount_amount:
+          type: number
+          format: double
+        final_price:
+          type: number
+          format: double
+        applied_campaigns:
+          type: array
+          items:
+            $ref: "#/components/schemas/AppliedCampaign"
+
+    DiscountTarget:
+      type: object
+      required: [id, target_type, target_id]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        target_type:
+          type: string
+          enum: [product, variant, category, brand]
+        target_id:
+          type: integer
+          minimum: 1
+
+    PromotionCondition:
+      type: object
+      properties:
+        product_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        product_variant_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        category_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        brand_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        min_quantity:
+          type: integer
+          minimum: 1
+        min_subtotal:
+          type: number
+          format: double
+          minimum: 0.01
+
+    PromotionAction:
+      type: object
+      required: [mode]
+      properties:
+        mode:
+          type: string
+          enum: [percent, fixed, fixed_price, free_item]
+        value:
+          type: number
+          format: double
+          minimum: 0
+        target_type:
+          type: string
+          enum: [cart, product, variant, category, brand]
+        target_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        product_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        product_variant_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        category_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        brand_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        sku:
+          type: string
+
+    PromotionRuleInput:
+      type: object
+      required: [condition, action]
+      properties:
+        condition:
+          $ref: "#/components/schemas/PromotionCondition"
+        action:
+          $ref: "#/components/schemas/PromotionAction"
+        stack_policy:
+          type: string
+          enum: [none, additive]
+        max_applications_per_order:
+          type: integer
+          minimum: 1
+          nullable: true
+
+    PromotionTargetInput:
+      type: object
+      required: [target_type, target_id]
+      properties:
+        target_type:
+          type: string
+          enum: [product, variant, category, brand]
+        target_id:
+          type: integer
+          minimum: 1
+
+    PromotionLevelInput:
+      type: object
+      required: [name, action, targets]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        priority:
+          type: integer
+          default: 0
+        action:
+          $ref: "#/components/schemas/PromotionAction"
+        stack_policy:
+          type: string
+          enum: [none, additive]
+        max_applications_per_order:
+          type: integer
+          minimum: 1
+          nullable: true
+        targets:
+          type: array
+          items:
+            $ref: "#/components/schemas/PromotionTargetInput"
+
+    PromotionInput:
+      type: object
+      required: [name, starts_at]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        priority:
+          type: integer
+          default: 0
+        is_exclusive:
+          type: boolean
+          default: false
+        status:
+          type: string
+          enum: [active, scheduled, disabled]
+        metadata:
+          type: object
+          additionalProperties: true
+        coupon_code:
+          type: string
+          nullable: true
+        channels:
+          type: array
+          items:
+            type: string
+            enum: [web, app, admin]
+        customer_segment:
+          type: string
+        global_usage_cap:
+          type: integer
+          minimum: 1
+          nullable: true
+        per_customer_usage_cap:
+          type: integer
+          minimum: 1
+          nullable: true
+        rules:
+          type: array
+          items:
+            $ref: "#/components/schemas/PromotionRuleInput"
+        levels:
+          type: array
+          items:
+            $ref: "#/components/schemas/PromotionLevelInput"
+
+    PromotionEvaluationLine:
+      type: object
+      required:
+        - product_id
+        - product_variant_id
+        - quantity
+        - base_price
+        - discount_amount
+        - final_price
+        - applied_campaigns
+      properties:
+        product_id:
+          type: integer
+          minimum: 1
+        product_variant_id:
+          type: integer
+          minimum: 1
+        quantity:
+          type: integer
+          minimum: 1
+        base_price:
+          type: number
+          format: double
+        discount_amount:
+          type: number
+          format: double
+        final_price:
+          type: number
+          format: double
+        applied_campaigns:
+          type: array
+          items:
+            $ref: "#/components/schemas/AppliedCampaign"
+
+    PromotionEvaluationRequestLine:
+      type: object
+      required: [product_id, product_variant_id, quantity, unit_price]
+      properties:
+        product_id:
+          type: integer
+          minimum: 1
+        product_variant_id:
+          type: integer
+          minimum: 1
+        brand_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        category_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        sku:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+        unit_price:
+          type: number
+          format: double
+          minimum: 0
+
+    PromotionEvaluationRequest:
+      type: object
+      required: [lines]
+      properties:
+        coupon_code:
+          type: string
+        channel:
+          type: string
+          enum: [web, app, admin]
+        customer_segment:
+          type: string
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/PromotionEvaluationRequestLine"
+
+    PromotionTemplateInput:
+      type: object
+      required: [name, template]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        template:
+          $ref: "#/components/schemas/PromotionInput"
+        is_active:
+          type: boolean
+          nullable: true
+
+    PromotionTemplateInstantiateInput:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        starts_at:
+          type: string
+          format: date-time
+          nullable: true
+        ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        coupon_code:
+          type: string
+          nullable: true
+        channels:
+          type: array
+          items:
+            type: string
+            enum: [web, app, admin]
+        customer_segment:
+          type: string
+          nullable: true
+        global_usage_cap:
+          type: integer
+          minimum: 1
+          nullable: true
+        per_customer_usage_cap:
+          type: integer
+          minimum: 1
+          nullable: true
+
+    PromotionTemplate:
+      type: object
+      required: [id, name, description, template_json, template, is_active, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        description:
+          type: string
+        template_json:
+          type: string
+        template:
+          type: object
+          additionalProperties: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PromotionTemplateListResponse:
+      type: object
+      required: [templates]
+      properties:
+        templates:
+          type: array
+          items:
+            $ref: "#/components/schemas/PromotionTemplate"
+
+    PromotionEvaluationResponse:
+      type: object
+      required: [subtotal, discount_total, final_subtotal, lines]
+      properties:
+        subtotal:
+          type: number
+          format: double
+        discount_total:
+          type: number
+          format: double
+        final_subtotal:
+          type: number
+          format: double
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/PromotionEvaluationLine"
+
+    ProductDiscountInput:
+      type: object
+      required: [name, product_ids, discount_mode, discount_value, starts_at]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        product_ids:
+          type: array
+          minItems: 1
+          items:
+            type: integer
+            minimum: 1
+        discount_mode:
+          type: string
+          enum: [percent, fixed]
+        discount_value:
+          type: number
+          format: double
+          minimum: 0.01
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        priority:
+          type: integer
+          default: 0
+        is_exclusive:
+          type: boolean
+          default: false
+        status:
+          type: string
+          enum: [active, disabled]
+        metadata:
+          type: object
+          additionalProperties: true
+        coupon_code:
+          type: string
+          nullable: true
+        channels:
+          type: array
+          items:
+            type: string
+            enum: [web, app, admin]
+        customer_segment:
+          type: string
+        global_usage_cap:
+          type: integer
+          minimum: 1
+          nullable: true
+        per_customer_usage_cap:
+          type: integer
+          minimum: 1
+          nullable: true
+
+    DiscountCampaign:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - status
+        - starts_at
+        - discount_mode
+        - discount_value
+        - priority
+        - is_exclusive
+        - targets
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        type:
+          type: string
+          enum: [product_discount, promotion]
+        status:
+          type: string
+          enum: [active, scheduled, disabled, archived]
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        discount_mode:
+          type: string
+          enum: [percent, fixed]
+        discount_value:
+          type: number
+          format: double
+        priority:
+          type: integer
+        is_exclusive:
+          type: boolean
+        metadata:
+          type: object
+          additionalProperties: true
+        coupon_code:
+          type: string
+          nullable: true
+        channels:
+          type: array
+          items:
+            type: string
+            enum: [web, app, admin]
+        customer_segment:
+          type: string
+          nullable: true
+        global_usage_cap:
+          type: integer
+          minimum: 1
+          nullable: true
+        per_customer_usage_cap:
+          type: integer
+          minimum: 1
+          nullable: true
+        targets:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiscountTarget"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    DiscountCampaignListResponse:
+      type: object
+      required: [campaigns]
+      properties:
+        campaigns:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiscountCampaign"
+
+    DiscountScheduleInput:
+      type: object
+      required: [schedule_type, window_start, window_end]
+      properties:
+        schedule_type:
+          type: string
+          enum: [one_time, recurring]
+        recurrence:
+          type: string
+          enum: [daily, weekly, monthly]
+        window_start:
+          type: string
+          format: date-time
+        window_end:
+          type: string
+          format: date-time
+        until_at:
+          type: string
+          format: date-time
+          nullable: true
+        timezone:
+          type: string
+
+    DiscountSchedule:
+      type: object
+      required:
+        - id
+        - campaign_id
+        - schedule_type
+        - window_start
+        - window_end
+        - timezone
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        campaign_id:
+          type: integer
+          minimum: 1
+        schedule_type:
+          type: string
+          enum: [one_time, recurring]
+        recurrence:
+          type: string
+          nullable: true
+        window_start:
+          type: string
+          format: date-time
+        window_end:
+          type: string
+          format: date-time
+        until_at:
+          type: string
+          format: date-time
+          nullable: true
+        timezone:
+          type: string
+        last_run_at:
+          type: string
+          format: date-time
+          nullable: true
+        next_run_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    DiscountLifecycleRunResponse:
+      type: object
+      required: [activated, deactivated, archived]
+      properties:
+        activated:
+          type: integer
+        deactivated:
+          type: integer
+        archived:
+          type: integer
+
+    DiscountStateHistory:
+      type: object
+      required:
+        - id
+        - campaign_id
+        - from_status
+        - to_status
+        - reason
+        - source
+        - actor
+        - changed_at
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        campaign_id:
+          type: integer
+          minimum: 1
+        from_status:
+          type: string
+        to_status:
+          type: string
+        reason:
+          type: string
+        source:
+          type: string
+        actor:
+          type: string
+        changed_at:
+          type: string
+          format: date-time
+
+    DiscountStateHistoryListResponse:
+      type: object
+      required: [history]
+      properties:
+        history:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiscountStateHistory"
+
+    DiscountCampaignAudit:
+      type: object
+      required:
+        - id
+        - campaign_id
+        - event_type
+        - source
+        - actor
+        - summary
+        - before_json
+        - after_json
+        - changed_at
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        campaign_id:
+          type: integer
+          minimum: 1
+        event_type:
+          type: string
+        source:
+          type: string
+        actor:
+          type: string
+        summary:
+          type: string
+        before_json:
+          type: string
+        after_json:
+          type: string
+        changed_at:
+          type: string
+          format: date-time
+
+    DiscountCampaignAuditListResponse:
+      type: object
+      required: [audit]
+      properties:
+        audit:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiscountCampaignAudit"
+
+    DiscountEvaluationMetrics:
+      type: object
+      required:
+        - total_evaluations
+        - failed_evaluations
+        - matched_evaluations
+        - total_latency_ms
+        - last_latency_ms
+        - last_line_count
+        - last_candidate_campaigns
+        - last_matched_campaigns
+        - last_error
+      properties:
+        total_evaluations:
+          type: integer
+          format: int64
+        failed_evaluations:
+          type: integer
+          format: int64
+        matched_evaluations:
+          type: integer
+          format: int64
+        total_latency_ms:
+          type: integer
+          format: int64
+        last_latency_ms:
+          type: integer
+          format: int64
+        last_line_count:
+          type: integer
+          format: int64
+        last_candidate_campaigns:
+          type: integer
+          format: int64
+        last_matched_campaigns:
+          type: integer
+          format: int64
+        last_evaluated_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_error:
+          type: string
+
+    DiscountReconciliationIssue:
+      type: object
+      required:
+        - campaign_id
+        - schedule_id
+        - expected_status
+        - actual_status
+        - message
+      properties:
+        campaign_id:
+          type: integer
+        schedule_id:
+          type: integer
+        expected_status:
+          type: string
+        actual_status:
+          type: string
+        expected_start:
+          type: string
+          format: date-time
+        actual_start:
+          type: string
+          format: date-time
+        expected_end:
+          type: string
+          format: date-time
+          nullable: true
+        actual_end:
+          type: string
+          format: date-time
+          nullable: true
+        message:
+          type: string
+
+    DiscountReconciliationReport:
+      type: object
+      required: [checked_at, issues]
+      properties:
+        checked_at:
+          type: string
+          format: date-time
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiscountReconciliationIssue"
+
     Product:
       type: object
       required:
@@ -3587,6 +4749,21 @@ components:
         price:
           type: number
           format: double
+        base_price:
+          type: number
+          format: double
+        discount_amount:
+          type: number
+          format: double
+        final_price:
+          type: number
+          format: double
+        applied_campaigns:
+          type: array
+          items:
+            $ref: "#/components/schemas/AppliedCampaign"
+        price_breakdown:
+          $ref: "#/components/schemas/PriceBreakdown"
         stock:
           type: integer
           minimum: 0
@@ -3901,6 +5078,19 @@ components:
           $ref: "#/components/schemas/ProductVariant"
         quantity:
           type: integer
+        base_price:
+          type: number
+          format: double
+        discount_amount:
+          type: number
+          format: double
+        final_price:
+          type: number
+          format: double
+        applied_campaigns:
+          type: array
+          items:
+            $ref: "#/components/schemas/AppliedCampaign"
         product:
           $ref: "#/components/schemas/Product"
         created_at:
@@ -5536,6 +6726,9 @@ components:
         currency:
           type: string
         subtotal:
+          type: number
+          format: double
+        discount_total:
           type: number
           format: double
         shipping:

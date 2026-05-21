@@ -5,6 +5,7 @@ import (
 
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/media"
+	discountservice "ecommerce/internal/services/discounts"
 	"ecommerce/models"
 
 	openapi_types "github.com/oapi-codegen/runtime/types"
@@ -12,15 +13,19 @@ import (
 )
 
 type cartItemResponse struct {
-	ID               int                        `json:"id"`
-	CartID           int                        `json:"cart_id"`
-	ProductVariantID int                        `json:"product_variant_id"`
-	Quantity         int                        `json:"quantity"`
-	ProductVariant   apicontract.ProductVariant `json:"product_variant"`
-	Product          apicontract.Product        `json:"product"`
-	CreatedAt        time.Time                  `json:"created_at"`
-	UpdatedAt        time.Time                  `json:"updated_at"`
-	DeletedAt        *time.Time                 `json:"deleted_at,omitempty"`
+	ID               int                           `json:"id"`
+	CartID           int                           `json:"cart_id"`
+	ProductVariantID int                           `json:"product_variant_id"`
+	Quantity         int                           `json:"quantity"`
+	ProductVariant   apicontract.ProductVariant    `json:"product_variant"`
+	Product          apicontract.Product           `json:"product"`
+	BasePrice        float64                       `json:"base_price"`
+	DiscountAmount   float64                       `json:"discount_amount"`
+	FinalPrice       float64                       `json:"final_price"`
+	AppliedCampaigns []apicontract.AppliedCampaign `json:"applied_campaigns"`
+	CreatedAt        time.Time                     `json:"created_at"`
+	UpdatedAt        time.Time                     `json:"updated_at"`
+	DeletedAt        *time.Time                    `json:"deleted_at,omitempty"`
 }
 
 type cartResponse struct {
@@ -45,6 +50,10 @@ func buildCartResponse(db *gorm.DB, mediaService *media.Service, cart models.Car
 	if err != nil {
 		return cartResponse{}, err
 	}
+	prices, err := pricesForCart(db, &cart)
+	if err != nil {
+		return cartResponse{}, err
+	}
 
 	items := make([]cartItemResponse, 0, len(cart.Items))
 	for _, item := range cart.Items {
@@ -56,6 +65,10 @@ func buildCartResponse(db *gorm.DB, mediaService *media.Service, cart models.Car
 			Quantity:         item.Quantity,
 			ProductVariant:   variantContracts[item.ProductVariantID],
 			Product:          productContracts[product.ID],
+			BasePrice:        prices[item.ProductVariantID].BasePrice.Float64(),
+			DiscountAmount:   prices[item.ProductVariantID].DiscountAmount.Float64(),
+			FinalPrice:       prices[item.ProductVariantID].FinalPrice.Float64(),
+			AppliedCampaigns: appliedCampaignContracts(prices[item.ProductVariantID].AppliedCampaigns),
 			CreatedAt:        item.CreatedAt,
 			UpdatedAt:        item.UpdatedAt,
 			DeletedAt:        toContractDeletedAt(item.DeletedAt),
@@ -88,6 +101,10 @@ func buildCartItemResponse(
 	if err != nil {
 		return cartItemResponse{}, err
 	}
+	prices, err := pricesForCartItems(db, []models.CartItem{item})
+	if err != nil {
+		return cartItemResponse{}, err
+	}
 
 	product := item.ProductVariant.Product
 	return cartItemResponse{
@@ -97,6 +114,10 @@ func buildCartItemResponse(
 		Quantity:         item.Quantity,
 		ProductVariant:   variantContracts[item.ProductVariantID],
 		Product:          productContracts[product.ID],
+		BasePrice:        prices[item.ProductVariantID].BasePrice.Float64(),
+		DiscountAmount:   prices[item.ProductVariantID].DiscountAmount.Float64(),
+		FinalPrice:       prices[item.ProductVariantID].FinalPrice.Float64(),
+		AppliedCampaigns: appliedCampaignContracts(prices[item.ProductVariantID].AppliedCampaigns),
 		CreatedAt:        item.CreatedAt,
 		UpdatedAt:        item.UpdatedAt,
 		DeletedAt:        toContractDeletedAt(item.DeletedAt),
@@ -164,6 +185,57 @@ func contractGuestEmail(email *string) *openapi_types.Email {
 	}
 	value := openapi_types.Email(*email)
 	return &value
+}
+
+func pricesForCart(db *gorm.DB, cart *models.Cart) (map[uint]discountservice.Price, error) {
+	discounts, err := evaluateCartDiscounts(db, cart)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[uint]discountservice.Price, len(discounts.Lines))
+	for _, line := range discounts.Lines {
+		result[line.ProductVariantID] = discountservice.Price{
+			BasePrice:        line.BasePrice,
+			DiscountAmount:   line.DiscountAmount,
+			FinalPrice:       line.FinalPrice,
+			AppliedCampaigns: line.AppliedCampaigns,
+		}
+	}
+	return result, nil
+}
+
+func pricesForCartItems(db *gorm.DB, items []models.CartItem) (map[uint]discountservice.Price, error) {
+	basePrices := make(map[uint]models.Money, len(items))
+	for _, item := range items {
+		basePrices[item.ProductVariant.ProductID] = item.ProductVariant.Price
+	}
+	byProduct, err := discountservice.PricesForProducts(db, basePrices, time.Now().UTC())
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[uint]discountservice.Price, len(items))
+	for _, item := range items {
+		result[item.ProductVariantID] = byProduct[item.ProductVariant.ProductID]
+	}
+	return result, nil
+}
+
+func appliedCampaignContracts(campaigns []discountservice.AppliedCampaign) []apicontract.AppliedCampaign {
+	result := make([]apicontract.AppliedCampaign, 0, len(campaigns))
+	for _, campaign := range campaigns {
+		var levelID *int
+		if campaign.LevelID != nil {
+			value := int(*campaign.LevelID)
+			levelID = &value
+		}
+		result = append(result, apicontract.AppliedCampaign{
+			DiscountAmount: campaign.DiscountAmount.Float64(),
+			Id:             int(campaign.ID),
+			LevelId:        levelID,
+			Name:           campaign.Name,
+		})
+	}
+	return result
 }
 
 func loadCartOrderContracts(

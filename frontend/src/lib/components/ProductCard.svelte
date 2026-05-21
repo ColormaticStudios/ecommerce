@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Card from "$lib/components/Card.svelte";
-	import { formatPrice } from "$lib/utils";
+	import { displayBasePrice, displayUnitPrice, formatPrice, hasDiscount } from "$lib/utils";
 
 	type ProductCardData = {
 		//id: number; // Unused
@@ -8,6 +8,9 @@
 		brand?: string | null;
 		description?: string | null;
 		price?: number | null;
+		basePrice?: number | null;
+		discountAmount?: number | null;
+		finalPrice?: number | null;
 		priceRange?: { min: number; max: number } | null;
 		image?: string | null;
 		stock?: number | null;
@@ -23,6 +26,35 @@
 	let { href, data, showStock = true, imageAspect = "square" }: Props = $props();
 
 	const imageClass = $derived(imageAspect === "wide" ? "aspect-[4/3]" : "aspect-square");
+	const unitPrice = $derived(
+		data.price == null
+			? null
+			: displayUnitPrice({
+					price: data.price,
+					base_price: data.basePrice,
+					discount_amount: data.discountAmount,
+					final_price: data.finalPrice,
+				})
+	);
+	const basePrice = $derived(
+		data.price == null
+			? null
+			: displayBasePrice({
+					price: data.price,
+					base_price: data.basePrice,
+					discount_amount: data.discountAmount,
+					final_price: data.finalPrice,
+				})
+	);
+	const discounted = $derived(
+		data.price != null &&
+			hasDiscount({
+				price: data.price,
+				base_price: data.basePrice,
+				discount_amount: data.discountAmount,
+				final_price: data.finalPrice,
+			})
+	);
 </script>
 
 <Card
@@ -60,12 +92,19 @@
 		{/if}
 
 		<div class="mt-auto flex items-center justify-between">
-			{#if data.price != null}
-				<span class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+			{#if unitPrice != null}
+				<span
+					class="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-lg font-semibold text-gray-900 dark:text-gray-100"
+				>
 					{#if data.priceRange && data.priceRange.min < data.priceRange.max}
 						From {formatPrice(data.priceRange.min)}
 					{:else}
-						{formatPrice(data.price)}
+						{formatPrice(unitPrice)}
+					{/if}
+					{#if discounted && basePrice != null}
+						<span class="text-sm font-medium text-gray-500 line-through dark:text-gray-400">
+							{formatPrice(basePrice)}
+						</span>
 					{/if}
 				</span>
 			{/if}

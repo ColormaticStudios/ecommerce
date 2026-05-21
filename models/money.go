@@ -51,7 +51,7 @@ func (m *Money) Scan(value any) error {
 		*m = 0
 		return nil
 	case int64:
-		*m = Money(v)
+		*m = MoneyFromFloat(float64(v))
 		return nil
 	case float64:
 		*m = MoneyFromFloat(v)

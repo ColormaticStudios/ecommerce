@@ -62,6 +62,23 @@ type InventoryThresholdRequest = components["schemas"]["InventoryThresholdReques
 type InventoryAdjustmentRequest = components["schemas"]["InventoryAdjustmentRequest"];
 type InventoryAdjustmentResponse = components["schemas"]["InventoryAdjustmentResponse"];
 type InventoryReconciliationReport = components["schemas"]["InventoryReconciliationReport"];
+type DiscountCampaign = components["schemas"]["DiscountCampaign"];
+type DiscountCampaignListResponse = components["schemas"]["DiscountCampaignListResponse"];
+type DiscountSchedule = components["schemas"]["DiscountSchedule"];
+type DiscountScheduleInput = components["schemas"]["DiscountScheduleInput"];
+type DiscountLifecycleRunResponse = components["schemas"]["DiscountLifecycleRunResponse"];
+type DiscountStateHistoryListResponse = components["schemas"]["DiscountStateHistoryListResponse"];
+type DiscountCampaignAuditListResponse = components["schemas"]["DiscountCampaignAuditListResponse"];
+type DiscountEvaluationMetrics = components["schemas"]["DiscountEvaluationMetrics"];
+type DiscountReconciliationReport = components["schemas"]["DiscountReconciliationReport"];
+type ProductDiscountInput = components["schemas"]["ProductDiscountInput"];
+type PromotionInput = components["schemas"]["PromotionInput"];
+type PromotionEvaluationRequest = components["schemas"]["PromotionEvaluationRequest"];
+type PromotionEvaluationResponse = components["schemas"]["PromotionEvaluationResponse"];
+type PromotionTemplate = components["schemas"]["PromotionTemplate"];
+type PromotionTemplateInput = components["schemas"]["PromotionTemplateInput"];
+type PromotionTemplateInstantiateInput = components["schemas"]["PromotionTemplateInstantiateInput"];
+type PromotionTemplateListResponse = components["schemas"]["PromotionTemplateListResponse"];
 type InventoryTimeline = components["schemas"]["InventoryTimeline"];
 type PurchaseOrder = components["schemas"]["PurchaseOrder"];
 type PurchaseOrderList = components["schemas"]["PurchaseOrderList"];
@@ -121,6 +138,18 @@ type GetAdminInventoryTimelineQuery =
 	paths["/api/v1/admin/inventory/variants/{product_variant_id}/timeline"]["get"]["parameters"]["query"];
 type ListAdminPurchaseOrdersQuery =
 	paths["/api/v1/admin/purchase-orders"]["get"]["parameters"]["query"];
+type ListAdminDiscountCampaignsQuery = NonNullable<
+	paths["/api/v1/admin/discounts/campaigns"]["get"]["parameters"]["query"]
+>;
+type ListAdminPromotionTemplatesQuery = NonNullable<
+	paths["/api/v1/admin/discounts/templates"]["get"]["parameters"]["query"]
+>;
+type ListAdminDiscountHistoryQuery = NonNullable<
+	paths["/api/v1/admin/discounts/history"]["get"]["parameters"]["query"]
+>;
+type ListAdminDiscountAuditQuery = NonNullable<
+	paths["/api/v1/admin/discounts/audit"]["get"]["parameters"]["query"]
+>;
 export type ListOrdersParams = Omit<NonNullable<ListUserOrdersQuery>, "status"> & {
 	status?: NonNullable<ListUserOrdersQuery>["status"] | "";
 };
@@ -707,6 +736,137 @@ export class API {
 		return await this.request<InventoryReconciliationReport>(
 			"POST",
 			"/admin/inventory/reconciliation"
+		);
+	}
+
+	public async listAdminDiscountCampaigns(
+		params: ListAdminDiscountCampaignsQuery = {}
+	): Promise<DiscountCampaign[]> {
+		const response = await this.request<DiscountCampaignListResponse>(
+			"GET",
+			"/admin/discounts/campaigns",
+			undefined,
+			params
+		);
+		return response.campaigns;
+	}
+
+	public async createAdminDiscountCampaign(data: ProductDiscountInput): Promise<DiscountCampaign> {
+		return await this.request<DiscountCampaign>("POST", "/admin/discounts/campaigns", data);
+	}
+
+	public async updateAdminDiscountCampaign(
+		id: number,
+		data: ProductDiscountInput
+	): Promise<DiscountCampaign> {
+		return await this.request<DiscountCampaign>("PATCH", `/admin/discounts/campaigns/${id}`, data);
+	}
+
+	public async disableAdminDiscountCampaign(id: number): Promise<DiscountCampaign> {
+		return await this.request<DiscountCampaign>(
+			"POST",
+			`/admin/discounts/campaigns/${id}/disable`
+		);
+	}
+
+	public async scheduleAdminDiscountCampaign(
+		id: number,
+		data: DiscountScheduleInput
+	): Promise<DiscountSchedule> {
+		return await this.request<DiscountSchedule>(
+			"POST",
+			`/admin/discounts/campaigns/${id}/schedule`,
+			data
+		);
+	}
+
+	public async archiveAdminDiscountCampaign(id: number): Promise<DiscountCampaign> {
+		return await this.request<DiscountCampaign>(
+			"POST",
+			`/admin/discounts/campaigns/${id}/archive`
+		);
+	}
+
+	public async createAdminPromotionCampaign(data: PromotionInput): Promise<DiscountCampaign> {
+		return await this.request<DiscountCampaign>("POST", "/admin/discounts/promotions", data);
+	}
+
+	public async previewAdminPromotion(
+		data: PromotionEvaluationRequest
+	): Promise<PromotionEvaluationResponse> {
+		return await this.request<PromotionEvaluationResponse>(
+			"POST",
+			"/admin/discounts/promotions/preview",
+			data
+		);
+	}
+
+	public async listAdminPromotionTemplates(
+		params: ListAdminPromotionTemplatesQuery = {}
+	): Promise<PromotionTemplate[]> {
+		const response = await this.request<PromotionTemplateListResponse>(
+			"GET",
+			"/admin/discounts/templates",
+			undefined,
+			params
+		);
+		return response.templates;
+	}
+
+	public async createAdminPromotionTemplate(
+		data: PromotionTemplateInput
+	): Promise<PromotionTemplate> {
+		return await this.request<PromotionTemplate>("POST", "/admin/discounts/templates", data);
+	}
+
+	public async instantiateAdminPromotionTemplate(
+		id: number,
+		data: PromotionTemplateInstantiateInput
+	): Promise<DiscountCampaign> {
+		return await this.request<DiscountCampaign>(
+			"POST",
+			`/admin/discounts/templates/${id}/instantiate`,
+			data
+		);
+	}
+
+	public async runAdminDiscountLifecycle(): Promise<DiscountLifecycleRunResponse> {
+		return await this.request<DiscountLifecycleRunResponse>(
+			"POST",
+			"/admin/discounts/lifecycle/run"
+		);
+	}
+
+	public async listAdminDiscountHistory(
+		params: ListAdminDiscountHistoryQuery = {}
+	): Promise<DiscountStateHistoryListResponse> {
+		return await this.request<DiscountStateHistoryListResponse>(
+			"GET",
+			"/admin/discounts/history",
+			undefined,
+			params
+		);
+	}
+
+	public async listAdminDiscountAudit(
+		params: ListAdminDiscountAuditQuery = {}
+	): Promise<DiscountCampaignAuditListResponse> {
+		return await this.request<DiscountCampaignAuditListResponse>(
+			"GET",
+			"/admin/discounts/audit",
+			undefined,
+			params
+		);
+	}
+
+	public async getAdminDiscountMetrics(): Promise<DiscountEvaluationMetrics> {
+		return await this.request<DiscountEvaluationMetrics>("GET", "/admin/discounts/metrics");
+	}
+
+	public async runAdminDiscountReconciliation(): Promise<DiscountReconciliationReport> {
+		return await this.request<DiscountReconciliationReport>(
+			"POST",
+			"/admin/discounts/reconciliation/run"
 		);
 	}
 

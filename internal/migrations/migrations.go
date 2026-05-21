@@ -89,6 +89,10 @@ const productCategoriesP0Version = "2026050701_product_categories_p0"
 const productCategoriesP1Version = "2026050702_product_categories_p1_assignment"
 const productCategoriesP3Version = "2026050703_product_categories_p3_hardening"
 const productAttributeEnumsVersion = "2026051801_product_attribute_enums"
+const discountsPromotionsP0Version = "2026051901_discounts_promotions_p0"
+const discountsPromotionsP2Version = "2026051902_discounts_promotions_p2_scheduling"
+const discountsPromotionsP3Version = "2026051903_discounts_promotions_p3_templates_controls"
+const discountsPromotionsP4Version = "2026051904_discounts_promotions_p4_operations"
 const migrationStepAlertThresholdEnvVar = "MIGRATIONS_STEP_ALERT_THRESHOLD_MS"
 
 var versionPattern = regexp.MustCompile(`^\d{10}_[a-z0-9_]+$`)
@@ -1077,6 +1081,191 @@ var orderedMigrations = []Migration{
 				return err
 			}
 			return backfillProductAttributeEnumValues(tx)
+		},
+	},
+	{
+		Version:         discountsPromotionsP0Version,
+		Name:            "add discounts and promotions core tables",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "discounts", "checkout"},
+		PostChecks: []PostCheck{
+			{
+				Name: "discounts_promotions_tables_exist",
+				Check: func(tx *gorm.DB) error {
+					required := []any{
+						&models.DiscountCampaign{},
+						&models.DiscountRule{},
+						&models.DiscountLevel{},
+						&models.DiscountTarget{},
+					}
+					for _, model := range required {
+						if !tx.Migrator().HasTable(model) {
+							return fmt.Errorf("missing migrated table for %T", model)
+						}
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			for _, model := range []any{
+				&models.DiscountCampaign{},
+				&models.DiscountRule{},
+				&models.DiscountLevel{},
+				&models.DiscountTarget{},
+			} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			statements := []string{
+				`CREATE INDEX IF NOT EXISTS idx_discount_campaigns_active_window ON discount_campaigns (type, status, is_archived, starts_at, ends_at)`,
+				`CREATE INDEX IF NOT EXISTS idx_discount_targets_product_lookup ON discount_targets (target_type, target_id, campaign_id)`,
+			}
+			for _, statement := range statements {
+				if err := tx.Exec(statement).Error; err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         discountsPromotionsP2Version,
+		Name:            "add discount scheduling and lifecycle history",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "discounts", "scheduling"},
+		PostChecks: []PostCheck{
+			{
+				Name: "discount_scheduling_tables_exist",
+				Check: func(tx *gorm.DB) error {
+					required := []any{
+						&models.DiscountSchedule{},
+						&models.DiscountStateHistory{},
+					}
+					for _, model := range required {
+						if !tx.Migrator().HasTable(model) {
+							return fmt.Errorf("missing migrated table for %T", model)
+						}
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			for _, model := range []any{
+				&models.DiscountSchedule{},
+				&models.DiscountStateHistory{},
+			} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			statements := []string{
+				`CREATE INDEX IF NOT EXISTS idx_discount_schedules_next_run ON discount_schedules (next_run_at, schedule_type)`,
+				`CREATE INDEX IF NOT EXISTS idx_discount_state_history_campaign_changed ON discount_state_histories (campaign_id, changed_at)`,
+			}
+			for _, statement := range statements {
+				if err := tx.Exec(statement).Error; err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         discountsPromotionsP3Version,
+		Name:            "add promotion templates and advanced controls",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "discounts", "templates"},
+		PostChecks: []PostCheck{
+			{
+				Name: "discount_templates_and_redemptions_exist",
+				Check: func(tx *gorm.DB) error {
+					for _, model := range []any{&models.PromotionTemplate{}, &models.DiscountRedemption{}} {
+						if !tx.Migrator().HasTable(model) {
+							return fmt.Errorf("missing migrated table for %T", model)
+						}
+					}
+					for _, column := range []string{"metadata_json", "coupon_code", "channels_json", "customer_segment", "global_usage_cap", "per_customer_usage_cap"} {
+						if !tx.Migrator().HasColumn(&models.DiscountCampaign{}, column) {
+							return fmt.Errorf("discount_campaigns.%s column missing", column)
+						}
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			columns := []struct {
+				name string
+				sql  string
+			}{
+				{"metadata_json", "TEXT NOT NULL DEFAULT '{}'"},
+				{"coupon_code", "TEXT"},
+				{"channels_json", "TEXT NOT NULL DEFAULT '[]'"},
+				{"customer_segment", "TEXT NOT NULL DEFAULT ''"},
+				{"global_usage_cap", "BIGINT"},
+				{"per_customer_usage_cap", "BIGINT"},
+			}
+			for _, column := range columns {
+				if err := ops.AddColumnIfNotExists(tx, "discount_campaigns", column.name, column.sql); err != nil {
+					return err
+				}
+			}
+			for _, model := range []any{
+				&models.PromotionTemplate{},
+				&models.DiscountRedemption{},
+			} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			statements := []string{
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_discount_campaigns_coupon_code ON discount_campaigns (coupon_code) WHERE coupon_code IS NOT NULL AND coupon_code <> ''`,
+				`CREATE INDEX IF NOT EXISTS idx_discount_redemptions_campaign_customer ON discount_redemptions (campaign_id, customer_id)`,
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_discount_redemptions_campaign_order ON discount_redemptions (campaign_id, order_id)`,
+			}
+			for _, statement := range statements {
+				if err := tx.Exec(statement).Error; err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         discountsPromotionsP4Version,
+		Name:            "add discount operational audit and lookup indexes",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "discounts", "operations"},
+		PostChecks: []PostCheck{
+			{
+				Name: "discount_campaign_audits_exist",
+				Check: func(tx *gorm.DB) error {
+					if !tx.Migrator().HasTable(&models.DiscountCampaignAudit{}) {
+						return fmt.Errorf("missing migrated table for %T", &models.DiscountCampaignAudit{})
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			if err := ops.CreateTableIfNotExists(tx, &models.DiscountCampaignAudit{}); err != nil {
+				return err
+			}
+			statements := []string{
+				`CREATE INDEX IF NOT EXISTS idx_discount_campaign_audits_campaign_changed ON discount_campaign_audits (campaign_id, changed_at)`,
+				`CREATE INDEX IF NOT EXISTS idx_discount_campaigns_runtime_lookup ON discount_campaigns (status, is_archived, starts_at, ends_at, priority, id)`,
+				`CREATE INDEX IF NOT EXISTS idx_discount_targets_category_lookup ON discount_targets (target_type, target_id, campaign_id, level_id)`,
+				`CREATE INDEX IF NOT EXISTS idx_discount_targets_level_lookup ON discount_targets (level_id, target_type, target_id)`,
+			}
+			for _, statement := range statements {
+				if err := tx.Exec(statement).Error; err != nil {
+					return err
+				}
+			}
+			return nil
 		},
 	},
 }

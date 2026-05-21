@@ -649,6 +649,230 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/admin/discounts/campaigns": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminDiscountCampaigns"];
+		put?: never;
+		post: operations["createAdminDiscountCampaign"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/discounts/promotions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["createAdminPromotionCampaign"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/discounts/promotions/preview": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["previewAdminPromotion"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/discounts/templates": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminPromotionTemplates"];
+		put?: never;
+		post: operations["createAdminPromotionTemplate"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/discounts/templates/{id}/instantiate": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["instantiateAdminPromotionTemplate"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/discounts/campaigns/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch: operations["updateAdminDiscountCampaign"];
+		trace?: never;
+	};
+	"/api/v1/admin/discounts/campaigns/{id}/disable": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["disableAdminDiscountCampaign"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/discounts/campaigns/{id}/schedule": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["scheduleAdminDiscountCampaign"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/discounts/campaigns/{id}/archive": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["archiveAdminDiscountCampaign"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/discounts/lifecycle/run": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["runAdminDiscountLifecycle"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/discounts/history": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminDiscountHistory"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/discounts/audit": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminDiscountAudit"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/discounts/metrics": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminDiscountMetrics"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/discounts/reconciliation/run": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["runAdminDiscountReconciliation"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/admin/brands": {
 		parameters: {
 			query?: never;
@@ -1732,6 +1956,335 @@ export interface components {
 			/** Format: double */
 			max: number;
 		};
+		AppliedCampaign: {
+			id: number;
+			level_id?: number | null;
+			name: string;
+			/** Format: double */
+			discount_amount: number;
+		};
+		PriceBreakdown: {
+			/** Format: double */
+			base_price: number;
+			/** Format: double */
+			discount_amount: number;
+			/** Format: double */
+			final_price: number;
+			applied_campaigns: components["schemas"]["AppliedCampaign"][];
+		};
+		DiscountTarget: {
+			id: number;
+			/** @enum {string} */
+			target_type: "product" | "variant" | "category" | "brand";
+			target_id: number;
+		};
+		PromotionCondition: {
+			product_ids?: number[];
+			product_variant_ids?: number[];
+			category_ids?: number[];
+			brand_ids?: number[];
+			min_quantity?: number;
+			/** Format: double */
+			min_subtotal?: number;
+		};
+		PromotionAction: {
+			/** @enum {string} */
+			mode: "percent" | "fixed" | "fixed_price" | "free_item";
+			/** Format: double */
+			value?: number;
+			/** @enum {string} */
+			target_type?: "cart" | "product" | "variant" | "category" | "brand";
+			target_ids?: number[];
+			product_ids?: number[];
+			product_variant_ids?: number[];
+			category_ids?: number[];
+			brand_ids?: number[];
+			sku?: string;
+		};
+		PromotionRuleInput: {
+			condition: components["schemas"]["PromotionCondition"];
+			action: components["schemas"]["PromotionAction"];
+			/** @enum {string} */
+			stack_policy?: "none" | "additive";
+			max_applications_per_order?: number | null;
+		};
+		PromotionTargetInput: {
+			/** @enum {string} */
+			target_type: "product" | "variant" | "category" | "brand";
+			target_id: number;
+		};
+		PromotionLevelInput: {
+			name: string;
+			/** @default 0 */
+			priority: number;
+			action: components["schemas"]["PromotionAction"];
+			/** @enum {string} */
+			stack_policy?: "none" | "additive";
+			max_applications_per_order?: number | null;
+			targets: components["schemas"]["PromotionTargetInput"][];
+		};
+		PromotionInput: {
+			name: string;
+			/** Format: date-time */
+			starts_at: string;
+			/** Format: date-time */
+			ends_at?: string | null;
+			/** @default 0 */
+			priority: number;
+			/** @default false */
+			is_exclusive: boolean;
+			/** @enum {string} */
+			status?: "active" | "scheduled" | "disabled";
+			metadata?: {
+				[key: string]: unknown;
+			};
+			coupon_code?: string | null;
+			channels?: ("web" | "app" | "admin")[];
+			customer_segment?: string;
+			global_usage_cap?: number | null;
+			per_customer_usage_cap?: number | null;
+			rules?: components["schemas"]["PromotionRuleInput"][];
+			levels?: components["schemas"]["PromotionLevelInput"][];
+		};
+		PromotionEvaluationLine: {
+			product_id: number;
+			product_variant_id: number;
+			quantity: number;
+			/** Format: double */
+			base_price: number;
+			/** Format: double */
+			discount_amount: number;
+			/** Format: double */
+			final_price: number;
+			applied_campaigns: components["schemas"]["AppliedCampaign"][];
+		};
+		PromotionEvaluationRequestLine: {
+			product_id: number;
+			product_variant_id: number;
+			brand_id?: number | null;
+			category_ids?: number[];
+			sku?: string;
+			quantity: number;
+			/** Format: double */
+			unit_price: number;
+		};
+		PromotionEvaluationRequest: {
+			coupon_code?: string;
+			/** @enum {string} */
+			channel?: "web" | "app" | "admin";
+			customer_segment?: string;
+			lines: components["schemas"]["PromotionEvaluationRequestLine"][];
+		};
+		PromotionTemplateInput: {
+			name: string;
+			description?: string;
+			template: components["schemas"]["PromotionInput"];
+			is_active?: boolean | null;
+		};
+		PromotionTemplateInstantiateInput: {
+			name?: string | null;
+			/** Format: date-time */
+			starts_at?: string | null;
+			/** Format: date-time */
+			ends_at?: string | null;
+			coupon_code?: string | null;
+			channels?: ("web" | "app" | "admin")[];
+			customer_segment?: string | null;
+			global_usage_cap?: number | null;
+			per_customer_usage_cap?: number | null;
+		};
+		PromotionTemplate: {
+			id: number;
+			name: string;
+			description: string;
+			template_json: string;
+			template: {
+				[key: string]: unknown;
+			};
+			is_active: boolean;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		PromotionTemplateListResponse: {
+			templates: components["schemas"]["PromotionTemplate"][];
+		};
+		PromotionEvaluationResponse: {
+			/** Format: double */
+			subtotal: number;
+			/** Format: double */
+			discount_total: number;
+			/** Format: double */
+			final_subtotal: number;
+			lines: components["schemas"]["PromotionEvaluationLine"][];
+		};
+		ProductDiscountInput: {
+			name: string;
+			product_ids: number[];
+			/** @enum {string} */
+			discount_mode: "percent" | "fixed";
+			/** Format: double */
+			discount_value: number;
+			/** Format: date-time */
+			starts_at: string;
+			/** Format: date-time */
+			ends_at?: string | null;
+			/** @default 0 */
+			priority: number;
+			/** @default false */
+			is_exclusive: boolean;
+			/** @enum {string} */
+			status?: "active" | "disabled";
+			metadata?: {
+				[key: string]: unknown;
+			};
+			coupon_code?: string | null;
+			channels?: ("web" | "app" | "admin")[];
+			customer_segment?: string;
+			global_usage_cap?: number | null;
+			per_customer_usage_cap?: number | null;
+		};
+		DiscountCampaign: {
+			id: number;
+			name: string;
+			/** @enum {string} */
+			type: "product_discount" | "promotion";
+			/** @enum {string} */
+			status: "active" | "scheduled" | "disabled" | "archived";
+			/** Format: date-time */
+			starts_at: string;
+			/** Format: date-time */
+			ends_at?: string | null;
+			/** @enum {string} */
+			discount_mode: "percent" | "fixed";
+			/** Format: double */
+			discount_value: number;
+			priority: number;
+			is_exclusive: boolean;
+			metadata?: {
+				[key: string]: unknown;
+			};
+			coupon_code?: string | null;
+			channels?: ("web" | "app" | "admin")[];
+			customer_segment?: string | null;
+			global_usage_cap?: number | null;
+			per_customer_usage_cap?: number | null;
+			targets: components["schemas"]["DiscountTarget"][];
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		DiscountCampaignListResponse: {
+			campaigns: components["schemas"]["DiscountCampaign"][];
+		};
+		DiscountScheduleInput: {
+			/** @enum {string} */
+			schedule_type: "one_time" | "recurring";
+			/** @enum {string} */
+			recurrence?: "daily" | "weekly" | "monthly";
+			/** Format: date-time */
+			window_start: string;
+			/** Format: date-time */
+			window_end: string;
+			/** Format: date-time */
+			until_at?: string | null;
+			timezone?: string;
+		};
+		DiscountSchedule: {
+			id: number;
+			campaign_id: number;
+			/** @enum {string} */
+			schedule_type: "one_time" | "recurring";
+			recurrence?: string | null;
+			/** Format: date-time */
+			window_start: string;
+			/** Format: date-time */
+			window_end: string;
+			/** Format: date-time */
+			until_at?: string | null;
+			timezone: string;
+			/** Format: date-time */
+			last_run_at?: string | null;
+			/** Format: date-time */
+			next_run_at?: string | null;
+		};
+		DiscountLifecycleRunResponse: {
+			activated: number;
+			deactivated: number;
+			archived: number;
+		};
+		DiscountStateHistory: {
+			id: number;
+			campaign_id: number;
+			from_status: string;
+			to_status: string;
+			reason: string;
+			source: string;
+			actor: string;
+			/** Format: date-time */
+			changed_at: string;
+		};
+		DiscountStateHistoryListResponse: {
+			history: components["schemas"]["DiscountStateHistory"][];
+		};
+		DiscountCampaignAudit: {
+			id: number;
+			campaign_id: number;
+			event_type: string;
+			source: string;
+			actor: string;
+			summary: string;
+			before_json: string;
+			after_json: string;
+			/** Format: date-time */
+			changed_at: string;
+		};
+		DiscountCampaignAuditListResponse: {
+			audit: components["schemas"]["DiscountCampaignAudit"][];
+		};
+		DiscountEvaluationMetrics: {
+			/** Format: int64 */
+			total_evaluations: number;
+			/** Format: int64 */
+			failed_evaluations: number;
+			/** Format: int64 */
+			matched_evaluations: number;
+			/** Format: int64 */
+			total_latency_ms: number;
+			/** Format: int64 */
+			last_latency_ms: number;
+			/** Format: int64 */
+			last_line_count: number;
+			/** Format: int64 */
+			last_candidate_campaigns: number;
+			/** Format: int64 */
+			last_matched_campaigns: number;
+			/** Format: date-time */
+			last_evaluated_at?: string | null;
+			last_error: string;
+		};
+		DiscountReconciliationIssue: {
+			campaign_id: number;
+			schedule_id: number;
+			expected_status: string;
+			actual_status: string;
+			/** Format: date-time */
+			expected_start?: string;
+			/** Format: date-time */
+			actual_start?: string;
+			/** Format: date-time */
+			expected_end?: string | null;
+			/** Format: date-time */
+			actual_end?: string | null;
+			message: string;
+		};
+		DiscountReconciliationReport: {
+			/** Format: date-time */
+			checked_at: string;
+			issues: components["schemas"]["DiscountReconciliationIssue"][];
+		};
 		Product: {
 			id: number;
 			sku: string;
@@ -1740,6 +2293,14 @@ export interface components {
 			description: string;
 			/** Format: double */
 			price: number;
+			/** Format: double */
+			base_price?: number;
+			/** Format: double */
+			discount_amount?: number;
+			/** Format: double */
+			final_price?: number;
+			applied_campaigns?: components["schemas"]["AppliedCampaign"][];
+			price_breakdown?: components["schemas"]["PriceBreakdown"];
 			stock: number;
 			images: string[];
 			cover_image?: string | null;
@@ -1849,6 +2410,13 @@ export interface components {
 			product_variant_id: number;
 			product_variant: components["schemas"]["ProductVariant"];
 			quantity: number;
+			/** Format: double */
+			base_price?: number;
+			/** Format: double */
+			discount_amount?: number;
+			/** Format: double */
+			final_price?: number;
+			applied_campaigns?: components["schemas"]["AppliedCampaign"][];
 			product: components["schemas"]["Product"];
 			/** Format: date-time */
 			created_at: string;
@@ -2564,6 +3132,8 @@ export interface components {
 			currency: string;
 			/** Format: double */
 			subtotal: number;
+			/** Format: double */
+			discount_total?: number;
 			/** Format: double */
 			shipping: number;
 			/** Format: double */
@@ -4348,6 +4918,480 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["Product"];
+				};
+			};
+		};
+	};
+	listAdminDiscountCampaigns: {
+		parameters: {
+			query?: {
+				status?: "active" | "scheduled" | "disabled" | "archived";
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Product discount campaigns */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DiscountCampaignListResponse"];
+				};
+			};
+		};
+	};
+	createAdminDiscountCampaign: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["ProductDiscountInput"];
+			};
+		};
+		responses: {
+			/** @description Created product discount campaign */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DiscountCampaign"];
+				};
+			};
+			/** @description Invalid discount campaign */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	createAdminPromotionCampaign: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["PromotionInput"];
+			};
+		};
+		responses: {
+			/** @description Created promotion campaign */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DiscountCampaign"];
+				};
+			};
+			/** @description Invalid promotion */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	previewAdminPromotion: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["PromotionEvaluationRequest"];
+			};
+		};
+		responses: {
+			/** @description Promotion evaluation preview */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["PromotionEvaluationResponse"];
+				};
+			};
+			/** @description Invalid preview request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	listAdminPromotionTemplates: {
+		parameters: {
+			query?: {
+				active?: boolean;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Promotion templates */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["PromotionTemplateListResponse"];
+				};
+			};
+		};
+	};
+	createAdminPromotionTemplate: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["PromotionTemplateInput"];
+			};
+		};
+		responses: {
+			/** @description Created promotion template */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["PromotionTemplate"];
+				};
+			};
+			/** @description Invalid template */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	instantiateAdminPromotionTemplate: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["PromotionTemplateInstantiateInput"];
+			};
+		};
+		responses: {
+			/** @description Created promotion campaign */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DiscountCampaign"];
+				};
+			};
+			/** @description Invalid template instantiation */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Promotion template not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	updateAdminDiscountCampaign: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["ProductDiscountInput"];
+			};
+		};
+		responses: {
+			/** @description Updated product discount campaign */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DiscountCampaign"];
+				};
+			};
+			/** @description Invalid discount campaign */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Discount campaign not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	disableAdminDiscountCampaign: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Disabled product discount campaign */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DiscountCampaign"];
+				};
+			};
+			/** @description Discount campaign not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	scheduleAdminDiscountCampaign: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["DiscountScheduleInput"];
+			};
+		};
+		responses: {
+			/** @description Saved discount schedule */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DiscountSchedule"];
+				};
+			};
+			/** @description Invalid schedule */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Discount campaign not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	archiveAdminDiscountCampaign: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Archived discount campaign */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DiscountCampaign"];
+				};
+			};
+			/** @description Discount campaign not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	runAdminDiscountLifecycle: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Discount lifecycle run summary */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DiscountLifecycleRunResponse"];
+				};
+			};
+		};
+	};
+	listAdminDiscountHistory: {
+		parameters: {
+			query?: {
+				campaign_id?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Discount lifecycle history */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DiscountStateHistoryListResponse"];
+				};
+			};
+		};
+	};
+	listAdminDiscountAudit: {
+		parameters: {
+			query?: {
+				campaign_id?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Discount campaign audit entries */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DiscountCampaignAuditListResponse"];
+				};
+			};
+		};
+	};
+	getAdminDiscountMetrics: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Discount evaluation metrics snapshot */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DiscountEvaluationMetrics"];
+				};
+			};
+		};
+	};
+	runAdminDiscountReconciliation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Discount schedule reconciliation report */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["DiscountReconciliationReport"];
 				};
 			};
 		};

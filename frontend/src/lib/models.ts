@@ -57,6 +57,31 @@ type ProductVariantSelectionPayload = components["schemas"]["ProductVariantSelec
 type ProductAttributeValuePayload = components["schemas"]["ProductAttributeValue"];
 type ProductPriceRangePayload = components["schemas"]["ProductPriceRange"];
 type ProductSEOPayload = components["schemas"]["ProductSEO"];
+type AppliedCampaignPayload = components["schemas"]["AppliedCampaign"];
+type PriceBreakdownPayload = components["schemas"]["PriceBreakdown"];
+
+function parseAppliedCampaign(campaign: AppliedCampaignPayload): AppliedCampaignModel {
+	return {
+		id: campaign.id,
+		level_id: campaign.level_id ?? null,
+		name: campaign.name,
+		discount_amount: campaign.discount_amount,
+	};
+}
+
+function parsePriceBreakdown(
+	breakdown: PriceBreakdownPayload | null | undefined
+): PriceBreakdownModel | null {
+	if (!breakdown) {
+		return null;
+	}
+	return {
+		base_price: breakdown.base_price,
+		discount_amount: breakdown.discount_amount,
+		final_price: breakdown.final_price,
+		applied_campaigns: (breakdown.applied_campaigns ?? []).map(parseAppliedCampaign),
+	};
+}
 
 function parseRelatedProduct(product: RelatedProductPayload): RelatedProductModel {
 	return {
@@ -215,6 +240,11 @@ export function parseProduct(product: ProductPayload): ProductModel {
 		subtitle: product.subtitle ?? null,
 		description: product.description,
 		price: product.price,
+		base_price: product.base_price ?? product.price,
+		discount_amount: product.discount_amount ?? 0,
+		final_price: product.final_price ?? product.price,
+		applied_campaigns: (product.applied_campaigns ?? []).map(parseAppliedCampaign),
+		price_breakdown: parsePriceBreakdown(product.price_breakdown),
 		stock: product.stock,
 		images: product.images ?? [],
 		cover_image: coverImage ?? undefined,
@@ -244,6 +274,11 @@ export interface ProductModel {
 	subtitle: string | null;
 	description: string;
 	price: number;
+	base_price: number;
+	discount_amount: number;
+	final_price: number;
+	applied_campaigns: AppliedCampaignModel[];
+	price_breakdown: PriceBreakdownModel | null;
 	stock: number;
 	images: string[];
 	cover_image?: string;
@@ -362,6 +397,20 @@ export interface RelatedProductModel {
 	stock: number;
 }
 
+export interface AppliedCampaignModel {
+	id: number;
+	level_id: number | null;
+	name: string;
+	discount_amount: number;
+}
+
+export interface PriceBreakdownModel {
+	base_price: number;
+	discount_amount: number;
+	final_price: number;
+	applied_campaigns: AppliedCampaignModel[];
+}
+
 type CartItemPayload = components["schemas"]["CartItem"];
 type CartPayload = components["schemas"]["Cart"];
 
@@ -391,6 +440,10 @@ export function parseCartItem(cartItem: CartItemPayload): CartItemModel {
 		cart_id: cartItem.cart_id,
 		product_variant_id: cartItem.product_variant_id,
 		quantity: cartItem.quantity,
+		base_price: cartItem.base_price ?? cartItem.product_variant.price,
+		discount_amount: cartItem.discount_amount ?? 0,
+		final_price: cartItem.final_price ?? cartItem.product_variant.price,
+		applied_campaigns: (cartItem.applied_campaigns ?? []).map(parseAppliedCampaign),
 		product_variant: parseProductVariant(cartItem.product_variant),
 		product: parseProduct(cartItem.product),
 		created_at: parseDate(cartItem.created_at) ?? new Date(),
@@ -404,6 +457,10 @@ export interface CartItemModel {
 	cart_id: number;
 	product_variant_id: number;
 	quantity: number;
+	base_price: number;
+	discount_amount: number;
+	final_price: number;
+	applied_campaigns: AppliedCampaignModel[];
 	product_variant: ProductVariantModel;
 	product: ProductModel;
 	created_at: Date;

@@ -29,6 +29,26 @@ func TestSchemaSnapshotAndDriftCheck(t *testing.T) {
 	require.ErrorContains(t, DriftCheck(db, path), "schema drift detected")
 }
 
+func TestWriteCurrentSchemaSnapshotRequiresLatestMigration(t *testing.T) {
+	db := newTestDB(t)
+	require.NoError(t, RunWithoutContract(db))
+
+	path := filepath.Join(t.TempDir(), "schema_snapshot.sql")
+	err := WriteCurrentSchemaSnapshot(db, path)
+	require.ErrorContains(t, err, "database must be at latest migration")
+	require.NoFileExists(t, path)
+}
+
+func TestWriteCurrentSchemaSnapshotWritesWhenDatabaseIsCurrent(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
+	require.NoError(t, Run(db))
+
+	path := filepath.Join(t.TempDir(), "schema_snapshot.sql")
+	require.NoError(t, WriteCurrentSchemaSnapshot(db, path))
+	require.FileExists(t, path)
+}
+
 func TestGenerateStub(t *testing.T) {
 	name, content, err := GenerateStub(time.Date(2026, 3, 5, 0, 0, 0, 0, time.UTC), "add_order_notes")
 	require.NoError(t, err)
