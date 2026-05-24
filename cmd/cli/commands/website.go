@@ -125,6 +125,7 @@ func newImportWebsiteCmd() *cobra.Command {
 
 func newSetWebsiteCmd() *cobra.Command {
 	var allowGuestCheckout bool
+	var couponCodesEnabled bool
 	var oidcProvider string
 	var oidcClientID string
 	var oidcClientSecret string
@@ -144,6 +145,9 @@ func newSetWebsiteCmd() *cobra.Command {
 
 			if cmd.Flags().Changed("allow-guest-checkout") {
 				settings.AllowGuestCheckout = allowGuestCheckout
+			}
+			if cmd.Flags().Changed("coupon-codes-enabled") {
+				settings.CouponCodesEnabled = couponCodesEnabled
 			}
 			if cmd.Flags().Changed("oidc-provider") {
 				settings.OIDCProvider = oidcProvider
@@ -184,6 +188,7 @@ func newSetWebsiteCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&allowGuestCheckout, "allow-guest-checkout", true, "Allow guest cart and checkout access")
+	cmd.Flags().BoolVar(&couponCodesEnabled, "coupon-codes-enabled", true, "Allow coupon-code-gated discounts during checkout")
 	cmd.Flags().StringVar(&oidcProvider, "oidc-provider", "", "OIDC issuer/provider URL")
 	cmd.Flags().StringVar(&oidcClientID, "oidc-client-id", "", "OIDC client ID")
 	cmd.Flags().StringVar(&oidcClientSecret, "oidc-client-secret", "", "OIDC client secret")
@@ -215,6 +220,7 @@ func updateWebsiteSettings(settings handlers.WebsiteSettingsPayload) (handlers.W
 func printWebsiteSettings(resp handlers.WebsiteSettingsResponse) {
 	fmt.Printf("Updated: %s\n", resp.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	fmt.Printf("Allow Guest Checkout: %t\n", resp.Settings.AllowGuestCheckout)
+	fmt.Printf("Coupon Codes Enabled: %t\n", resp.Settings.CouponCodesEnabled)
 	fmt.Printf("OIDC Enabled: %t\n", websiteOIDCConfigured(resp.Settings))
 	fmt.Printf("OIDC Provider: %s\n", resp.Settings.OIDCProvider)
 	fmt.Printf("OIDC Client ID: %s\n", resp.Settings.OIDCClientID)

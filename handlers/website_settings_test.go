@@ -31,10 +31,11 @@ func TestWebsiteSettingsDefaultsAndUpdate(t *testing.T) {
 	var defaults WebsiteSettingsResponse
 	require.NoError(t, json.Unmarshal(getW.Body.Bytes(), &defaults))
 	assert.True(t, defaults.Settings.AllowGuestCheckout)
+	assert.True(t, defaults.Settings.CouponCodesEnabled)
 	assert.Empty(t, defaults.Settings.OIDCProvider)
 
 	const rawClientSecret = "plain-client-secret-value"
-	body := `{"settings":{"allow_guest_checkout":false,"oidc_provider":" https://issuer.example ","oidc_client_id":" client-id ","oidc_client_secret":" ` + rawClientSecret + ` ","oidc_client_secret_configured":false,"clear_oidc_client_secret":false,"oidc_redirect_uri":" https://shop.example/api/v1/auth/oidc/callback "}}`
+	body := `{"settings":{"allow_guest_checkout":false,"coupon_codes_enabled":false,"oidc_provider":" https://issuer.example ","oidc_client_id":" client-id ","oidc_client_secret":" ` + rawClientSecret + ` ","oidc_client_secret_configured":false,"clear_oidc_client_secret":false,"oidc_redirect_uri":" https://shop.example/api/v1/auth/oidc/callback "}}`
 	putReq := httptest.NewRequest(http.MethodPut, "/admin/website", strings.NewReader(body))
 	putReq.Header.Set("Content-Type", "application/json")
 	putW := httptest.NewRecorder()
@@ -44,6 +45,7 @@ func TestWebsiteSettingsDefaultsAndUpdate(t *testing.T) {
 	var updated WebsiteSettingsResponse
 	require.NoError(t, json.Unmarshal(putW.Body.Bytes(), &updated))
 	assert.False(t, updated.Settings.AllowGuestCheckout)
+	assert.False(t, updated.Settings.CouponCodesEnabled)
 	assert.Equal(t, "https://issuer.example", updated.Settings.OIDCProvider)
 	assert.Equal(t, "client-id", updated.Settings.OIDCClientID)
 	assert.Empty(t, updated.Settings.OIDCClientSecret)
@@ -54,6 +56,7 @@ func TestWebsiteSettingsDefaultsAndUpdate(t *testing.T) {
 	var stored models.WebsiteSettings
 	require.NoError(t, db.First(&stored, models.WebsiteSettingsSingletonID).Error)
 	assert.False(t, stored.AllowGuestCheckout)
+	assert.False(t, stored.CouponCodesEnabled)
 	assert.Equal(t, "https://issuer.example", stored.OIDCProvider)
 	assert.NotEmpty(t, stored.OIDCClientSecretEnvelopeJSON)
 	assert.NotContains(t, stored.OIDCClientSecretEnvelopeJSON, rawClientSecret)

@@ -21,6 +21,7 @@ const (
 
 type WebsiteSettingsPayload struct {
 	AllowGuestCheckout         bool   `json:"allow_guest_checkout"`
+	CouponCodesEnabled         bool   `json:"coupon_codes_enabled"`
 	OIDCProvider               string `json:"oidc_provider"`
 	OIDCClientID               string `json:"oidc_client_id"`
 	OIDCClientSecret           string `json:"oidc_client_secret"`
@@ -41,6 +42,7 @@ type UpsertWebsiteSettingsRequest struct {
 func normalizeWebsiteSettings(input WebsiteSettingsPayload) WebsiteSettingsPayload {
 	return WebsiteSettingsPayload{
 		AllowGuestCheckout:    input.AllowGuestCheckout,
+		CouponCodesEnabled:    input.CouponCodesEnabled,
 		OIDCProvider:          strings.TrimSpace(input.OIDCProvider),
 		OIDCClientID:          strings.TrimSpace(input.OIDCClientID),
 		OIDCClientSecret:      strings.TrimSpace(input.OIDCClientSecret),
@@ -61,6 +63,7 @@ func loadOrCreateWebsiteSettings(db *gorm.DB) (models.WebsiteSettings, error) {
 	settings = models.WebsiteSettings{
 		ID:                 models.WebsiteSettingsSingletonID,
 		AllowGuestCheckout: true,
+		CouponCodesEnabled: true,
 	}
 	if err := db.Select("*").Create(&settings).Error; err != nil {
 		return models.WebsiteSettings{}, err
@@ -71,6 +74,7 @@ func loadOrCreateWebsiteSettings(db *gorm.DB) (models.WebsiteSettings, error) {
 func websiteSettingsPayload(settings models.WebsiteSettings) WebsiteSettingsPayload {
 	return WebsiteSettingsPayload{
 		AllowGuestCheckout:         settings.AllowGuestCheckout,
+		CouponCodesEnabled:         settings.CouponCodesEnabled,
 		OIDCProvider:               settings.OIDCProvider,
 		OIDCClientID:               settings.OIDCClientID,
 		OIDCClientSecret:           "",
@@ -118,6 +122,7 @@ func UpsertWebsiteSettingsWithCredentials(db *gorm.DB, credentials *providerops.
 				return err
 			}
 			current.AllowGuestCheckout = normalized.AllowGuestCheckout
+			current.CouponCodesEnabled = normalized.CouponCodesEnabled
 			current.OIDCProvider = normalized.OIDCProvider
 			current.OIDCClientID = normalized.OIDCClientID
 			current.OIDCRedirectURI = normalized.OIDCRedirectURI

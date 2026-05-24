@@ -201,6 +201,7 @@ func (legacyStorefrontSettings) TableName() string {
 type legacyWebsiteSettings struct {
 	ID                           uint   `gorm:"primaryKey;autoIncrement:false"`
 	AllowGuestCheckout           bool   `gorm:"not null;default:true"`
+	CouponCodesEnabled           bool   `gorm:"not null;default:true"`
 	OIDCProvider                 string `gorm:"column:oidc_provider;not null;default:''"`
 	OIDCClientID                 string `gorm:"column:oidc_client_id;not null;default:''"`
 	OIDCClientSecretEnvelopeJSON string `gorm:"column:oidc_client_secret_envelope_json;type:text;not null;default:''"`

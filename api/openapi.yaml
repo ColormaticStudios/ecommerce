@@ -7127,6 +7127,7 @@ components:
       type: object
       required:
         - allow_guest_checkout
+        - coupon_codes_enabled
         - oidc_provider
         - oidc_client_id
         - oidc_client_secret
@@ -7136,6 +7137,9 @@ components:
       properties:
         allow_guest_checkout:
           type: boolean
+        coupon_codes_enabled:
+          type: boolean
+          description: Controls whether coupon-code-gated campaigns can be applied.
         oidc_provider:
           type: string
         oidc_client_id:

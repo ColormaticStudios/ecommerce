@@ -20,6 +20,7 @@
 
 	const emptySettings: WebsiteSettings = {
 		allow_guest_checkout: true,
+		coupon_codes_enabled: true,
 		oidc_provider: "",
 		oidc_client_id: "",
 		oidc_client_secret: "",
@@ -45,6 +46,7 @@
 	function normalizeSettings(settings: WebsiteSettings): WebsiteSettings {
 		return {
 			allow_guest_checkout: settings.allow_guest_checkout,
+			coupon_codes_enabled: settings.coupon_codes_enabled,
 			oidc_provider: settings.oidc_provider.trim(),
 			oidc_client_id: settings.oidc_client_id.trim(),
 			oidc_client_secret: settings.oidc_client_secret.trim(),
@@ -159,6 +161,14 @@
 						bind:checked={draft.allow_guest_checkout}
 					/>
 					<span>Allow guests to create carts and start checkout without signing in.</span>
+				</label>
+				<label class="mt-4 flex items-start gap-3 text-sm text-stone-700 dark:text-stone-200">
+					<input
+						class="mt-1 h-4 w-4 shrink-0"
+						type="checkbox"
+						bind:checked={draft.coupon_codes_enabled}
+					/>
+					<span>Allow coupon codes during checkout.</span>
 				</label>
 			</AdminSurface>
 

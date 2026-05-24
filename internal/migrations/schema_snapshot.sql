@@ -1115,6 +1115,7 @@ TABLE webhook_events
   INDEX idx_webhook_events_received_at columns=received_at unique=false option=
 TABLE website_settings
   COLUMN allow_guest_checkout
+  COLUMN coupon_codes_enabled
   COLUMN created_at
   COLUMN id
   COLUMN oidc_client_id

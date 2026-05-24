@@ -85,6 +85,7 @@ const inventoryDisciplineP2Version = "2026032403_inventory_discipline_p2_alerts"
 const inventoryDisciplineP3Version = "2026032404_inventory_discipline_p3_purchase_orders"
 const inventoryDisciplineP4Version = "2026032405_inventory_discipline_p4_adjustments"
 const websiteSettingsVersion = "2026042701_website_settings"
+const websiteCouponSettingsVersion = "2026042702_website_coupon_settings"
 const productCategoriesP0Version = "2026050701_product_categories_p0"
 const productCategoriesP1Version = "2026050702_product_categories_p1_assignment"
 const productCategoriesP3Version = "2026050703_product_categories_p3_hardening"
@@ -973,6 +974,26 @@ var orderedMigrations = []Migration{
 				return err
 			}
 			return stripStorefrontCheckoutSettings(tx)
+		},
+	},
+	{
+		Version:         websiteCouponSettingsVersion,
+		Name:            "add website coupon code setting",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "settings", "checkout", "discounts"},
+		PostChecks: []PostCheck{
+			{
+				Name: "website_coupon_codes_enabled_exists",
+				Check: func(tx *gorm.DB) error {
+					if !tx.Migrator().HasColumn(&models.WebsiteSettings{}, "coupon_codes_enabled") {
+						return fmt.Errorf("website_settings.coupon_codes_enabled column missing")
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			return ops.AddColumnIfNotExists(tx, "website_settings", "coupon_codes_enabled", "BOOLEAN NOT NULL DEFAULT TRUE")
 		},
 	},
 	{

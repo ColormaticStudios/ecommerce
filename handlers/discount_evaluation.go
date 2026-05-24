@@ -14,7 +14,18 @@ func evaluateCartDiscounts(db *gorm.DB, cart *models.Cart) (discountservice.Eval
 	if err != nil {
 		return discountservice.EvaluationResult{}, err
 	}
-	return discountservice.EvaluateCart(db, lines, time.Now().UTC())
+	couponCodesEnabled := true
+	if db.Migrator().HasTable(&models.WebsiteSettings{}) {
+		settings, err := loadOrCreateWebsiteSettings(db)
+		if err != nil {
+			return discountservice.EvaluationResult{}, err
+		}
+		couponCodesEnabled = settings.CouponCodesEnabled
+	}
+	return discountservice.EvaluateCartWithOptions(db, lines, time.Now().UTC(), discountservice.EvaluationOptions{
+		Channel:            models.DiscountChannelWeb,
+		DisableCouponCodes: !couponCodesEnabled,
+	})
 }
 
 func discountCartLines(db *gorm.DB, cart *models.Cart) ([]discountservice.CartLine, error) {

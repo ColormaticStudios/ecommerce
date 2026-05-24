@@ -537,6 +537,10 @@ func TestEvaluateCartFiltersCouponChannelAndSegmentCampaigns(t *testing.T) {
 	withCode, err := EvaluateCartWithOptions(db, lines, now, EvaluationOptions{CouponCode: "vip20", Channel: models.DiscountChannelWeb, CustomerSegment: "vip"})
 	require.NoError(t, err)
 	require.Equal(t, 5.0, withCode.DiscountTotal.Float64())
+
+	disabledCoupons, err := EvaluateCartWithOptions(db, lines, now, EvaluationOptions{CouponCode: "vip20", Channel: models.DiscountChannelWeb, CustomerSegment: "vip", DisableCouponCodes: true})
+	require.NoError(t, err)
+	require.Zero(t, disabledCoupons.DiscountTotal)
 }
 
 func TestUsageCapsBlockSubsequentRedemptions(t *testing.T) {

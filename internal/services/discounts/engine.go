@@ -48,9 +48,10 @@ type EvaluationResult struct {
 }
 
 type EvaluationOptions struct {
-	CouponCode      string
-	Channel         string
-	CustomerSegment string
+	CouponCode         string
+	Channel            string
+	CustomerSegment    string
+	DisableCouponCodes bool
 }
 
 type RuleCondition struct {
@@ -317,6 +318,9 @@ func loadActiveCampaigns(db *gorm.DB, now time.Time, options EvaluationOptions) 
 
 func campaignMatchesOptions(campaign models.DiscountCampaign, options EvaluationOptions) bool {
 	coupon := strings.ToUpper(strings.TrimSpace(options.CouponCode))
+	if options.DisableCouponCodes && campaign.CouponCode != nil {
+		return false
+	}
 	if campaign.CouponCode != nil && strings.ToUpper(strings.TrimSpace(*campaign.CouponCode)) != coupon {
 		return false
 	}

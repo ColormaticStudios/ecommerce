@@ -3292,6 +3292,8 @@ export interface components {
 		};
 		WebsiteSettings: {
 			allow_guest_checkout: boolean;
+			/** @description Controls whether coupon-code-gated campaigns can be applied. */
+			coupon_codes_enabled: boolean;
 			oidc_provider: string;
 			oidc_client_id: string;
 			/** @description Write-only client secret. Responses always return an empty string. */
