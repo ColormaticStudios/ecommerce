@@ -161,7 +161,7 @@
 
 	<AdminMasterDetailLayout columnsClass="xl:grid-cols-[1.15fr_0.95fr]">
 		{#snippet lead()}
-			<div class="xl:hidden">
+			<div class="flex xl:hidden">
 				<TabSwitcher
 					items={mobilePanelTabs}
 					bind:value={mobilePanel}
