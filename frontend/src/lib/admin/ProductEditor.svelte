@@ -2598,7 +2598,7 @@
 			onclick={deleteProduct}
 		>
 			<i class="bi bi-trash-fill mr-1"></i>
-			{deleting ? "Deleting..." : "Delete product"}
+			{deleting ? "Deleting..." : "Delete"}
 		</Button>
 	{/if}
 {/snippet}
@@ -2769,7 +2769,7 @@
 	/>
 
 	{#if relatedLoading && relatedOptions.length === 0 && relatedLastSearchedQuery !== ""}
-		<AdminEmptyState>Searching products...</AdminEmptyState>
+		<AdminEmptyState class="mt-3">Searching products...</AdminEmptyState>
 	{:else if relatedOptions.length}
 		<div class={relatedResultsClass(layoutMode)}>
 			{#each relatedOptions as option (option.id)}
@@ -2792,7 +2792,7 @@
 			{/each}
 		</div>
 	{:else if !relatedLoading && relatedLastSearchedQuery !== "" && relatedLastSearchedQuery === relatedQuery.trim()}
-		<AdminEmptyState>Your search didn&apos;t match any products.</AdminEmptyState>
+		<AdminEmptyState class="mt-3">Your search didn&apos;t match any products.</AdminEmptyState>
 	{/if}
 
 	{#if relatedSelected.length}
