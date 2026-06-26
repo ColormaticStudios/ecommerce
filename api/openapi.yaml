@@ -18,6 +18,7 @@ tags:
   - name: admin
   - name: media
   - name: storefront
+  - name: cms
   - name: website
 paths:
   /api/v1/auth/register:
@@ -317,20 +318,203 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /api/v1/storefront:
+  /api/v1/content:
     get:
-      tags: [storefront]
-      operationId: getStorefrontSettings
+      tags: [cms]
+      operationId: resolveContentHomepage
       security: []
+      parameters:
+        - in: query
+          name: market
+          schema: { type: string }
+        - in: query
+          name: locale
+          schema: { type: string }
+        - in: query
+          name: device
+          schema: { type: string, enum: [desktop, mobile, tablet] }
+        - in: query
+          name: segment
+          schema: { type: string }
+        - in: query
+          name: utm_source
+          schema: { type: string }
+        - in: query
+          name: assignment_key
+          schema: { type: string }
       responses:
         "200":
-          description: Storefront settings
+          description: Published CMS homepage
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StorefrontSettingsResponse"
-        "500":
-          description: Internal server error
+                $ref: "#/components/schemas/CmsPageResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/content/{path}:
+    get:
+      tags: [cms]
+      operationId: resolveContentPage
+      security: []
+      parameters:
+        - in: path
+          name: path
+          required: true
+          schema:
+            type: string
+
+        - in: query
+          name: market
+          schema:
+            type: string
+        - in: query
+          name: locale
+          schema:
+            type: string
+        - in: query
+          name: device
+          schema:
+            type: string
+            enum: [desktop, mobile, tablet]
+        - in: query
+          name: segment
+          schema:
+            type: string
+        - in: query
+          name: utm_source
+          schema:
+            type: string
+        - in: query
+          name: assignment_key
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Published CMS page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsPageResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/content/events:
+    post:
+      tags: [cms]
+      operationId: recordContentEvent
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsContentEventRequest"
+      responses:
+        "202":
+          description: Content event accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid content event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/content/redirect:
+    get:
+      tags: [cms]
+      operationId: resolveContentRedirect
+      security: []
+      parameters:
+        - in: query
+          name: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Matching redirect
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsRedirectResolution"
+        "404":
+          description: No redirect
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/content/sitemap.xml:
+    get:
+      tags: [cms]
+      operationId: getContentSitemap
+      security: []
+      responses:
+        "200":
+          description: Storefront sitemap
+          content:
+            application/xml:
+              schema:
+                type: string
+
+  /api/v1/content/navigation/{location}:
+    get:
+      tags: [cms]
+      operationId: getContentNavigation
+      security: []
+      parameters:
+        - in: path
+          name: location
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Published CMS navigation menu
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsNavigationResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/content/global/{region}:
+    get:
+      tags: [cms]
+      operationId: getContentGlobalRegion
+      security: []
+      parameters:
+        - in: path
+          name: region
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Published CMS global region
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsGlobalRegionResponse"
+        "404":
+          description: Not found
           content:
             application/json:
               schema:
@@ -3192,41 +3376,1481 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /api/v1/admin/storefront:
+  /api/v1/admin/cms/pages:
     get:
-      tags: [admin, storefront]
-      operationId: getAdminStorefrontSettings
+      tags: [admin, cms]
+      operationId: listAdminCmsPages
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
       responses:
         "200":
-          description: Storefront settings
+          description: CMS pages
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StorefrontSettingsResponse"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-    put:
-      tags: [admin, storefront]
-      operationId: updateStorefrontSettings
+                $ref: "#/components/schemas/CmsPageListResponse"
+    post:
+      tags: [admin, cms]
+      operationId: createAdminCmsPage
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/StorefrontSettingsRequest"
+              $ref: "#/components/schemas/CmsPageDraftRequest"
       responses:
-        "200":
-          description: Updated storefront settings
+        "201":
+          description: Created CMS page draft
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StorefrontSettingsResponse"
+                $ref: "#/components/schemas/CmsPageResponse"
         "400":
           description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/preview:
+    post:
+      tags: [admin, cms]
+      operationId: previewAdminCmsPayload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsPreviewRequest"
+      responses:
+        "200":
+          description: Evaluated CMS commerce block preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsPreviewResponse"
+        "400":
+          description: Invalid preview request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Duplicate path
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/v1/admin/cms/pages/{id}:
+    get:
+      tags: [admin, cms]
+      operationId: getAdminCmsPage
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: CMS page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsPageResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      tags: [admin, cms]
+      operationId: updateAdminCmsPage
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsPageDraftRequest"
+      responses:
+        "200":
+          description: Updated CMS page draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsPageResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Duplicate path
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags: [admin, cms]
+      operationId: deleteAdminCmsPage
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Deleted CMS page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/pages/{id}/publish:
+    post:
+      tags: [admin, cms]
+      operationId: publishAdminCmsPage
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsPublishRequest"
+      responses:
+        "200":
+          description: Published CMS page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsPageResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/pages/{id}/unpublish:
+    post:
+      tags: [admin, cms]
+      operationId: unpublishAdminCmsPage
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsPublishRequest"
+      responses:
+        "200":
+          description: Unpublished CMS page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsPageResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/pages/{id}/draft:
+    delete:
+      tags: [admin, cms]
+      operationId: discardAdminCmsPageDraft
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Discarded CMS page draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsPageResponse"
+        "204":
+          description: Deleted draft-only CMS page
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/locales:
+    get:
+      tags: [admin, cms]
+      operationId: getAdminCmsLocales
+      responses:
+        "200":
+          description: CMS locale registry and fallback configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsLocaleSettings"
+    put:
+      tags: [admin, cms]
+      operationId: updateAdminCmsLocales
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsLocaleSettingsInput"
+      responses:
+        "200":
+          description: Updated CMS locale registry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsLocaleSettings"
+        "400":
+          description: Invalid locale configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/pages/{id}/variants:
+    get:
+      tags: [admin, cms]
+      operationId: listAdminCmsPageVariants
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Localized and market-specific page variants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CmsPageVariant"
+    post:
+      tags: [admin, cms]
+      operationId: createAdminCmsPageVariant
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsPageVariantInput"
+      responses:
+        "201":
+          description: Created page variant draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsPageVariant"
+        "400":
+          description: Invalid page variant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Duplicate locale and market variant or localized path
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/pages/{id}/variants/{variant_id}:
+    put:
+      tags: [admin, cms]
+      operationId: updateAdminCmsPageVariant
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: variant_id
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsPageVariantInput"
+      responses:
+        "200":
+          description: Updated page variant draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsPageVariant"
+        "400":
+          description: Invalid page variant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags: [admin, cms]
+      operationId: deleteAdminCmsPageVariant
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: variant_id
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Deleted page variant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /api/v1/admin/cms/pages/{id}/variants/{variant_id}/{action}:
+    post:
+      tags: [admin, cms]
+      operationId: transitionAdminCmsPageVariant
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: variant_id
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: action
+          required: true
+          schema:
+            type: string
+            enum: [submit, approve, request_changes, publish, rollback]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsWorkflowActionInput"
+      responses:
+        "200":
+          description: Transitioned page variant workflow
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsPageVariant"
+        "400":
+          description: Invalid workflow transition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Insufficient CMS permission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/audit:
+    get:
+      tags: [admin, cms]
+      operationId: listAdminCmsAuditEvents
+      parameters:
+        - in: query
+          name: entry_id
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 200 }
+      responses:
+        "200":
+          description: CMS mutation and publication audit trail
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CmsAuditEvent"
+
+  /api/v1/admin/cms/governance:
+    get:
+      tags: [admin, cms]
+      operationId: getAdminCmsGovernance
+      responses:
+        "200":
+          description: CMS governance settings and role assignments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsGovernance"
+    put:
+      tags: [admin, cms]
+      operationId: updateAdminCmsGovernance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsGovernanceInput"
+      responses:
+        "200":
+          description: Updated CMS governance settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsGovernance"
+
+  /api/v1/admin/cms/entries/{id}/workflow:
+    get:
+      tags: [admin, cms]
+      operationId: getAdminCmsEntryWorkflow
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Entry workflow and comments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsEntryWorkflow"
+
+  /api/v1/admin/cms/entries/{id}/workflow/{action}:
+    post:
+      tags: [admin, cms]
+      operationId: transitionAdminCmsEntryWorkflow
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: action
+          required: true
+          schema:
+            type: string
+            enum: [submit, approve, request_changes, reset]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsWorkflowActionInput"
+      responses:
+        "200":
+          description: Updated entry workflow
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsEntryWorkflow"
+
+  /api/v1/admin/cms/entries/{id}/comments:
+    post:
+      tags: [admin, cms]
+      operationId: createAdminCmsEntryComment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsCommentInput"
+      responses:
+        "201":
+          description: Added editorial comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsChangeComment"
+
+  /api/v1/admin/cms/comments/{id}/resolve:
+    post:
+      tags: [admin, cms]
+      operationId: resolveAdminCmsComment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Resolved editorial comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsChangeComment"
+
+  /api/v1/admin/cms/entries/{id}/variants:
+    get:
+      tags: [admin, cms]
+      operationId: listAdminCmsEntryVariants
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Localized entry variants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CmsEntryVariant"
+    post:
+      tags: [admin, cms]
+      operationId: createAdminCmsEntryVariant
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsEntryVariantInput"
+      responses:
+        "201":
+          description: Created localized entry variant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsEntryVariant"
+
+  /api/v1/admin/cms/entries/{id}/variants/{variant_id}:
+    put:
+      tags: [admin, cms]
+      operationId: updateAdminCmsEntryVariant
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: variant_id
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsEntryVariantInput"
+      responses:
+        "200":
+          description: Updated localized entry variant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsEntryVariant"
+    delete:
+      tags: [admin, cms]
+      operationId: deleteAdminCmsEntryVariant
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: variant_id
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Deleted localized entry variant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /api/v1/admin/cms/entries/{id}/variants/{variant_id}/{action}:
+    post:
+      tags: [admin, cms]
+      operationId: transitionAdminCmsEntryVariant
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: variant_id
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: action
+          required: true
+          schema:
+            type: string
+            enum: [submit, approve, request_changes, publish, reset]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsWorkflowActionInput"
+      responses:
+        "200":
+          description: Transitioned localized entry variant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsEntryVariant"
+
+  /api/v1/admin/cms/operations:
+    get:
+      tags: [admin, cms]
+      operationId: getAdminCmsOperations
+      responses:
+        "200":
+          description: CMS publish queue and invalidation operations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsOperations"
+
+  /api/v1/admin/cms/operations/invalidation/{id}/retry:
+    post:
+      tags: [admin, cms]
+      operationId: retryAdminCmsInvalidation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Invalidation queued for retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /api/v1/admin/cms/restore/preview:
+    post:
+      tags: [admin, cms]
+      operationId: previewAdminCmsRestore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsContentExport"
+      responses:
+        "200":
+          description: CMS restore dry-run report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsRestorePreview"
+
+  /api/v1/admin/cms/export:
+    get:
+      tags: [admin, cms]
+      operationId: exportAdminCmsContent
+      responses:
+        "200":
+          description: Portable CMS backup export
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsContentExport"
+    post:
+      tags: [admin, cms]
+      operationId: restoreAdminCmsContent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsContentExport"
+      responses:
+        "200":
+          description: CMS content restored from export
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid or unsupported CMS export
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/pages/{id}/rollback:
+    post:
+      tags: [admin, cms]
+      operationId: rollbackAdminCmsPage
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsRollbackRequest"
+      responses:
+        "200":
+          description: Rolled back CMS page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsPageResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/pages/{id}/delivery:
+    get:
+      tags: [admin, cms]
+      operationId: getAdminCmsPageDelivery
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: CMS page scheduling, targeting, and experiment settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsPageDeliveryResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      tags: [admin, cms]
+      operationId: updateAdminCmsPageDelivery
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsPageDeliveryRequest"
+      responses:
+        "200":
+          description: Updated CMS page delivery settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsPageDeliveryResponse"
+        "400":
+          description: Invalid delivery settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/pages/{id}/seo:
+    get:
+      tags: [admin, cms]
+      operationId: getAdminCmsPageSeo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: CMS page SEO metadata and validation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsSEOResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      tags: [admin, cms]
+      operationId: updateAdminCmsPageSeo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsSEOInput"
+      responses:
+        "200":
+          description: Updated CMS page SEO metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsSEOResponse"
+        "400":
+          description: Invalid SEO metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/redirects:
+    get:
+      tags: [admin, cms]
+      operationId: listAdminCmsRedirects
+      responses:
+        "200":
+          description: CMS redirect rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CmsRedirectRule"
+    post:
+      tags: [admin, cms]
+      operationId: createAdminCmsRedirect
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsRedirectInput"
+      responses:
+        "201":
+          description: Created redirect rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsRedirectRule"
+        "400":
+          description: Invalid redirect
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/redirects/{id}:
+    patch:
+      tags: [admin, cms]
+      operationId: updateAdminCmsRedirect
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsRedirectInput"
+      responses:
+        "200":
+          description: Updated redirect rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsRedirectRule"
+        "400":
+          description: Invalid redirect
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags: [admin, cms]
+      operationId: deleteAdminCmsRedirect
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Redirect deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+  /api/v1/admin/cms/navigation:
+    get:
+      tags: [admin, cms]
+      operationId: listAdminCmsNavigation
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: CMS navigation menus
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsNavigationListResponse"
+    post:
+      tags: [admin, cms]
+      operationId: createAdminCmsNavigation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsNavigationDraftRequest"
+      responses:
+        "201":
+          description: Created navigation draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsNavigationResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Duplicate key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/v1/admin/cms/navigation/{id}:
+    get:
+      tags: [admin, cms]
+      operationId: getAdminCmsNavigation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: CMS navigation menu
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsNavigationResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      tags: [admin, cms]
+      operationId: updateAdminCmsNavigation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsNavigationDraftRequest"
+      responses:
+        "200":
+          description: Updated navigation draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsNavigationResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Duplicate key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags: [admin, cms]
+      operationId: deleteAdminCmsNavigation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Deleted navigation menu
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/navigation/{id}/publish:
+    post:
+      tags: [admin, cms]
+      operationId: publishAdminCmsNavigation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsPublishRequest"
+      responses:
+        "200":
+          description: Published navigation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsNavigationResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/navigation/{id}/unpublish:
+    post:
+      tags: [admin, cms]
+      operationId: unpublishAdminCmsNavigation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsPublishRequest"
+      responses:
+        "200":
+          description: Unpublished navigation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsNavigationResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/navigation/{id}/draft:
+    delete:
+      tags: [admin, cms]
+      operationId: discardAdminCmsNavigationDraft
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Discarded navigation draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsNavigationResponse"
+        "204":
+          description: Deleted draft-only navigation menu
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/global:
+    get:
+      tags: [admin, cms]
+      operationId: listAdminCmsGlobalRegions
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: CMS global regions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsGlobalRegionListResponse"
+    post:
+      tags: [admin, cms]
+      operationId: createAdminCmsGlobalRegion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsGlobalRegionDraftRequest"
+      responses:
+        "201":
+          description: Created global region draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsGlobalRegionResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Duplicate key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/global/{id}:
+    get:
+      tags: [admin, cms]
+      operationId: getAdminCmsGlobalRegion
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: CMS global region
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsGlobalRegionResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      tags: [admin, cms]
+      operationId: updateAdminCmsGlobalRegion
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsGlobalRegionDraftRequest"
+      responses:
+        "200":
+          description: Updated global region draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsGlobalRegionResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Duplicate key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags: [admin, cms]
+      operationId: deleteAdminCmsGlobalRegion
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Deleted global region
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/global/{id}/publish:
+    post:
+      tags: [admin, cms]
+      operationId: publishAdminCmsGlobalRegion
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsPublishRequest"
+      responses:
+        "200":
+          description: Published global region
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsGlobalRegionResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/global/{id}/unpublish:
+    post:
+      tags: [admin, cms]
+      operationId: unpublishAdminCmsGlobalRegion
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CmsPublishRequest"
+      responses:
+        "200":
+          description: Unpublished global region
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsGlobalRegionResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v1/admin/cms/global/{id}/draft:
+    delete:
+      tags: [admin, cms]
+      operationId: discardAdminCmsGlobalRegionDraft
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Discarded global region draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CmsGlobalRegionResponse"
+        "204":
+          description: Deleted draft-only global region
+        "404":
+          description: Not found
           content:
             application/json:
               schema:
@@ -3271,36 +4895,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-
-  /api/v1/admin/storefront/publish:
-    post:
-      tags: [admin, storefront]
-      operationId: publishStorefrontSettings
-      responses:
-        "200":
-          description: Published storefront settings
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StorefrontSettingsResponse"
-        "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
-  /api/v1/admin/storefront/draft:
-    delete:
-      tags: [admin, storefront]
-      operationId: discardStorefrontDraft
-      responses:
-        "200":
-          description: Storefront settings after draft discard
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StorefrontSettingsResponse"
 
   /api/v1/admin/preview:
     get:
@@ -3431,6 +5025,1547 @@ components:
       properties:
         message:
           type: string
+
+    CmsEntryStatus:
+      type: string
+      enum: [DRAFT, SCHEDULED, PUBLISHED, ARCHIVED]
+
+    CmsEntry:
+      type: object
+      required: [id, entry_type, key, status, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        entry_type:
+          type: string
+          enum: [page, layout, global, navigation, template]
+        key:
+          type: string
+        status:
+          $ref: "#/components/schemas/CmsEntryStatus"
+        current_version_id:
+          type: integer
+          nullable: true
+        published_version_id:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CmsEntryVersion:
+      type: object
+      required: [id, entry_id, version_number, schema_version, payload, created_at]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        entry_id:
+          type: integer
+          minimum: 1
+        version_number:
+          type: integer
+          minimum: 1
+        schema_version:
+          type: integer
+          minimum: 1
+        payload:
+          $ref: "#/components/schemas/CmsPagePayload"
+        created_by:
+          type: integer
+          nullable: true
+        change_summary:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    CmsPublication:
+      type: object
+      required: [id, entry_id, version_id, published_at]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        entry_id:
+          type: integer
+          minimum: 1
+        version_id:
+          type: integer
+          minimum: 1
+        published_by:
+          type: integer
+          nullable: true
+        published_at:
+          type: string
+          format: date-time
+        rollback_from_publication_id:
+          type: integer
+          nullable: true
+        notes:
+          type: string
+
+    CmsNavigationMenu:
+      type: object
+      required: [id, entry_id, key, title, location, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        entry_id:
+          type: integer
+          minimum: 1
+        key:
+          type: string
+        title:
+          type: string
+        location:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CmsNavigationItem:
+      type: object
+      required: [id, menu_id, label, item_type, target_ref, url, sort_order, is_enabled]
+      properties:
+        id:
+          type: integer
+          minimum: 0
+        menu_id:
+          type: integer
+          minimum: 0
+        parent_id:
+          type: integer
+          nullable: true
+        label:
+          type: string
+        item_type:
+          type: string
+          enum: [internal, external, category, product, page, dropdown]
+        target_ref:
+          type: string
+        url:
+          type: string
+        sort_order:
+          type: integer
+        is_enabled:
+          type: boolean
+
+    CmsNavigationDraftRequest:
+      type: object
+      required: [key, title, location, items]
+      properties:
+        key:
+          type: string
+        title:
+          type: string
+        location:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsNavigationItemInput"
+        change_summary:
+          type: string
+
+    CmsNavigationItemInput:
+      type: object
+      required: [label, item_type, target_ref, url, sort_order, is_enabled]
+      properties:
+        id:
+          type: integer
+          minimum: 0
+        parent_id:
+          type: integer
+          nullable: true
+        label:
+          type: string
+        item_type:
+          type: string
+          enum: [internal, external, category, product, page, dropdown]
+        target_ref:
+          type: string
+        url:
+          type: string
+        sort_order:
+          type: integer
+        is_enabled:
+          type: boolean
+
+    CmsNavigationResponse:
+      type: object
+      required: [menu, entry, items, has_unpublished_draft]
+      properties:
+        menu:
+          $ref: "#/components/schemas/CmsNavigationMenu"
+        entry:
+          $ref: "#/components/schemas/CmsEntry"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsNavigationItem"
+        current_version:
+          nullable: true
+          $ref: "#/components/schemas/CmsEntryVersion"
+        published_version:
+          nullable: true
+          $ref: "#/components/schemas/CmsEntryVersion"
+        latest_publication:
+          nullable: true
+          $ref: "#/components/schemas/CmsPublication"
+        has_unpublished_draft:
+          type: boolean
+
+    CmsNavigationListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsNavigationResponse"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    CmsGlobalRegion:
+      type: object
+      required: [id, entry_id, key, title, region, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        entry_id:
+          type: integer
+          minimum: 1
+        key:
+          type: string
+        title:
+          type: string
+        region:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CmsGlobalRegionDraftRequest:
+      type: object
+      required: [key, title, region, payload]
+      properties:
+        key:
+          type: string
+        title:
+          type: string
+        region:
+          type: string
+        payload:
+          $ref: "#/components/schemas/CmsPagePayload"
+        change_summary:
+          type: string
+
+    CmsGlobalRegionResponse:
+      type: object
+      required: [region, entry, has_unpublished_draft]
+      properties:
+        region:
+          $ref: "#/components/schemas/CmsGlobalRegion"
+        entry:
+          $ref: "#/components/schemas/CmsEntry"
+        current_version:
+          nullable: true
+          $ref: "#/components/schemas/CmsEntryVersion"
+        published_version:
+          nullable: true
+          $ref: "#/components/schemas/CmsEntryVersion"
+        latest_publication:
+          nullable: true
+          $ref: "#/components/schemas/CmsPublication"
+        has_unpublished_draft:
+          type: boolean
+
+    CmsGlobalRegionListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsGlobalRegionResponse"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    CmsPage:
+      type: object
+      required: [id, entry_id, path, slug, title, template_key, visibility, is_homepage, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        entry_id:
+          type: integer
+          minimum: 1
+        path:
+          type: string
+        slug:
+          type: string
+        title:
+          type: string
+        template_key:
+          type: string
+        visibility:
+          type: string
+          enum: [public, hidden]
+        seo_metadata_id:
+          type: integer
+          nullable: true
+        is_homepage:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CmsPageResponse:
+      type: object
+      required: [page, entry, has_unpublished_draft]
+      properties:
+        page:
+          $ref: "#/components/schemas/CmsPage"
+        entry:
+          $ref: "#/components/schemas/CmsEntry"
+        current_version:
+          nullable: true
+          $ref: "#/components/schemas/CmsEntryVersion"
+        published_version:
+          nullable: true
+          $ref: "#/components/schemas/CmsEntryVersion"
+        latest_publication:
+          nullable: true
+          $ref: "#/components/schemas/CmsPublication"
+        has_unpublished_draft:
+          type: boolean
+        delivery:
+          $ref: "#/components/schemas/CmsDeliveryDecision"
+        seo:
+          $ref: "#/components/schemas/CmsSEOMetadata"
+        localization:
+          $ref: "#/components/schemas/CmsResolvedLocalization"
+
+    CmsPageListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsPageResponse"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    CmsPageDraftRequest:
+      type: object
+      required: [path, title, payload]
+      properties:
+        path:
+          type: string
+        slug:
+          type: string
+        title:
+          type: string
+        template_key:
+          type: string
+        visibility:
+          type: string
+          enum: [public, hidden]
+        is_homepage:
+          type: boolean
+        payload:
+          $ref: "#/components/schemas/CmsPagePayload"
+        change_summary:
+          type: string
+
+    CmsPagePayload:
+      type: object
+      properties:
+        blocks:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsContentBlock"
+      additionalProperties: true
+
+    CmsContentBlock:
+      oneOf:
+        - $ref: "#/components/schemas/CmsHeroBlock"
+        - $ref: "#/components/schemas/CmsRichTextBlock"
+        - $ref: "#/components/schemas/CmsImageBlock"
+        - $ref: "#/components/schemas/CmsGalleryBlock"
+        - $ref: "#/components/schemas/CmsVideoBlock"
+        - $ref: "#/components/schemas/CmsFAQBlock"
+        - $ref: "#/components/schemas/CmsCTABlock"
+        - $ref: "#/components/schemas/CmsPromoBannerBlock"
+        - $ref: "#/components/schemas/CmsProductRailBlock"
+        - $ref: "#/components/schemas/CmsCategoryTilesBlock"
+        - $ref: "#/components/schemas/CmsPromotionHighlightBlock"
+        - $ref: "#/components/schemas/CmsInventoryMessageBlock"
+        - $ref: "#/components/schemas/CmsTestimonialBlock"
+        - $ref: "#/components/schemas/CmsSocialEmbedBlock"
+        - $ref: "#/components/schemas/CmsCustomHTMLBlock"
+        - $ref: "#/components/schemas/CmsFooterBlock"
+      discriminator:
+        propertyName: type
+
+    CmsLink:
+      type: object
+      required: [label, url]
+      properties:
+        label:
+          type: string
+        url:
+          type: string
+
+    CmsHeroBlock:
+      type: object
+      required: [type, title]
+      properties:
+        type:
+          type: string
+          enum: [hero]
+        title:
+          type: string
+        subtitle:
+          type: string
+        image_media_id:
+          type: string
+        primary_cta:
+          $ref: "#/components/schemas/CmsLink"
+
+    CmsRichTextBlock:
+      type: object
+      required: [type, body]
+      properties:
+        type:
+          type: string
+          enum: [rich_text]
+        body:
+          type: string
+
+    CmsImageBlock:
+      type: object
+      required: [type, media_id]
+      properties:
+        type:
+          type: string
+          enum: [image]
+        media_id:
+          type: string
+        alt:
+          type: string
+        caption:
+          type: string
+
+    CmsGalleryBlock:
+      type: object
+      required: [type, images]
+      properties:
+        type:
+          type: string
+          enum: [gallery]
+        images:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/CmsGalleryImage"
+
+    CmsGalleryImage:
+      type: object
+      required: [media_id]
+      properties:
+        media_id:
+          type: string
+        alt:
+          type: string
+        caption:
+          type: string
+
+    CmsVideoBlock:
+      type: object
+      required: [type, url]
+      properties:
+        type:
+          type: string
+          enum: [video]
+        url:
+          type: string
+        title:
+          type: string
+
+    CmsFAQBlock:
+      type: object
+      required: [type, items]
+      properties:
+        type:
+          type: string
+          enum: [faq]
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [question, answer]
+            properties:
+              question:
+                type: string
+              answer:
+                type: string
+
+    CmsCTABlock:
+      type: object
+      required: [type, label, url]
+      properties:
+        type:
+          type: string
+          enum: [cta]
+        label:
+          type: string
+        url:
+          type: string
+        body:
+          type: string
+
+    CmsPromoBannerBlock:
+      type: object
+      required: [type, title]
+      properties:
+        type:
+          type: string
+          enum: [promo_banner]
+        title:
+          type: string
+        body:
+          type: string
+        link:
+          $ref: "#/components/schemas/CmsLink"
+
+    CmsProductRailBlock:
+      type: object
+      required: [type, title, source, limit]
+      properties:
+        type:
+          type: string
+          enum: [product_rail]
+        title:
+          type: string
+        subtitle:
+          type: string
+        source:
+          type: string
+          enum: [manual, newest, search, category]
+        product_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        query:
+          type: string
+        category_slug:
+          type: string
+        sort:
+          type: string
+          enum: [created_at, price, name]
+        order:
+          type: string
+          enum: [asc, desc]
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 24
+        image_aspect:
+          type: string
+          enum: [square, wide]
+
+    CmsCategoryTilesBlock:
+      type: object
+      required: [type, title, category_slugs]
+      properties:
+        type:
+          type: string
+          enum: [category_tiles]
+        title:
+          type: string
+        subtitle:
+          type: string
+        category_slugs:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        category_media_ids:
+          type: object
+          additionalProperties:
+            type: string
+        image_aspect:
+          type: string
+          enum: [square, wide]
+
+    CmsPromotionHighlightBlock:
+      type: object
+      required: [type, title]
+      properties:
+        type:
+          type: string
+          enum: [promotion_highlight]
+        title:
+          type: string
+        body:
+          type: string
+        badge:
+          type: string
+        promotion_code:
+          type: string
+        campaign_id:
+          type: integer
+          minimum: 1
+        link:
+          $ref: "#/components/schemas/CmsLink"
+
+    CmsInventoryMessageBlock:
+      type: object
+      required: [type, product_id]
+      properties:
+        type:
+          type: string
+          enum: [inventory_message]
+        product_id:
+          type: integer
+          minimum: 1
+        low_stock_threshold:
+          type: integer
+          minimum: 1
+          maximum: 1000
+        in_stock_message:
+          type: string
+        low_stock_message:
+          type: string
+        out_of_stock_message:
+          type: string
+
+    CmsTestimonialBlock:
+      type: object
+      required: [type, quote, attribution]
+      properties:
+        type:
+          type: string
+          enum: [testimonial]
+        quote:
+          type: string
+        attribution:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+
+    CmsSocialEmbedBlock:
+      type: object
+      required: [type, provider, url]
+      properties:
+        type:
+          type: string
+          enum: [social_embed]
+        provider:
+          type: string
+          enum: [instagram, tiktok, youtube]
+        url:
+          type: string
+        title:
+          type: string
+
+    CmsCustomHTMLBlock:
+      type: object
+      required: [type, html]
+      properties:
+        type:
+          type: string
+          enum: [custom_html]
+        html:
+          type: string
+
+    CmsFooterColumn:
+      type: object
+      required: [title, links]
+      properties:
+        title:
+          type: string
+        links:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/CmsLink"
+
+    CmsFooterBlock:
+      type: object
+      required: [type, brand_name, columns, social_links, copyright, layout]
+      properties:
+        type:
+          type: string
+          enum: [footer]
+        brand_name:
+          type: string
+        tagline:
+          type: string
+        columns:
+          type: array
+          maxItems: 6
+          items:
+            $ref: "#/components/schemas/CmsFooterColumn"
+        social_links:
+          type: array
+          maxItems: 8
+          items:
+            $ref: "#/components/schemas/CmsLink"
+        copyright:
+          type: string
+        layout:
+          type: string
+          enum: [columns, centered, minimal]
+
+    CmsLocale:
+      type: object
+      required: [code, name, enabled, is_default]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        enabled:
+          type: boolean
+        is_default:
+          type: boolean
+        fallback_locale:
+          type: string
+          nullable: true
+
+    CmsLocaleInput:
+      type: object
+      required: [code, name, enabled, is_default]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        enabled:
+          type: boolean
+        is_default:
+          type: boolean
+        fallback_locale:
+          type: string
+          nullable: true
+
+    CmsLocaleSettings:
+      type: object
+      required: [locales]
+      properties:
+        locales:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsLocale"
+
+    CmsLocaleSettingsInput:
+      type: object
+      required: [locales]
+      properties:
+        locales:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/CmsLocaleInput"
+
+    CmsPageVariant:
+      type: object
+      required:
+        [id, page_id, entry_id, locale, market, path, slug, title, payload, status, revision, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        page_id:
+          type: integer
+          minimum: 1
+        entry_id:
+          type: integer
+          minimum: 1
+        locale:
+          type: string
+        market:
+          type: string
+        path:
+          type: string
+        slug:
+          type: string
+        title:
+          type: string
+        payload:
+          $ref: "#/components/schemas/CmsPagePayload"
+        status:
+          type: string
+          enum: [draft, in_review, changes_requested, approved, published]
+        revision:
+          type: integer
+          minimum: 1
+        submitted_by:
+          type: string
+          nullable: true
+        approved_by:
+          type: string
+          nullable: true
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CmsPageVariantInput:
+      type: object
+      required: [locale, path, title, payload]
+      properties:
+        locale:
+          type: string
+        market:
+          type: string
+        path:
+          type: string
+        slug:
+          type: string
+        title:
+          type: string
+        payload:
+          $ref: "#/components/schemas/CmsPagePayload"
+        change_summary:
+          type: string
+
+    CmsWorkflowActionInput:
+      type: object
+      properties:
+        comment:
+          type: string
+
+    CmsRoleAssignment:
+      type: object
+      required: [subject, role]
+      properties:
+        subject:
+          type: string
+        role:
+          type: string
+          enum: [author, editor, publisher]
+
+    CmsGovernance:
+      type: object
+      required: [approval_required, invalidation_webhook_url, roles]
+      properties:
+        approval_required:
+          type: boolean
+        invalidation_webhook_url:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsRoleAssignment"
+
+    CmsGovernanceInput:
+      type: object
+      required: [approval_required, invalidation_webhook_url, roles]
+      properties:
+        approval_required:
+          type: boolean
+        invalidation_webhook_url:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsRoleAssignment"
+
+    CmsChangeComment:
+      type: object
+      required: [id, entry_id, actor, body, created_at]
+      properties:
+        id: { type: integer, minimum: 1 }
+        entry_id: { type: integer, minimum: 1 }
+        variant_id: { type: integer, nullable: true }
+        actor: { type: string }
+        body: { type: string }
+        resolved_by: { type: string, nullable: true }
+        resolved_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    CmsCommentInput:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string, minLength: 1 }
+
+    CmsEntryWorkflow:
+      type: object
+      required: [entry_id, version_id, status, comments]
+      properties:
+        entry_id: { type: integer, minimum: 1 }
+        version_id: { type: integer, minimum: 1 }
+        status:
+          type: string
+          enum: [draft, in_review, changes_requested, approved]
+        submitted_by: { type: string, nullable: true }
+        approved_by: { type: string, nullable: true }
+        comments:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsChangeComment"
+
+    CmsEntryVariant:
+      type: object
+      required: [id, entry_id, locale, market, payload, status, revision, created_at, updated_at]
+      properties:
+        id: { type: integer, minimum: 1 }
+        entry_id: { type: integer, minimum: 1 }
+        locale: { type: string }
+        market: { type: string }
+        payload: { type: object, additionalProperties: true }
+        status:
+          type: string
+          enum: [draft, in_review, changes_requested, approved, published]
+        revision: { type: integer, minimum: 1 }
+        submitted_by: { type: string, nullable: true }
+        approved_by: { type: string, nullable: true }
+        published_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    CmsEntryVariantInput:
+      type: object
+      required: [locale, payload]
+      properties:
+        locale: { type: string }
+        market: { type: string }
+        payload: { type: object, additionalProperties: true }
+        change_summary: { type: string }
+
+    CmsInvalidationEvent:
+      type: object
+      required: [id, entry_id, reason, status, attempts, last_error, created_at]
+      properties:
+        id: { type: integer, minimum: 1 }
+        entry_id: { type: integer, minimum: 1 }
+        variant_id: { type: integer, nullable: true }
+        reason: { type: string }
+        status: { type: string, enum: [pending, sent, failed] }
+        attempts: { type: integer, minimum: 0 }
+        last_error: { type: string }
+        created_at: { type: string, format: date-time }
+        sent_at: { type: string, format: date-time, nullable: true }
+
+    CmsOperations:
+      type: object
+      required: [pending_schedules, active_experiments, invalidations]
+      properties:
+        pending_schedules: { type: integer, minimum: 0 }
+        active_experiments: { type: integer, minimum: 0 }
+        invalidations:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsInvalidationEvent"
+
+    CmsRestorePreview:
+      type: object
+      required: [valid, schema_version, pages, navigation, global_regions, variants, warnings, errors]
+      properties:
+        valid: { type: boolean }
+        schema_version: { type: integer }
+        pages: { type: integer, minimum: 0 }
+        navigation: { type: integer, minimum: 0 }
+        global_regions: { type: integer, minimum: 0 }
+        variants: { type: integer, minimum: 0 }
+        warnings: { type: array, items: { type: string } }
+        errors: { type: array, items: { type: string } }
+
+    CmsAuditEvent:
+      type: object
+      required: [id, entry_id, action, actor, detail, created_at]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        entry_id:
+          type: integer
+          minimum: 1
+        version_id:
+          type: integer
+          nullable: true
+        variant_id:
+          type: integer
+          nullable: true
+        action:
+          type: string
+        actor:
+          type: string
+        detail:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    CmsResolvedLocalization:
+      type: object
+      required: [requested_locale, resolved_locale, market, used_fallback, alternates]
+      properties:
+        requested_locale:
+          type: string
+        resolved_locale:
+          type: string
+        market:
+          type: string
+        used_fallback:
+          type: boolean
+        alternates:
+          type: array
+          items:
+            type: object
+            required: [locale, path]
+            properties:
+              locale:
+                type: string
+              market:
+                type: string
+              path:
+                type: string
+
+    CmsContentExport:
+      type: object
+      required: [schema_version, exported_at, locales, pages, navigation, global_regions, variants]
+      properties:
+        schema_version:
+          type: integer
+        exported_at:
+          type: string
+          format: date-time
+        locales:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsLocale"
+        pages:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsPageResponse"
+        navigation:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsNavigationResponse"
+        global_regions:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsGlobalRegionResponse"
+        variants:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsPageVariant"
+
+    CmsPublishRequest:
+      type: object
+      properties:
+        notes:
+          type: string
+
+    CmsPreviewRequest:
+      type: object
+      required: [payload]
+      properties:
+        payload:
+          $ref: "#/components/schemas/CmsPagePayload"
+
+    CmsPreviewBlock:
+      type: object
+      required: [key, type, status, item_count, messages]
+      properties:
+        key:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+          enum: [ok, degraded, static]
+        item_count:
+          type: integer
+          minimum: 0
+        messages:
+          type: array
+          items:
+            type: string
+
+    CmsPreviewResponse:
+      type: object
+      required: [blocks]
+      properties:
+        blocks:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsPreviewBlock"
+
+    CmsRollbackRequest:
+      type: object
+      required: [version_id]
+      properties:
+        version_id:
+          type: integer
+          minimum: 1
+        notes:
+          type: string
+
+    CmsSchedule:
+      type: object
+      required: [id, entry_id, version_id, publish_at, timezone, status, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        entry_id:
+          type: integer
+          minimum: 1
+        version_id:
+          type: integer
+          minimum: 1
+        publish_at:
+          type: string
+          format: date-time
+        unpublish_at:
+          type: string
+          format: date-time
+          nullable: true
+        timezone:
+          type: string
+        status:
+          type: string
+          enum: [pending, active, completed, cancelled]
+        last_transition_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CmsScheduleInput:
+      type: object
+      required: [publish_at, timezone]
+      properties:
+        publish_at:
+          type: string
+          format: date-time
+        unpublish_at:
+          type: string
+          format: date-time
+          nullable: true
+        timezone:
+          type: string
+
+    CmsTargetingRule:
+      type: object
+      required: [id, priority, is_enabled, markets, device_classes, auth_states, referrers, utm_sources, segment_keys]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        priority:
+          type: integer
+        is_enabled:
+          type: boolean
+        markets:
+          type: array
+          items:
+            type: string
+        device_classes:
+          type: array
+          items:
+            type: string
+            enum: [desktop, mobile, tablet]
+        auth_states:
+          type: array
+          items:
+            type: string
+            enum: [guest, authenticated]
+        referrers:
+          type: array
+          items:
+            type: string
+        utm_sources:
+          type: array
+          items:
+            type: string
+        segment_keys:
+          type: array
+          items:
+            type: string
+
+    CmsTargetingRuleInput:
+      type: object
+      required: [priority, is_enabled, markets, device_classes, auth_states, referrers, utm_sources, segment_keys]
+      properties:
+        priority:
+          type: integer
+        is_enabled:
+          type: boolean
+        markets:
+          type: array
+          items:
+            type: string
+        device_classes:
+          type: array
+          items:
+            type: string
+            enum: [desktop, mobile, tablet]
+        auth_states:
+          type: array
+          items:
+            type: string
+            enum: [guest, authenticated]
+        referrers:
+          type: array
+          items:
+            type: string
+        utm_sources:
+          type: array
+          items:
+            type: string
+        segment_keys:
+          type: array
+          items:
+            type: string
+
+    CmsExperimentVariant:
+      type: object
+      required: [id, experiment_id, name, version_id, allocation]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        experiment_id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        version_id:
+          type: integer
+          minimum: 1
+        allocation:
+          type: integer
+          minimum: 1
+          maximum: 10000
+
+    CmsExperimentVariantInput:
+      type: object
+      required: [name, version_id, allocation]
+      properties:
+        name:
+          type: string
+        version_id:
+          type: integer
+          minimum: 1
+        allocation:
+          type: integer
+          minimum: 1
+          maximum: 10000
+
+    CmsExperiment:
+      type: object
+      required: [id, entry_id, name, status, sticky_key, starts_at, variants, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        entry_id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        status:
+          type: string
+          enum: [draft, active, paused, completed]
+        sticky_key:
+          type: string
+          enum: [visitor, customer]
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        variants:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/CmsExperimentVariant"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CmsExperimentInput:
+      type: object
+      required: [name, status, sticky_key, starts_at, variants]
+      properties:
+        name:
+          type: string
+        status:
+          type: string
+          enum: [draft, active, paused, completed]
+        sticky_key:
+          type: string
+          enum: [visitor, customer]
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        variants:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/CmsExperimentVariantInput"
+
+    CmsPageDeliveryRequest:
+      type: object
+      required: [targeting_rules]
+      properties:
+        schedule:
+          nullable: true
+          $ref: "#/components/schemas/CmsScheduleInput"
+        targeting_rules:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsTargetingRuleInput"
+        experiment:
+          nullable: true
+          $ref: "#/components/schemas/CmsExperimentInput"
+
+    CmsPageDeliveryResponse:
+      type: object
+      required: [targeting_rules, recent_publications]
+      properties:
+        schedule:
+          nullable: true
+          $ref: "#/components/schemas/CmsSchedule"
+        targeting_rules:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsTargetingRule"
+        experiment:
+          nullable: true
+          $ref: "#/components/schemas/CmsExperiment"
+        recent_publications:
+          type: array
+          items:
+            $ref: "#/components/schemas/CmsPublication"
+
+    CmsDeliveryDecision:
+      type: object
+      required: [content_version_id, correlation_id]
+      properties:
+        content_version_id:
+          type: integer
+          minimum: 1
+        experiment_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        experiment_variant_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        correlation_id:
+          type: string
+
+    CmsContentEventRequest:
+      type: object
+      required: [content_version_id, correlation_id, event_type]
+      properties:
+        content_version_id:
+          type: integer
+          minimum: 1
+        experiment_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        experiment_variant_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        correlation_id:
+          type: string
+        event_type:
+          type: string
+          enum: [impression, conversion]
+
+    CmsSEOMetadata:
+      type: object
+      required: [title, description, canonical_url, robots, og_title, og_description, twitter_card, twitter_title, twitter_description, json_ld]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        canonical_url:
+          type: string
+        robots:
+          type: string
+          enum: [index_follow, noindex_follow, index_nofollow, noindex_nofollow]
+        og_title:
+          type: string
+        og_description:
+          type: string
+        og_image_media_id:
+          type: string
+          nullable: true
+        twitter_card:
+          type: string
+          enum: [summary, summary_large_image]
+        twitter_title:
+          type: string
+        twitter_description:
+          type: string
+        twitter_image_media_id:
+          type: string
+          nullable: true
+        json_ld:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    CmsSEOInput:
+      type: object
+      required: [title, description, canonical_url, robots, og_title, og_description, twitter_card, twitter_title, twitter_description, json_ld]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        canonical_url:
+          type: string
+        robots:
+          type: string
+          enum: [index_follow, noindex_follow, index_nofollow, noindex_nofollow]
+        og_title:
+          type: string
+        og_description:
+          type: string
+        og_image_media_id:
+          type: string
+          nullable: true
+        twitter_card:
+          type: string
+          enum: [summary, summary_large_image]
+        twitter_title:
+          type: string
+        twitter_description:
+          type: string
+        twitter_image_media_id:
+          type: string
+          nullable: true
+        json_ld:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    CmsSEOResponse:
+      type: object
+      required: [metadata, issues]
+      properties:
+        metadata:
+          $ref: "#/components/schemas/CmsSEOMetadata"
+        issues:
+          type: array
+          items:
+            type: string
+
+    CmsRedirectRule:
+      type: object
+      required: [id, source_pattern, match_type, target_url, redirect_type, priority, is_enabled, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        source_pattern:
+          type: string
+        match_type:
+          type: string
+          enum: [exact, prefix]
+        target_url:
+          type: string
+        redirect_type:
+          type: integer
+          enum: [301, 302]
+        priority:
+          type: integer
+        is_enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CmsRedirectInput:
+      type: object
+      required: [source_pattern, match_type, target_url, redirect_type, priority, is_enabled]
+      properties:
+        source_pattern:
+          type: string
+        match_type:
+          type: string
+          enum: [exact, prefix]
+        target_url:
+          type: string
+        redirect_type:
+          type: integer
+          enum: [301, 302]
+        priority:
+          type: integer
+        is_enabled:
+          type: boolean
+
+    CmsRedirectResolution:
+      type: object
+      required: [target_url, redirect_type]
+      properties:
+        target_url:
+          type: string
+        redirect_type:
+          type: integer
+          enum: [301, 302]
 
     DraftPreviewSessionResponse:
       type: object
@@ -6952,180 +10087,10 @@ components:
           items:
             type: string
 
-    StorefrontLink:
-      type: object
-      required: [label, url]
-      properties:
-        label:
-          type: string
-        url:
-          type: string
-
-    StorefrontHero:
-      type: object
-      required:
-        - eyebrow
-        - title
-        - subtitle
-        - background_image_url
-        - primary_cta
-        - secondary_cta
-      properties:
-        eyebrow:
-          type: string
-        title:
-          type: string
-        subtitle:
-          type: string
-        background_image_url:
-          type: string
-        background_image_media_id:
-          type: string
-        primary_cta:
-          $ref: "#/components/schemas/StorefrontLink"
-        secondary_cta:
-          $ref: "#/components/schemas/StorefrontLink"
-
-    StorefrontProductSection:
-      type: object
-      required:
-        - title
-        - subtitle
-        - source
-        - query
-        - product_ids
-        - sort
-        - order
-        - limit
-        - brand_slug
-        - category_slug
-        - has_variant_stock
-        - attribute_filters
-        - show_stock
-        - show_description
-        - image_aspect
-      properties:
-        title:
-          type: string
-        subtitle:
-          type: string
-        source:
-          type: string
-          enum: [manual, newest, search, category]
-        query:
-          type: string
-        product_ids:
-          type: array
-          items:
-            type: integer
-            minimum: 1
-        sort:
-          type: string
-          enum: [created_at, price, name]
-        order:
-          type: string
-          enum: [asc, desc]
-        limit:
-          type: integer
-          minimum: 1
-          maximum: 24
-        brand_slug:
-          type: string
-        category_slug:
-          type: string
-        has_variant_stock:
-          type: boolean
-        attribute_filters:
-          type: object
-          additionalProperties:
-            type: string
-        show_stock:
-          type: boolean
-        show_description:
-          type: boolean
-        image_aspect:
-          type: string
-          enum: [square, wide]
-
-    StorefrontHomepageSection:
-      type: object
-      required: [id, type, enabled]
-      properties:
-        id:
-          type: string
-        type:
-          type: string
-          enum: [hero, products, promo_cards, badges]
-        enabled:
-          type: boolean
-        hero:
-          $ref: "#/components/schemas/StorefrontHero"
-        product_section:
-          $ref: "#/components/schemas/StorefrontProductSection"
-        promo_cards:
-          type: array
-          items:
-            $ref: "#/components/schemas/StorefrontPromoCard"
-        promo_card_limit:
-          type: integer
-          minimum: 1
-          maximum: 12
-        badges:
-          type: array
-          items:
-            type: string
-
-    StorefrontPromoCard:
-      type: object
-      required: [kicker, title, description, image_url, link]
-      properties:
-        kicker:
-          type: string
-        title:
-          type: string
-        description:
-          type: string
-        image_url:
-          type: string
-        link:
-          $ref: "#/components/schemas/StorefrontLink"
-
-    StorefrontFooterColumn:
-      type: object
-      required: [title, links]
-      properties:
-        title:
-          type: string
-        links:
-          type: array
-          items:
-            $ref: "#/components/schemas/StorefrontLink"
-
-    StorefrontFooter:
-      type: object
-      required:
-        [brand_name, tagline, copyright, columns, social_links, bottom_notice]
-      properties:
-        brand_name:
-          type: string
-        tagline:
-          type: string
-        copyright:
-          type: string
-        columns:
-          type: array
-          items:
-            $ref: "#/components/schemas/StorefrontFooterColumn"
-        social_links:
-          type: array
-          items:
-            $ref: "#/components/schemas/StorefrontLink"
-        bottom_notice:
-          type: string
-
     WebsiteSettings:
       type: object
       required:
+        - site_title
         - allow_guest_checkout
         - coupon_codes_enabled
         - oidc_provider
@@ -7135,6 +10100,8 @@ components:
         - clear_oidc_client_secret
         - oidc_redirect_uri
       properties:
+        site_title:
+          type: string
         allow_guest_checkout:
           type: boolean
         coupon_codes_enabled:
@@ -7170,44 +10137,5 @@ components:
         settings:
           $ref: "#/components/schemas/WebsiteSettings"
         updated_at:
-          type: string
-          format: date-time
-
-    StorefrontSettings:
-      type: object
-      required: [site_title, homepage_sections, footer]
-      properties:
-        site_title:
-          type: string
-        homepage_sections:
-          type: array
-          items:
-            $ref: "#/components/schemas/StorefrontHomepageSection"
-        footer:
-          $ref: "#/components/schemas/StorefrontFooter"
-
-    StorefrontSettingsRequest:
-      type: object
-      required: [settings]
-      properties:
-        settings:
-          $ref: "#/components/schemas/StorefrontSettings"
-
-    StorefrontSettingsResponse:
-      type: object
-      required: [settings, updated_at, has_draft_changes, published_updated_at]
-      properties:
-        settings:
-          $ref: "#/components/schemas/StorefrontSettings"
-        updated_at:
-          type: string
-          format: date-time
-        has_draft_changes:
-          type: boolean
-        draft_updated_at:
-          type: string
-          format: date-time
-          nullable: true
-        published_updated_at:
           type: string
           format: date-time

@@ -515,16 +515,267 @@ func (s *GeneratedAPIServer) DiscardProductDraft(c *gin.Context, id int) {
 	s.runProtected(c, "admin", DiscardProductDraft(s.db, s.mediaService))
 }
 
-func (s *GeneratedAPIServer) GetAdminStorefrontSettings(c *gin.Context) {
-	s.runProtected(c, "admin", GetAdminStorefrontSettings(s.db, s.mediaService))
+func (s *GeneratedAPIServer) ListAdminCmsPages(c *gin.Context, params apicontract.ListAdminCmsPagesParams) {
+	_ = params
+	s.runProtected(c, "admin", listAdminCMSPages(s.db))
 }
 
-func (s *GeneratedAPIServer) UpdateStorefrontSettings(c *gin.Context) {
-	s.runProtected(c, "admin", UpsertStorefrontSettings(s.db, s.mediaService))
+func (s *GeneratedAPIServer) CreateAdminCmsPage(c *gin.Context) {
+	s.runProtected(c, "admin", createAdminCMSPage(s.db, s.mediaService))
 }
 
-func (s *GeneratedAPIServer) PublishStorefrontSettings(c *gin.Context) {
-	s.runProtected(c, "admin", PublishStorefrontSettings(s.db, s.mediaService))
+func (s *GeneratedAPIServer) GetAdminCmsLocales(c *gin.Context) {
+	s.runProtected(c, "admin", getAdminCMSLocales(s.db))
+}
+
+func (s *GeneratedAPIServer) UpdateAdminCmsLocales(c *gin.Context) {
+	s.runProtected(c, "admin", updateAdminCMSLocales(s.db))
+}
+
+func (s *GeneratedAPIServer) ListAdminCmsPageVariants(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", listAdminCMSPageVariants(s.db))
+}
+
+func (s *GeneratedAPIServer) CreateAdminCmsPageVariant(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", createAdminCMSPageVariant(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) UpdateAdminCmsPageVariant(c *gin.Context, id int, variantId int) {
+	_, _ = id, variantId
+	s.runProtected(c, "admin", updateAdminCMSPageVariant(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) DeleteAdminCmsPageVariant(c *gin.Context, id int, variantId int) {
+	_, _ = id, variantId
+	s.runProtected(c, "admin", deleteAdminCMSPageVariant(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) TransitionAdminCmsPageVariant(c *gin.Context, id int, variantId int, action apicontract.TransitionAdminCmsPageVariantParamsAction) {
+	_, _, _ = id, variantId, action
+	s.runProtected(c, "admin", transitionAdminCMSPageVariant(s.db))
+}
+
+func (s *GeneratedAPIServer) ListAdminCmsAuditEvents(c *gin.Context, params apicontract.ListAdminCmsAuditEventsParams) {
+	_ = params
+	s.runProtected(c, "admin", listAdminCMSAuditEvents(s.db))
+}
+
+func (s *GeneratedAPIServer) GetAdminCmsGovernance(c *gin.Context) {
+	s.runProtected(c, "admin", getAdminCMSGovernance(s.db))
+}
+func (s *GeneratedAPIServer) UpdateAdminCmsGovernance(c *gin.Context) {
+	s.runProtected(c, "admin", updateAdminCMSGovernance(s.db))
+}
+func (s *GeneratedAPIServer) GetAdminCmsEntryWorkflow(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", getAdminCMSEntryWorkflow(s.db))
+}
+func (s *GeneratedAPIServer) TransitionAdminCmsEntryWorkflow(c *gin.Context, id int, action apicontract.TransitionAdminCmsEntryWorkflowParamsAction) {
+	_, _ = id, action
+	s.runProtected(c, "admin", transitionAdminCMSEntryWorkflow(s.db))
+}
+func (s *GeneratedAPIServer) CreateAdminCmsEntryComment(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", createAdminCMSEntryComment(s.db))
+}
+func (s *GeneratedAPIServer) ResolveAdminCmsComment(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", resolveAdminCMSComment(s.db))
+}
+func (s *GeneratedAPIServer) ListAdminCmsEntryVariants(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", listAdminCMSEntryVariants(s.db))
+}
+func (s *GeneratedAPIServer) CreateAdminCmsEntryVariant(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", createAdminCMSEntryVariant(s.db))
+}
+func (s *GeneratedAPIServer) UpdateAdminCmsEntryVariant(c *gin.Context, id, variantId int) {
+	_, _ = id, variantId
+	s.runProtected(c, "admin", updateAdminCMSEntryVariant(s.db))
+}
+func (s *GeneratedAPIServer) DeleteAdminCmsEntryVariant(c *gin.Context, id, variantId int) {
+	_, _ = id, variantId
+	s.runProtected(c, "admin", deleteAdminCMSEntryVariant(s.db))
+}
+func (s *GeneratedAPIServer) TransitionAdminCmsEntryVariant(c *gin.Context, id, variantId int, action apicontract.TransitionAdminCmsEntryVariantParamsAction) {
+	_, _, _ = id, variantId, action
+	s.runProtected(c, "admin", transitionAdminCMSEntryVariant(s.db))
+}
+func (s *GeneratedAPIServer) GetAdminCmsOperations(c *gin.Context) {
+	s.runProtected(c, "admin", getAdminCMSOperations(s.db))
+}
+func (s *GeneratedAPIServer) RetryAdminCmsInvalidation(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", retryAdminCMSInvalidation(s.db))
+}
+func (s *GeneratedAPIServer) PreviewAdminCmsRestore(c *gin.Context) {
+	s.runProtected(c, "admin", previewAdminCMSRestore())
+}
+
+func (s *GeneratedAPIServer) ExportAdminCmsContent(c *gin.Context) {
+	s.runProtected(c, "admin", exportAdminCMSContent(s.db))
+}
+
+func (s *GeneratedAPIServer) RestoreAdminCmsContent(c *gin.Context) {
+	s.runProtected(c, "admin", restoreAdminCMSContent(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) GetAdminCmsPage(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", getAdminCMSPage(s.db))
+}
+
+func (s *GeneratedAPIServer) UpdateAdminCmsPage(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", updateAdminCMSPage(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) DeleteAdminCmsPage(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", deleteAdminCMSPage(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) PublishAdminCmsPage(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", publishAdminCMSPage(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) UnpublishAdminCmsPage(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", unpublishAdminCMSPage(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) DiscardAdminCmsPageDraft(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", discardAdminCMSPageDraft(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) RollbackAdminCmsPage(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", rollbackAdminCMSPage(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) GetAdminCmsPageDelivery(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", getAdminCMSPageDelivery(s.db))
+}
+
+func (s *GeneratedAPIServer) UpdateAdminCmsPageDelivery(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", updateAdminCMSPageDelivery(s.db))
+}
+
+func (s *GeneratedAPIServer) GetAdminCmsPageSeo(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", getAdminCMSPageSEO(s.db))
+}
+
+func (s *GeneratedAPIServer) UpdateAdminCmsPageSeo(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", updateAdminCMSPageSEO(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) ListAdminCmsRedirects(c *gin.Context) {
+	s.runProtected(c, "admin", listAdminCMSRedirects(s.db))
+}
+
+func (s *GeneratedAPIServer) CreateAdminCmsRedirect(c *gin.Context) {
+	s.runProtected(c, "admin", createAdminCMSRedirect(s.db))
+}
+
+func (s *GeneratedAPIServer) UpdateAdminCmsRedirect(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", updateAdminCMSRedirect(s.db))
+}
+
+func (s *GeneratedAPIServer) DeleteAdminCmsRedirect(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", deleteAdminCMSRedirect(s.db))
+}
+
+func (s *GeneratedAPIServer) PreviewAdminCmsPayload(c *gin.Context) {
+	s.runProtected(c, "admin", previewAdminCMSPayload(s.db))
+}
+
+func (s *GeneratedAPIServer) ListAdminCmsNavigation(c *gin.Context, params apicontract.ListAdminCmsNavigationParams) {
+	_ = params
+	s.runProtected(c, "admin", listAdminCMSNavigation(s.db))
+}
+
+func (s *GeneratedAPIServer) CreateAdminCmsNavigation(c *gin.Context) {
+	s.runProtected(c, "admin", createAdminCMSNavigation(s.db))
+}
+
+func (s *GeneratedAPIServer) GetAdminCmsNavigation(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", getAdminCMSNavigation(s.db))
+}
+
+func (s *GeneratedAPIServer) UpdateAdminCmsNavigation(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", updateAdminCMSNavigation(s.db))
+}
+
+func (s *GeneratedAPIServer) DeleteAdminCmsNavigation(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", deleteAdminCMSNavigation(s.db))
+}
+
+func (s *GeneratedAPIServer) PublishAdminCmsNavigation(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", publishAdminCMSNavigation(s.db))
+}
+
+func (s *GeneratedAPIServer) UnpublishAdminCmsNavigation(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", unpublishAdminCMSNavigation(s.db))
+}
+
+func (s *GeneratedAPIServer) DiscardAdminCmsNavigationDraft(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", discardAdminCMSNavigationDraft(s.db))
+}
+
+func (s *GeneratedAPIServer) ListAdminCmsGlobalRegions(c *gin.Context, params apicontract.ListAdminCmsGlobalRegionsParams) {
+	_ = params
+	s.runProtected(c, "admin", listAdminCMSGlobalRegions(s.db))
+}
+
+func (s *GeneratedAPIServer) CreateAdminCmsGlobalRegion(c *gin.Context) {
+	s.runProtected(c, "admin", createAdminCMSGlobalRegion(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) GetAdminCmsGlobalRegion(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", getAdminCMSGlobalRegion(s.db))
+}
+
+func (s *GeneratedAPIServer) UpdateAdminCmsGlobalRegion(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", updateAdminCMSGlobalRegion(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) DeleteAdminCmsGlobalRegion(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", deleteAdminCMSGlobalRegion(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) PublishAdminCmsGlobalRegion(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", publishAdminCMSGlobalRegion(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) UnpublishAdminCmsGlobalRegion(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", unpublishAdminCMSGlobalRegion(s.db, s.mediaService))
+}
+
+func (s *GeneratedAPIServer) DiscardAdminCmsGlobalRegionDraft(c *gin.Context, id int) {
+	_ = id
+	s.runProtected(c, "admin", discardAdminCMSGlobalRegionDraft(s.db, s.mediaService))
 }
 
 func (s *GeneratedAPIServer) GetAdminWebsiteSettings(c *gin.Context) {
@@ -533,10 +784,6 @@ func (s *GeneratedAPIServer) GetAdminWebsiteSettings(c *gin.Context) {
 
 func (s *GeneratedAPIServer) UpdateWebsiteSettings(c *gin.Context) {
 	s.runProtected(c, "admin", UpsertWebsiteSettingsWithCredentials(s.db, s.providerRuntime.Credentials))
-}
-
-func (s *GeneratedAPIServer) DiscardStorefrontDraft(c *gin.Context) {
-	s.runProtected(c, "admin", DiscardStorefrontDraft(s.db, s.mediaService))
 }
 
 func (s *GeneratedAPIServer) GetAdminPreview(c *gin.Context) {
@@ -811,7 +1058,49 @@ func (s *GeneratedAPIServer) GetProduct(c *gin.Context, id int) {
 	GetProductByID(s.db, s.mediaService)(c)
 }
 
-func (s *GeneratedAPIServer) GetStorefrontSettings(c *gin.Context) {
+func (s *GeneratedAPIServer) ResolveContentPage(c *gin.Context, path string, params apicontract.ResolveContentPageParams) {
+	_ = path
+	_ = params
 	s.applyDraftPreview(c)
-	GetStorefrontSettings(s.db, s.mediaService)(c)
+	if user, err := findAuthenticatedUserIfPresent(s.db, c, s.jwtSecret); err == nil && user != nil {
+		c.Set("cms_authenticated", true)
+		c.Set("cms_customer_assignment", strconv.FormatUint(uint64(user.ID), 10))
+	}
+	resolveContentPage(s.db)(c)
+}
+
+func (s *GeneratedAPIServer) ResolveContentHomepage(c *gin.Context, params apicontract.ResolveContentHomepageParams) {
+	_ = params
+	c.Params = append(c.Params, gin.Param{Key: "path", Value: "/"})
+	s.applyDraftPreview(c)
+	if user, err := findAuthenticatedUserIfPresent(s.db, c, s.jwtSecret); err == nil && user != nil {
+		c.Set("cms_authenticated", true)
+		c.Set("cms_customer_assignment", strconv.FormatUint(uint64(user.ID), 10))
+	}
+	resolveContentPage(s.db)(c)
+}
+
+func (s *GeneratedAPIServer) RecordContentEvent(c *gin.Context) {
+	s.runPublic(c, recordContentEvent(s.db))
+}
+
+func (s *GeneratedAPIServer) ResolveContentRedirect(c *gin.Context, params apicontract.ResolveContentRedirectParams) {
+	_ = params
+	s.runPublic(c, resolveContentRedirect(s.db))
+}
+
+func (s *GeneratedAPIServer) GetContentSitemap(c *gin.Context) {
+	s.runPublic(c, getContentSitemap(s.db))
+}
+
+func (s *GeneratedAPIServer) GetContentNavigation(c *gin.Context, location string) {
+	_ = location
+	s.applyDraftPreview(c)
+	resolveContentNavigation(s.db)(c)
+}
+
+func (s *GeneratedAPIServer) GetContentGlobalRegion(c *gin.Context, region string) {
+	_ = region
+	s.applyDraftPreview(c)
+	resolveContentGlobalRegion(s.db)(c)
 }

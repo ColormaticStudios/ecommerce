@@ -21,11 +21,11 @@ Frontend-specific docs are in:
 - Authentication and authorization (local auth + OIDC)
 - Product catalog and admin product management
 - Cart, guest checkout, and order workflows
-- Storefront configuration and draft/preview publishing
+- CMS content management with draft/preview publishing
 - Media upload/processing pipeline
 - Runtime-extensible checkout providers (payment, shipping, tax)
 - Runtime-loadable provider executables for payment, shipping, and tax services
-- CLI for admin workflows, catalog drafting, storefront config, and order observability
+- CLI for admin workflows, catalog drafting, CMS content, and order observability
 
 ## Quick Start
 

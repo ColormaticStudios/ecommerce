@@ -227,7 +227,6 @@
 						<div class="w-64 shrink-0">
 							<ProductCard
 								href={resolve(`/product/${related.id}`)}
-								showStock={true}
 								imageAspect="wide"
 								data={{
 									//id: related.id, // Unused

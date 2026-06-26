@@ -11,6 +11,7 @@
 	} from "$lib/admin/dirty-navigation";
 	import AdminSidebar from "$lib/admin/AdminSidebar.svelte";
 	import { getActiveAdminSection } from "$lib/admin/navigation";
+	import IconButton from "$lib/components/IconButton.svelte";
 
 	interface Props {
 		children?: import("svelte").Snippet;
@@ -86,14 +87,14 @@
 </script>
 
 <section class="min-h-screen">
-	<button
-		type="button"
-		class="m-4 inline-flex cursor-pointer items-center gap-2 rounded-full border border-gray-300 bg-white/90 px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm transition hover:border-gray-400 hover:bg-gray-50 lg:hidden dark:border-gray-700 dark:bg-gray-900/90 dark:text-gray-100 dark:hover:border-gray-600 dark:hover:bg-gray-800"
+	<IconButton
+		aria-label="Open admin sections"
+		title="Open admin sections"
+		class="m-4 text-gray-800 shadow-sm lg:hidden dark:text-gray-100"
 		onclick={() => (drawerOpen = true)}
 	>
 		<i class="bi bi-layout-sidebar-inset"></i>
-		Sections
-	</button>
+	</IconButton>
 
 	<div class="grid min-h-screen items-stretch lg:grid-cols-[auto_minmax(0,1fr)]">
 		<aside
@@ -123,7 +124,8 @@
 	>
 		<button
 			type="button"
-			class="absolute inset-0 bg-gray-950/45 backdrop-blur-[2px]"
+			class="absolute inset-0 backdrop-blur-[2px]"
+			style="background-color: rgb(3 7 18 / 0.45);"
 			aria-label="Close admin drawer"
 			onclick={() => (drawerOpen = false)}
 			transition:fade={{ duration: 180 }}

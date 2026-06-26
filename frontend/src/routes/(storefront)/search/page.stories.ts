@@ -1,12 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/sveltekit";
 import type { ComponentProps } from "svelte";
 import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
-import {
-	makeAttributeDefinition,
-	makeBrand,
-	makeProduct,
-	makeStorefrontSettings,
-} from "$lib/storybook/factories";
+import { makeAttributeDefinition, makeBrand, makeProduct } from "$lib/storybook/factories";
 import { makeRouteLayoutData } from "$lib/storybook/layout";
 import { renderRouteStory } from "$lib/storybook/render";
 import SearchPage from "./+page.svelte";
@@ -66,7 +61,6 @@ function createData(overrides: Partial<SearchPageData> = {}): SearchPageData {
 		totalResults: 0,
 		sortBy: "created_at",
 		sortOrder: "desc",
-		storefront: makeStorefrontSettings(),
 		...overrides,
 	};
 }

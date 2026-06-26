@@ -92,13 +92,21 @@ type ProductAttributeValue struct {
 
 type SEOMetadata struct {
 	BaseModel
-	EntityType     string  `json:"entity_type" gorm:"not null;index:idx_seo_entity,unique"`
-	EntityID       uint    `json:"entity_id" gorm:"not null;index:idx_seo_entity,unique"`
-	Title          *string `json:"title,omitempty"`
-	Description    *string `json:"description,omitempty"`
-	CanonicalPath  *string `json:"canonical_path,omitempty" gorm:"uniqueIndex"`
-	OgImageMediaID *string `json:"og_image_media_id,omitempty"`
-	NoIndex        bool    `json:"noindex" gorm:"not null;default:false"`
+	EntityType          string  `json:"entity_type" gorm:"not null;index:idx_seo_entity,unique"`
+	EntityID            uint    `json:"entity_id" gorm:"not null;index:idx_seo_entity,unique"`
+	Title               *string `json:"title,omitempty"`
+	Description         *string `json:"description,omitempty"`
+	CanonicalPath       *string `json:"canonical_path,omitempty" gorm:"uniqueIndex"`
+	OgImageMediaID      *string `json:"og_image_media_id,omitempty"`
+	NoIndex             bool    `json:"noindex" gorm:"not null;default:false"`
+	Robots              string  `json:"robots" gorm:"size:32;not null;default:index_follow"`
+	OGTitle             *string `json:"og_title,omitempty"`
+	OGDescription       *string `json:"og_description,omitempty"`
+	TwitterCard         string  `json:"twitter_card" gorm:"size:32;not null;default:summary_large_image"`
+	TwitterTitle        *string `json:"twitter_title,omitempty"`
+	TwitterDescription  *string `json:"twitter_description,omitempty"`
+	TwitterImageMediaID *string `json:"twitter_image_media_id,omitempty"`
+	JSONLD              string  `json:"json_ld" gorm:"type:jsonb;not null;default:'[]'"`
 }
 
 type ProductDraft struct {

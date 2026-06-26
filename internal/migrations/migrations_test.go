@@ -1,7 +1,7 @@
 package migrations
 
 import (
-	"ecommerce/models"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -12,6 +12,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"ecommerce/models"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -564,8 +566,8 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, discountsPromotionsP4Version, status.LatestAppliedVersion)
-	require.Equal(t, 1, status.PendingCount)
+	require.Equal(t, ecommerceCMSFooterBackfillVersion, status.LatestAppliedVersion)
+	require.Equal(t, 2, status.PendingCount)
 }
 
 func TestRunAppliesAllOrderedMigrationsAndReplayIsIdempotent(t *testing.T) {
@@ -1037,4 +1039,158 @@ func TestProvidersP4AddsSecurityAndOpsStructures(t *testing.T) {
 	} {
 		require.True(t, db.Migrator().HasTable(model), "missing migrated table for %T", model)
 	}
+}
+
+func TestEcommerceCMSP4AddsDeliveryTables(t *testing.T) {
+	db := newTestDB(t)
+	cmsP4Index := slices.IndexFunc(orderedMigrations, func(m Migration) bool {
+		return m.Version == ecommerceCMSP4Version
+	})
+	require.NotEqual(t, -1, cmsP4Index)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:cmsP4Index]))
+	require.False(t, db.Migrator().HasTable(&models.CMSSchedule{}))
+
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:cmsP4Index+1]))
+	for _, model := range []any{
+		&models.CMSSchedule{},
+		&models.CMSTargetingRule{},
+		&models.CMSExperiment{},
+		&models.CMSExperimentVariant{},
+		&models.CMSExposureEvent{},
+	} {
+		require.True(t, db.Migrator().HasTable(model))
+	}
+}
+
+func TestMigrateCMSPayloadMediaIDs(t *testing.T) {
+	raw := `{"blocks":[{"type":"hero","title":"Hero","image_url":"http://localhost:3000/media/hero-id/original.webp"},{"type":"image","url":"/media/image-id/original.webp"},{"type":"gallery","images":[{"url":"/media/gallery-id/original.webp"}]},{"type":"category_tiles","category_images":{"sale":"/media/category-id/original.webp"}}]}`
+	migrated, changed, err := migrateCMSPayloadMediaIDs(raw)
+	require.NoError(t, err)
+	require.True(t, changed)
+	var payload map[string]any
+	require.NoError(t, json.Unmarshal([]byte(migrated), &payload))
+	blocks := payload["blocks"].([]any)
+	require.Equal(t, "hero-id", blocks[0].(map[string]any)["image_media_id"])
+	require.Equal(t, "image-id", blocks[1].(map[string]any)["media_id"])
+	require.Equal(t, "gallery-id", blocks[2].(map[string]any)["images"].([]any)[0].(map[string]any)["media_id"])
+	require.Equal(t, "category-id", blocks[3].(map[string]any)["category_media_ids"].(map[string]any)["sale"])
+	require.NotContains(t, migrated, "localhost:3000")
+}
+
+func TestEcommerceCMSP5AddsSEOAndRedirectSchema(t *testing.T) {
+	db := newTestDB(t)
+	p5Index := slices.IndexFunc(orderedMigrations, func(m Migration) bool { return m.Version == ecommerceCMSP5Version })
+	require.NotEqual(t, -1, p5Index)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:p5Index+1]))
+	require.True(t, db.Migrator().HasTable(&models.CMSRedirectRule{}))
+	for _, field := range []string{"Robots", "OGTitle", "TwitterCard", "TwitterImageMediaID", "JSONLD"} {
+		require.True(t, db.Migrator().HasColumn(&models.SEOMetadata{}, field))
+	}
+}
+
+// TestEcommerceCMSLegacyRemovalReusesExistingDraftHomepage regression-tests the
+// legacy storefront cutover against a dev database that already has a draft CMS
+// page at "/" (e.g. created through the CMS UI). The cutover must adopt that
+// entry as the published homepage instead of inserting a duplicate cms_entries
+// row that would collide with idx_cms_entries_type_key_live.
+func TestEcommerceCMSLegacyRemovalReusesExistingDraftHomepage(t *testing.T) {
+	db := newTestDB(t)
+
+	legacyIndex := slices.IndexFunc(orderedMigrations, func(m Migration) bool { return m.Version == ecommerceCMSLegacyRemovalVersion })
+	require.NotEqual(t, -1, legacyIndex)
+	require.Greater(t, legacyIndex, 0)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:legacyIndex]))
+
+	now := time.Now().UTC()
+	legacyConfig := `{"site_title":"Test Store","homepage_sections":[{"id":"hero","type":"hero","enabled":true,"hero":{"title":"Legacy Hero Title","subtitle":"from storefront"}}]}`
+	require.NoError(t, db.Exec(`INSERT INTO storefront_settings (id, config_json, published_updated, created_at, updated_at) VALUES (1, ?, ?, ?, ?)`, legacyConfig, now, now, now).Error)
+
+	entry := models.CMSEntry{EntryType: models.CMSEntryTypePage, Key: "/", Status: models.CMSEntryStatusDraft}
+	require.NoError(t, db.Create(&entry).Error)
+	draftVersion := models.CMSEntryVersion{EntryID: entry.ID, VersionNumber: 1, SchemaVersion: 1, PayloadJSON: `{"blocks":[{"type":"hero","title":"Placeholder"}]}`, ChangeSummary: "draft", CreatedAt: now}
+	require.NoError(t, db.Create(&draftVersion).Error)
+	entry.CurrentVersionID = &draftVersion.ID
+	require.NoError(t, db.Save(&entry).Error)
+	require.NoError(t, db.Select("*").Create(&models.CMSPage{EntryID: entry.ID, Path: "/", Slug: "home", Title: "Home", TemplateKey: "default", Visibility: models.CMSPageVisibilityPublic, IsHomepage: false}).Error)
+
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:legacyIndex+1]))
+
+	require.False(t, db.Migrator().HasTable("storefront_settings"))
+
+	var homepageCount int64
+	require.NoError(t, db.Model(&models.CMSPage{}).Where("is_homepage = ?", true).Count(&homepageCount).Error)
+	require.Equal(t, int64(1), homepageCount)
+
+	var homepage models.CMSPage
+	require.NoError(t, db.Where("is_homepage = ?", true).First(&homepage).Error)
+	require.Equal(t, entry.ID, homepage.EntryID)
+	require.Equal(t, "/", homepage.Path)
+
+	var reloaded models.CMSEntry
+	require.NoError(t, db.First(&reloaded, entry.ID).Error)
+	require.Equal(t, models.CMSEntryStatusPublished, reloaded.Status)
+	require.NotNil(t, reloaded.PublishedVersionID)
+	require.Equal(t, reloaded.CurrentVersionID, reloaded.PublishedVersionID)
+
+	var versions []models.CMSEntryVersion
+	require.NoError(t, db.Where("entry_id = ?", entry.ID).Order("version_number ASC").Find(&versions).Error)
+	require.Len(t, versions, 2)
+	require.Equal(t, uint(1), versions[0].VersionNumber)
+	require.Equal(t, uint(2), versions[1].VersionNumber)
+
+	var published models.CMSEntryVersion
+	require.NoError(t, db.First(&published, *reloaded.PublishedVersionID).Error)
+	require.Contains(t, published.PayloadJSON, "Legacy Hero Title")
+
+	var pubCount int64
+	require.NoError(t, db.Model(&models.CMSPublication{}).Where("entry_id = ? AND version_id = ?", entry.ID, published.ID).Count(&pubCount).Error)
+	require.Equal(t, int64(1), pubCount)
+}
+
+func TestEcommerceCMSLegacyRemovalBackfillsRenderableFooter(t *testing.T) {
+	db := newTestDB(t)
+
+	legacyIndex := slices.IndexFunc(orderedMigrations, func(m Migration) bool { return m.Version == ecommerceCMSLegacyRemovalVersion })
+	require.NotEqual(t, -1, legacyIndex)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:legacyIndex]))
+
+	now := time.Now().UTC()
+	legacyConfig := `{"site_title":"Test Store","homepage_sections":[]}`
+	require.NoError(t, db.Exec(`INSERT INTO storefront_settings (id, config_json, published_updated, created_at, updated_at) VALUES (1, ?, ?, ?, ?)`, legacyConfig, now, now, now).Error)
+
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:legacyIndex+1]))
+
+	var payload string
+	require.NoError(t, db.Table("cms_global_regions").
+		Select("cms_entry_versions.payload_json").
+		Joins("JOIN cms_entries ON cms_entries.id = cms_global_regions.entry_id").
+		Joins("JOIN cms_entry_versions ON cms_entry_versions.id = cms_entries.published_version_id").
+		Where("cms_global_regions.region = ?", "footer").
+		Scan(&payload).Error)
+	require.NotEmpty(t, payload)
+	require.False(t, cmsPayloadBlocksEmpty(payload))
+	require.Contains(t, payload, `"type":"footer"`)
+}
+
+func TestEcommerceCMSFooterBackfillRepairsPublishedEmptyFooter(t *testing.T) {
+	db := newTestDB(t)
+
+	footerIndex := slices.IndexFunc(orderedMigrations, func(m Migration) bool { return m.Version == ecommerceCMSFooterBackfillVersion })
+	require.NotEqual(t, -1, footerIndex)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:footerIndex]))
+
+	var entry models.CMSEntry
+	require.NoError(t, db.Where("entry_type = ? AND key = ?", models.CMSEntryTypeGlobal, "global:footer").First(&entry).Error)
+	require.NotNil(t, entry.CurrentVersionID)
+	require.NotNil(t, entry.PublishedVersionID)
+	require.NoError(t, db.Model(&models.CMSEntryVersion{}).
+		Where("id IN ?", []uint{*entry.CurrentVersionID, *entry.PublishedVersionID}).
+		Update("payload_json", `{"blocks":[]}`).Error)
+
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:footerIndex+1]))
+
+	var reloaded models.CMSEntryVersion
+	require.NoError(t, db.First(&reloaded, *entry.PublishedVersionID).Error)
+	require.False(t, cmsPayloadBlocksEmpty(reloaded.PayloadJSON))
+	require.Contains(t, reloaded.PayloadJSON, `"type":"footer"`)
 }

@@ -13,7 +13,7 @@
 		value: string;
 		ariaLabel: string;
 		class?: string;
-		onChange?: (value: string) => void;
+		onChange?: (value: string) => boolean | void;
 	}
 
 	let { items, value = $bindable(), ariaLabel, class: className = "", onChange }: Props = $props();
@@ -142,8 +142,8 @@
 							: "hover:text-stone-900 dark:hover:text-stone-100"
 					}`}
 					onclick={() => {
+						if (onChange?.(item.id) === false) return;
 						value = item.id;
-						onChange?.(item.id);
 					}}
 				>
 					<span

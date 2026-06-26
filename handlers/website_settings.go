@@ -20,6 +20,7 @@ const (
 )
 
 type WebsiteSettingsPayload struct {
+	SiteTitle                  string `json:"site_title"`
 	AllowGuestCheckout         bool   `json:"allow_guest_checkout"`
 	CouponCodesEnabled         bool   `json:"coupon_codes_enabled"`
 	OIDCProvider               string `json:"oidc_provider"`
@@ -41,6 +42,7 @@ type UpsertWebsiteSettingsRequest struct {
 
 func normalizeWebsiteSettings(input WebsiteSettingsPayload) WebsiteSettingsPayload {
 	return WebsiteSettingsPayload{
+		SiteTitle:             strings.TrimSpace(input.SiteTitle),
 		AllowGuestCheckout:    input.AllowGuestCheckout,
 		CouponCodesEnabled:    input.CouponCodesEnabled,
 		OIDCProvider:          strings.TrimSpace(input.OIDCProvider),
@@ -62,6 +64,7 @@ func loadOrCreateWebsiteSettings(db *gorm.DB) (models.WebsiteSettings, error) {
 	}
 	settings = models.WebsiteSettings{
 		ID:                 models.WebsiteSettingsSingletonID,
+		SiteTitle:          "Ecommerce",
 		AllowGuestCheckout: true,
 		CouponCodesEnabled: true,
 	}
@@ -73,6 +76,7 @@ func loadOrCreateWebsiteSettings(db *gorm.DB) (models.WebsiteSettings, error) {
 
 func websiteSettingsPayload(settings models.WebsiteSettings) WebsiteSettingsPayload {
 	return WebsiteSettingsPayload{
+		SiteTitle:                  settings.SiteTitle,
 		AllowGuestCheckout:         settings.AllowGuestCheckout,
 		CouponCodesEnabled:         settings.CouponCodesEnabled,
 		OIDCProvider:               settings.OIDCProvider,
@@ -122,6 +126,7 @@ func UpsertWebsiteSettingsWithCredentials(db *gorm.DB, credentials *providerops.
 				return err
 			}
 			current.AllowGuestCheckout = normalized.AllowGuestCheckout
+			current.SiteTitle = normalized.SiteTitle
 			current.CouponCodesEnabled = normalized.CouponCodesEnabled
 			current.OIDCProvider = normalized.OIDCProvider
 			current.OIDCClientID = normalized.OIDCClientID

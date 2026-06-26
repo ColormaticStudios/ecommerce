@@ -19,6 +19,7 @@
 	});
 
 	const emptySettings: WebsiteSettings = {
+		site_title: "Ecommerce",
 		allow_guest_checkout: true,
 		coupon_codes_enabled: true,
 		oidc_provider: "",
@@ -45,6 +46,7 @@
 
 	function normalizeSettings(settings: WebsiteSettings): WebsiteSettings {
 		return {
+			site_title: settings.site_title.trim(),
 			allow_guest_checkout: settings.allow_guest_checkout,
 			coupon_codes_enabled: settings.coupon_codes_enabled,
 			oidc_provider: settings.oidc_provider.trim(),
@@ -151,6 +153,14 @@
 			{#if loadErrorMessage}
 				<AdminEmptyState tone="error">{loadErrorMessage}</AdminEmptyState>
 			{/if}
+
+			<AdminSurface variant="subsurface">
+				<h3 class="text-sm font-semibold text-stone-900 dark:text-stone-100">Site identity</h3>
+				<label class="mt-4 block text-sm text-stone-700 dark:text-stone-200">
+					<span class="mb-1 block font-medium">Site title</span>
+					<TextInput tone="admin" bind:value={draft.site_title} />
+				</label>
+			</AdminSurface>
 
 			<AdminSurface variant="subsurface">
 				<h3 class="text-sm font-semibold text-stone-900 dark:text-stone-100">Checkout access</h3>

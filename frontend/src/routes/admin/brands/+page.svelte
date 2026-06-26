@@ -89,6 +89,12 @@
 	}
 
 	function loadIntoForm(brand: BrandModel) {
+		if (selectedBrandId === brand.id) return;
+		if (!savePrompt.confirmDiscard()) return;
+		openBrand(brand);
+	}
+
+	function openBrand(brand: BrandModel) {
 		clearLogoPreview();
 		selectedBrandId = brand.id;
 		name = brand.name;
@@ -97,6 +103,11 @@
 		logoMediaId = brand.logo_media_id ?? "";
 		isActive = brand.is_active;
 		captureSavedSnapshot();
+	}
+
+	function requestNewBrand() {
+		if (!savePrompt.confirmDiscard()) return;
+		resetForm();
 	}
 
 	async function loadBrands(query = appliedSearchQuery) {
@@ -110,7 +121,7 @@
 			if (selectedBrandId !== null) {
 				const refreshed = brands.find((brand) => brand.id === selectedBrandId);
 				if (refreshed) {
-					loadIntoForm(refreshed);
+					openBrand(refreshed);
 				}
 			}
 		} catch (error) {
@@ -123,10 +134,12 @@
 	}
 
 	function applyBrandSearch() {
+		if (!savePrompt.confirmDiscard()) return;
 		void loadBrands(searchQuery);
 	}
 
 	function refreshBrands() {
+		if (!savePrompt.confirmDiscard()) return;
 		searchQuery = appliedSearchQuery;
 		void loadBrands(appliedSearchQuery);
 	}
@@ -191,7 +204,7 @@
 					? await api.createAdminBrand(payload)
 					: await api.updateAdminBrand(selectedBrandId, payload);
 
-			loadIntoForm(saved);
+			openBrand(saved);
 			await loadBrands(appliedSearchQuery);
 			captureSavedSnapshot();
 			notices.setSuccess(isUpdate ? "Brand updated." : "Brand created.");
@@ -401,7 +414,7 @@
 						variant="regular"
 						class="rounded-full whitespace-nowrap"
 						disabled={saving || deleting || uploadingLogo}
-						onclick={resetForm}
+						onclick={requestNewBrand}
 					>
 						<i class="bi bi-x-lg mr-1"></i>
 						Clear

@@ -36,7 +36,7 @@
   - Moderation throughput, abuse rates, and review conversion impact become shared analytics dimensions.
 - Legal/compliance/security (`roadmap/legal-compliance-security.md`):
   - Moderation and user-reporting data retention/deletion rules must align with privacy and audit requirements.
-- Ecommerce CMS (`roadmap/ecommerce-cms.md`):
+- Ecommerce CMS:
   - CMS testimonial/review blocks should consume published, policy-compliant review summaries from this domain.
 
 ## P0: UGC Foundation and Contracts

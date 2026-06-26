@@ -16,13 +16,6 @@ import type {
 	TrackingEventModel,
 	UserModel,
 } from "$lib/models";
-import {
-	cloneStorefrontSettings,
-	createDefaultProductSection,
-	createDefaultStorefrontSettings,
-	type StorefrontSettingsModel,
-	type StorefrontSettingsResponseModel,
-} from "$lib/storefront";
 
 type ProviderCredential = components["schemas"]["ProviderCredential"];
 type ProviderOperationsOverview = components["schemas"]["ProviderOperationsOverview"];
@@ -577,63 +570,10 @@ export function makeCheckoutQuote(
 	);
 }
 
-export function makeStorefrontSettings(
-	overrides: Partial<StorefrontSettingsModel> = {}
-): StorefrontSettingsModel {
-	const settings = cloneStorefrontSettings(createDefaultStorefrontSettings());
-	settings.site_title = "Colormatic Supply";
-	settings.homepage_sections = [
-		{
-			id: "hero-1",
-			type: "hero",
-			enabled: true,
-			hero: {
-				eyebrow: "Spring Edit",
-				title: "Useful gear with sharper edges",
-				subtitle: "A route-story storefront with deliberate states and less generic filler.",
-				background_image_url:
-					"https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=80",
-				background_image_media_id: "",
-				primary_cta: { label: "Shop new arrivals", url: "/search?q=jacket" },
-				secondary_cta: { label: "Browse all", url: "/search" },
-			},
-		},
-		{
-			id: "products-1",
-			type: "products",
-			enabled: true,
-			product_section: {
-				...createDefaultProductSection("Featured products", "manual"),
-				subtitle: "A small manual selection for Storybook.",
-				source: "manual",
-				product_ids: [101, 102],
-				show_stock: true,
-				show_description: true,
-				image_aspect: "wide",
-			},
-		},
-	];
-	return merge(settings, overrides);
-}
-
-export function makeStorefrontResponse(
-	overrides: Partial<StorefrontSettingsResponseModel> = {}
-): StorefrontSettingsResponseModel {
-	return merge(
-		{
-			settings: makeStorefrontSettings(),
-			updated_at: now,
-			has_draft_changes: false,
-			draft_updated_at: null,
-			published_updated_at: now,
-		},
-		overrides
-	);
-}
-
 export function makeWebsiteSettings(overrides: Partial<WebsiteSettings> = {}): WebsiteSettings {
 	return merge(
 		{
+			site_title: "Colormatic Store",
 			allow_guest_checkout: true,
 			coupon_codes_enabled: true,
 			oidc_provider: "https://issuer.example",

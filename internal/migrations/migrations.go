@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"regexp"
 	"slices"
@@ -15,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"ecommerce/internal/media"
 	"ecommerce/internal/migrations/ops"
 	"ecommerce/models"
 
@@ -94,6 +96,15 @@ const discountsPromotionsP0Version = "2026051901_discounts_promotions_p0"
 const discountsPromotionsP2Version = "2026051902_discounts_promotions_p2_scheduling"
 const discountsPromotionsP3Version = "2026051903_discounts_promotions_p3_templates_controls"
 const discountsPromotionsP4Version = "2026051904_discounts_promotions_p4_operations"
+const ecommerceCMSP0Version = "2026061701_ecommerce_cms_p0"
+const ecommerceCMSP2Version = "2026061702_ecommerce_cms_p2_navigation_global"
+const ecommerceCMSP4Version = "2026062101_ecommerce_cms_p4_delivery"
+const ecommerceCMSMediaIDsVersion = "2026062102_ecommerce_cms_media_ids"
+const ecommerceCMSP5Version = "2026062103_ecommerce_cms_p5_seo_redirects"
+const ecommerceCMSP6Version = "2026062104_ecommerce_cms_p6_localization_governance"
+const ecommerceCMSCompletionVersion = "2026062105_ecommerce_cms_governance_operations"
+const ecommerceCMSLegacyRemovalVersion = "2026062106_remove_legacy_storefront"
+const ecommerceCMSFooterBackfillVersion = "2026062107_cms_footer_empty_backfill"
 const migrationStepAlertThresholdEnvVar = "MIGRATIONS_STEP_ALERT_THRESHOLD_MS"
 
 var versionPattern = regexp.MustCompile(`^\d{10}_[a-z0-9_]+$`)
@@ -1289,11 +1300,860 @@ var orderedMigrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:         ecommerceCMSP0Version,
+		Name:            "add ecommerce cms foundation tables",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "cms", "content"},
+		PostChecks: []PostCheck{
+			{
+				Name: "cms_foundation_tables_exist",
+				Check: func(tx *gorm.DB) error {
+					required := []any{
+						&models.CMSEntry{},
+						&models.CMSEntryVersion{},
+						&models.CMSPublication{},
+						&models.CMSPage{},
+					}
+					for _, model := range required {
+						if !tx.Migrator().HasTable(model) {
+							return fmt.Errorf("missing migrated table for %T", model)
+						}
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			for _, model := range []any{
+				&models.CMSEntry{},
+				&models.CMSEntryVersion{},
+				&models.CMSPublication{},
+				&models.CMSPage{},
+			} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			statements := []string{
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_entries_type_key_live ON cms_entries (entry_type, key) WHERE deleted_at IS NULL`,
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_versions_entry_number_unique ON cms_entry_versions (entry_id, version_number)`,
+				`CREATE INDEX IF NOT EXISTS idx_cms_publications_entry_published ON cms_publications (entry_id, published_at DESC, id DESC)`,
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_pages_path_live ON cms_pages (path) WHERE deleted_at IS NULL`,
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_pages_homepage_live ON cms_pages (is_homepage) WHERE is_homepage = true AND deleted_at IS NULL`,
+			}
+			for _, statement := range statements {
+				if err := tx.Exec(statement).Error; err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         ecommerceCMSP2Version,
+		Name:            "add ecommerce cms navigation and global content",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "cms", "content", "navigation"},
+		PostChecks: []PostCheck{
+			{
+				Name: "cms_navigation_global_tables_exist",
+				Check: func(tx *gorm.DB) error {
+					required := []any{
+						&models.CMSNavigationMenu{},
+						&models.CMSNavigationItem{},
+						&models.CMSGlobalRegion{},
+					}
+					for _, model := range required {
+						if !tx.Migrator().HasTable(model) {
+							return fmt.Errorf("missing migrated table for %T", model)
+						}
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			for _, model := range []any{
+				&models.CMSNavigationMenu{},
+				&models.CMSNavigationItem{},
+				&models.CMSGlobalRegion{},
+			} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			statements := []string{
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_navigation_menus_key_live ON cms_navigation_menus (key) WHERE deleted_at IS NULL`,
+				`CREATE INDEX IF NOT EXISTS idx_cms_navigation_menus_location ON cms_navigation_menus (location, key)`,
+				`CREATE INDEX IF NOT EXISTS idx_cms_navigation_items_menu_order ON cms_navigation_items (menu_id, parent_id, sort_order, id)`,
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_global_regions_key_live ON cms_global_regions (key) WHERE deleted_at IS NULL`,
+				`CREATE INDEX IF NOT EXISTS idx_cms_global_regions_region ON cms_global_regions (region, key)`,
+			}
+			for _, statement := range statements {
+				if err := tx.Exec(statement).Error; err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         ecommerceCMSP4Version,
+		Name:            "add ecommerce cms scheduling targeting and experiments",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "cms", "content", "experimentation"},
+		PostChecks: []PostCheck{
+			{
+				Name: "cms_delivery_tables_exist",
+				Check: func(tx *gorm.DB) error {
+					for _, model := range []any{
+						&models.CMSSchedule{},
+						&models.CMSTargetingRule{},
+						&models.CMSExperiment{},
+						&models.CMSExperimentVariant{},
+						&models.CMSExposureEvent{},
+					} {
+						if !tx.Migrator().HasTable(model) {
+							return fmt.Errorf("missing migrated table for %T", model)
+						}
+					}
+					return nil
+				},
+			},
+		},
+		Up: func(tx *gorm.DB) error {
+			for _, model := range []any{
+				&models.CMSSchedule{},
+				&models.CMSTargetingRule{},
+				&models.CMSExperiment{},
+				&models.CMSExperimentVariant{},
+				&models.CMSExposureEvent{},
+			} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			statements := []string{
+				`CREATE INDEX IF NOT EXISTS idx_cms_schedules_due ON cms_schedules (status, publish_at, unpublish_at)`,
+				`CREATE INDEX IF NOT EXISTS idx_cms_targeting_rules_entry_priority ON cms_targeting_rules (entry_id, is_enabled, priority, id)`,
+				`CREATE INDEX IF NOT EXISTS idx_cms_experiments_runtime ON cms_experiments (entry_id, status, starts_at, ends_at)`,
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_experiment_variants_name ON cms_experiment_variants (experiment_id, name)`,
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_exposure_event_dedupe ON cms_exposure_events (correlation_id, event_type, content_version_id)`,
+			}
+			for _, statement := range statements {
+				if err := tx.Exec(statement).Error; err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         ecommerceCMSMediaIDsVersion,
+		Name:            "store ecommerce cms media references by id",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"backfill", "cms", "media"},
+		Up: func(tx *gorm.DB) error {
+			return migrateCMSMediaIDs(tx)
+		},
+	},
+	{
+		Version:         ecommerceCMSP5Version,
+		Name:            "add ecommerce cms seo metadata and redirects",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "cms", "seo", "redirects"},
+		PostChecks: []PostCheck{{
+			Name: "cms_redirects_and_seo_fields_exist",
+			Check: func(tx *gorm.DB) error {
+				if !tx.Migrator().HasTable(&models.CMSRedirectRule{}) {
+					return errors.New("missing cms redirect rules table")
+				}
+				for _, field := range []string{"Robots", "OGTitle", "OGDescription", "TwitterCard", "TwitterTitle", "TwitterDescription", "TwitterImageMediaID", "JSONLD"} {
+					if !tx.Migrator().HasColumn(&models.SEOMetadata{}, field) {
+						return fmt.Errorf("missing seo metadata column %s", field)
+					}
+				}
+				return nil
+			},
+		}},
+		Up: func(tx *gorm.DB) error {
+			if err := ops.CreateTableIfNotExists(tx, &models.CMSRedirectRule{}); err != nil {
+				return err
+			}
+			for _, field := range []string{"Robots", "OGTitle", "OGDescription", "TwitterCard", "TwitterTitle", "TwitterDescription", "TwitterImageMediaID", "JSONLD"} {
+				if !tx.Migrator().HasColumn(&models.SEOMetadata{}, field) {
+					if err := tx.Migrator().AddColumn(&models.SEOMetadata{}, field); err != nil {
+						return err
+					}
+				}
+			}
+			for _, statement := range []string{
+				`CREATE INDEX IF NOT EXISTS idx_cms_redirect_rules_match ON cms_redirect_rules (is_enabled, match_type, priority, id)`,
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_redirect_rules_source_live ON cms_redirect_rules (source_pattern, match_type) WHERE deleted_at IS NULL`,
+			} {
+				if err := tx.Exec(statement).Error; err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         ecommerceCMSP6Version,
+		Name:            "add ecommerce cms localization variants governance and audit",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "cms", "localization", "governance"},
+		PostChecks: []PostCheck{{
+			Name: "cms_p6_tables_and_default_locale_exist",
+			Check: func(tx *gorm.DB) error {
+				for _, model := range []any{&models.CMSLocale{}, &models.CMSPageVariant{}, &models.CMSAuditEvent{}, &models.CMSChangeComment{}, &models.CMSRoleAssignment{}, &models.CMSInvalidationEvent{}} {
+					if !tx.Migrator().HasTable(model) {
+						return fmt.Errorf("missing migrated table for %T", model)
+					}
+				}
+				var count int64
+				if err := tx.Model(&models.CMSLocale{}).Where("is_default = ?", true).Count(&count).Error; err != nil {
+					return err
+				}
+				if count != 1 {
+					return fmt.Errorf("expected exactly one default CMS locale, found %d", count)
+				}
+				return nil
+			},
+		}},
+		Up: func(tx *gorm.DB) error {
+			for _, model := range []any{&models.CMSLocale{}, &models.CMSPageVariant{}, &models.CMSAuditEvent{}, &models.CMSChangeComment{}, &models.CMSRoleAssignment{}, &models.CMSInvalidationEvent{}} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			for _, statement := range []string{
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_page_variant_scope_live ON cms_page_variants (page_id, locale, market) WHERE deleted_at IS NULL`,
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_page_variant_path_live ON cms_page_variants (path, locale, market) WHERE deleted_at IS NULL`,
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_locale_default ON cms_locales (is_default) WHERE is_default = TRUE AND deleted_at IS NULL`,
+				`CREATE INDEX IF NOT EXISTS idx_cms_audit_entry_created ON cms_audit_events (entry_id, created_at DESC, id DESC)`,
+				`CREATE INDEX IF NOT EXISTS idx_cms_invalidation_pending ON cms_invalidation_events (status, created_at, id)`,
+			} {
+				if err := tx.Exec(statement).Error; err != nil {
+					return err
+				}
+			}
+			locale := models.CMSLocale{Code: "en-US", Name: "English (United States)", Enabled: true, IsDefault: true}
+			return tx.Where("code = ?", locale.Code).FirstOrCreate(&locale).Error
+		},
+	},
+	{
+		Version:         ecommerceCMSCompletionVersion,
+		Name:            "complete ecommerce cms governance localization and operations",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "cms", "governance", "operations"},
+		Up: func(tx *gorm.DB) error {
+			if !tx.Migrator().HasColumn(&models.WebsiteSettings{}, "SiteTitle") {
+				if err := tx.Migrator().AddColumn(&models.WebsiteSettings{}, "SiteTitle"); err != nil {
+					return err
+				}
+			}
+			for _, model := range []any{&models.CMSEntryWorkflow{}, &models.CMSContentVariant{}, &models.CMSSettings{}} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			for _, field := range []string{"ResolvedBy", "ResolvedAt"} {
+				if !tx.Migrator().HasColumn(&models.CMSChangeComment{}, field) {
+					if err := tx.Migrator().AddColumn(&models.CMSChangeComment{}, field); err != nil {
+						return err
+					}
+				}
+			}
+			for _, field := range []string{"Attempts", "LastError"} {
+				if !tx.Migrator().HasColumn(&models.CMSInvalidationEvent{}, field) {
+					if err := tx.Migrator().AddColumn(&models.CMSInvalidationEvent{}, field); err != nil {
+						return err
+					}
+				}
+			}
+			for _, statement := range []string{
+				`CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_content_variant_scope_live ON cms_content_variants (entry_id, locale, market) WHERE deleted_at IS NULL`,
+				`CREATE INDEX IF NOT EXISTS idx_cms_entry_workflow_status ON cms_entry_workflows (status, updated_at, id)`,
+			} {
+				if err := tx.Exec(statement).Error; err != nil {
+					return err
+				}
+			}
+			settings := models.CMSSettings{ID: 1, ApprovalRequired: true}
+			return tx.Where("id = ?", settings.ID).FirstOrCreate(&settings).Error
+		},
+	},
+	{
+		Version:          ecommerceCMSLegacyRemovalVersion,
+		Name:             "remove legacy storefront settings after cms cutover",
+		TransactionMode:  TransactionModeRequired,
+		Tags:             []string{"contract", "cms", "storefront"},
+		ContractBlockers: []string{"allow_contract_migrations"},
+		PostChecks: []PostCheck{{
+			Name: "legacy_storefront_removed_and_homepage_available",
+			Check: func(tx *gorm.DB) error {
+				if tx.Migrator().HasTable("storefront_settings") {
+					return errors.New("legacy storefront_settings table still exists")
+				}
+				var count int64
+				if err := tx.Model(&models.CMSPage{}).Where("is_homepage = ?", true).Count(&count).Error; err != nil {
+					return err
+				}
+				if count != 1 {
+					return fmt.Errorf("expected one CMS homepage, found %d", count)
+				}
+				return nil
+			},
+		}},
+		Up: func(tx *gorm.DB) error {
+			if err := backfillLegacyStorefrontIntoCMS(tx); err != nil {
+				return err
+			}
+			if tx.Migrator().HasTable("storefront_settings") {
+				return tx.Exec(`DROP TABLE storefront_settings`).Error
+			}
+			return nil
+		},
+	},
+	{
+		Version:         ecommerceCMSFooterBackfillVersion,
+		Name:            "backfill empty cms footer global region",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"backfill", "cms", "storefront"},
+		PostChecks: []PostCheck{{
+			Name: "published_footer_has_renderable_blocks",
+			Check: func(tx *gorm.DB) error {
+				var rows []struct {
+					PayloadJSON string
+				}
+				if err := tx.Session(&gorm.Session{NewDB: true}).Table("cms_global_regions").
+					Select("cms_entry_versions.payload_json").
+					Joins("JOIN cms_entries ON cms_entries.id = cms_global_regions.entry_id").
+					Joins("JOIN cms_entry_versions ON cms_entry_versions.id = cms_entries.published_version_id").
+					Where("cms_global_regions.region = ?", "footer").
+					Find(&rows).Error; err != nil {
+					return err
+				}
+				for _, row := range rows {
+					if cmsPayloadBlocksEmpty(row.PayloadJSON) {
+						return errors.New("published footer CMS region has no renderable blocks")
+					}
+				}
+				return nil
+			},
+		}},
+		Up: backfillEmptyCMSFooterRegion,
+	},
 }
 
 type productAttributeEnumBackfillRow struct {
 	ProductAttributeID uint
 	EnumValue          string
+}
+
+func migrateCMSMediaIDs(tx *gorm.DB) error {
+	var versions []models.CMSEntryVersion
+	if err := tx.Find(&versions).Error; err != nil {
+		return err
+	}
+	for _, version := range versions {
+		payload, changed, err := migrateCMSPayloadMediaIDs(version.PayloadJSON)
+		if err != nil {
+			return fmt.Errorf("migrate cms version %d media: %w", version.ID, err)
+		}
+		if changed {
+			if err := tx.Model(&models.CMSEntryVersion{}).Where("id = ?", version.ID).Update("payload_json", payload).Error; err != nil {
+				return err
+			}
+		}
+	}
+	var entries []models.CMSEntry
+	if err := tx.Find(&entries).Error; err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		for _, current := range []struct {
+			versionID *uint
+			role      string
+		}{
+			{entry.CurrentVersionID, media.RoleCMSDraftContent},
+			{entry.PublishedVersionID, media.RoleCMSContent},
+		} {
+			if current.versionID == nil {
+				continue
+			}
+			var version models.CMSEntryVersion
+			if err := tx.First(&version, *current.versionID).Error; err != nil {
+				return err
+			}
+			ids, err := cmsPayloadMediaIDs(version.PayloadJSON)
+			if err != nil {
+				return err
+			}
+			for position, mediaID := range ids {
+				var count int64
+				if err := tx.Model(&models.MediaObject{}).Where("id = ?", mediaID).Count(&count).Error; err != nil {
+					return err
+				}
+				if count == 0 {
+					continue
+				}
+				ref := models.MediaReference{MediaID: mediaID, OwnerType: media.OwnerTypeCMSEntry, OwnerID: entry.ID, Role: current.role, Position: position}
+				if err := tx.Where("media_id = ? AND owner_type = ? AND owner_id = ? AND role = ?", mediaID, ref.OwnerType, ref.OwnerID, ref.Role).FirstOrCreate(&ref).Error; err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func migrateCMSPayloadMediaIDs(raw string) (string, bool, error) {
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(raw), &payload); err != nil {
+		return "", false, err
+	}
+	blocks, _ := payload["blocks"].([]any)
+	changed := false
+	for _, rawBlock := range blocks {
+		block, ok := rawBlock.(map[string]any)
+		if !ok {
+			continue
+		}
+		if id := mediaIDFromCMSURL(block["image_url"]); id != "" {
+			block["image_media_id"] = id
+			delete(block, "image_url")
+			changed = true
+		}
+		if id := mediaIDFromCMSURL(block["url"]); id != "" && block["type"] == "image" {
+			block["media_id"] = id
+			delete(block, "url")
+			changed = true
+		}
+		if images, ok := block["images"].([]any); ok {
+			for _, rawImage := range images {
+				if image, ok := rawImage.(map[string]any); ok {
+					if id := mediaIDFromCMSURL(image["url"]); id != "" {
+						image["media_id"] = id
+						delete(image, "url")
+						changed = true
+					}
+				}
+			}
+		}
+		if images, ok := block["category_images"].(map[string]any); ok {
+			mediaIDs := map[string]any{}
+			for slug, rawURL := range images {
+				if id := mediaIDFromCMSURL(rawURL); id != "" {
+					mediaIDs[slug] = id
+				}
+			}
+			block["category_media_ids"] = mediaIDs
+			delete(block, "category_images")
+			changed = true
+		}
+	}
+	if !changed {
+		return raw, false, nil
+	}
+	encoded, err := json.Marshal(payload)
+	return string(encoded), true, err
+}
+
+func cmsPayloadMediaIDs(raw string) ([]string, error) {
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(raw), &payload); err != nil {
+		return nil, err
+	}
+	seen := map[string]bool{}
+	ids := []string{}
+	add := func(value any) {
+		id, ok := value.(string)
+		if ok && strings.TrimSpace(id) != "" && !seen[id] {
+			seen[id] = true
+			ids = append(ids, id)
+		}
+	}
+	blocks, _ := payload["blocks"].([]any)
+	for _, rawBlock := range blocks {
+		block, _ := rawBlock.(map[string]any)
+		add(block["image_media_id"])
+		add(block["media_id"])
+		if images, ok := block["images"].([]any); ok {
+			for _, rawImage := range images {
+				image, _ := rawImage.(map[string]any)
+				add(image["media_id"])
+			}
+		}
+		if images, ok := block["category_media_ids"].(map[string]any); ok {
+			for _, mediaID := range images {
+				add(mediaID)
+			}
+		}
+	}
+	return ids, nil
+}
+
+func mediaIDFromCMSURL(value any) string {
+	raw, ok := value.(string)
+	if !ok || strings.TrimSpace(raw) == "" {
+		return ""
+	}
+	parsed, err := url.Parse(raw)
+	if err != nil {
+		return ""
+	}
+	parts := strings.Split(strings.Trim(parsed.Path, "/"), "/")
+	if len(parts) != 3 || parts[0] != "media" || parts[2] != "original.webp" {
+		return ""
+	}
+	id, err := url.PathUnescape(parts[1])
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(id)
+}
+
+func backfillLegacyStorefrontIntoCMS(tx *gorm.DB) error {
+	db := tx.Session(&gorm.Session{NewDB: true})
+	var legacy struct {
+		ConfigJSON string
+	}
+	if db.Migrator().HasTable("storefront_settings") {
+		result := db.Table("storefront_settings").Select("config_json").Order("id ASC").Limit(1).Scan(&legacy)
+		if result.Error != nil {
+			return result.Error
+		}
+	}
+	var config map[string]any
+	if strings.TrimSpace(legacy.ConfigJSON) != "" {
+		if err := json.Unmarshal([]byte(legacy.ConfigJSON), &config); err != nil {
+			return fmt.Errorf("decode legacy storefront for CMS cutover: %w", err)
+		}
+	}
+	if config == nil {
+		config = map[string]any{}
+	}
+	if siteTitle, ok := config["site_title"].(string); ok && strings.TrimSpace(siteTitle) != "" {
+		if err := db.Model(&models.WebsiteSettings{}).Where("id = ?", models.WebsiteSettingsSingletonID).Update("site_title", strings.TrimSpace(siteTitle)).Error; err != nil {
+			return err
+		}
+	}
+
+	var homepageCount int64
+	if err := db.Model(&models.CMSPage{}).Where("is_homepage = ?", true).Count(&homepageCount).Error; err != nil {
+		return err
+	}
+	if homepageCount == 0 {
+		blocks := legacyHomepageBlocks(config)
+		if len(blocks) == 0 {
+			blocks = []any{map[string]any{"type": "hero", "title": "Welcome", "subtitle": ""}}
+		}
+		payload, err := json.Marshal(map[string]any{"blocks": blocks})
+		if err != nil {
+			return err
+		}
+		if err := backfillLegacyHomepageIntoCMS(db, payload); err != nil {
+			return err
+		}
+	}
+	return backfillLegacyFooterIntoCMS(db, config)
+}
+
+// backfillLegacyHomepageIntoCMS ensures a published CMS homepage exists at "/",
+// reusing an existing page entry when one is already present (for example a
+// draft created during development) so the cutover does not collide with the
+// unique (entry_type, key) index on cms_entries.
+func backfillLegacyHomepageIntoCMS(db *gorm.DB, legacyPayload []byte) error {
+	var entry models.CMSEntry
+	err := db.Where("entry_type = ? AND key = ?", models.CMSEntryTypePage, "/").First(&entry).Error
+	switch {
+	case errors.Is(err, gorm.ErrRecordNotFound):
+		return createLegacyHomepageEntry(db, legacyPayload)
+	case err != nil:
+		return err
+	default:
+		return adoptExistingHomepageEntry(db, &entry, legacyPayload)
+	}
+}
+
+func createLegacyHomepageEntry(db *gorm.DB, legacyPayload []byte) error {
+	entry := models.CMSEntry{EntryType: models.CMSEntryTypePage, Key: "/", Status: models.CMSEntryStatusPublished}
+	if err := db.Create(&entry).Error; err != nil {
+		return err
+	}
+	version := models.CMSEntryVersion{EntryID: entry.ID, VersionNumber: 1, SchemaVersion: 1, PayloadJSON: string(legacyPayload), ChangeSummary: "Migrated from legacy storefront", CreatedAt: time.Now().UTC()}
+	if err := db.Create(&version).Error; err != nil {
+		return err
+	}
+	entry.CurrentVersionID, entry.PublishedVersionID = &version.ID, &version.ID
+	if err := db.Save(&entry).Error; err != nil {
+		return err
+	}
+	page := models.CMSPage{EntryID: entry.ID, Path: "/", Slug: "home", Title: "Home", TemplateKey: "default", Visibility: models.CMSPageVisibilityPublic, IsHomepage: true}
+	if err := db.Select("*").Create(&page).Error; err != nil {
+		return err
+	}
+	return db.Create(&models.CMSPublication{EntryID: entry.ID, VersionID: version.ID, PublishedAt: time.Now().UTC(), Notes: "Legacy storefront cutover"}).Error
+}
+
+// adoptExistingHomepageEntry publishes a pre-existing cms_entries page at "/"
+// as the homepage, backfilling the legacy storefront content as a new
+// published version so the prior draft content is retained as history.
+func adoptExistingHomepageEntry(db *gorm.DB, entry *models.CMSEntry, legacyPayload []byte) error {
+	now := time.Now().UTC()
+
+	var maxVersion uint
+	row := db.Model(&models.CMSEntryVersion{}).
+		Where("entry_id = ?", entry.ID).
+		Select("COALESCE(MAX(version_number), 0)").
+		Row()
+	if err := row.Scan(&maxVersion); err != nil {
+		return fmt.Errorf("homepage cutover: determine next version number: %w", err)
+	}
+
+	version := models.CMSEntryVersion{EntryID: entry.ID, VersionNumber: maxVersion + 1, SchemaVersion: 1, PayloadJSON: string(legacyPayload), ChangeSummary: "Migrated from legacy storefront", CreatedAt: now}
+	if err := db.Create(&version).Error; err != nil {
+		return err
+	}
+	entry.CurrentVersionID, entry.PublishedVersionID = &version.ID, &version.ID
+	entry.Status = models.CMSEntryStatusPublished
+	if err := db.Model(&models.CMSEntry{}).Where("id = ?", entry.ID).Updates(map[string]any{
+		"status":               entry.Status,
+		"current_version_id":   entry.CurrentVersionID,
+		"published_version_id": entry.PublishedVersionID,
+	}).Error; err != nil {
+		return err
+	}
+
+	var pubCount int64
+	if err := db.Model(&models.CMSPublication{}).Where("entry_id = ? AND version_id = ?", entry.ID, version.ID).Count(&pubCount).Error; err != nil {
+		return err
+	}
+	if pubCount == 0 {
+		if err := db.Create(&models.CMSPublication{EntryID: entry.ID, VersionID: version.ID, PublishedAt: now, Notes: "Legacy storefront cutover"}).Error; err != nil {
+			return err
+		}
+	}
+
+	var page models.CMSPage
+	if err := db.Where("entry_id = ?", entry.ID).First(&page).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			page = models.CMSPage{EntryID: entry.ID, Path: "/", Slug: "home", Title: "Home", TemplateKey: "default", Visibility: models.CMSPageVisibilityPublic, IsHomepage: true}
+			return db.Select("*").Create(&page).Error
+		}
+		return err
+	}
+	updates := map[string]any{"is_homepage": true, "path": "/"}
+	if strings.TrimSpace(page.Slug) == "" {
+		updates["slug"] = "home"
+	}
+	if strings.TrimSpace(page.Title) == "" {
+		updates["title"] = "Home"
+	}
+	if strings.TrimSpace(page.TemplateKey) == "" {
+		updates["template_key"] = "default"
+	}
+	if strings.TrimSpace(string(page.Visibility)) == "" {
+		updates["visibility"] = models.CMSPageVisibilityPublic
+	}
+	return db.Model(&page).Updates(updates).Error
+}
+
+func legacyHomepageBlocks(config map[string]any) []any {
+	sections, _ := config["homepage_sections"].([]any)
+	blocks := make([]any, 0, len(sections))
+	for _, raw := range sections {
+		section, _ := raw.(map[string]any)
+		if enabled, exists := section["enabled"].(bool); exists && !enabled {
+			continue
+		}
+		switch section["type"] {
+		case "hero":
+			hero, _ := section["hero"].(map[string]any)
+			block := map[string]any{"type": "hero", "title": stringFromMap(hero, "title"), "subtitle": stringFromMap(hero, "subtitle")}
+			if mediaID := stringFromMap(hero, "background_image_media_id"); mediaID != "" {
+				block["image_media_id"] = mediaID
+			}
+			if cta, ok := hero["primary_cta"].(map[string]any); ok {
+				block["primary_cta"] = map[string]any{"label": stringFromMap(cta, "label"), "url": stringFromMap(cta, "url")}
+			}
+			blocks = append(blocks, block)
+		case "products":
+			product, _ := section["product_section"].(map[string]any)
+			block := map[string]any{"type": "product_rail", "title": stringFromMap(product, "title"), "subtitle": stringFromMap(product, "subtitle"), "source": stringFromMap(product, "source"), "limit": numberFromMap(product, "limit", 8)}
+			for _, key := range []string{"query", "category_slug", "sort", "order", "image_aspect"} {
+				if value := stringFromMap(product, key); value != "" {
+					block[key] = value
+				}
+			}
+			if ids, ok := product["product_ids"].([]any); ok {
+				block["product_ids"] = ids
+			}
+			blocks = append(blocks, block)
+		case "promo_cards":
+			cards, _ := section["promo_cards"].([]any)
+			for _, rawCard := range cards {
+				card, _ := rawCard.(map[string]any)
+				block := map[string]any{"type": "promo_banner", "title": stringFromMap(card, "title"), "body": stringFromMap(card, "description")}
+				if link, ok := card["link"].(map[string]any); ok {
+					block["link"] = map[string]any{"label": stringFromMap(link, "label"), "url": stringFromMap(link, "url")}
+				}
+				blocks = append(blocks, block)
+			}
+		case "badges":
+			badges, _ := section["badges"].([]any)
+			values := make([]string, 0, len(badges))
+			for _, badge := range badges {
+				if value, ok := badge.(string); ok && value != "" {
+					values = append(values, value)
+				}
+			}
+			if len(values) > 0 {
+				blocks = append(blocks, map[string]any{"type": "rich_text", "body": strings.Join(values, " · ")})
+			}
+		}
+	}
+	return blocks
+}
+
+func backfillLegacyFooterIntoCMS(tx *gorm.DB, config map[string]any) error {
+	var count int64
+	if err := tx.Model(&models.CMSGlobalRegion{}).Where("region = ?", "footer").Count(&count).Error; err != nil || count > 0 {
+		return err
+	}
+	payload, err := json.Marshal(map[string]any{"blocks": legacyFooterBlocks(config)})
+	if err != nil {
+		return err
+	}
+	entry := models.CMSEntry{EntryType: models.CMSEntryTypeGlobal, Key: "global:footer", Status: models.CMSEntryStatusPublished}
+	if err := tx.Create(&entry).Error; err != nil {
+		return err
+	}
+	version := models.CMSEntryVersion{EntryID: entry.ID, VersionNumber: 1, SchemaVersion: 1, PayloadJSON: string(payload), ChangeSummary: "Migrated legacy footer", CreatedAt: time.Now().UTC()}
+	if err := tx.Create(&version).Error; err != nil {
+		return err
+	}
+	entry.CurrentVersionID, entry.PublishedVersionID = &version.ID, &version.ID
+	if err := tx.Save(&entry).Error; err != nil {
+		return err
+	}
+	region := models.CMSGlobalRegion{EntryID: entry.ID, Key: "footer", Title: "Footer", Region: "footer"}
+	if err := tx.Create(&region).Error; err != nil {
+		return err
+	}
+	return tx.Create(&models.CMSPublication{EntryID: entry.ID, VersionID: version.ID, PublishedAt: time.Now().UTC(), Notes: "Legacy storefront cutover"}).Error
+}
+
+func backfillEmptyCMSFooterRegion(tx *gorm.DB) error {
+	payload, err := json.Marshal(map[string]any{"blocks": defaultStructuredFooterBlocks()})
+	if err != nil {
+		return err
+	}
+	var versionIDs []uint
+	if err := tx.Session(&gorm.Session{NewDB: true}).Raw(`
+		SELECT DISTINCT version_id
+		FROM (
+			SELECT cms_entries.current_version_id AS version_id
+			FROM cms_global_regions
+			JOIN cms_entries ON cms_entries.id = cms_global_regions.entry_id
+			WHERE cms_global_regions.region = ? AND cms_entries.current_version_id IS NOT NULL
+			UNION
+			SELECT cms_entries.published_version_id AS version_id
+			FROM cms_global_regions
+			JOIN cms_entries ON cms_entries.id = cms_global_regions.entry_id
+			WHERE cms_global_regions.region = ? AND cms_entries.published_version_id IS NOT NULL
+		) footer_versions
+	`, "footer", "footer").Scan(&versionIDs).Error; err != nil {
+		return err
+	}
+	if len(versionIDs) == 0 {
+		return nil
+	}
+	var versions []models.CMSEntryVersion
+	if err := tx.Session(&gorm.Session{NewDB: true}).Where("id IN ?", versionIDs).Find(&versions).Error; err != nil {
+		return err
+	}
+	for _, version := range versions {
+		if !cmsPayloadBlocksEmpty(version.PayloadJSON) {
+			continue
+		}
+		if err := tx.Session(&gorm.Session{NewDB: true}).Model(&models.CMSEntryVersion{}).
+			Where("id = ?", version.ID).
+			Update("payload_json", string(payload)).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func legacyFooterBlocks(config map[string]any) []any {
+	footer, _ := config["footer"].(map[string]any)
+	lines := []string{stringFromMap(footer, "tagline"), stringFromMap(footer, "bottom_notice"), stringFromMap(footer, "copyright")}
+	blocks := make([]any, 0, len(lines))
+	for _, line := range lines {
+		if strings.TrimSpace(line) != "" {
+			blocks = append(blocks, map[string]any{"type": "rich_text", "body": line})
+		}
+	}
+	if len(blocks) > 0 {
+		return blocks
+	}
+	return defaultStructuredFooterBlocks()
+}
+
+func defaultStructuredFooterBlocks() []any {
+	year := time.Now().UTC().Year()
+	return []any{map[string]any{
+		"type":       "footer",
+		"brand_name": "Store",
+		"tagline":    "Thoughtfully selected products for everyday use.",
+		"columns": []any{
+			map[string]any{
+				"title": "Shop",
+				"links": []any{
+					map[string]any{"label": "All products", "url": "/search"},
+					map[string]any{"label": "New arrivals", "url": "/search?sort=created_at"},
+				},
+			},
+			map[string]any{
+				"title": "Help",
+				"links": []any{
+					map[string]any{"label": "Shipping", "url": "/shipping"},
+					map[string]any{"label": "Returns", "url": "/returns"},
+				},
+			},
+		},
+		"social_links": []any{},
+		"copyright":    fmt.Sprintf("\u00a9 %d Store", year),
+		"layout":       "columns",
+		"theme":        "light",
+	}}
+}
+
+func cmsPayloadBlocksEmpty(raw string) bool {
+	var payload struct {
+		Blocks []any `json:"blocks"`
+	}
+	if err := json.Unmarshal([]byte(raw), &payload); err != nil {
+		return false
+	}
+	return len(payload.Blocks) == 0
+}
+
+func stringFromMap(values map[string]any, key string) string {
+	value, _ := values[key].(string)
+	return strings.TrimSpace(value)
+}
+
+func numberFromMap(values map[string]any, key string, fallback float64) float64 {
+	value, ok := values[key].(float64)
+	if !ok || value <= 0 {
+		return fallback
+	}
+	return value
 }
 
 func backfillProductAttributeEnumValues(tx *gorm.DB) error {
@@ -1905,7 +2765,7 @@ func legacyAllowGuestCheckout(tx *gorm.DB) (bool, error) {
 	}
 	result := queryDB.Table("storefront_settings").
 		Select("config_json").
-		Where("id = ?", models.StorefrontSettingsSingletonID).
+		Where("id = ?", 1).
 		Limit(1).
 		Scan(&row)
 	if result.Error != nil {

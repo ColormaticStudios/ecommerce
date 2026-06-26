@@ -75,6 +75,12 @@
 	}
 
 	function loadIntoForm(category: CategoryModel) {
+		if (selectedCategoryId === category.id) return;
+		if (!savePrompt.confirmDiscard()) return;
+		openCategory(category);
+	}
+
+	function openCategory(category: CategoryModel) {
 		selectedCategoryId = category.id;
 		name = category.name;
 		slug = category.slug;
@@ -83,6 +89,11 @@
 		sortOrder = category.sort_order.toString();
 		isActive = category.is_active;
 		captureSavedSnapshot();
+	}
+
+	function requestNewCategory() {
+		if (!savePrompt.confirmDiscard()) return;
+		resetForm();
 	}
 
 	async function loadCategories(query = appliedSearchQuery) {
@@ -99,7 +110,7 @@
 			if (selectedCategoryId !== null) {
 				const refreshed = categories.find((category) => category.id === selectedCategoryId);
 				if (refreshed) {
-					loadIntoForm(refreshed);
+					openCategory(refreshed);
 				}
 			}
 		} catch (error) {
@@ -112,10 +123,12 @@
 	}
 
 	function applyCategorySearch() {
+		if (!savePrompt.confirmDiscard()) return;
 		void loadCategories(searchQuery);
 	}
 
 	function refreshCategories() {
+		if (!savePrompt.confirmDiscard()) return;
 		searchQuery = appliedSearchQuery;
 		void loadCategories(appliedSearchQuery);
 	}
@@ -147,7 +160,7 @@
 					? await api.createAdminCategory(payload)
 					: await api.updateAdminCategory(selectedCategoryId, payload);
 
-			loadIntoForm(saved);
+			openCategory(saved);
 			await loadCategories(appliedSearchQuery);
 			captureSavedSnapshot();
 			notices.setSuccess(isUpdate ? "Category updated." : "Category created.");
@@ -333,7 +346,7 @@
 						variant="regular"
 						class="rounded-full whitespace-nowrap"
 						disabled={saving || deleting}
-						onclick={resetForm}
+						onclick={requestNewCategory}
 					>
 						<i class="bi bi-x-lg mr-1"></i>
 						Clear

@@ -8,8 +8,8 @@ export type AdminSectionId =
 	| "purchase-orders"
 	| "users"
 	| "providers"
-	| "website"
-	| "storefront";
+	| "cms"
+	| "website";
 
 type AdminRouteHref =
 	| "/admin/products"
@@ -21,8 +21,8 @@ type AdminRouteHref =
 	| "/admin/purchase-orders"
 	| "/admin/users"
 	| "/admin/providers"
-	| "/admin/website"
-	| "/admin/storefront";
+	| "/admin/cms"
+	| "/admin/website";
 
 export interface AdminNavItem {
 	id: AdminSectionId;
@@ -97,18 +97,18 @@ export const adminNavItems: AdminNavItem[] = [
 		matchPrefixes: ["/admin/providers"],
 	},
 	{
+		id: "cms",
+		label: "CMS",
+		href: "/admin/cms",
+		icon: "bi-layout-text-window-reverse",
+		matchPrefixes: ["/admin/cms"],
+	},
+	{
 		id: "website",
 		label: "Website",
 		href: "/admin/website",
 		icon: "bi-sliders",
 		matchPrefixes: ["/admin/website"],
-	},
-	{
-		id: "storefront",
-		label: "Storefront",
-		href: "/admin/storefront",
-		icon: "bi-window-stack",
-		matchPrefixes: ["/admin/storefront"],
 	},
 ];
 

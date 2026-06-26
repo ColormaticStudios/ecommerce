@@ -17,6 +17,7 @@ import (
 	"ecommerce/internal/migrations"
 	"ecommerce/internal/providerplugins"
 	checkoutservice "ecommerce/internal/services/checkout"
+	cmsservice "ecommerce/internal/services/cms"
 	inventoryservice "ecommerce/internal/services/inventory"
 	paymentservice "ecommerce/internal/services/payments"
 	providerops "ecommerce/internal/services/providerops"
@@ -238,6 +239,8 @@ func main() {
 		}
 	}()
 	inventoryservice.StartReservationExpiryWorker(context.Background(), db, time.Minute, log.Default())
+	cmsservice.StartDeliveryWorker(context.Background(), db, time.Minute, log.Default(), mediaService)
+	cmsservice.StartInvalidationWorker(context.Background(), db, cfg.CMSInvalidationWebhookURL, time.Minute, log.Default())
 
 	keyring, err := providerops.ParseKeyringConfig(cfg.ProviderCredentialsKeys)
 	if err != nil {

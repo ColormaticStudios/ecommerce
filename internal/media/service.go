@@ -15,17 +15,19 @@ const (
 	StatusReady      = "ready"
 	StatusFailed     = "failed"
 
-	OwnerTypeProduct    = "product"
-	OwnerTypeUser       = "user"
-	OwnerTypeStorefront = "storefront"
+	OwnerTypeProduct        = "product"
+	OwnerTypeUser           = "user"
+	OwnerTypeCMSEntry       = "cms_entry"
+	OwnerTypeCMSPageVariant = "cms_page_variant"
 
-	RoleProductImage        = "product_image"
-	RoleProductDraftImage   = "product_draft_image"
-	RoleProfilePhoto        = "profile_photo"
-	RoleStorefrontHero      = "storefront_hero"
-	RoleStorefrontHeroDraft = "storefront_hero_draft"
-	DefaultMediaRoot        = "media"
-	DefaultPublicPath       = "/media"
+	RoleProductImage      = "product_image"
+	RoleProductDraftImage = "product_draft_image"
+	RoleProfilePhoto      = "profile_photo"
+	RoleCMSContent        = "cms_content"
+	RoleCMSDraftContent   = "cms_draft_content"
+	RoleCMSSEO            = "cms_seo"
+	DefaultMediaRoot      = "media"
+	DefaultPublicPath     = "/media"
 )
 
 type Service struct {

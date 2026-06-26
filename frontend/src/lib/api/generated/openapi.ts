@@ -185,14 +185,110 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/api/v1/storefront": {
+	"/api/v1/content": {
 		parameters: {
 			query?: never;
 			header?: never;
 			path?: never;
 			cookie?: never;
 		};
-		get: operations["getStorefrontSettings"];
+		get: operations["resolveContentHomepage"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/content/{path}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["resolveContentPage"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/content/events": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["recordContentEvent"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/content/redirect": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["resolveContentRedirect"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/content/sitemap.xml": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getContentSitemap"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/content/navigation/{location}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getContentNavigation"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/content/global/{region}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getContentGlobalRegion"];
 		put?: never;
 		post?: never;
 		delete?: never;
@@ -1625,17 +1721,609 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/api/v1/admin/storefront": {
+	"/api/v1/admin/cms/pages": {
 		parameters: {
 			query?: never;
 			header?: never;
 			path?: never;
 			cookie?: never;
 		};
-		get: operations["getAdminStorefrontSettings"];
-		put: operations["updateStorefrontSettings"];
+		get: operations["listAdminCmsPages"];
+		put?: never;
+		post: operations["createAdminCmsPage"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/preview": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["previewAdminCmsPayload"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/pages/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminCmsPage"];
+		put?: never;
+		post?: never;
+		delete: operations["deleteAdminCmsPage"];
+		options?: never;
+		head?: never;
+		patch: operations["updateAdminCmsPage"];
+		trace?: never;
+	};
+	"/api/v1/admin/cms/pages/{id}/publish": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["publishAdminCmsPage"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/pages/{id}/unpublish": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["unpublishAdminCmsPage"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/pages/{id}/draft": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete: operations["discardAdminCmsPageDraft"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/locales": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminCmsLocales"];
+		put: operations["updateAdminCmsLocales"];
 		post?: never;
 		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/pages/{id}/variants": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminCmsPageVariants"];
+		put?: never;
+		post: operations["createAdminCmsPageVariant"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/pages/{id}/variants/{variant_id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put: operations["updateAdminCmsPageVariant"];
+		post?: never;
+		delete: operations["deleteAdminCmsPageVariant"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/pages/{id}/variants/{variant_id}/{action}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["transitionAdminCmsPageVariant"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/audit": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminCmsAuditEvents"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/governance": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminCmsGovernance"];
+		put: operations["updateAdminCmsGovernance"];
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/entries/{id}/workflow": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminCmsEntryWorkflow"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/entries/{id}/workflow/{action}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["transitionAdminCmsEntryWorkflow"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/entries/{id}/comments": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["createAdminCmsEntryComment"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/comments/{id}/resolve": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["resolveAdminCmsComment"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/entries/{id}/variants": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminCmsEntryVariants"];
+		put?: never;
+		post: operations["createAdminCmsEntryVariant"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/entries/{id}/variants/{variant_id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put: operations["updateAdminCmsEntryVariant"];
+		post?: never;
+		delete: operations["deleteAdminCmsEntryVariant"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/entries/{id}/variants/{variant_id}/{action}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["transitionAdminCmsEntryVariant"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/operations": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminCmsOperations"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/operations/invalidation/{id}/retry": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["retryAdminCmsInvalidation"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/restore/preview": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["previewAdminCmsRestore"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/export": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["exportAdminCmsContent"];
+		put?: never;
+		post: operations["restoreAdminCmsContent"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/pages/{id}/rollback": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["rollbackAdminCmsPage"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/pages/{id}/delivery": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminCmsPageDelivery"];
+		put: operations["updateAdminCmsPageDelivery"];
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/pages/{id}/seo": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminCmsPageSeo"];
+		put: operations["updateAdminCmsPageSeo"];
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/redirects": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminCmsRedirects"];
+		put?: never;
+		post: operations["createAdminCmsRedirect"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/redirects/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete: operations["deleteAdminCmsRedirect"];
+		options?: never;
+		head?: never;
+		patch: operations["updateAdminCmsRedirect"];
+		trace?: never;
+	};
+	"/api/v1/admin/cms/navigation": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminCmsNavigation"];
+		put?: never;
+		post: operations["createAdminCmsNavigation"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/navigation/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminCmsNavigation"];
+		put?: never;
+		post?: never;
+		delete: operations["deleteAdminCmsNavigation"];
+		options?: never;
+		head?: never;
+		patch: operations["updateAdminCmsNavigation"];
+		trace?: never;
+	};
+	"/api/v1/admin/cms/navigation/{id}/publish": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["publishAdminCmsNavigation"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/navigation/{id}/unpublish": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["unpublishAdminCmsNavigation"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/navigation/{id}/draft": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete: operations["discardAdminCmsNavigationDraft"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/global": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminCmsGlobalRegions"];
+		put?: never;
+		post: operations["createAdminCmsGlobalRegion"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/global/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminCmsGlobalRegion"];
+		put?: never;
+		post?: never;
+		delete: operations["deleteAdminCmsGlobalRegion"];
+		options?: never;
+		head?: never;
+		patch: operations["updateAdminCmsGlobalRegion"];
+		trace?: never;
+	};
+	"/api/v1/admin/cms/global/{id}/publish": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["publishAdminCmsGlobalRegion"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/global/{id}/unpublish": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["unpublishAdminCmsGlobalRegion"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/cms/global/{id}/draft": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete: operations["discardAdminCmsGlobalRegionDraft"];
 		options?: never;
 		head?: never;
 		patch?: never;
@@ -1652,38 +2340,6 @@ export interface paths {
 		put: operations["updateWebsiteSettings"];
 		post?: never;
 		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/admin/storefront/publish": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		post: operations["publishStorefrontSettings"];
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/admin/storefront/draft": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		post?: never;
-		delete: operations["discardStorefrontDraft"];
 		options?: never;
 		head?: never;
 		patch?: never;
@@ -1779,6 +2435,770 @@ export interface components {
 		};
 		MessageResponse: {
 			message: string;
+		};
+		/** @enum {string} */
+		CmsEntryStatus: "DRAFT" | "SCHEDULED" | "PUBLISHED" | "ARCHIVED";
+		CmsEntry: {
+			id: number;
+			/** @enum {string} */
+			entry_type: "page" | "layout" | "global" | "navigation" | "template";
+			key: string;
+			status: components["schemas"]["CmsEntryStatus"];
+			current_version_id?: number | null;
+			published_version_id?: number | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		CmsEntryVersion: {
+			id: number;
+			entry_id: number;
+			version_number: number;
+			schema_version: number;
+			payload: components["schemas"]["CmsPagePayload"];
+			created_by?: number | null;
+			change_summary?: string;
+			/** Format: date-time */
+			created_at: string;
+		};
+		CmsPublication: {
+			id: number;
+			entry_id: number;
+			version_id: number;
+			published_by?: number | null;
+			/** Format: date-time */
+			published_at: string;
+			rollback_from_publication_id?: number | null;
+			notes?: string;
+		};
+		CmsNavigationMenu: {
+			id: number;
+			entry_id: number;
+			key: string;
+			title: string;
+			location: string;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		CmsNavigationItem: {
+			id: number;
+			menu_id: number;
+			parent_id?: number | null;
+			label: string;
+			/** @enum {string} */
+			item_type: "internal" | "external" | "category" | "product" | "page" | "dropdown";
+			target_ref: string;
+			url: string;
+			sort_order: number;
+			is_enabled: boolean;
+		};
+		CmsNavigationDraftRequest: {
+			key: string;
+			title: string;
+			location: string;
+			items: components["schemas"]["CmsNavigationItemInput"][];
+			change_summary?: string;
+		};
+		CmsNavigationItemInput: {
+			id?: number;
+			parent_id?: number | null;
+			label: string;
+			/** @enum {string} */
+			item_type: "internal" | "external" | "category" | "product" | "page" | "dropdown";
+			target_ref: string;
+			url: string;
+			sort_order: number;
+			is_enabled: boolean;
+		};
+		CmsNavigationResponse: {
+			menu: components["schemas"]["CmsNavigationMenu"];
+			entry: components["schemas"]["CmsEntry"];
+			items: components["schemas"]["CmsNavigationItem"][];
+			current_version?: components["schemas"]["CmsEntryVersion"];
+			published_version?: components["schemas"]["CmsEntryVersion"];
+			latest_publication?: components["schemas"]["CmsPublication"];
+			has_unpublished_draft: boolean;
+		};
+		CmsNavigationListResponse: {
+			data: components["schemas"]["CmsNavigationResponse"][];
+			pagination: components["schemas"]["Pagination"];
+		};
+		CmsGlobalRegion: {
+			id: number;
+			entry_id: number;
+			key: string;
+			title: string;
+			region: string;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		CmsGlobalRegionDraftRequest: {
+			key: string;
+			title: string;
+			region: string;
+			payload: components["schemas"]["CmsPagePayload"];
+			change_summary?: string;
+		};
+		CmsGlobalRegionResponse: {
+			region: components["schemas"]["CmsGlobalRegion"];
+			entry: components["schemas"]["CmsEntry"];
+			current_version?: components["schemas"]["CmsEntryVersion"];
+			published_version?: components["schemas"]["CmsEntryVersion"];
+			latest_publication?: components["schemas"]["CmsPublication"];
+			has_unpublished_draft: boolean;
+		};
+		CmsGlobalRegionListResponse: {
+			data: components["schemas"]["CmsGlobalRegionResponse"][];
+			pagination: components["schemas"]["Pagination"];
+		};
+		CmsPage: {
+			id: number;
+			entry_id: number;
+			path: string;
+			slug: string;
+			title: string;
+			template_key: string;
+			/** @enum {string} */
+			visibility: "public" | "hidden";
+			seo_metadata_id?: number | null;
+			is_homepage: boolean;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		CmsPageResponse: {
+			page: components["schemas"]["CmsPage"];
+			entry: components["schemas"]["CmsEntry"];
+			current_version?: components["schemas"]["CmsEntryVersion"];
+			published_version?: components["schemas"]["CmsEntryVersion"];
+			latest_publication?: components["schemas"]["CmsPublication"];
+			has_unpublished_draft: boolean;
+			delivery?: components["schemas"]["CmsDeliveryDecision"];
+			seo?: components["schemas"]["CmsSEOMetadata"];
+			localization?: components["schemas"]["CmsResolvedLocalization"];
+		};
+		CmsPageListResponse: {
+			data: components["schemas"]["CmsPageResponse"][];
+			pagination: components["schemas"]["Pagination"];
+		};
+		CmsPageDraftRequest: {
+			path: string;
+			slug?: string;
+			title: string;
+			template_key?: string;
+			/** @enum {string} */
+			visibility?: "public" | "hidden";
+			is_homepage?: boolean;
+			payload: components["schemas"]["CmsPagePayload"];
+			change_summary?: string;
+		};
+		CmsPagePayload: {
+			blocks?: components["schemas"]["CmsContentBlock"][];
+		} & {
+			[key: string]: unknown;
+		};
+		CmsContentBlock:
+			| components["schemas"]["CmsHeroBlock"]
+			| components["schemas"]["CmsRichTextBlock"]
+			| components["schemas"]["CmsImageBlock"]
+			| components["schemas"]["CmsGalleryBlock"]
+			| components["schemas"]["CmsVideoBlock"]
+			| components["schemas"]["CmsFAQBlock"]
+			| components["schemas"]["CmsCTABlock"]
+			| components["schemas"]["CmsPromoBannerBlock"]
+			| components["schemas"]["CmsProductRailBlock"]
+			| components["schemas"]["CmsCategoryTilesBlock"]
+			| components["schemas"]["CmsPromotionHighlightBlock"]
+			| components["schemas"]["CmsInventoryMessageBlock"]
+			| components["schemas"]["CmsTestimonialBlock"]
+			| components["schemas"]["CmsSocialEmbedBlock"]
+			| components["schemas"]["CmsCustomHTMLBlock"]
+			| components["schemas"]["CmsFooterBlock"];
+		CmsLink: {
+			label: string;
+			url: string;
+		};
+		CmsHeroBlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsHeroBlock";
+			title: string;
+			subtitle?: string;
+			image_media_id?: string;
+			primary_cta?: components["schemas"]["CmsLink"];
+		};
+		CmsRichTextBlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsRichTextBlock";
+			body: string;
+		};
+		CmsImageBlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsImageBlock";
+			media_id: string;
+			alt?: string;
+			caption?: string;
+		};
+		CmsGalleryBlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsGalleryBlock";
+			images: components["schemas"]["CmsGalleryImage"][];
+		};
+		CmsGalleryImage: {
+			media_id: string;
+			alt?: string;
+			caption?: string;
+		};
+		CmsVideoBlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsVideoBlock";
+			url: string;
+			title?: string;
+		};
+		CmsFAQBlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsFAQBlock";
+			items: {
+				question: string;
+				answer: string;
+			}[];
+		};
+		CmsCTABlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsCTABlock";
+			label: string;
+			url: string;
+			body?: string;
+		};
+		CmsPromoBannerBlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsPromoBannerBlock";
+			title: string;
+			body?: string;
+			link?: components["schemas"]["CmsLink"];
+		};
+		CmsProductRailBlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsProductRailBlock";
+			title: string;
+			subtitle?: string;
+			/** @enum {string} */
+			source: "manual" | "newest" | "search" | "category";
+			product_ids?: number[];
+			query?: string;
+			category_slug?: string;
+			/** @enum {string} */
+			sort?: "created_at" | "price" | "name";
+			/** @enum {string} */
+			order?: "asc" | "desc";
+			limit: number;
+			/** @enum {string} */
+			image_aspect?: "square" | "wide";
+		};
+		CmsCategoryTilesBlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsCategoryTilesBlock";
+			title: string;
+			subtitle?: string;
+			category_slugs: string[];
+			category_media_ids?: {
+				[key: string]: string;
+			};
+			/** @enum {string} */
+			image_aspect?: "square" | "wide";
+		};
+		CmsPromotionHighlightBlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsPromotionHighlightBlock";
+			title: string;
+			body?: string;
+			badge?: string;
+			promotion_code?: string;
+			campaign_id?: number;
+			link?: components["schemas"]["CmsLink"];
+		};
+		CmsInventoryMessageBlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsInventoryMessageBlock";
+			product_id: number;
+			low_stock_threshold?: number;
+			in_stock_message?: string;
+			low_stock_message?: string;
+			out_of_stock_message?: string;
+		};
+		CmsTestimonialBlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsTestimonialBlock";
+			quote: string;
+			attribution: string;
+			rating?: number;
+		};
+		CmsSocialEmbedBlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsSocialEmbedBlock";
+			/** @enum {string} */
+			provider: "instagram" | "tiktok" | "youtube";
+			url: string;
+			title?: string;
+		};
+		CmsCustomHTMLBlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsCustomHTMLBlock";
+			html: string;
+		};
+		CmsFooterColumn: {
+			title: string;
+			links: components["schemas"]["CmsLink"][];
+		};
+		CmsFooterBlock: {
+			/**
+			 * @description discriminator enum property added by openapi-typescript
+			 * @enum {string}
+			 */
+			type: "CmsFooterBlock";
+			brand_name: string;
+			tagline?: string;
+			columns: components["schemas"]["CmsFooterColumn"][];
+			social_links: components["schemas"]["CmsLink"][];
+			copyright: string;
+			/** @enum {string} */
+			layout: "columns" | "centered" | "minimal";
+		};
+		CmsLocale: {
+			code: string;
+			name: string;
+			enabled: boolean;
+			is_default: boolean;
+			fallback_locale?: string | null;
+		};
+		CmsLocaleInput: {
+			code: string;
+			name: string;
+			enabled: boolean;
+			is_default: boolean;
+			fallback_locale?: string | null;
+		};
+		CmsLocaleSettings: {
+			locales: components["schemas"]["CmsLocale"][];
+		};
+		CmsLocaleSettingsInput: {
+			locales: components["schemas"]["CmsLocaleInput"][];
+		};
+		CmsPageVariant: {
+			id: number;
+			page_id: number;
+			entry_id: number;
+			locale: string;
+			market: string;
+			path: string;
+			slug: string;
+			title: string;
+			payload: components["schemas"]["CmsPagePayload"];
+			/** @enum {string} */
+			status: "draft" | "in_review" | "changes_requested" | "approved" | "published";
+			revision: number;
+			submitted_by?: string | null;
+			approved_by?: string | null;
+			/** Format: date-time */
+			published_at?: string | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		CmsPageVariantInput: {
+			locale: string;
+			market?: string;
+			path: string;
+			slug?: string;
+			title: string;
+			payload: components["schemas"]["CmsPagePayload"];
+			change_summary?: string;
+		};
+		CmsWorkflowActionInput: {
+			comment?: string;
+		};
+		CmsRoleAssignment: {
+			subject: string;
+			/** @enum {string} */
+			role: "author" | "editor" | "publisher";
+		};
+		CmsGovernance: {
+			approval_required: boolean;
+			invalidation_webhook_url: string;
+			roles: components["schemas"]["CmsRoleAssignment"][];
+		};
+		CmsGovernanceInput: {
+			approval_required: boolean;
+			invalidation_webhook_url: string;
+			roles: components["schemas"]["CmsRoleAssignment"][];
+		};
+		CmsChangeComment: {
+			id: number;
+			entry_id: number;
+			variant_id?: number | null;
+			actor: string;
+			body: string;
+			resolved_by?: string | null;
+			/** Format: date-time */
+			resolved_at?: string | null;
+			/** Format: date-time */
+			created_at: string;
+		};
+		CmsCommentInput: {
+			body: string;
+		};
+		CmsEntryWorkflow: {
+			entry_id: number;
+			version_id: number;
+			/** @enum {string} */
+			status: "draft" | "in_review" | "changes_requested" | "approved";
+			submitted_by?: string | null;
+			approved_by?: string | null;
+			comments: components["schemas"]["CmsChangeComment"][];
+		};
+		CmsEntryVariant: {
+			id: number;
+			entry_id: number;
+			locale: string;
+			market: string;
+			payload: {
+				[key: string]: unknown;
+			};
+			/** @enum {string} */
+			status: "draft" | "in_review" | "changes_requested" | "approved" | "published";
+			revision: number;
+			submitted_by?: string | null;
+			approved_by?: string | null;
+			/** Format: date-time */
+			published_at?: string | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		CmsEntryVariantInput: {
+			locale: string;
+			market?: string;
+			payload: {
+				[key: string]: unknown;
+			};
+			change_summary?: string;
+		};
+		CmsInvalidationEvent: {
+			id: number;
+			entry_id: number;
+			variant_id?: number | null;
+			reason: string;
+			/** @enum {string} */
+			status: "pending" | "sent" | "failed";
+			attempts: number;
+			last_error: string;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			sent_at?: string | null;
+		};
+		CmsOperations: {
+			pending_schedules: number;
+			active_experiments: number;
+			invalidations: components["schemas"]["CmsInvalidationEvent"][];
+		};
+		CmsRestorePreview: {
+			valid: boolean;
+			schema_version: number;
+			pages: number;
+			navigation: number;
+			global_regions: number;
+			variants: number;
+			warnings: string[];
+			errors: string[];
+		};
+		CmsAuditEvent: {
+			id: number;
+			entry_id: number;
+			version_id?: number | null;
+			variant_id?: number | null;
+			action: string;
+			actor: string;
+			detail: string;
+			/** Format: date-time */
+			created_at: string;
+		};
+		CmsResolvedLocalization: {
+			requested_locale: string;
+			resolved_locale: string;
+			market: string;
+			used_fallback: boolean;
+			alternates: {
+				locale: string;
+				market?: string;
+				path: string;
+			}[];
+		};
+		CmsContentExport: {
+			schema_version: number;
+			/** Format: date-time */
+			exported_at: string;
+			locales: components["schemas"]["CmsLocale"][];
+			pages: components["schemas"]["CmsPageResponse"][];
+			navigation: components["schemas"]["CmsNavigationResponse"][];
+			global_regions: components["schemas"]["CmsGlobalRegionResponse"][];
+			variants: components["schemas"]["CmsPageVariant"][];
+		};
+		CmsPublishRequest: {
+			notes?: string;
+		};
+		CmsPreviewRequest: {
+			payload: components["schemas"]["CmsPagePayload"];
+		};
+		CmsPreviewBlock: {
+			key: string;
+			type: string;
+			/** @enum {string} */
+			status: "ok" | "degraded" | "static";
+			item_count: number;
+			messages: string[];
+		};
+		CmsPreviewResponse: {
+			blocks: components["schemas"]["CmsPreviewBlock"][];
+		};
+		CmsRollbackRequest: {
+			version_id: number;
+			notes?: string;
+		};
+		CmsSchedule: {
+			id: number;
+			entry_id: number;
+			version_id: number;
+			/** Format: date-time */
+			publish_at: string;
+			/** Format: date-time */
+			unpublish_at?: string | null;
+			timezone: string;
+			/** @enum {string} */
+			status: "pending" | "active" | "completed" | "cancelled";
+			/** Format: date-time */
+			last_transition_at?: string | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		CmsScheduleInput: {
+			/** Format: date-time */
+			publish_at: string;
+			/** Format: date-time */
+			unpublish_at?: string | null;
+			timezone: string;
+		};
+		CmsTargetingRule: {
+			id: number;
+			priority: number;
+			is_enabled: boolean;
+			markets: string[];
+			device_classes: ("desktop" | "mobile" | "tablet")[];
+			auth_states: ("guest" | "authenticated")[];
+			referrers: string[];
+			utm_sources: string[];
+			segment_keys: string[];
+		};
+		CmsTargetingRuleInput: {
+			priority: number;
+			is_enabled: boolean;
+			markets: string[];
+			device_classes: ("desktop" | "mobile" | "tablet")[];
+			auth_states: ("guest" | "authenticated")[];
+			referrers: string[];
+			utm_sources: string[];
+			segment_keys: string[];
+		};
+		CmsExperimentVariant: {
+			id: number;
+			experiment_id: number;
+			name: string;
+			version_id: number;
+			allocation: number;
+		};
+		CmsExperimentVariantInput: {
+			name: string;
+			version_id: number;
+			allocation: number;
+		};
+		CmsExperiment: {
+			id: number;
+			entry_id: number;
+			name: string;
+			/** @enum {string} */
+			status: "draft" | "active" | "paused" | "completed";
+			/** @enum {string} */
+			sticky_key: "visitor" | "customer";
+			/** Format: date-time */
+			starts_at: string;
+			/** Format: date-time */
+			ends_at?: string | null;
+			variants: components["schemas"]["CmsExperimentVariant"][];
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		CmsExperimentInput: {
+			name: string;
+			/** @enum {string} */
+			status: "draft" | "active" | "paused" | "completed";
+			/** @enum {string} */
+			sticky_key: "visitor" | "customer";
+			/** Format: date-time */
+			starts_at: string;
+			/** Format: date-time */
+			ends_at?: string | null;
+			variants: components["schemas"]["CmsExperimentVariantInput"][];
+		};
+		CmsPageDeliveryRequest: {
+			schedule?: components["schemas"]["CmsScheduleInput"];
+			targeting_rules: components["schemas"]["CmsTargetingRuleInput"][];
+			experiment?: components["schemas"]["CmsExperimentInput"];
+		};
+		CmsPageDeliveryResponse: {
+			schedule?: components["schemas"]["CmsSchedule"];
+			targeting_rules: components["schemas"]["CmsTargetingRule"][];
+			experiment?: components["schemas"]["CmsExperiment"];
+			recent_publications: components["schemas"]["CmsPublication"][];
+		};
+		CmsDeliveryDecision: {
+			content_version_id: number;
+			experiment_id?: number | null;
+			experiment_variant_id?: number | null;
+			correlation_id: string;
+		};
+		CmsContentEventRequest: {
+			content_version_id: number;
+			experiment_id?: number | null;
+			experiment_variant_id?: number | null;
+			correlation_id: string;
+			/** @enum {string} */
+			event_type: "impression" | "conversion";
+		};
+		CmsSEOMetadata: {
+			title: string;
+			description: string;
+			canonical_url: string;
+			/** @enum {string} */
+			robots: "index_follow" | "noindex_follow" | "index_nofollow" | "noindex_nofollow";
+			og_title: string;
+			og_description: string;
+			og_image_media_id?: string | null;
+			/** @enum {string} */
+			twitter_card: "summary" | "summary_large_image";
+			twitter_title: string;
+			twitter_description: string;
+			twitter_image_media_id?: string | null;
+			json_ld: {
+				[key: string]: unknown;
+			}[];
+		};
+		CmsSEOInput: {
+			title: string;
+			description: string;
+			canonical_url: string;
+			/** @enum {string} */
+			robots: "index_follow" | "noindex_follow" | "index_nofollow" | "noindex_nofollow";
+			og_title: string;
+			og_description: string;
+			og_image_media_id?: string | null;
+			/** @enum {string} */
+			twitter_card: "summary" | "summary_large_image";
+			twitter_title: string;
+			twitter_description: string;
+			twitter_image_media_id?: string | null;
+			json_ld: {
+				[key: string]: unknown;
+			}[];
+		};
+		CmsSEOResponse: {
+			metadata: components["schemas"]["CmsSEOMetadata"];
+			issues: string[];
+		};
+		CmsRedirectRule: {
+			id: number;
+			source_pattern: string;
+			/** @enum {string} */
+			match_type: "exact" | "prefix";
+			target_url: string;
+			/** @enum {integer} */
+			redirect_type: 301 | 302;
+			priority: number;
+			is_enabled: boolean;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		CmsRedirectInput: {
+			source_pattern: string;
+			/** @enum {string} */
+			match_type: "exact" | "prefix";
+			target_url: string;
+			/** @enum {integer} */
+			redirect_type: 301 | 302;
+			priority: number;
+			is_enabled: boolean;
+		};
+		CmsRedirectResolution: {
+			target_url: string;
+			/** @enum {integer} */
+			redirect_type: 301 | 302;
 		};
 		DraftPreviewSessionResponse: {
 			active: boolean;
@@ -3224,73 +4644,8 @@ export interface components {
 		MediaIDsRequest: {
 			media_ids: string[];
 		};
-		StorefrontLink: {
-			label: string;
-			url: string;
-		};
-		StorefrontHero: {
-			eyebrow: string;
-			title: string;
-			subtitle: string;
-			background_image_url: string;
-			background_image_media_id?: string;
-			primary_cta: components["schemas"]["StorefrontLink"];
-			secondary_cta: components["schemas"]["StorefrontLink"];
-		};
-		StorefrontProductSection: {
-			title: string;
-			subtitle: string;
-			/** @enum {string} */
-			source: "manual" | "newest" | "search" | "category";
-			query: string;
-			product_ids: number[];
-			/** @enum {string} */
-			sort: "created_at" | "price" | "name";
-			/** @enum {string} */
-			order: "asc" | "desc";
-			limit: number;
-			brand_slug: string;
-			category_slug: string;
-			has_variant_stock: boolean;
-			attribute_filters: {
-				[key: string]: string;
-			};
-			show_stock: boolean;
-			show_description: boolean;
-			/** @enum {string} */
-			image_aspect: "square" | "wide";
-		};
-		StorefrontHomepageSection: {
-			id: string;
-			/** @enum {string} */
-			type: "hero" | "products" | "promo_cards" | "badges";
-			enabled: boolean;
-			hero?: components["schemas"]["StorefrontHero"];
-			product_section?: components["schemas"]["StorefrontProductSection"];
-			promo_cards?: components["schemas"]["StorefrontPromoCard"][];
-			promo_card_limit?: number;
-			badges?: string[];
-		};
-		StorefrontPromoCard: {
-			kicker: string;
-			title: string;
-			description: string;
-			image_url: string;
-			link: components["schemas"]["StorefrontLink"];
-		};
-		StorefrontFooterColumn: {
-			title: string;
-			links: components["schemas"]["StorefrontLink"][];
-		};
-		StorefrontFooter: {
-			brand_name: string;
-			tagline: string;
-			copyright: string;
-			columns: components["schemas"]["StorefrontFooterColumn"][];
-			social_links: components["schemas"]["StorefrontLink"][];
-			bottom_notice: string;
-		};
 		WebsiteSettings: {
+			site_title: string;
 			allow_guest_checkout: boolean;
 			/** @description Controls whether coupon-code-gated campaigns can be applied. */
 			coupon_codes_enabled: boolean;
@@ -3311,24 +4666,6 @@ export interface components {
 			settings: components["schemas"]["WebsiteSettings"];
 			/** Format: date-time */
 			updated_at: string;
-		};
-		StorefrontSettings: {
-			site_title: string;
-			homepage_sections: components["schemas"]["StorefrontHomepageSection"][];
-			footer: components["schemas"]["StorefrontFooter"];
-		};
-		StorefrontSettingsRequest: {
-			settings: components["schemas"]["StorefrontSettings"];
-		};
-		StorefrontSettingsResponse: {
-			settings: components["schemas"]["StorefrontSettings"];
-			/** Format: date-time */
-			updated_at: string;
-			has_draft_changes: boolean;
-			/** Format: date-time */
-			draft_updated_at?: string | null;
-			/** Format: date-time */
-			published_updated_at: string;
 		};
 	};
 	responses: never;
@@ -3667,7 +5004,145 @@ export interface operations {
 			};
 		};
 	};
-	getStorefrontSettings: {
+	resolveContentHomepage: {
+		parameters: {
+			query?: {
+				market?: string;
+				locale?: string;
+				device?: "desktop" | "mobile" | "tablet";
+				segment?: string;
+				utm_source?: string;
+				assignment_key?: string;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Published CMS homepage */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsPageResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	resolveContentPage: {
+		parameters: {
+			query?: {
+				market?: string;
+				locale?: string;
+				device?: "desktop" | "mobile" | "tablet";
+				segment?: string;
+				utm_source?: string;
+				assignment_key?: string;
+			};
+			header?: never;
+			path: {
+				path: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Published CMS page */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsPageResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	recordContentEvent: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsContentEventRequest"];
+			};
+		};
+		responses: {
+			/** @description Content event accepted */
+			202: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["MessageResponse"];
+				};
+			};
+			/** @description Invalid content event */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	resolveContentRedirect: {
+		parameters: {
+			query: {
+				path: string;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Matching redirect */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsRedirectResolution"];
+				};
+			};
+			/** @description No redirect */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	getContentSitemap: {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -3676,17 +5151,70 @@ export interface operations {
 		};
 		requestBody?: never;
 		responses: {
-			/** @description Storefront settings */
+			/** @description Storefront sitemap */
 			200: {
 				headers: {
 					[name: string]: unknown;
 				};
 				content: {
-					"application/json": components["schemas"]["StorefrontSettingsResponse"];
+					"application/xml": string;
 				};
 			};
-			/** @description Internal server error */
-			500: {
+		};
+	};
+	getContentNavigation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				location: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Published CMS navigation menu */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsNavigationResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	getContentGlobalRegion: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				region: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Published CMS global region */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsGlobalRegionResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
 				headers: {
 					[name: string]: unknown;
 				};
@@ -7139,26 +8667,53 @@ export interface operations {
 			};
 		};
 	};
-	getAdminStorefrontSettings: {
+	listAdminCmsPages: {
 		parameters: {
-			query?: never;
+			query?: {
+				page?: number;
+				limit?: number;
+			};
 			header?: never;
 			path?: never;
 			cookie?: never;
 		};
 		requestBody?: never;
 		responses: {
-			/** @description Storefront settings */
+			/** @description CMS pages */
 			200: {
 				headers: {
 					[name: string]: unknown;
 				};
 				content: {
-					"application/json": components["schemas"]["StorefrontSettingsResponse"];
+					"application/json": components["schemas"]["CmsPageListResponse"];
 				};
 			};
-			/** @description Internal server error */
-			500: {
+		};
+	};
+	createAdminCmsPage: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsPageDraftRequest"];
+			};
+		};
+		responses: {
+			/** @description Created CMS page draft */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsPageResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
 				headers: {
 					[name: string]: unknown;
 				};
@@ -7168,7 +8723,7 @@ export interface operations {
 			};
 		};
 	};
-	updateStorefrontSettings: {
+	previewAdminCmsPayload: {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -7177,21 +8732,1775 @@ export interface operations {
 		};
 		requestBody: {
 			content: {
-				"application/json": components["schemas"]["StorefrontSettingsRequest"];
+				"application/json": components["schemas"]["CmsPreviewRequest"];
 			};
 		};
 		responses: {
-			/** @description Updated storefront settings */
+			/** @description Evaluated CMS commerce block preview */
 			200: {
 				headers: {
 					[name: string]: unknown;
 				};
 				content: {
-					"application/json": components["schemas"]["StorefrontSettingsResponse"];
+					"application/json": components["schemas"]["CmsPreviewResponse"];
+				};
+			};
+			/** @description Invalid preview request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Duplicate path */
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	getAdminCmsPage: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description CMS page */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsPageResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	deleteAdminCmsPage: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Deleted CMS page */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["MessageResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	updateAdminCmsPage: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsPageDraftRequest"];
+			};
+		};
+		responses: {
+			/** @description Updated CMS page draft */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsPageResponse"];
 				};
 			};
 			/** @description Bad request */
 			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Duplicate path */
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	publishAdminCmsPage: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": components["schemas"]["CmsPublishRequest"];
+			};
+		};
+		responses: {
+			/** @description Published CMS page */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsPageResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	unpublishAdminCmsPage: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": components["schemas"]["CmsPublishRequest"];
+			};
+		};
+		responses: {
+			/** @description Unpublished CMS page */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsPageResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	discardAdminCmsPageDraft: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Discarded CMS page draft */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsPageResponse"];
+				};
+			};
+			/** @description Deleted draft-only CMS page */
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	getAdminCmsLocales: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description CMS locale registry and fallback configuration */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsLocaleSettings"];
+				};
+			};
+		};
+	};
+	updateAdminCmsLocales: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsLocaleSettingsInput"];
+			};
+		};
+		responses: {
+			/** @description Updated CMS locale registry */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsLocaleSettings"];
+				};
+			};
+			/** @description Invalid locale configuration */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	listAdminCmsPageVariants: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Localized and market-specific page variants */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsPageVariant"][];
+				};
+			};
+		};
+	};
+	createAdminCmsPageVariant: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsPageVariantInput"];
+			};
+		};
+		responses: {
+			/** @description Created page variant draft */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsPageVariant"];
+				};
+			};
+			/** @description Invalid page variant */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Duplicate locale and market variant or localized path */
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	updateAdminCmsPageVariant: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+				variant_id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsPageVariantInput"];
+			};
+		};
+		responses: {
+			/** @description Updated page variant draft */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsPageVariant"];
+				};
+			};
+			/** @description Invalid page variant */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	deleteAdminCmsPageVariant: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+				variant_id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Deleted page variant */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["MessageResponse"];
+				};
+			};
+		};
+	};
+	transitionAdminCmsPageVariant: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+				variant_id: number;
+				action: "submit" | "approve" | "request_changes" | "publish" | "rollback";
+			};
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": components["schemas"]["CmsWorkflowActionInput"];
+			};
+		};
+		responses: {
+			/** @description Transitioned page variant workflow */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsPageVariant"];
+				};
+			};
+			/** @description Invalid workflow transition */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Insufficient CMS permission */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	listAdminCmsAuditEvents: {
+		parameters: {
+			query?: {
+				entry_id?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description CMS mutation and publication audit trail */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsAuditEvent"][];
+				};
+			};
+		};
+	};
+	getAdminCmsGovernance: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description CMS governance settings and role assignments */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsGovernance"];
+				};
+			};
+		};
+	};
+	updateAdminCmsGovernance: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsGovernanceInput"];
+			};
+		};
+		responses: {
+			/** @description Updated CMS governance settings */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsGovernance"];
+				};
+			};
+		};
+	};
+	getAdminCmsEntryWorkflow: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Entry workflow and comments */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsEntryWorkflow"];
+				};
+			};
+		};
+	};
+	transitionAdminCmsEntryWorkflow: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+				action: "submit" | "approve" | "request_changes" | "reset";
+			};
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": components["schemas"]["CmsWorkflowActionInput"];
+			};
+		};
+		responses: {
+			/** @description Updated entry workflow */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsEntryWorkflow"];
+				};
+			};
+		};
+	};
+	createAdminCmsEntryComment: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsCommentInput"];
+			};
+		};
+		responses: {
+			/** @description Added editorial comment */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsChangeComment"];
+				};
+			};
+		};
+	};
+	resolveAdminCmsComment: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Resolved editorial comment */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsChangeComment"];
+				};
+			};
+		};
+	};
+	listAdminCmsEntryVariants: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Localized entry variants */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsEntryVariant"][];
+				};
+			};
+		};
+	};
+	createAdminCmsEntryVariant: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsEntryVariantInput"];
+			};
+		};
+		responses: {
+			/** @description Created localized entry variant */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsEntryVariant"];
+				};
+			};
+		};
+	};
+	updateAdminCmsEntryVariant: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+				variant_id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsEntryVariantInput"];
+			};
+		};
+		responses: {
+			/** @description Updated localized entry variant */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsEntryVariant"];
+				};
+			};
+		};
+	};
+	deleteAdminCmsEntryVariant: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+				variant_id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Deleted localized entry variant */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["MessageResponse"];
+				};
+			};
+		};
+	};
+	transitionAdminCmsEntryVariant: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+				variant_id: number;
+				action: "submit" | "approve" | "request_changes" | "publish" | "reset";
+			};
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": components["schemas"]["CmsWorkflowActionInput"];
+			};
+		};
+		responses: {
+			/** @description Transitioned localized entry variant */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsEntryVariant"];
+				};
+			};
+		};
+	};
+	getAdminCmsOperations: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description CMS publish queue and invalidation operations */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsOperations"];
+				};
+			};
+		};
+	};
+	retryAdminCmsInvalidation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Invalidation queued for retry */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["MessageResponse"];
+				};
+			};
+		};
+	};
+	previewAdminCmsRestore: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsContentExport"];
+			};
+		};
+		responses: {
+			/** @description CMS restore dry-run report */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsRestorePreview"];
+				};
+			};
+		};
+	};
+	exportAdminCmsContent: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Portable CMS backup export */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsContentExport"];
+				};
+			};
+		};
+	};
+	restoreAdminCmsContent: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsContentExport"];
+			};
+		};
+		responses: {
+			/** @description CMS content restored from export */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["MessageResponse"];
+				};
+			};
+			/** @description Invalid or unsupported CMS export */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	rollbackAdminCmsPage: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsRollbackRequest"];
+			};
+		};
+		responses: {
+			/** @description Rolled back CMS page */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsPageResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	getAdminCmsPageDelivery: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description CMS page scheduling, targeting, and experiment settings */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsPageDeliveryResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	updateAdminCmsPageDelivery: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsPageDeliveryRequest"];
+			};
+		};
+		responses: {
+			/** @description Updated CMS page delivery settings */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsPageDeliveryResponse"];
+				};
+			};
+			/** @description Invalid delivery settings */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	getAdminCmsPageSeo: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description CMS page SEO metadata and validation */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsSEOResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	updateAdminCmsPageSeo: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsSEOInput"];
+			};
+		};
+		responses: {
+			/** @description Updated CMS page SEO metadata */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsSEOResponse"];
+				};
+			};
+			/** @description Invalid SEO metadata */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	listAdminCmsRedirects: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description CMS redirect rules */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsRedirectRule"][];
+				};
+			};
+		};
+	};
+	createAdminCmsRedirect: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsRedirectInput"];
+			};
+		};
+		responses: {
+			/** @description Created redirect rule */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsRedirectRule"];
+				};
+			};
+			/** @description Invalid redirect */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	deleteAdminCmsRedirect: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Redirect deleted */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["MessageResponse"];
+				};
+			};
+		};
+	};
+	updateAdminCmsRedirect: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsRedirectInput"];
+			};
+		};
+		responses: {
+			/** @description Updated redirect rule */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsRedirectRule"];
+				};
+			};
+			/** @description Invalid redirect */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	listAdminCmsNavigation: {
+		parameters: {
+			query?: {
+				page?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description CMS navigation menus */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsNavigationListResponse"];
+				};
+			};
+		};
+	};
+	createAdminCmsNavigation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsNavigationDraftRequest"];
+			};
+		};
+		responses: {
+			/** @description Created navigation draft */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsNavigationResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Duplicate key */
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	getAdminCmsNavigation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description CMS navigation menu */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsNavigationResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	deleteAdminCmsNavigation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Deleted navigation menu */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["MessageResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	updateAdminCmsNavigation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsNavigationDraftRequest"];
+			};
+		};
+		responses: {
+			/** @description Updated navigation draft */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsNavigationResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Duplicate key */
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	publishAdminCmsNavigation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": components["schemas"]["CmsPublishRequest"];
+			};
+		};
+		responses: {
+			/** @description Published navigation */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsNavigationResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	unpublishAdminCmsNavigation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": components["schemas"]["CmsPublishRequest"];
+			};
+		};
+		responses: {
+			/** @description Unpublished navigation */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsNavigationResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	discardAdminCmsNavigationDraft: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Discarded navigation draft */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsNavigationResponse"];
+				};
+			};
+			/** @description Deleted draft-only navigation menu */
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	listAdminCmsGlobalRegions: {
+		parameters: {
+			query?: {
+				page?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description CMS global regions */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsGlobalRegionListResponse"];
+				};
+			};
+		};
+	};
+	createAdminCmsGlobalRegion: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsGlobalRegionDraftRequest"];
+			};
+		};
+		responses: {
+			/** @description Created global region draft */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsGlobalRegionResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Duplicate key */
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	getAdminCmsGlobalRegion: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description CMS global region */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsGlobalRegionResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	deleteAdminCmsGlobalRegion: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Deleted global region */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["MessageResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	updateAdminCmsGlobalRegion: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["CmsGlobalRegionDraftRequest"];
+			};
+		};
+		responses: {
+			/** @description Updated global region draft */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsGlobalRegionResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Duplicate key */
+			409: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	publishAdminCmsGlobalRegion: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": components["schemas"]["CmsPublishRequest"];
+			};
+		};
+		responses: {
+			/** @description Published global region */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsGlobalRegionResponse"];
+				};
+			};
+			/** @description Bad request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	unpublishAdminCmsGlobalRegion: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": components["schemas"]["CmsPublishRequest"];
+			};
+		};
+		responses: {
+			/** @description Unpublished global region */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsGlobalRegionResponse"];
+				};
+			};
+			/** @description Not found */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Error"];
+				};
+			};
+		};
+	};
+	discardAdminCmsGlobalRegionDraft: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Discarded global region draft */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["CmsGlobalRegionResponse"];
+				};
+			};
+			/** @description Deleted draft-only global region */
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			/** @description Not found */
+			404: {
 				headers: {
 					[name: string]: unknown;
 				};
@@ -7259,55 +10568,6 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["Error"];
-				};
-			};
-		};
-	};
-	publishStorefrontSettings: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Published storefront settings */
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["StorefrontSettingsResponse"];
-				};
-			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-		};
-	};
-	discardStorefrontDraft: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description Storefront settings after draft discard */
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["StorefrontSettingsResponse"];
 				};
 			};
 		};
