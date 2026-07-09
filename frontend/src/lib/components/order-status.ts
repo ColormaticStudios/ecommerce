@@ -2,20 +2,18 @@ import type { OrderModel } from "$lib/models";
 
 export type OrderStatusTone = "neutral" | "info" | "success" | "warning" | "danger";
 
+const orderStatusTones = {
+	PENDING: "warning",
+	PAID: "success",
+	FAILED: "danger",
+	SHIPPED: "info",
+	DELIVERED: "success",
+	CANCELLED: "neutral",
+	REFUNDED: "info",
+} satisfies Record<OrderModel["status"], OrderStatusTone>;
+
 export function getOrderStatusTone(status: OrderModel["status"]): OrderStatusTone {
-	switch (status) {
-		case "PAID":
-		case "DELIVERED":
-			return "success";
-		case "SHIPPED":
-			return "info";
-		case "FAILED":
-			return "danger";
-		case "PENDING":
-			return "warning";
-		default:
-			return "neutral";
-	}
+	return orderStatusTones[status];
 }
 
 export function formatOrderStatusLabel(status: OrderModel["status"]): string {

@@ -9,7 +9,7 @@ describe("getOrderStatusTone", () => {
 		expect(getOrderStatusTone("DELIVERED")).toBe("success");
 		expect(getOrderStatusTone("FAILED")).toBe("danger");
 		expect(getOrderStatusTone("CANCELLED")).toBe("neutral");
-		expect(getOrderStatusTone("REFUNDED")).toBe("neutral");
+		expect(getOrderStatusTone("REFUNDED")).toBe("info");
 	});
 });
 

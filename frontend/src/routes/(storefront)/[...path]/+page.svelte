@@ -66,7 +66,6 @@
 
 <CmsPageRenderer
 	page={data.page}
-	previewActive={data.draftPreviewActive}
 	productRails={data.productRails}
 	categoryTiles={data.categoryTiles}
 	inventoryProducts={data.inventoryProducts}

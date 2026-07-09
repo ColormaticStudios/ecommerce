@@ -37,7 +37,7 @@ You can use any Javascript package manager, e.g. NPM, Bun, Yarn, PNPM, etc. For 
    bun run dev --open
    ```
 
-The app will be available at http://localhost:3000 by default.
+The app will be available at http://localhost:5173 by default.
 
 ### Building for Production
 

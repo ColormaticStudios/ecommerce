@@ -15,7 +15,6 @@
 
 	interface Props {
 		page: CmsPageModel;
-		previewActive?: boolean;
 		productRails?: Record<string, ProductModel[]>;
 		categoryTiles?: Record<string, CategoryModel[]>;
 		inventoryProducts?: Record<string, ProductModel | null>;
