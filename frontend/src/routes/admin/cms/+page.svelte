@@ -2746,14 +2746,12 @@
 <div class="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 	<AdminPageHeader title="CMS" />
 
-	<div class="flex">
-		<TabSwitcher
-			items={cmsTabs}
-			bind:value={activeTab}
-			ariaLabel="CMS sections"
-			onChange={changeTab}
-		/>
-	</div>
+	<TabSwitcher
+		items={cmsTabs}
+		bind:value={activeTab}
+		ariaLabel="CMS sections"
+		onChange={changeTab}
+	/>
 
 	{#if loadError}
 		<AdminEmptyState tone="error" class="mt-6">{loadError}</AdminEmptyState>

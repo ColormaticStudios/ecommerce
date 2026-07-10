@@ -183,13 +183,12 @@
 
 	<AdminMasterDetailLayout columnsClass="xl:grid-cols-[1.15fr_0.95fr]">
 		{#snippet lead()}
-			<div class="flex xl:hidden">
-				<TabSwitcher
-					items={mobilePanelTabs}
-					bind:value={mobilePanel}
-					ariaLabel="Product admin panels"
-				/>
-			</div>
+			<TabSwitcher
+				items={mobilePanelTabs}
+				bind:value={mobilePanel}
+				ariaLabel="Product admin panels"
+				class="xl:hidden"
+			/>
 		{/snippet}
 		{#snippet master()}
 			<AdminPanel

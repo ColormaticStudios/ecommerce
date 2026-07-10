@@ -30,6 +30,7 @@
 	import Button from "$lib/components/Button.svelte";
 	import Dropdown from "$lib/components/Dropdown.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
+	import TabSwitcher, { type TabSwitcherItem } from "$lib/components/TabSwitcher.svelte";
 	import TextArea from "$lib/components/TextArea.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
 	import { formatPrice } from "$lib/utils";
@@ -169,13 +170,18 @@
 	let lifecycleReport = $state<DiscountLifecycleRunResponse | null>(null);
 	let reconciliationReport = $state<DiscountReconciliationReport | null>(null);
 
-	const tabOptions: Array<{ id: TabId; label: string }> = [
+	const tabOptions: Array<TabSwitcherItem & { id: TabId }> = [
 		{ id: "campaigns", label: "Campaigns" },
 		{ id: "product", label: "Product discount" },
 		{ id: "promotion", label: "Promotion" },
 		{ id: "templates", label: "Templates" },
 		{ id: "ops", label: "Operations" },
 	];
+	const discountTabs = $derived(
+		tabOptions.map((item) =>
+			item.id === "product" && editingCampaignId ? { ...item, label: "Edit discount" } : item
+		)
+	);
 
 	const activeCampaigns = $derived(campaigns.filter((campaign) => campaign.status === "active"));
 	const scheduledCampaigns = $derived(
@@ -749,18 +755,7 @@
 		{@render statCard("Matched evaluations", metrics.matched_evaluations, "bi-activity")}
 	</div>
 
-	<div class="flex flex-wrap gap-2">
-		{#each tabOptions as item (item.id)}
-			<Button
-				tone="admin"
-				variant={tab === item.id ? "primary" : "regular"}
-				type="button"
-				onclick={() => (tab = item.id)}
-			>
-				{item.id === "product" && editingCampaignId ? "Edit discount" : item.label}
-			</Button>
-		{/each}
-	</div>
+	<TabSwitcher items={discountTabs} bind:value={tab} ariaLabel="Discount sections" />
 
 	{#if tab === "campaigns"}
 		<AdminPanel title="Campaigns" meta={`${filteredCampaigns.length} shown`}>
