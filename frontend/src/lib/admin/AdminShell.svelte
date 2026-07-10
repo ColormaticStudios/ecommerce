@@ -86,7 +86,7 @@
 	});
 </script>
 
-<section class="min-h-screen">
+<section class="min-h-screen lg:h-screen lg:overflow-hidden">
 	<IconButton
 		aria-label="Open admin sections"
 		title="Open admin sections"
@@ -96,9 +96,9 @@
 		<i class="bi bi-layout-sidebar-inset"></i>
 	</IconButton>
 
-	<div class="grid min-h-screen items-stretch lg:grid-cols-[auto_minmax(0,1fr)]">
+	<div class="grid min-h-screen items-stretch lg:h-full lg:grid-cols-[auto_minmax(0,1fr)]">
 		<aside
-			class={`hidden border-r border-gray-200 bg-gray-100 transition-[width] duration-200 lg:block dark:border-gray-800 dark:bg-gray-900 ${
+			class={`hidden border-r border-gray-200 bg-gray-100 transition-[width] duration-200 lg:block lg:overflow-y-auto lg:overscroll-contain dark:border-gray-800 dark:bg-gray-900 ${
 				sidebarCollapsed ? "w-20" : "w-64"
 			}`}
 		>
@@ -109,7 +109,9 @@
 			/>
 		</aside>
 
-		<div class="min-w-0 bg-gray-100 px-4 py-6 sm:px-6 lg:px-8 dark:bg-gray-950">
+		<div
+			class="min-w-0 bg-gray-100 px-4 py-6 sm:px-6 lg:overflow-y-auto lg:overscroll-contain lg:px-8 dark:bg-gray-950"
+		>
 			{@render children?.()}
 		</div>
 	</div>
