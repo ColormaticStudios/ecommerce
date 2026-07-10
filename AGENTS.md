@@ -2,6 +2,8 @@
 
 Read `README.md` and `frontend/README.md` for information. Read `frontend/package.json` for list of frontend tests. Backend tests are standard Go tests, use `go test ./...`
 
+Before implementing a feature that consumes, extends, or changes a subsystem, read `wiki/Subsystem-Integration.md` and each relevant subsystem page it links. This is mandatory for agents and developers. When creating a new subsystem, create and link its integration documentation in the same change, following that guide.
+
 Create new tests where needed. Use best practices, test valid and invalid data. Keep docs and tests up-to-date with new changes.
 
 Always run the formatter on code you modify:

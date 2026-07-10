@@ -8,6 +8,8 @@ Project documentation is maintained in the wiki:
 
 - https://git.colormatic.org/ColormaticStudios/ecommerce/wiki
 
+Before integrating with or changing a subsystem, read the [Subsystem Integration Guide](wiki/Subsystem-Integration.md) and its relevant subsystem page.
+
 API reference is generated in:
 
 - [API.md](API.md)
