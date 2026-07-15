@@ -8,10 +8,10 @@ import (
 
 	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
+	"ecommerce/internal/media"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
-	"gorm.io/gorm"
 )
 
 func NewBrandCmd() *cobra.Command {
@@ -41,11 +41,11 @@ func newListBrandsCmd() *cobra.Command {
 				path += "?q=" + url.QueryEscape(trimmed)
 			}
 
-			resp, err := invokeWithDB[apicontract.BrandListResponse](localHandlerRequest{
+			resp, err := invokeWithMediaService[apicontract.BrandListResponse](localHandlerRequest{
 				Method: http.MethodGet,
 				Path:   path,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.ListAdminBrands(db)
+			}, func(mediaService *media.Service) gin.HandlerFunc {
+				return handlers.ListAdminBrands(mediaService.DB, mediaService)
 			})
 			if err != nil {
 				return err
@@ -88,12 +88,12 @@ func newCreateBrandCmd() *cobra.Command {
 		Short: "Create a brand",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			payload := input.toContract(cmd)
-			brand, err := invokeWithDB[apicontract.Brand](localHandlerRequest{
+			brand, err := invokeWithMediaService[apicontract.Brand](localHandlerRequest{
 				Method: http.MethodPost,
 				Path:   "/api/v1/admin/brands",
 				Body:   payload,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.CreateAdminBrand(db)
+			}, func(mediaService *media.Service) gin.HandlerFunc {
+				return handlers.CreateAdminBrand(mediaService.DB, mediaService)
 			})
 			if err != nil {
 				return err
@@ -129,13 +129,13 @@ func newUpdateBrandCmd() *cobra.Command {
 		Short: "Update a brand",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			payload := input.toContract(cmd)
-			brand, err := invokeWithDB[apicontract.Brand](localHandlerRequest{
+			brand, err := invokeWithMediaService[apicontract.Brand](localHandlerRequest{
 				Method:     http.MethodPatch,
 				Path:       fmt.Sprintf("/api/v1/admin/brands/%d", id),
 				PathParams: map[string]string{"id": fmt.Sprintf("%d", id)},
 				Body:       payload,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.UpdateAdminBrand(db)
+			}, func(mediaService *media.Service) gin.HandlerFunc {
+				return handlers.UpdateAdminBrand(mediaService.DB, mediaService)
 			})
 			if err != nil {
 				return err
@@ -170,12 +170,12 @@ func newDeleteBrandCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete a brand",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := invokeWithDB[apicontract.MessageResponse](localHandlerRequest{
+			resp, err := invokeWithMediaService[apicontract.MessageResponse](localHandlerRequest{
 				Method:     http.MethodDelete,
 				Path:       fmt.Sprintf("/api/v1/admin/brands/%d", id),
 				PathParams: map[string]string{"id": fmt.Sprintf("%d", id)},
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.DeleteAdminBrand(db)
+			}, func(mediaService *media.Service) gin.HandlerFunc {
+				return handlers.DeleteAdminBrand(mediaService.DB, mediaService)
 			})
 			if err != nil {
 				return err
@@ -228,8 +228,13 @@ func (f brandInputFlags) toContract(cmd *cobra.Command) apicontract.BrandInput {
 	return apicontract.BrandInput{
 		Description: description,
 		IsActive:    parseBoolPointerSet(cmd, "is-active", f.isActive),
-		LogoMediaId: logoMediaID,
-		Name:        strings.TrimSpace(f.name),
-		Slug:        slug,
+		Logo: func() *apicontract.BrandLogoInput {
+			if logoMediaID == nil {
+				return nil
+			}
+			return &apicontract.BrandLogoInput{MediaId: *logoMediaID}
+		}(),
+		Name: strings.TrimSpace(f.name),
+		Slug: slug,
 	}
 }

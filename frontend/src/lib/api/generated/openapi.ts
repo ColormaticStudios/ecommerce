@@ -3256,7 +3256,7 @@ export interface components {
 			name: string;
 			slug: string;
 			description?: string | null;
-			logo_media_id?: string | null;
+			logo_url?: string | null;
 			is_active: boolean;
 		};
 		BrandListResponse: {
@@ -3266,8 +3266,11 @@ export interface components {
 			name: string;
 			slug?: string | null;
 			description?: string | null;
-			logo_media_id?: string | null;
+			logo?: components["schemas"]["BrandLogoInput"];
 			is_active?: boolean;
+		};
+		BrandLogoInput: {
+			media_id: string;
 		};
 		Category: {
 			id: number;

@@ -3729,6 +3729,45 @@ func TestAdminBrandCRUD(t *testing.T) {
 	assert.Zero(t, count)
 }
 
+func TestAdminBrandLogoUsesMediaReferences(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := newTestDB(t, &models.User{}, &models.Brand{}, &models.MediaObject{}, &models.MediaReference{})
+	mediaService := media.NewService(db, t.TempDir(), "/media", nil)
+	require.NoError(t, mediaService.EnsureDirs())
+	ready := models.MediaObject{ID: "brand-logo", OriginalPath: "brand-logo/original.webp", MimeType: "image/webp", Status: media.StatusReady}
+	require.NoError(t, db.Create(&ready).Error)
+
+	server, err := NewGeneratedAPIServer(db, mediaService, GeneratedAPIServerConfig{JWTSecret: generatedTestJWTSecret})
+	require.NoError(t, err)
+	r := gin.New()
+	apicontract.RegisterHandlers(r, server)
+	admin := seedUser(t, db, "sub-admin-brand-logo", "admin-brand-logo", "admin-brand-logo@example.com", "admin")
+	adminToken := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	createResp := performJSONRequest(t, r, http.MethodPost, "/api/v1/admin/brands", map[string]any{
+		"name": "Acme Labs",
+		"logo": map[string]any{"media_id": ready.ID},
+	}, adminToken)
+	require.Equal(t, http.StatusCreated, createResp.Code)
+	created := decodeJSON[apicontract.Brand](t, createResp)
+	require.NotNil(t, created.LogoUrl)
+	assert.Contains(t, *created.LogoUrl, ready.OriginalPath)
+
+	var references int64
+	require.NoError(t, db.Model(&models.MediaReference{}).Where("media_id = ? AND owner_type = ? AND owner_id = ? AND role = ?", ready.ID, media.OwnerTypeBrand, created.Id, media.RoleBrandLogo).Count(&references).Error)
+	require.EqualValues(t, 1, references)
+
+	removeResp := performJSONRequest(t, r, http.MethodPatch, fmt.Sprintf("/api/v1/admin/brands/%d", created.Id), map[string]any{
+		"name": "Acme Labs",
+		"logo": nil,
+	}, adminToken)
+	require.Equal(t, http.StatusOK, removeResp.Code)
+	removed := decodeJSON[apicontract.Brand](t, removeResp)
+	assert.Nil(t, removed.LogoUrl)
+	require.NoError(t, db.Model(&models.MediaObject{}).Where("id = ?", ready.ID).Count(&references).Error)
+	assert.Zero(t, references)
+}
+
 func TestAdminBrandListSearch(t *testing.T) {
 	r, db := setupGeneratedRouterWithConfig(
 		t,

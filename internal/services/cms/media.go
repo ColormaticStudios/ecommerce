@@ -106,8 +106,8 @@ func syncPayloadMediaReferences(tx *gorm.DB, ownerType string, ownerID uint, pay
 			}
 			return nil, err
 		}
-		if object.Status == media.StatusFailed {
-			return nil, fmt.Errorf("%w: media %q failed processing", ErrInvalidPage, id)
+		if object.Status != media.StatusReady || strings.TrimSpace(object.OriginalPath) == "" {
+			return nil, fmt.Errorf("%w: media %q is not ready", ErrInvalidPage, id)
 		}
 		if !strings.HasPrefix(object.MimeType, "image/") {
 			return nil, fmt.Errorf("%w: media %q must be an image", ErrInvalidPage, id)

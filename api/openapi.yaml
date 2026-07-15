@@ -6712,7 +6712,7 @@ components:
         description:
           type: string
           nullable: true
-        logo_media_id:
+        logo_url:
           type: string
           nullable: true
         is_active:
@@ -6743,11 +6743,18 @@ components:
           type: string
           nullable: true
           maxLength: 500
-        logo_media_id:
-          type: string
+        logo:
+          $ref: "#/components/schemas/BrandLogoInput"
           nullable: true
         is_active:
           type: boolean
+
+    BrandLogoInput:
+      type: object
+      required: [media_id]
+      properties:
+        media_id:
+          type: string
 
     Category:
       type: object

@@ -105,6 +105,8 @@ const ecommerceCMSP6Version = "2026062104_ecommerce_cms_p6_localization_governan
 const ecommerceCMSCompletionVersion = "2026062105_ecommerce_cms_governance_operations"
 const ecommerceCMSLegacyRemovalVersion = "2026062106_remove_legacy_storefront"
 const ecommerceCMSFooterBackfillVersion = "2026062107_cms_footer_empty_backfill"
+const brandLogoMediaReferencesVersion = "2026071001_brand_logo_media_references"
+const brandLogoMediaContractVersion = "2026071002_remove_brand_logo_media_id"
 const migrationStepAlertThresholdEnvVar = "MIGRATIONS_STEP_ALERT_THRESHOLD_MS"
 
 var versionPattern = regexp.MustCompile(`^\d{10}_[a-z0-9_]+$`)
@@ -1646,11 +1648,74 @@ var orderedMigrations = []Migration{
 		}},
 		Up: backfillEmptyCMSFooterRegion,
 	},
+	{
+		Version:         brandLogoMediaReferencesVersion,
+		Name:            "backfill brand logo media references",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"backfill", "catalog", "media"},
+		Up:              backfillBrandLogoMediaReferences,
+	},
+	{
+		Version:          brandLogoMediaContractVersion,
+		Name:             "remove legacy brand logo media id",
+		TransactionMode:  TransactionModeRequired,
+		Tags:             []string{"contract", "catalog", "media"},
+		ContractBlockers: []string{"allow_contract_migrations"},
+		PostChecks: []PostCheck{{
+			Name: "brand_logo_media_id_removed",
+			Check: func(tx *gorm.DB) error {
+				if tx.Migrator().HasColumn("brands", "logo_media_id") {
+					return errors.New("brands.logo_media_id still exists")
+				}
+				return nil
+			},
+		}},
+		Up: func(tx *gorm.DB) error {
+			if !tx.Migrator().HasColumn("brands", "logo_media_id") {
+				return nil
+			}
+			return tx.Exec(`ALTER TABLE brands DROP COLUMN logo_media_id`).Error
+		},
+	},
 }
 
 type productAttributeEnumBackfillRow struct {
 	ProductAttributeID uint
 	EnumValue          string
+}
+
+func backfillBrandLogoMediaReferences(tx *gorm.DB) error {
+	if !tx.Migrator().HasColumn("brands", "logo_media_id") {
+		return nil
+	}
+	type legacyBrandLogo struct {
+		ID          uint
+		LogoMediaID *string `gorm:"column:logo_media_id"`
+	}
+	var brands []legacyBrandLogo
+	if err := tx.Table("brands").Select("id, logo_media_id").Where("logo_media_id IS NOT NULL AND TRIM(logo_media_id) <> ''").Find(&brands).Error; err != nil {
+		return err
+	}
+	for _, brand := range brands {
+		mediaID := strings.TrimSpace(*brand.LogoMediaID)
+		var object models.MediaObject
+		if err := tx.First(&object, "id = ?", mediaID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				log.Printf("migration_brand_logo_unattached brand_id=%d media_id=%q reason=not_found", brand.ID, mediaID)
+				continue
+			}
+			return err
+		}
+		if object.Status != media.StatusReady || strings.TrimSpace(object.OriginalPath) == "" || !strings.HasPrefix(object.MimeType, "image/") {
+			log.Printf("migration_brand_logo_unattached brand_id=%d media_id=%q reason=not_ready_image", brand.ID, mediaID)
+			continue
+		}
+		ref := models.MediaReference{MediaID: mediaID, OwnerType: media.OwnerTypeBrand, OwnerID: brand.ID, Role: media.RoleBrandLogo}
+		if err := tx.Where("media_id = ? AND owner_type = ? AND owner_id = ? AND role = ?", mediaID, ref.OwnerType, ref.OwnerID, ref.Role).FirstOrCreate(&ref).Error; err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func migrateCMSMediaIDs(tx *gorm.DB) error {

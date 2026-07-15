@@ -101,7 +101,7 @@ export function parseBrand(brand: BrandPayload): BrandModel {
 		name: brand.name,
 		slug: brand.slug,
 		description: brand.description ?? null,
-		logo_media_id: brand.logo_media_id ?? null,
+		logo_url: brand.logo_url ?? null,
 		is_active: brand.is_active,
 	};
 }
@@ -299,7 +299,7 @@ export interface BrandModel {
 	name: string;
 	slug: string;
 	description: string | null;
-	logo_media_id: string | null;
+	logo_url: string | null;
 	is_active: boolean;
 }
 

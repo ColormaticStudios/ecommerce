@@ -92,7 +92,7 @@ export function makeBrand(overrides: Partial<BrandModel> = {}): BrandModel {
 			name: "Colormatic",
 			slug: "colormatic",
 			description: "Studio brand for route stories.",
-			logo_media_id: null,
+			logo_url: null,
 			is_active: true,
 		},
 		overrides

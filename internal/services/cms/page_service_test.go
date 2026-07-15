@@ -332,6 +332,35 @@ func TestPageServiceTracksDraftAndLiveMediaReferences(t *testing.T) {
 	require.Zero(t, oldCount, "replaced unreferenced media should be cleaned")
 }
 
+func TestPageServiceRejectsMediaThatIsNotReadyForAttachment(t *testing.T) {
+	db := newServiceTestDB(t)
+	for _, object := range []models.MediaObject{
+		{ID: "processing-image", MimeType: "image/webp", Status: media.StatusProcessing},
+		{ID: "failed-image", MimeType: "image/webp", Status: media.StatusFailed},
+		{ID: "missing-source", MimeType: "image/webp", Status: media.StatusReady},
+	} {
+		require.NoError(t, db.Create(&object).Error)
+	}
+
+	service := NewPageService(db, media.NewService(db, t.TempDir(), "/media", nil))
+	for _, mediaID := range []string{"processing-image", "failed-image", "missing-source"} {
+		t.Run(mediaID, func(t *testing.T) {
+			_, err := service.CreateDraft(PageDraftInput{
+				Path:  "/" + mediaID,
+				Title: mediaID,
+				Payload: PagePayload{"blocks": []any{
+					map[string]any{"type": "image", "media_id": mediaID},
+				}},
+			})
+			require.ErrorIs(t, err, ErrInvalidPage)
+
+			var references int64
+			require.NoError(t, db.Model(&models.MediaReference{}).Where("media_id = ?", mediaID).Count(&references).Error)
+			require.Zero(t, references)
+		})
+	}
+}
+
 func requireCMSMediaReference(t *testing.T, db *gorm.DB, entryID uint, role, mediaID string) {
 	t.Helper()
 	var count int64

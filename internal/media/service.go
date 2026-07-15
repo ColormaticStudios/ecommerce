@@ -17,12 +17,14 @@ const (
 
 	OwnerTypeProduct        = "product"
 	OwnerTypeUser           = "user"
+	OwnerTypeBrand          = "brand"
 	OwnerTypeCMSEntry       = "cms_entry"
 	OwnerTypeCMSPageVariant = "cms_page_variant"
 
 	RoleProductImage      = "product_image"
 	RoleProductDraftImage = "product_draft_image"
 	RoleProfilePhoto      = "profile_photo"
+	RoleBrandLogo         = "brand_logo"
 	RoleCMSContent        = "cms_content"
 	RoleCMSDraftContent   = "cms_draft_content"
 	RoleCMSSEO            = "cms_seo"

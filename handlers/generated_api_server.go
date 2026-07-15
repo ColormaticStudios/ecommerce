@@ -325,7 +325,7 @@ func (s *GeneratedAPIServer) CreateProduct(c *gin.Context) {
 }
 
 func (s *GeneratedAPIServer) CreateAdminBrand(c *gin.Context) {
-	s.runProtected(c, "admin", CreateAdminBrand(s.db))
+	s.runProtected(c, "admin", CreateAdminBrand(s.db, s.mediaService))
 }
 
 func (s *GeneratedAPIServer) ListAdminCategories(c *gin.Context, params apicontract.ListAdminCategoriesParams) {
@@ -349,12 +349,12 @@ func (s *GeneratedAPIServer) UpdateAdminCategory(c *gin.Context, id int) {
 
 func (s *GeneratedAPIServer) DeleteAdminBrand(c *gin.Context, id int) {
 	_ = id
-	s.runProtected(c, "admin", DeleteAdminBrand(s.db))
+	s.runProtected(c, "admin", DeleteAdminBrand(s.db, s.mediaService))
 }
 
 func (s *GeneratedAPIServer) UpdateAdminBrand(c *gin.Context, id int) {
 	_ = id
-	s.runProtected(c, "admin", UpdateAdminBrand(s.db))
+	s.runProtected(c, "admin", UpdateAdminBrand(s.db, s.mediaService))
 }
 
 func (s *GeneratedAPIServer) ListAdminProducts(c *gin.Context, params apicontract.ListAdminProductsParams) {
@@ -443,7 +443,7 @@ func (s *GeneratedAPIServer) RunAdminDiscountReconciliation(c *gin.Context) {
 
 func (s *GeneratedAPIServer) ListAdminBrands(c *gin.Context, params apicontract.ListAdminBrandsParams) {
 	_ = params
-	s.runProtected(c, "admin", ListAdminBrands(s.db))
+	s.runProtected(c, "admin", ListAdminBrands(s.db, s.mediaService))
 }
 
 func (s *GeneratedAPIServer) ListAdminProductAttributes(c *gin.Context) {
@@ -1041,7 +1041,7 @@ func (s *GeneratedAPIServer) ListProducts(c *gin.Context, params apicontract.Lis
 }
 
 func (s *GeneratedAPIServer) ListBrands(c *gin.Context) {
-	ListBrands(s.db)(c)
+	ListBrands(s.db, s.mediaService)(c)
 }
 
 func (s *GeneratedAPIServer) ListCategories(c *gin.Context) {

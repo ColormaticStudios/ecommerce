@@ -5,7 +5,6 @@ type Brand struct {
 	Name        string  `json:"name" gorm:"not null"`
 	Slug        string  `json:"slug" gorm:"uniqueIndex;not null"`
 	Description *string `json:"description,omitempty"`
-	LogoMediaID *string `json:"logo_media_id,omitempty"`
 	IsActive    bool    `json:"is_active" gorm:"not null;default:true;index"`
 }
 

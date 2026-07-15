@@ -566,8 +566,8 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, ecommerceCMSFooterBackfillVersion, status.LatestAppliedVersion)
-	require.Equal(t, 2, status.PendingCount)
+	require.Equal(t, brandLogoMediaReferencesVersion, status.LatestAppliedVersion)
+	require.Equal(t, 3, status.PendingCount)
 }
 
 func TestRunAppliesAllOrderedMigrationsAndReplayIsIdempotent(t *testing.T) {

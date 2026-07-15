@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"ecommerce/internal/apicontract"
+	"ecommerce/internal/media"
 	categoriesservice "ecommerce/internal/services/categories"
 	"ecommerce/models"
 
@@ -85,15 +86,20 @@ func validateCatalogSEO(tx *gorm.DB, seo productSEODraftData, productID uint) er
 	return nil
 }
 
-func brandToContract(brand models.Brand) apicontract.Brand {
-	return apicontract.Brand{
+func brandToContract(brand models.Brand, mediaService *media.Service) apicontract.Brand {
+	contract := apicontract.Brand{
 		Description: brand.Description,
 		Id:          int(brand.ID),
 		IsActive:    brand.IsActive,
-		LogoMediaId: brand.LogoMediaID,
 		Name:        brand.Name,
 		Slug:        brand.Slug,
 	}
+	if mediaService != nil {
+		if logoURL, err := mediaService.BrandLogoURL(brand.ID); err == nil {
+			contract.LogoUrl = &logoURL
+		}
+	}
+	return contract
 }
 
 func productAttributeToContract(attribute models.ProductAttribute) apicontract.ProductAttributeDefinition {
@@ -450,7 +456,7 @@ func categoryHasPublishedProductReferences(db *gorm.DB, categoryID uint) (bool, 
 	return count > 0, err
 }
 
-func ListBrands(db *gorm.DB) gin.HandlerFunc {
+func ListBrands(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var brands []models.Brand
 		if err := listBrandsQuery(db, true, "").Find(&brands).Error; err != nil {
@@ -460,13 +466,13 @@ func ListBrands(db *gorm.DB) gin.HandlerFunc {
 
 		response := apicontract.BrandListResponse{Data: make([]apicontract.Brand, 0, len(brands))}
 		for _, brand := range brands {
-			response.Data = append(response.Data, brandToContract(brand))
+			response.Data = append(response.Data, brandToContract(brand, mediaService))
 		}
 		c.JSON(http.StatusOK, response)
 	}
 }
 
-func ListAdminBrands(db *gorm.DB) gin.HandlerFunc {
+func ListAdminBrands(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		searchTerm := strings.TrimSpace(c.Query("q"))
 		var brands []models.Brand
@@ -477,7 +483,7 @@ func ListAdminBrands(db *gorm.DB) gin.HandlerFunc {
 
 		response := apicontract.BrandListResponse{Data: make([]apicontract.Brand, 0, len(brands))}
 		for _, brand := range brands {
-			response.Data = append(response.Data, brandToContract(brand))
+			response.Data = append(response.Data, brandToContract(brand, mediaService))
 		}
 		c.JSON(http.StatusOK, response)
 	}
@@ -499,7 +505,6 @@ func validateBrandInput(tx *gorm.DB, input apicontract.BrandInput, excludeID uin
 		return models.Brand{}, errors.New("Brand description must be 500 characters or fewer")
 	}
 
-	logoMediaID := trimOptionalString(input.LogoMediaId)
 	isActive := true
 	if input.IsActive != nil {
 		isActive = *input.IsActive
@@ -519,12 +524,54 @@ func validateBrandInput(tx *gorm.DB, input apicontract.BrandInput, excludeID uin
 		Name:        name,
 		Slug:        slug,
 		Description: description,
-		LogoMediaID: logoMediaID,
 		IsActive:    isActive,
 	}, nil
 }
 
-func CreateAdminBrand(db *gorm.DB) gin.HandlerFunc {
+func brandLogoMediaID(mediaService *media.Service, input apicontract.BrandInput) (string, error) {
+	if input.Logo == nil {
+		return "", nil
+	}
+	if mediaService == nil {
+		return "", errors.New("media service is unavailable")
+	}
+	mediaID := strings.TrimSpace(input.Logo.MediaId)
+	if mediaID == "" {
+		return "", errors.New("logo media ID is required")
+	}
+	object, err := mediaService.WaitUntilReady(mediaID, mediaReadyTimeout)
+	if err != nil {
+		return "", mediaLookupStatusError(err, "Logo media not found", "Failed to load logo media", "Logo media processing failed", "Logo media is still processing")
+	}
+	if !strings.HasPrefix(object.MimeType, "image/") {
+		return "", errors.New("logo media must be an image")
+	}
+	return mediaID, nil
+}
+
+func replaceBrandLogoReference(tx *gorm.DB, brandID uint, mediaID string) ([]string, error) {
+	var existing []models.MediaReference
+	if err := tx.Where("owner_type = ? AND owner_id = ? AND role = ?", media.OwnerTypeBrand, brandID, media.RoleBrandLogo).Find(&existing).Error; err != nil {
+		return nil, err
+	}
+	if err := tx.Where("owner_type = ? AND owner_id = ? AND role = ?", media.OwnerTypeBrand, brandID, media.RoleBrandLogo).Delete(&models.MediaReference{}).Error; err != nil {
+		return nil, err
+	}
+	if mediaID != "" {
+		if err := tx.Create(&models.MediaReference{MediaID: mediaID, OwnerType: media.OwnerTypeBrand, OwnerID: brandID, Role: media.RoleBrandLogo}).Error; err != nil {
+			return nil, err
+		}
+	}
+	removed := make([]string, 0, len(existing))
+	for _, ref := range existing {
+		if ref.MediaID != mediaID {
+			removed = append(removed, ref.MediaID)
+		}
+	}
+	return removed, nil
+}
+
+func CreateAdminBrand(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req apicontract.BrandInput
 		if err := bindStrictJSON(c, &req); err != nil {
@@ -537,16 +584,27 @@ func CreateAdminBrand(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		logoMediaID, err := brandLogoMediaID(mediaService, req)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 
-		if err := db.Create(&brand).Error; err != nil {
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Create(&brand).Error; err != nil {
+				return err
+			}
+			_, err := replaceBrandLogoReference(tx, brand.ID, logoMediaID)
+			return err
+		}); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create brand"})
 			return
 		}
-		c.JSON(http.StatusCreated, brandToContract(brand))
+		c.JSON(http.StatusCreated, brandToContract(brand, mediaService))
 	}
 }
 
-func UpdateAdminBrand(db *gorm.DB) gin.HandlerFunc {
+func UpdateAdminBrand(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req apicontract.BrandInput
 		if err := bindStrictJSON(c, &req); err != nil {
@@ -565,22 +623,35 @@ func UpdateAdminBrand(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		logoMediaID, err := brandLogoMediaID(mediaService, req)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 
 		brand.Name = normalized.Name
 		brand.Slug = normalized.Slug
 		brand.Description = normalized.Description
-		brand.LogoMediaID = normalized.LogoMediaID
 		brand.IsActive = normalized.IsActive
 
-		if err := db.Save(&brand).Error; err != nil {
+		var cleanupIDs []string
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Save(&brand).Error; err != nil {
+				return err
+			}
+			var err error
+			cleanupIDs, err = replaceBrandLogoReference(tx, brand.ID, logoMediaID)
+			return err
+		}); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update brand"})
 			return
 		}
-		c.JSON(http.StatusOK, brandToContract(brand))
+		cleanupMediaIDs(mediaService, cleanupIDs)
+		c.JSON(http.StatusOK, brandToContract(brand, mediaService))
 	}
 }
 
-func DeleteAdminBrand(db *gorm.DB) gin.HandlerFunc {
+func DeleteAdminBrand(db *gorm.DB, mediaService *media.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var brand models.Brand
 		if err := db.First(&brand, c.Param("id")).Error; err != nil {
@@ -608,10 +679,19 @@ func DeleteAdminBrand(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		if err := db.Delete(&brand).Error; err != nil {
+		var cleanupIDs []string
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			var err error
+			cleanupIDs, err = replaceBrandLogoReference(tx, brand.ID, "")
+			if err != nil {
+				return err
+			}
+			return tx.Delete(&brand).Error
+		}); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete brand"})
 			return
 		}
+		cleanupMediaIDs(mediaService, cleanupIDs)
 		c.JSON(http.StatusOK, apicontract.MessageResponse{Message: "Brand deleted"})
 	}
 }
