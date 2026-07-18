@@ -29,6 +29,9 @@ import * as ordersDomain from "$lib/api/domains/orders";
 import * as profileDomain from "$lib/api/domains/profile";
 
 const API_ROUTE = "/api/v1";
+const TUS_VERSION = "1.0.0";
+const TUS_CHUNK_SIZE = 5 * 1024 * 1024;
+const TUS_MAX_RESUME_ATTEMPTS = 3;
 export const DRAFT_PREVIEW_SYNC_EVENT = "draft-preview:changed";
 export const DRAFT_PREVIEW_SYNC_STORAGE_KEY = "draft-preview:state";
 export const STOREFRONT_SYNC_EVENT = "storefront:changed";
@@ -506,71 +509,169 @@ export class API {
 	}
 
 	public async uploadMedia(file: File): Promise<string> {
-		const uploadUrl = new URL(`${this.baseUrl}${API_ROUTE}/media/uploads`);
-		const metadata = `filename ${btoa(unescape(encodeURIComponent(file.name)))}`;
+		const storageKey = this.mediaUploadStorageKey(file);
+		let uploadLocation = this.readStoredUploadLocation(storageKey);
+		let offset = uploadLocation ? await this.getUploadOffset(uploadLocation, file.size) : null;
 
-		const createResponse = await fetch(uploadUrl.toString(), {
-			method: "POST",
-			headers: {
-				"Tus-Resumable": "1.0.0",
-				"Upload-Length": String(file.size),
-				"Upload-Metadata": metadata,
-				...(this.readCookie("csrf_token") ? { "X-CSRF-Token": this.readCookie("csrf_token") } : {}),
-			},
-			credentials: "include",
-		});
-
-		if (!createResponse.ok) {
-			const createText = await createResponse.text();
-			let createBody: unknown = createText;
-			try {
-				createBody = createText ? JSON.parse(createText) : null;
-			} catch {
-				createBody = createText;
-			}
-			this.handleCsrfForbidden(createResponse.status, createBody);
-			throw new Error(`Failed to create upload: ${createResponse.statusText}`);
+		if (offset === null) {
+			uploadLocation = await this.createMediaUpload(file);
+			offset = 0;
+			this.storeUploadLocation(storageKey, uploadLocation);
 		}
 
-		const location = createResponse.headers.get("Location");
-		if (!location) {
+		if (!uploadLocation) {
 			throw new Error("Upload location missing");
 		}
+		const activeUploadLocation = uploadLocation;
 
-		const resolvedLocation = location.startsWith("/") ? `${this.baseUrl}${location}` : location;
-
-		const patchResponse = await fetch(resolvedLocation, {
-			method: "PATCH",
-			headers: {
-				"Tus-Resumable": "1.0.0",
-				"Upload-Offset": "0",
-				"Content-Type": "application/offset+octet-stream",
-				...(this.readCookie("csrf_token") ? { "X-CSRF-Token": this.readCookie("csrf_token") } : {}),
-			},
-			body: file,
-			credentials: "include",
-		});
-
-		if (!patchResponse.ok) {
-			const patchText = await patchResponse.text();
-			let patchBody: unknown = patchText;
+		let resumeAttempts = 0;
+		while (offset < file.size) {
+			let response: Response;
 			try {
-				patchBody = patchText ? JSON.parse(patchText) : null;
-			} catch {
-				patchBody = patchText;
+				response = await fetch(activeUploadLocation, {
+					method: "PATCH",
+					headers: {
+						"Tus-Resumable": TUS_VERSION,
+						"Upload-Offset": String(offset),
+						"Content-Type": "application/offset+octet-stream",
+						...this.csrfHeader(),
+					},
+					body: file.slice(offset, Math.min(offset + TUS_CHUNK_SIZE, file.size)),
+					credentials: "include",
+				});
+			} catch (error) {
+				if (resumeAttempts >= TUS_MAX_RESUME_ATTEMPTS) throw error;
+				const resumedOffset = await this.getUploadOffset(activeUploadLocation, file.size);
+				if (resumedOffset === null) throw error;
+				offset = resumedOffset;
+				resumeAttempts += 1;
+				continue;
 			}
-			this.handleCsrfForbidden(patchResponse.status, patchBody);
-			throw new Error(`Failed to upload media: ${patchResponse.statusText}`);
+
+			if (response.ok) {
+				const nextOffset = this.parseUploadOffset(response.headers.get("Upload-Offset"), file.size);
+				if (nextOffset === null || nextOffset <= offset) {
+					throw new Error("Upload server returned an invalid offset");
+				}
+				offset = nextOffset;
+				resumeAttempts = 0;
+				continue;
+			}
+
+			await this.handleUploadResponseError(response, "Failed to upload media");
+			if (resumeAttempts >= TUS_MAX_RESUME_ATTEMPTS) {
+				throw new Error(`Failed to upload media: ${response.statusText}`);
+			}
+			const resumedOffset = await this.getUploadOffset(activeUploadLocation, file.size);
+			if (resumedOffset === null) {
+				throw new Error(`Failed to upload media: ${response.statusText}`);
+			}
+			offset = resumedOffset;
+			resumeAttempts += 1;
 		}
 
-		const parsed = new URL(location, this.baseUrl);
-		const segments = parsed.pathname.split("/").filter(Boolean);
-		const mediaId = segments[segments.length - 1];
+		this.removeStoredUploadLocation(storageKey);
+		const segments = new URL(activeUploadLocation, this.baseUrl).pathname
+			.split("/")
+			.filter(Boolean);
+		const mediaId = segments.at(-1);
 		if (!mediaId) {
 			throw new Error("Upload ID missing");
 		}
-
 		return mediaId;
+	}
+
+	private async createMediaUpload(file: File): Promise<string> {
+		const metadata = `filename ${btoa(unescape(encodeURIComponent(file.name)))}`;
+		const response = await fetch(new URL(`${this.baseUrl}${API_ROUTE}/media/uploads`).toString(), {
+			method: "POST",
+			headers: {
+				"Tus-Resumable": TUS_VERSION,
+				"Upload-Length": String(file.size),
+				"Upload-Metadata": metadata,
+				...this.csrfHeader(),
+			},
+			credentials: "include",
+		});
+		await this.handleUploadResponseError(response, "Failed to create upload");
+		if (!response.ok) throw new Error(`Failed to create upload: ${response.statusText}`);
+
+		const location = response.headers.get("Location");
+		if (!location) throw new Error("Upload location missing");
+		return new URL(location, this.baseUrl).toString();
+	}
+
+	private async getUploadOffset(location: string, size: number): Promise<number | null> {
+		try {
+			const response = await fetch(location, {
+				method: "HEAD",
+				headers: { "Tus-Resumable": TUS_VERSION, ...this.csrfHeader() },
+				credentials: "include",
+			});
+			if (!response.ok) return null;
+			return this.parseUploadOffset(response.headers.get("Upload-Offset"), size);
+		} catch {
+			return null;
+		}
+	}
+
+	private parseUploadOffset(value: string | null, size: number): number | null {
+		if (!value || !/^\d+$/.test(value)) return null;
+		const offset = Number(value);
+		return Number.isSafeInteger(offset) && offset >= 0 && offset <= size ? offset : null;
+	}
+
+	private shouldResumeUpload(status: number): boolean {
+		return status === 409 || status >= 500;
+	}
+
+	private async handleUploadResponseError(response: Response, message: string): Promise<void> {
+		if (response.ok) return;
+
+		const text = await response.text();
+		let body: unknown = text;
+		try {
+			body = text ? JSON.parse(text) : null;
+		} catch {
+			// Keep non-JSON tus error responses as text.
+		}
+		this.handleCsrfForbidden(response.status, body);
+		if (!this.shouldResumeUpload(response.status)) {
+			throw new Error(`${message}: ${response.statusText}`);
+		}
+	}
+
+	private csrfHeader(): Record<string, string> {
+		const token = this.readCookie("csrf_token");
+		return token ? { "X-CSRF-Token": token } : {};
+	}
+
+	private mediaUploadStorageKey(file: File): string {
+		return `media-upload:${this.baseUrl}:${file.name}:${file.size}:${file.lastModified}:${file.type}`;
+	}
+
+	private readStoredUploadLocation(key: string): string | null {
+		try {
+			return typeof window === "undefined" ? null : window.localStorage.getItem(key);
+		} catch {
+			return null;
+		}
+	}
+
+	private storeUploadLocation(key: string, location: string): void {
+		try {
+			if (typeof window !== "undefined") window.localStorage.setItem(key, location);
+		} catch {
+			// Uploads remain resumable in this page when storage is unavailable.
+		}
+	}
+
+	private removeStoredUploadLocation(key: string): void {
+		try {
+			if (typeof window !== "undefined") window.localStorage.removeItem(key);
+		} catch {
+			// Nothing to clean up when storage is unavailable.
+		}
 	}
 
 	public async attachProfilePhoto(mediaId: string): Promise<UserModel> {

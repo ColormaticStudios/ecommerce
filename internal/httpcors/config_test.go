@@ -14,6 +14,10 @@ func TestAllowHeadersIncludesCheckoutMutationHeaders(t *testing.T) {
 	assert.Contains(t, headers, "Authorization")
 }
 
+func TestExposeHeadersIncludesTusResumeOffset(t *testing.T) {
+	assert.Contains(t, ExposeHeaders(), "Upload-Offset")
+}
+
 func TestAllowHeadersReturnsCopy(t *testing.T) {
 	headers := AllowHeaders()
 	headers[0] = "Modified"

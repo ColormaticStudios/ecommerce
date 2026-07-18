@@ -19,6 +19,7 @@ var allowHeaders = []string{
 var exposeHeaders = []string{
 	"Content-Length",
 	"Location",
+	"Upload-Offset",
 }
 
 func AllowMethods() []string {
