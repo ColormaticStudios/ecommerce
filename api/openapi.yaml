@@ -4946,6 +4946,8 @@ paths:
           schema:
             type: integer
             minimum: 0
+            maximum: 524288000
+            description: Total upload size in bytes. Uploads are limited to 500 MiB (524,288,000 bytes).
         - in: header
           name: Upload-Metadata
           schema:

@@ -423,7 +423,7 @@ func allocateVariant(experiment models.CMSExperiment, key string) *models.CMSExp
 	if key == "" || len(experiment.Variants) == 0 {
 		return nil
 	}
-	digest := sha256.Sum256([]byte(fmt.Sprintf("%d:%s", experiment.ID, key)))
+	digest := sha256.Sum256(fmt.Appendf(nil, "%d:%s", experiment.ID, key))
 	bucket := int(uint16(digest[0])<<8|uint16(digest[1])) * 10000 / 65536
 	cumulative := 0
 	for index := range experiment.Variants {
@@ -436,7 +436,7 @@ func allocateVariant(experiment models.CMSExperiment, key string) *models.CMSExp
 }
 
 func assignmentHash(experimentID uint, key string) string {
-	digest := sha256.Sum256([]byte(fmt.Sprintf("%d:%s", experimentID, key)))
+	digest := sha256.Sum256(fmt.Appendf(nil, "%d:%s", experimentID, key))
 	return hex.EncodeToString(digest[:])
 }
 

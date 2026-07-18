@@ -78,7 +78,7 @@ func validateCatalogSEO(tx *gorm.DB, seo productSEODraftData, productID uint) er
 		if err == nil {
 			return errors.New("SEO canonical path already exists")
 		}
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
 		}
 	}

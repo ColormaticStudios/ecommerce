@@ -28,8 +28,6 @@ import (
 	"github.com/didip/tollbooth_gin"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	tusdfilestore "github.com/tus/tusd/v2/pkg/filestore"
-	tusdhandler "github.com/tus/tusd/v2/pkg/handler"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -161,15 +159,7 @@ func main() {
 	}
 	mediaService.StartProcessor()
 
-	composer := tusdhandler.NewStoreComposer()
-	store := tusdfilestore.New(mediaService.TusDir())
-	store.UseIn(composer)
-
-	tusd, err := tusdhandler.NewHandler(tusdhandler.Config{
-		BasePath:              "/api/v1/media/uploads",
-		StoreComposer:         composer,
-		NotifyCompleteUploads: true,
-	})
+	tusd, err := mediaService.NewTusUploadHandler()
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to initialize tusd: %v", err)
 	}
