@@ -18,6 +18,14 @@ func TestRootCommandIncludesCMSGroup(t *testing.T) {
 	if cmd == nil || cmd.Name() != "cms" {
 		t.Fatalf("expected cms command, got %#v", cmd)
 	}
+
+	bootstrap, _, err := root.Find([]string{"cms", "bootstrap"})
+	if err != nil {
+		t.Fatalf("find cms bootstrap command: %v", err)
+	}
+	if bootstrap == nil || bootstrap.Name() != "bootstrap" {
+		t.Fatalf("expected cms bootstrap command, got %#v", bootstrap)
+	}
 }
 
 func TestLoadCMSPageInput(t *testing.T) {

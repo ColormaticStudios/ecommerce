@@ -188,6 +188,7 @@ func NewCMSCmd() *cobra.Command {
 	cmd.AddCommand(newCMSAuditCmd())
 	cmd.AddCommand(newCMSOperationsCmd())
 	cmd.AddCommand(newCMSScaffoldCmd())
+	cmd.AddCommand(newCMSBootstrapCmd())
 
 	return cmd
 }
@@ -1037,6 +1038,26 @@ func newCMSOperationsCmd() *cobra.Command {
 		},
 	})
 	return cmd
+}
+
+func newCMSBootstrapCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "bootstrap",
+		Short: "Create the default editable CMS site without overwriting existing content",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := requireLocalMode("CMS bootstrap"); err != nil {
+				return err
+			}
+			db := getDB()
+			defer closeDB(db)
+			result, err := cms.BootstrapStarterSite(db)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("CMS bootstrap complete: %d page(s) created, homepage_upgraded=%t, navigation=%t, footer=%t created.\n", len(result.CreatedPages), result.UpgradedHomepage, result.CreatedNavigation, result.CreatedFooter)
+			return nil
+		},
+	}
 }
 
 func newCMSScaffoldCmd() *cobra.Command {

@@ -1,6 +1,6 @@
 # Colormatic Ecommerce Agent Guidelines
 
-Read `README.md` and `frontend/README.md` for information. Read `frontend/package.json` for list of frontend tests. Backend tests are standard Go tests, use `go test ./...`
+Read `README.md` and `frontend/README.md` for information. Read files in `wiki` for more details, note that it is a separate Git repository and is ignored in the main repository. Write more docs in the wiki as needed. Read `frontend/package.json` for list of frontend tests. Backend tests are standard Go tests, use `go test ./...`
 
 Before implementing a feature that consumes, extends, or changes a subsystem, read `wiki/Subsystem-Integration.md` and each relevant subsystem page it links. This is mandatory for agents and developers. When creating a new subsystem, create and link its integration documentation in the same change, following that guide.
 

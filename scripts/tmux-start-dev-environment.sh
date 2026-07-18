@@ -4,23 +4,31 @@ set -e
 
 wait_for_dev_db() {
 	local container="ecommerce-db"
+	local deadline=$((SECONDS + 60))
 	local state
 
-	while true; do
+	while ((SECONDS < deadline)); do
 		state="$(sudo docker inspect -f '{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}}' "$container" 2>/dev/null || true)"
 
 		case "$state" in
 			"running healthy")
-				return 0
+				# Docker health checks run inside the container. Confirm that the
+				# host connection used by migrations is also ready before proceeding.
+				if go run ./cmd/migrate status >/dev/null 2>&1; then
+					return 0
+				fi
 				;;
 			exited* | dead*)
-				echo "Dev DB container stopped before becoming healthy" >&2
+				echo "Dev DB container stopped before becoming ready" >&2
 				return 1
 				;;
 		esac
 
 		sleep 0.25
 	done
+
+	echo "Dev DB did not become ready within 60 seconds" >&2
+	return 1
 }
 
 
