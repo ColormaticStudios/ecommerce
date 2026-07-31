@@ -238,7 +238,7 @@ func ApplyTrackingEvent(
 		loaded, loadErr := GetShipment(tx, shipment.ID)
 		return loaded, true, loadErr
 	}
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return models.Shipment{}, false, err
 	}
 

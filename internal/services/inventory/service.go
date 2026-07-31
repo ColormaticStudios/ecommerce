@@ -153,7 +153,7 @@ func Reserve(db *gorm.DB, input ReservationInput) (models.InventoryReservation, 
 			availability, err = GetAvailability(tx, existing.ProductVariantID)
 			return err
 		}
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
 		}
 
@@ -905,14 +905,14 @@ func effectiveThreshold(tx *gorm.DB, productVariantID uint) (int, error) {
 	if err == nil {
 		return threshold.LowStockQuantity, nil
 	}
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return 0, err
 	}
 	err = tx.Where("product_variant_id IS NULL").First(&threshold).Error
 	if err == nil {
 		return threshold.LowStockQuantity, nil
 	}
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return 0, err
 	}
 	return 5, nil

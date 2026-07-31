@@ -281,7 +281,7 @@ func resolveNexusConfig(tx *gorm.DB, provider string, data map[string]string) (*
 	if err == nil {
 		return &config, nil
 	}
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
 	if state == "" {
