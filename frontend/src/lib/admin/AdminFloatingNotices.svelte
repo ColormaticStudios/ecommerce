@@ -43,11 +43,11 @@
 
 {#if hasStatus || showUnsaved}
 	<div
-		class="pointer-events-none fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 flex-col items-center gap-2"
+		class="pointer-events-none fixed bottom-4 left-1/2 z-[70] flex -translate-x-1/2 flex-col items-center gap-2"
 	>
 		{#if hasStatus}
 			<div
-				class={`pointer-events-auto flex items-center gap-2 rounded-full border px-2 py-1.5 text-xs font-semibold shadow-sm ${statusContainerClass}`}
+				class={`pointer-events-auto flex max-w-[calc(100vw-2rem)] items-center gap-2 rounded-full border px-2 py-1.5 text-xs font-semibold shadow-sm ${statusContainerClass}`}
 			>
 				<span class="ml-1 inline-flex min-w-0 items-center gap-1.5">
 					<i class={`bi ${statusTone === "success" ? "bi-check-circle-fill" : "bi-x-circle-fill"}`}

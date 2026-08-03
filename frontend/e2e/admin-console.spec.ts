@@ -21,46 +21,6 @@ test("guest and customer users are denied admin console access", async ({ page, 
 	await expect(page.getByText("Contact an administrator if you need access.")).toBeVisible();
 });
 
-test("admin storefront editor warns before sidebar navigation discards unsaved changes", async ({
-	page,
-	request,
-}) => {
-	const now = Date.now();
-	await seedAndLoginUser(page, request, {
-		email: `admin-dirty-${now}@example.com`,
-		username: `admin-dirty-${now}`,
-		name: "Dirty Admin",
-		role: "admin",
-	});
-
-	await page.goto("/admin/storefront");
-	await expect(page.getByRole("heading", { name: "Storefront" })).toBeVisible();
-	await expect(page.getByRole("button", { name: "Save draft" })).toBeVisible();
-
-	const siteTitleInput = page.getByPlaceholder("Navbar site title");
-	await siteTitleInput.fill(`Dirty storefront ${now}`);
-	await expect(page.getByText("You have unsaved storefront changes.")).toBeVisible();
-
-	let promptCount = 0;
-	page.on("dialog", async (dialog) => {
-		promptCount += 1;
-		expect(dialog.message()).toContain("You have unsaved storefront changes");
-		if (promptCount === 1) {
-			await dialog.dismiss();
-			return;
-		}
-		await dialog.accept();
-	});
-
-	await page.getByRole("link", { name: "Brands" }).click();
-	await expect(page).toHaveURL(/\/admin\/storefront$/);
-	await expect(page.getByPlaceholder("Navbar site title")).toHaveValue(`Dirty storefront ${now}`);
-
-	await page.getByRole("link", { name: "Brands" }).click();
-	await expect(page).toHaveURL(/\/admin\/brands$/);
-	expect(promptCount).toBe(2);
-});
-
 test("admin can search and reopen a seeded brand after reload", async ({ page, request }) => {
 	const now = Date.now();
 	const brandName = `E2E Brand ${now}`;
@@ -130,31 +90,4 @@ test("admin can create a brand from the brands console", async ({ page, request 
 	await expect(page.getByLabel("Name")).toHaveValue(brandName);
 	await expect(page.getByLabel("Slug")).toHaveValue(brandSlug);
 	await expect(page.getByLabel("Description")).toHaveValue(brandDescription);
-});
-
-test("admin can save storefront drafts and reload the saved values", async ({ page, request }) => {
-	const now = Date.now();
-	const siteTitle = `E2E Storefront ${now}`;
-
-	await seedAndLoginUser(page, request, {
-		email: `admin-storefront-${now}@example.com`,
-		username: `admin-storefront-${now}`,
-		name: "Storefront Admin",
-		role: "admin",
-	});
-
-	await page.goto("/admin/storefront");
-	await expect(page.getByRole("heading", { name: "Storefront" })).toBeVisible();
-	await expect(page.getByRole("button", { name: "Save draft" })).toBeVisible();
-
-	const siteTitleInput = page.getByPlaceholder("Navbar site title");
-	await siteTitleInput.fill(siteTitle);
-	await page.getByRole("button", { name: "Save draft" }).click();
-
-	await expect(page.getByText("Storefront draft saved.")).toBeVisible();
-	await expect(page.getByText("Draft saved", { exact: true })).toBeVisible();
-
-	await page.reload();
-	await expect(page.getByRole("heading", { name: "Storefront" })).toBeVisible();
-	await expect(page.getByPlaceholder("Navbar site title")).toHaveValue(siteTitle);
 });

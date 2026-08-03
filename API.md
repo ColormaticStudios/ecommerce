@@ -356,6 +356,7 @@ fetch('http://localhost:3000/api/v1/products',
 |min_price|query|number(double)|false|none|
 |max_price|query|number(double)|false|none|
 |brand_slug|query|string|false|none|
+|category_slug|query|array[string]|false|none|
 |has_variant_stock|query|boolean|false|none|
 |attribute|query|object|false|none|
 |sort|query|string|false|none|
@@ -2369,6 +2370,9 @@ fetch('http://localhost:3000/api/v1/admin/products',
 |min_price|query|number(double)|false|none|
 |max_price|query|number(double)|false|none|
 |brand_slug|query|string|false|none|
+|category_slug|query|array[string]|false|none|
+|category_id|query|array[integer]|false|none|
+|include_inactive_categories|query|boolean|false|none|
 |has_variant_stock|query|boolean|false|none|
 |attribute|query|object|false|none|
 |sort|query|string|false|none|
@@ -2413,6 +2417,9 @@ const inputBody = '{
     "string"
   ],
   "related_product_ids": [
+    1
+  ],
+  "category_ids": [
     1
   ],
   "brand_id": 1,
@@ -2505,6 +2512,9 @@ fetch('http://localhost:3000/api/v1/admin/products',
   "related_product_ids": [
     1
   ],
+  "category_ids": [
+    1
+  ],
   "brand_id": 1,
   "default_variant_sku": "string",
   "options": [
@@ -2573,6 +2583,1313 @@ fetch('http://localhost:3000/api/v1/admin/products',
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
 |201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created product|Product|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminDiscountCampaigns
+
+<a id="opIdlistAdminDiscountCampaigns"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/campaigns',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/discounts/campaigns`
+
+<h3 id="listadmindiscountcampaigns-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|status|query|string|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|status|active|
+|status|scheduled|
+|status|disabled|
+|status|archived|
+
+<h3 id="listadmindiscountcampaigns-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Product discount campaigns|DiscountCampaignListResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminDiscountCampaign
+
+<a id="opIdcreateAdminDiscountCampaign"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "product_ids": [
+    1
+  ],
+  "discount_mode": "percent",
+  "discount_value": 0.01,
+  "starts_at": "2019-08-24T14:15:22Z",
+  "ends_at": "2019-08-24T14:15:22Z",
+  "priority": 0,
+  "is_exclusive": false,
+  "status": "active",
+  "metadata": {},
+  "coupon_code": "string",
+  "channels": [
+    "web"
+  ],
+  "customer_segment": "string",
+  "global_usage_cap": 1,
+  "per_customer_usage_cap": 1
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/campaigns',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/discounts/campaigns`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "product_ids": [
+    1
+  ],
+  "discount_mode": "percent",
+  "discount_value": 0.01,
+  "starts_at": "2019-08-24T14:15:22Z",
+  "ends_at": "2019-08-24T14:15:22Z",
+  "priority": 0,
+  "is_exclusive": false,
+  "status": "active",
+  "metadata": {},
+  "coupon_code": "string",
+  "channels": [
+    "web"
+  ],
+  "customer_segment": "string",
+  "global_usage_cap": 1,
+  "per_customer_usage_cap": 1
+}
+```
+
+<h3 id="createadmindiscountcampaign-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|ProductDiscountInput|true|none|
+
+<h3 id="createadmindiscountcampaign-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created product discount campaign|DiscountCampaign|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid discount campaign|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminPromotionCampaign
+
+<a id="opIdcreateAdminPromotionCampaign"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "starts_at": "2019-08-24T14:15:22Z",
+  "ends_at": "2019-08-24T14:15:22Z",
+  "priority": 0,
+  "is_exclusive": false,
+  "status": "active",
+  "metadata": {},
+  "coupon_code": "string",
+  "channels": [
+    "web"
+  ],
+  "customer_segment": "string",
+  "global_usage_cap": 1,
+  "per_customer_usage_cap": 1,
+  "rules": [
+    {
+      "condition": {
+        "product_ids": [
+          1
+        ],
+        "product_variant_ids": [
+          1
+        ],
+        "category_ids": [
+          1
+        ],
+        "brand_ids": [
+          1
+        ],
+        "min_quantity": 1,
+        "min_subtotal": 0.01
+      },
+      "action": {
+        "mode": "percent",
+        "value": 0.1,
+        "target_type": "cart",
+        "target_ids": [
+          1
+        ],
+        "product_ids": [
+          1
+        ],
+        "product_variant_ids": [
+          1
+        ],
+        "category_ids": [
+          1
+        ],
+        "brand_ids": [
+          1
+        ],
+        "sku": "string"
+      },
+      "stack_policy": "none",
+      "max_applications_per_order": 1
+    }
+  ],
+  "levels": [
+    {
+      "name": "string",
+      "priority": 0,
+      "action": {
+        "mode": "percent",
+        "value": 0.1,
+        "target_type": "cart",
+        "target_ids": [
+          1
+        ],
+        "product_ids": [
+          1
+        ],
+        "product_variant_ids": [
+          1
+        ],
+        "category_ids": [
+          1
+        ],
+        "brand_ids": [
+          1
+        ],
+        "sku": "string"
+      },
+      "stack_policy": "none",
+      "max_applications_per_order": 1,
+      "targets": [
+        {
+          "target_type": "product",
+          "target_id": 1
+        }
+      ]
+    }
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/promotions',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/discounts/promotions`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "starts_at": "2019-08-24T14:15:22Z",
+  "ends_at": "2019-08-24T14:15:22Z",
+  "priority": 0,
+  "is_exclusive": false,
+  "status": "active",
+  "metadata": {},
+  "coupon_code": "string",
+  "channels": [
+    "web"
+  ],
+  "customer_segment": "string",
+  "global_usage_cap": 1,
+  "per_customer_usage_cap": 1,
+  "rules": [
+    {
+      "condition": {
+        "product_ids": [
+          1
+        ],
+        "product_variant_ids": [
+          1
+        ],
+        "category_ids": [
+          1
+        ],
+        "brand_ids": [
+          1
+        ],
+        "min_quantity": 1,
+        "min_subtotal": 0.01
+      },
+      "action": {
+        "mode": "percent",
+        "value": 0.1,
+        "target_type": "cart",
+        "target_ids": [
+          1
+        ],
+        "product_ids": [
+          1
+        ],
+        "product_variant_ids": [
+          1
+        ],
+        "category_ids": [
+          1
+        ],
+        "brand_ids": [
+          1
+        ],
+        "sku": "string"
+      },
+      "stack_policy": "none",
+      "max_applications_per_order": 1
+    }
+  ],
+  "levels": [
+    {
+      "name": "string",
+      "priority": 0,
+      "action": {
+        "mode": "percent",
+        "value": 0.1,
+        "target_type": "cart",
+        "target_ids": [
+          1
+        ],
+        "product_ids": [
+          1
+        ],
+        "product_variant_ids": [
+          1
+        ],
+        "category_ids": [
+          1
+        ],
+        "brand_ids": [
+          1
+        ],
+        "sku": "string"
+      },
+      "stack_policy": "none",
+      "max_applications_per_order": 1,
+      "targets": [
+        {
+          "target_type": "product",
+          "target_id": 1
+        }
+      ]
+    }
+  ]
+}
+```
+
+<h3 id="createadminpromotioncampaign-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|PromotionInput|true|none|
+
+<h3 id="createadminpromotioncampaign-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created promotion campaign|DiscountCampaign|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid promotion|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## previewAdminPromotion
+
+<a id="opIdpreviewAdminPromotion"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "coupon_code": "string",
+  "channel": "web",
+  "customer_segment": "string",
+  "lines": [
+    {
+      "product_id": 1,
+      "product_variant_id": 1,
+      "brand_id": 1,
+      "category_ids": [
+        1
+      ],
+      "sku": "string",
+      "quantity": 1,
+      "unit_price": 0.1
+    }
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/promotions/preview',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/discounts/promotions/preview`
+
+> Body parameter
+
+```json
+{
+  "coupon_code": "string",
+  "channel": "web",
+  "customer_segment": "string",
+  "lines": [
+    {
+      "product_id": 1,
+      "product_variant_id": 1,
+      "brand_id": 1,
+      "category_ids": [
+        1
+      ],
+      "sku": "string",
+      "quantity": 1,
+      "unit_price": 0.1
+    }
+  ]
+}
+```
+
+<h3 id="previewadminpromotion-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|PromotionEvaluationRequest|true|none|
+
+<h3 id="previewadminpromotion-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Promotion evaluation preview|PromotionEvaluationResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid preview request|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminPromotionTemplates
+
+<a id="opIdlistAdminPromotionTemplates"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/templates',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/discounts/templates`
+
+<h3 id="listadminpromotiontemplates-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|active|query|boolean|false|none|
+
+<h3 id="listadminpromotiontemplates-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Promotion templates|PromotionTemplateListResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminPromotionTemplate
+
+<a id="opIdcreateAdminPromotionTemplate"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "description": "string",
+  "template": {
+    "name": "string",
+    "starts_at": "2019-08-24T14:15:22Z",
+    "ends_at": "2019-08-24T14:15:22Z",
+    "priority": 0,
+    "is_exclusive": false,
+    "status": "active",
+    "metadata": {},
+    "coupon_code": "string",
+    "channels": [
+      "web"
+    ],
+    "customer_segment": "string",
+    "global_usage_cap": 1,
+    "per_customer_usage_cap": 1,
+    "rules": [
+      {
+        "condition": {
+          "product_ids": [
+            1
+          ],
+          "product_variant_ids": [
+            1
+          ],
+          "category_ids": [
+            1
+          ],
+          "brand_ids": [
+            1
+          ],
+          "min_quantity": 1,
+          "min_subtotal": 0.01
+        },
+        "action": {
+          "mode": "percent",
+          "value": 0.1,
+          "target_type": "cart",
+          "target_ids": [
+            1
+          ],
+          "product_ids": [
+            1
+          ],
+          "product_variant_ids": [
+            1
+          ],
+          "category_ids": [
+            1
+          ],
+          "brand_ids": [
+            1
+          ],
+          "sku": "string"
+        },
+        "stack_policy": "none",
+        "max_applications_per_order": 1
+      }
+    ],
+    "levels": [
+      {
+        "name": "string",
+        "priority": 0,
+        "action": {
+          "mode": "percent",
+          "value": 0.1,
+          "target_type": "cart",
+          "target_ids": [
+            1
+          ],
+          "product_ids": [
+            1
+          ],
+          "product_variant_ids": [
+            1
+          ],
+          "category_ids": [
+            1
+          ],
+          "brand_ids": [
+            1
+          ],
+          "sku": "string"
+        },
+        "stack_policy": "none",
+        "max_applications_per_order": 1,
+        "targets": [
+          {
+            "target_type": "product",
+            "target_id": 1
+          }
+        ]
+      }
+    ]
+  },
+  "is_active": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/templates',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/discounts/templates`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "description": "string",
+  "template": {
+    "name": "string",
+    "starts_at": "2019-08-24T14:15:22Z",
+    "ends_at": "2019-08-24T14:15:22Z",
+    "priority": 0,
+    "is_exclusive": false,
+    "status": "active",
+    "metadata": {},
+    "coupon_code": "string",
+    "channels": [
+      "web"
+    ],
+    "customer_segment": "string",
+    "global_usage_cap": 1,
+    "per_customer_usage_cap": 1,
+    "rules": [
+      {
+        "condition": {
+          "product_ids": [
+            1
+          ],
+          "product_variant_ids": [
+            1
+          ],
+          "category_ids": [
+            1
+          ],
+          "brand_ids": [
+            1
+          ],
+          "min_quantity": 1,
+          "min_subtotal": 0.01
+        },
+        "action": {
+          "mode": "percent",
+          "value": 0.1,
+          "target_type": "cart",
+          "target_ids": [
+            1
+          ],
+          "product_ids": [
+            1
+          ],
+          "product_variant_ids": [
+            1
+          ],
+          "category_ids": [
+            1
+          ],
+          "brand_ids": [
+            1
+          ],
+          "sku": "string"
+        },
+        "stack_policy": "none",
+        "max_applications_per_order": 1
+      }
+    ],
+    "levels": [
+      {
+        "name": "string",
+        "priority": 0,
+        "action": {
+          "mode": "percent",
+          "value": 0.1,
+          "target_type": "cart",
+          "target_ids": [
+            1
+          ],
+          "product_ids": [
+            1
+          ],
+          "product_variant_ids": [
+            1
+          ],
+          "category_ids": [
+            1
+          ],
+          "brand_ids": [
+            1
+          ],
+          "sku": "string"
+        },
+        "stack_policy": "none",
+        "max_applications_per_order": 1,
+        "targets": [
+          {
+            "target_type": "product",
+            "target_id": 1
+          }
+        ]
+      }
+    ]
+  },
+  "is_active": true
+}
+```
+
+<h3 id="createadminpromotiontemplate-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|PromotionTemplateInput|true|none|
+
+<h3 id="createadminpromotiontemplate-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created promotion template|PromotionTemplate|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid template|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## instantiateAdminPromotionTemplate
+
+<a id="opIdinstantiateAdminPromotionTemplate"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "starts_at": "2019-08-24T14:15:22Z",
+  "ends_at": "2019-08-24T14:15:22Z",
+  "coupon_code": "string",
+  "channels": [
+    "web"
+  ],
+  "customer_segment": "string",
+  "global_usage_cap": 1,
+  "per_customer_usage_cap": 1
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/templates/{id}/instantiate',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/discounts/templates/{id}/instantiate`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "starts_at": "2019-08-24T14:15:22Z",
+  "ends_at": "2019-08-24T14:15:22Z",
+  "coupon_code": "string",
+  "channels": [
+    "web"
+  ],
+  "customer_segment": "string",
+  "global_usage_cap": 1,
+  "per_customer_usage_cap": 1
+}
+```
+
+<h3 id="instantiateadminpromotiontemplate-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|PromotionTemplateInstantiateInput|true|none|
+
+<h3 id="instantiateadminpromotiontemplate-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created promotion campaign|DiscountCampaign|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid template instantiation|Error|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Promotion template not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateAdminDiscountCampaign
+
+<a id="opIdupdateAdminDiscountCampaign"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "product_ids": [
+    1
+  ],
+  "discount_mode": "percent",
+  "discount_value": 0.01,
+  "starts_at": "2019-08-24T14:15:22Z",
+  "ends_at": "2019-08-24T14:15:22Z",
+  "priority": 0,
+  "is_exclusive": false,
+  "status": "active",
+  "metadata": {},
+  "coupon_code": "string",
+  "channels": [
+    "web"
+  ],
+  "customer_segment": "string",
+  "global_usage_cap": 1,
+  "per_customer_usage_cap": 1
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/campaigns/{id}',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/discounts/campaigns/{id}`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "product_ids": [
+    1
+  ],
+  "discount_mode": "percent",
+  "discount_value": 0.01,
+  "starts_at": "2019-08-24T14:15:22Z",
+  "ends_at": "2019-08-24T14:15:22Z",
+  "priority": 0,
+  "is_exclusive": false,
+  "status": "active",
+  "metadata": {},
+  "coupon_code": "string",
+  "channels": [
+    "web"
+  ],
+  "customer_segment": "string",
+  "global_usage_cap": 1,
+  "per_customer_usage_cap": 1
+}
+```
+
+<h3 id="updateadmindiscountcampaign-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|ProductDiscountInput|true|none|
+
+<h3 id="updateadmindiscountcampaign-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated product discount campaign|DiscountCampaign|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid discount campaign|Error|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Discount campaign not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## disableAdminDiscountCampaign
+
+<a id="opIddisableAdminDiscountCampaign"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/campaigns/{id}/disable',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/discounts/campaigns/{id}/disable`
+
+<h3 id="disableadmindiscountcampaign-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="disableadmindiscountcampaign-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Disabled product discount campaign|DiscountCampaign|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Discount campaign not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## scheduleAdminDiscountCampaign
+
+<a id="opIdscheduleAdminDiscountCampaign"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "schedule_type": "one_time",
+  "recurrence": "daily",
+  "window_start": "2019-08-24T14:15:22Z",
+  "window_end": "2019-08-24T14:15:22Z",
+  "until_at": "2019-08-24T14:15:22Z",
+  "timezone": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/campaigns/{id}/schedule',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/discounts/campaigns/{id}/schedule`
+
+> Body parameter
+
+```json
+{
+  "schedule_type": "one_time",
+  "recurrence": "daily",
+  "window_start": "2019-08-24T14:15:22Z",
+  "window_end": "2019-08-24T14:15:22Z",
+  "until_at": "2019-08-24T14:15:22Z",
+  "timezone": "string"
+}
+```
+
+<h3 id="scheduleadmindiscountcampaign-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|DiscountScheduleInput|true|none|
+
+<h3 id="scheduleadmindiscountcampaign-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Saved discount schedule|DiscountSchedule|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid schedule|Error|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Discount campaign not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## archiveAdminDiscountCampaign
+
+<a id="opIdarchiveAdminDiscountCampaign"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/campaigns/{id}/archive',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/discounts/campaigns/{id}/archive`
+
+<h3 id="archiveadmindiscountcampaign-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="archiveadmindiscountcampaign-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Archived discount campaign|DiscountCampaign|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Discount campaign not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## runAdminDiscountLifecycle
+
+<a id="opIdrunAdminDiscountLifecycle"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/lifecycle/run',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/discounts/lifecycle/run`
+
+<h3 id="runadmindiscountlifecycle-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Discount lifecycle run summary|DiscountLifecycleRunResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminDiscountHistory
+
+<a id="opIdlistAdminDiscountHistory"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/history',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/discounts/history`
+
+<h3 id="listadmindiscounthistory-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|campaign_id|query|integer|false|none|
+
+<h3 id="listadmindiscounthistory-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Discount lifecycle history|DiscountStateHistoryListResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminDiscountAudit
+
+<a id="opIdlistAdminDiscountAudit"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/audit',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/discounts/audit`
+
+<h3 id="listadmindiscountaudit-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|campaign_id|query|integer|false|none|
+
+<h3 id="listadmindiscountaudit-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Discount campaign audit entries|DiscountCampaignAuditListResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminDiscountMetrics
+
+<a id="opIdgetAdminDiscountMetrics"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/metrics',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/discounts/metrics`
+
+<h3 id="getadmindiscountmetrics-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Discount evaluation metrics snapshot|DiscountEvaluationMetrics|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## runAdminDiscountReconciliation
+
+<a id="opIdrunAdminDiscountReconciliation"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/discounts/reconciliation/run',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/discounts/reconciliation/run`
+
+<h3 id="runadmindiscountreconciliation-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Discount schedule reconciliation report|DiscountReconciliationReport|
 
 <aside class="warning">
 To perform this operation, you must be authenticated by means of one of the following methods:
@@ -2798,6 +4115,230 @@ To perform this operation, you must be authenticated by means of one of the foll
 cookieAuth, bearerAuth
 </aside>
 
+## listAdminCategories
+
+<a id="opIdlistAdminCategories"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/categories',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/categories`
+
+<h3 id="listadmincategories-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|q|query|string|false|none|
+|include_inactive|query|boolean|false|none|
+
+<h3 id="listadmincategories-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Available categories|CategoryListResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminCategory
+
+<a id="opIdcreateAdminCategory"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "slug": "string",
+  "description": "string",
+  "is_active": true,
+  "sort_order": 0,
+  "parent_id": 1
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/categories',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/categories`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "slug": "string",
+  "description": "string",
+  "is_active": true,
+  "sort_order": 0,
+  "parent_id": 1
+}
+```
+
+<h3 id="createadmincategory-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|CategoryInput|true|none|
+
+<h3 id="createadmincategory-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created category|Category|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateAdminCategory
+
+<a id="opIdupdateAdminCategory"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "slug": "string",
+  "description": "string",
+  "is_active": true,
+  "sort_order": 0,
+  "parent_id": 1
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/categories/{id}',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/categories/{id}`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "slug": "string",
+  "description": "string",
+  "is_active": true,
+  "sort_order": 0,
+  "parent_id": 1
+}
+```
+
+<h3 id="updateadmincategory-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|CategoryInput|true|none|
+
+<h3 id="updateadmincategory-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated category|Category|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## deleteAdminCategory
+
+<a id="opIddeleteAdminCategory"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/categories/{id}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`DELETE /api/v1/admin/categories/{id}`
+
+<h3 id="deleteadmincategory-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="deleteadmincategory-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Deleted category|MessageResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
 ## listAdminProductAttributes
 
 <a id="opIdlistAdminProductAttributes"></a>
@@ -2849,7 +4390,10 @@ const inputBody = '{
   "slug": "string",
   "type": "text",
   "filterable": true,
-  "sortable": true
+  "sortable": true,
+  "enum_values": [
+    "string"
+  ]
 }';
 const headers = {
   'Content-Type':'application/json',
@@ -2880,7 +4424,10 @@ fetch('http://localhost:3000/api/v1/admin/product-attributes',
   "slug": "string",
   "type": "text",
   "filterable": true,
-  "sortable": true
+  "sortable": true,
+  "enum_values": [
+    "string"
+  ]
 }
 ```
 
@@ -2913,7 +4460,10 @@ const inputBody = '{
   "slug": "string",
   "type": "text",
   "filterable": true,
-  "sortable": true
+  "sortable": true,
+  "enum_values": [
+    "string"
+  ]
 }';
 const headers = {
   'Content-Type':'application/json',
@@ -2944,7 +4494,10 @@ fetch('http://localhost:3000/api/v1/admin/product-attributes/{id}',
   "slug": "string",
   "type": "text",
   "filterable": true,
-  "sortable": true
+  "sortable": true,
+  "enum_values": [
+    "string"
+  ]
 }
 ```
 
@@ -3075,6 +4628,9 @@ const inputBody = '{
   "related_product_ids": [
     1
   ],
+  "category_ids": [
+    1
+  ],
   "brand_id": 1,
   "default_variant_sku": "string",
   "options": [
@@ -3163,6 +4719,9 @@ fetch('http://localhost:3000/api/v1/admin/products/{id}',
     "string"
   ],
   "related_product_ids": [
+    1
+  ],
+  "category_ids": [
     1
   ],
   "brand_id": 1,
@@ -4803,9 +6362,9 @@ To perform this operation, you must be authenticated by means of one of the foll
 cookieAuth, bearerAuth
 </aside>
 
-## getAdminStorefrontSettings
+## listAdminInventoryReservations
 
-<a id="opIdgetAdminStorefrontSettings"></a>
+<a id="opIdlistAdminInventoryReservations"></a>
 
 > Code samples
 
@@ -4815,7 +6374,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('http://localhost:3000/api/v1/admin/storefront',
+fetch('http://localhost:3000/api/v1/admin/inventory/reservations',
 {
   method: 'GET',
 
@@ -4829,13 +6388,29 @@ fetch('http://localhost:3000/api/v1/admin/storefront',
 
 ```
 
-`GET /api/v1/admin/storefront`
+`GET /api/v1/admin/inventory/reservations`
 
-<h3 id="getadminstorefrontsettings-responses">Responses</h3>
+<h3 id="listadmininventoryreservations-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|status|query|array[string]|false|none|
+|limit|query|integer|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|status|ACTIVE|
+|status|CONSUMED|
+|status|RELEASED|
+|status|EXPIRED|
+
+<h3 id="listadmininventoryreservations-responses">Responses</h3>
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Storefront settings|StorefrontSettingsResponse|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Inventory reservations|InventoryReservationList|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Internal server error|Error|
 
 <aside class="warning">
@@ -4843,112 +6418,22 @@ To perform this operation, you must be authenticated by means of one of the foll
 cookieAuth, bearerAuth
 </aside>
 
-## updateStorefrontSettings
+## listAdminInventoryAlerts
 
-<a id="opIdupdateStorefrontSettings"></a>
+<a id="opIdlistAdminInventoryAlerts"></a>
 
 > Code samples
 
 ```javascript
-const inputBody = '{
-  "settings": {
-    "site_title": "string",
-    "homepage_sections": [
-      {
-        "id": "string",
-        "type": "hero",
-        "enabled": true,
-        "hero": {
-          "eyebrow": "string",
-          "title": "string",
-          "subtitle": "string",
-          "background_image_url": "string",
-          "background_image_media_id": "string",
-          "primary_cta": {
-            "label": "string",
-            "url": "string"
-          },
-          "secondary_cta": {
-            "label": "string",
-            "url": "string"
-          }
-        },
-        "product_section": {
-          "title": "string",
-          "subtitle": "string",
-          "source": "manual",
-          "query": "string",
-          "product_ids": [
-            1
-          ],
-          "sort": "created_at",
-          "order": "asc",
-          "limit": 1,
-          "brand_slug": "string",
-          "has_variant_stock": true,
-          "attribute_filters": {
-            "property1": "string",
-            "property2": "string"
-          },
-          "show_stock": true,
-          "show_description": true,
-          "image_aspect": "square"
-        },
-        "promo_cards": [
-          {
-            "kicker": "string",
-            "title": "string",
-            "description": "string",
-            "image_url": "string",
-            "link": {
-              "label": "string",
-              "url": "string"
-            }
-          }
-        ],
-        "promo_card_limit": 1,
-        "badges": [
-          "string"
-        ]
-      }
-    ],
-    "footer": {
-      "brand_name": "string",
-      "tagline": "string",
-      "copyright": "string",
-      "columns": [
-        {
-          "title": "string",
-          "links": [
-            {
-              "label": "string",
-              "url": "string"
-            }
-          ]
-        }
-      ],
-      "social_links": [
-        {
-          "label": "string",
-          "url": "string"
-        }
-      ],
-      "bottom_notice": "string"
-    },
-    "checkout": {
-      "allow_guest_checkout": true
-    }
-  }
-}';
+
 const headers = {
-  'Content-Type':'application/json',
   'Accept':'application/json'
 };
 
-fetch('http://localhost:3000/api/v1/admin/storefront',
+fetch('http://localhost:3000/api/v1/admin/inventory/alerts',
 {
-  method: 'PUT',
-  body: inputBody,
+  method: 'GET',
+
   headers: headers
 })
 .then(function(res) {
@@ -4959,124 +6444,38 @@ fetch('http://localhost:3000/api/v1/admin/storefront',
 
 ```
 
-`PUT /api/v1/admin/storefront`
+`GET /api/v1/admin/inventory/alerts`
 
-> Body parameter
-
-```json
-{
-  "settings": {
-    "site_title": "string",
-    "homepage_sections": [
-      {
-        "id": "string",
-        "type": "hero",
-        "enabled": true,
-        "hero": {
-          "eyebrow": "string",
-          "title": "string",
-          "subtitle": "string",
-          "background_image_url": "string",
-          "background_image_media_id": "string",
-          "primary_cta": {
-            "label": "string",
-            "url": "string"
-          },
-          "secondary_cta": {
-            "label": "string",
-            "url": "string"
-          }
-        },
-        "product_section": {
-          "title": "string",
-          "subtitle": "string",
-          "source": "manual",
-          "query": "string",
-          "product_ids": [
-            1
-          ],
-          "sort": "created_at",
-          "order": "asc",
-          "limit": 1,
-          "brand_slug": "string",
-          "has_variant_stock": true,
-          "attribute_filters": {
-            "property1": "string",
-            "property2": "string"
-          },
-          "show_stock": true,
-          "show_description": true,
-          "image_aspect": "square"
-        },
-        "promo_cards": [
-          {
-            "kicker": "string",
-            "title": "string",
-            "description": "string",
-            "image_url": "string",
-            "link": {
-              "label": "string",
-              "url": "string"
-            }
-          }
-        ],
-        "promo_card_limit": 1,
-        "badges": [
-          "string"
-        ]
-      }
-    ],
-    "footer": {
-      "brand_name": "string",
-      "tagline": "string",
-      "copyright": "string",
-      "columns": [
-        {
-          "title": "string",
-          "links": [
-            {
-              "label": "string",
-              "url": "string"
-            }
-          ]
-        }
-      ],
-      "social_links": [
-        {
-          "label": "string",
-          "url": "string"
-        }
-      ],
-      "bottom_notice": "string"
-    },
-    "checkout": {
-      "allow_guest_checkout": true
-    }
-  }
-}
-```
-
-<h3 id="updatestorefrontsettings-parameters">Parameters</h3>
+<h3 id="listadmininventoryalerts-parameters">Parameters</h3>
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
-|body|body|StorefrontSettingsRequest|true|none|
+|status|query|array[string]|false|none|
+|limit|query|integer|false|none|
 
-<h3 id="updatestorefrontsettings-responses">Responses</h3>
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|status|OPEN|
+|status|ACKED|
+|status|RESOLVED|
+
+<h3 id="listadmininventoryalerts-responses">Responses</h3>
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated storefront settings|StorefrontSettingsResponse|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Inventory alerts|InventoryAlertList|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Internal server error|Error|
 
 <aside class="warning">
 To perform this operation, you must be authenticated by means of one of the following methods:
 cookieAuth, bearerAuth
 </aside>
 
-## publishStorefrontSettings
+## ackAdminInventoryAlert
 
-<a id="opIdpublishStorefrontSettings"></a>
+<a id="opIdackAdminInventoryAlert"></a>
 
 > Code samples
 
@@ -5086,7 +6485,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('http://localhost:3000/api/v1/admin/storefront/publish',
+fetch('http://localhost:3000/api/v1/admin/inventory/alerts/{id}/ack',
 {
   method: 'POST',
 
@@ -5100,23 +6499,29 @@ fetch('http://localhost:3000/api/v1/admin/storefront/publish',
 
 ```
 
-`POST /api/v1/admin/storefront/publish`
+`POST /api/v1/admin/inventory/alerts/{id}/ack`
 
-<h3 id="publishstorefrontsettings-responses">Responses</h3>
+<h3 id="ackadmininventoryalert-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="ackadmininventoryalert-responses">Responses</h3>
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Published storefront settings|StorefrontSettingsResponse|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Acknowledged inventory alert|InventoryAlert|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid alert id|Error|
 
 <aside class="warning">
 To perform this operation, you must be authenticated by means of one of the following methods:
 cookieAuth, bearerAuth
 </aside>
 
-## discardStorefrontDraft
+## resolveAdminInventoryAlert
 
-<a id="opIddiscardStorefrontDraft"></a>
+<a id="opIdresolveAdminInventoryAlert"></a>
 
 > Code samples
 
@@ -5126,7 +6531,157 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('http://localhost:3000/api/v1/admin/storefront/draft',
+fetch('http://localhost:3000/api/v1/admin/inventory/alerts/{id}/resolve',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/inventory/alerts/{id}/resolve`
+
+<h3 id="resolveadmininventoryalert-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="resolveadmininventoryalert-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Resolved inventory alert|InventoryAlert|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid alert id|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminInventoryThresholds
+
+<a id="opIdlistAdminInventoryThresholds"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/inventory/thresholds',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/inventory/thresholds`
+
+<h3 id="listadmininventorythresholds-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|product_variant_id|query|integer|false|none|
+
+<h3 id="listadmininventorythresholds-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Inventory thresholds|InventoryThresholdList|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## upsertAdminInventoryThreshold
+
+<a id="opIdupsertAdminInventoryThreshold"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "product_variant_id": 0,
+  "low_stock_quantity": 0
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/inventory/thresholds',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/inventory/thresholds`
+
+> Body parameter
+
+```json
+{
+  "product_variant_id": 0,
+  "low_stock_quantity": 0
+}
+```
+
+<h3 id="upsertadmininventorythreshold-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|InventoryThresholdRequest|true|none|
+
+<h3 id="upsertadmininventorythreshold-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Inventory threshold|InventoryThreshold|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid threshold request|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## deleteAdminInventoryThreshold
+
+<a id="opIddeleteAdminInventoryThreshold"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/inventory/thresholds/{id}',
 {
   method: 'DELETE',
 
@@ -5140,13 +6695,5306 @@ fetch('http://localhost:3000/api/v1/admin/storefront/draft',
 
 ```
 
-`DELETE /api/v1/admin/storefront/draft`
+`DELETE /api/v1/admin/inventory/thresholds/{id}`
 
-<h3 id="discardstorefrontdraft-responses">Responses</h3>
+<h3 id="deleteadmininventorythreshold-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="deleteadmininventorythreshold-responses">Responses</h3>
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Storefront settings after draft discard|StorefrontSettingsResponse|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Inventory threshold deleted|MessageResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid threshold id|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminInventoryAdjustment
+
+<a id="opIdcreateAdminInventoryAdjustment"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "product_variant_id": 0,
+  "quantity_delta": 0,
+  "reason_code": "CYCLE_COUNT_GAIN",
+  "notes": "string",
+  "approved_by_type": "string",
+  "approved_by_id": 0
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/inventory/adjustments',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/inventory/adjustments`
+
+> Body parameter
+
+```json
+{
+  "product_variant_id": 0,
+  "quantity_delta": 0,
+  "reason_code": "CYCLE_COUNT_GAIN",
+  "notes": "string",
+  "approved_by_type": "string",
+  "approved_by_id": 0
+}
+```
+
+<h3 id="createadmininventoryadjustment-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|InventoryAdjustmentRequest|true|none|
+
+<h3 id="createadmininventoryadjustment-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Inventory adjustment created|InventoryAdjustmentResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid adjustment|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## runAdminInventoryReconciliation
+
+<a id="opIdrunAdminInventoryReconciliation"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/inventory/reconciliation',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/inventory/reconciliation`
+
+<h3 id="runadmininventoryreconciliation-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Inventory reconciliation report|InventoryReconciliationReport|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminInventoryTimeline
+
+<a id="opIdgetAdminInventoryTimeline"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/inventory/variants/{product_variant_id}/timeline',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/inventory/variants/{product_variant_id}/timeline`
+
+<h3 id="getadmininventorytimeline-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|product_variant_id|path|integer|true|none|
+|limit|query|integer|false|none|
+
+<h3 id="getadmininventorytimeline-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Inventory timeline|InventoryTimeline|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid product variant id|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminPurchaseOrders
+
+<a id="opIdlistAdminPurchaseOrders"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/purchase-orders',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/purchase-orders`
+
+<h3 id="listadminpurchaseorders-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|limit|query|integer|false|none|
+
+<h3 id="listadminpurchaseorders-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Purchase orders|PurchaseOrderList|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminPurchaseOrder
+
+<a id="opIdcreateAdminPurchaseOrder"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "supplier_id": 0,
+  "supplier": {
+    "name": "string",
+    "email": "string",
+    "notes": "string"
+  },
+  "notes": "string",
+  "items": [
+    {
+      "product_variant_id": 0,
+      "quantity_ordered": 1,
+      "unit_cost": 0
+    }
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/purchase-orders',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/purchase-orders`
+
+> Body parameter
+
+```json
+{
+  "supplier_id": 0,
+  "supplier": {
+    "name": "string",
+    "email": "string",
+    "notes": "string"
+  },
+  "notes": "string",
+  "items": [
+    {
+      "product_variant_id": 0,
+      "quantity_ordered": 1,
+      "unit_cost": 0
+    }
+  ]
+}
+```
+
+<h3 id="createadminpurchaseorder-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|PurchaseOrderRequest|true|none|
+
+<h3 id="createadminpurchaseorder-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Purchase order created|PurchaseOrder|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid purchase order|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## issueAdminPurchaseOrder
+
+<a id="opIdissueAdminPurchaseOrder"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/purchase-orders/{id}/issue',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/purchase-orders/{id}/issue`
+
+<h3 id="issueadminpurchaseorder-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="issueadminpurchaseorder-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Purchase order issued|PurchaseOrder|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid purchase order transition|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## cancelAdminPurchaseOrder
+
+<a id="opIdcancelAdminPurchaseOrder"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/purchase-orders/{id}/cancel',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/purchase-orders/{id}/cancel`
+
+<h3 id="canceladminpurchaseorder-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="canceladminpurchaseorder-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Purchase order cancelled|PurchaseOrder|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid purchase order transition|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## receiveAdminPurchaseOrder
+
+<a id="opIdreceiveAdminPurchaseOrder"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "notes": "string",
+  "items": [
+    {
+      "purchase_order_item_id": 0,
+      "quantity_received": 1
+    }
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/purchase-orders/{id}/receive',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/purchase-orders/{id}/receive`
+
+> Body parameter
+
+```json
+{
+  "notes": "string",
+  "items": [
+    {
+      "purchase_order_item_id": 0,
+      "quantity_received": 1
+    }
+  ]
+}
+```
+
+<h3 id="receiveadminpurchaseorder-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|PurchaseOrderReceiveRequest|true|none|
+
+<h3 id="receiveadminpurchaseorder-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Purchase order receipt|PurchaseOrderReceiptResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid receipt|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminCmsPages
+
+<a id="opIdlistAdminCmsPages"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/pages',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/pages`
+
+<h3 id="listadmincmspages-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|page|query|integer|false|none|
+|limit|query|integer|false|none|
+
+<h3 id="listadmincmspages-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS pages|CmsPageListResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminCmsPage
+
+<a id="opIdcreateAdminCmsPage"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "path": "string",
+  "slug": "string",
+  "title": "string",
+  "template_key": "string",
+  "visibility": "public",
+  "is_homepage": true,
+  "payload": {
+    "blocks": [
+      {
+        "type": "hero",
+        "title": "string",
+        "subtitle": "string",
+        "image_media_id": "string",
+        "primary_cta": {
+          "label": "string",
+          "url": "string"
+        }
+      }
+    ]
+  },
+  "change_summary": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/pages',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/pages`
+
+> Body parameter
+
+```json
+{
+  "path": "string",
+  "slug": "string",
+  "title": "string",
+  "template_key": "string",
+  "visibility": "public",
+  "is_homepage": true,
+  "payload": {
+    "blocks": [
+      {
+        "type": "hero",
+        "title": "string",
+        "subtitle": "string",
+        "image_media_id": "string",
+        "primary_cta": {
+          "label": "string",
+          "url": "string"
+        }
+      }
+    ]
+  },
+  "change_summary": "string"
+}
+```
+
+<h3 id="createadmincmspage-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|CmsPageDraftRequest|true|none|
+
+<h3 id="createadmincmspage-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created CMS page draft|CmsPageResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## previewAdminCmsPayload
+
+<a id="opIdpreviewAdminCmsPayload"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "payload": {
+    "blocks": [
+      {
+        "type": "hero",
+        "title": "string",
+        "subtitle": "string",
+        "image_media_id": "string",
+        "primary_cta": {
+          "label": "string",
+          "url": "string"
+        }
+      }
+    ]
+  }
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/preview',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/preview`
+
+> Body parameter
+
+```json
+{
+  "payload": {
+    "blocks": [
+      {
+        "type": "hero",
+        "title": "string",
+        "subtitle": "string",
+        "image_media_id": "string",
+        "primary_cta": {
+          "label": "string",
+          "url": "string"
+        }
+      }
+    ]
+  }
+}
+```
+
+<h3 id="previewadmincmspayload-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|CmsPreviewRequest|true|none|
+
+<h3 id="previewadmincmspayload-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Evaluated CMS commerce block preview|CmsPreviewResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid preview request|Error|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|Duplicate path|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminCmsPage
+
+<a id="opIdgetAdminCmsPage"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/pages/{id}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/pages/{id}`
+
+<h3 id="getadmincmspage-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="getadmincmspage-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS page|CmsPageResponse|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateAdminCmsPage
+
+<a id="opIdupdateAdminCmsPage"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "path": "string",
+  "slug": "string",
+  "title": "string",
+  "template_key": "string",
+  "visibility": "public",
+  "is_homepage": true,
+  "payload": {
+    "blocks": [
+      {
+        "type": "hero",
+        "title": "string",
+        "subtitle": "string",
+        "image_media_id": "string",
+        "primary_cta": {
+          "label": "string",
+          "url": "string"
+        }
+      }
+    ]
+  },
+  "change_summary": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/pages/{id}',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/cms/pages/{id}`
+
+> Body parameter
+
+```json
+{
+  "path": "string",
+  "slug": "string",
+  "title": "string",
+  "template_key": "string",
+  "visibility": "public",
+  "is_homepage": true,
+  "payload": {
+    "blocks": [
+      {
+        "type": "hero",
+        "title": "string",
+        "subtitle": "string",
+        "image_media_id": "string",
+        "primary_cta": {
+          "label": "string",
+          "url": "string"
+        }
+      }
+    ]
+  },
+  "change_summary": "string"
+}
+```
+
+<h3 id="updateadmincmspage-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|CmsPageDraftRequest|true|none|
+
+<h3 id="updateadmincmspage-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated CMS page draft|CmsPageResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|Duplicate path|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## publishAdminCmsPage
+
+<a id="opIdpublishAdminCmsPage"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "notes": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/pages/{id}/publish',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/pages/{id}/publish`
+
+> Body parameter
+
+```json
+{
+  "notes": "string"
+}
+```
+
+<h3 id="publishadmincmspage-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|CmsPublishRequest|false|none|
+
+<h3 id="publishadmincmspage-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Published CMS page|CmsPageResponse|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminCmsLocales
+
+<a id="opIdgetAdminCmsLocales"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/locales',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/locales`
+
+<h3 id="getadmincmslocales-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS locale registry and fallback configuration|CmsLocaleSettings|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateAdminCmsLocales
+
+<a id="opIdupdateAdminCmsLocales"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "locales": [
+    {
+      "code": "string",
+      "name": "string",
+      "enabled": true,
+      "is_default": true,
+      "fallback_locale": "string"
+    }
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/locales',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/cms/locales`
+
+> Body parameter
+
+```json
+{
+  "locales": [
+    {
+      "code": "string",
+      "name": "string",
+      "enabled": true,
+      "is_default": true,
+      "fallback_locale": "string"
+    }
+  ]
+}
+```
+
+<h3 id="updateadmincmslocales-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|CmsLocaleSettingsInput|true|none|
+
+<h3 id="updateadmincmslocales-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated CMS locale registry|CmsLocaleSettings|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid locale configuration|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminCmsPageVariants
+
+<a id="opIdlistAdminCmsPageVariants"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/pages/{id}/variants',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/pages/{id}/variants`
+
+<h3 id="listadmincmspagevariants-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="listadmincmspagevariants-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Localized and market-specific page variants|Inline|
+
+<h3 id="listadmincmspagevariants-responseschema">Response Schema</h3>
+
+Status Code **200**
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|[CmsPageVariant]|false|none|none|
+|» id|integer|true|none|none|
+|» page_id|integer|true|none|none|
+|» entry_id|integer|true|none|none|
+|» locale|string|true|none|none|
+|» market|string|true|none|none|
+|» path|string|true|none|none|
+|» slug|string|true|none|none|
+|» title|string|true|none|none|
+|» payload|CmsPagePayload|true|none|none|
+|»» blocks|[oneOf]|false|none|none|
+
+*oneOf*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsHeroBlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» title|string|true|none|none|
+|»»»» subtitle|string|false|none|none|
+|»»»» image_media_id|string|false|none|none|
+|»»»» primary_cta|CmsLink|false|none|none|
+|»»»»» label|string|true|none|none|
+|»»»»» url|string|true|none|none|
+
+*xor*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsRichTextBlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» body|string|true|none|none|
+
+*xor*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsImageBlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» media_id|string|true|none|none|
+|»»»» alt|string|false|none|none|
+|»»»» caption|string|false|none|none|
+
+*xor*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsGalleryBlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» images|[CmsGalleryImage]|true|none|none|
+|»»»»» media_id|string|true|none|none|
+|»»»»» alt|string|false|none|none|
+|»»»»» caption|string|false|none|none|
+
+*xor*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsVideoBlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» url|string|true|none|none|
+|»»»» title|string|false|none|none|
+
+*xor*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsFAQBlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» items|[object]|true|none|none|
+|»»»»» question|string|true|none|none|
+|»»»»» answer|string|true|none|none|
+
+*xor*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsCTABlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» label|string|true|none|none|
+|»»»» url|string|true|none|none|
+|»»»» body|string|false|none|none|
+
+*xor*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsPromoBannerBlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» title|string|true|none|none|
+|»»»» body|string|false|none|none|
+|»»»» link|CmsLink|false|none|none|
+
+*xor*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsProductRailBlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» title|string|true|none|none|
+|»»»» subtitle|string|false|none|none|
+|»»»» source|string|true|none|none|
+|»»»» product_ids|[integer]|false|none|none|
+|»»»» query|string|false|none|none|
+|»»»» category_slug|string|false|none|none|
+|»»»» sort|string|false|none|none|
+|»»»» order|string|false|none|none|
+|»»»» limit|integer|true|none|none|
+|»»»» show_stock|boolean|false|none|none|
+|»»»» show_description|boolean|false|none|none|
+|»»»» image_aspect|string|false|none|none|
+
+*xor*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsCategoryTilesBlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» title|string|true|none|none|
+|»»»» subtitle|string|false|none|none|
+|»»»» category_slugs|[string]|true|none|none|
+|»»»» category_media_ids|object|false|none|none|
+|»»»»» **additionalProperties**|string|false|none|none|
+|»»»» image_aspect|string|false|none|none|
+
+*xor*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsPromotionHighlightBlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» title|string|true|none|none|
+|»»»» body|string|false|none|none|
+|»»»» badge|string|false|none|none|
+|»»»» promotion_code|string|false|none|none|
+|»»»» campaign_id|integer|false|none|none|
+|»»»» link|CmsLink|false|none|none|
+
+*xor*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsInventoryMessageBlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» product_id|integer|true|none|none|
+|»»»» low_stock_threshold|integer|false|none|none|
+|»»»» in_stock_message|string|false|none|none|
+|»»»» low_stock_message|string|false|none|none|
+|»»»» out_of_stock_message|string|false|none|none|
+
+*xor*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsTestimonialBlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» quote|string|true|none|none|
+|»»»» attribution|string|true|none|none|
+|»»»» rating|integer|false|none|none|
+
+*xor*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsSocialEmbedBlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» provider|string|true|none|none|
+|»»»» url|string|true|none|none|
+|»»»» title|string|false|none|none|
+
+*xor*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsCustomHTMLBlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» html|string|true|none|none|
+
+*xor*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|»»» *anonymous*|CmsFooterBlock|false|none|none|
+|»»»» type|string|true|none|none|
+|»»»» brand_name|string|true|none|none|
+|»»»» tagline|string|false|none|none|
+|»»»» columns|[CmsFooterColumn]|true|none|none|
+|»»»»» title|string|true|none|none|
+|»»»»» links|[CmsLink]|true|none|none|
+|»»»» social_links|[CmsLink]|true|none|none|
+|»»»» copyright|string|true|none|none|
+|»»»» layout|string|true|none|none|
+|»»»» theme|string|true|none|none|
+
+*continued*
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|» status|string|true|none|none|
+|» revision|integer|true|none|none|
+|» submitted_by|string¦null|false|none|none|
+|» approved_by|string¦null|false|none|none|
+|» published_at|string(date-time)¦null|false|none|none|
+|» created_at|string(date-time)|true|none|none|
+|» updated_at|string(date-time)|true|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|type|hero|
+|type|rich_text|
+|type|image|
+|type|gallery|
+|type|video|
+|type|faq|
+|type|cta|
+|type|promo_banner|
+|type|product_rail|
+|source|manual|
+|source|newest|
+|source|search|
+|source|category|
+|sort|created_at|
+|sort|price|
+|sort|name|
+|order|asc|
+|order|desc|
+|image_aspect|square|
+|image_aspect|wide|
+|type|category_tiles|
+|image_aspect|square|
+|image_aspect|wide|
+|type|promotion_highlight|
+|type|inventory_message|
+|type|testimonial|
+|type|social_embed|
+|provider|instagram|
+|provider|tiktok|
+|provider|youtube|
+|type|custom_html|
+|type|footer|
+|layout|columns|
+|layout|centered|
+|layout|minimal|
+|theme|light|
+|theme|dark|
+|theme|contrast|
+|status|draft|
+|status|in_review|
+|status|changes_requested|
+|status|approved|
+|status|published|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminCmsPageVariant
+
+<a id="opIdcreateAdminCmsPageVariant"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "locale": "string",
+  "market": "string",
+  "path": "string",
+  "slug": "string",
+  "title": "string",
+  "payload": {
+    "blocks": [
+      {
+        "type": "hero",
+        "title": "string",
+        "subtitle": "string",
+        "image_media_id": "string",
+        "primary_cta": {
+          "label": "string",
+          "url": "string"
+        }
+      }
+    ]
+  },
+  "change_summary": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/pages/{id}/variants',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/pages/{id}/variants`
+
+> Body parameter
+
+```json
+{
+  "locale": "string",
+  "market": "string",
+  "path": "string",
+  "slug": "string",
+  "title": "string",
+  "payload": {
+    "blocks": [
+      {
+        "type": "hero",
+        "title": "string",
+        "subtitle": "string",
+        "image_media_id": "string",
+        "primary_cta": {
+          "label": "string",
+          "url": "string"
+        }
+      }
+    ]
+  },
+  "change_summary": "string"
+}
+```
+
+<h3 id="createadmincmspagevariant-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|CmsPageVariantInput|true|none|
+
+<h3 id="createadmincmspagevariant-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created page variant draft|CmsPageVariant|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid page variant|Error|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|Duplicate locale and market variant or localized path|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateAdminCmsPageVariant
+
+<a id="opIdupdateAdminCmsPageVariant"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "locale": "string",
+  "market": "string",
+  "path": "string",
+  "slug": "string",
+  "title": "string",
+  "payload": {
+    "blocks": [
+      {
+        "type": "hero",
+        "title": "string",
+        "subtitle": "string",
+        "image_media_id": "string",
+        "primary_cta": {
+          "label": "string",
+          "url": "string"
+        }
+      }
+    ]
+  },
+  "change_summary": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/pages/{id}/variants/{variant_id}',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/cms/pages/{id}/variants/{variant_id}`
+
+> Body parameter
+
+```json
+{
+  "locale": "string",
+  "market": "string",
+  "path": "string",
+  "slug": "string",
+  "title": "string",
+  "payload": {
+    "blocks": [
+      {
+        "type": "hero",
+        "title": "string",
+        "subtitle": "string",
+        "image_media_id": "string",
+        "primary_cta": {
+          "label": "string",
+          "url": "string"
+        }
+      }
+    ]
+  },
+  "change_summary": "string"
+}
+```
+
+<h3 id="updateadmincmspagevariant-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|variant_id|path|integer|true|none|
+|body|body|CmsPageVariantInput|true|none|
+
+<h3 id="updateadmincmspagevariant-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated page variant draft|CmsPageVariant|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid page variant|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## deleteAdminCmsPageVariant
+
+<a id="opIddeleteAdminCmsPageVariant"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/pages/{id}/variants/{variant_id}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`DELETE /api/v1/admin/cms/pages/{id}/variants/{variant_id}`
+
+<h3 id="deleteadmincmspagevariant-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|variant_id|path|integer|true|none|
+
+<h3 id="deleteadmincmspagevariant-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Deleted page variant|MessageResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## transitionAdminCmsPageVariant
+
+<a id="opIdtransitionAdminCmsPageVariant"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "comment": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/pages/{id}/variants/{variant_id}/{action}',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/pages/{id}/variants/{variant_id}/{action}`
+
+> Body parameter
+
+```json
+{
+  "comment": "string"
+}
+```
+
+<h3 id="transitionadmincmspagevariant-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|variant_id|path|integer|true|none|
+|action|path|string|true|none|
+|body|body|CmsWorkflowActionInput|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|action|submit|
+|action|approve|
+|action|request_changes|
+|action|publish|
+|action|rollback|
+
+<h3 id="transitionadmincmspagevariant-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Transitioned page variant workflow|CmsPageVariant|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid workflow transition|Error|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|Insufficient CMS permission|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminCmsAuditEvents
+
+<a id="opIdlistAdminCmsAuditEvents"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/audit',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/audit`
+
+<h3 id="listadmincmsauditevents-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|entry_id|query|integer|false|none|
+|limit|query|integer|false|none|
+
+<h3 id="listadmincmsauditevents-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS mutation and publication audit trail|Inline|
+
+<h3 id="listadmincmsauditevents-responseschema">Response Schema</h3>
+
+Status Code **200**
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|[CmsAuditEvent]|false|none|none|
+|» id|integer|true|none|none|
+|» entry_id|integer|true|none|none|
+|» version_id|integer¦null|false|none|none|
+|» variant_id|integer¦null|false|none|none|
+|» action|string|true|none|none|
+|» actor|string|true|none|none|
+|» detail|string|true|none|none|
+|» created_at|string(date-time)|true|none|none|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminCmsGovernance
+
+<a id="opIdgetAdminCmsGovernance"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/governance',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/governance`
+
+<h3 id="getadmincmsgovernance-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS governance settings and role assignments|CmsGovernance|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateAdminCmsGovernance
+
+<a id="opIdupdateAdminCmsGovernance"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "approval_required": true,
+  "invalidation_webhook_url": "string",
+  "roles": [
+    {
+      "subject": "string",
+      "role": "author"
+    }
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/governance',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/cms/governance`
+
+> Body parameter
+
+```json
+{
+  "approval_required": true,
+  "invalidation_webhook_url": "string",
+  "roles": [
+    {
+      "subject": "string",
+      "role": "author"
+    }
+  ]
+}
+```
+
+<h3 id="updateadmincmsgovernance-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|CmsGovernanceInput|true|none|
+
+<h3 id="updateadmincmsgovernance-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated CMS governance settings|CmsGovernance|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminCmsEntryWorkflow
+
+<a id="opIdgetAdminCmsEntryWorkflow"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/entries/{id}/workflow',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/entries/{id}/workflow`
+
+<h3 id="getadmincmsentryworkflow-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="getadmincmsentryworkflow-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Entry workflow and comments|CmsEntryWorkflow|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## transitionAdminCmsEntryWorkflow
+
+<a id="opIdtransitionAdminCmsEntryWorkflow"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "comment": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/entries/{id}/workflow/{action}',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/entries/{id}/workflow/{action}`
+
+> Body parameter
+
+```json
+{
+  "comment": "string"
+}
+```
+
+<h3 id="transitionadmincmsentryworkflow-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|action|path|string|true|none|
+|body|body|CmsWorkflowActionInput|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|action|submit|
+|action|approve|
+|action|request_changes|
+|action|reset|
+
+<h3 id="transitionadmincmsentryworkflow-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated entry workflow|CmsEntryWorkflow|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminCmsEntryComment
+
+<a id="opIdcreateAdminCmsEntryComment"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "body": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/entries/{id}/comments',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/entries/{id}/comments`
+
+> Body parameter
+
+```json
+{
+  "body": "string"
+}
+```
+
+<h3 id="createadmincmsentrycomment-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|CmsCommentInput|true|none|
+
+<h3 id="createadmincmsentrycomment-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Added editorial comment|CmsChangeComment|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## resolveAdminCmsComment
+
+<a id="opIdresolveAdminCmsComment"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/comments/{id}/resolve',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/comments/{id}/resolve`
+
+<h3 id="resolveadmincmscomment-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="resolveadmincmscomment-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Resolved editorial comment|CmsChangeComment|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminCmsEntryVariants
+
+<a id="opIdlistAdminCmsEntryVariants"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/entries/{id}/variants',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/entries/{id}/variants`
+
+<h3 id="listadmincmsentryvariants-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="listadmincmsentryvariants-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Localized entry variants|Inline|
+
+<h3 id="listadmincmsentryvariants-responseschema">Response Schema</h3>
+
+Status Code **200**
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|[CmsEntryVariant]|false|none|none|
+|» id|integer|true|none|none|
+|» entry_id|integer|true|none|none|
+|» locale|string|true|none|none|
+|» market|string|true|none|none|
+|» payload|object|true|none|none|
+|» status|string|true|none|none|
+|» revision|integer|true|none|none|
+|» submitted_by|string¦null|false|none|none|
+|» approved_by|string¦null|false|none|none|
+|» published_at|string(date-time)¦null|false|none|none|
+|» created_at|string(date-time)|true|none|none|
+|» updated_at|string(date-time)|true|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|status|draft|
+|status|in_review|
+|status|changes_requested|
+|status|approved|
+|status|published|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminCmsEntryVariant
+
+<a id="opIdcreateAdminCmsEntryVariant"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "locale": "string",
+  "market": "string",
+  "payload": {},
+  "change_summary": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/entries/{id}/variants',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/entries/{id}/variants`
+
+> Body parameter
+
+```json
+{
+  "locale": "string",
+  "market": "string",
+  "payload": {},
+  "change_summary": "string"
+}
+```
+
+<h3 id="createadmincmsentryvariant-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|CmsEntryVariantInput|true|none|
+
+<h3 id="createadmincmsentryvariant-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created localized entry variant|CmsEntryVariant|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateAdminCmsEntryVariant
+
+<a id="opIdupdateAdminCmsEntryVariant"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "locale": "string",
+  "market": "string",
+  "payload": {},
+  "change_summary": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/entries/{id}/variants/{variant_id}',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/cms/entries/{id}/variants/{variant_id}`
+
+> Body parameter
+
+```json
+{
+  "locale": "string",
+  "market": "string",
+  "payload": {},
+  "change_summary": "string"
+}
+```
+
+<h3 id="updateadmincmsentryvariant-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|variant_id|path|integer|true|none|
+|body|body|CmsEntryVariantInput|true|none|
+
+<h3 id="updateadmincmsentryvariant-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated localized entry variant|CmsEntryVariant|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## deleteAdminCmsEntryVariant
+
+<a id="opIddeleteAdminCmsEntryVariant"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/entries/{id}/variants/{variant_id}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`DELETE /api/v1/admin/cms/entries/{id}/variants/{variant_id}`
+
+<h3 id="deleteadmincmsentryvariant-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|variant_id|path|integer|true|none|
+
+<h3 id="deleteadmincmsentryvariant-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Deleted localized entry variant|MessageResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## transitionAdminCmsEntryVariant
+
+<a id="opIdtransitionAdminCmsEntryVariant"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "comment": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/entries/{id}/variants/{variant_id}/{action}',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/entries/{id}/variants/{variant_id}/{action}`
+
+> Body parameter
+
+```json
+{
+  "comment": "string"
+}
+```
+
+<h3 id="transitionadmincmsentryvariant-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|variant_id|path|integer|true|none|
+|action|path|string|true|none|
+|body|body|CmsWorkflowActionInput|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|action|submit|
+|action|approve|
+|action|request_changes|
+|action|publish|
+|action|reset|
+
+<h3 id="transitionadmincmsentryvariant-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Transitioned localized entry variant|CmsEntryVariant|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminCmsOperations
+
+<a id="opIdgetAdminCmsOperations"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/operations',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/operations`
+
+<h3 id="getadmincmsoperations-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS publish queue and invalidation operations|CmsOperations|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## retryAdminCmsInvalidation
+
+<a id="opIdretryAdminCmsInvalidation"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/operations/invalidation/{id}/retry',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/operations/invalidation/{id}/retry`
+
+<h3 id="retryadmincmsinvalidation-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="retryadmincmsinvalidation-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Invalidation queued for retry|MessageResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## previewAdminCmsRestore
+
+<a id="opIdpreviewAdminCmsRestore"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "schema_version": 0,
+  "exported_at": "2019-08-24T14:15:22Z",
+  "locales": [
+    {
+      "code": "string",
+      "name": "string",
+      "enabled": true,
+      "is_default": true,
+      "fallback_locale": "string"
+    }
+  ],
+  "pages": [
+    {
+      "page": {
+        "id": 1,
+        "entry_id": 1,
+        "path": "string",
+        "slug": "string",
+        "title": "string",
+        "template_key": "string",
+        "visibility": "public",
+        "seo_metadata_id": 0,
+        "is_homepage": true,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "entry": {
+        "id": 1,
+        "entry_type": "page",
+        "key": "string",
+        "status": "DRAFT",
+        "current_version_id": 0,
+        "published_version_id": 0,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "current_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "published_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "latest_publication": {
+        "id": 1,
+        "entry_id": 1,
+        "version_id": 1,
+        "published_by": 0,
+        "published_at": "2019-08-24T14:15:22Z",
+        "rollback_from_publication_id": 0,
+        "notes": "string"
+      },
+      "has_unpublished_draft": true,
+      "delivery": {
+        "content_version_id": 1,
+        "experiment_id": 1,
+        "experiment_variant_id": 1,
+        "correlation_id": "string"
+      },
+      "seo": {
+        "title": "string",
+        "description": "string",
+        "canonical_url": "string",
+        "robots": "index_follow",
+        "og_title": "string",
+        "og_description": "string",
+        "og_image_media_id": "string",
+        "twitter_card": "summary",
+        "twitter_title": "string",
+        "twitter_description": "string",
+        "twitter_image_media_id": "string",
+        "json_ld": [
+          {}
+        ]
+      },
+      "localization": {
+        "requested_locale": "string",
+        "resolved_locale": "string",
+        "market": "string",
+        "used_fallback": true,
+        "alternates": [
+          {
+            "locale": "string",
+            "market": "string",
+            "path": "string"
+          }
+        ]
+      }
+    }
+  ],
+  "navigation": [
+    {
+      "menu": {
+        "id": 1,
+        "entry_id": 1,
+        "key": "string",
+        "title": "string",
+        "location": "string",
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "entry": {
+        "id": 1,
+        "entry_type": "page",
+        "key": "string",
+        "status": "DRAFT",
+        "current_version_id": 0,
+        "published_version_id": 0,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "items": [
+        {
+          "id": 0,
+          "menu_id": 0,
+          "parent_id": 0,
+          "label": "string",
+          "item_type": "internal",
+          "target_ref": "string",
+          "url": "string",
+          "sort_order": 0,
+          "is_enabled": true
+        }
+      ],
+      "current_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "published_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "latest_publication": {
+        "id": 1,
+        "entry_id": 1,
+        "version_id": 1,
+        "published_by": 0,
+        "published_at": "2019-08-24T14:15:22Z",
+        "rollback_from_publication_id": 0,
+        "notes": "string"
+      },
+      "has_unpublished_draft": true
+    }
+  ],
+  "global_regions": [
+    {
+      "region": {
+        "id": 1,
+        "entry_id": 1,
+        "key": "string",
+        "title": "string",
+        "region": "string",
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "entry": {
+        "id": 1,
+        "entry_type": "page",
+        "key": "string",
+        "status": "DRAFT",
+        "current_version_id": 0,
+        "published_version_id": 0,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "current_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "published_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "latest_publication": {
+        "id": 1,
+        "entry_id": 1,
+        "version_id": 1,
+        "published_by": 0,
+        "published_at": "2019-08-24T14:15:22Z",
+        "rollback_from_publication_id": 0,
+        "notes": "string"
+      },
+      "has_unpublished_draft": true
+    }
+  ],
+  "variants": [
+    {
+      "id": 1,
+      "page_id": 1,
+      "entry_id": 1,
+      "locale": "string",
+      "market": "string",
+      "path": "string",
+      "slug": "string",
+      "title": "string",
+      "payload": {
+        "blocks": [
+          {
+            "type": "hero",
+            "title": "string",
+            "subtitle": "string",
+            "image_media_id": "string",
+            "primary_cta": {
+              "label": "string",
+              "url": "string"
+            }
+          }
+        ]
+      },
+      "status": "draft",
+      "revision": 1,
+      "submitted_by": "string",
+      "approved_by": "string",
+      "published_at": "2019-08-24T14:15:22Z",
+      "created_at": "2019-08-24T14:15:22Z",
+      "updated_at": "2019-08-24T14:15:22Z"
+    }
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/restore/preview',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/restore/preview`
+
+> Body parameter
+
+```json
+{
+  "schema_version": 0,
+  "exported_at": "2019-08-24T14:15:22Z",
+  "locales": [
+    {
+      "code": "string",
+      "name": "string",
+      "enabled": true,
+      "is_default": true,
+      "fallback_locale": "string"
+    }
+  ],
+  "pages": [
+    {
+      "page": {
+        "id": 1,
+        "entry_id": 1,
+        "path": "string",
+        "slug": "string",
+        "title": "string",
+        "template_key": "string",
+        "visibility": "public",
+        "seo_metadata_id": 0,
+        "is_homepage": true,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "entry": {
+        "id": 1,
+        "entry_type": "page",
+        "key": "string",
+        "status": "DRAFT",
+        "current_version_id": 0,
+        "published_version_id": 0,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "current_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "published_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "latest_publication": {
+        "id": 1,
+        "entry_id": 1,
+        "version_id": 1,
+        "published_by": 0,
+        "published_at": "2019-08-24T14:15:22Z",
+        "rollback_from_publication_id": 0,
+        "notes": "string"
+      },
+      "has_unpublished_draft": true,
+      "delivery": {
+        "content_version_id": 1,
+        "experiment_id": 1,
+        "experiment_variant_id": 1,
+        "correlation_id": "string"
+      },
+      "seo": {
+        "title": "string",
+        "description": "string",
+        "canonical_url": "string",
+        "robots": "index_follow",
+        "og_title": "string",
+        "og_description": "string",
+        "og_image_media_id": "string",
+        "twitter_card": "summary",
+        "twitter_title": "string",
+        "twitter_description": "string",
+        "twitter_image_media_id": "string",
+        "json_ld": [
+          {}
+        ]
+      },
+      "localization": {
+        "requested_locale": "string",
+        "resolved_locale": "string",
+        "market": "string",
+        "used_fallback": true,
+        "alternates": [
+          {
+            "locale": "string",
+            "market": "string",
+            "path": "string"
+          }
+        ]
+      }
+    }
+  ],
+  "navigation": [
+    {
+      "menu": {
+        "id": 1,
+        "entry_id": 1,
+        "key": "string",
+        "title": "string",
+        "location": "string",
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "entry": {
+        "id": 1,
+        "entry_type": "page",
+        "key": "string",
+        "status": "DRAFT",
+        "current_version_id": 0,
+        "published_version_id": 0,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "items": [
+        {
+          "id": 0,
+          "menu_id": 0,
+          "parent_id": 0,
+          "label": "string",
+          "item_type": "internal",
+          "target_ref": "string",
+          "url": "string",
+          "sort_order": 0,
+          "is_enabled": true
+        }
+      ],
+      "current_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "published_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "latest_publication": {
+        "id": 1,
+        "entry_id": 1,
+        "version_id": 1,
+        "published_by": 0,
+        "published_at": "2019-08-24T14:15:22Z",
+        "rollback_from_publication_id": 0,
+        "notes": "string"
+      },
+      "has_unpublished_draft": true
+    }
+  ],
+  "global_regions": [
+    {
+      "region": {
+        "id": 1,
+        "entry_id": 1,
+        "key": "string",
+        "title": "string",
+        "region": "string",
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "entry": {
+        "id": 1,
+        "entry_type": "page",
+        "key": "string",
+        "status": "DRAFT",
+        "current_version_id": 0,
+        "published_version_id": 0,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "current_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "published_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "latest_publication": {
+        "id": 1,
+        "entry_id": 1,
+        "version_id": 1,
+        "published_by": 0,
+        "published_at": "2019-08-24T14:15:22Z",
+        "rollback_from_publication_id": 0,
+        "notes": "string"
+      },
+      "has_unpublished_draft": true
+    }
+  ],
+  "variants": [
+    {
+      "id": 1,
+      "page_id": 1,
+      "entry_id": 1,
+      "locale": "string",
+      "market": "string",
+      "path": "string",
+      "slug": "string",
+      "title": "string",
+      "payload": {
+        "blocks": [
+          {
+            "type": "hero",
+            "title": "string",
+            "subtitle": "string",
+            "image_media_id": "string",
+            "primary_cta": {
+              "label": "string",
+              "url": "string"
+            }
+          }
+        ]
+      },
+      "status": "draft",
+      "revision": 1,
+      "submitted_by": "string",
+      "approved_by": "string",
+      "published_at": "2019-08-24T14:15:22Z",
+      "created_at": "2019-08-24T14:15:22Z",
+      "updated_at": "2019-08-24T14:15:22Z"
+    }
+  ]
+}
+```
+
+<h3 id="previewadmincmsrestore-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|CmsContentExport|true|none|
+
+<h3 id="previewadmincmsrestore-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS restore dry-run report|CmsRestorePreview|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## exportAdminCmsContent
+
+<a id="opIdexportAdminCmsContent"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/export',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/export`
+
+<h3 id="exportadmincmscontent-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Portable CMS backup export|CmsContentExport|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## restoreAdminCmsContent
+
+<a id="opIdrestoreAdminCmsContent"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "schema_version": 0,
+  "exported_at": "2019-08-24T14:15:22Z",
+  "locales": [
+    {
+      "code": "string",
+      "name": "string",
+      "enabled": true,
+      "is_default": true,
+      "fallback_locale": "string"
+    }
+  ],
+  "pages": [
+    {
+      "page": {
+        "id": 1,
+        "entry_id": 1,
+        "path": "string",
+        "slug": "string",
+        "title": "string",
+        "template_key": "string",
+        "visibility": "public",
+        "seo_metadata_id": 0,
+        "is_homepage": true,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "entry": {
+        "id": 1,
+        "entry_type": "page",
+        "key": "string",
+        "status": "DRAFT",
+        "current_version_id": 0,
+        "published_version_id": 0,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "current_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "published_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "latest_publication": {
+        "id": 1,
+        "entry_id": 1,
+        "version_id": 1,
+        "published_by": 0,
+        "published_at": "2019-08-24T14:15:22Z",
+        "rollback_from_publication_id": 0,
+        "notes": "string"
+      },
+      "has_unpublished_draft": true,
+      "delivery": {
+        "content_version_id": 1,
+        "experiment_id": 1,
+        "experiment_variant_id": 1,
+        "correlation_id": "string"
+      },
+      "seo": {
+        "title": "string",
+        "description": "string",
+        "canonical_url": "string",
+        "robots": "index_follow",
+        "og_title": "string",
+        "og_description": "string",
+        "og_image_media_id": "string",
+        "twitter_card": "summary",
+        "twitter_title": "string",
+        "twitter_description": "string",
+        "twitter_image_media_id": "string",
+        "json_ld": [
+          {}
+        ]
+      },
+      "localization": {
+        "requested_locale": "string",
+        "resolved_locale": "string",
+        "market": "string",
+        "used_fallback": true,
+        "alternates": [
+          {
+            "locale": "string",
+            "market": "string",
+            "path": "string"
+          }
+        ]
+      }
+    }
+  ],
+  "navigation": [
+    {
+      "menu": {
+        "id": 1,
+        "entry_id": 1,
+        "key": "string",
+        "title": "string",
+        "location": "string",
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "entry": {
+        "id": 1,
+        "entry_type": "page",
+        "key": "string",
+        "status": "DRAFT",
+        "current_version_id": 0,
+        "published_version_id": 0,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "items": [
+        {
+          "id": 0,
+          "menu_id": 0,
+          "parent_id": 0,
+          "label": "string",
+          "item_type": "internal",
+          "target_ref": "string",
+          "url": "string",
+          "sort_order": 0,
+          "is_enabled": true
+        }
+      ],
+      "current_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "published_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "latest_publication": {
+        "id": 1,
+        "entry_id": 1,
+        "version_id": 1,
+        "published_by": 0,
+        "published_at": "2019-08-24T14:15:22Z",
+        "rollback_from_publication_id": 0,
+        "notes": "string"
+      },
+      "has_unpublished_draft": true
+    }
+  ],
+  "global_regions": [
+    {
+      "region": {
+        "id": 1,
+        "entry_id": 1,
+        "key": "string",
+        "title": "string",
+        "region": "string",
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "entry": {
+        "id": 1,
+        "entry_type": "page",
+        "key": "string",
+        "status": "DRAFT",
+        "current_version_id": 0,
+        "published_version_id": 0,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "current_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "published_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "latest_publication": {
+        "id": 1,
+        "entry_id": 1,
+        "version_id": 1,
+        "published_by": 0,
+        "published_at": "2019-08-24T14:15:22Z",
+        "rollback_from_publication_id": 0,
+        "notes": "string"
+      },
+      "has_unpublished_draft": true
+    }
+  ],
+  "variants": [
+    {
+      "id": 1,
+      "page_id": 1,
+      "entry_id": 1,
+      "locale": "string",
+      "market": "string",
+      "path": "string",
+      "slug": "string",
+      "title": "string",
+      "payload": {
+        "blocks": [
+          {
+            "type": "hero",
+            "title": "string",
+            "subtitle": "string",
+            "image_media_id": "string",
+            "primary_cta": {
+              "label": "string",
+              "url": "string"
+            }
+          }
+        ]
+      },
+      "status": "draft",
+      "revision": 1,
+      "submitted_by": "string",
+      "approved_by": "string",
+      "published_at": "2019-08-24T14:15:22Z",
+      "created_at": "2019-08-24T14:15:22Z",
+      "updated_at": "2019-08-24T14:15:22Z"
+    }
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/export',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/export`
+
+> Body parameter
+
+```json
+{
+  "schema_version": 0,
+  "exported_at": "2019-08-24T14:15:22Z",
+  "locales": [
+    {
+      "code": "string",
+      "name": "string",
+      "enabled": true,
+      "is_default": true,
+      "fallback_locale": "string"
+    }
+  ],
+  "pages": [
+    {
+      "page": {
+        "id": 1,
+        "entry_id": 1,
+        "path": "string",
+        "slug": "string",
+        "title": "string",
+        "template_key": "string",
+        "visibility": "public",
+        "seo_metadata_id": 0,
+        "is_homepage": true,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "entry": {
+        "id": 1,
+        "entry_type": "page",
+        "key": "string",
+        "status": "DRAFT",
+        "current_version_id": 0,
+        "published_version_id": 0,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "current_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "published_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "latest_publication": {
+        "id": 1,
+        "entry_id": 1,
+        "version_id": 1,
+        "published_by": 0,
+        "published_at": "2019-08-24T14:15:22Z",
+        "rollback_from_publication_id": 0,
+        "notes": "string"
+      },
+      "has_unpublished_draft": true,
+      "delivery": {
+        "content_version_id": 1,
+        "experiment_id": 1,
+        "experiment_variant_id": 1,
+        "correlation_id": "string"
+      },
+      "seo": {
+        "title": "string",
+        "description": "string",
+        "canonical_url": "string",
+        "robots": "index_follow",
+        "og_title": "string",
+        "og_description": "string",
+        "og_image_media_id": "string",
+        "twitter_card": "summary",
+        "twitter_title": "string",
+        "twitter_description": "string",
+        "twitter_image_media_id": "string",
+        "json_ld": [
+          {}
+        ]
+      },
+      "localization": {
+        "requested_locale": "string",
+        "resolved_locale": "string",
+        "market": "string",
+        "used_fallback": true,
+        "alternates": [
+          {
+            "locale": "string",
+            "market": "string",
+            "path": "string"
+          }
+        ]
+      }
+    }
+  ],
+  "navigation": [
+    {
+      "menu": {
+        "id": 1,
+        "entry_id": 1,
+        "key": "string",
+        "title": "string",
+        "location": "string",
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "entry": {
+        "id": 1,
+        "entry_type": "page",
+        "key": "string",
+        "status": "DRAFT",
+        "current_version_id": 0,
+        "published_version_id": 0,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "items": [
+        {
+          "id": 0,
+          "menu_id": 0,
+          "parent_id": 0,
+          "label": "string",
+          "item_type": "internal",
+          "target_ref": "string",
+          "url": "string",
+          "sort_order": 0,
+          "is_enabled": true
+        }
+      ],
+      "current_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "published_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "latest_publication": {
+        "id": 1,
+        "entry_id": 1,
+        "version_id": 1,
+        "published_by": 0,
+        "published_at": "2019-08-24T14:15:22Z",
+        "rollback_from_publication_id": 0,
+        "notes": "string"
+      },
+      "has_unpublished_draft": true
+    }
+  ],
+  "global_regions": [
+    {
+      "region": {
+        "id": 1,
+        "entry_id": 1,
+        "key": "string",
+        "title": "string",
+        "region": "string",
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "entry": {
+        "id": 1,
+        "entry_type": "page",
+        "key": "string",
+        "status": "DRAFT",
+        "current_version_id": 0,
+        "published_version_id": 0,
+        "created_at": "2019-08-24T14:15:22Z",
+        "updated_at": "2019-08-24T14:15:22Z"
+      },
+      "current_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "published_version": {
+        "id": 1,
+        "entry_id": 1,
+        "version_number": 1,
+        "schema_version": 1,
+        "payload": {
+          "blocks": [
+            {
+              "type": "hero",
+              "title": "string",
+              "subtitle": "string",
+              "image_media_id": "string",
+              "primary_cta": {
+                "label": "string",
+                "url": "string"
+              }
+            }
+          ]
+        },
+        "created_by": 0,
+        "change_summary": "string",
+        "created_at": "2019-08-24T14:15:22Z"
+      },
+      "latest_publication": {
+        "id": 1,
+        "entry_id": 1,
+        "version_id": 1,
+        "published_by": 0,
+        "published_at": "2019-08-24T14:15:22Z",
+        "rollback_from_publication_id": 0,
+        "notes": "string"
+      },
+      "has_unpublished_draft": true
+    }
+  ],
+  "variants": [
+    {
+      "id": 1,
+      "page_id": 1,
+      "entry_id": 1,
+      "locale": "string",
+      "market": "string",
+      "path": "string",
+      "slug": "string",
+      "title": "string",
+      "payload": {
+        "blocks": [
+          {
+            "type": "hero",
+            "title": "string",
+            "subtitle": "string",
+            "image_media_id": "string",
+            "primary_cta": {
+              "label": "string",
+              "url": "string"
+            }
+          }
+        ]
+      },
+      "status": "draft",
+      "revision": 1,
+      "submitted_by": "string",
+      "approved_by": "string",
+      "published_at": "2019-08-24T14:15:22Z",
+      "created_at": "2019-08-24T14:15:22Z",
+      "updated_at": "2019-08-24T14:15:22Z"
+    }
+  ]
+}
+```
+
+<h3 id="restoreadmincmscontent-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|CmsContentExport|true|none|
+
+<h3 id="restoreadmincmscontent-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS content restored from export|MessageResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid or unsupported CMS export|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## rollbackAdminCmsPage
+
+<a id="opIdrollbackAdminCmsPage"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "version_id": 1,
+  "notes": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/pages/{id}/rollback',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/pages/{id}/rollback`
+
+> Body parameter
+
+```json
+{
+  "version_id": 1,
+  "notes": "string"
+}
+```
+
+<h3 id="rollbackadmincmspage-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|CmsRollbackRequest|true|none|
+
+<h3 id="rollbackadmincmspage-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Rolled back CMS page|CmsPageResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminCmsPageDelivery
+
+<a id="opIdgetAdminCmsPageDelivery"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/pages/{id}/delivery',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/pages/{id}/delivery`
+
+<h3 id="getadmincmspagedelivery-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="getadmincmspagedelivery-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS page scheduling, targeting, and experiment settings|CmsPageDeliveryResponse|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateAdminCmsPageDelivery
+
+<a id="opIdupdateAdminCmsPageDelivery"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "schedule": {
+    "publish_at": "2019-08-24T14:15:22Z",
+    "unpublish_at": "2019-08-24T14:15:22Z",
+    "timezone": "string"
+  },
+  "targeting_rules": [
+    {
+      "priority": 0,
+      "is_enabled": true,
+      "markets": [
+        "string"
+      ],
+      "device_classes": [
+        "desktop"
+      ],
+      "auth_states": [
+        "guest"
+      ],
+      "referrers": [
+        "string"
+      ],
+      "utm_sources": [
+        "string"
+      ],
+      "segment_keys": [
+        "string"
+      ]
+    }
+  ],
+  "experiment": {
+    "name": "string",
+    "status": "draft",
+    "sticky_key": "visitor",
+    "starts_at": "2019-08-24T14:15:22Z",
+    "ends_at": "2019-08-24T14:15:22Z",
+    "variants": [
+      {
+        "name": "string",
+        "version_id": 1,
+        "allocation": 1
+      },
+      {
+        "name": "string",
+        "version_id": 1,
+        "allocation": 1
+      }
+    ]
+  }
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/pages/{id}/delivery',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/cms/pages/{id}/delivery`
+
+> Body parameter
+
+```json
+{
+  "schedule": {
+    "publish_at": "2019-08-24T14:15:22Z",
+    "unpublish_at": "2019-08-24T14:15:22Z",
+    "timezone": "string"
+  },
+  "targeting_rules": [
+    {
+      "priority": 0,
+      "is_enabled": true,
+      "markets": [
+        "string"
+      ],
+      "device_classes": [
+        "desktop"
+      ],
+      "auth_states": [
+        "guest"
+      ],
+      "referrers": [
+        "string"
+      ],
+      "utm_sources": [
+        "string"
+      ],
+      "segment_keys": [
+        "string"
+      ]
+    }
+  ],
+  "experiment": {
+    "name": "string",
+    "status": "draft",
+    "sticky_key": "visitor",
+    "starts_at": "2019-08-24T14:15:22Z",
+    "ends_at": "2019-08-24T14:15:22Z",
+    "variants": [
+      {
+        "name": "string",
+        "version_id": 1,
+        "allocation": 1
+      },
+      {
+        "name": "string",
+        "version_id": 1,
+        "allocation": 1
+      }
+    ]
+  }
+}
+```
+
+<h3 id="updateadmincmspagedelivery-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|CmsPageDeliveryRequest|true|none|
+
+<h3 id="updateadmincmspagedelivery-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated CMS page delivery settings|CmsPageDeliveryResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid delivery settings|Error|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminCmsPageSeo
+
+<a id="opIdgetAdminCmsPageSeo"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/pages/{id}/seo',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/pages/{id}/seo`
+
+<h3 id="getadmincmspageseo-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="getadmincmspageseo-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS page SEO metadata and validation|CmsSEOResponse|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateAdminCmsPageSeo
+
+<a id="opIdupdateAdminCmsPageSeo"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "title": "string",
+  "description": "string",
+  "canonical_url": "string",
+  "robots": "index_follow",
+  "og_title": "string",
+  "og_description": "string",
+  "og_image_media_id": "string",
+  "twitter_card": "summary",
+  "twitter_title": "string",
+  "twitter_description": "string",
+  "twitter_image_media_id": "string",
+  "json_ld": [
+    {}
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/pages/{id}/seo',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/cms/pages/{id}/seo`
+
+> Body parameter
+
+```json
+{
+  "title": "string",
+  "description": "string",
+  "canonical_url": "string",
+  "robots": "index_follow",
+  "og_title": "string",
+  "og_description": "string",
+  "og_image_media_id": "string",
+  "twitter_card": "summary",
+  "twitter_title": "string",
+  "twitter_description": "string",
+  "twitter_image_media_id": "string",
+  "json_ld": [
+    {}
+  ]
+}
+```
+
+<h3 id="updateadmincmspageseo-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|CmsSEOInput|true|none|
+
+<h3 id="updateadmincmspageseo-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated CMS page SEO metadata|CmsSEOResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid SEO metadata|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminCmsRedirects
+
+<a id="opIdlistAdminCmsRedirects"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/redirects',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/redirects`
+
+<h3 id="listadmincmsredirects-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS redirect rules|Inline|
+
+<h3 id="listadmincmsredirects-responseschema">Response Schema</h3>
+
+Status Code **200**
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|[CmsRedirectRule]|false|none|none|
+|» id|integer|true|none|none|
+|» source_pattern|string|true|none|none|
+|» match_type|string|true|none|none|
+|» target_url|string|true|none|none|
+|» redirect_type|integer|true|none|none|
+|» priority|integer|true|none|none|
+|» is_enabled|boolean|true|none|none|
+|» created_at|string(date-time)|true|none|none|
+|» updated_at|string(date-time)|true|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|match_type|exact|
+|match_type|prefix|
+|redirect_type|301|
+|redirect_type|302|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminCmsRedirect
+
+<a id="opIdcreateAdminCmsRedirect"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "source_pattern": "string",
+  "match_type": "exact",
+  "target_url": "string",
+  "redirect_type": 301,
+  "priority": 0,
+  "is_enabled": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/redirects',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/redirects`
+
+> Body parameter
+
+```json
+{
+  "source_pattern": "string",
+  "match_type": "exact",
+  "target_url": "string",
+  "redirect_type": 301,
+  "priority": 0,
+  "is_enabled": true
+}
+```
+
+<h3 id="createadmincmsredirect-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|CmsRedirectInput|true|none|
+
+<h3 id="createadmincmsredirect-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created redirect rule|CmsRedirectRule|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid redirect|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateAdminCmsRedirect
+
+<a id="opIdupdateAdminCmsRedirect"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "source_pattern": "string",
+  "match_type": "exact",
+  "target_url": "string",
+  "redirect_type": 301,
+  "priority": 0,
+  "is_enabled": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/redirects/{id}',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/cms/redirects/{id}`
+
+> Body parameter
+
+```json
+{
+  "source_pattern": "string",
+  "match_type": "exact",
+  "target_url": "string",
+  "redirect_type": 301,
+  "priority": 0,
+  "is_enabled": true
+}
+```
+
+<h3 id="updateadmincmsredirect-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|CmsRedirectInput|true|none|
+
+<h3 id="updateadmincmsredirect-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated redirect rule|CmsRedirectRule|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid redirect|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## deleteAdminCmsRedirect
+
+<a id="opIddeleteAdminCmsRedirect"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/redirects/{id}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`DELETE /api/v1/admin/cms/redirects/{id}`
+
+<h3 id="deleteadmincmsredirect-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="deleteadmincmsredirect-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Redirect deleted|MessageResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminCmsNavigation
+
+<a id="opIdlistAdminCmsNavigation"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/navigation',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/navigation`
+
+<h3 id="listadmincmsnavigation-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|page|query|integer|false|none|
+|limit|query|integer|false|none|
+
+<h3 id="listadmincmsnavigation-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS navigation menus|CmsNavigationListResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminCmsNavigation
+
+<a id="opIdcreateAdminCmsNavigation"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "key": "string",
+  "title": "string",
+  "location": "string",
+  "items": [
+    {
+      "id": 0,
+      "parent_id": 0,
+      "label": "string",
+      "item_type": "internal",
+      "target_ref": "string",
+      "url": "string",
+      "sort_order": 0,
+      "is_enabled": true
+    }
+  ],
+  "change_summary": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/navigation',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/navigation`
+
+> Body parameter
+
+```json
+{
+  "key": "string",
+  "title": "string",
+  "location": "string",
+  "items": [
+    {
+      "id": 0,
+      "parent_id": 0,
+      "label": "string",
+      "item_type": "internal",
+      "target_ref": "string",
+      "url": "string",
+      "sort_order": 0,
+      "is_enabled": true
+    }
+  ],
+  "change_summary": "string"
+}
+```
+
+<h3 id="createadmincmsnavigation-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|CmsNavigationDraftRequest|true|none|
+
+<h3 id="createadmincmsnavigation-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created navigation draft|CmsNavigationResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|Duplicate key|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminCmsNavigation
+
+<a id="opIdgetAdminCmsNavigation"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/navigation/{id}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/navigation/{id}`
+
+<h3 id="getadmincmsnavigation-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="getadmincmsnavigation-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS navigation menu|CmsNavigationResponse|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateAdminCmsNavigation
+
+<a id="opIdupdateAdminCmsNavigation"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "key": "string",
+  "title": "string",
+  "location": "string",
+  "items": [
+    {
+      "id": 0,
+      "parent_id": 0,
+      "label": "string",
+      "item_type": "internal",
+      "target_ref": "string",
+      "url": "string",
+      "sort_order": 0,
+      "is_enabled": true
+    }
+  ],
+  "change_summary": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/navigation/{id}',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/cms/navigation/{id}`
+
+> Body parameter
+
+```json
+{
+  "key": "string",
+  "title": "string",
+  "location": "string",
+  "items": [
+    {
+      "id": 0,
+      "parent_id": 0,
+      "label": "string",
+      "item_type": "internal",
+      "target_ref": "string",
+      "url": "string",
+      "sort_order": 0,
+      "is_enabled": true
+    }
+  ],
+  "change_summary": "string"
+}
+```
+
+<h3 id="updateadmincmsnavigation-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|CmsNavigationDraftRequest|true|none|
+
+<h3 id="updateadmincmsnavigation-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated navigation draft|CmsNavigationResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|Duplicate key|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## publishAdminCmsNavigation
+
+<a id="opIdpublishAdminCmsNavigation"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "notes": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/navigation/{id}/publish',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/navigation/{id}/publish`
+
+> Body parameter
+
+```json
+{
+  "notes": "string"
+}
+```
+
+<h3 id="publishadmincmsnavigation-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|CmsPublishRequest|false|none|
+
+<h3 id="publishadmincmsnavigation-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Published navigation|CmsNavigationResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminCmsGlobalRegions
+
+<a id="opIdlistAdminCmsGlobalRegions"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/global',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/global`
+
+<h3 id="listadmincmsglobalregions-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|page|query|integer|false|none|
+|limit|query|integer|false|none|
+
+<h3 id="listadmincmsglobalregions-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS global regions|CmsGlobalRegionListResponse|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminCmsGlobalRegion
+
+<a id="opIdcreateAdminCmsGlobalRegion"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "key": "string",
+  "title": "string",
+  "region": "string",
+  "payload": {
+    "blocks": [
+      {
+        "type": "hero",
+        "title": "string",
+        "subtitle": "string",
+        "image_media_id": "string",
+        "primary_cta": {
+          "label": "string",
+          "url": "string"
+        }
+      }
+    ]
+  },
+  "change_summary": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/global',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/global`
+
+> Body parameter
+
+```json
+{
+  "key": "string",
+  "title": "string",
+  "region": "string",
+  "payload": {
+    "blocks": [
+      {
+        "type": "hero",
+        "title": "string",
+        "subtitle": "string",
+        "image_media_id": "string",
+        "primary_cta": {
+          "label": "string",
+          "url": "string"
+        }
+      }
+    ]
+  },
+  "change_summary": "string"
+}
+```
+
+<h3 id="createadmincmsglobalregion-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|CmsGlobalRegionDraftRequest|true|none|
+
+<h3 id="createadmincmsglobalregion-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created global region draft|CmsGlobalRegionResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|Duplicate key|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminCmsGlobalRegion
+
+<a id="opIdgetAdminCmsGlobalRegion"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/global/{id}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/cms/global/{id}`
+
+<h3 id="getadmincmsglobalregion-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="getadmincmsglobalregion-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS global region|CmsGlobalRegionResponse|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateAdminCmsGlobalRegion
+
+<a id="opIdupdateAdminCmsGlobalRegion"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "key": "string",
+  "title": "string",
+  "region": "string",
+  "payload": {
+    "blocks": [
+      {
+        "type": "hero",
+        "title": "string",
+        "subtitle": "string",
+        "image_media_id": "string",
+        "primary_cta": {
+          "label": "string",
+          "url": "string"
+        }
+      }
+    ]
+  },
+  "change_summary": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/global/{id}',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/cms/global/{id}`
+
+> Body parameter
+
+```json
+{
+  "key": "string",
+  "title": "string",
+  "region": "string",
+  "payload": {
+    "blocks": [
+      {
+        "type": "hero",
+        "title": "string",
+        "subtitle": "string",
+        "image_media_id": "string",
+        "primary_cta": {
+          "label": "string",
+          "url": "string"
+        }
+      }
+    ]
+  },
+  "change_summary": "string"
+}
+```
+
+<h3 id="updateadmincmsglobalregion-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|CmsGlobalRegionDraftRequest|true|none|
+
+<h3 id="updateadmincmsglobalregion-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated global region draft|CmsGlobalRegionResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|Duplicate key|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## publishAdminCmsGlobalRegion
+
+<a id="opIdpublishAdminCmsGlobalRegion"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "notes": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/cms/global/{id}/publish',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/cms/global/{id}/publish`
+
+> Body parameter
+
+```json
+{
+  "notes": "string"
+}
+```
+
+<h3 id="publishadmincmsglobalregion-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|CmsPublishRequest|false|none|
+
+<h3 id="publishadmincmsglobalregion-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Published global region|CmsGlobalRegionResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminWebsiteSettings
+
+<a id="opIdgetAdminWebsiteSettings"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/website',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/website`
+
+<h3 id="getadminwebsitesettings-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Website settings|WebsiteSettingsResponse|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Internal server error|Error|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## updateWebsiteSettings
+
+<a id="opIdupdateWebsiteSettings"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "settings": {
+    "site_title": "string",
+    "allow_guest_checkout": true,
+    "coupon_codes_enabled": true,
+    "oidc_provider": "string",
+    "oidc_client_id": "string",
+    "oidc_client_secret": "string",
+    "oidc_client_secret_configured": true,
+    "clear_oidc_client_secret": true,
+    "oidc_redirect_uri": "string"
+  }
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/website',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/website`
+
+> Body parameter
+
+```json
+{
+  "settings": {
+    "site_title": "string",
+    "allow_guest_checkout": true,
+    "coupon_codes_enabled": true,
+    "oidc_provider": "string",
+    "oidc_client_id": "string",
+    "oidc_client_secret": "string",
+    "oidc_client_secret_configured": true,
+    "clear_oidc_client_secret": true,
+    "oidc_redirect_uri": "string"
+  }
+}
+```
+
+<h3 id="updatewebsitesettings-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|WebsiteSettingsRequest|true|none|
+
+<h3 id="updatewebsitesettings-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated website settings|WebsiteSettingsResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad request|Error|
 
 <aside class="warning">
 To perform this operation, you must be authenticated by means of one of the following methods:
@@ -5518,11 +12366,11 @@ To perform this operation, you must be authenticated by means of one of the foll
 cookieAuth, bearerAuth
 </aside>
 
-<h1 id="ecommerce-api-storefront">storefront</h1>
+<h1 id="ecommerce-api-cms">cms</h1>
 
-## getStorefrontSettings
+## resolveContentHomepage
 
-<a id="opIdgetStorefrontSettings"></a>
+<a id="opIdresolveContentHomepage"></a>
 
 > Code samples
 
@@ -5532,7 +12380,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('http://localhost:3000/api/v1/storefront',
+fetch('http://localhost:3000/api/v1/content',
 {
   method: 'GET',
 
@@ -5546,14 +12394,369 @@ fetch('http://localhost:3000/api/v1/storefront',
 
 ```
 
-`GET /api/v1/storefront`
+`GET /api/v1/content`
 
-<h3 id="getstorefrontsettings-responses">Responses</h3>
+<h3 id="resolvecontenthomepage-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|market|query|string|false|none|
+|locale|query|string|false|none|
+|device|query|string|false|none|
+|segment|query|string|false|none|
+|utm_source|query|string|false|none|
+|assignment_key|query|string|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|device|desktop|
+|device|mobile|
+|device|tablet|
+
+<h3 id="resolvecontenthomepage-responses">Responses</h3>
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Storefront settings|StorefrontSettingsResponse|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Internal server error|Error|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Published CMS homepage|CmsPageResponse|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## resolveContentPage
+
+<a id="opIdresolveContentPage"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/content/{path}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/content/{path}`
+
+<h3 id="resolvecontentpage-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|path|path|string|true|none|
+|market|query|string|false|none|
+|locale|query|string|false|none|
+|device|query|string|false|none|
+|segment|query|string|false|none|
+|utm_source|query|string|false|none|
+|assignment_key|query|string|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|device|desktop|
+|device|mobile|
+|device|tablet|
+
+<h3 id="resolvecontentpage-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Published CMS page|CmsPageResponse|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## recordContentEvent
+
+<a id="opIdrecordContentEvent"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "content_version_id": 1,
+  "experiment_id": 1,
+  "experiment_variant_id": 1,
+  "correlation_id": "string",
+  "event_type": "impression"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/content/events',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/content/events`
+
+> Body parameter
+
+```json
+{
+  "content_version_id": 1,
+  "experiment_id": 1,
+  "experiment_variant_id": 1,
+  "correlation_id": "string",
+  "event_type": "impression"
+}
+```
+
+<h3 id="recordcontentevent-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|CmsContentEventRequest|true|none|
+
+<h3 id="recordcontentevent-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|202|[Accepted](https://tools.ietf.org/html/rfc7231#section-6.3.3)|Content event accepted|MessageResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Invalid content event|Error|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## resolveContentRedirect
+
+<a id="opIdresolveContentRedirect"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/content/redirect?path=string',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/content/redirect`
+
+<h3 id="resolvecontentredirect-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|path|query|string|true|none|
+
+<h3 id="resolvecontentredirect-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Matching redirect|CmsRedirectResolution|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|No redirect|Error|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## getContentSitemap
+
+<a id="opIdgetContentSitemap"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/xml'
+};
+
+fetch('http://localhost:3000/api/v1/content/sitemap.xml',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/content/sitemap.xml`
+
+<h3 id="getcontentsitemap-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Storefront sitemap|string|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## getContentNavigation
+
+<a id="opIdgetContentNavigation"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/content/navigation/{location}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/content/navigation/{location}`
+
+<h3 id="getcontentnavigation-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|location|path|string|true|none|
+
+<h3 id="getcontentnavigation-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Published CMS navigation menu|CmsNavigationResponse|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## getContentGlobalRegion
+
+<a id="opIdgetContentGlobalRegion"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/content/global/{region}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/content/global/{region}`
+
+<h3 id="getcontentglobalregion-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|region|path|string|true|none|
+
+<h3 id="getcontentglobalregion-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Published CMS global region|CmsGlobalRegionResponse|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|Not found|Error|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+<h1 id="ecommerce-api-catalog">catalog</h1>
+
+## List active storefront categories
+
+<a id="opIdlistCategories"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/categories',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/categories`
+
+<h3 id="list-active-storefront-categories-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Active categories|CategoryListResponse|
 
 <aside class="success">
 This operation does not require authentication

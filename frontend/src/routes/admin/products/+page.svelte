@@ -91,8 +91,30 @@
 	}
 
 	function openEditor(productId: number | null = null) {
+		if (selectedProductId === productId && mobilePanel === "editor") return;
+		if (!savePrompt.confirmDiscard()) return;
 		selectedProductId = productId;
 		mobilePanel = "editor";
+	}
+
+	function applyCatalogSearch() {
+		if (!savePrompt.confirmDiscard()) return;
+		catalog.applySearch();
+	}
+
+	function refreshCatalog() {
+		if (!savePrompt.confirmDiscard()) return;
+		catalog.refresh();
+	}
+
+	function changeCatalogPage(page: number) {
+		if (!savePrompt.confirmDiscard()) return;
+		void catalog.changePage(page);
+	}
+
+	function updateCatalogLimit(limit: number) {
+		if (!savePrompt.confirmDiscard()) return;
+		catalog.updateLimit(limit);
 	}
 
 	function handleProductCreated(product: ProductModel) {
@@ -139,8 +161,8 @@
 		searchClass="sm:max-w-sm"
 		searchPlaceholder="Search products"
 		bind:searchValue={catalog.query}
-		onSearch={catalog.applySearch}
-		onRefresh={catalog.refresh}
+		onSearch={applyCatalogSearch}
+		onRefresh={refreshCatalog}
 		searchRefreshing={catalog.loading}
 		searchDisabled={catalog.loading}
 	/>
@@ -161,13 +183,12 @@
 
 	<AdminMasterDetailLayout columnsClass="xl:grid-cols-[1.15fr_0.95fr]">
 		{#snippet lead()}
-			<div class="xl:hidden">
-				<TabSwitcher
-					items={mobilePanelTabs}
-					bind:value={mobilePanel}
-					ariaLabel="Product admin panels"
-				/>
-			</div>
+			<TabSwitcher
+				items={mobilePanelTabs}
+				bind:value={mobilePanel}
+				ariaLabel="Product admin panels"
+				class="xl:hidden"
+			/>
 		{/snippet}
 		{#snippet master()}
 			<AdminPanel
@@ -244,9 +265,9 @@
 							totalPages={catalog.totalPages}
 							limit={catalog.limit}
 							{limitOptions}
-							onLimitChange={catalog.updateLimit}
-							onPrev={() => void catalog.changePage(catalog.page - 1)}
-							onNext={() => void catalog.changePage(catalog.page + 1)}
+							onLimitChange={updateCatalogLimit}
+							onPrev={() => changeCatalogPage(catalog.page - 1)}
+							onNext={() => changeCatalogPage(catalog.page + 1)}
 						/>
 					</div>
 				{/if}

@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -50,6 +51,355 @@ const (
 	CheckoutPluginStateSeverityInfo    CheckoutPluginStateSeverity = "info"
 	CheckoutPluginStateSeveritySuccess CheckoutPluginStateSeverity = "success"
 	CheckoutPluginStateSeverityWarning CheckoutPluginStateSeverity = "warning"
+)
+
+// Defines values for CmsCTABlockType.
+const (
+	Cta CmsCTABlockType = "cta"
+)
+
+// Defines values for CmsCategoryTilesBlockImageAspect.
+const (
+	CmsCategoryTilesBlockImageAspectSquare CmsCategoryTilesBlockImageAspect = "square"
+	CmsCategoryTilesBlockImageAspectWide   CmsCategoryTilesBlockImageAspect = "wide"
+)
+
+// Defines values for CmsCategoryTilesBlockType.
+const (
+	CategoryTiles CmsCategoryTilesBlockType = "category_tiles"
+)
+
+// Defines values for CmsContentEventRequestEventType.
+const (
+	Conversion CmsContentEventRequestEventType = "conversion"
+	Impression CmsContentEventRequestEventType = "impression"
+)
+
+// Defines values for CmsCustomHTMLBlockType.
+const (
+	CustomHtml CmsCustomHTMLBlockType = "custom_html"
+)
+
+// Defines values for CmsEntryEntryType.
+const (
+	CmsEntryEntryTypeGlobal     CmsEntryEntryType = "global"
+	CmsEntryEntryTypeLayout     CmsEntryEntryType = "layout"
+	CmsEntryEntryTypeNavigation CmsEntryEntryType = "navigation"
+	CmsEntryEntryTypePage       CmsEntryEntryType = "page"
+	CmsEntryEntryTypeTemplate   CmsEntryEntryType = "template"
+)
+
+// Defines values for CmsEntryStatus.
+const (
+	CmsEntryStatusARCHIVED  CmsEntryStatus = "ARCHIVED"
+	CmsEntryStatusDRAFT     CmsEntryStatus = "DRAFT"
+	CmsEntryStatusPUBLISHED CmsEntryStatus = "PUBLISHED"
+	CmsEntryStatusSCHEDULED CmsEntryStatus = "SCHEDULED"
+)
+
+// Defines values for CmsEntryVariantStatus.
+const (
+	CmsEntryVariantStatusApproved         CmsEntryVariantStatus = "approved"
+	CmsEntryVariantStatusChangesRequested CmsEntryVariantStatus = "changes_requested"
+	CmsEntryVariantStatusDraft            CmsEntryVariantStatus = "draft"
+	CmsEntryVariantStatusInReview         CmsEntryVariantStatus = "in_review"
+	CmsEntryVariantStatusPublished        CmsEntryVariantStatus = "published"
+)
+
+// Defines values for CmsEntryWorkflowStatus.
+const (
+	CmsEntryWorkflowStatusApproved         CmsEntryWorkflowStatus = "approved"
+	CmsEntryWorkflowStatusChangesRequested CmsEntryWorkflowStatus = "changes_requested"
+	CmsEntryWorkflowStatusDraft            CmsEntryWorkflowStatus = "draft"
+	CmsEntryWorkflowStatusInReview         CmsEntryWorkflowStatus = "in_review"
+)
+
+// Defines values for CmsExperimentStatus.
+const (
+	CmsExperimentStatusActive    CmsExperimentStatus = "active"
+	CmsExperimentStatusCompleted CmsExperimentStatus = "completed"
+	CmsExperimentStatusDraft     CmsExperimentStatus = "draft"
+	CmsExperimentStatusPaused    CmsExperimentStatus = "paused"
+)
+
+// Defines values for CmsExperimentStickyKey.
+const (
+	CmsExperimentStickyKeyCustomer CmsExperimentStickyKey = "customer"
+	CmsExperimentStickyKeyVisitor  CmsExperimentStickyKey = "visitor"
+)
+
+// Defines values for CmsExperimentInputStatus.
+const (
+	CmsExperimentInputStatusActive    CmsExperimentInputStatus = "active"
+	CmsExperimentInputStatusCompleted CmsExperimentInputStatus = "completed"
+	CmsExperimentInputStatusDraft     CmsExperimentInputStatus = "draft"
+	CmsExperimentInputStatusPaused    CmsExperimentInputStatus = "paused"
+)
+
+// Defines values for CmsExperimentInputStickyKey.
+const (
+	CmsExperimentInputStickyKeyCustomer CmsExperimentInputStickyKey = "customer"
+	CmsExperimentInputStickyKeyVisitor  CmsExperimentInputStickyKey = "visitor"
+)
+
+// Defines values for CmsFAQBlockType.
+const (
+	Faq CmsFAQBlockType = "faq"
+)
+
+// Defines values for CmsFooterBlockLayout.
+const (
+	Centered CmsFooterBlockLayout = "centered"
+	Columns  CmsFooterBlockLayout = "columns"
+	Minimal  CmsFooterBlockLayout = "minimal"
+)
+
+// Defines values for CmsFooterBlockType.
+const (
+	Footer CmsFooterBlockType = "footer"
+)
+
+// Defines values for CmsGalleryBlockType.
+const (
+	Gallery CmsGalleryBlockType = "gallery"
+)
+
+// Defines values for CmsHeroBlockType.
+const (
+	Hero CmsHeroBlockType = "hero"
+)
+
+// Defines values for CmsImageBlockType.
+const (
+	Image CmsImageBlockType = "image"
+)
+
+// Defines values for CmsInvalidationEventStatus.
+const (
+	CmsInvalidationEventStatusFailed  CmsInvalidationEventStatus = "failed"
+	CmsInvalidationEventStatusPending CmsInvalidationEventStatus = "pending"
+	CmsInvalidationEventStatusSent    CmsInvalidationEventStatus = "sent"
+)
+
+// Defines values for CmsInventoryMessageBlockType.
+const (
+	InventoryMessage CmsInventoryMessageBlockType = "inventory_message"
+)
+
+// Defines values for CmsNavigationItemItemType.
+const (
+	CmsNavigationItemItemTypeCategory CmsNavigationItemItemType = "category"
+	CmsNavigationItemItemTypeDropdown CmsNavigationItemItemType = "dropdown"
+	CmsNavigationItemItemTypeExternal CmsNavigationItemItemType = "external"
+	CmsNavigationItemItemTypeInternal CmsNavigationItemItemType = "internal"
+	CmsNavigationItemItemTypePage     CmsNavigationItemItemType = "page"
+	CmsNavigationItemItemTypeProduct  CmsNavigationItemItemType = "product"
+)
+
+// Defines values for CmsNavigationItemInputItemType.
+const (
+	CmsNavigationItemInputItemTypeCategory CmsNavigationItemInputItemType = "category"
+	CmsNavigationItemInputItemTypeDropdown CmsNavigationItemInputItemType = "dropdown"
+	CmsNavigationItemInputItemTypeExternal CmsNavigationItemInputItemType = "external"
+	CmsNavigationItemInputItemTypeInternal CmsNavigationItemInputItemType = "internal"
+	CmsNavigationItemInputItemTypePage     CmsNavigationItemInputItemType = "page"
+	CmsNavigationItemInputItemTypeProduct  CmsNavigationItemInputItemType = "product"
+)
+
+// Defines values for CmsPageVisibility.
+const (
+	CmsPageVisibilityHidden CmsPageVisibility = "hidden"
+	CmsPageVisibilityPublic CmsPageVisibility = "public"
+)
+
+// Defines values for CmsPageDraftRequestVisibility.
+const (
+	CmsPageDraftRequestVisibilityHidden CmsPageDraftRequestVisibility = "hidden"
+	CmsPageDraftRequestVisibilityPublic CmsPageDraftRequestVisibility = "public"
+)
+
+// Defines values for CmsPageVariantStatus.
+const (
+	Approved         CmsPageVariantStatus = "approved"
+	ChangesRequested CmsPageVariantStatus = "changes_requested"
+	Draft            CmsPageVariantStatus = "draft"
+	InReview         CmsPageVariantStatus = "in_review"
+	Published        CmsPageVariantStatus = "published"
+)
+
+// Defines values for CmsPreviewBlockStatus.
+const (
+	Degraded CmsPreviewBlockStatus = "degraded"
+	Ok       CmsPreviewBlockStatus = "ok"
+	Static   CmsPreviewBlockStatus = "static"
+)
+
+// Defines values for CmsProductRailBlockImageAspect.
+const (
+	CmsProductRailBlockImageAspectSquare CmsProductRailBlockImageAspect = "square"
+	CmsProductRailBlockImageAspectWide   CmsProductRailBlockImageAspect = "wide"
+)
+
+// Defines values for CmsProductRailBlockOrder.
+const (
+	CmsProductRailBlockOrderAsc  CmsProductRailBlockOrder = "asc"
+	CmsProductRailBlockOrderDesc CmsProductRailBlockOrder = "desc"
+)
+
+// Defines values for CmsProductRailBlockSort.
+const (
+	CmsProductRailBlockSortCreatedAt CmsProductRailBlockSort = "created_at"
+	CmsProductRailBlockSortName      CmsProductRailBlockSort = "name"
+	CmsProductRailBlockSortPrice     CmsProductRailBlockSort = "price"
+)
+
+// Defines values for CmsProductRailBlockSource.
+const (
+	CmsProductRailBlockSourceCategory CmsProductRailBlockSource = "category"
+	CmsProductRailBlockSourceManual   CmsProductRailBlockSource = "manual"
+	CmsProductRailBlockSourceNewest   CmsProductRailBlockSource = "newest"
+	CmsProductRailBlockSourceSearch   CmsProductRailBlockSource = "search"
+)
+
+// Defines values for CmsProductRailBlockType.
+const (
+	ProductRail CmsProductRailBlockType = "product_rail"
+)
+
+// Defines values for CmsPromoBannerBlockType.
+const (
+	PromoBanner CmsPromoBannerBlockType = "promo_banner"
+)
+
+// Defines values for CmsPromotionHighlightBlockType.
+const (
+	PromotionHighlight CmsPromotionHighlightBlockType = "promotion_highlight"
+)
+
+// Defines values for CmsRedirectInputMatchType.
+const (
+	CmsRedirectInputMatchTypeExact  CmsRedirectInputMatchType = "exact"
+	CmsRedirectInputMatchTypePrefix CmsRedirectInputMatchType = "prefix"
+)
+
+// Defines values for CmsRedirectInputRedirectType.
+const (
+	CmsRedirectInputRedirectTypeN301 CmsRedirectInputRedirectType = 301
+	CmsRedirectInputRedirectTypeN302 CmsRedirectInputRedirectType = 302
+)
+
+// Defines values for CmsRedirectResolutionRedirectType.
+const (
+	CmsRedirectResolutionRedirectTypeN301 CmsRedirectResolutionRedirectType = 301
+	CmsRedirectResolutionRedirectTypeN302 CmsRedirectResolutionRedirectType = 302
+)
+
+// Defines values for CmsRedirectRuleMatchType.
+const (
+	CmsRedirectRuleMatchTypeExact  CmsRedirectRuleMatchType = "exact"
+	CmsRedirectRuleMatchTypePrefix CmsRedirectRuleMatchType = "prefix"
+)
+
+// Defines values for CmsRedirectRuleRedirectType.
+const (
+	N301 CmsRedirectRuleRedirectType = 301
+	N302 CmsRedirectRuleRedirectType = 302
+)
+
+// Defines values for CmsRichTextBlockType.
+const (
+	RichText CmsRichTextBlockType = "rich_text"
+)
+
+// Defines values for CmsRoleAssignmentRole.
+const (
+	Author    CmsRoleAssignmentRole = "author"
+	Editor    CmsRoleAssignmentRole = "editor"
+	Publisher CmsRoleAssignmentRole = "publisher"
+)
+
+// Defines values for CmsSEOInputRobots.
+const (
+	CmsSEOInputRobotsIndexFollow     CmsSEOInputRobots = "index_follow"
+	CmsSEOInputRobotsIndexNofollow   CmsSEOInputRobots = "index_nofollow"
+	CmsSEOInputRobotsNoindexFollow   CmsSEOInputRobots = "noindex_follow"
+	CmsSEOInputRobotsNoindexNofollow CmsSEOInputRobots = "noindex_nofollow"
+)
+
+// Defines values for CmsSEOInputTwitterCard.
+const (
+	CmsSEOInputTwitterCardSummary           CmsSEOInputTwitterCard = "summary"
+	CmsSEOInputTwitterCardSummaryLargeImage CmsSEOInputTwitterCard = "summary_large_image"
+)
+
+// Defines values for CmsSEOMetadataRobots.
+const (
+	CmsSEOMetadataRobotsIndexFollow     CmsSEOMetadataRobots = "index_follow"
+	CmsSEOMetadataRobotsIndexNofollow   CmsSEOMetadataRobots = "index_nofollow"
+	CmsSEOMetadataRobotsNoindexFollow   CmsSEOMetadataRobots = "noindex_follow"
+	CmsSEOMetadataRobotsNoindexNofollow CmsSEOMetadataRobots = "noindex_nofollow"
+)
+
+// Defines values for CmsSEOMetadataTwitterCard.
+const (
+	CmsSEOMetadataTwitterCardSummary           CmsSEOMetadataTwitterCard = "summary"
+	CmsSEOMetadataTwitterCardSummaryLargeImage CmsSEOMetadataTwitterCard = "summary_large_image"
+)
+
+// Defines values for CmsScheduleStatus.
+const (
+	CmsScheduleStatusActive    CmsScheduleStatus = "active"
+	CmsScheduleStatusCancelled CmsScheduleStatus = "cancelled"
+	CmsScheduleStatusCompleted CmsScheduleStatus = "completed"
+	CmsScheduleStatusPending   CmsScheduleStatus = "pending"
+)
+
+// Defines values for CmsSocialEmbedBlockProvider.
+const (
+	Instagram CmsSocialEmbedBlockProvider = "instagram"
+	Tiktok    CmsSocialEmbedBlockProvider = "tiktok"
+	Youtube   CmsSocialEmbedBlockProvider = "youtube"
+)
+
+// Defines values for CmsSocialEmbedBlockType.
+const (
+	SocialEmbed CmsSocialEmbedBlockType = "social_embed"
+)
+
+// Defines values for CmsTargetingRuleAuthStates.
+const (
+	CmsTargetingRuleAuthStatesAuthenticated CmsTargetingRuleAuthStates = "authenticated"
+	CmsTargetingRuleAuthStatesGuest         CmsTargetingRuleAuthStates = "guest"
+)
+
+// Defines values for CmsTargetingRuleDeviceClasses.
+const (
+	CmsTargetingRuleDeviceClassesDesktop CmsTargetingRuleDeviceClasses = "desktop"
+	CmsTargetingRuleDeviceClassesMobile  CmsTargetingRuleDeviceClasses = "mobile"
+	CmsTargetingRuleDeviceClassesTablet  CmsTargetingRuleDeviceClasses = "tablet"
+)
+
+// Defines values for CmsTargetingRuleInputAuthStates.
+const (
+	CmsTargetingRuleInputAuthStatesAuthenticated CmsTargetingRuleInputAuthStates = "authenticated"
+	CmsTargetingRuleInputAuthStatesGuest         CmsTargetingRuleInputAuthStates = "guest"
+)
+
+// Defines values for CmsTargetingRuleInputDeviceClasses.
+const (
+	CmsTargetingRuleInputDeviceClassesDesktop CmsTargetingRuleInputDeviceClasses = "desktop"
+	CmsTargetingRuleInputDeviceClassesMobile  CmsTargetingRuleInputDeviceClasses = "mobile"
+	CmsTargetingRuleInputDeviceClassesTablet  CmsTargetingRuleInputDeviceClasses = "tablet"
+)
+
+// Defines values for CmsTestimonialBlockType.
+const (
+	Testimonial CmsTestimonialBlockType = "testimonial"
+)
+
+// Defines values for CmsVideoBlockType.
+const (
+	Video CmsVideoBlockType = "video"
 )
 
 // Defines values for DiscountCampaignChannels.
@@ -346,8 +696,8 @@ const (
 
 // Defines values for ProviderReconciliationRunTrigger.
 const (
-	MANUAL    ProviderReconciliationRunTrigger = "MANUAL"
-	SCHEDULED ProviderReconciliationRunTrigger = "SCHEDULED"
+	ProviderReconciliationRunTriggerMANUAL    ProviderReconciliationRunTrigger = "MANUAL"
+	ProviderReconciliationRunTriggerSCHEDULED ProviderReconciliationRunTrigger = "SCHEDULED"
 )
 
 // Defines values for ProviderReconciliationRunRequestProviderType.
@@ -373,41 +723,6 @@ const (
 	ShipmentStatusINTRANSIT      ShipmentStatus = "IN_TRANSIT"
 	ShipmentStatusLABELPURCHASED ShipmentStatus = "LABEL_PURCHASED"
 	ShipmentStatusQUOTED         ShipmentStatus = "QUOTED"
-)
-
-// Defines values for StorefrontHomepageSectionType.
-const (
-	Badges     StorefrontHomepageSectionType = "badges"
-	Hero       StorefrontHomepageSectionType = "hero"
-	Products   StorefrontHomepageSectionType = "products"
-	PromoCards StorefrontHomepageSectionType = "promo_cards"
-)
-
-// Defines values for StorefrontProductSectionImageAspect.
-const (
-	Square StorefrontProductSectionImageAspect = "square"
-	Wide   StorefrontProductSectionImageAspect = "wide"
-)
-
-// Defines values for StorefrontProductSectionOrder.
-const (
-	StorefrontProductSectionOrderAsc  StorefrontProductSectionOrder = "asc"
-	StorefrontProductSectionOrderDesc StorefrontProductSectionOrder = "desc"
-)
-
-// Defines values for StorefrontProductSectionSort.
-const (
-	StorefrontProductSectionSortCreatedAt StorefrontProductSectionSort = "created_at"
-	StorefrontProductSectionSortName      StorefrontProductSectionSort = "name"
-	StorefrontProductSectionSortPrice     StorefrontProductSectionSort = "price"
-)
-
-// Defines values for StorefrontProductSectionSource.
-const (
-	StorefrontProductSectionSourceCategory StorefrontProductSectionSource = "category"
-	StorefrontProductSectionSourceManual   StorefrontProductSectionSource = "manual"
-	StorefrontProductSectionSourceNewest   StorefrontProductSectionSource = "newest"
-	StorefrontProductSectionSourceSearch   StorefrontProductSectionSource = "search"
 )
 
 // Defines values for TaxLineLineType.
@@ -460,6 +775,32 @@ const (
 	UpdateAdminCheckoutPluginParamsTypePayment  UpdateAdminCheckoutPluginParamsType = "payment"
 	UpdateAdminCheckoutPluginParamsTypeShipping UpdateAdminCheckoutPluginParamsType = "shipping"
 	UpdateAdminCheckoutPluginParamsTypeTax      UpdateAdminCheckoutPluginParamsType = "tax"
+)
+
+// Defines values for TransitionAdminCmsEntryVariantParamsAction.
+const (
+	TransitionAdminCmsEntryVariantParamsActionApprove        TransitionAdminCmsEntryVariantParamsAction = "approve"
+	TransitionAdminCmsEntryVariantParamsActionPublish        TransitionAdminCmsEntryVariantParamsAction = "publish"
+	TransitionAdminCmsEntryVariantParamsActionRequestChanges TransitionAdminCmsEntryVariantParamsAction = "request_changes"
+	TransitionAdminCmsEntryVariantParamsActionReset          TransitionAdminCmsEntryVariantParamsAction = "reset"
+	TransitionAdminCmsEntryVariantParamsActionSubmit         TransitionAdminCmsEntryVariantParamsAction = "submit"
+)
+
+// Defines values for TransitionAdminCmsEntryWorkflowParamsAction.
+const (
+	TransitionAdminCmsEntryWorkflowParamsActionApprove        TransitionAdminCmsEntryWorkflowParamsAction = "approve"
+	TransitionAdminCmsEntryWorkflowParamsActionRequestChanges TransitionAdminCmsEntryWorkflowParamsAction = "request_changes"
+	TransitionAdminCmsEntryWorkflowParamsActionReset          TransitionAdminCmsEntryWorkflowParamsAction = "reset"
+	TransitionAdminCmsEntryWorkflowParamsActionSubmit         TransitionAdminCmsEntryWorkflowParamsAction = "submit"
+)
+
+// Defines values for TransitionAdminCmsPageVariantParamsAction.
+const (
+	Approve        TransitionAdminCmsPageVariantParamsAction = "approve"
+	Publish        TransitionAdminCmsPageVariantParamsAction = "publish"
+	RequestChanges TransitionAdminCmsPageVariantParamsAction = "request_changes"
+	Rollback       TransitionAdminCmsPageVariantParamsAction = "rollback"
+	Submit         TransitionAdminCmsPageVariantParamsAction = "submit"
 )
 
 // Defines values for ListAdminDiscountCampaignsParamsStatus.
@@ -533,6 +874,20 @@ const (
 // Defines values for OidcLoginParamsResponseFormat.
 const (
 	OidcLoginParamsResponseFormatJson OidcLoginParamsResponseFormat = "json"
+)
+
+// Defines values for ResolveContentHomepageParamsDevice.
+const (
+	ResolveContentHomepageParamsDeviceDesktop ResolveContentHomepageParamsDevice = "desktop"
+	ResolveContentHomepageParamsDeviceMobile  ResolveContentHomepageParamsDevice = "mobile"
+	ResolveContentHomepageParamsDeviceTablet  ResolveContentHomepageParamsDevice = "tablet"
+)
+
+// Defines values for ResolveContentPageParamsDevice.
+const (
+	ResolveContentPageParamsDeviceDesktop ResolveContentPageParamsDevice = "desktop"
+	ResolveContentPageParamsDeviceMobile  ResolveContentPageParamsDevice = "mobile"
+	ResolveContentPageParamsDeviceTablet  ResolveContentPageParamsDevice = "tablet"
 )
 
 // Defines values for ListUserOrdersParamsStatus.
@@ -629,23 +984,28 @@ type Brand struct {
 	Description *string `json:"description"`
 	Id          int     `json:"id"`
 	IsActive    bool    `json:"is_active"`
-	LogoMediaId *string `json:"logo_media_id"`
+	LogoUrl     *string `json:"logo_url"`
 	Name        string  `json:"name"`
 	Slug        string  `json:"slug"`
 }
 
 // BrandInput defines model for BrandInput.
 type BrandInput struct {
-	Description *string `json:"description"`
-	IsActive    *bool   `json:"is_active,omitempty"`
-	LogoMediaId *string `json:"logo_media_id"`
-	Name        string  `json:"name"`
-	Slug        *string `json:"slug"`
+	Description *string         `json:"description"`
+	IsActive    *bool           `json:"is_active,omitempty"`
+	Logo        *BrandLogoInput `json:"logo,omitempty"`
+	Name        string          `json:"name"`
+	Slug        *string         `json:"slug"`
 }
 
 // BrandListResponse defines model for BrandListResponse.
 type BrandListResponse struct {
 	Data []Brand `json:"data"`
+}
+
+// BrandLogoInput defines model for BrandLogoInput.
+type BrandLogoInput struct {
+	MediaId string `json:"media_id"`
 }
 
 // Cart defines model for Cart.
@@ -833,6 +1193,935 @@ type ClaimGuestOrderRequest struct {
 type ClaimGuestOrderResponse struct {
 	Message string `json:"message"`
 	Order   Order  `json:"order"`
+}
+
+// CmsAuditEvent defines model for CmsAuditEvent.
+type CmsAuditEvent struct {
+	Action    string    `json:"action"`
+	Actor     string    `json:"actor"`
+	CreatedAt time.Time `json:"created_at"`
+	Detail    string    `json:"detail"`
+	EntryId   int       `json:"entry_id"`
+	Id        int       `json:"id"`
+	VariantId *int      `json:"variant_id"`
+	VersionId *int      `json:"version_id"`
+}
+
+// CmsCTABlock defines model for CmsCTABlock.
+type CmsCTABlock struct {
+	Body  *string         `json:"body,omitempty"`
+	Label string          `json:"label"`
+	Type  CmsCTABlockType `json:"type"`
+	Url   string          `json:"url"`
+}
+
+// CmsCTABlockType defines model for CmsCTABlock.Type.
+type CmsCTABlockType string
+
+// CmsCategoryTilesBlock defines model for CmsCategoryTilesBlock.
+type CmsCategoryTilesBlock struct {
+	CategoryMediaIds *map[string]string                `json:"category_media_ids,omitempty"`
+	CategorySlugs    []string                          `json:"category_slugs"`
+	ImageAspect      *CmsCategoryTilesBlockImageAspect `json:"image_aspect,omitempty"`
+	Subtitle         *string                           `json:"subtitle,omitempty"`
+	Title            string                            `json:"title"`
+	Type             CmsCategoryTilesBlockType         `json:"type"`
+}
+
+// CmsCategoryTilesBlockImageAspect defines model for CmsCategoryTilesBlock.ImageAspect.
+type CmsCategoryTilesBlockImageAspect string
+
+// CmsCategoryTilesBlockType defines model for CmsCategoryTilesBlock.Type.
+type CmsCategoryTilesBlockType string
+
+// CmsChangeComment defines model for CmsChangeComment.
+type CmsChangeComment struct {
+	Actor      string     `json:"actor"`
+	Body       string     `json:"body"`
+	CreatedAt  time.Time  `json:"created_at"`
+	EntryId    int        `json:"entry_id"`
+	Id         int        `json:"id"`
+	ResolvedAt *time.Time `json:"resolved_at"`
+	ResolvedBy *string    `json:"resolved_by"`
+	VariantId  *int       `json:"variant_id"`
+}
+
+// CmsCommentInput defines model for CmsCommentInput.
+type CmsCommentInput struct {
+	Body string `json:"body"`
+}
+
+// CmsContentBlock defines model for CmsContentBlock.
+type CmsContentBlock struct {
+	union json.RawMessage
+}
+
+// CmsContentEventRequest defines model for CmsContentEventRequest.
+type CmsContentEventRequest struct {
+	ContentVersionId    int                             `json:"content_version_id"`
+	CorrelationId       string                          `json:"correlation_id"`
+	EventType           CmsContentEventRequestEventType `json:"event_type"`
+	ExperimentId        *int                            `json:"experiment_id"`
+	ExperimentVariantId *int                            `json:"experiment_variant_id"`
+}
+
+// CmsContentEventRequestEventType defines model for CmsContentEventRequest.EventType.
+type CmsContentEventRequestEventType string
+
+// CmsContentExport defines model for CmsContentExport.
+type CmsContentExport struct {
+	ExportedAt    time.Time                 `json:"exported_at"`
+	GlobalRegions []CmsGlobalRegionResponse `json:"global_regions"`
+	Locales       []CmsLocale               `json:"locales"`
+	Navigation    []CmsNavigationResponse   `json:"navigation"`
+	Pages         []CmsPageResponse         `json:"pages"`
+	SchemaVersion int                       `json:"schema_version"`
+	Variants      []CmsPageVariant          `json:"variants"`
+}
+
+// CmsCustomHTMLBlock defines model for CmsCustomHTMLBlock.
+type CmsCustomHTMLBlock struct {
+	Html string                 `json:"html"`
+	Type CmsCustomHTMLBlockType `json:"type"`
+}
+
+// CmsCustomHTMLBlockType defines model for CmsCustomHTMLBlock.Type.
+type CmsCustomHTMLBlockType string
+
+// CmsDeliveryDecision defines model for CmsDeliveryDecision.
+type CmsDeliveryDecision struct {
+	ContentVersionId    int    `json:"content_version_id"`
+	CorrelationId       string `json:"correlation_id"`
+	ExperimentId        *int   `json:"experiment_id"`
+	ExperimentVariantId *int   `json:"experiment_variant_id"`
+}
+
+// CmsEntry defines model for CmsEntry.
+type CmsEntry struct {
+	CreatedAt          time.Time         `json:"created_at"`
+	CurrentVersionId   *int              `json:"current_version_id"`
+	EntryType          CmsEntryEntryType `json:"entry_type"`
+	Id                 int               `json:"id"`
+	Key                string            `json:"key"`
+	PublishedVersionId *int              `json:"published_version_id"`
+	Status             CmsEntryStatus    `json:"status"`
+	UpdatedAt          time.Time         `json:"updated_at"`
+}
+
+// CmsEntryEntryType defines model for CmsEntry.EntryType.
+type CmsEntryEntryType string
+
+// CmsEntryStatus defines model for CmsEntryStatus.
+type CmsEntryStatus string
+
+// CmsEntryVariant defines model for CmsEntryVariant.
+type CmsEntryVariant struct {
+	ApprovedBy  *string                `json:"approved_by"`
+	CreatedAt   time.Time              `json:"created_at"`
+	EntryId     int                    `json:"entry_id"`
+	Id          int                    `json:"id"`
+	Locale      string                 `json:"locale"`
+	Market      string                 `json:"market"`
+	Payload     map[string]interface{} `json:"payload"`
+	PublishedAt *time.Time             `json:"published_at"`
+	Revision    int                    `json:"revision"`
+	Status      CmsEntryVariantStatus  `json:"status"`
+	SubmittedBy *string                `json:"submitted_by"`
+	UpdatedAt   time.Time              `json:"updated_at"`
+}
+
+// CmsEntryVariantStatus defines model for CmsEntryVariant.Status.
+type CmsEntryVariantStatus string
+
+// CmsEntryVariantInput defines model for CmsEntryVariantInput.
+type CmsEntryVariantInput struct {
+	ChangeSummary *string                `json:"change_summary,omitempty"`
+	Locale        string                 `json:"locale"`
+	Market        *string                `json:"market,omitempty"`
+	Payload       map[string]interface{} `json:"payload"`
+}
+
+// CmsEntryVersion defines model for CmsEntryVersion.
+type CmsEntryVersion struct {
+	ChangeSummary *string        `json:"change_summary,omitempty"`
+	CreatedAt     time.Time      `json:"created_at"`
+	CreatedBy     *int           `json:"created_by"`
+	EntryId       int            `json:"entry_id"`
+	Id            int            `json:"id"`
+	Payload       CmsPagePayload `json:"payload"`
+	SchemaVersion int            `json:"schema_version"`
+	VersionNumber int            `json:"version_number"`
+}
+
+// CmsEntryWorkflow defines model for CmsEntryWorkflow.
+type CmsEntryWorkflow struct {
+	ApprovedBy  *string                `json:"approved_by"`
+	Comments    []CmsChangeComment     `json:"comments"`
+	EntryId     int                    `json:"entry_id"`
+	Status      CmsEntryWorkflowStatus `json:"status"`
+	SubmittedBy *string                `json:"submitted_by"`
+	VersionId   int                    `json:"version_id"`
+}
+
+// CmsEntryWorkflowStatus defines model for CmsEntryWorkflow.Status.
+type CmsEntryWorkflowStatus string
+
+// CmsExperiment defines model for CmsExperiment.
+type CmsExperiment struct {
+	CreatedAt time.Time              `json:"created_at"`
+	EndsAt    *time.Time             `json:"ends_at"`
+	EntryId   int                    `json:"entry_id"`
+	Id        int                    `json:"id"`
+	Name      string                 `json:"name"`
+	StartsAt  time.Time              `json:"starts_at"`
+	Status    CmsExperimentStatus    `json:"status"`
+	StickyKey CmsExperimentStickyKey `json:"sticky_key"`
+	UpdatedAt time.Time              `json:"updated_at"`
+	Variants  []CmsExperimentVariant `json:"variants"`
+}
+
+// CmsExperimentStatus defines model for CmsExperiment.Status.
+type CmsExperimentStatus string
+
+// CmsExperimentStickyKey defines model for CmsExperiment.StickyKey.
+type CmsExperimentStickyKey string
+
+// CmsExperimentInput defines model for CmsExperimentInput.
+type CmsExperimentInput struct {
+	EndsAt    *time.Time                  `json:"ends_at"`
+	Name      string                      `json:"name"`
+	StartsAt  time.Time                   `json:"starts_at"`
+	Status    CmsExperimentInputStatus    `json:"status"`
+	StickyKey CmsExperimentInputStickyKey `json:"sticky_key"`
+	Variants  []CmsExperimentVariantInput `json:"variants"`
+}
+
+// CmsExperimentInputStatus defines model for CmsExperimentInput.Status.
+type CmsExperimentInputStatus string
+
+// CmsExperimentInputStickyKey defines model for CmsExperimentInput.StickyKey.
+type CmsExperimentInputStickyKey string
+
+// CmsExperimentVariant defines model for CmsExperimentVariant.
+type CmsExperimentVariant struct {
+	Allocation   int    `json:"allocation"`
+	ExperimentId int    `json:"experiment_id"`
+	Id           int    `json:"id"`
+	Name         string `json:"name"`
+	VersionId    int    `json:"version_id"`
+}
+
+// CmsExperimentVariantInput defines model for CmsExperimentVariantInput.
+type CmsExperimentVariantInput struct {
+	Allocation int    `json:"allocation"`
+	Name       string `json:"name"`
+	VersionId  int    `json:"version_id"`
+}
+
+// CmsFAQBlock defines model for CmsFAQBlock.
+type CmsFAQBlock struct {
+	Items []struct {
+		Answer   string `json:"answer"`
+		Question string `json:"question"`
+	} `json:"items"`
+	Type CmsFAQBlockType `json:"type"`
+}
+
+// CmsFAQBlockType defines model for CmsFAQBlock.Type.
+type CmsFAQBlockType string
+
+// CmsFooterBlock defines model for CmsFooterBlock.
+type CmsFooterBlock struct {
+	BrandName   string               `json:"brand_name"`
+	Columns     []CmsFooterColumn    `json:"columns"`
+	Copyright   string               `json:"copyright"`
+	Layout      CmsFooterBlockLayout `json:"layout"`
+	SocialLinks []CmsLink            `json:"social_links"`
+	Tagline     *string              `json:"tagline,omitempty"`
+	Type        CmsFooterBlockType   `json:"type"`
+}
+
+// CmsFooterBlockLayout defines model for CmsFooterBlock.Layout.
+type CmsFooterBlockLayout string
+
+// CmsFooterBlockType defines model for CmsFooterBlock.Type.
+type CmsFooterBlockType string
+
+// CmsFooterColumn defines model for CmsFooterColumn.
+type CmsFooterColumn struct {
+	Links []CmsLink `json:"links"`
+	Title string    `json:"title"`
+}
+
+// CmsGalleryBlock defines model for CmsGalleryBlock.
+type CmsGalleryBlock struct {
+	Images []CmsGalleryImage   `json:"images"`
+	Type   CmsGalleryBlockType `json:"type"`
+}
+
+// CmsGalleryBlockType defines model for CmsGalleryBlock.Type.
+type CmsGalleryBlockType string
+
+// CmsGalleryImage defines model for CmsGalleryImage.
+type CmsGalleryImage struct {
+	Alt     *string `json:"alt,omitempty"`
+	Caption *string `json:"caption,omitempty"`
+	MediaId string  `json:"media_id"`
+}
+
+// CmsGlobalRegion defines model for CmsGlobalRegion.
+type CmsGlobalRegion struct {
+	CreatedAt time.Time `json:"created_at"`
+	EntryId   int       `json:"entry_id"`
+	Id        int       `json:"id"`
+	Key       string    `json:"key"`
+	Region    string    `json:"region"`
+	Title     string    `json:"title"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// CmsGlobalRegionDraftRequest defines model for CmsGlobalRegionDraftRequest.
+type CmsGlobalRegionDraftRequest struct {
+	ChangeSummary *string        `json:"change_summary,omitempty"`
+	Key           string         `json:"key"`
+	Payload       CmsPagePayload `json:"payload"`
+	Region        string         `json:"region"`
+	Title         string         `json:"title"`
+}
+
+// CmsGlobalRegionListResponse defines model for CmsGlobalRegionListResponse.
+type CmsGlobalRegionListResponse struct {
+	Data       []CmsGlobalRegionResponse `json:"data"`
+	Pagination Pagination                `json:"pagination"`
+}
+
+// CmsGlobalRegionResponse defines model for CmsGlobalRegionResponse.
+type CmsGlobalRegionResponse struct {
+	CurrentVersion      *CmsEntryVersion `json:"current_version,omitempty"`
+	Entry               CmsEntry         `json:"entry"`
+	HasUnpublishedDraft bool             `json:"has_unpublished_draft"`
+	LatestPublication   *CmsPublication  `json:"latest_publication,omitempty"`
+	PublishedVersion    *CmsEntryVersion `json:"published_version,omitempty"`
+	Region              CmsGlobalRegion  `json:"region"`
+}
+
+// CmsGovernance defines model for CmsGovernance.
+type CmsGovernance struct {
+	ApprovalRequired       bool                `json:"approval_required"`
+	InvalidationWebhookUrl string              `json:"invalidation_webhook_url"`
+	Roles                  []CmsRoleAssignment `json:"roles"`
+}
+
+// CmsGovernanceInput defines model for CmsGovernanceInput.
+type CmsGovernanceInput struct {
+	ApprovalRequired       bool                `json:"approval_required"`
+	InvalidationWebhookUrl string              `json:"invalidation_webhook_url"`
+	Roles                  []CmsRoleAssignment `json:"roles"`
+}
+
+// CmsHeroBlock defines model for CmsHeroBlock.
+type CmsHeroBlock struct {
+	ImageMediaId *string          `json:"image_media_id,omitempty"`
+	PrimaryCta   *CmsLink         `json:"primary_cta,omitempty"`
+	Subtitle     *string          `json:"subtitle,omitempty"`
+	Title        string           `json:"title"`
+	Type         CmsHeroBlockType `json:"type"`
+}
+
+// CmsHeroBlockType defines model for CmsHeroBlock.Type.
+type CmsHeroBlockType string
+
+// CmsImageBlock defines model for CmsImageBlock.
+type CmsImageBlock struct {
+	Alt     *string           `json:"alt,omitempty"`
+	Caption *string           `json:"caption,omitempty"`
+	MediaId string            `json:"media_id"`
+	Type    CmsImageBlockType `json:"type"`
+}
+
+// CmsImageBlockType defines model for CmsImageBlock.Type.
+type CmsImageBlockType string
+
+// CmsInvalidationEvent defines model for CmsInvalidationEvent.
+type CmsInvalidationEvent struct {
+	Attempts  int                        `json:"attempts"`
+	CreatedAt time.Time                  `json:"created_at"`
+	EntryId   int                        `json:"entry_id"`
+	Id        int                        `json:"id"`
+	LastError string                     `json:"last_error"`
+	Reason    string                     `json:"reason"`
+	SentAt    *time.Time                 `json:"sent_at"`
+	Status    CmsInvalidationEventStatus `json:"status"`
+	VariantId *int                       `json:"variant_id"`
+}
+
+// CmsInvalidationEventStatus defines model for CmsInvalidationEvent.Status.
+type CmsInvalidationEventStatus string
+
+// CmsInventoryMessageBlock defines model for CmsInventoryMessageBlock.
+type CmsInventoryMessageBlock struct {
+	InStockMessage    *string                      `json:"in_stock_message,omitempty"`
+	LowStockMessage   *string                      `json:"low_stock_message,omitempty"`
+	LowStockThreshold *int                         `json:"low_stock_threshold,omitempty"`
+	OutOfStockMessage *string                      `json:"out_of_stock_message,omitempty"`
+	ProductId         int                          `json:"product_id"`
+	Type              CmsInventoryMessageBlockType `json:"type"`
+}
+
+// CmsInventoryMessageBlockType defines model for CmsInventoryMessageBlock.Type.
+type CmsInventoryMessageBlockType string
+
+// CmsLink defines model for CmsLink.
+type CmsLink struct {
+	Label string `json:"label"`
+	Url   string `json:"url"`
+}
+
+// CmsLocale defines model for CmsLocale.
+type CmsLocale struct {
+	Code           string  `json:"code"`
+	Enabled        bool    `json:"enabled"`
+	FallbackLocale *string `json:"fallback_locale"`
+	IsDefault      bool    `json:"is_default"`
+	Name           string  `json:"name"`
+}
+
+// CmsLocaleInput defines model for CmsLocaleInput.
+type CmsLocaleInput struct {
+	Code           string  `json:"code"`
+	Enabled        bool    `json:"enabled"`
+	FallbackLocale *string `json:"fallback_locale"`
+	IsDefault      bool    `json:"is_default"`
+	Name           string  `json:"name"`
+}
+
+// CmsLocaleSettings defines model for CmsLocaleSettings.
+type CmsLocaleSettings struct {
+	Locales []CmsLocale `json:"locales"`
+}
+
+// CmsLocaleSettingsInput defines model for CmsLocaleSettingsInput.
+type CmsLocaleSettingsInput struct {
+	Locales []CmsLocaleInput `json:"locales"`
+}
+
+// CmsNavigationDraftRequest defines model for CmsNavigationDraftRequest.
+type CmsNavigationDraftRequest struct {
+	ChangeSummary *string                  `json:"change_summary,omitempty"`
+	Items         []CmsNavigationItemInput `json:"items"`
+	Key           string                   `json:"key"`
+	Location      string                   `json:"location"`
+	Title         string                   `json:"title"`
+}
+
+// CmsNavigationItem defines model for CmsNavigationItem.
+type CmsNavigationItem struct {
+	Id        int                       `json:"id"`
+	IsEnabled bool                      `json:"is_enabled"`
+	ItemType  CmsNavigationItemItemType `json:"item_type"`
+	Label     string                    `json:"label"`
+	MenuId    int                       `json:"menu_id"`
+	ParentId  *int                      `json:"parent_id"`
+	SortOrder int                       `json:"sort_order"`
+	TargetRef string                    `json:"target_ref"`
+	Url       string                    `json:"url"`
+}
+
+// CmsNavigationItemItemType defines model for CmsNavigationItem.ItemType.
+type CmsNavigationItemItemType string
+
+// CmsNavigationItemInput defines model for CmsNavigationItemInput.
+type CmsNavigationItemInput struct {
+	Id        *int                           `json:"id,omitempty"`
+	IsEnabled bool                           `json:"is_enabled"`
+	ItemType  CmsNavigationItemInputItemType `json:"item_type"`
+	Label     string                         `json:"label"`
+	ParentId  *int                           `json:"parent_id"`
+	SortOrder int                            `json:"sort_order"`
+	TargetRef string                         `json:"target_ref"`
+	Url       string                         `json:"url"`
+}
+
+// CmsNavigationItemInputItemType defines model for CmsNavigationItemInput.ItemType.
+type CmsNavigationItemInputItemType string
+
+// CmsNavigationListResponse defines model for CmsNavigationListResponse.
+type CmsNavigationListResponse struct {
+	Data       []CmsNavigationResponse `json:"data"`
+	Pagination Pagination              `json:"pagination"`
+}
+
+// CmsNavigationMenu defines model for CmsNavigationMenu.
+type CmsNavigationMenu struct {
+	CreatedAt time.Time `json:"created_at"`
+	EntryId   int       `json:"entry_id"`
+	Id        int       `json:"id"`
+	Key       string    `json:"key"`
+	Location  string    `json:"location"`
+	Title     string    `json:"title"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// CmsNavigationResponse defines model for CmsNavigationResponse.
+type CmsNavigationResponse struct {
+	CurrentVersion      *CmsEntryVersion    `json:"current_version,omitempty"`
+	Entry               CmsEntry            `json:"entry"`
+	HasUnpublishedDraft bool                `json:"has_unpublished_draft"`
+	Items               []CmsNavigationItem `json:"items"`
+	LatestPublication   *CmsPublication     `json:"latest_publication,omitempty"`
+	Menu                CmsNavigationMenu   `json:"menu"`
+	PublishedVersion    *CmsEntryVersion    `json:"published_version,omitempty"`
+}
+
+// CmsOperations defines model for CmsOperations.
+type CmsOperations struct {
+	ActiveExperiments int                    `json:"active_experiments"`
+	Invalidations     []CmsInvalidationEvent `json:"invalidations"`
+	PendingSchedules  int                    `json:"pending_schedules"`
+}
+
+// CmsPage defines model for CmsPage.
+type CmsPage struct {
+	CreatedAt     time.Time         `json:"created_at"`
+	EntryId       int               `json:"entry_id"`
+	Id            int               `json:"id"`
+	IsHomepage    bool              `json:"is_homepage"`
+	Path          string            `json:"path"`
+	SeoMetadataId *int              `json:"seo_metadata_id"`
+	Slug          string            `json:"slug"`
+	TemplateKey   string            `json:"template_key"`
+	Title         string            `json:"title"`
+	UpdatedAt     time.Time         `json:"updated_at"`
+	Visibility    CmsPageVisibility `json:"visibility"`
+}
+
+// CmsPageVisibility defines model for CmsPage.Visibility.
+type CmsPageVisibility string
+
+// CmsPageDeliveryRequest defines model for CmsPageDeliveryRequest.
+type CmsPageDeliveryRequest struct {
+	Experiment     *CmsExperimentInput     `json:"experiment,omitempty"`
+	Schedule       *CmsScheduleInput       `json:"schedule,omitempty"`
+	TargetingRules []CmsTargetingRuleInput `json:"targeting_rules"`
+}
+
+// CmsPageDeliveryResponse defines model for CmsPageDeliveryResponse.
+type CmsPageDeliveryResponse struct {
+	Experiment         *CmsExperiment     `json:"experiment,omitempty"`
+	RecentPublications []CmsPublication   `json:"recent_publications"`
+	Schedule           *CmsSchedule       `json:"schedule,omitempty"`
+	TargetingRules     []CmsTargetingRule `json:"targeting_rules"`
+}
+
+// CmsPageDraftRequest defines model for CmsPageDraftRequest.
+type CmsPageDraftRequest struct {
+	ChangeSummary *string                        `json:"change_summary,omitempty"`
+	IsHomepage    *bool                          `json:"is_homepage,omitempty"`
+	Path          string                         `json:"path"`
+	Payload       CmsPagePayload                 `json:"payload"`
+	Slug          *string                        `json:"slug,omitempty"`
+	TemplateKey   *string                        `json:"template_key,omitempty"`
+	Title         string                         `json:"title"`
+	Visibility    *CmsPageDraftRequestVisibility `json:"visibility,omitempty"`
+}
+
+// CmsPageDraftRequestVisibility defines model for CmsPageDraftRequest.Visibility.
+type CmsPageDraftRequestVisibility string
+
+// CmsPageListResponse defines model for CmsPageListResponse.
+type CmsPageListResponse struct {
+	Data       []CmsPageResponse `json:"data"`
+	Pagination Pagination        `json:"pagination"`
+}
+
+// CmsPagePayload defines model for CmsPagePayload.
+type CmsPagePayload struct {
+	Blocks               *[]CmsContentBlock     `json:"blocks,omitempty"`
+	AdditionalProperties map[string]interface{} `json:"-"`
+}
+
+// CmsPageResponse defines model for CmsPageResponse.
+type CmsPageResponse struct {
+	CurrentVersion      *CmsEntryVersion         `json:"current_version,omitempty"`
+	Delivery            *CmsDeliveryDecision     `json:"delivery,omitempty"`
+	Entry               CmsEntry                 `json:"entry"`
+	HasUnpublishedDraft bool                     `json:"has_unpublished_draft"`
+	LatestPublication   *CmsPublication          `json:"latest_publication,omitempty"`
+	Localization        *CmsResolvedLocalization `json:"localization,omitempty"`
+	Page                CmsPage                  `json:"page"`
+	PublishedVersion    *CmsEntryVersion         `json:"published_version,omitempty"`
+	Seo                 *CmsSEOMetadata          `json:"seo,omitempty"`
+}
+
+// CmsPageVariant defines model for CmsPageVariant.
+type CmsPageVariant struct {
+	ApprovedBy  *string              `json:"approved_by"`
+	CreatedAt   time.Time            `json:"created_at"`
+	EntryId     int                  `json:"entry_id"`
+	Id          int                  `json:"id"`
+	Locale      string               `json:"locale"`
+	Market      string               `json:"market"`
+	PageId      int                  `json:"page_id"`
+	Path        string               `json:"path"`
+	Payload     CmsPagePayload       `json:"payload"`
+	PublishedAt *time.Time           `json:"published_at"`
+	Revision    int                  `json:"revision"`
+	Slug        string               `json:"slug"`
+	Status      CmsPageVariantStatus `json:"status"`
+	SubmittedBy *string              `json:"submitted_by"`
+	Title       string               `json:"title"`
+	UpdatedAt   time.Time            `json:"updated_at"`
+}
+
+// CmsPageVariantStatus defines model for CmsPageVariant.Status.
+type CmsPageVariantStatus string
+
+// CmsPageVariantInput defines model for CmsPageVariantInput.
+type CmsPageVariantInput struct {
+	ChangeSummary *string        `json:"change_summary,omitempty"`
+	Locale        string         `json:"locale"`
+	Market        *string        `json:"market,omitempty"`
+	Path          string         `json:"path"`
+	Payload       CmsPagePayload `json:"payload"`
+	Slug          *string        `json:"slug,omitempty"`
+	Title         string         `json:"title"`
+}
+
+// CmsPreviewBlock defines model for CmsPreviewBlock.
+type CmsPreviewBlock struct {
+	ItemCount int                   `json:"item_count"`
+	Key       string                `json:"key"`
+	Messages  []string              `json:"messages"`
+	Status    CmsPreviewBlockStatus `json:"status"`
+	Type      string                `json:"type"`
+}
+
+// CmsPreviewBlockStatus defines model for CmsPreviewBlock.Status.
+type CmsPreviewBlockStatus string
+
+// CmsPreviewRequest defines model for CmsPreviewRequest.
+type CmsPreviewRequest struct {
+	Payload CmsPagePayload `json:"payload"`
+}
+
+// CmsPreviewResponse defines model for CmsPreviewResponse.
+type CmsPreviewResponse struct {
+	Blocks []CmsPreviewBlock `json:"blocks"`
+}
+
+// CmsProductRailBlock defines model for CmsProductRailBlock.
+type CmsProductRailBlock struct {
+	CategorySlug *string                         `json:"category_slug,omitempty"`
+	ImageAspect  *CmsProductRailBlockImageAspect `json:"image_aspect,omitempty"`
+	Limit        int                             `json:"limit"`
+	Order        *CmsProductRailBlockOrder       `json:"order,omitempty"`
+	ProductIds   *[]int                          `json:"product_ids,omitempty"`
+	Query        *string                         `json:"query,omitempty"`
+	Sort         *CmsProductRailBlockSort        `json:"sort,omitempty"`
+	Source       CmsProductRailBlockSource       `json:"source"`
+	Subtitle     *string                         `json:"subtitle,omitempty"`
+	Title        string                          `json:"title"`
+	Type         CmsProductRailBlockType         `json:"type"`
+}
+
+// CmsProductRailBlockImageAspect defines model for CmsProductRailBlock.ImageAspect.
+type CmsProductRailBlockImageAspect string
+
+// CmsProductRailBlockOrder defines model for CmsProductRailBlock.Order.
+type CmsProductRailBlockOrder string
+
+// CmsProductRailBlockSort defines model for CmsProductRailBlock.Sort.
+type CmsProductRailBlockSort string
+
+// CmsProductRailBlockSource defines model for CmsProductRailBlock.Source.
+type CmsProductRailBlockSource string
+
+// CmsProductRailBlockType defines model for CmsProductRailBlock.Type.
+type CmsProductRailBlockType string
+
+// CmsPromoBannerBlock defines model for CmsPromoBannerBlock.
+type CmsPromoBannerBlock struct {
+	Body  *string                 `json:"body,omitempty"`
+	Link  *CmsLink                `json:"link,omitempty"`
+	Title string                  `json:"title"`
+	Type  CmsPromoBannerBlockType `json:"type"`
+}
+
+// CmsPromoBannerBlockType defines model for CmsPromoBannerBlock.Type.
+type CmsPromoBannerBlockType string
+
+// CmsPromotionHighlightBlock defines model for CmsPromotionHighlightBlock.
+type CmsPromotionHighlightBlock struct {
+	Badge         *string                        `json:"badge,omitempty"`
+	Body          *string                        `json:"body,omitempty"`
+	CampaignId    *int                           `json:"campaign_id,omitempty"`
+	Link          *CmsLink                       `json:"link,omitempty"`
+	PromotionCode *string                        `json:"promotion_code,omitempty"`
+	Title         string                         `json:"title"`
+	Type          CmsPromotionHighlightBlockType `json:"type"`
+}
+
+// CmsPromotionHighlightBlockType defines model for CmsPromotionHighlightBlock.Type.
+type CmsPromotionHighlightBlockType string
+
+// CmsPublication defines model for CmsPublication.
+type CmsPublication struct {
+	EntryId                   int       `json:"entry_id"`
+	Id                        int       `json:"id"`
+	Notes                     *string   `json:"notes,omitempty"`
+	PublishedAt               time.Time `json:"published_at"`
+	PublishedBy               *int      `json:"published_by"`
+	RollbackFromPublicationId *int      `json:"rollback_from_publication_id"`
+	VersionId                 int       `json:"version_id"`
+}
+
+// CmsPublishRequest defines model for CmsPublishRequest.
+type CmsPublishRequest struct {
+	Notes *string `json:"notes,omitempty"`
+}
+
+// CmsRedirectInput defines model for CmsRedirectInput.
+type CmsRedirectInput struct {
+	IsEnabled     bool                         `json:"is_enabled"`
+	MatchType     CmsRedirectInputMatchType    `json:"match_type"`
+	Priority      int                          `json:"priority"`
+	RedirectType  CmsRedirectInputRedirectType `json:"redirect_type"`
+	SourcePattern string                       `json:"source_pattern"`
+	TargetUrl     string                       `json:"target_url"`
+}
+
+// CmsRedirectInputMatchType defines model for CmsRedirectInput.MatchType.
+type CmsRedirectInputMatchType string
+
+// CmsRedirectInputRedirectType defines model for CmsRedirectInput.RedirectType.
+type CmsRedirectInputRedirectType int
+
+// CmsRedirectResolution defines model for CmsRedirectResolution.
+type CmsRedirectResolution struct {
+	RedirectType CmsRedirectResolutionRedirectType `json:"redirect_type"`
+	TargetUrl    string                            `json:"target_url"`
+}
+
+// CmsRedirectResolutionRedirectType defines model for CmsRedirectResolution.RedirectType.
+type CmsRedirectResolutionRedirectType int
+
+// CmsRedirectRule defines model for CmsRedirectRule.
+type CmsRedirectRule struct {
+	CreatedAt     time.Time                   `json:"created_at"`
+	Id            int                         `json:"id"`
+	IsEnabled     bool                        `json:"is_enabled"`
+	MatchType     CmsRedirectRuleMatchType    `json:"match_type"`
+	Priority      int                         `json:"priority"`
+	RedirectType  CmsRedirectRuleRedirectType `json:"redirect_type"`
+	SourcePattern string                      `json:"source_pattern"`
+	TargetUrl     string                      `json:"target_url"`
+	UpdatedAt     time.Time                   `json:"updated_at"`
+}
+
+// CmsRedirectRuleMatchType defines model for CmsRedirectRule.MatchType.
+type CmsRedirectRuleMatchType string
+
+// CmsRedirectRuleRedirectType defines model for CmsRedirectRule.RedirectType.
+type CmsRedirectRuleRedirectType int
+
+// CmsResolvedLocalization defines model for CmsResolvedLocalization.
+type CmsResolvedLocalization struct {
+	Alternates []struct {
+		Locale string  `json:"locale"`
+		Market *string `json:"market,omitempty"`
+		Path   string  `json:"path"`
+	} `json:"alternates"`
+	Market          string `json:"market"`
+	RequestedLocale string `json:"requested_locale"`
+	ResolvedLocale  string `json:"resolved_locale"`
+	UsedFallback    bool   `json:"used_fallback"`
+}
+
+// CmsRestorePreview defines model for CmsRestorePreview.
+type CmsRestorePreview struct {
+	Errors        []string `json:"errors"`
+	GlobalRegions int      `json:"global_regions"`
+	Navigation    int      `json:"navigation"`
+	Pages         int      `json:"pages"`
+	SchemaVersion int      `json:"schema_version"`
+	Valid         bool     `json:"valid"`
+	Variants      int      `json:"variants"`
+	Warnings      []string `json:"warnings"`
+}
+
+// CmsRichTextBlock defines model for CmsRichTextBlock.
+type CmsRichTextBlock struct {
+	Body string               `json:"body"`
+	Type CmsRichTextBlockType `json:"type"`
+}
+
+// CmsRichTextBlockType defines model for CmsRichTextBlock.Type.
+type CmsRichTextBlockType string
+
+// CmsRoleAssignment defines model for CmsRoleAssignment.
+type CmsRoleAssignment struct {
+	Role    CmsRoleAssignmentRole `json:"role"`
+	Subject string                `json:"subject"`
+}
+
+// CmsRoleAssignmentRole defines model for CmsRoleAssignment.Role.
+type CmsRoleAssignmentRole string
+
+// CmsRollbackRequest defines model for CmsRollbackRequest.
+type CmsRollbackRequest struct {
+	Notes     *string `json:"notes,omitempty"`
+	VersionId int     `json:"version_id"`
+}
+
+// CmsSEOInput defines model for CmsSEOInput.
+type CmsSEOInput struct {
+	CanonicalUrl        string                   `json:"canonical_url"`
+	Description         string                   `json:"description"`
+	JsonLd              []map[string]interface{} `json:"json_ld"`
+	OgDescription       string                   `json:"og_description"`
+	OgImageMediaId      *string                  `json:"og_image_media_id"`
+	OgTitle             string                   `json:"og_title"`
+	Robots              CmsSEOInputRobots        `json:"robots"`
+	Title               string                   `json:"title"`
+	TwitterCard         CmsSEOInputTwitterCard   `json:"twitter_card"`
+	TwitterDescription  string                   `json:"twitter_description"`
+	TwitterImageMediaId *string                  `json:"twitter_image_media_id"`
+	TwitterTitle        string                   `json:"twitter_title"`
+}
+
+// CmsSEOInputRobots defines model for CmsSEOInput.Robots.
+type CmsSEOInputRobots string
+
+// CmsSEOInputTwitterCard defines model for CmsSEOInput.TwitterCard.
+type CmsSEOInputTwitterCard string
+
+// CmsSEOMetadata defines model for CmsSEOMetadata.
+type CmsSEOMetadata struct {
+	CanonicalUrl        string                    `json:"canonical_url"`
+	Description         string                    `json:"description"`
+	JsonLd              []map[string]interface{}  `json:"json_ld"`
+	OgDescription       string                    `json:"og_description"`
+	OgImageMediaId      *string                   `json:"og_image_media_id"`
+	OgTitle             string                    `json:"og_title"`
+	Robots              CmsSEOMetadataRobots      `json:"robots"`
+	Title               string                    `json:"title"`
+	TwitterCard         CmsSEOMetadataTwitterCard `json:"twitter_card"`
+	TwitterDescription  string                    `json:"twitter_description"`
+	TwitterImageMediaId *string                   `json:"twitter_image_media_id"`
+	TwitterTitle        string                    `json:"twitter_title"`
+}
+
+// CmsSEOMetadataRobots defines model for CmsSEOMetadata.Robots.
+type CmsSEOMetadataRobots string
+
+// CmsSEOMetadataTwitterCard defines model for CmsSEOMetadata.TwitterCard.
+type CmsSEOMetadataTwitterCard string
+
+// CmsSEOResponse defines model for CmsSEOResponse.
+type CmsSEOResponse struct {
+	Issues   []string       `json:"issues"`
+	Metadata CmsSEOMetadata `json:"metadata"`
+}
+
+// CmsSchedule defines model for CmsSchedule.
+type CmsSchedule struct {
+	CreatedAt        time.Time         `json:"created_at"`
+	EntryId          int               `json:"entry_id"`
+	Id               int               `json:"id"`
+	LastTransitionAt *time.Time        `json:"last_transition_at"`
+	PublishAt        time.Time         `json:"publish_at"`
+	Status           CmsScheduleStatus `json:"status"`
+	Timezone         string            `json:"timezone"`
+	UnpublishAt      *time.Time        `json:"unpublish_at"`
+	UpdatedAt        time.Time         `json:"updated_at"`
+	VersionId        int               `json:"version_id"`
+}
+
+// CmsScheduleStatus defines model for CmsSchedule.Status.
+type CmsScheduleStatus string
+
+// CmsScheduleInput defines model for CmsScheduleInput.
+type CmsScheduleInput struct {
+	PublishAt   time.Time  `json:"publish_at"`
+	Timezone    string     `json:"timezone"`
+	UnpublishAt *time.Time `json:"unpublish_at"`
+}
+
+// CmsSocialEmbedBlock defines model for CmsSocialEmbedBlock.
+type CmsSocialEmbedBlock struct {
+	Provider CmsSocialEmbedBlockProvider `json:"provider"`
+	Title    *string                     `json:"title,omitempty"`
+	Type     CmsSocialEmbedBlockType     `json:"type"`
+	Url      string                      `json:"url"`
+}
+
+// CmsSocialEmbedBlockProvider defines model for CmsSocialEmbedBlock.Provider.
+type CmsSocialEmbedBlockProvider string
+
+// CmsSocialEmbedBlockType defines model for CmsSocialEmbedBlock.Type.
+type CmsSocialEmbedBlockType string
+
+// CmsTargetingRule defines model for CmsTargetingRule.
+type CmsTargetingRule struct {
+	AuthStates    []CmsTargetingRuleAuthStates    `json:"auth_states"`
+	DeviceClasses []CmsTargetingRuleDeviceClasses `json:"device_classes"`
+	Id            int                             `json:"id"`
+	IsEnabled     bool                            `json:"is_enabled"`
+	Markets       []string                        `json:"markets"`
+	Priority      int                             `json:"priority"`
+	Referrers     []string                        `json:"referrers"`
+	SegmentKeys   []string                        `json:"segment_keys"`
+	UtmSources    []string                        `json:"utm_sources"`
+}
+
+// CmsTargetingRuleAuthStates defines model for CmsTargetingRule.AuthStates.
+type CmsTargetingRuleAuthStates string
+
+// CmsTargetingRuleDeviceClasses defines model for CmsTargetingRule.DeviceClasses.
+type CmsTargetingRuleDeviceClasses string
+
+// CmsTargetingRuleInput defines model for CmsTargetingRuleInput.
+type CmsTargetingRuleInput struct {
+	AuthStates    []CmsTargetingRuleInputAuthStates    `json:"auth_states"`
+	DeviceClasses []CmsTargetingRuleInputDeviceClasses `json:"device_classes"`
+	IsEnabled     bool                                 `json:"is_enabled"`
+	Markets       []string                             `json:"markets"`
+	Priority      int                                  `json:"priority"`
+	Referrers     []string                             `json:"referrers"`
+	SegmentKeys   []string                             `json:"segment_keys"`
+	UtmSources    []string                             `json:"utm_sources"`
+}
+
+// CmsTargetingRuleInputAuthStates defines model for CmsTargetingRuleInput.AuthStates.
+type CmsTargetingRuleInputAuthStates string
+
+// CmsTargetingRuleInputDeviceClasses defines model for CmsTargetingRuleInput.DeviceClasses.
+type CmsTargetingRuleInputDeviceClasses string
+
+// CmsTestimonialBlock defines model for CmsTestimonialBlock.
+type CmsTestimonialBlock struct {
+	Attribution string                  `json:"attribution"`
+	Quote       string                  `json:"quote"`
+	Rating      *int                    `json:"rating,omitempty"`
+	Type        CmsTestimonialBlockType `json:"type"`
+}
+
+// CmsTestimonialBlockType defines model for CmsTestimonialBlock.Type.
+type CmsTestimonialBlockType string
+
+// CmsVideoBlock defines model for CmsVideoBlock.
+type CmsVideoBlock struct {
+	Title *string           `json:"title,omitempty"`
+	Type  CmsVideoBlockType `json:"type"`
+	Url   string            `json:"url"`
+}
+
+// CmsVideoBlockType defines model for CmsVideoBlock.Type.
+type CmsVideoBlockType string
+
+// CmsWorkflowActionInput defines model for CmsWorkflowActionInput.
+type CmsWorkflowActionInput struct {
+	Comment *string `json:"comment,omitempty"`
 }
 
 // CreateCheckoutOrderRequest defines model for CreateCheckoutOrderRequest.
@@ -2064,115 +3353,6 @@ type ShipmentRate struct {
 	ShipmentId     *int       `json:"shipment_id"`
 }
 
-// StorefrontFooter defines model for StorefrontFooter.
-type StorefrontFooter struct {
-	BottomNotice string                   `json:"bottom_notice"`
-	BrandName    string                   `json:"brand_name"`
-	Columns      []StorefrontFooterColumn `json:"columns"`
-	Copyright    string                   `json:"copyright"`
-	SocialLinks  []StorefrontLink         `json:"social_links"`
-	Tagline      string                   `json:"tagline"`
-}
-
-// StorefrontFooterColumn defines model for StorefrontFooterColumn.
-type StorefrontFooterColumn struct {
-	Links []StorefrontLink `json:"links"`
-	Title string           `json:"title"`
-}
-
-// StorefrontHero defines model for StorefrontHero.
-type StorefrontHero struct {
-	BackgroundImageMediaId *string        `json:"background_image_media_id,omitempty"`
-	BackgroundImageUrl     string         `json:"background_image_url"`
-	Eyebrow                string         `json:"eyebrow"`
-	PrimaryCta             StorefrontLink `json:"primary_cta"`
-	SecondaryCta           StorefrontLink `json:"secondary_cta"`
-	Subtitle               string         `json:"subtitle"`
-	Title                  string         `json:"title"`
-}
-
-// StorefrontHomepageSection defines model for StorefrontHomepageSection.
-type StorefrontHomepageSection struct {
-	Badges         *[]string                     `json:"badges,omitempty"`
-	Enabled        bool                          `json:"enabled"`
-	Hero           *StorefrontHero               `json:"hero,omitempty"`
-	Id             string                        `json:"id"`
-	ProductSection *StorefrontProductSection     `json:"product_section,omitempty"`
-	PromoCardLimit *int                          `json:"promo_card_limit,omitempty"`
-	PromoCards     *[]StorefrontPromoCard        `json:"promo_cards,omitempty"`
-	Type           StorefrontHomepageSectionType `json:"type"`
-}
-
-// StorefrontHomepageSectionType defines model for StorefrontHomepageSection.Type.
-type StorefrontHomepageSectionType string
-
-// StorefrontLink defines model for StorefrontLink.
-type StorefrontLink struct {
-	Label string `json:"label"`
-	Url   string `json:"url"`
-}
-
-// StorefrontProductSection defines model for StorefrontProductSection.
-type StorefrontProductSection struct {
-	AttributeFilters map[string]string                   `json:"attribute_filters"`
-	BrandSlug        string                              `json:"brand_slug"`
-	CategorySlug     string                              `json:"category_slug"`
-	HasVariantStock  bool                                `json:"has_variant_stock"`
-	ImageAspect      StorefrontProductSectionImageAspect `json:"image_aspect"`
-	Limit            int                                 `json:"limit"`
-	Order            StorefrontProductSectionOrder       `json:"order"`
-	ProductIds       []int                               `json:"product_ids"`
-	Query            string                              `json:"query"`
-	ShowDescription  bool                                `json:"show_description"`
-	ShowStock        bool                                `json:"show_stock"`
-	Sort             StorefrontProductSectionSort        `json:"sort"`
-	Source           StorefrontProductSectionSource      `json:"source"`
-	Subtitle         string                              `json:"subtitle"`
-	Title            string                              `json:"title"`
-}
-
-// StorefrontProductSectionImageAspect defines model for StorefrontProductSection.ImageAspect.
-type StorefrontProductSectionImageAspect string
-
-// StorefrontProductSectionOrder defines model for StorefrontProductSection.Order.
-type StorefrontProductSectionOrder string
-
-// StorefrontProductSectionSort defines model for StorefrontProductSection.Sort.
-type StorefrontProductSectionSort string
-
-// StorefrontProductSectionSource defines model for StorefrontProductSection.Source.
-type StorefrontProductSectionSource string
-
-// StorefrontPromoCard defines model for StorefrontPromoCard.
-type StorefrontPromoCard struct {
-	Description string         `json:"description"`
-	ImageUrl    string         `json:"image_url"`
-	Kicker      string         `json:"kicker"`
-	Link        StorefrontLink `json:"link"`
-	Title       string         `json:"title"`
-}
-
-// StorefrontSettings defines model for StorefrontSettings.
-type StorefrontSettings struct {
-	Footer           StorefrontFooter            `json:"footer"`
-	HomepageSections []StorefrontHomepageSection `json:"homepage_sections"`
-	SiteTitle        string                      `json:"site_title"`
-}
-
-// StorefrontSettingsRequest defines model for StorefrontSettingsRequest.
-type StorefrontSettingsRequest struct {
-	Settings StorefrontSettings `json:"settings"`
-}
-
-// StorefrontSettingsResponse defines model for StorefrontSettingsResponse.
-type StorefrontSettingsResponse struct {
-	DraftUpdatedAt     *time.Time         `json:"draft_updated_at"`
-	HasDraftChanges    bool               `json:"has_draft_changes"`
-	PublishedUpdatedAt time.Time          `json:"published_updated_at"`
-	Settings           StorefrontSettings `json:"settings"`
-	UpdatedAt          time.Time          `json:"updated_at"`
-}
-
 // Supplier defines model for Supplier.
 type Supplier struct {
 	CreatedAt time.Time `json:"created_at"`
@@ -2336,6 +3516,7 @@ type WebsiteSettings struct {
 	OidcClientSecretConfigured bool   `json:"oidc_client_secret_configured"`
 	OidcProvider               string `json:"oidc_provider"`
 	OidcRedirectUri            string `json:"oidc_redirect_uri"`
+	SiteTitle                  string `json:"site_title"`
 }
 
 // WebsiteSettingsRequest defines model for WebsiteSettingsRequest.
@@ -2362,6 +3543,39 @@ type ListAdminCategoriesParams struct {
 
 // UpdateAdminCheckoutPluginParamsType defines parameters for UpdateAdminCheckoutPlugin.
 type UpdateAdminCheckoutPluginParamsType string
+
+// ListAdminCmsAuditEventsParams defines parameters for ListAdminCmsAuditEvents.
+type ListAdminCmsAuditEventsParams struct {
+	EntryId *int `form:"entry_id,omitempty" json:"entry_id,omitempty"`
+	Limit   *int `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// TransitionAdminCmsEntryVariantParamsAction defines parameters for TransitionAdminCmsEntryVariant.
+type TransitionAdminCmsEntryVariantParamsAction string
+
+// TransitionAdminCmsEntryWorkflowParamsAction defines parameters for TransitionAdminCmsEntryWorkflow.
+type TransitionAdminCmsEntryWorkflowParamsAction string
+
+// ListAdminCmsGlobalRegionsParams defines parameters for ListAdminCmsGlobalRegions.
+type ListAdminCmsGlobalRegionsParams struct {
+	Page  *int `form:"page,omitempty" json:"page,omitempty"`
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ListAdminCmsNavigationParams defines parameters for ListAdminCmsNavigation.
+type ListAdminCmsNavigationParams struct {
+	Page  *int `form:"page,omitempty" json:"page,omitempty"`
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ListAdminCmsPagesParams defines parameters for ListAdminCmsPages.
+type ListAdminCmsPagesParams struct {
+	Page  *int `form:"page,omitempty" json:"page,omitempty"`
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// TransitionAdminCmsPageVariantParamsAction defines parameters for TransitionAdminCmsPageVariant.
+type TransitionAdminCmsPageVariantParamsAction string
 
 // ListAdminDiscountAuditParams defines parameters for ListAdminDiscountAudit.
 type ListAdminDiscountAuditParams struct {
@@ -2556,6 +3770,37 @@ type FinalizeCheckoutOrderTaxParams struct {
 	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
 }
 
+// ResolveContentHomepageParams defines parameters for ResolveContentHomepage.
+type ResolveContentHomepageParams struct {
+	Market        *string                             `form:"market,omitempty" json:"market,omitempty"`
+	Locale        *string                             `form:"locale,omitempty" json:"locale,omitempty"`
+	Device        *ResolveContentHomepageParamsDevice `form:"device,omitempty" json:"device,omitempty"`
+	Segment       *string                             `form:"segment,omitempty" json:"segment,omitempty"`
+	UtmSource     *string                             `form:"utm_source,omitempty" json:"utm_source,omitempty"`
+	AssignmentKey *string                             `form:"assignment_key,omitempty" json:"assignment_key,omitempty"`
+}
+
+// ResolveContentHomepageParamsDevice defines parameters for ResolveContentHomepage.
+type ResolveContentHomepageParamsDevice string
+
+// ResolveContentRedirectParams defines parameters for ResolveContentRedirect.
+type ResolveContentRedirectParams struct {
+	Path string `form:"path" json:"path"`
+}
+
+// ResolveContentPageParams defines parameters for ResolveContentPage.
+type ResolveContentPageParams struct {
+	Market        *string                         `form:"market,omitempty" json:"market,omitempty"`
+	Locale        *string                         `form:"locale,omitempty" json:"locale,omitempty"`
+	Device        *ResolveContentPageParamsDevice `form:"device,omitempty" json:"device,omitempty"`
+	Segment       *string                         `form:"segment,omitempty" json:"segment,omitempty"`
+	UtmSource     *string                         `form:"utm_source,omitempty" json:"utm_source,omitempty"`
+	AssignmentKey *string                         `form:"assignment_key,omitempty" json:"assignment_key,omitempty"`
+}
+
+// ResolveContentPageParamsDevice defines parameters for ResolveContentPage.
+type ResolveContentPageParamsDevice string
+
 // ListUserOrdersParams defines parameters for ListUserOrders.
 type ListUserOrdersParams struct {
 	Status    *ListUserOrdersParamsStatus `form:"status,omitempty" json:"status,omitempty"`
@@ -2618,6 +3863,96 @@ type UpdateAdminCategoryJSONRequestBody = CategoryInput
 
 // UpdateAdminCheckoutPluginJSONRequestBody defines body for UpdateAdminCheckoutPlugin for application/json ContentType.
 type UpdateAdminCheckoutPluginJSONRequestBody = UpdateCheckoutPluginRequest
+
+// CreateAdminCmsEntryCommentJSONRequestBody defines body for CreateAdminCmsEntryComment for application/json ContentType.
+type CreateAdminCmsEntryCommentJSONRequestBody = CmsCommentInput
+
+// CreateAdminCmsEntryVariantJSONRequestBody defines body for CreateAdminCmsEntryVariant for application/json ContentType.
+type CreateAdminCmsEntryVariantJSONRequestBody = CmsEntryVariantInput
+
+// UpdateAdminCmsEntryVariantJSONRequestBody defines body for UpdateAdminCmsEntryVariant for application/json ContentType.
+type UpdateAdminCmsEntryVariantJSONRequestBody = CmsEntryVariantInput
+
+// TransitionAdminCmsEntryVariantJSONRequestBody defines body for TransitionAdminCmsEntryVariant for application/json ContentType.
+type TransitionAdminCmsEntryVariantJSONRequestBody = CmsWorkflowActionInput
+
+// TransitionAdminCmsEntryWorkflowJSONRequestBody defines body for TransitionAdminCmsEntryWorkflow for application/json ContentType.
+type TransitionAdminCmsEntryWorkflowJSONRequestBody = CmsWorkflowActionInput
+
+// RestoreAdminCmsContentJSONRequestBody defines body for RestoreAdminCmsContent for application/json ContentType.
+type RestoreAdminCmsContentJSONRequestBody = CmsContentExport
+
+// CreateAdminCmsGlobalRegionJSONRequestBody defines body for CreateAdminCmsGlobalRegion for application/json ContentType.
+type CreateAdminCmsGlobalRegionJSONRequestBody = CmsGlobalRegionDraftRequest
+
+// UpdateAdminCmsGlobalRegionJSONRequestBody defines body for UpdateAdminCmsGlobalRegion for application/json ContentType.
+type UpdateAdminCmsGlobalRegionJSONRequestBody = CmsGlobalRegionDraftRequest
+
+// PublishAdminCmsGlobalRegionJSONRequestBody defines body for PublishAdminCmsGlobalRegion for application/json ContentType.
+type PublishAdminCmsGlobalRegionJSONRequestBody = CmsPublishRequest
+
+// UnpublishAdminCmsGlobalRegionJSONRequestBody defines body for UnpublishAdminCmsGlobalRegion for application/json ContentType.
+type UnpublishAdminCmsGlobalRegionJSONRequestBody = CmsPublishRequest
+
+// UpdateAdminCmsGovernanceJSONRequestBody defines body for UpdateAdminCmsGovernance for application/json ContentType.
+type UpdateAdminCmsGovernanceJSONRequestBody = CmsGovernanceInput
+
+// UpdateAdminCmsLocalesJSONRequestBody defines body for UpdateAdminCmsLocales for application/json ContentType.
+type UpdateAdminCmsLocalesJSONRequestBody = CmsLocaleSettingsInput
+
+// CreateAdminCmsNavigationJSONRequestBody defines body for CreateAdminCmsNavigation for application/json ContentType.
+type CreateAdminCmsNavigationJSONRequestBody = CmsNavigationDraftRequest
+
+// UpdateAdminCmsNavigationJSONRequestBody defines body for UpdateAdminCmsNavigation for application/json ContentType.
+type UpdateAdminCmsNavigationJSONRequestBody = CmsNavigationDraftRequest
+
+// PublishAdminCmsNavigationJSONRequestBody defines body for PublishAdminCmsNavigation for application/json ContentType.
+type PublishAdminCmsNavigationJSONRequestBody = CmsPublishRequest
+
+// UnpublishAdminCmsNavigationJSONRequestBody defines body for UnpublishAdminCmsNavigation for application/json ContentType.
+type UnpublishAdminCmsNavigationJSONRequestBody = CmsPublishRequest
+
+// CreateAdminCmsPageJSONRequestBody defines body for CreateAdminCmsPage for application/json ContentType.
+type CreateAdminCmsPageJSONRequestBody = CmsPageDraftRequest
+
+// UpdateAdminCmsPageJSONRequestBody defines body for UpdateAdminCmsPage for application/json ContentType.
+type UpdateAdminCmsPageJSONRequestBody = CmsPageDraftRequest
+
+// UpdateAdminCmsPageDeliveryJSONRequestBody defines body for UpdateAdminCmsPageDelivery for application/json ContentType.
+type UpdateAdminCmsPageDeliveryJSONRequestBody = CmsPageDeliveryRequest
+
+// PublishAdminCmsPageJSONRequestBody defines body for PublishAdminCmsPage for application/json ContentType.
+type PublishAdminCmsPageJSONRequestBody = CmsPublishRequest
+
+// RollbackAdminCmsPageJSONRequestBody defines body for RollbackAdminCmsPage for application/json ContentType.
+type RollbackAdminCmsPageJSONRequestBody = CmsRollbackRequest
+
+// UpdateAdminCmsPageSeoJSONRequestBody defines body for UpdateAdminCmsPageSeo for application/json ContentType.
+type UpdateAdminCmsPageSeoJSONRequestBody = CmsSEOInput
+
+// UnpublishAdminCmsPageJSONRequestBody defines body for UnpublishAdminCmsPage for application/json ContentType.
+type UnpublishAdminCmsPageJSONRequestBody = CmsPublishRequest
+
+// CreateAdminCmsPageVariantJSONRequestBody defines body for CreateAdminCmsPageVariant for application/json ContentType.
+type CreateAdminCmsPageVariantJSONRequestBody = CmsPageVariantInput
+
+// UpdateAdminCmsPageVariantJSONRequestBody defines body for UpdateAdminCmsPageVariant for application/json ContentType.
+type UpdateAdminCmsPageVariantJSONRequestBody = CmsPageVariantInput
+
+// TransitionAdminCmsPageVariantJSONRequestBody defines body for TransitionAdminCmsPageVariant for application/json ContentType.
+type TransitionAdminCmsPageVariantJSONRequestBody = CmsWorkflowActionInput
+
+// PreviewAdminCmsPayloadJSONRequestBody defines body for PreviewAdminCmsPayload for application/json ContentType.
+type PreviewAdminCmsPayloadJSONRequestBody = CmsPreviewRequest
+
+// CreateAdminCmsRedirectJSONRequestBody defines body for CreateAdminCmsRedirect for application/json ContentType.
+type CreateAdminCmsRedirectJSONRequestBody = CmsRedirectInput
+
+// UpdateAdminCmsRedirectJSONRequestBody defines body for UpdateAdminCmsRedirect for application/json ContentType.
+type UpdateAdminCmsRedirectJSONRequestBody = CmsRedirectInput
+
+// PreviewAdminCmsRestoreJSONRequestBody defines body for PreviewAdminCmsRestore for application/json ContentType.
+type PreviewAdminCmsRestoreJSONRequestBody = CmsContentExport
 
 // CreateAdminDiscountCampaignJSONRequestBody defines body for CreateAdminDiscountCampaign for application/json ContentType.
 type CreateAdminDiscountCampaignJSONRequestBody = ProductDiscountInput
@@ -2691,9 +4026,6 @@ type CreateAdminPurchaseOrderJSONRequestBody = PurchaseOrderRequest
 // ReceiveAdminPurchaseOrderJSONRequestBody defines body for ReceiveAdminPurchaseOrder for application/json ContentType.
 type ReceiveAdminPurchaseOrderJSONRequestBody = PurchaseOrderReceiveRequest
 
-// UpdateStorefrontSettingsJSONRequestBody defines body for UpdateStorefrontSettings for application/json ContentType.
-type UpdateStorefrontSettingsJSONRequestBody = StorefrontSettingsRequest
-
 // UpdateUserRoleJSONRequestBody defines body for UpdateUserRole for application/json ContentType.
 type UpdateUserRoleJSONRequestBody = UpdateUserRoleRequest
 
@@ -2727,6 +4059,9 @@ type FinalizeCheckoutOrderTaxJSONRequestBody = CheckoutOrderTaxFinalizeRequest
 // QuoteCheckoutSessionJSONRequestBody defines body for QuoteCheckoutSession for application/json ContentType.
 type QuoteCheckoutSessionJSONRequestBody = CheckoutQuoteRequest
 
+// RecordContentEventJSONRequestBody defines body for RecordContentEvent for application/json ContentType.
+type RecordContentEventJSONRequestBody = CmsContentEventRequest
+
 // UpdateProfileJSONRequestBody defines body for UpdateProfile for application/json ContentType.
 type UpdateProfileJSONRequestBody = UpdateProfileRequest
 
@@ -2756,6 +4091,583 @@ type SetProfilePhotoJSONRequestBody SetProfilePhotoJSONBody
 
 // ReceiveWebhookEventJSONRequestBody defines body for ReceiveWebhookEvent for application/json ContentType.
 type ReceiveWebhookEventJSONRequestBody ReceiveWebhookEventJSONBody
+
+// Getter for additional properties for CmsPagePayload. Returns the specified
+// element and whether it was found
+func (a CmsPagePayload) Get(fieldName string) (value interface{}, found bool) {
+	if a.AdditionalProperties != nil {
+		value, found = a.AdditionalProperties[fieldName]
+	}
+	return
+}
+
+// Setter for additional properties for CmsPagePayload
+func (a *CmsPagePayload) Set(fieldName string, value interface{}) {
+	if a.AdditionalProperties == nil {
+		a.AdditionalProperties = make(map[string]interface{})
+	}
+	a.AdditionalProperties[fieldName] = value
+}
+
+// Override default JSON handling for CmsPagePayload to handle AdditionalProperties
+func (a *CmsPagePayload) UnmarshalJSON(b []byte) error {
+	object := make(map[string]json.RawMessage)
+	err := json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if raw, found := object["blocks"]; found {
+		err = json.Unmarshal(raw, &a.Blocks)
+		if err != nil {
+			return fmt.Errorf("error reading 'blocks': %w", err)
+		}
+		delete(object, "blocks")
+	}
+
+	if len(object) != 0 {
+		a.AdditionalProperties = make(map[string]interface{})
+		for fieldName, fieldBuf := range object {
+			var fieldVal interface{}
+			err := json.Unmarshal(fieldBuf, &fieldVal)
+			if err != nil {
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
+			}
+			a.AdditionalProperties[fieldName] = fieldVal
+		}
+	}
+	return nil
+}
+
+// Override default JSON handling for CmsPagePayload to handle AdditionalProperties
+func (a CmsPagePayload) MarshalJSON() ([]byte, error) {
+	var err error
+	object := make(map[string]json.RawMessage)
+
+	if a.Blocks != nil {
+		object["blocks"], err = json.Marshal(a.Blocks)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'blocks': %w", err)
+		}
+	}
+
+	for fieldName, field := range a.AdditionalProperties {
+		object[fieldName], err = json.Marshal(field)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
+		}
+	}
+	return json.Marshal(object)
+}
+
+// AsCmsHeroBlock returns the union data inside the CmsContentBlock as a CmsHeroBlock
+func (t CmsContentBlock) AsCmsHeroBlock() (CmsHeroBlock, error) {
+	var body CmsHeroBlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsHeroBlock overwrites any union data inside the CmsContentBlock as the provided CmsHeroBlock
+func (t *CmsContentBlock) FromCmsHeroBlock(v CmsHeroBlock) error {
+	v.Type = "CmsHeroBlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsHeroBlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsHeroBlock
+func (t *CmsContentBlock) MergeCmsHeroBlock(v CmsHeroBlock) error {
+	v.Type = "CmsHeroBlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmsRichTextBlock returns the union data inside the CmsContentBlock as a CmsRichTextBlock
+func (t CmsContentBlock) AsCmsRichTextBlock() (CmsRichTextBlock, error) {
+	var body CmsRichTextBlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsRichTextBlock overwrites any union data inside the CmsContentBlock as the provided CmsRichTextBlock
+func (t *CmsContentBlock) FromCmsRichTextBlock(v CmsRichTextBlock) error {
+	v.Type = "CmsRichTextBlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsRichTextBlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsRichTextBlock
+func (t *CmsContentBlock) MergeCmsRichTextBlock(v CmsRichTextBlock) error {
+	v.Type = "CmsRichTextBlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmsImageBlock returns the union data inside the CmsContentBlock as a CmsImageBlock
+func (t CmsContentBlock) AsCmsImageBlock() (CmsImageBlock, error) {
+	var body CmsImageBlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsImageBlock overwrites any union data inside the CmsContentBlock as the provided CmsImageBlock
+func (t *CmsContentBlock) FromCmsImageBlock(v CmsImageBlock) error {
+	v.Type = "CmsImageBlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsImageBlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsImageBlock
+func (t *CmsContentBlock) MergeCmsImageBlock(v CmsImageBlock) error {
+	v.Type = "CmsImageBlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmsGalleryBlock returns the union data inside the CmsContentBlock as a CmsGalleryBlock
+func (t CmsContentBlock) AsCmsGalleryBlock() (CmsGalleryBlock, error) {
+	var body CmsGalleryBlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsGalleryBlock overwrites any union data inside the CmsContentBlock as the provided CmsGalleryBlock
+func (t *CmsContentBlock) FromCmsGalleryBlock(v CmsGalleryBlock) error {
+	v.Type = "CmsGalleryBlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsGalleryBlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsGalleryBlock
+func (t *CmsContentBlock) MergeCmsGalleryBlock(v CmsGalleryBlock) error {
+	v.Type = "CmsGalleryBlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmsVideoBlock returns the union data inside the CmsContentBlock as a CmsVideoBlock
+func (t CmsContentBlock) AsCmsVideoBlock() (CmsVideoBlock, error) {
+	var body CmsVideoBlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsVideoBlock overwrites any union data inside the CmsContentBlock as the provided CmsVideoBlock
+func (t *CmsContentBlock) FromCmsVideoBlock(v CmsVideoBlock) error {
+	v.Type = "CmsVideoBlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsVideoBlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsVideoBlock
+func (t *CmsContentBlock) MergeCmsVideoBlock(v CmsVideoBlock) error {
+	v.Type = "CmsVideoBlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmsFAQBlock returns the union data inside the CmsContentBlock as a CmsFAQBlock
+func (t CmsContentBlock) AsCmsFAQBlock() (CmsFAQBlock, error) {
+	var body CmsFAQBlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsFAQBlock overwrites any union data inside the CmsContentBlock as the provided CmsFAQBlock
+func (t *CmsContentBlock) FromCmsFAQBlock(v CmsFAQBlock) error {
+	v.Type = "CmsFAQBlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsFAQBlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsFAQBlock
+func (t *CmsContentBlock) MergeCmsFAQBlock(v CmsFAQBlock) error {
+	v.Type = "CmsFAQBlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmsCTABlock returns the union data inside the CmsContentBlock as a CmsCTABlock
+func (t CmsContentBlock) AsCmsCTABlock() (CmsCTABlock, error) {
+	var body CmsCTABlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsCTABlock overwrites any union data inside the CmsContentBlock as the provided CmsCTABlock
+func (t *CmsContentBlock) FromCmsCTABlock(v CmsCTABlock) error {
+	v.Type = "CmsCTABlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsCTABlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsCTABlock
+func (t *CmsContentBlock) MergeCmsCTABlock(v CmsCTABlock) error {
+	v.Type = "CmsCTABlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmsPromoBannerBlock returns the union data inside the CmsContentBlock as a CmsPromoBannerBlock
+func (t CmsContentBlock) AsCmsPromoBannerBlock() (CmsPromoBannerBlock, error) {
+	var body CmsPromoBannerBlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsPromoBannerBlock overwrites any union data inside the CmsContentBlock as the provided CmsPromoBannerBlock
+func (t *CmsContentBlock) FromCmsPromoBannerBlock(v CmsPromoBannerBlock) error {
+	v.Type = "CmsPromoBannerBlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsPromoBannerBlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsPromoBannerBlock
+func (t *CmsContentBlock) MergeCmsPromoBannerBlock(v CmsPromoBannerBlock) error {
+	v.Type = "CmsPromoBannerBlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmsProductRailBlock returns the union data inside the CmsContentBlock as a CmsProductRailBlock
+func (t CmsContentBlock) AsCmsProductRailBlock() (CmsProductRailBlock, error) {
+	var body CmsProductRailBlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsProductRailBlock overwrites any union data inside the CmsContentBlock as the provided CmsProductRailBlock
+func (t *CmsContentBlock) FromCmsProductRailBlock(v CmsProductRailBlock) error {
+	v.Type = "CmsProductRailBlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsProductRailBlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsProductRailBlock
+func (t *CmsContentBlock) MergeCmsProductRailBlock(v CmsProductRailBlock) error {
+	v.Type = "CmsProductRailBlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmsCategoryTilesBlock returns the union data inside the CmsContentBlock as a CmsCategoryTilesBlock
+func (t CmsContentBlock) AsCmsCategoryTilesBlock() (CmsCategoryTilesBlock, error) {
+	var body CmsCategoryTilesBlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsCategoryTilesBlock overwrites any union data inside the CmsContentBlock as the provided CmsCategoryTilesBlock
+func (t *CmsContentBlock) FromCmsCategoryTilesBlock(v CmsCategoryTilesBlock) error {
+	v.Type = "CmsCategoryTilesBlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsCategoryTilesBlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsCategoryTilesBlock
+func (t *CmsContentBlock) MergeCmsCategoryTilesBlock(v CmsCategoryTilesBlock) error {
+	v.Type = "CmsCategoryTilesBlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmsPromotionHighlightBlock returns the union data inside the CmsContentBlock as a CmsPromotionHighlightBlock
+func (t CmsContentBlock) AsCmsPromotionHighlightBlock() (CmsPromotionHighlightBlock, error) {
+	var body CmsPromotionHighlightBlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsPromotionHighlightBlock overwrites any union data inside the CmsContentBlock as the provided CmsPromotionHighlightBlock
+func (t *CmsContentBlock) FromCmsPromotionHighlightBlock(v CmsPromotionHighlightBlock) error {
+	v.Type = "CmsPromotionHighlightBlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsPromotionHighlightBlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsPromotionHighlightBlock
+func (t *CmsContentBlock) MergeCmsPromotionHighlightBlock(v CmsPromotionHighlightBlock) error {
+	v.Type = "CmsPromotionHighlightBlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmsInventoryMessageBlock returns the union data inside the CmsContentBlock as a CmsInventoryMessageBlock
+func (t CmsContentBlock) AsCmsInventoryMessageBlock() (CmsInventoryMessageBlock, error) {
+	var body CmsInventoryMessageBlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsInventoryMessageBlock overwrites any union data inside the CmsContentBlock as the provided CmsInventoryMessageBlock
+func (t *CmsContentBlock) FromCmsInventoryMessageBlock(v CmsInventoryMessageBlock) error {
+	v.Type = "CmsInventoryMessageBlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsInventoryMessageBlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsInventoryMessageBlock
+func (t *CmsContentBlock) MergeCmsInventoryMessageBlock(v CmsInventoryMessageBlock) error {
+	v.Type = "CmsInventoryMessageBlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmsTestimonialBlock returns the union data inside the CmsContentBlock as a CmsTestimonialBlock
+func (t CmsContentBlock) AsCmsTestimonialBlock() (CmsTestimonialBlock, error) {
+	var body CmsTestimonialBlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsTestimonialBlock overwrites any union data inside the CmsContentBlock as the provided CmsTestimonialBlock
+func (t *CmsContentBlock) FromCmsTestimonialBlock(v CmsTestimonialBlock) error {
+	v.Type = "CmsTestimonialBlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsTestimonialBlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsTestimonialBlock
+func (t *CmsContentBlock) MergeCmsTestimonialBlock(v CmsTestimonialBlock) error {
+	v.Type = "CmsTestimonialBlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmsSocialEmbedBlock returns the union data inside the CmsContentBlock as a CmsSocialEmbedBlock
+func (t CmsContentBlock) AsCmsSocialEmbedBlock() (CmsSocialEmbedBlock, error) {
+	var body CmsSocialEmbedBlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsSocialEmbedBlock overwrites any union data inside the CmsContentBlock as the provided CmsSocialEmbedBlock
+func (t *CmsContentBlock) FromCmsSocialEmbedBlock(v CmsSocialEmbedBlock) error {
+	v.Type = "CmsSocialEmbedBlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsSocialEmbedBlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsSocialEmbedBlock
+func (t *CmsContentBlock) MergeCmsSocialEmbedBlock(v CmsSocialEmbedBlock) error {
+	v.Type = "CmsSocialEmbedBlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmsCustomHTMLBlock returns the union data inside the CmsContentBlock as a CmsCustomHTMLBlock
+func (t CmsContentBlock) AsCmsCustomHTMLBlock() (CmsCustomHTMLBlock, error) {
+	var body CmsCustomHTMLBlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsCustomHTMLBlock overwrites any union data inside the CmsContentBlock as the provided CmsCustomHTMLBlock
+func (t *CmsContentBlock) FromCmsCustomHTMLBlock(v CmsCustomHTMLBlock) error {
+	v.Type = "CmsCustomHTMLBlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsCustomHTMLBlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsCustomHTMLBlock
+func (t *CmsContentBlock) MergeCmsCustomHTMLBlock(v CmsCustomHTMLBlock) error {
+	v.Type = "CmsCustomHTMLBlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmsFooterBlock returns the union data inside the CmsContentBlock as a CmsFooterBlock
+func (t CmsContentBlock) AsCmsFooterBlock() (CmsFooterBlock, error) {
+	var body CmsFooterBlock
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmsFooterBlock overwrites any union data inside the CmsContentBlock as the provided CmsFooterBlock
+func (t *CmsContentBlock) FromCmsFooterBlock(v CmsFooterBlock) error {
+	v.Type = "CmsFooterBlock"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmsFooterBlock performs a merge with any union data inside the CmsContentBlock, using the provided CmsFooterBlock
+func (t *CmsContentBlock) MergeCmsFooterBlock(v CmsFooterBlock) error {
+	v.Type = "CmsFooterBlock"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t CmsContentBlock) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"type"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t CmsContentBlock) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "CmsCTABlock":
+		return t.AsCmsCTABlock()
+	case "CmsCategoryTilesBlock":
+		return t.AsCmsCategoryTilesBlock()
+	case "CmsCustomHTMLBlock":
+		return t.AsCmsCustomHTMLBlock()
+	case "CmsFAQBlock":
+		return t.AsCmsFAQBlock()
+	case "CmsFooterBlock":
+		return t.AsCmsFooterBlock()
+	case "CmsGalleryBlock":
+		return t.AsCmsGalleryBlock()
+	case "CmsHeroBlock":
+		return t.AsCmsHeroBlock()
+	case "CmsImageBlock":
+		return t.AsCmsImageBlock()
+	case "CmsInventoryMessageBlock":
+		return t.AsCmsInventoryMessageBlock()
+	case "CmsProductRailBlock":
+		return t.AsCmsProductRailBlock()
+	case "CmsPromoBannerBlock":
+		return t.AsCmsPromoBannerBlock()
+	case "CmsPromotionHighlightBlock":
+		return t.AsCmsPromotionHighlightBlock()
+	case "CmsRichTextBlock":
+		return t.AsCmsRichTextBlock()
+	case "CmsSocialEmbedBlock":
+		return t.AsCmsSocialEmbedBlock()
+	case "CmsTestimonialBlock":
+		return t.AsCmsTestimonialBlock()
+	case "CmsVideoBlock":
+		return t.AsCmsVideoBlock()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
+func (t CmsContentBlock) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *CmsContentBlock) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -2789,6 +4701,180 @@ type ServerInterface interface {
 
 	// (PATCH /api/v1/admin/checkout/plugins/{type}/{id})
 	UpdateAdminCheckoutPlugin(c *gin.Context, pType UpdateAdminCheckoutPluginParamsType, id string)
+
+	// (GET /api/v1/admin/cms/audit)
+	ListAdminCmsAuditEvents(c *gin.Context, params ListAdminCmsAuditEventsParams)
+
+	// (POST /api/v1/admin/cms/comments/{id}/resolve)
+	ResolveAdminCmsComment(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/cms/entries/{id}/comments)
+	CreateAdminCmsEntryComment(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/cms/entries/{id}/variants)
+	ListAdminCmsEntryVariants(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/cms/entries/{id}/variants)
+	CreateAdminCmsEntryVariant(c *gin.Context, id int)
+
+	// (DELETE /api/v1/admin/cms/entries/{id}/variants/{variant_id})
+	DeleteAdminCmsEntryVariant(c *gin.Context, id int, variantId int)
+
+	// (PUT /api/v1/admin/cms/entries/{id}/variants/{variant_id})
+	UpdateAdminCmsEntryVariant(c *gin.Context, id int, variantId int)
+
+	// (POST /api/v1/admin/cms/entries/{id}/variants/{variant_id}/{action})
+	TransitionAdminCmsEntryVariant(c *gin.Context, id int, variantId int, action TransitionAdminCmsEntryVariantParamsAction)
+
+	// (GET /api/v1/admin/cms/entries/{id}/workflow)
+	GetAdminCmsEntryWorkflow(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/cms/entries/{id}/workflow/{action})
+	TransitionAdminCmsEntryWorkflow(c *gin.Context, id int, action TransitionAdminCmsEntryWorkflowParamsAction)
+
+	// (GET /api/v1/admin/cms/export)
+	ExportAdminCmsContent(c *gin.Context)
+
+	// (POST /api/v1/admin/cms/export)
+	RestoreAdminCmsContent(c *gin.Context)
+
+	// (GET /api/v1/admin/cms/global)
+	ListAdminCmsGlobalRegions(c *gin.Context, params ListAdminCmsGlobalRegionsParams)
+
+	// (POST /api/v1/admin/cms/global)
+	CreateAdminCmsGlobalRegion(c *gin.Context)
+
+	// (DELETE /api/v1/admin/cms/global/{id})
+	DeleteAdminCmsGlobalRegion(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/cms/global/{id})
+	GetAdminCmsGlobalRegion(c *gin.Context, id int)
+
+	// (PATCH /api/v1/admin/cms/global/{id})
+	UpdateAdminCmsGlobalRegion(c *gin.Context, id int)
+
+	// (DELETE /api/v1/admin/cms/global/{id}/draft)
+	DiscardAdminCmsGlobalRegionDraft(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/cms/global/{id}/publish)
+	PublishAdminCmsGlobalRegion(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/cms/global/{id}/unpublish)
+	UnpublishAdminCmsGlobalRegion(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/cms/governance)
+	GetAdminCmsGovernance(c *gin.Context)
+
+	// (PUT /api/v1/admin/cms/governance)
+	UpdateAdminCmsGovernance(c *gin.Context)
+
+	// (GET /api/v1/admin/cms/locales)
+	GetAdminCmsLocales(c *gin.Context)
+
+	// (PUT /api/v1/admin/cms/locales)
+	UpdateAdminCmsLocales(c *gin.Context)
+
+	// (GET /api/v1/admin/cms/navigation)
+	ListAdminCmsNavigation(c *gin.Context, params ListAdminCmsNavigationParams)
+
+	// (POST /api/v1/admin/cms/navigation)
+	CreateAdminCmsNavigation(c *gin.Context)
+
+	// (DELETE /api/v1/admin/cms/navigation/{id})
+	DeleteAdminCmsNavigation(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/cms/navigation/{id})
+	GetAdminCmsNavigation(c *gin.Context, id int)
+
+	// (PATCH /api/v1/admin/cms/navigation/{id})
+	UpdateAdminCmsNavigation(c *gin.Context, id int)
+
+	// (DELETE /api/v1/admin/cms/navigation/{id}/draft)
+	DiscardAdminCmsNavigationDraft(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/cms/navigation/{id}/publish)
+	PublishAdminCmsNavigation(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/cms/navigation/{id}/unpublish)
+	UnpublishAdminCmsNavigation(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/cms/operations)
+	GetAdminCmsOperations(c *gin.Context)
+
+	// (POST /api/v1/admin/cms/operations/invalidation/{id}/retry)
+	RetryAdminCmsInvalidation(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/cms/pages)
+	ListAdminCmsPages(c *gin.Context, params ListAdminCmsPagesParams)
+
+	// (POST /api/v1/admin/cms/pages)
+	CreateAdminCmsPage(c *gin.Context)
+
+	// (DELETE /api/v1/admin/cms/pages/{id})
+	DeleteAdminCmsPage(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/cms/pages/{id})
+	GetAdminCmsPage(c *gin.Context, id int)
+
+	// (PATCH /api/v1/admin/cms/pages/{id})
+	UpdateAdminCmsPage(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/cms/pages/{id}/delivery)
+	GetAdminCmsPageDelivery(c *gin.Context, id int)
+
+	// (PUT /api/v1/admin/cms/pages/{id}/delivery)
+	UpdateAdminCmsPageDelivery(c *gin.Context, id int)
+
+	// (DELETE /api/v1/admin/cms/pages/{id}/draft)
+	DiscardAdminCmsPageDraft(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/cms/pages/{id}/publish)
+	PublishAdminCmsPage(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/cms/pages/{id}/rollback)
+	RollbackAdminCmsPage(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/cms/pages/{id}/seo)
+	GetAdminCmsPageSeo(c *gin.Context, id int)
+
+	// (PUT /api/v1/admin/cms/pages/{id}/seo)
+	UpdateAdminCmsPageSeo(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/cms/pages/{id}/unpublish)
+	UnpublishAdminCmsPage(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/cms/pages/{id}/variants)
+	ListAdminCmsPageVariants(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/cms/pages/{id}/variants)
+	CreateAdminCmsPageVariant(c *gin.Context, id int)
+
+	// (DELETE /api/v1/admin/cms/pages/{id}/variants/{variant_id})
+	DeleteAdminCmsPageVariant(c *gin.Context, id int, variantId int)
+
+	// (PUT /api/v1/admin/cms/pages/{id}/variants/{variant_id})
+	UpdateAdminCmsPageVariant(c *gin.Context, id int, variantId int)
+
+	// (POST /api/v1/admin/cms/pages/{id}/variants/{variant_id}/{action})
+	TransitionAdminCmsPageVariant(c *gin.Context, id int, variantId int, action TransitionAdminCmsPageVariantParamsAction)
+
+	// (POST /api/v1/admin/cms/preview)
+	PreviewAdminCmsPayload(c *gin.Context)
+
+	// (GET /api/v1/admin/cms/redirects)
+	ListAdminCmsRedirects(c *gin.Context)
+
+	// (POST /api/v1/admin/cms/redirects)
+	CreateAdminCmsRedirect(c *gin.Context)
+
+	// (DELETE /api/v1/admin/cms/redirects/{id})
+	DeleteAdminCmsRedirect(c *gin.Context, id int)
+
+	// (PATCH /api/v1/admin/cms/redirects/{id})
+	UpdateAdminCmsRedirect(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/cms/restore/preview)
+	PreviewAdminCmsRestore(c *gin.Context)
 
 	// (GET /api/v1/admin/discounts/audit)
 	ListAdminDiscountAudit(c *gin.Context, params ListAdminDiscountAuditParams)
@@ -2985,18 +5071,6 @@ type ServerInterface interface {
 	// (POST /api/v1/admin/purchase-orders/{id}/receive)
 	ReceiveAdminPurchaseOrder(c *gin.Context, id int)
 
-	// (GET /api/v1/admin/storefront)
-	GetAdminStorefrontSettings(c *gin.Context)
-
-	// (PUT /api/v1/admin/storefront)
-	UpdateStorefrontSettings(c *gin.Context)
-
-	// (DELETE /api/v1/admin/storefront/draft)
-	DiscardStorefrontDraft(c *gin.Context)
-
-	// (POST /api/v1/admin/storefront/publish)
-	PublishStorefrontSettings(c *gin.Context)
-
 	// (GET /api/v1/admin/tax/reports/export)
 	ExportAdminTaxReport(c *gin.Context, params ExportAdminTaxReportParams)
 
@@ -3074,6 +5148,27 @@ type ServerInterface interface {
 
 	// (POST /api/v1/checkout/quote)
 	QuoteCheckoutSession(c *gin.Context)
+
+	// (GET /api/v1/content)
+	ResolveContentHomepage(c *gin.Context, params ResolveContentHomepageParams)
+
+	// (POST /api/v1/content/events)
+	RecordContentEvent(c *gin.Context)
+
+	// (GET /api/v1/content/global/{region})
+	GetContentGlobalRegion(c *gin.Context, region string)
+
+	// (GET /api/v1/content/navigation/{location})
+	GetContentNavigation(c *gin.Context, location string)
+
+	// (GET /api/v1/content/redirect)
+	ResolveContentRedirect(c *gin.Context, params ResolveContentRedirectParams)
+
+	// (GET /api/v1/content/sitemap.xml)
+	GetContentSitemap(c *gin.Context)
+
+	// (GET /api/v1/content/{path})
+	ResolveContentPage(c *gin.Context, path string, params ResolveContentPageParams)
 
 	// (GET /api/v1/me/)
 	GetProfile(c *gin.Context)
@@ -3161,9 +5256,6 @@ type ServerInterface interface {
 	// Get product by id
 	// (GET /api/v1/products/{id})
 	GetProduct(c *gin.Context, id int)
-
-	// (GET /api/v1/storefront)
-	GetStorefrontSettings(c *gin.Context)
 
 	// (POST /api/v1/webhooks/{provider})
 	ReceiveWebhookEvent(c *gin.Context, provider string)
@@ -3444,6 +5536,1597 @@ func (siw *ServerInterfaceWrapper) UpdateAdminCheckoutPlugin(c *gin.Context) {
 	}
 
 	siw.Handler.UpdateAdminCheckoutPlugin(c, pType, id)
+}
+
+// ListAdminCmsAuditEvents operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminCmsAuditEvents(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminCmsAuditEventsParams
+
+	// ------------- Optional query parameter "entry_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "entry_id", c.Request.URL.Query(), &params.EntryId)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter entry_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminCmsAuditEvents(c, params)
+}
+
+// ResolveAdminCmsComment operation middleware
+func (siw *ServerInterfaceWrapper) ResolveAdminCmsComment(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ResolveAdminCmsComment(c, id)
+}
+
+// CreateAdminCmsEntryComment operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminCmsEntryComment(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminCmsEntryComment(c, id)
+}
+
+// ListAdminCmsEntryVariants operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminCmsEntryVariants(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminCmsEntryVariants(c, id)
+}
+
+// CreateAdminCmsEntryVariant operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminCmsEntryVariant(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminCmsEntryVariant(c, id)
+}
+
+// DeleteAdminCmsEntryVariant operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAdminCmsEntryVariant(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "variant_id" -------------
+	var variantId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "variant_id", c.Param("variant_id"), &variantId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter variant_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteAdminCmsEntryVariant(c, id, variantId)
+}
+
+// UpdateAdminCmsEntryVariant operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminCmsEntryVariant(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "variant_id" -------------
+	var variantId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "variant_id", c.Param("variant_id"), &variantId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter variant_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminCmsEntryVariant(c, id, variantId)
+}
+
+// TransitionAdminCmsEntryVariant operation middleware
+func (siw *ServerInterfaceWrapper) TransitionAdminCmsEntryVariant(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "variant_id" -------------
+	var variantId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "variant_id", c.Param("variant_id"), &variantId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter variant_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "action" -------------
+	var action TransitionAdminCmsEntryVariantParamsAction
+
+	err = runtime.BindStyledParameterWithOptions("simple", "action", c.Param("action"), &action, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter action: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.TransitionAdminCmsEntryVariant(c, id, variantId, action)
+}
+
+// GetAdminCmsEntryWorkflow operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminCmsEntryWorkflow(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminCmsEntryWorkflow(c, id)
+}
+
+// TransitionAdminCmsEntryWorkflow operation middleware
+func (siw *ServerInterfaceWrapper) TransitionAdminCmsEntryWorkflow(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "action" -------------
+	var action TransitionAdminCmsEntryWorkflowParamsAction
+
+	err = runtime.BindStyledParameterWithOptions("simple", "action", c.Param("action"), &action, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter action: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.TransitionAdminCmsEntryWorkflow(c, id, action)
+}
+
+// ExportAdminCmsContent operation middleware
+func (siw *ServerInterfaceWrapper) ExportAdminCmsContent(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ExportAdminCmsContent(c)
+}
+
+// RestoreAdminCmsContent operation middleware
+func (siw *ServerInterfaceWrapper) RestoreAdminCmsContent(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RestoreAdminCmsContent(c)
+}
+
+// ListAdminCmsGlobalRegions operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminCmsGlobalRegions(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminCmsGlobalRegionsParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminCmsGlobalRegions(c, params)
+}
+
+// CreateAdminCmsGlobalRegion operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminCmsGlobalRegion(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminCmsGlobalRegion(c)
+}
+
+// DeleteAdminCmsGlobalRegion operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAdminCmsGlobalRegion(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteAdminCmsGlobalRegion(c, id)
+}
+
+// GetAdminCmsGlobalRegion operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminCmsGlobalRegion(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminCmsGlobalRegion(c, id)
+}
+
+// UpdateAdminCmsGlobalRegion operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminCmsGlobalRegion(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminCmsGlobalRegion(c, id)
+}
+
+// DiscardAdminCmsGlobalRegionDraft operation middleware
+func (siw *ServerInterfaceWrapper) DiscardAdminCmsGlobalRegionDraft(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DiscardAdminCmsGlobalRegionDraft(c, id)
+}
+
+// PublishAdminCmsGlobalRegion operation middleware
+func (siw *ServerInterfaceWrapper) PublishAdminCmsGlobalRegion(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PublishAdminCmsGlobalRegion(c, id)
+}
+
+// UnpublishAdminCmsGlobalRegion operation middleware
+func (siw *ServerInterfaceWrapper) UnpublishAdminCmsGlobalRegion(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UnpublishAdminCmsGlobalRegion(c, id)
+}
+
+// GetAdminCmsGovernance operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminCmsGovernance(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminCmsGovernance(c)
+}
+
+// UpdateAdminCmsGovernance operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminCmsGovernance(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminCmsGovernance(c)
+}
+
+// GetAdminCmsLocales operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminCmsLocales(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminCmsLocales(c)
+}
+
+// UpdateAdminCmsLocales operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminCmsLocales(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminCmsLocales(c)
+}
+
+// ListAdminCmsNavigation operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminCmsNavigation(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminCmsNavigationParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminCmsNavigation(c, params)
+}
+
+// CreateAdminCmsNavigation operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminCmsNavigation(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminCmsNavigation(c)
+}
+
+// DeleteAdminCmsNavigation operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAdminCmsNavigation(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteAdminCmsNavigation(c, id)
+}
+
+// GetAdminCmsNavigation operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminCmsNavigation(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminCmsNavigation(c, id)
+}
+
+// UpdateAdminCmsNavigation operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminCmsNavigation(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminCmsNavigation(c, id)
+}
+
+// DiscardAdminCmsNavigationDraft operation middleware
+func (siw *ServerInterfaceWrapper) DiscardAdminCmsNavigationDraft(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DiscardAdminCmsNavigationDraft(c, id)
+}
+
+// PublishAdminCmsNavigation operation middleware
+func (siw *ServerInterfaceWrapper) PublishAdminCmsNavigation(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PublishAdminCmsNavigation(c, id)
+}
+
+// UnpublishAdminCmsNavigation operation middleware
+func (siw *ServerInterfaceWrapper) UnpublishAdminCmsNavigation(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UnpublishAdminCmsNavigation(c, id)
+}
+
+// GetAdminCmsOperations operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminCmsOperations(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminCmsOperations(c)
+}
+
+// RetryAdminCmsInvalidation operation middleware
+func (siw *ServerInterfaceWrapper) RetryAdminCmsInvalidation(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RetryAdminCmsInvalidation(c, id)
+}
+
+// ListAdminCmsPages operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminCmsPages(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminCmsPagesParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminCmsPages(c, params)
+}
+
+// CreateAdminCmsPage operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminCmsPage(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminCmsPage(c)
+}
+
+// DeleteAdminCmsPage operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAdminCmsPage(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteAdminCmsPage(c, id)
+}
+
+// GetAdminCmsPage operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminCmsPage(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminCmsPage(c, id)
+}
+
+// UpdateAdminCmsPage operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminCmsPage(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminCmsPage(c, id)
+}
+
+// GetAdminCmsPageDelivery operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminCmsPageDelivery(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminCmsPageDelivery(c, id)
+}
+
+// UpdateAdminCmsPageDelivery operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminCmsPageDelivery(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminCmsPageDelivery(c, id)
+}
+
+// DiscardAdminCmsPageDraft operation middleware
+func (siw *ServerInterfaceWrapper) DiscardAdminCmsPageDraft(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DiscardAdminCmsPageDraft(c, id)
+}
+
+// PublishAdminCmsPage operation middleware
+func (siw *ServerInterfaceWrapper) PublishAdminCmsPage(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PublishAdminCmsPage(c, id)
+}
+
+// RollbackAdminCmsPage operation middleware
+func (siw *ServerInterfaceWrapper) RollbackAdminCmsPage(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RollbackAdminCmsPage(c, id)
+}
+
+// GetAdminCmsPageSeo operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminCmsPageSeo(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminCmsPageSeo(c, id)
+}
+
+// UpdateAdminCmsPageSeo operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminCmsPageSeo(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminCmsPageSeo(c, id)
+}
+
+// UnpublishAdminCmsPage operation middleware
+func (siw *ServerInterfaceWrapper) UnpublishAdminCmsPage(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UnpublishAdminCmsPage(c, id)
+}
+
+// ListAdminCmsPageVariants operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminCmsPageVariants(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminCmsPageVariants(c, id)
+}
+
+// CreateAdminCmsPageVariant operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminCmsPageVariant(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminCmsPageVariant(c, id)
+}
+
+// DeleteAdminCmsPageVariant operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAdminCmsPageVariant(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "variant_id" -------------
+	var variantId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "variant_id", c.Param("variant_id"), &variantId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter variant_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteAdminCmsPageVariant(c, id, variantId)
+}
+
+// UpdateAdminCmsPageVariant operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminCmsPageVariant(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "variant_id" -------------
+	var variantId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "variant_id", c.Param("variant_id"), &variantId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter variant_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminCmsPageVariant(c, id, variantId)
+}
+
+// TransitionAdminCmsPageVariant operation middleware
+func (siw *ServerInterfaceWrapper) TransitionAdminCmsPageVariant(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "variant_id" -------------
+	var variantId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "variant_id", c.Param("variant_id"), &variantId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter variant_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "action" -------------
+	var action TransitionAdminCmsPageVariantParamsAction
+
+	err = runtime.BindStyledParameterWithOptions("simple", "action", c.Param("action"), &action, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter action: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.TransitionAdminCmsPageVariant(c, id, variantId, action)
+}
+
+// PreviewAdminCmsPayload operation middleware
+func (siw *ServerInterfaceWrapper) PreviewAdminCmsPayload(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PreviewAdminCmsPayload(c)
+}
+
+// ListAdminCmsRedirects operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminCmsRedirects(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminCmsRedirects(c)
+}
+
+// CreateAdminCmsRedirect operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminCmsRedirect(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminCmsRedirect(c)
+}
+
+// DeleteAdminCmsRedirect operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAdminCmsRedirect(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteAdminCmsRedirect(c, id)
+}
+
+// UpdateAdminCmsRedirect operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminCmsRedirect(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminCmsRedirect(c, id)
+}
+
+// PreviewAdminCmsRestore operation middleware
+func (siw *ServerInterfaceWrapper) PreviewAdminCmsRestore(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PreviewAdminCmsRestore(c)
 }
 
 // ListAdminDiscountAudit operation middleware
@@ -5377,74 +9060,6 @@ func (siw *ServerInterfaceWrapper) ReceiveAdminPurchaseOrder(c *gin.Context) {
 	siw.Handler.ReceiveAdminPurchaseOrder(c, id)
 }
 
-// GetAdminStorefrontSettings operation middleware
-func (siw *ServerInterfaceWrapper) GetAdminStorefrontSettings(c *gin.Context) {
-
-	c.Set(CookieAuthScopes, []string{})
-
-	c.Set(BearerAuthScopes, []string{})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.GetAdminStorefrontSettings(c)
-}
-
-// UpdateStorefrontSettings operation middleware
-func (siw *ServerInterfaceWrapper) UpdateStorefrontSettings(c *gin.Context) {
-
-	c.Set(CookieAuthScopes, []string{})
-
-	c.Set(BearerAuthScopes, []string{})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.UpdateStorefrontSettings(c)
-}
-
-// DiscardStorefrontDraft operation middleware
-func (siw *ServerInterfaceWrapper) DiscardStorefrontDraft(c *gin.Context) {
-
-	c.Set(CookieAuthScopes, []string{})
-
-	c.Set(BearerAuthScopes, []string{})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.DiscardStorefrontDraft(c)
-}
-
-// PublishStorefrontSettings operation middleware
-func (siw *ServerInterfaceWrapper) PublishStorefrontSettings(c *gin.Context) {
-
-	c.Set(CookieAuthScopes, []string{})
-
-	c.Set(BearerAuthScopes, []string{})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.PublishStorefrontSettings(c)
-}
-
 // ExportAdminTaxReport operation middleware
 func (siw *ServerInterfaceWrapper) ExportAdminTaxReport(c *gin.Context) {
 
@@ -6181,6 +9796,254 @@ func (siw *ServerInterfaceWrapper) QuoteCheckoutSession(c *gin.Context) {
 	}
 
 	siw.Handler.QuoteCheckoutSession(c)
+}
+
+// ResolveContentHomepage operation middleware
+func (siw *ServerInterfaceWrapper) ResolveContentHomepage(c *gin.Context) {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ResolveContentHomepageParams
+
+	// ------------- Optional query parameter "market" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "market", c.Request.URL.Query(), &params.Market)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter market: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "locale" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "locale", c.Request.URL.Query(), &params.Locale)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter locale: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "device" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "device", c.Request.URL.Query(), &params.Device)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter device: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "segment" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "segment", c.Request.URL.Query(), &params.Segment)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter segment: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "utm_source" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "utm_source", c.Request.URL.Query(), &params.UtmSource)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter utm_source: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "assignment_key" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "assignment_key", c.Request.URL.Query(), &params.AssignmentKey)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter assignment_key: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ResolveContentHomepage(c, params)
+}
+
+// RecordContentEvent operation middleware
+func (siw *ServerInterfaceWrapper) RecordContentEvent(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RecordContentEvent(c)
+}
+
+// GetContentGlobalRegion operation middleware
+func (siw *ServerInterfaceWrapper) GetContentGlobalRegion(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "region" -------------
+	var region string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "region", c.Param("region"), &region, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter region: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetContentGlobalRegion(c, region)
+}
+
+// GetContentNavigation operation middleware
+func (siw *ServerInterfaceWrapper) GetContentNavigation(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "location" -------------
+	var location string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "location", c.Param("location"), &location, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter location: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetContentNavigation(c, location)
+}
+
+// ResolveContentRedirect operation middleware
+func (siw *ServerInterfaceWrapper) ResolveContentRedirect(c *gin.Context) {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ResolveContentRedirectParams
+
+	// ------------- Required query parameter "path" -------------
+
+	if paramValue := c.Query("path"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Query argument path is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "path", c.Request.URL.Query(), &params.Path)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter path: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ResolveContentRedirect(c, params)
+}
+
+// GetContentSitemap operation middleware
+func (siw *ServerInterfaceWrapper) GetContentSitemap(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetContentSitemap(c)
+}
+
+// ResolveContentPage operation middleware
+func (siw *ServerInterfaceWrapper) ResolveContentPage(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "path" -------------
+	var path string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "path", c.Param("path"), &path, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter path: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ResolveContentPageParams
+
+	// ------------- Optional query parameter "market" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "market", c.Request.URL.Query(), &params.Market)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter market: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "locale" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "locale", c.Request.URL.Query(), &params.Locale)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter locale: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "device" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "device", c.Request.URL.Query(), &params.Device)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter device: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "segment" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "segment", c.Request.URL.Query(), &params.Segment)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter segment: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "utm_source" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "utm_source", c.Request.URL.Query(), &params.UtmSource)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter utm_source: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "assignment_key" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "assignment_key", c.Request.URL.Query(), &params.AssignmentKey)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter assignment_key: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ResolveContentPage(c, path, params)
 }
 
 // GetProfile operation middleware
@@ -6987,19 +10850,6 @@ func (siw *ServerInterfaceWrapper) GetProduct(c *gin.Context) {
 	siw.Handler.GetProduct(c, id)
 }
 
-// GetStorefrontSettings operation middleware
-func (siw *ServerInterfaceWrapper) GetStorefrontSettings(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.GetStorefrontSettings(c)
-}
-
 // ReceiveWebhookEvent operation middleware
 func (siw *ServerInterfaceWrapper) ReceiveWebhookEvent(c *gin.Context) {
 
@@ -7061,6 +10911,64 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.PATCH(options.BaseURL+"/api/v1/admin/categories/:id", wrapper.UpdateAdminCategory)
 	router.GET(options.BaseURL+"/api/v1/admin/checkout/plugins", wrapper.ListAdminCheckoutPlugins)
 	router.PATCH(options.BaseURL+"/api/v1/admin/checkout/plugins/:type/:id", wrapper.UpdateAdminCheckoutPlugin)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/audit", wrapper.ListAdminCmsAuditEvents)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/comments/:id/resolve", wrapper.ResolveAdminCmsComment)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/entries/:id/comments", wrapper.CreateAdminCmsEntryComment)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/entries/:id/variants", wrapper.ListAdminCmsEntryVariants)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/entries/:id/variants", wrapper.CreateAdminCmsEntryVariant)
+	router.DELETE(options.BaseURL+"/api/v1/admin/cms/entries/:id/variants/:variant_id", wrapper.DeleteAdminCmsEntryVariant)
+	router.PUT(options.BaseURL+"/api/v1/admin/cms/entries/:id/variants/:variant_id", wrapper.UpdateAdminCmsEntryVariant)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/entries/:id/variants/:variant_id/:action", wrapper.TransitionAdminCmsEntryVariant)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/entries/:id/workflow", wrapper.GetAdminCmsEntryWorkflow)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/entries/:id/workflow/:action", wrapper.TransitionAdminCmsEntryWorkflow)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/export", wrapper.ExportAdminCmsContent)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/export", wrapper.RestoreAdminCmsContent)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/global", wrapper.ListAdminCmsGlobalRegions)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/global", wrapper.CreateAdminCmsGlobalRegion)
+	router.DELETE(options.BaseURL+"/api/v1/admin/cms/global/:id", wrapper.DeleteAdminCmsGlobalRegion)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/global/:id", wrapper.GetAdminCmsGlobalRegion)
+	router.PATCH(options.BaseURL+"/api/v1/admin/cms/global/:id", wrapper.UpdateAdminCmsGlobalRegion)
+	router.DELETE(options.BaseURL+"/api/v1/admin/cms/global/:id/draft", wrapper.DiscardAdminCmsGlobalRegionDraft)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/global/:id/publish", wrapper.PublishAdminCmsGlobalRegion)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/global/:id/unpublish", wrapper.UnpublishAdminCmsGlobalRegion)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/governance", wrapper.GetAdminCmsGovernance)
+	router.PUT(options.BaseURL+"/api/v1/admin/cms/governance", wrapper.UpdateAdminCmsGovernance)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/locales", wrapper.GetAdminCmsLocales)
+	router.PUT(options.BaseURL+"/api/v1/admin/cms/locales", wrapper.UpdateAdminCmsLocales)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/navigation", wrapper.ListAdminCmsNavigation)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/navigation", wrapper.CreateAdminCmsNavigation)
+	router.DELETE(options.BaseURL+"/api/v1/admin/cms/navigation/:id", wrapper.DeleteAdminCmsNavigation)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/navigation/:id", wrapper.GetAdminCmsNavigation)
+	router.PATCH(options.BaseURL+"/api/v1/admin/cms/navigation/:id", wrapper.UpdateAdminCmsNavigation)
+	router.DELETE(options.BaseURL+"/api/v1/admin/cms/navigation/:id/draft", wrapper.DiscardAdminCmsNavigationDraft)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/navigation/:id/publish", wrapper.PublishAdminCmsNavigation)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/navigation/:id/unpublish", wrapper.UnpublishAdminCmsNavigation)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/operations", wrapper.GetAdminCmsOperations)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/operations/invalidation/:id/retry", wrapper.RetryAdminCmsInvalidation)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/pages", wrapper.ListAdminCmsPages)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/pages", wrapper.CreateAdminCmsPage)
+	router.DELETE(options.BaseURL+"/api/v1/admin/cms/pages/:id", wrapper.DeleteAdminCmsPage)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/pages/:id", wrapper.GetAdminCmsPage)
+	router.PATCH(options.BaseURL+"/api/v1/admin/cms/pages/:id", wrapper.UpdateAdminCmsPage)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/pages/:id/delivery", wrapper.GetAdminCmsPageDelivery)
+	router.PUT(options.BaseURL+"/api/v1/admin/cms/pages/:id/delivery", wrapper.UpdateAdminCmsPageDelivery)
+	router.DELETE(options.BaseURL+"/api/v1/admin/cms/pages/:id/draft", wrapper.DiscardAdminCmsPageDraft)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/pages/:id/publish", wrapper.PublishAdminCmsPage)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/pages/:id/rollback", wrapper.RollbackAdminCmsPage)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/pages/:id/seo", wrapper.GetAdminCmsPageSeo)
+	router.PUT(options.BaseURL+"/api/v1/admin/cms/pages/:id/seo", wrapper.UpdateAdminCmsPageSeo)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/pages/:id/unpublish", wrapper.UnpublishAdminCmsPage)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/pages/:id/variants", wrapper.ListAdminCmsPageVariants)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/pages/:id/variants", wrapper.CreateAdminCmsPageVariant)
+	router.DELETE(options.BaseURL+"/api/v1/admin/cms/pages/:id/variants/:variant_id", wrapper.DeleteAdminCmsPageVariant)
+	router.PUT(options.BaseURL+"/api/v1/admin/cms/pages/:id/variants/:variant_id", wrapper.UpdateAdminCmsPageVariant)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/pages/:id/variants/:variant_id/:action", wrapper.TransitionAdminCmsPageVariant)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/preview", wrapper.PreviewAdminCmsPayload)
+	router.GET(options.BaseURL+"/api/v1/admin/cms/redirects", wrapper.ListAdminCmsRedirects)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/redirects", wrapper.CreateAdminCmsRedirect)
+	router.DELETE(options.BaseURL+"/api/v1/admin/cms/redirects/:id", wrapper.DeleteAdminCmsRedirect)
+	router.PATCH(options.BaseURL+"/api/v1/admin/cms/redirects/:id", wrapper.UpdateAdminCmsRedirect)
+	router.POST(options.BaseURL+"/api/v1/admin/cms/restore/preview", wrapper.PreviewAdminCmsRestore)
 	router.GET(options.BaseURL+"/api/v1/admin/discounts/audit", wrapper.ListAdminDiscountAudit)
 	router.GET(options.BaseURL+"/api/v1/admin/discounts/campaigns", wrapper.ListAdminDiscountCampaigns)
 	router.POST(options.BaseURL+"/api/v1/admin/discounts/campaigns", wrapper.CreateAdminDiscountCampaign)
@@ -7126,10 +11034,6 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/api/v1/admin/purchase-orders/:id/cancel", wrapper.CancelAdminPurchaseOrder)
 	router.POST(options.BaseURL+"/api/v1/admin/purchase-orders/:id/issue", wrapper.IssueAdminPurchaseOrder)
 	router.POST(options.BaseURL+"/api/v1/admin/purchase-orders/:id/receive", wrapper.ReceiveAdminPurchaseOrder)
-	router.GET(options.BaseURL+"/api/v1/admin/storefront", wrapper.GetAdminStorefrontSettings)
-	router.PUT(options.BaseURL+"/api/v1/admin/storefront", wrapper.UpdateStorefrontSettings)
-	router.DELETE(options.BaseURL+"/api/v1/admin/storefront/draft", wrapper.DiscardStorefrontDraft)
-	router.POST(options.BaseURL+"/api/v1/admin/storefront/publish", wrapper.PublishStorefrontSettings)
 	router.GET(options.BaseURL+"/api/v1/admin/tax/reports/export", wrapper.ExportAdminTaxReport)
 	router.GET(options.BaseURL+"/api/v1/admin/users", wrapper.ListUsers)
 	router.PATCH(options.BaseURL+"/api/v1/admin/users/:id/role", wrapper.UpdateUserRole)
@@ -7156,6 +11060,13 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/api/v1/checkout/orders/:id/tax/finalize", wrapper.FinalizeCheckoutOrderTax)
 	router.GET(options.BaseURL+"/api/v1/checkout/plugins", wrapper.ListCheckoutSessionPlugins)
 	router.POST(options.BaseURL+"/api/v1/checkout/quote", wrapper.QuoteCheckoutSession)
+	router.GET(options.BaseURL+"/api/v1/content", wrapper.ResolveContentHomepage)
+	router.POST(options.BaseURL+"/api/v1/content/events", wrapper.RecordContentEvent)
+	router.GET(options.BaseURL+"/api/v1/content/global/:region", wrapper.GetContentGlobalRegion)
+	router.GET(options.BaseURL+"/api/v1/content/navigation/:location", wrapper.GetContentNavigation)
+	router.GET(options.BaseURL+"/api/v1/content/redirect", wrapper.ResolveContentRedirect)
+	router.GET(options.BaseURL+"/api/v1/content/sitemap.xml", wrapper.GetContentSitemap)
+	router.GET(options.BaseURL+"/api/v1/content/:path", wrapper.ResolveContentPage)
 	router.GET(options.BaseURL+"/api/v1/me/", wrapper.GetProfile)
 	router.PATCH(options.BaseURL+"/api/v1/me/", wrapper.UpdateProfile)
 	router.GET(options.BaseURL+"/api/v1/me/addresses", wrapper.ListSavedAddresses)
@@ -7185,7 +11096,6 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/api/v1/product-attributes", wrapper.ListProductAttributes)
 	router.GET(options.BaseURL+"/api/v1/products", wrapper.ListProducts)
 	router.GET(options.BaseURL+"/api/v1/products/:id", wrapper.GetProduct)
-	router.GET(options.BaseURL+"/api/v1/storefront", wrapper.GetStorefrontSettings)
 	router.POST(options.BaseURL+"/api/v1/webhooks/:provider", wrapper.ReceiveWebhookEvent)
 }
 
@@ -7367,6 +11277,1482 @@ type UpdateAdminCheckoutPlugin400JSONResponse Error
 func (response UpdateAdminCheckoutPlugin400JSONResponse) VisitUpdateAdminCheckoutPluginResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminCmsAuditEventsRequestObject struct {
+	Params ListAdminCmsAuditEventsParams
+}
+
+type ListAdminCmsAuditEventsResponseObject interface {
+	VisitListAdminCmsAuditEventsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminCmsAuditEvents200JSONResponse []CmsAuditEvent
+
+func (response ListAdminCmsAuditEvents200JSONResponse) VisitListAdminCmsAuditEventsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ResolveAdminCmsCommentRequestObject struct {
+	Id int `json:"id"`
+}
+
+type ResolveAdminCmsCommentResponseObject interface {
+	VisitResolveAdminCmsCommentResponse(w http.ResponseWriter) error
+}
+
+type ResolveAdminCmsComment200JSONResponse CmsChangeComment
+
+func (response ResolveAdminCmsComment200JSONResponse) VisitResolveAdminCmsCommentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminCmsEntryCommentRequestObject struct {
+	Id   int `json:"id"`
+	Body *CreateAdminCmsEntryCommentJSONRequestBody
+}
+
+type CreateAdminCmsEntryCommentResponseObject interface {
+	VisitCreateAdminCmsEntryCommentResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminCmsEntryComment201JSONResponse CmsChangeComment
+
+func (response CreateAdminCmsEntryComment201JSONResponse) VisitCreateAdminCmsEntryCommentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminCmsEntryVariantsRequestObject struct {
+	Id int `json:"id"`
+}
+
+type ListAdminCmsEntryVariantsResponseObject interface {
+	VisitListAdminCmsEntryVariantsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminCmsEntryVariants200JSONResponse []CmsEntryVariant
+
+func (response ListAdminCmsEntryVariants200JSONResponse) VisitListAdminCmsEntryVariantsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminCmsEntryVariantRequestObject struct {
+	Id   int `json:"id"`
+	Body *CreateAdminCmsEntryVariantJSONRequestBody
+}
+
+type CreateAdminCmsEntryVariantResponseObject interface {
+	VisitCreateAdminCmsEntryVariantResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminCmsEntryVariant201JSONResponse CmsEntryVariant
+
+func (response CreateAdminCmsEntryVariant201JSONResponse) VisitCreateAdminCmsEntryVariantResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminCmsEntryVariantRequestObject struct {
+	Id        int `json:"id"`
+	VariantId int `json:"variant_id"`
+}
+
+type DeleteAdminCmsEntryVariantResponseObject interface {
+	VisitDeleteAdminCmsEntryVariantResponse(w http.ResponseWriter) error
+}
+
+type DeleteAdminCmsEntryVariant200JSONResponse MessageResponse
+
+func (response DeleteAdminCmsEntryVariant200JSONResponse) VisitDeleteAdminCmsEntryVariantResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsEntryVariantRequestObject struct {
+	Id        int `json:"id"`
+	VariantId int `json:"variant_id"`
+	Body      *UpdateAdminCmsEntryVariantJSONRequestBody
+}
+
+type UpdateAdminCmsEntryVariantResponseObject interface {
+	VisitUpdateAdminCmsEntryVariantResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminCmsEntryVariant200JSONResponse CmsEntryVariant
+
+func (response UpdateAdminCmsEntryVariant200JSONResponse) VisitUpdateAdminCmsEntryVariantResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type TransitionAdminCmsEntryVariantRequestObject struct {
+	Id        int                                        `json:"id"`
+	VariantId int                                        `json:"variant_id"`
+	Action    TransitionAdminCmsEntryVariantParamsAction `json:"action"`
+	Body      *TransitionAdminCmsEntryVariantJSONRequestBody
+}
+
+type TransitionAdminCmsEntryVariantResponseObject interface {
+	VisitTransitionAdminCmsEntryVariantResponse(w http.ResponseWriter) error
+}
+
+type TransitionAdminCmsEntryVariant200JSONResponse CmsEntryVariant
+
+func (response TransitionAdminCmsEntryVariant200JSONResponse) VisitTransitionAdminCmsEntryVariantResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminCmsEntryWorkflowRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetAdminCmsEntryWorkflowResponseObject interface {
+	VisitGetAdminCmsEntryWorkflowResponse(w http.ResponseWriter) error
+}
+
+type GetAdminCmsEntryWorkflow200JSONResponse CmsEntryWorkflow
+
+func (response GetAdminCmsEntryWorkflow200JSONResponse) VisitGetAdminCmsEntryWorkflowResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type TransitionAdminCmsEntryWorkflowRequestObject struct {
+	Id     int                                         `json:"id"`
+	Action TransitionAdminCmsEntryWorkflowParamsAction `json:"action"`
+	Body   *TransitionAdminCmsEntryWorkflowJSONRequestBody
+}
+
+type TransitionAdminCmsEntryWorkflowResponseObject interface {
+	VisitTransitionAdminCmsEntryWorkflowResponse(w http.ResponseWriter) error
+}
+
+type TransitionAdminCmsEntryWorkflow200JSONResponse CmsEntryWorkflow
+
+func (response TransitionAdminCmsEntryWorkflow200JSONResponse) VisitTransitionAdminCmsEntryWorkflowResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ExportAdminCmsContentRequestObject struct {
+}
+
+type ExportAdminCmsContentResponseObject interface {
+	VisitExportAdminCmsContentResponse(w http.ResponseWriter) error
+}
+
+type ExportAdminCmsContent200JSONResponse CmsContentExport
+
+func (response ExportAdminCmsContent200JSONResponse) VisitExportAdminCmsContentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RestoreAdminCmsContentRequestObject struct {
+	Body *RestoreAdminCmsContentJSONRequestBody
+}
+
+type RestoreAdminCmsContentResponseObject interface {
+	VisitRestoreAdminCmsContentResponse(w http.ResponseWriter) error
+}
+
+type RestoreAdminCmsContent200JSONResponse MessageResponse
+
+func (response RestoreAdminCmsContent200JSONResponse) VisitRestoreAdminCmsContentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RestoreAdminCmsContent400JSONResponse Error
+
+func (response RestoreAdminCmsContent400JSONResponse) VisitRestoreAdminCmsContentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminCmsGlobalRegionsRequestObject struct {
+	Params ListAdminCmsGlobalRegionsParams
+}
+
+type ListAdminCmsGlobalRegionsResponseObject interface {
+	VisitListAdminCmsGlobalRegionsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminCmsGlobalRegions200JSONResponse CmsGlobalRegionListResponse
+
+func (response ListAdminCmsGlobalRegions200JSONResponse) VisitListAdminCmsGlobalRegionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminCmsGlobalRegionRequestObject struct {
+	Body *CreateAdminCmsGlobalRegionJSONRequestBody
+}
+
+type CreateAdminCmsGlobalRegionResponseObject interface {
+	VisitCreateAdminCmsGlobalRegionResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminCmsGlobalRegion201JSONResponse CmsGlobalRegionResponse
+
+func (response CreateAdminCmsGlobalRegion201JSONResponse) VisitCreateAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminCmsGlobalRegion400JSONResponse Error
+
+func (response CreateAdminCmsGlobalRegion400JSONResponse) VisitCreateAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminCmsGlobalRegion409JSONResponse Error
+
+func (response CreateAdminCmsGlobalRegion409JSONResponse) VisitCreateAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminCmsGlobalRegionRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DeleteAdminCmsGlobalRegionResponseObject interface {
+	VisitDeleteAdminCmsGlobalRegionResponse(w http.ResponseWriter) error
+}
+
+type DeleteAdminCmsGlobalRegion200JSONResponse MessageResponse
+
+func (response DeleteAdminCmsGlobalRegion200JSONResponse) VisitDeleteAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminCmsGlobalRegion404JSONResponse Error
+
+func (response DeleteAdminCmsGlobalRegion404JSONResponse) VisitDeleteAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminCmsGlobalRegionRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetAdminCmsGlobalRegionResponseObject interface {
+	VisitGetAdminCmsGlobalRegionResponse(w http.ResponseWriter) error
+}
+
+type GetAdminCmsGlobalRegion200JSONResponse CmsGlobalRegionResponse
+
+func (response GetAdminCmsGlobalRegion200JSONResponse) VisitGetAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminCmsGlobalRegion404JSONResponse Error
+
+func (response GetAdminCmsGlobalRegion404JSONResponse) VisitGetAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsGlobalRegionRequestObject struct {
+	Id   int `json:"id"`
+	Body *UpdateAdminCmsGlobalRegionJSONRequestBody
+}
+
+type UpdateAdminCmsGlobalRegionResponseObject interface {
+	VisitUpdateAdminCmsGlobalRegionResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminCmsGlobalRegion200JSONResponse CmsGlobalRegionResponse
+
+func (response UpdateAdminCmsGlobalRegion200JSONResponse) VisitUpdateAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsGlobalRegion400JSONResponse Error
+
+func (response UpdateAdminCmsGlobalRegion400JSONResponse) VisitUpdateAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsGlobalRegion404JSONResponse Error
+
+func (response UpdateAdminCmsGlobalRegion404JSONResponse) VisitUpdateAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsGlobalRegion409JSONResponse Error
+
+func (response UpdateAdminCmsGlobalRegion409JSONResponse) VisitUpdateAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DiscardAdminCmsGlobalRegionDraftRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DiscardAdminCmsGlobalRegionDraftResponseObject interface {
+	VisitDiscardAdminCmsGlobalRegionDraftResponse(w http.ResponseWriter) error
+}
+
+type DiscardAdminCmsGlobalRegionDraft200JSONResponse CmsGlobalRegionResponse
+
+func (response DiscardAdminCmsGlobalRegionDraft200JSONResponse) VisitDiscardAdminCmsGlobalRegionDraftResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DiscardAdminCmsGlobalRegionDraft204Response struct {
+}
+
+func (response DiscardAdminCmsGlobalRegionDraft204Response) VisitDiscardAdminCmsGlobalRegionDraftResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DiscardAdminCmsGlobalRegionDraft404JSONResponse Error
+
+func (response DiscardAdminCmsGlobalRegionDraft404JSONResponse) VisitDiscardAdminCmsGlobalRegionDraftResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminCmsGlobalRegionRequestObject struct {
+	Id   int `json:"id"`
+	Body *PublishAdminCmsGlobalRegionJSONRequestBody
+}
+
+type PublishAdminCmsGlobalRegionResponseObject interface {
+	VisitPublishAdminCmsGlobalRegionResponse(w http.ResponseWriter) error
+}
+
+type PublishAdminCmsGlobalRegion200JSONResponse CmsGlobalRegionResponse
+
+func (response PublishAdminCmsGlobalRegion200JSONResponse) VisitPublishAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminCmsGlobalRegion400JSONResponse Error
+
+func (response PublishAdminCmsGlobalRegion400JSONResponse) VisitPublishAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminCmsGlobalRegion404JSONResponse Error
+
+func (response PublishAdminCmsGlobalRegion404JSONResponse) VisitPublishAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UnpublishAdminCmsGlobalRegionRequestObject struct {
+	Id   int `json:"id"`
+	Body *UnpublishAdminCmsGlobalRegionJSONRequestBody
+}
+
+type UnpublishAdminCmsGlobalRegionResponseObject interface {
+	VisitUnpublishAdminCmsGlobalRegionResponse(w http.ResponseWriter) error
+}
+
+type UnpublishAdminCmsGlobalRegion200JSONResponse CmsGlobalRegionResponse
+
+func (response UnpublishAdminCmsGlobalRegion200JSONResponse) VisitUnpublishAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UnpublishAdminCmsGlobalRegion404JSONResponse Error
+
+func (response UnpublishAdminCmsGlobalRegion404JSONResponse) VisitUnpublishAdminCmsGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminCmsGovernanceRequestObject struct {
+}
+
+type GetAdminCmsGovernanceResponseObject interface {
+	VisitGetAdminCmsGovernanceResponse(w http.ResponseWriter) error
+}
+
+type GetAdminCmsGovernance200JSONResponse CmsGovernance
+
+func (response GetAdminCmsGovernance200JSONResponse) VisitGetAdminCmsGovernanceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsGovernanceRequestObject struct {
+	Body *UpdateAdminCmsGovernanceJSONRequestBody
+}
+
+type UpdateAdminCmsGovernanceResponseObject interface {
+	VisitUpdateAdminCmsGovernanceResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminCmsGovernance200JSONResponse CmsGovernance
+
+func (response UpdateAdminCmsGovernance200JSONResponse) VisitUpdateAdminCmsGovernanceResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminCmsLocalesRequestObject struct {
+}
+
+type GetAdminCmsLocalesResponseObject interface {
+	VisitGetAdminCmsLocalesResponse(w http.ResponseWriter) error
+}
+
+type GetAdminCmsLocales200JSONResponse CmsLocaleSettings
+
+func (response GetAdminCmsLocales200JSONResponse) VisitGetAdminCmsLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsLocalesRequestObject struct {
+	Body *UpdateAdminCmsLocalesJSONRequestBody
+}
+
+type UpdateAdminCmsLocalesResponseObject interface {
+	VisitUpdateAdminCmsLocalesResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminCmsLocales200JSONResponse CmsLocaleSettings
+
+func (response UpdateAdminCmsLocales200JSONResponse) VisitUpdateAdminCmsLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsLocales400JSONResponse Error
+
+func (response UpdateAdminCmsLocales400JSONResponse) VisitUpdateAdminCmsLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminCmsNavigationRequestObject struct {
+	Params ListAdminCmsNavigationParams
+}
+
+type ListAdminCmsNavigationResponseObject interface {
+	VisitListAdminCmsNavigationResponse(w http.ResponseWriter) error
+}
+
+type ListAdminCmsNavigation200JSONResponse CmsNavigationListResponse
+
+func (response ListAdminCmsNavigation200JSONResponse) VisitListAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminCmsNavigationRequestObject struct {
+	Body *CreateAdminCmsNavigationJSONRequestBody
+}
+
+type CreateAdminCmsNavigationResponseObject interface {
+	VisitCreateAdminCmsNavigationResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminCmsNavigation201JSONResponse CmsNavigationResponse
+
+func (response CreateAdminCmsNavigation201JSONResponse) VisitCreateAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminCmsNavigation400JSONResponse Error
+
+func (response CreateAdminCmsNavigation400JSONResponse) VisitCreateAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminCmsNavigation409JSONResponse Error
+
+func (response CreateAdminCmsNavigation409JSONResponse) VisitCreateAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminCmsNavigationRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DeleteAdminCmsNavigationResponseObject interface {
+	VisitDeleteAdminCmsNavigationResponse(w http.ResponseWriter) error
+}
+
+type DeleteAdminCmsNavigation200JSONResponse MessageResponse
+
+func (response DeleteAdminCmsNavigation200JSONResponse) VisitDeleteAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminCmsNavigation404JSONResponse Error
+
+func (response DeleteAdminCmsNavigation404JSONResponse) VisitDeleteAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminCmsNavigationRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetAdminCmsNavigationResponseObject interface {
+	VisitGetAdminCmsNavigationResponse(w http.ResponseWriter) error
+}
+
+type GetAdminCmsNavigation200JSONResponse CmsNavigationResponse
+
+func (response GetAdminCmsNavigation200JSONResponse) VisitGetAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminCmsNavigation404JSONResponse Error
+
+func (response GetAdminCmsNavigation404JSONResponse) VisitGetAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsNavigationRequestObject struct {
+	Id   int `json:"id"`
+	Body *UpdateAdminCmsNavigationJSONRequestBody
+}
+
+type UpdateAdminCmsNavigationResponseObject interface {
+	VisitUpdateAdminCmsNavigationResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminCmsNavigation200JSONResponse CmsNavigationResponse
+
+func (response UpdateAdminCmsNavigation200JSONResponse) VisitUpdateAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsNavigation400JSONResponse Error
+
+func (response UpdateAdminCmsNavigation400JSONResponse) VisitUpdateAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsNavigation404JSONResponse Error
+
+func (response UpdateAdminCmsNavigation404JSONResponse) VisitUpdateAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsNavigation409JSONResponse Error
+
+func (response UpdateAdminCmsNavigation409JSONResponse) VisitUpdateAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DiscardAdminCmsNavigationDraftRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DiscardAdminCmsNavigationDraftResponseObject interface {
+	VisitDiscardAdminCmsNavigationDraftResponse(w http.ResponseWriter) error
+}
+
+type DiscardAdminCmsNavigationDraft200JSONResponse CmsNavigationResponse
+
+func (response DiscardAdminCmsNavigationDraft200JSONResponse) VisitDiscardAdminCmsNavigationDraftResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DiscardAdminCmsNavigationDraft204Response struct {
+}
+
+func (response DiscardAdminCmsNavigationDraft204Response) VisitDiscardAdminCmsNavigationDraftResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DiscardAdminCmsNavigationDraft404JSONResponse Error
+
+func (response DiscardAdminCmsNavigationDraft404JSONResponse) VisitDiscardAdminCmsNavigationDraftResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminCmsNavigationRequestObject struct {
+	Id   int `json:"id"`
+	Body *PublishAdminCmsNavigationJSONRequestBody
+}
+
+type PublishAdminCmsNavigationResponseObject interface {
+	VisitPublishAdminCmsNavigationResponse(w http.ResponseWriter) error
+}
+
+type PublishAdminCmsNavigation200JSONResponse CmsNavigationResponse
+
+func (response PublishAdminCmsNavigation200JSONResponse) VisitPublishAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminCmsNavigation400JSONResponse Error
+
+func (response PublishAdminCmsNavigation400JSONResponse) VisitPublishAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminCmsNavigation404JSONResponse Error
+
+func (response PublishAdminCmsNavigation404JSONResponse) VisitPublishAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UnpublishAdminCmsNavigationRequestObject struct {
+	Id   int `json:"id"`
+	Body *UnpublishAdminCmsNavigationJSONRequestBody
+}
+
+type UnpublishAdminCmsNavigationResponseObject interface {
+	VisitUnpublishAdminCmsNavigationResponse(w http.ResponseWriter) error
+}
+
+type UnpublishAdminCmsNavigation200JSONResponse CmsNavigationResponse
+
+func (response UnpublishAdminCmsNavigation200JSONResponse) VisitUnpublishAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UnpublishAdminCmsNavigation404JSONResponse Error
+
+func (response UnpublishAdminCmsNavigation404JSONResponse) VisitUnpublishAdminCmsNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminCmsOperationsRequestObject struct {
+}
+
+type GetAdminCmsOperationsResponseObject interface {
+	VisitGetAdminCmsOperationsResponse(w http.ResponseWriter) error
+}
+
+type GetAdminCmsOperations200JSONResponse CmsOperations
+
+func (response GetAdminCmsOperations200JSONResponse) VisitGetAdminCmsOperationsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RetryAdminCmsInvalidationRequestObject struct {
+	Id int `json:"id"`
+}
+
+type RetryAdminCmsInvalidationResponseObject interface {
+	VisitRetryAdminCmsInvalidationResponse(w http.ResponseWriter) error
+}
+
+type RetryAdminCmsInvalidation200JSONResponse MessageResponse
+
+func (response RetryAdminCmsInvalidation200JSONResponse) VisitRetryAdminCmsInvalidationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminCmsPagesRequestObject struct {
+	Params ListAdminCmsPagesParams
+}
+
+type ListAdminCmsPagesResponseObject interface {
+	VisitListAdminCmsPagesResponse(w http.ResponseWriter) error
+}
+
+type ListAdminCmsPages200JSONResponse CmsPageListResponse
+
+func (response ListAdminCmsPages200JSONResponse) VisitListAdminCmsPagesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminCmsPageRequestObject struct {
+	Body *CreateAdminCmsPageJSONRequestBody
+}
+
+type CreateAdminCmsPageResponseObject interface {
+	VisitCreateAdminCmsPageResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminCmsPage201JSONResponse CmsPageResponse
+
+func (response CreateAdminCmsPage201JSONResponse) VisitCreateAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminCmsPage400JSONResponse Error
+
+func (response CreateAdminCmsPage400JSONResponse) VisitCreateAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminCmsPageRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DeleteAdminCmsPageResponseObject interface {
+	VisitDeleteAdminCmsPageResponse(w http.ResponseWriter) error
+}
+
+type DeleteAdminCmsPage200JSONResponse MessageResponse
+
+func (response DeleteAdminCmsPage200JSONResponse) VisitDeleteAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminCmsPage404JSONResponse Error
+
+func (response DeleteAdminCmsPage404JSONResponse) VisitDeleteAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminCmsPageRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetAdminCmsPageResponseObject interface {
+	VisitGetAdminCmsPageResponse(w http.ResponseWriter) error
+}
+
+type GetAdminCmsPage200JSONResponse CmsPageResponse
+
+func (response GetAdminCmsPage200JSONResponse) VisitGetAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminCmsPage404JSONResponse Error
+
+func (response GetAdminCmsPage404JSONResponse) VisitGetAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsPageRequestObject struct {
+	Id   int `json:"id"`
+	Body *UpdateAdminCmsPageJSONRequestBody
+}
+
+type UpdateAdminCmsPageResponseObject interface {
+	VisitUpdateAdminCmsPageResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminCmsPage200JSONResponse CmsPageResponse
+
+func (response UpdateAdminCmsPage200JSONResponse) VisitUpdateAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsPage400JSONResponse Error
+
+func (response UpdateAdminCmsPage400JSONResponse) VisitUpdateAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsPage404JSONResponse Error
+
+func (response UpdateAdminCmsPage404JSONResponse) VisitUpdateAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsPage409JSONResponse Error
+
+func (response UpdateAdminCmsPage409JSONResponse) VisitUpdateAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminCmsPageDeliveryRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetAdminCmsPageDeliveryResponseObject interface {
+	VisitGetAdminCmsPageDeliveryResponse(w http.ResponseWriter) error
+}
+
+type GetAdminCmsPageDelivery200JSONResponse CmsPageDeliveryResponse
+
+func (response GetAdminCmsPageDelivery200JSONResponse) VisitGetAdminCmsPageDeliveryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminCmsPageDelivery404JSONResponse Error
+
+func (response GetAdminCmsPageDelivery404JSONResponse) VisitGetAdminCmsPageDeliveryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsPageDeliveryRequestObject struct {
+	Id   int `json:"id"`
+	Body *UpdateAdminCmsPageDeliveryJSONRequestBody
+}
+
+type UpdateAdminCmsPageDeliveryResponseObject interface {
+	VisitUpdateAdminCmsPageDeliveryResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminCmsPageDelivery200JSONResponse CmsPageDeliveryResponse
+
+func (response UpdateAdminCmsPageDelivery200JSONResponse) VisitUpdateAdminCmsPageDeliveryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsPageDelivery400JSONResponse Error
+
+func (response UpdateAdminCmsPageDelivery400JSONResponse) VisitUpdateAdminCmsPageDeliveryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsPageDelivery404JSONResponse Error
+
+func (response UpdateAdminCmsPageDelivery404JSONResponse) VisitUpdateAdminCmsPageDeliveryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DiscardAdminCmsPageDraftRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DiscardAdminCmsPageDraftResponseObject interface {
+	VisitDiscardAdminCmsPageDraftResponse(w http.ResponseWriter) error
+}
+
+type DiscardAdminCmsPageDraft200JSONResponse CmsPageResponse
+
+func (response DiscardAdminCmsPageDraft200JSONResponse) VisitDiscardAdminCmsPageDraftResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DiscardAdminCmsPageDraft204Response struct {
+}
+
+func (response DiscardAdminCmsPageDraft204Response) VisitDiscardAdminCmsPageDraftResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DiscardAdminCmsPageDraft404JSONResponse Error
+
+func (response DiscardAdminCmsPageDraft404JSONResponse) VisitDiscardAdminCmsPageDraftResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminCmsPageRequestObject struct {
+	Id   int `json:"id"`
+	Body *PublishAdminCmsPageJSONRequestBody
+}
+
+type PublishAdminCmsPageResponseObject interface {
+	VisitPublishAdminCmsPageResponse(w http.ResponseWriter) error
+}
+
+type PublishAdminCmsPage200JSONResponse CmsPageResponse
+
+func (response PublishAdminCmsPage200JSONResponse) VisitPublishAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminCmsPage404JSONResponse Error
+
+func (response PublishAdminCmsPage404JSONResponse) VisitPublishAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RollbackAdminCmsPageRequestObject struct {
+	Id   int `json:"id"`
+	Body *RollbackAdminCmsPageJSONRequestBody
+}
+
+type RollbackAdminCmsPageResponseObject interface {
+	VisitRollbackAdminCmsPageResponse(w http.ResponseWriter) error
+}
+
+type RollbackAdminCmsPage200JSONResponse CmsPageResponse
+
+func (response RollbackAdminCmsPage200JSONResponse) VisitRollbackAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RollbackAdminCmsPage400JSONResponse Error
+
+func (response RollbackAdminCmsPage400JSONResponse) VisitRollbackAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RollbackAdminCmsPage404JSONResponse Error
+
+func (response RollbackAdminCmsPage404JSONResponse) VisitRollbackAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminCmsPageSeoRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetAdminCmsPageSeoResponseObject interface {
+	VisitGetAdminCmsPageSeoResponse(w http.ResponseWriter) error
+}
+
+type GetAdminCmsPageSeo200JSONResponse CmsSEOResponse
+
+func (response GetAdminCmsPageSeo200JSONResponse) VisitGetAdminCmsPageSeoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminCmsPageSeo404JSONResponse Error
+
+func (response GetAdminCmsPageSeo404JSONResponse) VisitGetAdminCmsPageSeoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsPageSeoRequestObject struct {
+	Id   int `json:"id"`
+	Body *UpdateAdminCmsPageSeoJSONRequestBody
+}
+
+type UpdateAdminCmsPageSeoResponseObject interface {
+	VisitUpdateAdminCmsPageSeoResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminCmsPageSeo200JSONResponse CmsSEOResponse
+
+func (response UpdateAdminCmsPageSeo200JSONResponse) VisitUpdateAdminCmsPageSeoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsPageSeo400JSONResponse Error
+
+func (response UpdateAdminCmsPageSeo400JSONResponse) VisitUpdateAdminCmsPageSeoResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UnpublishAdminCmsPageRequestObject struct {
+	Id   int `json:"id"`
+	Body *UnpublishAdminCmsPageJSONRequestBody
+}
+
+type UnpublishAdminCmsPageResponseObject interface {
+	VisitUnpublishAdminCmsPageResponse(w http.ResponseWriter) error
+}
+
+type UnpublishAdminCmsPage200JSONResponse CmsPageResponse
+
+func (response UnpublishAdminCmsPage200JSONResponse) VisitUnpublishAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UnpublishAdminCmsPage404JSONResponse Error
+
+func (response UnpublishAdminCmsPage404JSONResponse) VisitUnpublishAdminCmsPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminCmsPageVariantsRequestObject struct {
+	Id int `json:"id"`
+}
+
+type ListAdminCmsPageVariantsResponseObject interface {
+	VisitListAdminCmsPageVariantsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminCmsPageVariants200JSONResponse []CmsPageVariant
+
+func (response ListAdminCmsPageVariants200JSONResponse) VisitListAdminCmsPageVariantsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminCmsPageVariantRequestObject struct {
+	Id   int `json:"id"`
+	Body *CreateAdminCmsPageVariantJSONRequestBody
+}
+
+type CreateAdminCmsPageVariantResponseObject interface {
+	VisitCreateAdminCmsPageVariantResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminCmsPageVariant201JSONResponse CmsPageVariant
+
+func (response CreateAdminCmsPageVariant201JSONResponse) VisitCreateAdminCmsPageVariantResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminCmsPageVariant400JSONResponse Error
+
+func (response CreateAdminCmsPageVariant400JSONResponse) VisitCreateAdminCmsPageVariantResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminCmsPageVariant409JSONResponse Error
+
+func (response CreateAdminCmsPageVariant409JSONResponse) VisitCreateAdminCmsPageVariantResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminCmsPageVariantRequestObject struct {
+	Id        int `json:"id"`
+	VariantId int `json:"variant_id"`
+}
+
+type DeleteAdminCmsPageVariantResponseObject interface {
+	VisitDeleteAdminCmsPageVariantResponse(w http.ResponseWriter) error
+}
+
+type DeleteAdminCmsPageVariant200JSONResponse MessageResponse
+
+func (response DeleteAdminCmsPageVariant200JSONResponse) VisitDeleteAdminCmsPageVariantResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsPageVariantRequestObject struct {
+	Id        int `json:"id"`
+	VariantId int `json:"variant_id"`
+	Body      *UpdateAdminCmsPageVariantJSONRequestBody
+}
+
+type UpdateAdminCmsPageVariantResponseObject interface {
+	VisitUpdateAdminCmsPageVariantResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminCmsPageVariant200JSONResponse CmsPageVariant
+
+func (response UpdateAdminCmsPageVariant200JSONResponse) VisitUpdateAdminCmsPageVariantResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsPageVariant400JSONResponse Error
+
+func (response UpdateAdminCmsPageVariant400JSONResponse) VisitUpdateAdminCmsPageVariantResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type TransitionAdminCmsPageVariantRequestObject struct {
+	Id        int                                       `json:"id"`
+	VariantId int                                       `json:"variant_id"`
+	Action    TransitionAdminCmsPageVariantParamsAction `json:"action"`
+	Body      *TransitionAdminCmsPageVariantJSONRequestBody
+}
+
+type TransitionAdminCmsPageVariantResponseObject interface {
+	VisitTransitionAdminCmsPageVariantResponse(w http.ResponseWriter) error
+}
+
+type TransitionAdminCmsPageVariant200JSONResponse CmsPageVariant
+
+func (response TransitionAdminCmsPageVariant200JSONResponse) VisitTransitionAdminCmsPageVariantResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type TransitionAdminCmsPageVariant400JSONResponse Error
+
+func (response TransitionAdminCmsPageVariant400JSONResponse) VisitTransitionAdminCmsPageVariantResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type TransitionAdminCmsPageVariant403JSONResponse Error
+
+func (response TransitionAdminCmsPageVariant403JSONResponse) VisitTransitionAdminCmsPageVariantResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PreviewAdminCmsPayloadRequestObject struct {
+	Body *PreviewAdminCmsPayloadJSONRequestBody
+}
+
+type PreviewAdminCmsPayloadResponseObject interface {
+	VisitPreviewAdminCmsPayloadResponse(w http.ResponseWriter) error
+}
+
+type PreviewAdminCmsPayload200JSONResponse CmsPreviewResponse
+
+func (response PreviewAdminCmsPayload200JSONResponse) VisitPreviewAdminCmsPayloadResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PreviewAdminCmsPayload400JSONResponse Error
+
+func (response PreviewAdminCmsPayload400JSONResponse) VisitPreviewAdminCmsPayloadResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PreviewAdminCmsPayload409JSONResponse Error
+
+func (response PreviewAdminCmsPayload409JSONResponse) VisitPreviewAdminCmsPayloadResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminCmsRedirectsRequestObject struct {
+}
+
+type ListAdminCmsRedirectsResponseObject interface {
+	VisitListAdminCmsRedirectsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminCmsRedirects200JSONResponse []CmsRedirectRule
+
+func (response ListAdminCmsRedirects200JSONResponse) VisitListAdminCmsRedirectsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminCmsRedirectRequestObject struct {
+	Body *CreateAdminCmsRedirectJSONRequestBody
+}
+
+type CreateAdminCmsRedirectResponseObject interface {
+	VisitCreateAdminCmsRedirectResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminCmsRedirect201JSONResponse CmsRedirectRule
+
+func (response CreateAdminCmsRedirect201JSONResponse) VisitCreateAdminCmsRedirectResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminCmsRedirect400JSONResponse Error
+
+func (response CreateAdminCmsRedirect400JSONResponse) VisitCreateAdminCmsRedirectResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminCmsRedirectRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DeleteAdminCmsRedirectResponseObject interface {
+	VisitDeleteAdminCmsRedirectResponse(w http.ResponseWriter) error
+}
+
+type DeleteAdminCmsRedirect200JSONResponse MessageResponse
+
+func (response DeleteAdminCmsRedirect200JSONResponse) VisitDeleteAdminCmsRedirectResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsRedirectRequestObject struct {
+	Id   int `json:"id"`
+	Body *UpdateAdminCmsRedirectJSONRequestBody
+}
+
+type UpdateAdminCmsRedirectResponseObject interface {
+	VisitUpdateAdminCmsRedirectResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminCmsRedirect200JSONResponse CmsRedirectRule
+
+func (response UpdateAdminCmsRedirect200JSONResponse) VisitUpdateAdminCmsRedirectResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminCmsRedirect400JSONResponse Error
+
+func (response UpdateAdminCmsRedirect400JSONResponse) VisitUpdateAdminCmsRedirectResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PreviewAdminCmsRestoreRequestObject struct {
+	Body *PreviewAdminCmsRestoreJSONRequestBody
+}
+
+type PreviewAdminCmsRestoreResponseObject interface {
+	VisitPreviewAdminCmsRestoreResponse(w http.ResponseWriter) error
+}
+
+type PreviewAdminCmsRestore200JSONResponse CmsRestorePreview
+
+func (response PreviewAdminCmsRestore200JSONResponse) VisitPreviewAdminCmsRestoreResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -8912,98 +14298,6 @@ func (response ReceiveAdminPurchaseOrder400JSONResponse) VisitReceiveAdminPurcha
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetAdminStorefrontSettingsRequestObject struct {
-}
-
-type GetAdminStorefrontSettingsResponseObject interface {
-	VisitGetAdminStorefrontSettingsResponse(w http.ResponseWriter) error
-}
-
-type GetAdminStorefrontSettings200JSONResponse StorefrontSettingsResponse
-
-func (response GetAdminStorefrontSettings200JSONResponse) VisitGetAdminStorefrontSettingsResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetAdminStorefrontSettings500JSONResponse Error
-
-func (response GetAdminStorefrontSettings500JSONResponse) VisitGetAdminStorefrontSettingsResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type UpdateStorefrontSettingsRequestObject struct {
-	Body *UpdateStorefrontSettingsJSONRequestBody
-}
-
-type UpdateStorefrontSettingsResponseObject interface {
-	VisitUpdateStorefrontSettingsResponse(w http.ResponseWriter) error
-}
-
-type UpdateStorefrontSettings200JSONResponse StorefrontSettingsResponse
-
-func (response UpdateStorefrontSettings200JSONResponse) VisitUpdateStorefrontSettingsResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type UpdateStorefrontSettings400JSONResponse Error
-
-func (response UpdateStorefrontSettings400JSONResponse) VisitUpdateStorefrontSettingsResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type DiscardStorefrontDraftRequestObject struct {
-}
-
-type DiscardStorefrontDraftResponseObject interface {
-	VisitDiscardStorefrontDraftResponse(w http.ResponseWriter) error
-}
-
-type DiscardStorefrontDraft200JSONResponse StorefrontSettingsResponse
-
-func (response DiscardStorefrontDraft200JSONResponse) VisitDiscardStorefrontDraftResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PublishStorefrontSettingsRequestObject struct {
-}
-
-type PublishStorefrontSettingsResponseObject interface {
-	VisitPublishStorefrontSettingsResponse(w http.ResponseWriter) error
-}
-
-type PublishStorefrontSettings200JSONResponse StorefrontSettingsResponse
-
-func (response PublishStorefrontSettings200JSONResponse) VisitPublishStorefrontSettingsResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PublishStorefrontSettings400JSONResponse Error
-
-func (response PublishStorefrontSettings400JSONResponse) VisitPublishStorefrontSettingsResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
 type ExportAdminTaxReportRequestObject struct {
 	Params ExportAdminTaxReportParams
 }
@@ -9752,6 +15046,189 @@ func (response QuoteCheckoutSession403JSONResponse) VisitQuoteCheckoutSessionRes
 	return json.NewEncoder(w).Encode(response)
 }
 
+type ResolveContentHomepageRequestObject struct {
+	Params ResolveContentHomepageParams
+}
+
+type ResolveContentHomepageResponseObject interface {
+	VisitResolveContentHomepageResponse(w http.ResponseWriter) error
+}
+
+type ResolveContentHomepage200JSONResponse CmsPageResponse
+
+func (response ResolveContentHomepage200JSONResponse) VisitResolveContentHomepageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ResolveContentHomepage404JSONResponse Error
+
+func (response ResolveContentHomepage404JSONResponse) VisitResolveContentHomepageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RecordContentEventRequestObject struct {
+	Body *RecordContentEventJSONRequestBody
+}
+
+type RecordContentEventResponseObject interface {
+	VisitRecordContentEventResponse(w http.ResponseWriter) error
+}
+
+type RecordContentEvent202JSONResponse MessageResponse
+
+func (response RecordContentEvent202JSONResponse) VisitRecordContentEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RecordContentEvent400JSONResponse Error
+
+func (response RecordContentEvent400JSONResponse) VisitRecordContentEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetContentGlobalRegionRequestObject struct {
+	Region string `json:"region"`
+}
+
+type GetContentGlobalRegionResponseObject interface {
+	VisitGetContentGlobalRegionResponse(w http.ResponseWriter) error
+}
+
+type GetContentGlobalRegion200JSONResponse CmsGlobalRegionResponse
+
+func (response GetContentGlobalRegion200JSONResponse) VisitGetContentGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetContentGlobalRegion404JSONResponse Error
+
+func (response GetContentGlobalRegion404JSONResponse) VisitGetContentGlobalRegionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetContentNavigationRequestObject struct {
+	Location string `json:"location"`
+}
+
+type GetContentNavigationResponseObject interface {
+	VisitGetContentNavigationResponse(w http.ResponseWriter) error
+}
+
+type GetContentNavigation200JSONResponse CmsNavigationResponse
+
+func (response GetContentNavigation200JSONResponse) VisitGetContentNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetContentNavigation404JSONResponse Error
+
+func (response GetContentNavigation404JSONResponse) VisitGetContentNavigationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ResolveContentRedirectRequestObject struct {
+	Params ResolveContentRedirectParams
+}
+
+type ResolveContentRedirectResponseObject interface {
+	VisitResolveContentRedirectResponse(w http.ResponseWriter) error
+}
+
+type ResolveContentRedirect200JSONResponse CmsRedirectResolution
+
+func (response ResolveContentRedirect200JSONResponse) VisitResolveContentRedirectResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ResolveContentRedirect404JSONResponse Error
+
+func (response ResolveContentRedirect404JSONResponse) VisitResolveContentRedirectResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetContentSitemapRequestObject struct {
+}
+
+type GetContentSitemapResponseObject interface {
+	VisitGetContentSitemapResponse(w http.ResponseWriter) error
+}
+
+type GetContentSitemap200ApplicationxmlResponse struct {
+	Body          io.Reader
+	ContentLength int64
+}
+
+func (response GetContentSitemap200ApplicationxmlResponse) VisitGetContentSitemapResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/xml")
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type ResolveContentPageRequestObject struct {
+	Path   string `json:"path"`
+	Params ResolveContentPageParams
+}
+
+type ResolveContentPageResponseObject interface {
+	VisitResolveContentPageResponse(w http.ResponseWriter) error
+}
+
+type ResolveContentPage200JSONResponse CmsPageResponse
+
+func (response ResolveContentPage200JSONResponse) VisitResolveContentPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ResolveContentPage404JSONResponse Error
+
+func (response ResolveContentPage404JSONResponse) VisitResolveContentPageResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetProfileRequestObject struct {
 }
 
@@ -10406,31 +15883,6 @@ func (response GetProduct404JSONResponse) VisitGetProductResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetStorefrontSettingsRequestObject struct {
-}
-
-type GetStorefrontSettingsResponseObject interface {
-	VisitGetStorefrontSettingsResponse(w http.ResponseWriter) error
-}
-
-type GetStorefrontSettings200JSONResponse StorefrontSettingsResponse
-
-func (response GetStorefrontSettings200JSONResponse) VisitGetStorefrontSettingsResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetStorefrontSettings500JSONResponse Error
-
-func (response GetStorefrontSettings500JSONResponse) VisitGetStorefrontSettingsResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
 type ReceiveWebhookEventRequestObject struct {
 	Provider string `json:"provider"`
 	Body     *ReceiveWebhookEventJSONRequestBody
@@ -10499,6 +15951,180 @@ type StrictServerInterface interface {
 
 	// (PATCH /api/v1/admin/checkout/plugins/{type}/{id})
 	UpdateAdminCheckoutPlugin(ctx context.Context, request UpdateAdminCheckoutPluginRequestObject) (UpdateAdminCheckoutPluginResponseObject, error)
+
+	// (GET /api/v1/admin/cms/audit)
+	ListAdminCmsAuditEvents(ctx context.Context, request ListAdminCmsAuditEventsRequestObject) (ListAdminCmsAuditEventsResponseObject, error)
+
+	// (POST /api/v1/admin/cms/comments/{id}/resolve)
+	ResolveAdminCmsComment(ctx context.Context, request ResolveAdminCmsCommentRequestObject) (ResolveAdminCmsCommentResponseObject, error)
+
+	// (POST /api/v1/admin/cms/entries/{id}/comments)
+	CreateAdminCmsEntryComment(ctx context.Context, request CreateAdminCmsEntryCommentRequestObject) (CreateAdminCmsEntryCommentResponseObject, error)
+
+	// (GET /api/v1/admin/cms/entries/{id}/variants)
+	ListAdminCmsEntryVariants(ctx context.Context, request ListAdminCmsEntryVariantsRequestObject) (ListAdminCmsEntryVariantsResponseObject, error)
+
+	// (POST /api/v1/admin/cms/entries/{id}/variants)
+	CreateAdminCmsEntryVariant(ctx context.Context, request CreateAdminCmsEntryVariantRequestObject) (CreateAdminCmsEntryVariantResponseObject, error)
+
+	// (DELETE /api/v1/admin/cms/entries/{id}/variants/{variant_id})
+	DeleteAdminCmsEntryVariant(ctx context.Context, request DeleteAdminCmsEntryVariantRequestObject) (DeleteAdminCmsEntryVariantResponseObject, error)
+
+	// (PUT /api/v1/admin/cms/entries/{id}/variants/{variant_id})
+	UpdateAdminCmsEntryVariant(ctx context.Context, request UpdateAdminCmsEntryVariantRequestObject) (UpdateAdminCmsEntryVariantResponseObject, error)
+
+	// (POST /api/v1/admin/cms/entries/{id}/variants/{variant_id}/{action})
+	TransitionAdminCmsEntryVariant(ctx context.Context, request TransitionAdminCmsEntryVariantRequestObject) (TransitionAdminCmsEntryVariantResponseObject, error)
+
+	// (GET /api/v1/admin/cms/entries/{id}/workflow)
+	GetAdminCmsEntryWorkflow(ctx context.Context, request GetAdminCmsEntryWorkflowRequestObject) (GetAdminCmsEntryWorkflowResponseObject, error)
+
+	// (POST /api/v1/admin/cms/entries/{id}/workflow/{action})
+	TransitionAdminCmsEntryWorkflow(ctx context.Context, request TransitionAdminCmsEntryWorkflowRequestObject) (TransitionAdminCmsEntryWorkflowResponseObject, error)
+
+	// (GET /api/v1/admin/cms/export)
+	ExportAdminCmsContent(ctx context.Context, request ExportAdminCmsContentRequestObject) (ExportAdminCmsContentResponseObject, error)
+
+	// (POST /api/v1/admin/cms/export)
+	RestoreAdminCmsContent(ctx context.Context, request RestoreAdminCmsContentRequestObject) (RestoreAdminCmsContentResponseObject, error)
+
+	// (GET /api/v1/admin/cms/global)
+	ListAdminCmsGlobalRegions(ctx context.Context, request ListAdminCmsGlobalRegionsRequestObject) (ListAdminCmsGlobalRegionsResponseObject, error)
+
+	// (POST /api/v1/admin/cms/global)
+	CreateAdminCmsGlobalRegion(ctx context.Context, request CreateAdminCmsGlobalRegionRequestObject) (CreateAdminCmsGlobalRegionResponseObject, error)
+
+	// (DELETE /api/v1/admin/cms/global/{id})
+	DeleteAdminCmsGlobalRegion(ctx context.Context, request DeleteAdminCmsGlobalRegionRequestObject) (DeleteAdminCmsGlobalRegionResponseObject, error)
+
+	// (GET /api/v1/admin/cms/global/{id})
+	GetAdminCmsGlobalRegion(ctx context.Context, request GetAdminCmsGlobalRegionRequestObject) (GetAdminCmsGlobalRegionResponseObject, error)
+
+	// (PATCH /api/v1/admin/cms/global/{id})
+	UpdateAdminCmsGlobalRegion(ctx context.Context, request UpdateAdminCmsGlobalRegionRequestObject) (UpdateAdminCmsGlobalRegionResponseObject, error)
+
+	// (DELETE /api/v1/admin/cms/global/{id}/draft)
+	DiscardAdminCmsGlobalRegionDraft(ctx context.Context, request DiscardAdminCmsGlobalRegionDraftRequestObject) (DiscardAdminCmsGlobalRegionDraftResponseObject, error)
+
+	// (POST /api/v1/admin/cms/global/{id}/publish)
+	PublishAdminCmsGlobalRegion(ctx context.Context, request PublishAdminCmsGlobalRegionRequestObject) (PublishAdminCmsGlobalRegionResponseObject, error)
+
+	// (POST /api/v1/admin/cms/global/{id}/unpublish)
+	UnpublishAdminCmsGlobalRegion(ctx context.Context, request UnpublishAdminCmsGlobalRegionRequestObject) (UnpublishAdminCmsGlobalRegionResponseObject, error)
+
+	// (GET /api/v1/admin/cms/governance)
+	GetAdminCmsGovernance(ctx context.Context, request GetAdminCmsGovernanceRequestObject) (GetAdminCmsGovernanceResponseObject, error)
+
+	// (PUT /api/v1/admin/cms/governance)
+	UpdateAdminCmsGovernance(ctx context.Context, request UpdateAdminCmsGovernanceRequestObject) (UpdateAdminCmsGovernanceResponseObject, error)
+
+	// (GET /api/v1/admin/cms/locales)
+	GetAdminCmsLocales(ctx context.Context, request GetAdminCmsLocalesRequestObject) (GetAdminCmsLocalesResponseObject, error)
+
+	// (PUT /api/v1/admin/cms/locales)
+	UpdateAdminCmsLocales(ctx context.Context, request UpdateAdminCmsLocalesRequestObject) (UpdateAdminCmsLocalesResponseObject, error)
+
+	// (GET /api/v1/admin/cms/navigation)
+	ListAdminCmsNavigation(ctx context.Context, request ListAdminCmsNavigationRequestObject) (ListAdminCmsNavigationResponseObject, error)
+
+	// (POST /api/v1/admin/cms/navigation)
+	CreateAdminCmsNavigation(ctx context.Context, request CreateAdminCmsNavigationRequestObject) (CreateAdminCmsNavigationResponseObject, error)
+
+	// (DELETE /api/v1/admin/cms/navigation/{id})
+	DeleteAdminCmsNavigation(ctx context.Context, request DeleteAdminCmsNavigationRequestObject) (DeleteAdminCmsNavigationResponseObject, error)
+
+	// (GET /api/v1/admin/cms/navigation/{id})
+	GetAdminCmsNavigation(ctx context.Context, request GetAdminCmsNavigationRequestObject) (GetAdminCmsNavigationResponseObject, error)
+
+	// (PATCH /api/v1/admin/cms/navigation/{id})
+	UpdateAdminCmsNavigation(ctx context.Context, request UpdateAdminCmsNavigationRequestObject) (UpdateAdminCmsNavigationResponseObject, error)
+
+	// (DELETE /api/v1/admin/cms/navigation/{id}/draft)
+	DiscardAdminCmsNavigationDraft(ctx context.Context, request DiscardAdminCmsNavigationDraftRequestObject) (DiscardAdminCmsNavigationDraftResponseObject, error)
+
+	// (POST /api/v1/admin/cms/navigation/{id}/publish)
+	PublishAdminCmsNavigation(ctx context.Context, request PublishAdminCmsNavigationRequestObject) (PublishAdminCmsNavigationResponseObject, error)
+
+	// (POST /api/v1/admin/cms/navigation/{id}/unpublish)
+	UnpublishAdminCmsNavigation(ctx context.Context, request UnpublishAdminCmsNavigationRequestObject) (UnpublishAdminCmsNavigationResponseObject, error)
+
+	// (GET /api/v1/admin/cms/operations)
+	GetAdminCmsOperations(ctx context.Context, request GetAdminCmsOperationsRequestObject) (GetAdminCmsOperationsResponseObject, error)
+
+	// (POST /api/v1/admin/cms/operations/invalidation/{id}/retry)
+	RetryAdminCmsInvalidation(ctx context.Context, request RetryAdminCmsInvalidationRequestObject) (RetryAdminCmsInvalidationResponseObject, error)
+
+	// (GET /api/v1/admin/cms/pages)
+	ListAdminCmsPages(ctx context.Context, request ListAdminCmsPagesRequestObject) (ListAdminCmsPagesResponseObject, error)
+
+	// (POST /api/v1/admin/cms/pages)
+	CreateAdminCmsPage(ctx context.Context, request CreateAdminCmsPageRequestObject) (CreateAdminCmsPageResponseObject, error)
+
+	// (DELETE /api/v1/admin/cms/pages/{id})
+	DeleteAdminCmsPage(ctx context.Context, request DeleteAdminCmsPageRequestObject) (DeleteAdminCmsPageResponseObject, error)
+
+	// (GET /api/v1/admin/cms/pages/{id})
+	GetAdminCmsPage(ctx context.Context, request GetAdminCmsPageRequestObject) (GetAdminCmsPageResponseObject, error)
+
+	// (PATCH /api/v1/admin/cms/pages/{id})
+	UpdateAdminCmsPage(ctx context.Context, request UpdateAdminCmsPageRequestObject) (UpdateAdminCmsPageResponseObject, error)
+
+	// (GET /api/v1/admin/cms/pages/{id}/delivery)
+	GetAdminCmsPageDelivery(ctx context.Context, request GetAdminCmsPageDeliveryRequestObject) (GetAdminCmsPageDeliveryResponseObject, error)
+
+	// (PUT /api/v1/admin/cms/pages/{id}/delivery)
+	UpdateAdminCmsPageDelivery(ctx context.Context, request UpdateAdminCmsPageDeliveryRequestObject) (UpdateAdminCmsPageDeliveryResponseObject, error)
+
+	// (DELETE /api/v1/admin/cms/pages/{id}/draft)
+	DiscardAdminCmsPageDraft(ctx context.Context, request DiscardAdminCmsPageDraftRequestObject) (DiscardAdminCmsPageDraftResponseObject, error)
+
+	// (POST /api/v1/admin/cms/pages/{id}/publish)
+	PublishAdminCmsPage(ctx context.Context, request PublishAdminCmsPageRequestObject) (PublishAdminCmsPageResponseObject, error)
+
+	// (POST /api/v1/admin/cms/pages/{id}/rollback)
+	RollbackAdminCmsPage(ctx context.Context, request RollbackAdminCmsPageRequestObject) (RollbackAdminCmsPageResponseObject, error)
+
+	// (GET /api/v1/admin/cms/pages/{id}/seo)
+	GetAdminCmsPageSeo(ctx context.Context, request GetAdminCmsPageSeoRequestObject) (GetAdminCmsPageSeoResponseObject, error)
+
+	// (PUT /api/v1/admin/cms/pages/{id}/seo)
+	UpdateAdminCmsPageSeo(ctx context.Context, request UpdateAdminCmsPageSeoRequestObject) (UpdateAdminCmsPageSeoResponseObject, error)
+
+	// (POST /api/v1/admin/cms/pages/{id}/unpublish)
+	UnpublishAdminCmsPage(ctx context.Context, request UnpublishAdminCmsPageRequestObject) (UnpublishAdminCmsPageResponseObject, error)
+
+	// (GET /api/v1/admin/cms/pages/{id}/variants)
+	ListAdminCmsPageVariants(ctx context.Context, request ListAdminCmsPageVariantsRequestObject) (ListAdminCmsPageVariantsResponseObject, error)
+
+	// (POST /api/v1/admin/cms/pages/{id}/variants)
+	CreateAdminCmsPageVariant(ctx context.Context, request CreateAdminCmsPageVariantRequestObject) (CreateAdminCmsPageVariantResponseObject, error)
+
+	// (DELETE /api/v1/admin/cms/pages/{id}/variants/{variant_id})
+	DeleteAdminCmsPageVariant(ctx context.Context, request DeleteAdminCmsPageVariantRequestObject) (DeleteAdminCmsPageVariantResponseObject, error)
+
+	// (PUT /api/v1/admin/cms/pages/{id}/variants/{variant_id})
+	UpdateAdminCmsPageVariant(ctx context.Context, request UpdateAdminCmsPageVariantRequestObject) (UpdateAdminCmsPageVariantResponseObject, error)
+
+	// (POST /api/v1/admin/cms/pages/{id}/variants/{variant_id}/{action})
+	TransitionAdminCmsPageVariant(ctx context.Context, request TransitionAdminCmsPageVariantRequestObject) (TransitionAdminCmsPageVariantResponseObject, error)
+
+	// (POST /api/v1/admin/cms/preview)
+	PreviewAdminCmsPayload(ctx context.Context, request PreviewAdminCmsPayloadRequestObject) (PreviewAdminCmsPayloadResponseObject, error)
+
+	// (GET /api/v1/admin/cms/redirects)
+	ListAdminCmsRedirects(ctx context.Context, request ListAdminCmsRedirectsRequestObject) (ListAdminCmsRedirectsResponseObject, error)
+
+	// (POST /api/v1/admin/cms/redirects)
+	CreateAdminCmsRedirect(ctx context.Context, request CreateAdminCmsRedirectRequestObject) (CreateAdminCmsRedirectResponseObject, error)
+
+	// (DELETE /api/v1/admin/cms/redirects/{id})
+	DeleteAdminCmsRedirect(ctx context.Context, request DeleteAdminCmsRedirectRequestObject) (DeleteAdminCmsRedirectResponseObject, error)
+
+	// (PATCH /api/v1/admin/cms/redirects/{id})
+	UpdateAdminCmsRedirect(ctx context.Context, request UpdateAdminCmsRedirectRequestObject) (UpdateAdminCmsRedirectResponseObject, error)
+
+	// (POST /api/v1/admin/cms/restore/preview)
+	PreviewAdminCmsRestore(ctx context.Context, request PreviewAdminCmsRestoreRequestObject) (PreviewAdminCmsRestoreResponseObject, error)
 
 	// (GET /api/v1/admin/discounts/audit)
 	ListAdminDiscountAudit(ctx context.Context, request ListAdminDiscountAuditRequestObject) (ListAdminDiscountAuditResponseObject, error)
@@ -10695,18 +16321,6 @@ type StrictServerInterface interface {
 	// (POST /api/v1/admin/purchase-orders/{id}/receive)
 	ReceiveAdminPurchaseOrder(ctx context.Context, request ReceiveAdminPurchaseOrderRequestObject) (ReceiveAdminPurchaseOrderResponseObject, error)
 
-	// (GET /api/v1/admin/storefront)
-	GetAdminStorefrontSettings(ctx context.Context, request GetAdminStorefrontSettingsRequestObject) (GetAdminStorefrontSettingsResponseObject, error)
-
-	// (PUT /api/v1/admin/storefront)
-	UpdateStorefrontSettings(ctx context.Context, request UpdateStorefrontSettingsRequestObject) (UpdateStorefrontSettingsResponseObject, error)
-
-	// (DELETE /api/v1/admin/storefront/draft)
-	DiscardStorefrontDraft(ctx context.Context, request DiscardStorefrontDraftRequestObject) (DiscardStorefrontDraftResponseObject, error)
-
-	// (POST /api/v1/admin/storefront/publish)
-	PublishStorefrontSettings(ctx context.Context, request PublishStorefrontSettingsRequestObject) (PublishStorefrontSettingsResponseObject, error)
-
 	// (GET /api/v1/admin/tax/reports/export)
 	ExportAdminTaxReport(ctx context.Context, request ExportAdminTaxReportRequestObject) (ExportAdminTaxReportResponseObject, error)
 
@@ -10784,6 +16398,27 @@ type StrictServerInterface interface {
 
 	// (POST /api/v1/checkout/quote)
 	QuoteCheckoutSession(ctx context.Context, request QuoteCheckoutSessionRequestObject) (QuoteCheckoutSessionResponseObject, error)
+
+	// (GET /api/v1/content)
+	ResolveContentHomepage(ctx context.Context, request ResolveContentHomepageRequestObject) (ResolveContentHomepageResponseObject, error)
+
+	// (POST /api/v1/content/events)
+	RecordContentEvent(ctx context.Context, request RecordContentEventRequestObject) (RecordContentEventResponseObject, error)
+
+	// (GET /api/v1/content/global/{region})
+	GetContentGlobalRegion(ctx context.Context, request GetContentGlobalRegionRequestObject) (GetContentGlobalRegionResponseObject, error)
+
+	// (GET /api/v1/content/navigation/{location})
+	GetContentNavigation(ctx context.Context, request GetContentNavigationRequestObject) (GetContentNavigationResponseObject, error)
+
+	// (GET /api/v1/content/redirect)
+	ResolveContentRedirect(ctx context.Context, request ResolveContentRedirectRequestObject) (ResolveContentRedirectResponseObject, error)
+
+	// (GET /api/v1/content/sitemap.xml)
+	GetContentSitemap(ctx context.Context, request GetContentSitemapRequestObject) (GetContentSitemapResponseObject, error)
+
+	// (GET /api/v1/content/{path})
+	ResolveContentPage(ctx context.Context, request ResolveContentPageRequestObject) (ResolveContentPageResponseObject, error)
 
 	// (GET /api/v1/me/)
 	GetProfile(ctx context.Context, request GetProfileRequestObject) (GetProfileResponseObject, error)
@@ -10871,9 +16506,6 @@ type StrictServerInterface interface {
 	// Get product by id
 	// (GET /api/v1/products/{id})
 	GetProduct(ctx context.Context, request GetProductRequestObject) (GetProductResponseObject, error)
-
-	// (GET /api/v1/storefront)
-	GetStorefrontSettings(ctx context.Context, request GetStorefrontSettingsRequestObject) (GetStorefrontSettingsResponseObject, error)
 
 	// (POST /api/v1/webhooks/{provider})
 	ReceiveWebhookEvent(ctx context.Context, request ReceiveWebhookEventRequestObject) (ReceiveWebhookEventResponseObject, error)
@@ -11189,6 +16821,1793 @@ func (sh *strictHandler) UpdateAdminCheckoutPlugin(ctx *gin.Context, pType Updat
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(UpdateAdminCheckoutPluginResponseObject); ok {
 		if err := validResponse.VisitUpdateAdminCheckoutPluginResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminCmsAuditEvents operation middleware
+func (sh *strictHandler) ListAdminCmsAuditEvents(ctx *gin.Context, params ListAdminCmsAuditEventsParams) {
+	var request ListAdminCmsAuditEventsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminCmsAuditEvents(ctx, request.(ListAdminCmsAuditEventsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminCmsAuditEvents")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminCmsAuditEventsResponseObject); ok {
+		if err := validResponse.VisitListAdminCmsAuditEventsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ResolveAdminCmsComment operation middleware
+func (sh *strictHandler) ResolveAdminCmsComment(ctx *gin.Context, id int) {
+	var request ResolveAdminCmsCommentRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ResolveAdminCmsComment(ctx, request.(ResolveAdminCmsCommentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ResolveAdminCmsComment")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ResolveAdminCmsCommentResponseObject); ok {
+		if err := validResponse.VisitResolveAdminCmsCommentResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminCmsEntryComment operation middleware
+func (sh *strictHandler) CreateAdminCmsEntryComment(ctx *gin.Context, id int) {
+	var request CreateAdminCmsEntryCommentRequestObject
+
+	request.Id = id
+
+	var body CreateAdminCmsEntryCommentJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminCmsEntryComment(ctx, request.(CreateAdminCmsEntryCommentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminCmsEntryComment")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminCmsEntryCommentResponseObject); ok {
+		if err := validResponse.VisitCreateAdminCmsEntryCommentResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminCmsEntryVariants operation middleware
+func (sh *strictHandler) ListAdminCmsEntryVariants(ctx *gin.Context, id int) {
+	var request ListAdminCmsEntryVariantsRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminCmsEntryVariants(ctx, request.(ListAdminCmsEntryVariantsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminCmsEntryVariants")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminCmsEntryVariantsResponseObject); ok {
+		if err := validResponse.VisitListAdminCmsEntryVariantsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminCmsEntryVariant operation middleware
+func (sh *strictHandler) CreateAdminCmsEntryVariant(ctx *gin.Context, id int) {
+	var request CreateAdminCmsEntryVariantRequestObject
+
+	request.Id = id
+
+	var body CreateAdminCmsEntryVariantJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminCmsEntryVariant(ctx, request.(CreateAdminCmsEntryVariantRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminCmsEntryVariant")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminCmsEntryVariantResponseObject); ok {
+		if err := validResponse.VisitCreateAdminCmsEntryVariantResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteAdminCmsEntryVariant operation middleware
+func (sh *strictHandler) DeleteAdminCmsEntryVariant(ctx *gin.Context, id int, variantId int) {
+	var request DeleteAdminCmsEntryVariantRequestObject
+
+	request.Id = id
+	request.VariantId = variantId
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAdminCmsEntryVariant(ctx, request.(DeleteAdminCmsEntryVariantRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAdminCmsEntryVariant")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteAdminCmsEntryVariantResponseObject); ok {
+		if err := validResponse.VisitDeleteAdminCmsEntryVariantResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminCmsEntryVariant operation middleware
+func (sh *strictHandler) UpdateAdminCmsEntryVariant(ctx *gin.Context, id int, variantId int) {
+	var request UpdateAdminCmsEntryVariantRequestObject
+
+	request.Id = id
+	request.VariantId = variantId
+
+	var body UpdateAdminCmsEntryVariantJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminCmsEntryVariant(ctx, request.(UpdateAdminCmsEntryVariantRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminCmsEntryVariant")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminCmsEntryVariantResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminCmsEntryVariantResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// TransitionAdminCmsEntryVariant operation middleware
+func (sh *strictHandler) TransitionAdminCmsEntryVariant(ctx *gin.Context, id int, variantId int, action TransitionAdminCmsEntryVariantParamsAction) {
+	var request TransitionAdminCmsEntryVariantRequestObject
+
+	request.Id = id
+	request.VariantId = variantId
+	request.Action = action
+
+	var body TransitionAdminCmsEntryVariantJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.TransitionAdminCmsEntryVariant(ctx, request.(TransitionAdminCmsEntryVariantRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "TransitionAdminCmsEntryVariant")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(TransitionAdminCmsEntryVariantResponseObject); ok {
+		if err := validResponse.VisitTransitionAdminCmsEntryVariantResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminCmsEntryWorkflow operation middleware
+func (sh *strictHandler) GetAdminCmsEntryWorkflow(ctx *gin.Context, id int) {
+	var request GetAdminCmsEntryWorkflowRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminCmsEntryWorkflow(ctx, request.(GetAdminCmsEntryWorkflowRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminCmsEntryWorkflow")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminCmsEntryWorkflowResponseObject); ok {
+		if err := validResponse.VisitGetAdminCmsEntryWorkflowResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// TransitionAdminCmsEntryWorkflow operation middleware
+func (sh *strictHandler) TransitionAdminCmsEntryWorkflow(ctx *gin.Context, id int, action TransitionAdminCmsEntryWorkflowParamsAction) {
+	var request TransitionAdminCmsEntryWorkflowRequestObject
+
+	request.Id = id
+	request.Action = action
+
+	var body TransitionAdminCmsEntryWorkflowJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.TransitionAdminCmsEntryWorkflow(ctx, request.(TransitionAdminCmsEntryWorkflowRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "TransitionAdminCmsEntryWorkflow")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(TransitionAdminCmsEntryWorkflowResponseObject); ok {
+		if err := validResponse.VisitTransitionAdminCmsEntryWorkflowResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ExportAdminCmsContent operation middleware
+func (sh *strictHandler) ExportAdminCmsContent(ctx *gin.Context) {
+	var request ExportAdminCmsContentRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ExportAdminCmsContent(ctx, request.(ExportAdminCmsContentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ExportAdminCmsContent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ExportAdminCmsContentResponseObject); ok {
+		if err := validResponse.VisitExportAdminCmsContentResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RestoreAdminCmsContent operation middleware
+func (sh *strictHandler) RestoreAdminCmsContent(ctx *gin.Context) {
+	var request RestoreAdminCmsContentRequestObject
+
+	var body RestoreAdminCmsContentJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RestoreAdminCmsContent(ctx, request.(RestoreAdminCmsContentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RestoreAdminCmsContent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(RestoreAdminCmsContentResponseObject); ok {
+		if err := validResponse.VisitRestoreAdminCmsContentResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminCmsGlobalRegions operation middleware
+func (sh *strictHandler) ListAdminCmsGlobalRegions(ctx *gin.Context, params ListAdminCmsGlobalRegionsParams) {
+	var request ListAdminCmsGlobalRegionsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminCmsGlobalRegions(ctx, request.(ListAdminCmsGlobalRegionsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminCmsGlobalRegions")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminCmsGlobalRegionsResponseObject); ok {
+		if err := validResponse.VisitListAdminCmsGlobalRegionsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminCmsGlobalRegion operation middleware
+func (sh *strictHandler) CreateAdminCmsGlobalRegion(ctx *gin.Context) {
+	var request CreateAdminCmsGlobalRegionRequestObject
+
+	var body CreateAdminCmsGlobalRegionJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminCmsGlobalRegion(ctx, request.(CreateAdminCmsGlobalRegionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminCmsGlobalRegion")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminCmsGlobalRegionResponseObject); ok {
+		if err := validResponse.VisitCreateAdminCmsGlobalRegionResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteAdminCmsGlobalRegion operation middleware
+func (sh *strictHandler) DeleteAdminCmsGlobalRegion(ctx *gin.Context, id int) {
+	var request DeleteAdminCmsGlobalRegionRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAdminCmsGlobalRegion(ctx, request.(DeleteAdminCmsGlobalRegionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAdminCmsGlobalRegion")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteAdminCmsGlobalRegionResponseObject); ok {
+		if err := validResponse.VisitDeleteAdminCmsGlobalRegionResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminCmsGlobalRegion operation middleware
+func (sh *strictHandler) GetAdminCmsGlobalRegion(ctx *gin.Context, id int) {
+	var request GetAdminCmsGlobalRegionRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminCmsGlobalRegion(ctx, request.(GetAdminCmsGlobalRegionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminCmsGlobalRegion")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminCmsGlobalRegionResponseObject); ok {
+		if err := validResponse.VisitGetAdminCmsGlobalRegionResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminCmsGlobalRegion operation middleware
+func (sh *strictHandler) UpdateAdminCmsGlobalRegion(ctx *gin.Context, id int) {
+	var request UpdateAdminCmsGlobalRegionRequestObject
+
+	request.Id = id
+
+	var body UpdateAdminCmsGlobalRegionJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminCmsGlobalRegion(ctx, request.(UpdateAdminCmsGlobalRegionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminCmsGlobalRegion")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminCmsGlobalRegionResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminCmsGlobalRegionResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DiscardAdminCmsGlobalRegionDraft operation middleware
+func (sh *strictHandler) DiscardAdminCmsGlobalRegionDraft(ctx *gin.Context, id int) {
+	var request DiscardAdminCmsGlobalRegionDraftRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DiscardAdminCmsGlobalRegionDraft(ctx, request.(DiscardAdminCmsGlobalRegionDraftRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DiscardAdminCmsGlobalRegionDraft")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DiscardAdminCmsGlobalRegionDraftResponseObject); ok {
+		if err := validResponse.VisitDiscardAdminCmsGlobalRegionDraftResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PublishAdminCmsGlobalRegion operation middleware
+func (sh *strictHandler) PublishAdminCmsGlobalRegion(ctx *gin.Context, id int) {
+	var request PublishAdminCmsGlobalRegionRequestObject
+
+	request.Id = id
+
+	var body PublishAdminCmsGlobalRegionJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PublishAdminCmsGlobalRegion(ctx, request.(PublishAdminCmsGlobalRegionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PublishAdminCmsGlobalRegion")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PublishAdminCmsGlobalRegionResponseObject); ok {
+		if err := validResponse.VisitPublishAdminCmsGlobalRegionResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UnpublishAdminCmsGlobalRegion operation middleware
+func (sh *strictHandler) UnpublishAdminCmsGlobalRegion(ctx *gin.Context, id int) {
+	var request UnpublishAdminCmsGlobalRegionRequestObject
+
+	request.Id = id
+
+	var body UnpublishAdminCmsGlobalRegionJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UnpublishAdminCmsGlobalRegion(ctx, request.(UnpublishAdminCmsGlobalRegionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UnpublishAdminCmsGlobalRegion")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UnpublishAdminCmsGlobalRegionResponseObject); ok {
+		if err := validResponse.VisitUnpublishAdminCmsGlobalRegionResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminCmsGovernance operation middleware
+func (sh *strictHandler) GetAdminCmsGovernance(ctx *gin.Context) {
+	var request GetAdminCmsGovernanceRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminCmsGovernance(ctx, request.(GetAdminCmsGovernanceRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminCmsGovernance")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminCmsGovernanceResponseObject); ok {
+		if err := validResponse.VisitGetAdminCmsGovernanceResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminCmsGovernance operation middleware
+func (sh *strictHandler) UpdateAdminCmsGovernance(ctx *gin.Context) {
+	var request UpdateAdminCmsGovernanceRequestObject
+
+	var body UpdateAdminCmsGovernanceJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminCmsGovernance(ctx, request.(UpdateAdminCmsGovernanceRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminCmsGovernance")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminCmsGovernanceResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminCmsGovernanceResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminCmsLocales operation middleware
+func (sh *strictHandler) GetAdminCmsLocales(ctx *gin.Context) {
+	var request GetAdminCmsLocalesRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminCmsLocales(ctx, request.(GetAdminCmsLocalesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminCmsLocales")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminCmsLocalesResponseObject); ok {
+		if err := validResponse.VisitGetAdminCmsLocalesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminCmsLocales operation middleware
+func (sh *strictHandler) UpdateAdminCmsLocales(ctx *gin.Context) {
+	var request UpdateAdminCmsLocalesRequestObject
+
+	var body UpdateAdminCmsLocalesJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminCmsLocales(ctx, request.(UpdateAdminCmsLocalesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminCmsLocales")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminCmsLocalesResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminCmsLocalesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminCmsNavigation operation middleware
+func (sh *strictHandler) ListAdminCmsNavigation(ctx *gin.Context, params ListAdminCmsNavigationParams) {
+	var request ListAdminCmsNavigationRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminCmsNavigation(ctx, request.(ListAdminCmsNavigationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminCmsNavigation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminCmsNavigationResponseObject); ok {
+		if err := validResponse.VisitListAdminCmsNavigationResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminCmsNavigation operation middleware
+func (sh *strictHandler) CreateAdminCmsNavigation(ctx *gin.Context) {
+	var request CreateAdminCmsNavigationRequestObject
+
+	var body CreateAdminCmsNavigationJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminCmsNavigation(ctx, request.(CreateAdminCmsNavigationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminCmsNavigation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminCmsNavigationResponseObject); ok {
+		if err := validResponse.VisitCreateAdminCmsNavigationResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteAdminCmsNavigation operation middleware
+func (sh *strictHandler) DeleteAdminCmsNavigation(ctx *gin.Context, id int) {
+	var request DeleteAdminCmsNavigationRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAdminCmsNavigation(ctx, request.(DeleteAdminCmsNavigationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAdminCmsNavigation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteAdminCmsNavigationResponseObject); ok {
+		if err := validResponse.VisitDeleteAdminCmsNavigationResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminCmsNavigation operation middleware
+func (sh *strictHandler) GetAdminCmsNavigation(ctx *gin.Context, id int) {
+	var request GetAdminCmsNavigationRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminCmsNavigation(ctx, request.(GetAdminCmsNavigationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminCmsNavigation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminCmsNavigationResponseObject); ok {
+		if err := validResponse.VisitGetAdminCmsNavigationResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminCmsNavigation operation middleware
+func (sh *strictHandler) UpdateAdminCmsNavigation(ctx *gin.Context, id int) {
+	var request UpdateAdminCmsNavigationRequestObject
+
+	request.Id = id
+
+	var body UpdateAdminCmsNavigationJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminCmsNavigation(ctx, request.(UpdateAdminCmsNavigationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminCmsNavigation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminCmsNavigationResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminCmsNavigationResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DiscardAdminCmsNavigationDraft operation middleware
+func (sh *strictHandler) DiscardAdminCmsNavigationDraft(ctx *gin.Context, id int) {
+	var request DiscardAdminCmsNavigationDraftRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DiscardAdminCmsNavigationDraft(ctx, request.(DiscardAdminCmsNavigationDraftRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DiscardAdminCmsNavigationDraft")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DiscardAdminCmsNavigationDraftResponseObject); ok {
+		if err := validResponse.VisitDiscardAdminCmsNavigationDraftResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PublishAdminCmsNavigation operation middleware
+func (sh *strictHandler) PublishAdminCmsNavigation(ctx *gin.Context, id int) {
+	var request PublishAdminCmsNavigationRequestObject
+
+	request.Id = id
+
+	var body PublishAdminCmsNavigationJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PublishAdminCmsNavigation(ctx, request.(PublishAdminCmsNavigationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PublishAdminCmsNavigation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PublishAdminCmsNavigationResponseObject); ok {
+		if err := validResponse.VisitPublishAdminCmsNavigationResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UnpublishAdminCmsNavigation operation middleware
+func (sh *strictHandler) UnpublishAdminCmsNavigation(ctx *gin.Context, id int) {
+	var request UnpublishAdminCmsNavigationRequestObject
+
+	request.Id = id
+
+	var body UnpublishAdminCmsNavigationJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UnpublishAdminCmsNavigation(ctx, request.(UnpublishAdminCmsNavigationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UnpublishAdminCmsNavigation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UnpublishAdminCmsNavigationResponseObject); ok {
+		if err := validResponse.VisitUnpublishAdminCmsNavigationResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminCmsOperations operation middleware
+func (sh *strictHandler) GetAdminCmsOperations(ctx *gin.Context) {
+	var request GetAdminCmsOperationsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminCmsOperations(ctx, request.(GetAdminCmsOperationsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminCmsOperations")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminCmsOperationsResponseObject); ok {
+		if err := validResponse.VisitGetAdminCmsOperationsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RetryAdminCmsInvalidation operation middleware
+func (sh *strictHandler) RetryAdminCmsInvalidation(ctx *gin.Context, id int) {
+	var request RetryAdminCmsInvalidationRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RetryAdminCmsInvalidation(ctx, request.(RetryAdminCmsInvalidationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RetryAdminCmsInvalidation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(RetryAdminCmsInvalidationResponseObject); ok {
+		if err := validResponse.VisitRetryAdminCmsInvalidationResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminCmsPages operation middleware
+func (sh *strictHandler) ListAdminCmsPages(ctx *gin.Context, params ListAdminCmsPagesParams) {
+	var request ListAdminCmsPagesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminCmsPages(ctx, request.(ListAdminCmsPagesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminCmsPages")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminCmsPagesResponseObject); ok {
+		if err := validResponse.VisitListAdminCmsPagesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminCmsPage operation middleware
+func (sh *strictHandler) CreateAdminCmsPage(ctx *gin.Context) {
+	var request CreateAdminCmsPageRequestObject
+
+	var body CreateAdminCmsPageJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminCmsPage(ctx, request.(CreateAdminCmsPageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminCmsPage")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminCmsPageResponseObject); ok {
+		if err := validResponse.VisitCreateAdminCmsPageResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteAdminCmsPage operation middleware
+func (sh *strictHandler) DeleteAdminCmsPage(ctx *gin.Context, id int) {
+	var request DeleteAdminCmsPageRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAdminCmsPage(ctx, request.(DeleteAdminCmsPageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAdminCmsPage")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteAdminCmsPageResponseObject); ok {
+		if err := validResponse.VisitDeleteAdminCmsPageResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminCmsPage operation middleware
+func (sh *strictHandler) GetAdminCmsPage(ctx *gin.Context, id int) {
+	var request GetAdminCmsPageRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminCmsPage(ctx, request.(GetAdminCmsPageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminCmsPage")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminCmsPageResponseObject); ok {
+		if err := validResponse.VisitGetAdminCmsPageResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminCmsPage operation middleware
+func (sh *strictHandler) UpdateAdminCmsPage(ctx *gin.Context, id int) {
+	var request UpdateAdminCmsPageRequestObject
+
+	request.Id = id
+
+	var body UpdateAdminCmsPageJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminCmsPage(ctx, request.(UpdateAdminCmsPageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminCmsPage")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminCmsPageResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminCmsPageResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminCmsPageDelivery operation middleware
+func (sh *strictHandler) GetAdminCmsPageDelivery(ctx *gin.Context, id int) {
+	var request GetAdminCmsPageDeliveryRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminCmsPageDelivery(ctx, request.(GetAdminCmsPageDeliveryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminCmsPageDelivery")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminCmsPageDeliveryResponseObject); ok {
+		if err := validResponse.VisitGetAdminCmsPageDeliveryResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminCmsPageDelivery operation middleware
+func (sh *strictHandler) UpdateAdminCmsPageDelivery(ctx *gin.Context, id int) {
+	var request UpdateAdminCmsPageDeliveryRequestObject
+
+	request.Id = id
+
+	var body UpdateAdminCmsPageDeliveryJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminCmsPageDelivery(ctx, request.(UpdateAdminCmsPageDeliveryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminCmsPageDelivery")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminCmsPageDeliveryResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminCmsPageDeliveryResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DiscardAdminCmsPageDraft operation middleware
+func (sh *strictHandler) DiscardAdminCmsPageDraft(ctx *gin.Context, id int) {
+	var request DiscardAdminCmsPageDraftRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DiscardAdminCmsPageDraft(ctx, request.(DiscardAdminCmsPageDraftRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DiscardAdminCmsPageDraft")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DiscardAdminCmsPageDraftResponseObject); ok {
+		if err := validResponse.VisitDiscardAdminCmsPageDraftResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PublishAdminCmsPage operation middleware
+func (sh *strictHandler) PublishAdminCmsPage(ctx *gin.Context, id int) {
+	var request PublishAdminCmsPageRequestObject
+
+	request.Id = id
+
+	var body PublishAdminCmsPageJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PublishAdminCmsPage(ctx, request.(PublishAdminCmsPageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PublishAdminCmsPage")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PublishAdminCmsPageResponseObject); ok {
+		if err := validResponse.VisitPublishAdminCmsPageResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RollbackAdminCmsPage operation middleware
+func (sh *strictHandler) RollbackAdminCmsPage(ctx *gin.Context, id int) {
+	var request RollbackAdminCmsPageRequestObject
+
+	request.Id = id
+
+	var body RollbackAdminCmsPageJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RollbackAdminCmsPage(ctx, request.(RollbackAdminCmsPageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RollbackAdminCmsPage")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(RollbackAdminCmsPageResponseObject); ok {
+		if err := validResponse.VisitRollbackAdminCmsPageResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminCmsPageSeo operation middleware
+func (sh *strictHandler) GetAdminCmsPageSeo(ctx *gin.Context, id int) {
+	var request GetAdminCmsPageSeoRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminCmsPageSeo(ctx, request.(GetAdminCmsPageSeoRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminCmsPageSeo")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminCmsPageSeoResponseObject); ok {
+		if err := validResponse.VisitGetAdminCmsPageSeoResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminCmsPageSeo operation middleware
+func (sh *strictHandler) UpdateAdminCmsPageSeo(ctx *gin.Context, id int) {
+	var request UpdateAdminCmsPageSeoRequestObject
+
+	request.Id = id
+
+	var body UpdateAdminCmsPageSeoJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminCmsPageSeo(ctx, request.(UpdateAdminCmsPageSeoRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminCmsPageSeo")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminCmsPageSeoResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminCmsPageSeoResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UnpublishAdminCmsPage operation middleware
+func (sh *strictHandler) UnpublishAdminCmsPage(ctx *gin.Context, id int) {
+	var request UnpublishAdminCmsPageRequestObject
+
+	request.Id = id
+
+	var body UnpublishAdminCmsPageJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UnpublishAdminCmsPage(ctx, request.(UnpublishAdminCmsPageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UnpublishAdminCmsPage")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UnpublishAdminCmsPageResponseObject); ok {
+		if err := validResponse.VisitUnpublishAdminCmsPageResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminCmsPageVariants operation middleware
+func (sh *strictHandler) ListAdminCmsPageVariants(ctx *gin.Context, id int) {
+	var request ListAdminCmsPageVariantsRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminCmsPageVariants(ctx, request.(ListAdminCmsPageVariantsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminCmsPageVariants")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminCmsPageVariantsResponseObject); ok {
+		if err := validResponse.VisitListAdminCmsPageVariantsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminCmsPageVariant operation middleware
+func (sh *strictHandler) CreateAdminCmsPageVariant(ctx *gin.Context, id int) {
+	var request CreateAdminCmsPageVariantRequestObject
+
+	request.Id = id
+
+	var body CreateAdminCmsPageVariantJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminCmsPageVariant(ctx, request.(CreateAdminCmsPageVariantRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminCmsPageVariant")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminCmsPageVariantResponseObject); ok {
+		if err := validResponse.VisitCreateAdminCmsPageVariantResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteAdminCmsPageVariant operation middleware
+func (sh *strictHandler) DeleteAdminCmsPageVariant(ctx *gin.Context, id int, variantId int) {
+	var request DeleteAdminCmsPageVariantRequestObject
+
+	request.Id = id
+	request.VariantId = variantId
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAdminCmsPageVariant(ctx, request.(DeleteAdminCmsPageVariantRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAdminCmsPageVariant")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteAdminCmsPageVariantResponseObject); ok {
+		if err := validResponse.VisitDeleteAdminCmsPageVariantResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminCmsPageVariant operation middleware
+func (sh *strictHandler) UpdateAdminCmsPageVariant(ctx *gin.Context, id int, variantId int) {
+	var request UpdateAdminCmsPageVariantRequestObject
+
+	request.Id = id
+	request.VariantId = variantId
+
+	var body UpdateAdminCmsPageVariantJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminCmsPageVariant(ctx, request.(UpdateAdminCmsPageVariantRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminCmsPageVariant")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminCmsPageVariantResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminCmsPageVariantResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// TransitionAdminCmsPageVariant operation middleware
+func (sh *strictHandler) TransitionAdminCmsPageVariant(ctx *gin.Context, id int, variantId int, action TransitionAdminCmsPageVariantParamsAction) {
+	var request TransitionAdminCmsPageVariantRequestObject
+
+	request.Id = id
+	request.VariantId = variantId
+	request.Action = action
+
+	var body TransitionAdminCmsPageVariantJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.TransitionAdminCmsPageVariant(ctx, request.(TransitionAdminCmsPageVariantRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "TransitionAdminCmsPageVariant")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(TransitionAdminCmsPageVariantResponseObject); ok {
+		if err := validResponse.VisitTransitionAdminCmsPageVariantResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PreviewAdminCmsPayload operation middleware
+func (sh *strictHandler) PreviewAdminCmsPayload(ctx *gin.Context) {
+	var request PreviewAdminCmsPayloadRequestObject
+
+	var body PreviewAdminCmsPayloadJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PreviewAdminCmsPayload(ctx, request.(PreviewAdminCmsPayloadRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PreviewAdminCmsPayload")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PreviewAdminCmsPayloadResponseObject); ok {
+		if err := validResponse.VisitPreviewAdminCmsPayloadResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminCmsRedirects operation middleware
+func (sh *strictHandler) ListAdminCmsRedirects(ctx *gin.Context) {
+	var request ListAdminCmsRedirectsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminCmsRedirects(ctx, request.(ListAdminCmsRedirectsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminCmsRedirects")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminCmsRedirectsResponseObject); ok {
+		if err := validResponse.VisitListAdminCmsRedirectsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminCmsRedirect operation middleware
+func (sh *strictHandler) CreateAdminCmsRedirect(ctx *gin.Context) {
+	var request CreateAdminCmsRedirectRequestObject
+
+	var body CreateAdminCmsRedirectJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminCmsRedirect(ctx, request.(CreateAdminCmsRedirectRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminCmsRedirect")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminCmsRedirectResponseObject); ok {
+		if err := validResponse.VisitCreateAdminCmsRedirectResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteAdminCmsRedirect operation middleware
+func (sh *strictHandler) DeleteAdminCmsRedirect(ctx *gin.Context, id int) {
+	var request DeleteAdminCmsRedirectRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAdminCmsRedirect(ctx, request.(DeleteAdminCmsRedirectRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAdminCmsRedirect")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteAdminCmsRedirectResponseObject); ok {
+		if err := validResponse.VisitDeleteAdminCmsRedirectResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminCmsRedirect operation middleware
+func (sh *strictHandler) UpdateAdminCmsRedirect(ctx *gin.Context, id int) {
+	var request UpdateAdminCmsRedirectRequestObject
+
+	request.Id = id
+
+	var body UpdateAdminCmsRedirectJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminCmsRedirect(ctx, request.(UpdateAdminCmsRedirectRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminCmsRedirect")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminCmsRedirectResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminCmsRedirectResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PreviewAdminCmsRestore operation middleware
+func (sh *strictHandler) PreviewAdminCmsRestore(ctx *gin.Context) {
+	var request PreviewAdminCmsRestoreRequestObject
+
+	var body PreviewAdminCmsRestoreJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PreviewAdminCmsRestore(ctx, request.(PreviewAdminCmsRestoreRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PreviewAdminCmsRestore")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PreviewAdminCmsRestoreResponseObject); ok {
+		if err := validResponse.VisitPreviewAdminCmsRestoreResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -13112,114 +20531,6 @@ func (sh *strictHandler) ReceiveAdminPurchaseOrder(ctx *gin.Context, id int) {
 	}
 }
 
-// GetAdminStorefrontSettings operation middleware
-func (sh *strictHandler) GetAdminStorefrontSettings(ctx *gin.Context) {
-	var request GetAdminStorefrontSettingsRequestObject
-
-	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetAdminStorefrontSettings(ctx, request.(GetAdminStorefrontSettingsRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetAdminStorefrontSettings")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		ctx.Error(err)
-		ctx.Status(http.StatusInternalServerError)
-	} else if validResponse, ok := response.(GetAdminStorefrontSettingsResponseObject); ok {
-		if err := validResponse.VisitGetAdminStorefrontSettingsResponse(ctx.Writer); err != nil {
-			ctx.Error(err)
-		}
-	} else if response != nil {
-		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
-// UpdateStorefrontSettings operation middleware
-func (sh *strictHandler) UpdateStorefrontSettings(ctx *gin.Context) {
-	var request UpdateStorefrontSettingsRequestObject
-
-	var body UpdateStorefrontSettingsJSONRequestBody
-	if err := ctx.ShouldBindJSON(&body); err != nil {
-		ctx.Status(http.StatusBadRequest)
-		ctx.Error(err)
-		return
-	}
-	request.Body = &body
-
-	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.UpdateStorefrontSettings(ctx, request.(UpdateStorefrontSettingsRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "UpdateStorefrontSettings")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		ctx.Error(err)
-		ctx.Status(http.StatusInternalServerError)
-	} else if validResponse, ok := response.(UpdateStorefrontSettingsResponseObject); ok {
-		if err := validResponse.VisitUpdateStorefrontSettingsResponse(ctx.Writer); err != nil {
-			ctx.Error(err)
-		}
-	} else if response != nil {
-		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
-// DiscardStorefrontDraft operation middleware
-func (sh *strictHandler) DiscardStorefrontDraft(ctx *gin.Context) {
-	var request DiscardStorefrontDraftRequestObject
-
-	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.DiscardStorefrontDraft(ctx, request.(DiscardStorefrontDraftRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "DiscardStorefrontDraft")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		ctx.Error(err)
-		ctx.Status(http.StatusInternalServerError)
-	} else if validResponse, ok := response.(DiscardStorefrontDraftResponseObject); ok {
-		if err := validResponse.VisitDiscardStorefrontDraftResponse(ctx.Writer); err != nil {
-			ctx.Error(err)
-		}
-	} else if response != nil {
-		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
-// PublishStorefrontSettings operation middleware
-func (sh *strictHandler) PublishStorefrontSettings(ctx *gin.Context) {
-	var request PublishStorefrontSettingsRequestObject
-
-	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.PublishStorefrontSettings(ctx, request.(PublishStorefrontSettingsRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PublishStorefrontSettings")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		ctx.Error(err)
-		ctx.Status(http.StatusInternalServerError)
-	} else if validResponse, ok := response.(PublishStorefrontSettingsResponseObject); ok {
-		if err := validResponse.VisitPublishStorefrontSettingsResponse(ctx.Writer); err != nil {
-			ctx.Error(err)
-		}
-	} else if response != nil {
-		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
 // ExportAdminTaxReport operation middleware
 func (sh *strictHandler) ExportAdminTaxReport(ctx *gin.Context, params ExportAdminTaxReportParams) {
 	var request ExportAdminTaxReportRequestObject
@@ -13980,6 +21291,200 @@ func (sh *strictHandler) QuoteCheckoutSession(ctx *gin.Context) {
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(QuoteCheckoutSessionResponseObject); ok {
 		if err := validResponse.VisitQuoteCheckoutSessionResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ResolveContentHomepage operation middleware
+func (sh *strictHandler) ResolveContentHomepage(ctx *gin.Context, params ResolveContentHomepageParams) {
+	var request ResolveContentHomepageRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ResolveContentHomepage(ctx, request.(ResolveContentHomepageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ResolveContentHomepage")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ResolveContentHomepageResponseObject); ok {
+		if err := validResponse.VisitResolveContentHomepageResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RecordContentEvent operation middleware
+func (sh *strictHandler) RecordContentEvent(ctx *gin.Context) {
+	var request RecordContentEventRequestObject
+
+	var body RecordContentEventJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RecordContentEvent(ctx, request.(RecordContentEventRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RecordContentEvent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(RecordContentEventResponseObject); ok {
+		if err := validResponse.VisitRecordContentEventResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetContentGlobalRegion operation middleware
+func (sh *strictHandler) GetContentGlobalRegion(ctx *gin.Context, region string) {
+	var request GetContentGlobalRegionRequestObject
+
+	request.Region = region
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetContentGlobalRegion(ctx, request.(GetContentGlobalRegionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetContentGlobalRegion")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetContentGlobalRegionResponseObject); ok {
+		if err := validResponse.VisitGetContentGlobalRegionResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetContentNavigation operation middleware
+func (sh *strictHandler) GetContentNavigation(ctx *gin.Context, location string) {
+	var request GetContentNavigationRequestObject
+
+	request.Location = location
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetContentNavigation(ctx, request.(GetContentNavigationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetContentNavigation")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetContentNavigationResponseObject); ok {
+		if err := validResponse.VisitGetContentNavigationResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ResolveContentRedirect operation middleware
+func (sh *strictHandler) ResolveContentRedirect(ctx *gin.Context, params ResolveContentRedirectParams) {
+	var request ResolveContentRedirectRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ResolveContentRedirect(ctx, request.(ResolveContentRedirectRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ResolveContentRedirect")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ResolveContentRedirectResponseObject); ok {
+		if err := validResponse.VisitResolveContentRedirectResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetContentSitemap operation middleware
+func (sh *strictHandler) GetContentSitemap(ctx *gin.Context) {
+	var request GetContentSitemapRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetContentSitemap(ctx, request.(GetContentSitemapRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetContentSitemap")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetContentSitemapResponseObject); ok {
+		if err := validResponse.VisitGetContentSitemapResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ResolveContentPage operation middleware
+func (sh *strictHandler) ResolveContentPage(ctx *gin.Context, path string, params ResolveContentPageParams) {
+	var request ResolveContentPageRequestObject
+
+	request.Path = path
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ResolveContentPage(ctx, request.(ResolveContentPageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ResolveContentPage")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ResolveContentPageResponseObject); ok {
+		if err := validResponse.VisitResolveContentPageResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -14816,31 +22321,6 @@ func (sh *strictHandler) GetProduct(ctx *gin.Context, id int) {
 	}
 }
 
-// GetStorefrontSettings operation middleware
-func (sh *strictHandler) GetStorefrontSettings(ctx *gin.Context) {
-	var request GetStorefrontSettingsRequestObject
-
-	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetStorefrontSettings(ctx, request.(GetStorefrontSettingsRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetStorefrontSettings")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		ctx.Error(err)
-		ctx.Status(http.StatusInternalServerError)
-	} else if validResponse, ok := response.(GetStorefrontSettingsResponseObject); ok {
-		if err := validResponse.VisitGetStorefrontSettingsResponse(ctx.Writer); err != nil {
-			ctx.Error(err)
-		}
-	} else if response != nil {
-		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
 // ReceiveWebhookEvent operation middleware
 func (sh *strictHandler) ReceiveWebhookEvent(ctx *gin.Context, provider string) {
 	var request ReceiveWebhookEventRequestObject
@@ -14879,235 +22359,321 @@ func (sh *strictHandler) ReceiveWebhookEvent(ctx *gin.Context, provider string) 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

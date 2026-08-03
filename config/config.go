@@ -26,6 +26,7 @@ type Config struct {
 	ProviderCredentialsKeys        string `mapstructure:"PROVIDER_CREDENTIALS_KEYS"`
 	ProviderCredentialsKeyVersion  string `mapstructure:"PROVIDER_CREDENTIALS_ACTIVE_KEY_VERSION"`
 	ProviderReconciliationInterval string `mapstructure:"PROVIDER_RECONCILIATION_INTERVAL"`
+	CMSInvalidationWebhookURL      string `mapstructure:"CMS_INVALIDATION_WEBHOOK_URL"`
 }
 
 var configKeys = []string{
@@ -45,6 +46,7 @@ var configKeys = []string{
 	"PROVIDER_CREDENTIALS_KEYS",
 	"PROVIDER_CREDENTIALS_ACTIVE_KEY_VERSION",
 	"PROVIDER_RECONCILIATION_INTERVAL",
+	"CMS_INVALIDATION_WEBHOOK_URL",
 }
 
 func LoadConfig() (config Config, err error) {

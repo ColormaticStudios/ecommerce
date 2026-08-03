@@ -14,9 +14,10 @@ function hasAuthenticatedContext(event: Pick<RequestEvent, "request">): boolean 
 }
 
 export function setPublicPageCacheHeaders(
-	event: Pick<RequestEvent, "request" | "setHeaders">
+	event: Pick<RequestEvent, "request" | "setHeaders">,
+	personalized = false
 ): void {
-	if (hasAuthenticatedContext(event)) {
+	if (personalized || hasAuthenticatedContext(event)) {
 		event.setHeaders({
 			"Cache-Control": PRIVATE_CACHE_CONTROL,
 			Vary: "Cookie, Authorization",

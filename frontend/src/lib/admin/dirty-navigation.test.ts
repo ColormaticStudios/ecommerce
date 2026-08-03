@@ -40,8 +40,8 @@ test("ignores unchanged destinations and clears its dirty state when the page un
 
 test("normalizes route targets without hashes for prompt comparisons", () => {
 	const target = toAdminNavigationTarget(
-		new URL("https://example.com/admin/storefront?preview=draft#footer")
+		new URL("https://example.com/admin/cms?preview=draft#footer")
 	);
 
-	expect(target).toBe("/admin/storefront?preview=draft");
+	expect(target).toBe("/admin/cms?preview=draft");
 });

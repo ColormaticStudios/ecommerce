@@ -21,11 +21,6 @@ import {
 } from "$lib/models";
 import { API_BASE_URL } from "$lib/config";
 import { fetchProduct, fetchProducts, type ListProductsQuery } from "$lib/api/openapi-client";
-import {
-	type StorefrontSettingsModel,
-	type StorefrontSettingsResponseModel,
-	parseStorefrontSettingsResponse,
-} from "$lib/storefront";
 import { buildOIDCLoginUrl } from "$lib/auth";
 import { appendQueryParams } from "$lib/api/http";
 import type { components, paths } from "$lib/api/generated/openapi";
@@ -34,6 +29,9 @@ import * as ordersDomain from "$lib/api/domains/orders";
 import * as profileDomain from "$lib/api/domains/profile";
 
 const API_ROUTE = "/api/v1";
+const TUS_VERSION = "1.0.0";
+const TUS_CHUNK_SIZE = 5 * 1024 * 1024;
+const TUS_MAX_RESUME_ATTEMPTS = 3;
 export const DRAFT_PREVIEW_SYNC_EVENT = "draft-preview:changed";
 export const DRAFT_PREVIEW_SYNC_STORAGE_KEY = "draft-preview:state";
 export const STOREFRONT_SYNC_EVENT = "storefront:changed";
@@ -106,12 +104,39 @@ type AdminOrderPaymentLifecycleModel = Omit<AdminOrderPaymentLifecycleResponse, 
 };
 type UserPagePayload = components["schemas"]["UserPage"];
 type UpdateOrderStatusRequest = components["schemas"]["UpdateOrderStatusRequest"];
-type StorefrontSettingsRequest = components["schemas"]["StorefrontSettingsRequest"];
-type StorefrontSettingsResponse = components["schemas"]["StorefrontSettingsResponse"];
 type WebsiteSettings = components["schemas"]["WebsiteSettings"];
 type WebsiteSettingsRequest = components["schemas"]["WebsiteSettingsRequest"];
 type WebsiteSettingsResponse = components["schemas"]["WebsiteSettingsResponse"];
 type DraftPreviewSessionResponse = components["schemas"]["DraftPreviewSessionResponse"];
+type CmsPageListResponse = components["schemas"]["CmsPageListResponse"];
+type CmsPageResponse = components["schemas"]["CmsPageResponse"];
+type CmsPageDraftRequest = components["schemas"]["CmsPageDraftRequest"];
+type CmsNavigationListResponse = components["schemas"]["CmsNavigationListResponse"];
+type CmsNavigationResponse = components["schemas"]["CmsNavigationResponse"];
+type CmsNavigationDraftRequest = components["schemas"]["CmsNavigationDraftRequest"];
+type CmsGlobalRegionListResponse = components["schemas"]["CmsGlobalRegionListResponse"];
+type CmsGlobalRegionResponse = components["schemas"]["CmsGlobalRegionResponse"];
+type CmsGlobalRegionDraftRequest = components["schemas"]["CmsGlobalRegionDraftRequest"];
+type CmsPublishRequest = components["schemas"]["CmsPublishRequest"];
+type CmsPreviewRequest = components["schemas"]["CmsPreviewRequest"];
+type CmsPreviewResponse = components["schemas"]["CmsPreviewResponse"];
+type CmsPageDeliveryRequest = components["schemas"]["CmsPageDeliveryRequest"];
+type CmsPageDeliveryResponse = components["schemas"]["CmsPageDeliveryResponse"];
+type CmsContentEventRequest = components["schemas"]["CmsContentEventRequest"];
+type CmsSEOInput = components["schemas"]["CmsSEOInput"];
+type CmsSEOResponse = components["schemas"]["CmsSEOResponse"];
+type CmsRedirectInput = components["schemas"]["CmsRedirectInput"];
+type CmsRedirectRule = components["schemas"]["CmsRedirectRule"];
+type CmsLocaleSettings = components["schemas"]["CmsLocaleSettings"];
+type CmsLocaleSettingsInput = components["schemas"]["CmsLocaleSettingsInput"];
+type CmsPageVariant = components["schemas"]["CmsPageVariant"];
+type CmsPageVariantInput = components["schemas"]["CmsPageVariantInput"];
+type CmsAuditEvent = components["schemas"]["CmsAuditEvent"];
+type CmsContentExport = components["schemas"]["CmsContentExport"];
+type CmsRestorePreview = components["schemas"]["CmsRestorePreview"];
+type CmsGovernance = components["schemas"]["CmsGovernance"];
+type CmsGovernanceInput = components["schemas"]["CmsGovernanceInput"];
+type CmsOperations = components["schemas"]["CmsOperations"];
 type ListUserOrdersQuery = paths["/api/v1/me/orders"]["get"]["parameters"]["query"];
 type ListAdminBrandsQuery = NonNullable<
 	paths["/api/v1/admin/brands"]["get"]["parameters"]["query"]
@@ -484,71 +509,169 @@ export class API {
 	}
 
 	public async uploadMedia(file: File): Promise<string> {
-		const uploadUrl = new URL(`${this.baseUrl}${API_ROUTE}/media/uploads`);
-		const metadata = `filename ${btoa(unescape(encodeURIComponent(file.name)))}`;
+		const storageKey = this.mediaUploadStorageKey(file);
+		let uploadLocation = this.readStoredUploadLocation(storageKey);
+		let offset = uploadLocation ? await this.getUploadOffset(uploadLocation, file.size) : null;
 
-		const createResponse = await fetch(uploadUrl.toString(), {
-			method: "POST",
-			headers: {
-				"Tus-Resumable": "1.0.0",
-				"Upload-Length": String(file.size),
-				"Upload-Metadata": metadata,
-				...(this.readCookie("csrf_token") ? { "X-CSRF-Token": this.readCookie("csrf_token") } : {}),
-			},
-			credentials: "include",
-		});
-
-		if (!createResponse.ok) {
-			const createText = await createResponse.text();
-			let createBody: unknown = createText;
-			try {
-				createBody = createText ? JSON.parse(createText) : null;
-			} catch {
-				createBody = createText;
-			}
-			this.handleCsrfForbidden(createResponse.status, createBody);
-			throw new Error(`Failed to create upload: ${createResponse.statusText}`);
+		if (offset === null) {
+			uploadLocation = await this.createMediaUpload(file);
+			offset = 0;
+			this.storeUploadLocation(storageKey, uploadLocation);
 		}
 
-		const location = createResponse.headers.get("Location");
-		if (!location) {
+		if (!uploadLocation) {
 			throw new Error("Upload location missing");
 		}
+		const activeUploadLocation = uploadLocation;
 
-		const resolvedLocation = location.startsWith("/") ? `${this.baseUrl}${location}` : location;
-
-		const patchResponse = await fetch(resolvedLocation, {
-			method: "PATCH",
-			headers: {
-				"Tus-Resumable": "1.0.0",
-				"Upload-Offset": "0",
-				"Content-Type": "application/offset+octet-stream",
-				...(this.readCookie("csrf_token") ? { "X-CSRF-Token": this.readCookie("csrf_token") } : {}),
-			},
-			body: file,
-			credentials: "include",
-		});
-
-		if (!patchResponse.ok) {
-			const patchText = await patchResponse.text();
-			let patchBody: unknown = patchText;
+		let resumeAttempts = 0;
+		while (offset < file.size) {
+			let response: Response;
 			try {
-				patchBody = patchText ? JSON.parse(patchText) : null;
-			} catch {
-				patchBody = patchText;
+				response = await fetch(activeUploadLocation, {
+					method: "PATCH",
+					headers: {
+						"Tus-Resumable": TUS_VERSION,
+						"Upload-Offset": String(offset),
+						"Content-Type": "application/offset+octet-stream",
+						...this.csrfHeader(),
+					},
+					body: file.slice(offset, Math.min(offset + TUS_CHUNK_SIZE, file.size)),
+					credentials: "include",
+				});
+			} catch (error) {
+				if (resumeAttempts >= TUS_MAX_RESUME_ATTEMPTS) throw error;
+				const resumedOffset = await this.getUploadOffset(activeUploadLocation, file.size);
+				if (resumedOffset === null) throw error;
+				offset = resumedOffset;
+				resumeAttempts += 1;
+				continue;
 			}
-			this.handleCsrfForbidden(patchResponse.status, patchBody);
-			throw new Error(`Failed to upload media: ${patchResponse.statusText}`);
+
+			if (response.ok) {
+				const nextOffset = this.parseUploadOffset(response.headers.get("Upload-Offset"), file.size);
+				if (nextOffset === null || nextOffset <= offset) {
+					throw new Error("Upload server returned an invalid offset");
+				}
+				offset = nextOffset;
+				resumeAttempts = 0;
+				continue;
+			}
+
+			await this.handleUploadResponseError(response, "Failed to upload media");
+			if (resumeAttempts >= TUS_MAX_RESUME_ATTEMPTS) {
+				throw new Error(`Failed to upload media: ${response.statusText}`);
+			}
+			const resumedOffset = await this.getUploadOffset(activeUploadLocation, file.size);
+			if (resumedOffset === null) {
+				throw new Error(`Failed to upload media: ${response.statusText}`);
+			}
+			offset = resumedOffset;
+			resumeAttempts += 1;
 		}
 
-		const parsed = new URL(location, this.baseUrl);
-		const segments = parsed.pathname.split("/").filter(Boolean);
-		const mediaId = segments[segments.length - 1];
+		this.removeStoredUploadLocation(storageKey);
+		const segments = new URL(activeUploadLocation, this.baseUrl).pathname
+			.split("/")
+			.filter(Boolean);
+		const mediaId = segments.at(-1);
 		if (!mediaId) {
 			throw new Error("Upload ID missing");
 		}
-
 		return mediaId;
+	}
+
+	private async createMediaUpload(file: File): Promise<string> {
+		const metadata = `filename ${btoa(unescape(encodeURIComponent(file.name)))}`;
+		const response = await fetch(new URL(`${this.baseUrl}${API_ROUTE}/media/uploads`).toString(), {
+			method: "POST",
+			headers: {
+				"Tus-Resumable": TUS_VERSION,
+				"Upload-Length": String(file.size),
+				"Upload-Metadata": metadata,
+				...this.csrfHeader(),
+			},
+			credentials: "include",
+		});
+		await this.handleUploadResponseError(response, "Failed to create upload");
+		if (!response.ok) throw new Error(`Failed to create upload: ${response.statusText}`);
+
+		const location = response.headers.get("Location");
+		if (!location) throw new Error("Upload location missing");
+		return new URL(location, this.baseUrl).toString();
+	}
+
+	private async getUploadOffset(location: string, size: number): Promise<number | null> {
+		try {
+			const response = await fetch(location, {
+				method: "HEAD",
+				headers: { "Tus-Resumable": TUS_VERSION, ...this.csrfHeader() },
+				credentials: "include",
+			});
+			if (!response.ok) return null;
+			return this.parseUploadOffset(response.headers.get("Upload-Offset"), size);
+		} catch {
+			return null;
+		}
+	}
+
+	private parseUploadOffset(value: string | null, size: number): number | null {
+		if (!value || !/^\d+$/.test(value)) return null;
+		const offset = Number(value);
+		return Number.isSafeInteger(offset) && offset >= 0 && offset <= size ? offset : null;
+	}
+
+	private shouldResumeUpload(status: number): boolean {
+		return status === 409 || status >= 500;
+	}
+
+	private async handleUploadResponseError(response: Response, message: string): Promise<void> {
+		if (response.ok) return;
+
+		const text = await response.text();
+		let body: unknown = text;
+		try {
+			body = text ? JSON.parse(text) : null;
+		} catch {
+			// Keep non-JSON tus error responses as text.
+		}
+		this.handleCsrfForbidden(response.status, body);
+		if (!this.shouldResumeUpload(response.status)) {
+			throw new Error(`${message}: ${response.statusText}`);
+		}
+	}
+
+	private csrfHeader(): Record<string, string> {
+		const token = this.readCookie("csrf_token");
+		return token ? { "X-CSRF-Token": token } : {};
+	}
+
+	private mediaUploadStorageKey(file: File): string {
+		return `media-upload:${this.baseUrl}:${file.name}:${file.size}:${file.lastModified}:${file.type}`;
+	}
+
+	private readStoredUploadLocation(key: string): string | null {
+		try {
+			return typeof window === "undefined" ? null : window.localStorage.getItem(key);
+		} catch {
+			return null;
+		}
+	}
+
+	private storeUploadLocation(key: string, location: string): void {
+		try {
+			if (typeof window !== "undefined") window.localStorage.setItem(key, location);
+		} catch {
+			// Uploads remain resumable in this page when storage is unavailable.
+		}
+	}
+
+	private removeStoredUploadLocation(key: string): void {
+		try {
+			if (typeof window !== "undefined") window.localStorage.removeItem(key);
+		} catch {
+			// Nothing to clean up when storage is unavailable.
+		}
 	}
 
 	public async attachProfilePhoto(mediaId: string): Promise<UserModel> {
@@ -763,10 +886,7 @@ export class API {
 	}
 
 	public async disableAdminDiscountCampaign(id: number): Promise<DiscountCampaign> {
-		return await this.request<DiscountCampaign>(
-			"POST",
-			`/admin/discounts/campaigns/${id}/disable`
-		);
+		return await this.request<DiscountCampaign>("POST", `/admin/discounts/campaigns/${id}/disable`);
 	}
 
 	public async scheduleAdminDiscountCampaign(
@@ -781,10 +901,7 @@ export class API {
 	}
 
 	public async archiveAdminDiscountCampaign(id: number): Promise<DiscountCampaign> {
-		return await this.request<DiscountCampaign>(
-			"POST",
-			`/admin/discounts/campaigns/${id}/archive`
-		);
+		return await this.request<DiscountCampaign>("POST", `/admin/discounts/campaigns/${id}/archive`);
 	}
 
 	public async createAdminPromotionCampaign(data: PromotionInput): Promise<DiscountCampaign> {
@@ -1159,48 +1276,312 @@ export class API {
 		return parseProduct(response);
 	}
 
-	public async getStorefrontSettings(): Promise<StorefrontSettingsResponseModel> {
-		const response = await this.request<StorefrontSettingsResponse>("GET", "/storefront");
-		return parseStorefrontSettingsResponse(response);
+	public async listAdminCmsPages(): Promise<CmsPageListResponse> {
+		return this.request<CmsPageListResponse>("GET", "/admin/cms/pages");
 	}
 
-	public async getAdminStorefrontSettings(): Promise<StorefrontSettingsResponseModel> {
-		const response = await this.request<StorefrontSettingsResponse>("GET", "/admin/storefront");
-		return parseStorefrontSettingsResponse(response);
+	public async getAdminCmsLocales(): Promise<CmsLocaleSettings> {
+		return this.request<CmsLocaleSettings>("GET", "/admin/cms/locales");
 	}
 
-	public async updateStorefrontSettings(
-		settings: StorefrontSettingsModel
-	): Promise<StorefrontSettingsResponseModel> {
-		const payload: StorefrontSettingsRequest = { settings };
-		const response = await this.request<StorefrontSettingsResponse>(
+	public async updateAdminCmsLocales(data: CmsLocaleSettingsInput): Promise<CmsLocaleSettings> {
+		return this.request<CmsLocaleSettings>("PUT", "/admin/cms/locales", data);
+	}
+
+	public async listAdminCmsPageVariants(pageId: number): Promise<CmsPageVariant[]> {
+		return this.request<CmsPageVariant[]>("GET", `/admin/cms/pages/${pageId}/variants`);
+	}
+
+	public async createAdminCmsPageVariant(
+		pageId: number,
+		data: CmsPageVariantInput
+	): Promise<CmsPageVariant> {
+		return this.request<CmsPageVariant>("POST", `/admin/cms/pages/${pageId}/variants`, data);
+	}
+
+	public async updateAdminCmsPageVariant(
+		pageId: number,
+		variantId: number,
+		data: CmsPageVariantInput
+	): Promise<CmsPageVariant> {
+		return this.request<CmsPageVariant>(
 			"PUT",
-			"/admin/storefront",
+			`/admin/cms/pages/${pageId}/variants/${variantId}`,
+			data
+		);
+	}
+
+	public async deleteAdminCmsPageVariant(pageId: number, variantId: number): Promise<void> {
+		await this.request("DELETE", `/admin/cms/pages/${pageId}/variants/${variantId}`);
+	}
+
+	public async transitionAdminCmsPageVariant(
+		pageId: number,
+		variantId: number,
+		action: "submit" | "approve" | "request_changes" | "publish" | "rollback",
+		comment = ""
+	): Promise<CmsPageVariant> {
+		const response = await this.request<CmsPageVariant>(
+			"POST",
+			`/admin/cms/pages/${pageId}/variants/${variantId}/${action}`,
+			{ comment }
+		);
+		if (action === "publish" || action === "rollback") broadcastStorefrontStateChange();
+		return response;
+	}
+
+	public async listAdminCmsAuditEvents(entryId?: number): Promise<CmsAuditEvent[]> {
+		return this.request<CmsAuditEvent[]>("GET", "/admin/cms/audit", undefined, {
+			entry_id: entryId,
+			limit: 100,
+		});
+	}
+
+	public async exportAdminCmsContent(): Promise<CmsContentExport> {
+		return this.request<CmsContentExport>("GET", "/admin/cms/export");
+	}
+
+	public async restoreAdminCmsContent(content: CmsContentExport): Promise<void> {
+		await this.request("POST", "/admin/cms/export", content);
+		broadcastStorefrontStateChange();
+	}
+
+	public async previewAdminCmsRestore(content: CmsContentExport): Promise<CmsRestorePreview> {
+		return this.request<CmsRestorePreview>("POST", "/admin/cms/restore/preview", content);
+	}
+
+	public async getAdminCmsGovernance(): Promise<CmsGovernance> {
+		return this.request<CmsGovernance>("GET", "/admin/cms/governance");
+	}
+
+	public async updateAdminCmsGovernance(data: CmsGovernanceInput): Promise<CmsGovernance> {
+		return this.request<CmsGovernance>("PUT", "/admin/cms/governance", data);
+	}
+
+	public async getAdminCmsOperations(): Promise<CmsOperations> {
+		return this.request<CmsOperations>("GET", "/admin/cms/operations");
+	}
+
+	public async retryAdminCmsInvalidation(id: number): Promise<void> {
+		await this.request("POST", `/admin/cms/operations/invalidation/${id}/retry`);
+	}
+
+	public async createAdminCmsPage(data: CmsPageDraftRequest): Promise<CmsPageResponse> {
+		return this.request<CmsPageResponse>("POST", "/admin/cms/pages", data);
+	}
+
+	public async updateAdminCmsPage(id: number, data: CmsPageDraftRequest): Promise<CmsPageResponse> {
+		return this.request<CmsPageResponse>("PATCH", `/admin/cms/pages/${id}`, data);
+	}
+
+	public async deleteAdminCmsPage(id: number): Promise<void> {
+		await this.request("DELETE", `/admin/cms/pages/${id}`);
+		broadcastStorefrontStateChange();
+	}
+
+	public async discardAdminCmsPageDraft(id: number): Promise<CmsPageResponse | null> {
+		const response = await this.request<CmsPageResponse | null>(
+			"DELETE",
+			`/admin/cms/pages/${id}/draft`
+		);
+		broadcastStorefrontStateChange();
+		return response;
+	}
+
+	public async publishAdminCmsPage(id: number, notes = ""): Promise<CmsPageResponse> {
+		const payload: CmsPublishRequest = { notes };
+		const response = await this.request<CmsPageResponse>(
+			"POST",
+			`/admin/cms/pages/${id}/publish`,
 			payload
 		);
-		const parsed = parseStorefrontSettingsResponse(response);
 		broadcastStorefrontStateChange();
-		return parsed;
+		return response;
 	}
 
-	public async publishStorefrontSettings(): Promise<StorefrontSettingsResponseModel> {
-		const response = await this.request<StorefrontSettingsResponse>(
+	public async unpublishAdminCmsPage(id: number, notes = ""): Promise<CmsPageResponse> {
+		const payload: CmsPublishRequest = { notes };
+		const response = await this.request<CmsPageResponse>(
 			"POST",
-			"/admin/storefront/publish"
+			`/admin/cms/pages/${id}/unpublish`,
+			payload
 		);
-		const parsed = parseStorefrontSettingsResponse(response);
 		broadcastStorefrontStateChange();
-		return parsed;
+		return response;
 	}
 
-	public async discardStorefrontDraft(): Promise<StorefrontSettingsResponseModel> {
-		const response = await this.request<StorefrontSettingsResponse>(
-			"DELETE",
-			"/admin/storefront/draft"
+	public async rollbackAdminCmsPage(
+		id: number,
+		versionId: number,
+		notes = ""
+	): Promise<CmsPageResponse> {
+		const response = await this.request<CmsPageResponse>(
+			"POST",
+			`/admin/cms/pages/${id}/rollback`,
+			{ version_id: versionId, notes }
 		);
-		const parsed = parseStorefrontSettingsResponse(response);
 		broadcastStorefrontStateChange();
-		return parsed;
+		return response;
+	}
+
+	public async previewAdminCmsPayload(data: CmsPreviewRequest): Promise<CmsPreviewResponse> {
+		return this.request<CmsPreviewResponse>("POST", "/admin/cms/preview", data);
+	}
+
+	public async getAdminCmsPageDelivery(id: number): Promise<CmsPageDeliveryResponse> {
+		return this.request<CmsPageDeliveryResponse>("GET", `/admin/cms/pages/${id}/delivery`);
+	}
+
+	public async updateAdminCmsPageDelivery(
+		id: number,
+		data: CmsPageDeliveryRequest
+	): Promise<CmsPageDeliveryResponse> {
+		return this.request<CmsPageDeliveryResponse>("PUT", `/admin/cms/pages/${id}/delivery`, data);
+	}
+
+	public async recordCmsContentEvent(data: CmsContentEventRequest): Promise<void> {
+		await this.request("POST", "/content/events", data);
+	}
+
+	public async getAdminCmsPageSEO(id: number): Promise<CmsSEOResponse> {
+		return this.request<CmsSEOResponse>("GET", `/admin/cms/pages/${id}/seo`);
+	}
+
+	public async updateAdminCmsPageSEO(id: number, data: CmsSEOInput): Promise<CmsSEOResponse> {
+		return this.request<CmsSEOResponse>("PUT", `/admin/cms/pages/${id}/seo`, data);
+	}
+
+	public async listAdminCmsRedirects(): Promise<CmsRedirectRule[]> {
+		return this.request<CmsRedirectRule[]>("GET", "/admin/cms/redirects");
+	}
+
+	public async createAdminCmsRedirect(data: CmsRedirectInput): Promise<CmsRedirectRule> {
+		return this.request<CmsRedirectRule>("POST", "/admin/cms/redirects", data);
+	}
+
+	public async updateAdminCmsRedirect(
+		id: number,
+		data: CmsRedirectInput
+	): Promise<CmsRedirectRule> {
+		return this.request<CmsRedirectRule>("PATCH", `/admin/cms/redirects/${id}`, data);
+	}
+
+	public async deleteAdminCmsRedirect(id: number): Promise<void> {
+		await this.request("DELETE", `/admin/cms/redirects/${id}`);
+	}
+
+	public async listAdminCmsNavigation(): Promise<CmsNavigationListResponse> {
+		return this.request<CmsNavigationListResponse>("GET", "/admin/cms/navigation");
+	}
+
+	public async createAdminCmsNavigation(
+		data: CmsNavigationDraftRequest
+	): Promise<CmsNavigationResponse> {
+		return this.request<CmsNavigationResponse>("POST", "/admin/cms/navigation", data);
+	}
+
+	public async updateAdminCmsNavigation(
+		id: number,
+		data: CmsNavigationDraftRequest
+	): Promise<CmsNavigationResponse> {
+		return this.request<CmsNavigationResponse>("PATCH", `/admin/cms/navigation/${id}`, data);
+	}
+
+	public async deleteAdminCmsNavigation(id: number): Promise<void> {
+		await this.request("DELETE", `/admin/cms/navigation/${id}`);
+		broadcastStorefrontStateChange();
+	}
+
+	public async discardAdminCmsNavigationDraft(id: number): Promise<CmsNavigationResponse | null> {
+		const response = await this.request<CmsNavigationResponse | null>(
+			"DELETE",
+			`/admin/cms/navigation/${id}/draft`
+		);
+		broadcastStorefrontStateChange();
+		return response;
+	}
+
+	public async publishAdminCmsNavigation(id: number, notes = ""): Promise<CmsNavigationResponse> {
+		const payload: CmsPublishRequest = { notes };
+		const response = await this.request<CmsNavigationResponse>(
+			"POST",
+			`/admin/cms/navigation/${id}/publish`,
+			payload
+		);
+		broadcastStorefrontStateChange();
+		return response;
+	}
+
+	public async unpublishAdminCmsNavigation(id: number, notes = ""): Promise<CmsNavigationResponse> {
+		const payload: CmsPublishRequest = { notes };
+		const response = await this.request<CmsNavigationResponse>(
+			"POST",
+			`/admin/cms/navigation/${id}/unpublish`,
+			payload
+		);
+		broadcastStorefrontStateChange();
+		return response;
+	}
+
+	public async listAdminCmsGlobalRegions(): Promise<CmsGlobalRegionListResponse> {
+		return this.request<CmsGlobalRegionListResponse>("GET", "/admin/cms/global");
+	}
+
+	public async createAdminCmsGlobalRegion(
+		data: CmsGlobalRegionDraftRequest
+	): Promise<CmsGlobalRegionResponse> {
+		return this.request<CmsGlobalRegionResponse>("POST", "/admin/cms/global", data);
+	}
+
+	public async updateAdminCmsGlobalRegion(
+		id: number,
+		data: CmsGlobalRegionDraftRequest
+	): Promise<CmsGlobalRegionResponse> {
+		return this.request<CmsGlobalRegionResponse>("PATCH", `/admin/cms/global/${id}`, data);
+	}
+
+	public async deleteAdminCmsGlobalRegion(id: number): Promise<void> {
+		await this.request("DELETE", `/admin/cms/global/${id}`);
+		broadcastStorefrontStateChange();
+	}
+
+	public async discardAdminCmsGlobalRegionDraft(
+		id: number
+	): Promise<CmsGlobalRegionResponse | null> {
+		const response = await this.request<CmsGlobalRegionResponse | null>(
+			"DELETE",
+			`/admin/cms/global/${id}/draft`
+		);
+		broadcastStorefrontStateChange();
+		return response;
+	}
+
+	public async publishAdminCmsGlobalRegion(
+		id: number,
+		notes = ""
+	): Promise<CmsGlobalRegionResponse> {
+		const payload: CmsPublishRequest = { notes };
+		const response = await this.request<CmsGlobalRegionResponse>(
+			"POST",
+			`/admin/cms/global/${id}/publish`,
+			payload
+		);
+		broadcastStorefrontStateChange();
+		return response;
+	}
+
+	public async unpublishAdminCmsGlobalRegion(
+		id: number,
+		notes = ""
+	): Promise<CmsGlobalRegionResponse> {
+		const payload: CmsPublishRequest = { notes };
+		const response = await this.request<CmsGlobalRegionResponse>(
+			"POST",
+			`/admin/cms/global/${id}/unpublish`,
+			payload
+		);
+		broadcastStorefrontStateChange();
+		return response;
 	}
 
 	public async getAdminWebsiteSettings(): Promise<WebsiteSettingsResponse> {

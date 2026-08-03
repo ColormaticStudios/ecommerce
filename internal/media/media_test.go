@@ -2,8 +2,11 @@ package media
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -114,6 +117,22 @@ func TestDeleteIfOrphanKeepsReferencedMedia(t *testing.T) {
 	var count int64
 	require.NoError(t, db.Model(&models.MediaObject{}).Where("id = ?", "linked").Count(&count).Error)
 	require.Equal(t, int64(1), count)
+}
+
+func TestTusUploadHandlerRejectsUploadsLargerThanLimit(t *testing.T) {
+	service, _, _ := setupMediaService(t)
+	uploadHandler, err := service.NewTusUploadHandler()
+	require.NoError(t, err)
+
+	req, err := http.NewRequest(http.MethodPost, "", nil)
+	require.NoError(t, err)
+	req.Header.Set("Tus-Resumable", "1.0.0")
+	req.Header.Set("Upload-Length", strconv.FormatInt(MaxUploadSizeBytes+1, 10))
+	res := httptest.NewRecorder()
+
+	uploadHandler.ServeHTTP(res, req)
+
+	assert.Equal(t, http.StatusRequestEntityTooLarge, res.Code)
 }
 
 func TestHandleTusdCompleteQueuesJobAndPersistsProcessingRecord(t *testing.T) {

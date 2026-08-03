@@ -19,11 +19,10 @@
 	type Props = {
 		href: string;
 		data: ProductCardData;
-		showStock?: boolean;
 		imageAspect?: "square" | "wide";
 	};
 
-	let { href, data, showStock = true, imageAspect = "square" }: Props = $props();
+	let { href, data, imageAspect = "square" }: Props = $props();
 
 	const imageClass = $derived(imageAspect === "wide" ? "aspect-[4/3]" : "aspect-square");
 	const unitPrice = $derived(
@@ -108,7 +107,7 @@
 					{/if}
 				</span>
 			{/if}
-			{#if showStock && data.stock != null}
+			{#if data.stock != null}
 				{#if data.stock === 0}
 					<span class="text-xs font-semibold text-red-500">Out of stock</span>
 				{:else if data.stock < 5}

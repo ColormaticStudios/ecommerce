@@ -57,7 +57,7 @@ func buildProductContract(
 		return apicontract.Product{}, err
 	}
 
-	brand, err := loadBrandContract(db, draft.BrandID)
+	brand, err := loadBrandContract(db, mediaService, draft.BrandID)
 	if err != nil {
 		return apicontract.Product{}, err
 	}
@@ -162,7 +162,7 @@ func loadCategoryContracts(db *gorm.DB, categoryIDs []uint) ([]apicontract.Categ
 	return result, nil
 }
 
-func loadBrandContract(db *gorm.DB, brandID *uint) (*apicontract.Brand, error) {
+func loadBrandContract(db *gorm.DB, mediaService *media.Service, brandID *uint) (*apicontract.Brand, error) {
 	if brandID == nil {
 		return nil, nil
 	}
@@ -175,14 +175,19 @@ func loadBrandContract(db *gorm.DB, brandID *uint) (*apicontract.Brand, error) {
 		return nil, err
 	}
 
-	return &apicontract.Brand{
+	contract := &apicontract.Brand{
 		Description: brand.Description,
 		Id:          int(brand.ID),
 		IsActive:    brand.IsActive,
-		LogoMediaId: brand.LogoMediaID,
 		Name:        brand.Name,
 		Slug:        brand.Slug,
-	}, nil
+	}
+	if mediaService != nil {
+		if logoURL, err := mediaService.BrandLogoURL(brand.ID); err == nil {
+			contract.LogoUrl = &logoURL
+		}
+	}
+	return contract, nil
 }
 
 func loadAttributeMetadata(db *gorm.DB, values []productAttributeValueDraftData) (map[uint]models.ProductAttribute, error) {

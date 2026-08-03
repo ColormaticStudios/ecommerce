@@ -24,9 +24,13 @@
 	class="flex h-full flex-col overflow-hidden border-r border-gray-300 bg-gray-100/95 dark:border-gray-800 dark:bg-gray-900/95"
 >
 	<div
-		class="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-4 dark:border-gray-800"
+		class={`border-b border-gray-200 px-4 py-4 dark:border-gray-800 ${
+			collapsed && !mobile
+				? "flex flex-col items-center gap-2"
+				: "flex items-center justify-between gap-3"
+		}`}
 	>
-		<div class="min-w-0">
+		<div class={collapsed && !mobile ? "flex justify-center" : "min-w-0"}>
 			{#if !collapsed || mobile}
 				<p class="text-sm font-semibold text-gray-950 dark:text-gray-50">Admin</p>
 				<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Operations console</p>
@@ -62,7 +66,7 @@
 			<IconButton
 				aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
 				title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-				class="text-gray-700 dark:text-gray-200"
+				class={`text-gray-700 dark:text-gray-200 ${collapsed ? "mt-1" : ""}`}
 				onclick={() => onToggleCollapse?.()}
 			>
 				<i class={`bi ${collapsed ? "bi-chevron-right" : "bi-chevron-left"}`}></i>

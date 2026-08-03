@@ -31,6 +31,10 @@ $CLI user address add \
 	--country "US" \
 	--set-default
 
+# Create an editable published CMS site (home, About, Contact, FAQ, navigation, and footer).
+# This is safe to re-run: it never overwrites existing CMS entries.
+$CLI cms bootstrap
+
 # Create test products
 $CLI product create -n "Fancy Toothpaste" -d "It'll clean those teeth right out of your mouth" -p 25.00 -s "TPASTE-001" --stock 100
 $CLI product create -n "Zakarya's T-Shirt" -d "Stolen right off his back" -p 50.00  -s "SHIRT-001" --stock 1

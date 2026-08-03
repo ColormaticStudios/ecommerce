@@ -13,7 +13,7 @@
 		value: string;
 		ariaLabel: string;
 		class?: string;
-		onChange?: (value: string) => void;
+		onChange?: (value: string) => boolean | void;
 	}
 
 	let { items, value = $bindable(), ariaLabel, class: className = "", onChange }: Props = $props();
@@ -112,7 +112,7 @@
 	});
 </script>
 
-<div class={`relative max-w-full ${className}`}>
+<div class={`relative inline-block max-w-full ${className}`}>
 	<div
 		bind:this={scrollViewport}
 		class="tab-switcher-scroll max-w-full overflow-x-auto overflow-y-hidden rounded-full border border-stone-200 bg-white px-1 text-[11px] font-semibold tracking-[0.18em] text-stone-500 uppercase shadow-sm dark:border-stone-800 dark:bg-stone-900 dark:text-stone-400"
@@ -120,7 +120,7 @@
 	>
 		<div
 			bind:this={tabList}
-			class="relative inline-flex w-max min-w-full items-center gap-1"
+			class="relative inline-flex w-max items-center gap-1"
 			role="tablist"
 			aria-label={ariaLabel}
 		>
@@ -142,8 +142,8 @@
 							: "hover:text-stone-900 dark:hover:text-stone-100"
 					}`}
 					onclick={() => {
+						if (onChange?.(item.id) === false) return;
 						value = item.id;
-						onChange?.(item.id);
 					}}
 				>
 					<span

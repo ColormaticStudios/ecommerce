@@ -171,6 +171,14 @@ export function createAdminSavePrompt(options: AdminSavePromptOptions = {}) {
 		}
 	}
 
+	function confirmDiscard(message = options.navigationMessage): boolean {
+		if (!dirty) return true;
+		if (blocked || saving) return false;
+		if (dirtyNavigation) return dirtyNavigation.confirmNavigation();
+		if (typeof window === "undefined") return false;
+		return window.confirm(message?.trim() || "You have unsaved changes. Discard them?");
+	}
+
 	return {
 		get dirty() {
 			return dirty;
@@ -197,6 +205,7 @@ export function createAdminSavePrompt(options: AdminSavePromptOptions = {}) {
 			return canSave;
 		},
 		save,
+		confirmDiscard,
 	};
 }
 

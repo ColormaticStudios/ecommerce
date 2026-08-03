@@ -6,6 +6,7 @@ const WebsiteSettingsSingletonID uint = 1
 
 type WebsiteSettings struct {
 	ID                           uint      `json:"id" gorm:"primaryKey;autoIncrement:false"`
+	SiteTitle                    string    `json:"site_title" gorm:"size:255;not null;default:Ecommerce"`
 	AllowGuestCheckout           bool      `json:"allow_guest_checkout" gorm:"not null;default:true"`
 	CouponCodesEnabled           bool      `json:"coupon_codes_enabled" gorm:"not null;default:true"`
 	OIDCProvider                 string    `json:"oidc_provider" gorm:"column:oidc_provider;not null;default:''"`

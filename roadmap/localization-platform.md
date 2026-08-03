@@ -6,7 +6,7 @@
 - Frontend routes/components under `frontend/src/routes` and `frontend/src/lib/components` contain hard-coded English UI strings.
 - API/user-visible errors are primarily English message strings; there is no stable localization key contract for error rendering.
 - Customer communications roadmap (`roadmap/customer-communications-email-sms.md`) introduces outbound delivery infrastructure, but not localized template management.
-- CMS roadmap (`roadmap/ecommerce-cms.md`) includes localization in P6, but only for CMS entities and not platform-wide UI copy/admin text/transactional messaging.
+- Ecommerce CMS includes localization, but only for CMS entities and not platform-wide UI copy/admin text/transactional messaging.
 
 ## Goals
 - Localize all user-facing text across storefront, checkout, account, admin, transactional communications, and API-driven UI states.
@@ -35,7 +35,7 @@
 6. P5: Hardening, quality gates, and compatibility cleanup.
 
 ## Cross-Roadmap Alignment
-- CMS (`roadmap/ecommerce-cms.md`):
+- CMS (now baseline):
   - This roadmap defines the shared localization platform consumed by CMS.
   - CMS P6 should use this roadmap’s locale/fallback/workflow model rather than defining a second localization stack.
 - Product catalog depth baseline:

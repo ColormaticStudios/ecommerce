@@ -222,12 +222,11 @@
 					Related Products
 				</h2>
 
-				<div class="flex gap-4 overflow-x-auto pb-2">
+				<div class="-mt-1 flex gap-4 overflow-x-auto pt-1 pb-2">
 					{#each product.related_products as related (related.sku)}
 						<div class="w-64 shrink-0">
 							<ProductCard
 								href={resolve(`/product/${related.id}`)}
-								showStock={true}
 								imageAspect="wide"
 								data={{
 									//id: related.id, // Unused

@@ -1,16 +1,18 @@
-import { makeStorefrontSettings } from "$lib/storybook/factories";
+import type { CmsGlobalRegionModel, CmsNavigationModel } from "$lib/cms";
 
 export function makeRouteLayoutData(
 	overrides: Partial<{
 		isAuthenticated: boolean;
-		storefront: ReturnType<typeof makeStorefrontSettings>;
 		draftPreview: { active: boolean; expires_at?: string | null };
+		cmsNavigation: CmsNavigationModel | null;
+		cmsGlobalRegions: Record<string, CmsGlobalRegionModel>;
 	}> = {}
 ) {
 	return {
 		isAuthenticated: false,
-		storefront: makeStorefrontSettings(),
 		draftPreview: { active: false, expires_at: null },
+		cmsNavigation: null,
+		cmsGlobalRegions: {},
 		...overrides,
 	};
 }
@@ -20,7 +22,6 @@ export function makeAdminLayoutData(
 		isAuthenticated: boolean;
 		isAdmin: boolean;
 		accessError: string;
-		storefront: ReturnType<typeof makeStorefrontSettings>;
 		draftPreview: { active: boolean; expires_at?: string | null };
 	}> = {}
 ) {

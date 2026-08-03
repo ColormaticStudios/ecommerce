@@ -55,6 +55,13 @@ export async function serverRequest<T>(
 	if (cookie) {
 		headers.set("cookie", cookie);
 	}
+	for (const name of ["user-agent", "referer", "x-correlation-id"]) {
+		const value = event.request.headers.get(name);
+		if (value) headers.set(name, value);
+	}
+	const host = event.request.headers.get("x-forwarded-host") ?? event.request.headers.get("host");
+	if (host) headers.set("x-forwarded-host", host);
+	headers.set("x-forwarded-proto", event.request.headers.get("x-forwarded-proto") ?? "http");
 
 	// Use the server runtime fetch for the external API base URL.
 	// SvelteKit's event.fetch can forward request context such as Origin,

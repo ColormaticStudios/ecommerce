@@ -24,7 +24,7 @@ func setupGeneratedRouter(t *testing.T) *gin.Engine {
 	t.Helper()
 
 	gin.SetMode(gin.TestMode)
-	db := newTestDB(t, &models.Product{}, &models.StorefrontSettings{}, &models.MediaObject{}, &models.MediaReference{})
+	db := newTestDB(t, &models.Product{}, &models.MediaObject{}, &models.MediaReference{})
 	require.NoError(t, db.Create(&models.Product{
 		SKU:         "sku-1",
 		Name:        "Generated Product 1",
@@ -175,18 +175,159 @@ func TestGeneratedGetProductSuccess(t *testing.T) {
 	assert.Equal(t, "Generated Product 1", body.Name)
 }
 
-func TestGeneratedStorefrontSuccess(t *testing.T) {
-	r := setupGeneratedRouter(t)
+func TestGeneratedCMSPageCreatePublishResolveRollback(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := newTestDB(t)
+	admin := seedUser(t, db, "sub-cms-admin", "cms-admin", "cms-admin@example.com", "admin")
+	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/storefront", nil)
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
+	r := gin.New()
+	server, err := NewGeneratedAPIServer(db, nil, GeneratedAPIServerConfig{JWTSecret: generatedTestJWTSecret})
+	require.NoError(t, err)
+	apicontract.RegisterHandlers(r, server)
 
-	assert.Equal(t, http.StatusOK, w.Code)
+	createW := adminLifecycleRequest(t, r, http.MethodPost, "/api/v1/admin/cms/pages", `{
+		"path": "/shipping",
+		"title": "Shipping",
+		"payload": {"headline": "Draft shipping"}
+	}`, token, "")
+	require.Equal(t, http.StatusCreated, createW.Code)
+	var created apicontract.CmsPageResponse
+	require.NoError(t, json.Unmarshal(createW.Body.Bytes(), &created))
+	require.True(t, created.HasUnpublishedDraft)
 
-	var body apicontract.StorefrontSettingsResponse
-	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
-	assert.NotEmpty(t, body.Settings.SiteTitle)
+	unpublishedW := httptest.NewRecorder()
+	r.ServeHTTP(unpublishedW, httptest.NewRequest(http.MethodGet, "/api/v1/content/shipping", nil))
+	require.Equal(t, http.StatusNotFound, unpublishedW.Code)
+
+	publishW := adminLifecycleRequest(t, r, http.MethodPost, "/api/v1/admin/cms/pages/1/publish", `{"notes":"launch"}`, token, "")
+	require.Equal(t, http.StatusOK, publishW.Code)
+	var published apicontract.CmsPageResponse
+	require.NoError(t, json.Unmarshal(publishW.Body.Bytes(), &published))
+	require.NotNil(t, published.PublishedVersion)
+	require.False(t, published.HasUnpublishedDraft)
+
+	resolveW := httptest.NewRecorder()
+	r.ServeHTTP(resolveW, httptest.NewRequest(http.MethodGet, "/api/v1/content/shipping", nil))
+	require.Equal(t, http.StatusOK, resolveW.Code)
+	var resolved apicontract.CmsPageResponse
+	require.NoError(t, json.Unmarshal(resolveW.Body.Bytes(), &resolved))
+	var resolvedRaw map[string]any
+	require.NoError(t, json.Unmarshal(resolveW.Body.Bytes(), &resolvedRaw))
+	publishedVersion := resolvedRaw["published_version"].(map[string]any)
+	publishedPayload := publishedVersion["payload"].(map[string]any)
+	assert.Equal(t, "Draft shipping", publishedPayload["headline"])
+
+	updateW := adminLifecycleRequest(t, r, http.MethodPatch, "/api/v1/admin/cms/pages/1", `{
+		"path": "/shipping",
+		"title": "Shipping",
+		"payload": {"headline": "Updated shipping"}
+	}`, token, "")
+	require.Equal(t, http.StatusOK, updateW.Code)
+
+	rollbackW := adminLifecycleRequest(t, r, http.MethodPost, "/api/v1/admin/cms/pages/1/rollback", `{"version_id":1}`, token, "")
+	require.Equal(t, http.StatusOK, rollbackW.Code)
+	var rolledBack apicontract.CmsPageResponse
+	require.NoError(t, json.Unmarshal(rollbackW.Body.Bytes(), &rolledBack))
+	require.NotNil(t, rolledBack.PublishedVersion)
+	assert.Equal(t, 1, rolledBack.PublishedVersion.Id)
+}
+
+func TestGeneratedCMSResolveUsesDraftPreviewForCurrentVersion(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := newTestDB(t)
+	admin := seedUser(t, db, "sub-cms-preview", "cms-preview", "cms-preview@example.com", "admin")
+	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	r := gin.New()
+	server, err := NewGeneratedAPIServer(db, nil, GeneratedAPIServerConfig{JWTSecret: generatedTestJWTSecret})
+	require.NoError(t, err)
+	apicontract.RegisterHandlers(r, server)
+
+	createW := adminLifecycleRequest(t, r, http.MethodPost, "/api/v1/admin/cms/pages", `{
+		"path": "/returns",
+		"title": "Returns",
+		"payload": {"blocks": [{"type": "rich_text", "body": "Draft return policy"}]}
+	}`, token, "")
+	require.Equal(t, http.StatusCreated, createW.Code)
+
+	publicW := httptest.NewRecorder()
+	r.ServeHTTP(publicW, httptest.NewRequest(http.MethodGet, "/api/v1/content/returns", nil))
+	require.Equal(t, http.StatusNotFound, publicW.Code)
+
+	previewToken, _, err := buildDraftPreviewToken(admin.Subject, admin.Role, generatedTestJWTSecret, time.Minute)
+	require.NoError(t, err)
+	previewReq := httptest.NewRequest(http.MethodGet, "/api/v1/content/returns", nil)
+	previewReq.AddCookie(&http.Cookie{Name: draftPreviewCookieName, Value: previewToken})
+	previewW := httptest.NewRecorder()
+	r.ServeHTTP(previewW, previewReq)
+	require.Equal(t, http.StatusOK, previewW.Code)
+	assert.Equal(t, "private, no-store", previewW.Header().Get("Cache-Control"))
+
+	var previewBody apicontract.CmsPageResponse
+	require.NoError(t, json.Unmarshal(previewW.Body.Bytes(), &previewBody))
+	require.NotNil(t, previewBody.CurrentVersion)
+	var previewRaw map[string]any
+	require.NoError(t, json.Unmarshal(previewW.Body.Bytes(), &previewRaw))
+	currentVersion := previewRaw["current_version"].(map[string]any)
+	currentPayload := currentVersion["payload"].(map[string]any)
+	currentBlocks := currentPayload["blocks"].([]any)
+	assert.Equal(t, "Draft return policy", currentBlocks[0].(map[string]any)["body"])
+}
+
+func TestGeneratedCMSNavigationAndGlobalRegionPublishResolve(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := newTestDB(t)
+	admin := seedUser(t, db, "sub-cms-p2", "cms-p2", "cms-p2@example.com", "admin")
+	token := issueBearerTokenWithRole(t, generatedTestJWTSecret, admin.Subject, admin.Role)
+
+	r := gin.New()
+	server, err := NewGeneratedAPIServer(db, nil, GeneratedAPIServerConfig{JWTSecret: generatedTestJWTSecret})
+	require.NoError(t, err)
+	apicontract.RegisterHandlers(r, server)
+
+	navW := adminLifecycleRequest(t, r, http.MethodPost, "/api/v1/admin/cms/navigation", `{
+		"key": "main",
+		"title": "Main",
+		"location": "header",
+		"items": [
+			{"id": 1, "label": "Shop", "item_type": "dropdown", "target_ref": "", "url": "", "sort_order": 1, "is_enabled": true},
+			{"id": 2, "parent_id": 1, "label": "Search", "item_type": "internal", "target_ref": "/search", "url": "/search", "sort_order": 2, "is_enabled": true}
+		]
+	}`, token, "")
+	require.Equal(t, http.StatusCreated, navW.Code)
+	navPublishW := adminLifecycleRequest(t, r, http.MethodPost, "/api/v1/admin/cms/navigation/1/publish", `{"notes":"publish nav"}`, token, "")
+	require.Equal(t, http.StatusOK, navPublishW.Code)
+	navPublicW := httptest.NewRecorder()
+	r.ServeHTTP(navPublicW, httptest.NewRequest(http.MethodGet, "/api/v1/content/navigation/header", nil))
+	require.Equal(t, http.StatusOK, navPublicW.Code)
+	var navBody apicontract.CmsNavigationResponse
+	require.NoError(t, json.Unmarshal(navPublicW.Body.Bytes(), &navBody))
+	require.Len(t, navBody.Items, 2)
+	assert.Equal(t, "Shop", navBody.Items[0].Label)
+	assert.Equal(t, apicontract.CmsNavigationItemItemTypeDropdown, navBody.Items[0].ItemType)
+	assert.Equal(t, "Search", navBody.Items[1].Label)
+	require.NotNil(t, navBody.Items[1].ParentId)
+	assert.Equal(t, navBody.Items[0].Id, *navBody.Items[1].ParentId)
+
+	globalW := adminLifecycleRequest(t, r, http.MethodPost, "/api/v1/admin/cms/global", `{
+		"key": "announcement",
+		"title": "Announcement",
+		"region": "announcement_bar",
+		"payload": {"blocks": [{"type": "promo_banner", "title": "Free shipping"}]}
+	}`, token, "")
+	require.Equal(t, http.StatusCreated, globalW.Code)
+	globalPublishW := adminLifecycleRequest(t, r, http.MethodPost, "/api/v1/admin/cms/global/1/publish", `{"notes":"publish global"}`, token, "")
+	require.Equal(t, http.StatusOK, globalPublishW.Code)
+	globalPublicW := httptest.NewRecorder()
+	r.ServeHTTP(globalPublicW, httptest.NewRequest(http.MethodGet, "/api/v1/content/global/announcement_bar", nil))
+	require.Equal(t, http.StatusOK, globalPublicW.Code)
+	var globalRaw map[string]any
+	require.NoError(t, json.Unmarshal(globalPublicW.Body.Bytes(), &globalRaw))
+	publishedVersion := globalRaw["published_version"].(map[string]any)
+	payload := publishedVersion["payload"].(map[string]any)
+	blocks := payload["blocks"].([]any)
+	assert.Equal(t, "Free shipping", blocks[0].(map[string]any)["title"])
 }
 
 func TestGeneratedLogoutEndpoint(t *testing.T) {

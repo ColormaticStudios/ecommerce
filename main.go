@@ -17,6 +17,7 @@ import (
 	"ecommerce/internal/migrations"
 	"ecommerce/internal/providerplugins"
 	checkoutservice "ecommerce/internal/services/checkout"
+	cmsservice "ecommerce/internal/services/cms"
 	inventoryservice "ecommerce/internal/services/inventory"
 	paymentservice "ecommerce/internal/services/payments"
 	providerops "ecommerce/internal/services/providerops"
@@ -27,8 +28,6 @@ import (
 	"github.com/didip/tollbooth_gin"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	tusdfilestore "github.com/tus/tusd/v2/pkg/filestore"
-	tusdhandler "github.com/tus/tusd/v2/pkg/handler"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -160,15 +159,7 @@ func main() {
 	}
 	mediaService.StartProcessor()
 
-	composer := tusdhandler.NewStoreComposer()
-	store := tusdfilestore.New(mediaService.TusDir())
-	store.UseIn(composer)
-
-	tusd, err := tusdhandler.NewHandler(tusdhandler.Config{
-		BasePath:              "/api/v1/media/uploads",
-		StoreComposer:         composer,
-		NotifyCompleteUploads: true,
-	})
+	tusd, err := mediaService.NewTusUploadHandler()
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to initialize tusd: %v", err)
 	}
@@ -238,6 +229,8 @@ func main() {
 		}
 	}()
 	inventoryservice.StartReservationExpiryWorker(context.Background(), db, time.Minute, log.Default())
+	cmsservice.StartDeliveryWorker(context.Background(), db, time.Minute, log.Default(), mediaService)
+	cmsservice.StartInvalidationWorker(context.Background(), db, cfg.CMSInvalidationWebhookURL, time.Minute, log.Default())
 
 	keyring, err := providerops.ParseKeyringConfig(cfg.ProviderCredentialsKeys)
 	if err != nil {

@@ -11,7 +11,6 @@
 	import AdminResourceActions from "$lib/admin/AdminResourceActions.svelte";
 	import Badge from "$lib/components/Badge.svelte";
 	import { createAdminNotices, createAdminSavePrompt } from "$lib/admin/state.svelte";
-	import { API_BASE_URL } from "$lib/config";
 	import Button from "$lib/components/Button.svelte";
 	import ButtonInput from "$lib/components/ButtonInput.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
@@ -34,6 +33,7 @@
 	let slug = $state("");
 	let description = $state("");
 	let logoMediaId = $state("");
+	let logoURL = $state<string | null>(null);
 	let logoPreviewUrl = $state<string | null>(null);
 	let isActive = $state(true);
 	let hasLoadError = $state(false);
@@ -52,6 +52,7 @@
 			slug: slug.trim(),
 			description: description.trim(),
 			logoMediaId: logoMediaId.trim(),
+			logoURL,
 			isActive,
 		})
 	);
@@ -60,10 +61,7 @@
 		if (logoPreviewUrl) {
 			return logoPreviewUrl;
 		}
-		if (!logoMediaId.trim()) {
-			return null;
-		}
-		return `${API_BASE_URL}/media/${encodeURIComponent(logoMediaId.trim())}/original.webp`;
+		return logoURL;
 	});
 
 	function captureSavedSnapshot() {
@@ -84,19 +82,32 @@
 		slug = "";
 		description = "";
 		logoMediaId = "";
+		logoURL = null;
 		isActive = true;
 		captureSavedSnapshot();
 	}
 
 	function loadIntoForm(brand: BrandModel) {
+		if (selectedBrandId === brand.id) return;
+		if (!savePrompt.confirmDiscard()) return;
+		openBrand(brand);
+	}
+
+	function openBrand(brand: BrandModel) {
 		clearLogoPreview();
 		selectedBrandId = brand.id;
 		name = brand.name;
 		slug = brand.slug;
 		description = brand.description ?? "";
-		logoMediaId = brand.logo_media_id ?? "";
+		logoMediaId = "";
+		logoURL = brand.logo_url ?? null;
 		isActive = brand.is_active;
 		captureSavedSnapshot();
+	}
+
+	function requestNewBrand() {
+		if (!savePrompt.confirmDiscard()) return;
+		resetForm();
 	}
 
 	async function loadBrands(query = appliedSearchQuery) {
@@ -110,7 +121,7 @@
 			if (selectedBrandId !== null) {
 				const refreshed = brands.find((brand) => brand.id === selectedBrandId);
 				if (refreshed) {
-					loadIntoForm(refreshed);
+					openBrand(refreshed);
 				}
 			}
 		} catch (error) {
@@ -123,10 +134,12 @@
 	}
 
 	function applyBrandSearch() {
+		if (!savePrompt.confirmDiscard()) return;
 		void loadBrands(searchQuery);
 	}
 
 	function refreshBrands() {
+		if (!savePrompt.confirmDiscard()) return;
 		searchQuery = appliedSearchQuery;
 		void loadBrands(appliedSearchQuery);
 	}
@@ -150,6 +163,7 @@
 
 		try {
 			logoMediaId = await api.uploadMedia(file);
+			logoURL = nextPreviewUrl;
 			notices.setSuccess("Brand image uploaded. Save brand to keep this logo.");
 		} catch (error) {
 			console.error(error);
@@ -167,6 +181,7 @@
 
 		clearLogoPreview();
 		logoMediaId = "";
+		logoURL = null;
 		notices.setSuccess("Brand image removed. Save brand to keep this change.");
 	}
 
@@ -182,7 +197,7 @@
 				name: name.trim(),
 				slug: slug.trim(),
 				description: description.trim() || undefined,
-				logo_media_id: logoMediaId.trim() || undefined,
+				logo: logoMediaId.trim() ? { media_id: logoMediaId.trim() } : undefined,
 				is_active: isActive,
 			};
 
@@ -191,7 +206,7 @@
 					? await api.createAdminBrand(payload)
 					: await api.updateAdminBrand(selectedBrandId, payload);
 
-			loadIntoForm(saved);
+			openBrand(saved);
 			await loadBrands(appliedSearchQuery);
 			captureSavedSnapshot();
 			notices.setSuccess(isUpdate ? "Brand updated." : "Brand created.");
@@ -401,7 +416,7 @@
 						variant="regular"
 						class="rounded-full whitespace-nowrap"
 						disabled={saving || deleting || uploadingLogo}
-						onclick={resetForm}
+						onclick={requestNewBrand}
 					>
 						<i class="bi bi-x-lg mr-1"></i>
 						Clear
