@@ -6,6 +6,7 @@ import {
 	makeAttributeDefinition,
 	makeDraftPreviewSession,
 	makeProduct,
+	makeVariant,
 } from "$lib/storybook/factories";
 import { makeAdminLayoutData } from "$lib/storybook/layout";
 import { renderRouteStory } from "$lib/storybook/render";
@@ -47,6 +48,68 @@ const unpublishedProduct = makeProduct({
 	id: 102,
 	name: "Field Jacket Draft",
 	is_published: false,
+});
+
+const productWithDraftMatrix = makeProduct({
+	id: 103,
+	name: "Field Jacket — Expanded Range",
+	has_draft_changes: true,
+	default_variant_id: 31,
+	default_variant_sku: "FIELD-JACKET-NAVY-S",
+	price_range: { min: 129, max: 149 },
+	options: [
+		{
+			id: 21,
+			name: "Color",
+			position: 1,
+			display_type: "swatch",
+			values: [
+				{ id: 211, value: "Navy", position: 1 },
+				{ id: 212, value: "Ochre", position: 2 },
+			],
+		},
+		{
+			id: 22,
+			name: "Size",
+			position: 2,
+			display_type: "select",
+			values: [
+				{ id: 221, value: "S", position: 1 },
+				{ id: 222, value: "M", position: 2 },
+			],
+		},
+	],
+	variants: [
+		makeVariant({
+			id: 31,
+			sku: "FIELD-JACKET-NAVY-S",
+			title: "Navy / S",
+			price: 129,
+			selections: [
+				{ product_option_value_id: 211, option_name: "Color", option_value: "Navy", position: 1 },
+				{ product_option_value_id: 221, option_name: "Size", option_value: "S", position: 2 },
+			],
+		}),
+		makeVariant({
+			id: 32,
+			sku: "FIELD-JACKET-OCHRE-M",
+			title: "Ochre / M",
+			price: 149,
+			stock: 0,
+			is_published: false,
+			selections: [
+				{ product_option_value_id: 212, option_name: "Color", option_value: "Ochre", position: 1 },
+				{ product_option_value_id: 222, option_name: "Size", option_value: "M", position: 2 },
+			],
+		}),
+	],
+	seo: {
+		title: "Field Jacket | Colormatic",
+		description: "A utility jacket available in seasonal colors.",
+		canonical_path: "/products/field-jacket",
+		og_image_media_id: null,
+		noindex: false,
+	},
 });
 
 const meta = {
@@ -132,6 +195,24 @@ export const PublishedProduct: Story = {
 				page: {
 					params: { id: String(publishedProduct.id) },
 				},
+			},
+		},
+	},
+};
+
+export const DraftChangesWithVariantMatrix: Story = {
+	render: () =>
+		renderRouteStory({
+			component: AdminProductPage,
+			componentProps: {
+				data: createData({ initialProduct: productWithDraftMatrix }),
+			},
+			api: createEditorApi(productWithDraftMatrix),
+		}),
+	parameters: {
+		sveltekit_experimental: {
+			state: {
+				page: { params: { id: String(productWithDraftMatrix.id) } },
 			},
 		},
 	},
