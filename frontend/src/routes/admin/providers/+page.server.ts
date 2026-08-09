@@ -5,6 +5,9 @@ import type { components } from "$lib/api/generated/openapi";
 type CheckoutPluginCatalogPayload = components["schemas"]["CheckoutPluginCatalog"];
 type ProviderCredentialListPayload = components["schemas"]["ProviderCredentialListResponse"];
 type ProviderOperationsOverviewPayload = components["schemas"]["ProviderOperationsOverview"];
+type ProviderOperationPagePayload = components["schemas"]["ProviderOperationPage"];
+type ProviderReconciliationCasePagePayload =
+	components["schemas"]["ProviderReconciliationCasePage"];
 type ProviderReconciliationRunPagePayload = components["schemas"]["ProviderReconciliationRunPage"];
 type WebhookEventPagePayload = components["schemas"]["WebhookEventPage"];
 
@@ -18,6 +21,24 @@ const emptyProviderOverview: ProviderOperationsOverviewPayload = {
 		dead_letter_count: 0,
 		rejected_count: 0,
 	},
+	operations: {
+		total_count: 0,
+		active_count: 0,
+		unknown_count: 0,
+		finalize_retry_count: 0,
+		compensation_retry_count: 0,
+		failed_count: 0,
+		completed_count: 0,
+	},
+	reconciliation_cases: { open_count: 0, unassigned_count: 0 },
+};
+const emptyProviderOperations: ProviderOperationPagePayload = {
+	data: [],
+	pagination: { page: 1, limit: 10, total: 0, total_pages: 0 },
+};
+const emptyReconciliationCases: ProviderReconciliationCasePagePayload = {
+	data: [],
+	pagination: { page: 1, limit: 10, total: 0, total_pages: 0 },
 };
 const emptyReconciliationRuns: ProviderReconciliationRunPagePayload = {
 	data: [],
@@ -44,6 +65,8 @@ export const load: PageServerLoad = async (event) => {
 	let checkoutPlugins: CheckoutPluginCatalogPayload = emptyCheckoutPlugins;
 	let providerCredentials = [] as ProviderCredentialListPayload["data"];
 	let providerOverview: ProviderOperationsOverviewPayload = emptyProviderOverview;
+	let providerOperations: ProviderOperationPagePayload = emptyProviderOperations;
+	let reconciliationCases: ProviderReconciliationCasePagePayload = emptyReconciliationCases;
 	let reconciliationRuns: ProviderReconciliationRunPagePayload = emptyReconciliationRuns;
 	let rejectedWebhookEvents: WebhookEventPagePayload = emptyWebhookEvents;
 	let deadLetterWebhookEvents: WebhookEventPagePayload = emptyWebhookEvents;
@@ -54,6 +77,8 @@ export const load: PageServerLoad = async (event) => {
 			checkoutPlugins,
 			providerCredentials,
 			providerOverview,
+			providerOperations,
+			reconciliationCases,
 			reconciliationRuns,
 			rejectedWebhookEvents,
 			deadLetterWebhookEvents,
@@ -65,6 +90,8 @@ export const load: PageServerLoad = async (event) => {
 		checkoutPluginsResult,
 		providerCredentialsResult,
 		providerOverviewResult,
+		providerOperationsResult,
+		reconciliationCasesResult,
 		reconciliationRunsResult,
 		rejectedWebhookEventsResult,
 		deadLetterWebhookEventsResult,
@@ -72,6 +99,15 @@ export const load: PageServerLoad = async (event) => {
 		serverRequest<CheckoutPluginCatalogPayload>(event, "/admin/checkout/plugins"),
 		serverRequest<ProviderCredentialListPayload>(event, "/admin/providers/credentials"),
 		serverRequest<ProviderOperationsOverviewPayload>(event, "/admin/providers/overview"),
+		serverRequest<ProviderOperationPagePayload>(event, "/admin/providers/operations", {
+			page: 1,
+			limit: 10,
+		}),
+		serverRequest<ProviderReconciliationCasePagePayload>(
+			event,
+			"/admin/providers/reconciliation/cases",
+			{ status: "OPEN", page: 1, limit: 10 }
+		),
 		serverRequest<ProviderReconciliationRunPagePayload>(
 			event,
 			"/admin/providers/reconciliation/runs",
@@ -110,6 +146,20 @@ export const load: PageServerLoad = async (event) => {
 		errorMessages.push("Unable to load provider operations overview.");
 	}
 
+	if (providerOperationsResult.status === "fulfilled") {
+		providerOperations = providerOperationsResult.value;
+	} else {
+		console.error(providerOperationsResult.reason);
+		errorMessages.push("Unable to load provider operations.");
+	}
+
+	if (reconciliationCasesResult.status === "fulfilled") {
+		reconciliationCases = reconciliationCasesResult.value;
+	} else {
+		console.error(reconciliationCasesResult.reason);
+		errorMessages.push("Unable to load provider reconciliation cases.");
+	}
+
 	if (reconciliationRunsResult.status === "fulfilled") {
 		reconciliationRuns = reconciliationRunsResult.value;
 	} else {
@@ -135,6 +185,8 @@ export const load: PageServerLoad = async (event) => {
 		checkoutPlugins,
 		providerCredentials,
 		providerOverview,
+		providerOperations,
+		reconciliationCases,
 		reconciliationRuns,
 		rejectedWebhookEvents,
 		deadLetterWebhookEvents,

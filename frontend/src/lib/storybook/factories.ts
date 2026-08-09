@@ -19,6 +19,8 @@ import type {
 
 type ProviderCredential = components["schemas"]["ProviderCredential"];
 type ProviderOperationsOverview = components["schemas"]["ProviderOperationsOverview"];
+type ProviderOperation = components["schemas"]["ProviderOperation"];
+type ProviderReconciliationCase = components["schemas"]["ProviderReconciliationCase"];
 type ProviderReconciliationRun = components["schemas"]["ProviderReconciliationRun"];
 type WebhookEventRecord = components["schemas"]["WebhookEventRecord"];
 type WebhookEventPage = components["schemas"]["WebhookEventPage"];
@@ -645,6 +647,94 @@ export function makeProviderOverview(
 				dead_letter_count: 0,
 				rejected_count: 0,
 			},
+			operations: {
+				total_count: 24,
+				active_count: 0,
+				unknown_count: 0,
+				finalize_retry_count: 0,
+				compensation_retry_count: 0,
+				failed_count: 0,
+				completed_count: 24,
+			},
+			reconciliation_cases: { open_count: 0, unassigned_count: 0 },
+		},
+		overrides
+	);
+}
+
+export function makeProviderOperation(
+	overrides: Partial<ProviderOperation> = {}
+): ProviderOperation {
+	return merge(
+		{
+			id: 41,
+			operation_key: "op_story_capture_41",
+			provider_type: "payment",
+			provider_id: "dummy-card",
+			environment: "sandbox",
+			operation: "capture",
+			idempotency_key: "story-capture-41",
+			correlation_id: "corr-story-41",
+			entity_type: "payment_intent",
+			entity_id: 14,
+			status: "COMPLETED",
+			provider_outcome: "SUCCEEDED",
+			provider_reference: "pay_story_41",
+			retryable: false,
+			available_actions: [],
+			problem: null,
+			parent_operation_id: null,
+			compensation_operation_id: null,
+			attempts: [
+				{
+					id: 81,
+					attempt_number: 1,
+					phase: "provider",
+					outcome: "SUCCEEDED",
+					provider_outcome: "SUCCEEDED",
+					provider_reference: "pay_story_41",
+					operation_key: "op_story_capture_41",
+					retryable: false,
+					problem: null,
+					started_at: "2026-04-07T09:30:00.000Z",
+					finished_at: "2026-04-07T09:30:01.000Z",
+				},
+			],
+			reconciliation_cases: [],
+			created_at: "2026-04-07T09:30:00.000Z",
+			updated_at: "2026-04-07T09:30:01.000Z",
+			completed_at: "2026-04-07T09:30:01.000Z",
+			next_attempt_at: null,
+		},
+		overrides
+	);
+}
+
+export function makeProviderReconciliationCase(
+	overrides: Partial<ProviderReconciliationCase> = {}
+): ProviderReconciliationCase {
+	return merge(
+		{
+			id: 71,
+			operation_id: 41,
+			attempt_id: 81,
+			provider_type: "payment",
+			provider_id: "dummy-card",
+			environment: "sandbox",
+			operation: "capture",
+			operation_status: "RECONCILIATION_REQUIRED",
+			status: "OPEN",
+			outcome: null,
+			reason: "provider outcome lookup remained ambiguous",
+			case_type: "operation_key_lookup",
+			provider_outcome: "UNKNOWN",
+			operation_key: "op_story_capture_41",
+			assigned_to: null,
+			resolution_note: null,
+			problem: null,
+			next_attempt_at: null,
+			opened_at: "2026-04-07T09:31:00.000Z",
+			resolved_at: null,
 		},
 		overrides
 	);

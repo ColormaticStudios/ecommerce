@@ -1,11 +1,33 @@
 import { expect, test } from "vitest";
 import {
+	describeProviderOperationState,
 	formatProviderCurrencies,
 	parseProviderCurrencies,
 	parseProviderSecretData,
 	providerRunbooks,
 	summarizeReconciliationMismatch,
 } from "./providers";
+
+test("describeProviderOperationState distinguishes safe recovery and capability states", () => {
+	expect(describeProviderOperationState({ status: "COMPLETED", available_actions: [] }).label).toBe(
+		"Healthy"
+	);
+	expect(
+		describeProviderOperationState({
+			status: "RECONCILIATION_REQUIRED",
+			available_actions: ["query_outcome"],
+		}).label
+	).toBe("Provider outcome unknown");
+	expect(
+		describeProviderOperationState({ status: "COMPENSATION_RETRY", available_actions: [] }).label
+	).toBe("Compensation failed");
+	expect(
+		describeProviderOperationState({
+			status: "RECONCILIATION_REQUIRED",
+			available_actions: [],
+		}).label
+	).toBe("Capability blocker");
+});
 
 test("parseProviderSecretData returns string maps for valid JSON objects", () => {
 	const result = parseProviderSecretData('{ "api_key": "sk_test", "merchant_id": "acct_123" }');

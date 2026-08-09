@@ -18,6 +18,13 @@ export interface ProviderRunbook {
 }
 
 type ProviderReconciliationRun = components["schemas"]["ProviderReconciliationRun"];
+type ProviderOperation = components["schemas"]["ProviderOperation"];
+
+export interface ProviderOperationGuidance {
+	label: string;
+	description: string;
+	tone: "success" | "danger" | "warning" | "info" | "neutral";
+}
 
 export const providerRunbooks: ProviderRunbook[] = [
 	{
@@ -87,6 +94,56 @@ export const providerRunbooks: ProviderRunbook[] = [
 		],
 	},
 ];
+
+export function describeProviderOperationState(
+	operation: Pick<ProviderOperation, "status" | "available_actions">
+): ProviderOperationGuidance {
+	if (operation.status === "COMPLETED") {
+		return {
+			label: "Healthy",
+			description: "The provider effect and local finalization are both complete.",
+			tone: "success",
+		};
+	}
+	if (operation.status === "COMPENSATION_RETRY") {
+		return {
+			label: "Compensation failed",
+			description:
+				"The reversal is not complete. Queue only the existing compensation workflow after reviewing the attempt history.",
+			tone: "danger",
+		};
+	}
+	if (operation.status === "FINALIZE_RETRY") {
+		return {
+			label: "Local finalization blocked",
+			description:
+				"The provider succeeded, but local state still needs an idempotent finalization retry.",
+			tone: "warning",
+		};
+	}
+	if (operation.status === "OUTCOME_UNKNOWN" || operation.status === "RECONCILIATION_REQUIRED") {
+		if ((operation.available_actions ?? []).includes("query_outcome")) {
+			return {
+				label: "Provider outcome unknown",
+				description:
+					"Query provider truth before any mutation or compensation decision. Never repeat the original operation blindly.",
+				tone: "warning",
+			};
+		}
+		return {
+			label: "Capability blocker",
+			description:
+				"Automatic outcome lookup is unavailable. Follow the provider runbook and resolve the case with evidence.",
+			tone: "danger",
+		};
+	}
+	return {
+		label: "In progress",
+		description:
+			"The durable workflow is active; wait for its current lease or queued step to finish.",
+		tone: "info",
+	};
+}
 
 export function parseProviderSecretData(raw: string): ParsedProviderSecretData {
 	const normalized = raw.trim();

@@ -2,6 +2,7 @@
 	import { getContext, onMount } from "svelte";
 	import { type API } from "$lib/api";
 	import {
+		describeProviderOperationState,
 		formatProviderCurrencies,
 		parseProviderCurrencies,
 		parseProviderSecretData,
@@ -27,7 +28,10 @@
 	import type { PageData } from "./$types";
 
 	interface Props {
-		data: PageData;
+		data: PageData & {
+			providerOperations?: components["schemas"]["ProviderOperationPage"];
+			reconciliationCases?: components["schemas"]["ProviderReconciliationCasePage"];
+		};
 	}
 
 	type CheckoutPluginCatalog = components["schemas"]["CheckoutPluginCatalog"];
@@ -37,6 +41,13 @@
 	type ProviderCredentialEnvironment = ProviderCredential["environment"];
 	type ProviderCredentialFxMode = ProviderCredential["fx_mode"];
 	type ProviderOperationsOverview = components["schemas"]["ProviderOperationsOverview"];
+	type ProviderOperation = components["schemas"]["ProviderOperation"];
+	type ProviderOperationPage = components["schemas"]["ProviderOperationPage"];
+	type ProviderOperationStatus = components["schemas"]["ProviderOperationStatus"];
+	type ProviderReconciliationCase = components["schemas"]["ProviderReconciliationCase"];
+	type ProviderReconciliationCaseOutcome =
+		components["schemas"]["ProviderReconciliationCaseOutcome"];
+	type ProviderReconciliationCasePage = components["schemas"]["ProviderReconciliationCasePage"];
 	type ProviderReconciliationRun = components["schemas"]["ProviderReconciliationRun"];
 	type ProviderReconciliationRunPage = components["schemas"]["ProviderReconciliationRunPage"];
 	type WebhookEventPage = components["schemas"]["WebhookEventPage"];
@@ -59,6 +70,24 @@
 			dead_letter_count: 0,
 			rejected_count: 0,
 		},
+		operations: {
+			total_count: 0,
+			active_count: 0,
+			unknown_count: 0,
+			finalize_retry_count: 0,
+			compensation_retry_count: 0,
+			failed_count: 0,
+			completed_count: 0,
+		},
+		reconciliation_cases: { open_count: 0, unassigned_count: 0 },
+	};
+	const emptyProviderOperations: ProviderOperationPage = {
+		data: [],
+		pagination: { page: 1, limit: 10, total: 0, total_pages: 0 },
+	};
+	const emptyReconciliationCases: ProviderReconciliationCasePage = {
+		data: [],
+		pagination: { page: 1, limit: 10, total: 0, total_pages: 0 },
 	};
 	const emptyReconciliationRuns: ProviderReconciliationRunPage = {
 		data: [],
@@ -87,14 +116,23 @@
 	let runsLoading = $state(false);
 	let runCreating = $state(false);
 	let runDetailLoading = $state(false);
+	let operationsLoading = $state(false);
+	let operationDetailLoading = $state(false);
+	let operationActionRunning = $state(false);
+	let casesLoading = $state(false);
+	let caseSaving = $state(false);
 
 	let providerCatalogState = $state<CheckoutPluginCatalog | null>(null);
 	let providerCredentialsState = $state<ProviderCredential[] | null>(null);
 	let providerOverviewState = $state<ProviderOperationsOverview | null>(null);
+	let providerOperationsState = $state<ProviderOperationPage | null>(null);
+	let reconciliationCasesState = $state<ProviderReconciliationCasePage | null>(null);
 	let reconciliationRunsState = $state<ProviderReconciliationRunPage | null>(null);
 	let rejectedWebhookEventsState = $state<WebhookEventPage | null>(null);
 	let deadLetterWebhookEventsState = $state<WebhookEventPage | null>(null);
 	let runDetailsById = $state<Record<number, ProviderReconciliationRun>>({});
+	let operationDetailsById = $state<Record<number, ProviderOperation>>({});
+	let caseDetailsById = $state<Record<number, ProviderReconciliationCase>>({});
 
 	let providerView = $state<ProviderView>("all");
 
@@ -114,6 +152,15 @@
 	let createRunProviderType = $state<CheckoutPluginType>("payment");
 	let createRunProviderId = $state("");
 
+	let operationFilterType = $state<ProviderView>("all");
+	let operationFilterStatus = $state<ProviderOperationStatus | "all">("all");
+	let operationFilterProviderId = $state("");
+	let selectedOperationId = $state<number | null>(null);
+	let selectedCaseId = $state<number | null>(null);
+	let caseAssignee = $state("");
+	let caseResolutionOutcome = $state<ProviderReconciliationCaseOutcome>("MANUAL_REVIEW");
+	let caseResolutionNote = $state("");
+
 	const providerCatalog = $derived.by(
 		() => providerCatalogState ?? data.checkoutPlugins ?? emptyProviderCatalog
 	);
@@ -122,6 +169,12 @@
 	);
 	const providerOverview = $derived.by(
 		() => providerOverviewState ?? data.providerOverview ?? emptyProviderOverview
+	);
+	const providerOperations = $derived.by(
+		() => providerOperationsState ?? data.providerOperations ?? emptyProviderOperations
+	);
+	const reconciliationCases = $derived.by(
+		() => reconciliationCasesState ?? data.reconciliationCases ?? emptyReconciliationCases
 	);
 	const reconciliationRuns = $derived.by(
 		() => reconciliationRunsState ?? data.reconciliationRuns ?? emptyReconciliationRuns
@@ -217,6 +270,23 @@
 			) ?? null
 	);
 	const parsedSecretData = $derived(parseProviderSecretData(credentialSecretData));
+	const selectedOperationSummary = $derived.by(
+		() => providerOperations.data.find((operation) => operation.id === selectedOperationId) ?? null
+	);
+	const selectedOperationDetail = $derived.by(() => {
+		if (selectedOperationId === null) return null;
+		return operationDetailsById[selectedOperationId] ?? selectedOperationSummary;
+	});
+	const selectedOperationGuidance = $derived.by(() =>
+		selectedOperationDetail ? describeProviderOperationState(selectedOperationDetail) : null
+	);
+	const selectedCaseSummary = $derived.by(
+		() => reconciliationCases.data.find((entry) => entry.id === selectedCaseId) ?? null
+	);
+	const selectedCaseDetail = $derived.by(() => {
+		if (selectedCaseId === null) return null;
+		return caseDetailsById[selectedCaseId] ?? selectedCaseSummary;
+	});
 	const selectedRunSummary = $derived.by(
 		() => reconciliationRuns.data.find((run) => run.id === selectedRunId) ?? null
 	);
@@ -299,6 +369,22 @@
 		return severity === "ERROR" ? "danger" : "warning";
 	}
 
+	function operationStatusTone(
+		status: ProviderOperationStatus
+	): "success" | "danger" | "warning" | "info" | "neutral" {
+		if (status === "COMPLETED" || status === "COMPENSATION_SUCCEEDED") return "success";
+		if (status === "FAILED" || status === "COMPENSATION_RETRY") return "danger";
+		if (
+			status === "OUTCOME_UNKNOWN" ||
+			status === "RECONCILIATION_REQUIRED" ||
+			status === "FINALIZE_RETRY"
+		)
+			return "warning";
+		if (status === "EXECUTING" || status === "FINALIZING" || status === "RECONCILING")
+			return "info";
+		return "neutral";
+	}
+
 	function webhookStatusTone(
 		status: WebhookEventRecord["status"]
 	): "danger" | "warning" | "success" {
@@ -362,6 +448,8 @@
 			loadCredentials({ quiet: true }),
 			loadProviderOverview({ quiet: true }),
 			loadWebhookEvents({ quiet: true }),
+			loadProviderOperations({ quiet: true, preserveSelection: true }),
+			loadReconciliationCases({ quiet: true, preserveSelection: true }),
 			loadReconciliationRuns({
 				page: safeRunPagination.page,
 				limit: reconciliationLimit,
@@ -523,6 +611,179 @@
 			notices.pushError(err.body?.error ?? "Unable to rotate provider credential.");
 		} finally {
 			credentialRotatingId = null;
+		}
+	}
+
+	async function loadProviderOperations({
+		quiet = false,
+		preserveSelection = true,
+	}: { quiet?: boolean; preserveSelection?: boolean } = {}) {
+		operationsLoading = true;
+		if (!quiet) notices.clear();
+		try {
+			const next = await api.listAdminProviderOperations({
+				provider_type: operationFilterType === "all" ? undefined : operationFilterType,
+				provider_id: operationFilterProviderId.trim() || undefined,
+				status: operationFilterStatus === "all" ? undefined : operationFilterStatus,
+				page: 1,
+				limit: 10,
+			});
+			providerOperationsState = next;
+			const retained = preserveSelection
+				? (next.data.find((operation) => operation.id === selectedOperationId)?.id ?? null)
+				: null;
+			selectedOperationId = retained ?? next.data[0]?.id ?? null;
+			if (selectedOperationId !== null && !(selectedOperationId in operationDetailsById)) {
+				void loadProviderOperationDetail(selectedOperationId, { quiet: true });
+			}
+		} catch (error) {
+			console.error(error);
+			notices.pushError("Unable to load provider operations.");
+		} finally {
+			operationsLoading = false;
+		}
+	}
+
+	async function loadProviderOperationDetail(operationId: number, { quiet = false } = {}) {
+		operationDetailLoading = true;
+		if (!quiet) notices.clear();
+		try {
+			const operation = await api.getAdminProviderOperation(operationId);
+			operationDetailsById = { ...operationDetailsById, [operation.id]: operation };
+		} catch (error) {
+			console.error(error);
+			notices.pushError("Unable to load provider operation detail.");
+		} finally {
+			operationDetailLoading = false;
+		}
+	}
+
+	async function selectOperation(operationId: number) {
+		selectedOperationId = operationId;
+		if (!(operationId in operationDetailsById)) await loadProviderOperationDetail(operationId);
+	}
+
+	async function runOperationAction(
+		action: "query_outcome" | "retry_finalize" | "retry_compensation"
+	) {
+		if (!selectedOperationDetail || operationActionRunning) return;
+		operationActionRunning = true;
+		notices.clear();
+		try {
+			let updated: ProviderOperation;
+			if (action === "query_outcome") {
+				updated = await api.queryAdminProviderOperationOutcome(selectedOperationDetail.id);
+			} else if (action === "retry_finalize") {
+				updated = await api.retryFinalizeAdminProviderOperation(selectedOperationDetail.id);
+			} else {
+				updated = await api.retryCompensationAdminProviderOperation(selectedOperationDetail.id);
+			}
+			operationDetailsById = { ...operationDetailsById, [updated.id]: updated };
+			providerOperationsState = {
+				...providerOperations,
+				data: providerOperations.data.map((entry) => (entry.id === updated.id ? updated : entry)),
+			};
+			await Promise.all([
+				loadProviderOverview({ quiet: true }),
+				loadReconciliationCases({ quiet: true, preserveSelection: true }),
+			]);
+			notices.pushSuccess(
+				action === "query_outcome"
+					? "Provider outcome query completed."
+					: "Recovery work was safely queued."
+			);
+		} catch (error) {
+			console.error(error);
+			const err = error as { body?: { error?: string } };
+			notices.pushError(err.body?.error ?? "Unable to update provider operation.");
+		} finally {
+			operationActionRunning = false;
+		}
+	}
+
+	async function loadReconciliationCases({
+		quiet = false,
+		preserveSelection = true,
+	}: { quiet?: boolean; preserveSelection?: boolean } = {}) {
+		casesLoading = true;
+		if (!quiet) notices.clear();
+		try {
+			const next = await api.listAdminProviderReconciliationCases({
+				status: "OPEN",
+				page: 1,
+				limit: 10,
+			});
+			reconciliationCasesState = next;
+			const retained = preserveSelection
+				? (next.data.find((entry) => entry.id === selectedCaseId)?.id ?? null)
+				: null;
+			selectedCaseId = retained ?? next.data[0]?.id ?? null;
+			if (selectedCaseId !== null) await selectCase(selectedCaseId, { quiet: true });
+		} catch (error) {
+			console.error(error);
+			notices.pushError("Unable to load provider reconciliation cases.");
+		} finally {
+			casesLoading = false;
+		}
+	}
+
+	async function selectCase(caseId: number, { quiet = false } = {}) {
+		selectedCaseId = caseId;
+		try {
+			const detail =
+				caseDetailsById[caseId] ?? (await api.getAdminProviderReconciliationCase(caseId));
+			caseDetailsById = { ...caseDetailsById, [detail.id]: detail };
+			caseAssignee = detail.assigned_to ?? "";
+			caseResolutionNote = detail.resolution_note ?? "";
+		} catch (error) {
+			console.error(error);
+			if (!quiet) notices.pushError("Unable to load reconciliation case detail.");
+		}
+	}
+
+	async function saveCaseAssignment() {
+		if (!selectedCaseDetail || caseSaving) return;
+		caseSaving = true;
+		try {
+			const updated = await api.updateAdminProviderReconciliationCase(selectedCaseDetail.id, {
+				assigned_to: caseAssignee.trim(),
+			});
+			caseDetailsById = { ...caseDetailsById, [updated.id]: updated };
+			reconciliationCasesState = {
+				...reconciliationCases,
+				data: reconciliationCases.data.map((entry) => (entry.id === updated.id ? updated : entry)),
+			};
+			notices.pushSuccess("Case assignment updated.");
+		} catch (error) {
+			console.error(error);
+			notices.pushError("Unable to update case assignment.");
+		} finally {
+			caseSaving = false;
+		}
+	}
+
+	async function resolveCase() {
+		if (!selectedCaseDetail || caseSaving || !caseResolutionNote.trim()) return;
+		caseSaving = true;
+		try {
+			await api.updateAdminProviderReconciliationCase(selectedCaseDetail.id, {
+				assigned_to: caseAssignee.trim(),
+				status: "RESOLVED",
+				outcome: caseResolutionOutcome,
+				resolution_note: caseResolutionNote.trim(),
+			});
+			delete caseDetailsById[selectedCaseDetail.id];
+			await Promise.all([
+				loadReconciliationCases({ quiet: true, preserveSelection: false }),
+				loadProviderOverview({ quiet: true }),
+			]);
+			notices.pushSuccess("Reconciliation case resolved with an audit note.");
+		} catch (error) {
+			console.error(error);
+			const err = error as { body?: { error?: string } };
+			notices.pushError(err.body?.error ?? "Unable to resolve reconciliation case.");
+		} finally {
+			caseSaving = false;
 		}
 	}
 
@@ -688,6 +949,14 @@
 		}
 		if (selectedRunId !== null) {
 			void loadReconciliationRunDetail(selectedRunId, { quiet: true });
+		}
+		selectedOperationId = data.providerOperations?.data[0]?.id ?? null;
+		if (selectedOperationId !== null) {
+			void loadProviderOperationDetail(selectedOperationId, { quiet: true });
+		}
+		selectedCaseId = data.reconciliationCases?.data[0]?.id ?? null;
+		if (selectedCaseId !== null) {
+			void selectCase(selectedCaseId, { quiet: true });
 		}
 	});
 </script>
@@ -1000,6 +1269,345 @@
 			</div>
 		</div>
 	</AdminPanel>
+
+	<div class="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+		<AdminPanel
+			title="Provider Operation Ledger"
+			meta={`${providerOperations.pagination.total} durable operation${providerOperations.pagination.total === 1 ? "" : "s"}`}
+		>
+			<div class="space-y-4">
+				<div class="grid gap-3 md:grid-cols-3">
+					<label class="space-y-2 text-sm text-stone-600 dark:text-stone-300">
+						<span>Provider type</span>
+						<Dropdown tone="admin" bind:value={operationFilterType}>
+							<option value="all">All types</option>
+							<option value="payment">Payment</option>
+							<option value="shipping">Shipping</option>
+							<option value="tax">Tax</option>
+						</Dropdown>
+					</label>
+					<label class="space-y-2 text-sm text-stone-600 dark:text-stone-300">
+						<span>Lifecycle state</span>
+						<Dropdown tone="admin" bind:value={operationFilterStatus}>
+							<option value="all">All states</option>
+							<option value="OUTCOME_UNKNOWN">Outcome unknown</option>
+							<option value="RECONCILIATION_REQUIRED">Reconciliation required</option>
+							<option value="FINALIZE_RETRY">Finalize retry</option>
+							<option value="COMPENSATION_RETRY">Compensation retry</option>
+							<option value="FAILED">Failed</option>
+							<option value="COMPLETED">Completed</option>
+						</Dropdown>
+					</label>
+					<label class="space-y-2 text-sm text-stone-600 dark:text-stone-300">
+						<span>Provider ID</span>
+						<TextInput
+							tone="admin"
+							placeholder="dummy-card"
+							bind:value={operationFilterProviderId}
+						/>
+					</label>
+				</div>
+				<div class="flex flex-wrap gap-2">
+					<Button
+						tone="admin"
+						type="button"
+						variant="regular"
+						class="rounded-full"
+						onclick={() => void loadProviderOperations({ preserveSelection: false })}
+						disabled={operationsLoading}
+					>
+						{operationsLoading ? "Loading..." : "Apply filters"}
+					</Button>
+					<Badge tone={providerOverview.operations.unknown_count > 0 ? "warning" : "neutral"}>
+						{providerOverview.operations.unknown_count} unknown
+					</Badge>
+					<Badge
+						tone={providerOverview.operations.compensation_retry_count > 0 ? "danger" : "neutral"}
+					>
+						{providerOverview.operations.compensation_retry_count} compensation failed
+					</Badge>
+				</div>
+
+				{#if providerOperations.data.length === 0}
+					<AdminEmptyState>No provider operations match these filters.</AdminEmptyState>
+				{:else}
+					<div class="space-y-3">
+						{#each providerOperations.data as operation (operation.id)}
+							<AdminListItem
+								as="button"
+								class={`p-4 ${selectedOperationId === operation.id ? "ring-1 ring-stone-900/15 dark:ring-stone-100/15" : ""}`}
+								onclick={() => void selectOperation(operation.id)}
+							>
+								<div class="flex flex-wrap items-start justify-between gap-3">
+									<div>
+										<p class="text-sm font-medium text-stone-950 dark:text-stone-50">
+											{operation.operation}
+										</p>
+										<p class="mt-1 font-mono text-xs text-stone-500 dark:text-stone-400">
+											{operation.operation_key}
+										</p>
+									</div>
+									<Badge tone={operationStatusTone(operation.status)}>{operation.status}</Badge>
+								</div>
+								<p class="mt-3 text-xs text-stone-500 dark:text-stone-400">
+									{operation.provider_type} • {operation.provider_id} • {operation.entity_type} #{operation.entity_id}
+								</p>
+							</AdminListItem>
+						{/each}
+					</div>
+				{/if}
+			</div>
+		</AdminPanel>
+
+		<AdminPanel
+			title="Operation Detail"
+			meta={selectedOperationDetail
+				? `${selectedOperationDetail.provider_id} • #${selectedOperationDetail.id}`
+				: "Select an operation"}
+		>
+			{#if operationDetailLoading && !selectedOperationDetail}
+				<AdminEmptyState>Loading operation detail...</AdminEmptyState>
+			{:else if !selectedOperationDetail}
+				<AdminEmptyState
+					>Select an operation to inspect attempts and recovery state.</AdminEmptyState
+				>
+			{:else}
+				<div class="space-y-5">
+					<div class="grid gap-3 sm:grid-cols-3">
+						<div class="rounded-2xl border border-stone-200/80 p-4 dark:border-stone-800">
+							<p class="text-xs tracking-[0.2em] text-stone-500 uppercase dark:text-stone-400">
+								Local state
+							</p>
+							<div class="mt-2">
+								<Badge tone={operationStatusTone(selectedOperationDetail.status)}
+									>{selectedOperationDetail.status}</Badge
+								>
+							</div>
+						</div>
+						<div class="rounded-2xl border border-stone-200/80 p-4 dark:border-stone-800">
+							<p class="text-xs tracking-[0.2em] text-stone-500 uppercase dark:text-stone-400">
+								Provider outcome
+							</p>
+							<p class="mt-2 text-sm font-medium text-stone-950 dark:text-stone-50">
+								{selectedOperationDetail.provider_outcome || "Not established"}
+							</p>
+						</div>
+						<div class="rounded-2xl border border-stone-200/80 p-4 dark:border-stone-800">
+							<p class="text-xs tracking-[0.2em] text-stone-500 uppercase dark:text-stone-400">
+								Compensation
+							</p>
+							<p class="mt-2 text-sm font-medium text-stone-950 dark:text-stone-50">
+								{#if selectedOperationDetail.parent_operation_id}
+									Child of #{selectedOperationDetail.parent_operation_id}
+								{:else if selectedOperationDetail.compensation_operation_id}
+									Operation #{selectedOperationDetail.compensation_operation_id}
+								{:else}
+									Not required
+								{/if}
+							</p>
+						</div>
+					</div>
+
+					{#if selectedOperationGuidance}
+						<div class="rounded-2xl border border-stone-200/80 p-4 dark:border-stone-800">
+							<div class="flex flex-wrap items-center gap-2">
+								<Badge tone={selectedOperationGuidance.tone}
+									>{selectedOperationGuidance.label}</Badge
+								>
+								<p class="text-sm text-stone-600 dark:text-stone-300">
+									{selectedOperationGuidance.description}
+								</p>
+							</div>
+						</div>
+					{/if}
+
+					{#if selectedOperationDetail.problem}
+						<div
+							class="rounded-2xl border border-rose-200 bg-rose-50/70 p-4 dark:border-rose-900/60 dark:bg-rose-950/20"
+						>
+							<p class="text-sm font-medium text-rose-800 dark:text-rose-200">
+								{selectedOperationDetail.problem.title}
+							</p>
+							<p class="mt-1 text-sm text-rose-700 dark:text-rose-300">
+								{selectedOperationDetail.problem.detail}
+							</p>
+						</div>
+					{/if}
+
+					<div class="flex flex-wrap gap-2">
+						{#each selectedOperationDetail.available_actions ?? [] as action (action)}
+							<Button
+								tone="admin"
+								type="button"
+								variant={action === "query_outcome" ? "primary" : "regular"}
+								class="rounded-full"
+								onclick={() => void runOperationAction(action)}
+								disabled={operationActionRunning}
+							>
+								{action === "query_outcome"
+									? "Query provider outcome"
+									: action === "retry_finalize"
+										? "Queue local finalization"
+										: "Queue compensation retry"}
+							</Button>
+						{/each}
+						{#if (selectedOperationDetail.available_actions ?? []).length === 0}
+							<p class="text-sm text-stone-500 dark:text-stone-400">
+								No safe operator action is available in this state.
+							</p>
+						{/if}
+					</div>
+
+					<div>
+						<h3 class="text-sm font-semibold text-stone-950 dark:text-stone-50">
+							Attempt timeline
+						</h3>
+						{#if selectedOperationDetail.attempts.length === 0}
+							<div class="mt-3">
+								<AdminEmptyState>No attempts have been recorded.</AdminEmptyState>
+							</div>
+						{:else}
+							<div class="mt-3 space-y-3 border-l border-stone-200 pl-4 dark:border-stone-800">
+								{#each selectedOperationDetail.attempts as attempt (attempt.id)}
+									<div class="rounded-2xl border border-stone-200/80 p-4 dark:border-stone-800">
+										<div class="flex flex-wrap justify-between gap-2">
+											<p class="text-sm font-medium text-stone-950 dark:text-stone-50">
+												Attempt {attempt.attempt_number} • {attempt.phase}
+											</p>
+											<Badge
+												tone={attempt.outcome === "SUCCEEDED"
+													? "success"
+													: attempt.outcome === "UNKNOWN"
+														? "warning"
+														: "danger"}>{attempt.outcome}</Badge
+											>
+										</div>
+										<p class="mt-2 text-xs text-stone-500 dark:text-stone-400">
+											Provider {attempt.provider_outcome || "not established"} • {formatDateTime(
+												attempt.started_at
+											)}
+										</p>
+										{#if attempt.problem}<p class="mt-2 text-sm text-rose-700 dark:text-rose-300">
+												{attempt.problem.detail}
+											</p>{/if}
+									</div>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
+		</AdminPanel>
+	</div>
+
+	<div class="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+		<AdminPanel
+			title="Actionable Reconciliation Cases"
+			meta={`${providerOverview.reconciliation_cases.open_count} open • ${providerOverview.reconciliation_cases.unassigned_count} unassigned`}
+		>
+			<div class="space-y-3">
+				<div class="flex justify-end">
+					<Button
+						tone="admin"
+						type="button"
+						variant="regular"
+						size="small"
+						class="rounded-full"
+						onclick={() => void loadReconciliationCases()}
+						disabled={casesLoading}>Refresh</Button
+					>
+				</div>
+				{#if reconciliationCases.data.length === 0}
+					<AdminEmptyState>No open reconciliation cases.</AdminEmptyState>
+				{:else}
+					{#each reconciliationCases.data as entry (entry.id)}
+						<AdminListItem
+							as="button"
+							class={`p-4 ${selectedCaseId === entry.id ? "ring-1 ring-stone-900/15 dark:ring-stone-100/15" : ""}`}
+							onclick={() => void selectCase(entry.id)}
+						>
+							<div class="flex flex-wrap justify-between gap-3">
+								<div>
+									<p class="text-sm font-medium text-stone-950 dark:text-stone-50">
+										{entry.reason}
+									</p>
+									<p class="mt-1 text-xs text-stone-500 dark:text-stone-400">
+										{entry.provider_type} • {entry.provider_id} • {entry.operation}
+									</p>
+								</div>
+								<Badge tone="warning">{entry.status}</Badge>
+							</div>
+							<p class="mt-3 text-xs text-stone-500 dark:text-stone-400">
+								Assigned to {entry.assigned_to || "nobody"}
+							</p>
+						</AdminListItem>
+					{/each}
+				{/if}
+			</div>
+		</AdminPanel>
+
+		<AdminPanel
+			title="Case Assignment and Resolution"
+			meta={selectedCaseDetail ? `Case #${selectedCaseDetail.id}` : "Select an open case"}
+		>
+			{#if !selectedCaseDetail}
+				<AdminEmptyState>Select a case to assign or resolve.</AdminEmptyState>
+			{:else}
+				<div class="space-y-4">
+					<div class="flex flex-wrap gap-2">
+						<Badge tone="warning">Provider {selectedCaseDetail.provider_outcome || "UNKNOWN"}</Badge
+						>
+						<Badge tone={operationStatusTone(selectedCaseDetail.operation_status)}
+							>Local {selectedCaseDetail.operation_status}</Badge
+						>
+						<Badge tone="neutral">{selectedCaseDetail.case_type}</Badge>
+					</div>
+					<label class="space-y-2 text-sm text-stone-600 dark:text-stone-300">
+						<span>Assigned operator</span>
+						<TextInput tone="admin" placeholder="ops@example.com" bind:value={caseAssignee} />
+					</label>
+					<Button
+						tone="admin"
+						type="button"
+						variant="regular"
+						class="rounded-full"
+						onclick={() => void saveCaseAssignment()}
+						disabled={caseSaving}>Save assignment</Button
+					>
+					<div class="border-t border-stone-200 pt-4 dark:border-stone-800">
+						<div class="grid gap-3 md:grid-cols-2">
+							<label class="space-y-2 text-sm text-stone-600 dark:text-stone-300">
+								<span>Resolution outcome</span>
+								<Dropdown tone="admin" bind:value={caseResolutionOutcome}>
+									<option value="CONFIRMED_SUCCEEDED">Confirmed succeeded</option>
+									<option value="CONFIRMED_FAILED">Confirmed failed</option>
+									<option value="RETRY_REQUIRED">Retry required</option>
+									<option value="MANUAL_REVIEW">Manual review</option>
+								</Dropdown>
+							</label>
+						</div>
+						<label class="mt-3 block space-y-2 text-sm text-stone-600 dark:text-stone-300">
+							<span>Resolution note</span>
+							<TextArea
+								tone="admin"
+								rows={4}
+								placeholder="Evidence checked and follow-up performed..."
+								bind:value={caseResolutionNote}
+							/>
+						</label>
+						<Button
+							tone="admin"
+							type="button"
+							variant="primary"
+							class="mt-3 rounded-full"
+							onclick={() => void resolveCase()}
+							disabled={caseSaving || !caseResolutionNote.trim()}>Resolve case</Button
+						>
+					</div>
+				</div>
+			{/if}
+		</AdminPanel>
+	</div>
 
 	<AdminMasterDetailLayout columnsClass="xl:grid-cols-[1.02fr_0.98fr]">
 		{#snippet master()}
