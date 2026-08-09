@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { CmsContentBlock } from "$lib/cms";
+	import type { CmsEditableBlock } from "$lib/admin/cms/blocks";
 	import Button from "$lib/components/Button.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import TextArea from "$lib/components/TextArea.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
 
-	type EditableBlock = CmsContentBlock & { editorId: string };
+	type EditableBlock = CmsEditableBlock;
 	type FooterBlock = Extract<EditableBlock, { type: "footer" }>;
 	type PromoBlock = Extract<EditableBlock, { type: "promo_banner" }>;
 	type Region = "announcement_bar" | "sitewide_banner" | "trust_strip" | "footer";

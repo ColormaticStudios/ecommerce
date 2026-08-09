@@ -1,9 +1,17 @@
 <script lang="ts">
+	import { untrack } from "svelte";
 	import type { components } from "$lib/api/generated/openapi";
 	import type { CmsContentBlock } from "$lib/cms";
 	import CmsVisualEditor from "$lib/admin/CmsVisualEditor.svelte";
+	import type { CmsEditableBlock } from "$lib/admin/cms/blocks";
 
-	type EditableBlock = CmsContentBlock & { editorId: string };
+	interface Props {
+		invalidRawBlock?: boolean;
+	}
+
+	let { invalidRawBlock = false }: Props = $props();
+	const initialInvalidRawBlock = untrack(() => invalidRawBlock);
+	type EditableBlock = CmsEditableBlock;
 	type CmsPreviewBlock = components["schemas"]["CmsPreviewBlock"];
 
 	let pageTitle = $state("Launch campaign");
@@ -56,6 +64,22 @@
 			low_stock_message: "Only a few left",
 			out_of_stock_message: "Currently unavailable",
 		},
+		...(initialInvalidRawBlock
+			? [
+					{
+						editorId: "unsupported-1",
+						type: "future_personalization",
+						editorProblem: {
+							status: "unsupported" as const,
+							title: "Unsupported “future_personalization” block",
+							message:
+								"This editor does not support this block type. It will be preserved when you save, but must be removed or supported before publishing.",
+							raw: { type: "future_personalization", segment: "vip" },
+						},
+						editorRaw: { type: "future_personalization", segment: "vip" },
+					} as unknown as EditableBlock,
+				]
+			: []),
 	]);
 
 	const previewBlocks: CmsPreviewBlock[] = [
@@ -77,7 +101,7 @@
 	bind:pageTitle
 	pagePath="/launch"
 	hasUnsavedChanges={true}
-	canPublish={true}
+	canPublish={!invalidRawBlock}
 	{previewBlocks}
 	{createBlock}
 	onSave={() => undefined}

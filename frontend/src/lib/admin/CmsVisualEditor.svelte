@@ -3,6 +3,18 @@
 	import type { API } from "$lib/api";
 	import type { components } from "$lib/api/generated/openapi";
 	import { searchAdminProducts } from "$lib/admin/productSearch";
+	import CmsBlockCanvas from "$lib/admin/cms/CmsBlockCanvas.svelte";
+	import CmsBlockLibrary from "$lib/admin/cms/CmsBlockLibrary.svelte";
+	import CmsBlockProblemCard from "$lib/admin/cms/CmsBlockProblemCard.svelte";
+	import { cmsBlockLabel, type CmsBlockLibraryItem } from "$lib/admin/cms/blockCatalog";
+	import type { CmsEditableBlock } from "$lib/admin/cms/blocks";
+	import {
+		cloneCmsBlocks,
+		createCmsEditorHistory,
+		recordCmsEditorHistory,
+		restoreCmsEditorHistory,
+		type CmsEditorHistory,
+	} from "$lib/admin/cms/editorHistory";
 	import { cmsMediaURL, type CmsContentBlock } from "$lib/cms";
 	import type { CategoryModel, ProductModel } from "$lib/models";
 	import Badge from "$lib/components/Badge.svelte";
@@ -11,7 +23,7 @@
 	import NumberInput from "$lib/components/NumberInput.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
 
-	type EditableBlock = CmsContentBlock & { editorId: string };
+	type EditableBlock = CmsEditableBlock;
 	type CmsPreviewBlock = components["schemas"]["CmsPreviewBlock"];
 	type DragSource =
 		| { kind: "block"; id: string }
@@ -72,8 +84,7 @@
 	let dragOffsetY = $state(0);
 	let dragWidth = $state(0);
 	let dragHeight = $state(0);
-	let history = $state<string[]>([]);
-	let historyIndex = $state(-1);
+	let history = $state<CmsEditorHistory>({ entries: [], index: -1 });
 	let uploadingImage = $state(false);
 	let uploadError = $state("");
 	let productSearch = $state("");
@@ -88,45 +99,11 @@
 	let localImagePreviews = $state<Record<string, string>>({});
 	let suppressNextBlockClick = $state(false);
 
-	const libraryBlocks: Array<{
-		type: CmsContentBlock["type"];
-		label: string;
-		icon: string;
-		description: string;
-	}> = [
-		{ type: "hero", label: "Hero", icon: "bi-stars", description: "Headline, media, and CTA" },
-		{ type: "rich_text", label: "Text", icon: "bi-text-paragraph", description: "Editorial copy" },
-		{ type: "image", label: "Image", icon: "bi-image", description: "Single media block" },
-		{ type: "cta", label: "CTA", icon: "bi-cursor", description: "Standalone action" },
-		{ type: "promo_banner", label: "Banner", icon: "bi-megaphone", description: "Site message" },
-		{ type: "product_rail", label: "Products", icon: "bi-grid", description: "Live catalog rail" },
-		{
-			type: "category_tiles",
-			label: "Categories",
-			icon: "bi-collection",
-			description: "Active category tiles",
-		},
-		{
-			type: "promotion_highlight",
-			label: "Promotion",
-			icon: "bi-percent",
-			description: "Campaign callout",
-		},
-		{
-			type: "inventory_message",
-			label: "Inventory",
-			icon: "bi-box-seam",
-			description: "Stock-aware message",
-		},
-		{ type: "testimonial", label: "Review", icon: "bi-chat-quote", description: "Customer proof" },
-		{ type: "social_embed", label: "Social", icon: "bi-play-btn", description: "Allowlisted post" },
-	];
-
 	const selectedBlock = $derived(
 		blocks.find((block) => block.editorId === selectedBlockId) ?? null
 	);
-	const canUndo = $derived(historyIndex > 0);
-	const canRedo = $derived(historyIndex >= 0 && historyIndex < history.length - 1);
+	const canUndo = $derived(history.index > 0);
+	const canRedo = $derived(history.index >= 0 && history.index < history.entries.length - 1);
 	const draggedBlock = $derived.by(() => {
 		const source = dragSource;
 		if (!source) return null;
@@ -156,49 +133,41 @@
 	});
 
 	function blockLabel(block: EditableBlock): string {
-		return block.type.replaceAll("_", " ");
+		return cmsBlockLabel(block.type);
 	}
 
-	function cloneBlocks(value: EditableBlock[]): EditableBlock[] {
-		return JSON.parse(JSON.stringify(value)) as EditableBlock[];
-	}
-
-	function snapshot(value = blocks): string {
-		return JSON.stringify(value);
+	function blockNumber(block: EditableBlock): number {
+		return blocks.findIndex((candidate) => candidate.editorId === block.editorId) + 1;
 	}
 
 	function resetHistory() {
-		history = [snapshot()];
-		historyIndex = 0;
+		history = createCmsEditorHistory(blocks);
 	}
 
 	function recordHistory() {
-		const next = snapshot();
-		if (history[historyIndex] === next) return;
-		history = [...history.slice(0, historyIndex + 1), next];
-		historyIndex = history.length - 1;
+		history = recordCmsEditorHistory(history, blocks);
 	}
 
 	function restore(index: number) {
-		const raw = history[index];
-		if (!raw) return;
-		blocks = JSON.parse(raw) as EditableBlock[];
-		historyIndex = index;
+		const restored = restoreCmsEditorHistory(history, index);
+		if (!restored) return;
+		history = restored.history;
+		blocks = restored.blocks;
 		if (!blocks.some((block) => block.editorId === selectedBlockId)) {
 			selectedBlockId = blocks[0]?.editorId ?? "";
 		}
 	}
 
 	function undo() {
-		if (canUndo) restore(historyIndex - 1);
+		if (canUndo) restore(history.index - 1);
 	}
 
 	function redo() {
-		if (canRedo) restore(historyIndex + 1);
+		if (canRedo) restore(history.index + 1);
 	}
 
 	function commit(nextBlocks: EditableBlock[]) {
-		blocks = cloneBlocks(nextBlocks);
+		blocks = cloneCmsBlocks(nextBlocks);
 		recordHistory();
 		void onRefreshPreview();
 	}
@@ -229,7 +198,7 @@
 		const source = dragSource;
 		if (!source) return;
 		const boundedIndex = Math.max(0, Math.min(targetIndex ?? blocks.length, blocks.length));
-		const next = cloneBlocks(blocks);
+		const next = cloneCmsBlocks(blocks);
 		let block: EditableBlock;
 		let finalIndex = boundedIndex;
 		if (source.kind === "block") {
@@ -238,7 +207,7 @@
 			[block] = next.splice(sourceIndex, 1);
 			if (sourceIndex < finalIndex) finalIndex -= 1;
 		} else {
-			block = cloneBlocks([source.block])[0];
+			block = cloneCmsBlocks([source.block])[0];
 		}
 		next.splice(Math.max(0, finalIndex), 0, block);
 		selectedBlockId = block.editorId;
@@ -272,7 +241,7 @@
 		window.addEventListener("pointercancel", handleBlockPointerCancel, { once: true });
 	}
 
-	function startLibraryPointerDrag(event: PointerEvent, item: (typeof libraryBlocks)[number]) {
+	function startLibraryPointerDrag(event: PointerEvent, item: CmsBlockLibraryItem) {
 		event.preventDefault();
 		event.stopPropagation();
 		const sourceElement = event.currentTarget as HTMLElement;
@@ -606,24 +575,6 @@
 		if (status === "degraded") return "warning";
 		return "neutral";
 	}
-
-	function libraryPreviewClass(type: CmsContentBlock["type"]): string {
-		switch (type) {
-			case "hero":
-				return "h-14 bg-stone-900 dark:bg-stone-100";
-			case "promo_banner":
-			case "promotion_highlight":
-				return "h-10 bg-emerald-600 dark:bg-emerald-400";
-			case "product_rail":
-				return "grid h-14 grid-cols-3 gap-1";
-			case "category_tiles":
-				return "grid h-14 grid-cols-2 gap-1";
-			case "testimonial":
-				return "h-12 border-l-4 border-amber-400 bg-stone-100 dark:bg-stone-800";
-			default:
-				return "h-12 bg-stone-100 dark:bg-stone-800";
-		}
-	}
 </script>
 
 <div
@@ -707,50 +658,7 @@
 			class:opacity-0={sidebarCollapsed}
 		>
 			<div class="space-y-5 p-4">
-				<section>
-					<div class="mb-3 flex items-center justify-between gap-2">
-						<h2 class="text-sm font-semibold">Components</h2>
-					</div>
-					<div class="grid gap-2">
-						{#each libraryBlocks as item (item.type)}
-							<button
-								type="button"
-								class="w-full overflow-hidden rounded-lg border border-stone-200 bg-white text-left text-stone-950 transition hover:border-stone-400 hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-50 dark:hover:border-stone-600 dark:hover:bg-stone-800"
-								onpointerdown={(event) => startLibraryPointerDrag(event, item)}
-							>
-								<div
-									class="border-b border-stone-200 bg-stone-50 p-2 dark:border-stone-800 dark:bg-stone-950"
-								>
-									<div class={libraryPreviewClass(item.type)}>
-										{#if item.type === "product_rail"}
-											<div class="rounded bg-stone-200 dark:bg-stone-700"></div>
-											<div class="rounded bg-stone-300 dark:bg-stone-600"></div>
-											<div class="rounded bg-stone-200 dark:bg-stone-700"></div>
-										{:else if item.type === "category_tiles"}
-											<div class="rounded bg-sky-100 dark:bg-sky-950"></div>
-											<div class="rounded bg-emerald-100 dark:bg-emerald-950"></div>
-										{:else if item.type === "rich_text"}
-											<div class="space-y-1 p-2">
-												<div class="h-1.5 w-3/4 rounded bg-stone-300 dark:bg-stone-600"></div>
-												<div class="h-1.5 w-full rounded bg-stone-200 dark:bg-stone-700"></div>
-												<div class="h-1.5 w-2/3 rounded bg-stone-200 dark:bg-stone-700"></div>
-											</div>
-										{/if}
-									</div>
-								</div>
-								<span class="flex items-start gap-3 p-3">
-									<i class={`bi ${item.icon} mt-0.5 text-stone-600 dark:text-stone-300`}></i>
-									<span class="min-w-0">
-										<span class="block text-sm font-medium">{item.label}</span>
-										<span class="block text-xs leading-5 text-stone-500 dark:text-stone-400">
-											{item.description}
-										</span>
-									</span>
-								</span>
-							</button>
-						{/each}
-					</div>
-				</section>
+				<CmsBlockLibrary onPointerDown={startLibraryPointerDrag} />
 
 				<section class="border-t border-stone-200 pt-4 dark:border-stone-800">
 					<div class="mb-3 flex items-center justify-between gap-2">
@@ -767,14 +675,16 @@
 									<i class="bi bi-trash mr-1"></i>
 									Remove
 								</Button>
-								<Button
-									tone="admin"
-									size="small"
-									onclick={() => addBlock(selectedBlock.type, true)}
-								>
-									<i class="bi bi-copy mr-1"></i>
-									Duplicate type
-								</Button>
+								{#if !selectedBlock.editorProblem}
+									<Button
+										tone="admin"
+										size="small"
+										onclick={() => addBlock(selectedBlock.type, true)}
+									>
+										<i class="bi bi-copy mr-1"></i>
+										Duplicate type
+									</Button>
+								{/if}
 							</div>
 							{#if selectedPreview}
 								<div class="rounded-lg border border-stone-200 p-3 text-sm dark:border-stone-800">
@@ -890,7 +800,17 @@
 											</button>
 										</div>
 									{/if}
-									{@render blockCanvas(block)}
+									<CmsBlockCanvas
+										{block}
+										blockNumber={blockNumber(block)}
+										{selected}
+										{localImagePreviews}
+										inventoryProductName={block.type === "inventory_message"
+											? inventoryProduct(block)?.name
+											: undefined}
+										{focusEditableText}
+										{commitInlineText}
+									/>
 								</section>
 							{/each}
 						</div>
@@ -911,152 +831,28 @@
 			style={dragGhostStyle()}
 			aria-hidden="true"
 		>
-			{@render blockCanvas(draggedBlock)}
+			<CmsBlockCanvas
+				block={draggedBlock}
+				blockNumber={blockNumber(draggedBlock)}
+				{localImagePreviews}
+				inventoryProductName={draggedBlock.type === "inventory_message"
+					? inventoryProduct(draggedBlock)?.name
+					: undefined}
+				{focusEditableText}
+				{commitInlineText}
+			/>
 		</div>
 	{/if}
 </div>
 
-{#snippet editableText(block: EditableBlock, key: string, value: string, className: string)}
-	<span
-		contenteditable={block.editorId === selectedBlockId ? "true" : "false"}
-		role="textbox"
-		aria-readonly={block.editorId === selectedBlockId ? "false" : "true"}
-		tabindex={block.editorId === selectedBlockId ? 0 : undefined}
-		data-empty={value.length === 0 ? "true" : undefined}
-		data-placeholder="Click to edit"
-		class={`${className} cms-inline-text whitespace-pre-wrap`}
-		onpointerdown={(event) => focusEditableText(block, event)}
-		onkeydown={(event) => event.stopPropagation()}
-		onblur={(event) => commitInlineText(block, key, event)}>{value}</span
-	>
-{/snippet}
-
-{#snippet blockCanvas(block: EditableBlock)}
-	{#if block.type === "hero"}
-		<div class="overflow-hidden rounded-md bg-stone-100 dark:bg-stone-800">
-			{#if block.image_media_id}
-				<img src={cmsMediaURL(block.image_media_id)} alt="" class="h-56 w-full object-cover" />
-			{/if}
-			<div class="p-6">
-				<h1 class="max-w-3xl text-3xl font-semibold">
-					{@render editableText(block, "title", block.title, "outline-none")}
-				</h1>
-				<p class="mt-3 max-w-2xl leading-7 text-stone-600 dark:text-stone-300">
-					{@render editableText(block, "subtitle", block.subtitle ?? "", "outline-none")}
-				</p>
-			</div>
-		</div>
-	{:else if block.type === "rich_text"}
-		<p class="max-w-3xl rounded-md px-3 py-4 leading-8 text-stone-700 dark:text-stone-200">
-			{@render editableText(block, "body", block.body, "outline-none")}
-		</p>
-	{:else if block.type === "image"}
-		<figure class="rounded-md">
-			{#if imagePreview(block)}
-				<img
-					src={imagePreview(block)}
-					alt={block.alt ?? ""}
-					class="max-h-96 w-full rounded-md object-cover"
-				/>
-			{:else}
-				<div
-					class="flex h-56 items-center justify-center rounded-md bg-stone-100 text-sm text-stone-500 dark:bg-stone-800"
-				>
-					Image URL not set
-				</div>
-			{/if}
-			{#if block.caption}
-				<figcaption class="mt-2 text-sm text-stone-500">{block.caption}</figcaption>
-			{/if}
-		</figure>
-	{:else if block.type === "cta"}
-		<div class="rounded-md border border-stone-200 p-5 dark:border-stone-800">
-			<p class="mb-4 text-stone-600 dark:text-stone-300">
-				{@render editableText(block, "body", block.body ?? "", "outline-none")}
-			</p>
-			<span class="inline-flex rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white">
-				{@render editableText(block, "label", block.label, "outline-none")}
-			</span>
-		</div>
-	{:else if block.type === "promo_banner" || block.type === "promotion_highlight"}
-		<div class="rounded-md bg-stone-950 p-6 text-white">
-			<h2 class="text-2xl font-semibold">
-				{@render editableText(block, "title", block.title, "outline-none")}
-			</h2>
-			<p class="mt-2 text-stone-200">
-				{@render editableText(block, "body", block.body ?? "", "outline-none")}
-			</p>
-		</div>
-	{:else if block.type === "product_rail"}
-		<div>
-			<h2 class="text-2xl font-semibold">
-				{@render editableText(block, "title", block.title, "outline-none")}
-			</h2>
-			<p class="mt-1 text-sm text-stone-500">
-				{@render editableText(block, "subtitle", block.subtitle ?? "", "outline-none")}
-			</p>
-			<div class="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-				{#each Array.from({ length: Math.min(block.limit || 4, 4) }, (_, productIndex) => productIndex) as productIndex (productIndex)}
-					<div
-						class="aspect-square rounded-md bg-stone-100 p-3 text-xs text-stone-500 dark:bg-stone-800"
-					>
-						Product {productIndex + 1}
-					</div>
-				{/each}
-			</div>
-		</div>
-	{:else if block.type === "category_tiles"}
-		<div>
-			<h2 class="text-2xl font-semibold">
-				{@render editableText(block, "title", block.title, "outline-none")}
-			</h2>
-			<div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-				{#each block.category_slugs.length ? block.category_slugs : ["category"] as slug (slug)}
-					<div class="overflow-hidden rounded-md border border-stone-200 dark:border-stone-800">
-						{#if categoryImagePreview(block, slug)}
-							<img
-								src={categoryImagePreview(block, slug)}
-								alt=""
-								class="aspect-video w-full object-cover"
-							/>
-						{/if}
-						<p class="p-4 font-medium">{slug}</p>
-					</div>
-				{/each}
-			</div>
-		</div>
-	{:else if block.type === "inventory_message"}
-		<div class="rounded-md border border-stone-200 p-4 text-sm dark:border-stone-800">
-			<p class="font-semibold">{inventoryProduct(block)?.name ?? "Select a product"}</p>
-			<p class="mt-1 text-stone-600 dark:text-stone-300">
-				{block.low_stock_message || "Almost gone"}
-			</p>
-		</div>
-	{:else if block.type === "testimonial"}
-		<blockquote class="rounded-md border border-stone-200 p-6 dark:border-stone-800">
-			<p class="text-xl leading-8">
-				{@render editableText(block, "quote", block.quote, "outline-none")}
-			</p>
-			<footer class="mt-4 text-sm font-medium text-stone-600 dark:text-stone-300">
-				{@render editableText(block, "attribution", block.attribution, "outline-none")}
-			</footer>
-		</blockquote>
-	{:else if block.type === "social_embed"}
-		<div class="rounded-md border border-stone-200 p-6 dark:border-stone-800">
-			<p class="text-sm font-semibold">{block.provider}</p>
-			<p class="mt-2 text-lg">{block.title || "Social post"}</p>
-		</div>
-	{:else}
-		<div
-			class="rounded-md border border-dashed border-stone-300 p-6 text-sm text-stone-500 dark:border-stone-700"
-		>
-			{blockLabel(block)}
-		</div>
-	{/if}
-{/snippet}
-
 {#snippet selectedInspector(block: EditableBlock)}
-	{#if block.type === "hero"}
+	{#if block.editorProblem}
+		<CmsBlockProblemCard
+			problem={block.editorProblem}
+			blockNumber={blockNumber(block)}
+			compact={true}
+		/>
+	{:else if block.type === "hero"}
 		<div class="space-y-2 text-sm">
 			<span class="block font-medium">Background image</span>
 			<label
@@ -1618,21 +1414,3 @@
 	</a>
 	<!-- eslint-enable svelte/no-navigation-without-resolve -->
 {/snippet}
-
-<style>
-	.cms-inline-text {
-		display: inline-block;
-		min-width: 1ch;
-		min-height: 1.5em;
-	}
-
-	.cms-inline-text[data-empty="true"]::before {
-		content: attr(data-placeholder);
-		color: rgb(120 113 108);
-		font-style: italic;
-	}
-
-	.cms-inline-text[data-empty="true"]:focus::before {
-		content: "";
-	}
-</style>

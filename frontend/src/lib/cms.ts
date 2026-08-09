@@ -81,12 +81,215 @@ interface CmsLink {
 	url: string;
 }
 
+export interface CmsRejectedContentBlock {
+	index: number;
+	reason: string;
+	value: unknown;
+}
+
+export interface CmsContentBlockDecodeResult {
+	blocks: CmsContentBlock[];
+	rejectedBlocks: CmsRejectedContentBlock[];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isString(value: unknown): value is string {
+	return typeof value === "string";
+}
+
+function isFiniteNumber(value: unknown): value is number {
+	return typeof value === "number" && Number.isFinite(value);
+}
+
+function hasOptional(
+	value: Record<string, unknown>,
+	key: string,
+	predicate: (candidate: unknown) => boolean
+): boolean {
+	return !(key in value) || value[key] === undefined || predicate(value[key]);
+}
+
+function isOneOf<T extends string>(value: unknown, options: readonly T[]): value is T {
+	return typeof value === "string" && options.some((option) => option === value);
+}
+
+function isCmsLink(value: unknown): value is CmsLink {
+	return isRecord(value) && isString(value.label) && isString(value.url);
+}
+
+function isCmsGalleryImage(
+	value: unknown
+): value is { media_id: string; alt?: string; caption?: string } {
+	return (
+		isRecord(value) &&
+		isString(value.media_id) &&
+		hasOptional(value, "alt", isString) &&
+		hasOptional(value, "caption", isString)
+	);
+}
+
+function isCmsFaqItem(value: unknown): value is { question: string; answer: string } {
+	return isRecord(value) && isString(value.question) && isString(value.answer);
+}
+
+function isCmsFooterColumn(value: unknown): value is { title: string; links: CmsLink[] } {
+	return (
+		isRecord(value) &&
+		isString(value.title) &&
+		Array.isArray(value.links) &&
+		value.links.every(isCmsLink)
+	);
+}
+
+function isStringRecord(value: unknown): value is Record<string, string> {
+	return isRecord(value) && Object.values(value).every(isString);
+}
+
+export function isCmsContentBlock(value: unknown): value is CmsContentBlock {
+	if (!isRecord(value) || !isString(value.type)) {
+		return false;
+	}
+
+	switch (value.type) {
+		case "hero":
+			return (
+				isString(value.title) &&
+				hasOptional(value, "subtitle", isString) &&
+				hasOptional(value, "image_media_id", isString) &&
+				hasOptional(value, "primary_cta", isCmsLink)
+			);
+		case "rich_text":
+			return isString(value.body);
+		case "image":
+			return (
+				isString(value.media_id) &&
+				hasOptional(value, "alt", isString) &&
+				hasOptional(value, "caption", isString)
+			);
+		case "gallery":
+			return Array.isArray(value.images) && value.images.every(isCmsGalleryImage);
+		case "video":
+			return isString(value.url) && hasOptional(value, "title", isString);
+		case "faq":
+			return Array.isArray(value.items) && value.items.every(isCmsFaqItem);
+		case "cta":
+			return isString(value.label) && isString(value.url) && hasOptional(value, "body", isString);
+		case "promo_banner":
+			return (
+				isString(value.title) &&
+				hasOptional(value, "body", isString) &&
+				hasOptional(value, "link", isCmsLink)
+			);
+		case "product_rail":
+			return (
+				isString(value.title) &&
+				isOneOf(value.source, ["manual", "newest", "search", "category"]) &&
+				isFiniteNumber(value.limit) &&
+				hasOptional(value, "subtitle", isString) &&
+				hasOptional(
+					value,
+					"product_ids",
+					(candidate) => Array.isArray(candidate) && candidate.every(isFiniteNumber)
+				) &&
+				hasOptional(value, "query", isString) &&
+				hasOptional(value, "category_slug", isString) &&
+				hasOptional(value, "sort", (candidate) =>
+					isOneOf(candidate, ["created_at", "price", "name"])
+				) &&
+				hasOptional(value, "order", (candidate) => isOneOf(candidate, ["asc", "desc"])) &&
+				hasOptional(value, "image_aspect", (candidate) => isOneOf(candidate, ["square", "wide"]))
+			);
+		case "category_tiles":
+			return (
+				isString(value.title) &&
+				Array.isArray(value.category_slugs) &&
+				value.category_slugs.every(isString) &&
+				hasOptional(value, "subtitle", isString) &&
+				hasOptional(value, "category_media_ids", isStringRecord) &&
+				hasOptional(value, "image_aspect", (candidate) => isOneOf(candidate, ["square", "wide"]))
+			);
+		case "promotion_highlight":
+			return (
+				isString(value.title) &&
+				hasOptional(value, "body", isString) &&
+				hasOptional(value, "badge", isString) &&
+				hasOptional(value, "promotion_code", isString) &&
+				hasOptional(value, "campaign_id", isFiniteNumber) &&
+				hasOptional(value, "link", isCmsLink)
+			);
+		case "inventory_message":
+			return (
+				isFiniteNumber(value.product_id) &&
+				hasOptional(value, "low_stock_threshold", isFiniteNumber) &&
+				hasOptional(value, "in_stock_message", isString) &&
+				hasOptional(value, "low_stock_message", isString) &&
+				hasOptional(value, "out_of_stock_message", isString)
+			);
+		case "testimonial":
+			return (
+				isString(value.quote) &&
+				isString(value.attribution) &&
+				hasOptional(value, "rating", isFiniteNumber)
+			);
+		case "social_embed":
+			return (
+				isOneOf(value.provider, ["instagram", "tiktok", "youtube"]) &&
+				isString(value.url) &&
+				hasOptional(value, "title", isString)
+			);
+		case "footer":
+			return (
+				isString(value.brand_name) &&
+				Array.isArray(value.columns) &&
+				value.columns.every(isCmsFooterColumn) &&
+				Array.isArray(value.social_links) &&
+				value.social_links.every(isCmsLink) &&
+				isString(value.copyright) &&
+				isOneOf(value.layout, ["columns", "centered", "minimal"]) &&
+				hasOptional(value, "tagline", isString)
+			);
+		case "custom_html":
+			return isString(value.html);
+		default:
+			return false;
+	}
+}
+
+export function decodeCmsContentBlocks(value: unknown): CmsContentBlockDecodeResult {
+	if (!Array.isArray(value)) {
+		return {
+			blocks: [],
+			rejectedBlocks: [{ index: -1, reason: "CMS blocks must be an array", value }],
+		};
+	}
+
+	const blocks: CmsContentBlock[] = [];
+	const rejectedBlocks: CmsRejectedContentBlock[] = [];
+	value.forEach((candidate, index) => {
+		if (isCmsContentBlock(candidate)) {
+			blocks.push(candidate);
+			return;
+		}
+		const type = isRecord(candidate) && isString(candidate.type) ? candidate.type : "unknown";
+		const reason =
+			type === "unknown"
+				? "CMS block must be an object with a supported type"
+				: `CMS block has an unsupported type or invalid structure: ${type}`;
+		rejectedBlocks.push({ index, reason, value: candidate });
+	});
+	return { blocks, rejectedBlocks };
+}
+
 export interface CmsPageModel {
 	id: number;
 	path: string;
 	title: string;
 	templateKey: string;
 	blocks: CmsContentBlock[];
+	rejectedBlocks?: CmsRejectedContentBlock[];
 	hasUnpublishedDraft: boolean;
 	seo: components["schemas"]["CmsSEOMetadata"] | null;
 	localization: components["schemas"]["CmsResolvedLocalization"] | null;
@@ -119,21 +322,21 @@ export interface CmsGlobalRegionModel {
 	title: string;
 	region: string;
 	blocks: CmsContentBlock[];
+	rejectedBlocks?: CmsRejectedContentBlock[];
 	hasUnpublishedDraft: boolean;
 }
 
 export function parseCmsPage(response: CmsPageResponsePayload, useDraft = false): CmsPageModel {
 	const version =
 		useDraft && response.current_version ? response.current_version : response.published_version;
-	const blocks = Array.isArray(version?.payload.blocks)
-		? (version.payload.blocks as unknown as CmsContentBlock[])
-		: [];
+	const { blocks, rejectedBlocks } = decodeCmsContentBlocks(version?.payload.blocks ?? []);
 	return {
 		id: response.page.id,
 		path: response.page.path,
 		title: response.page.title,
 		templateKey: response.page.template_key,
 		blocks,
+		rejectedBlocks,
 		hasUnpublishedDraft: response.has_unpublished_draft,
 		seo: response.seo ?? null,
 		localization: response.localization ?? null,
@@ -170,15 +373,14 @@ export function parseCmsGlobalRegion(
 ): CmsGlobalRegionModel {
 	const version =
 		useDraft && response.current_version ? response.current_version : response.published_version;
-	const blocks = Array.isArray(version?.payload.blocks)
-		? (version.payload.blocks as unknown as CmsContentBlock[])
-		: [];
+	const { blocks, rejectedBlocks } = decodeCmsContentBlocks(version?.payload.blocks ?? []);
 	return {
 		id: response.region.id,
 		key: response.region.key,
 		title: response.region.title,
 		region: response.region.region,
 		blocks,
+		rejectedBlocks,
 		hasUnpublishedDraft: response.has_unpublished_draft,
 	};
 }

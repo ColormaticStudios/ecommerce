@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/sveltekit";
 import type { ComponentProps } from "svelte";
+import type { CmsContentBlock } from "$lib/cms";
 import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
 import { makeCategory, makeProduct } from "$lib/storybook/factories";
 import { makeRouteLayoutData } from "$lib/storybook/layout";
@@ -131,11 +132,129 @@ function createData(overrides: Partial<CmsPageData> = {}): CmsPageData {
 	};
 }
 
+const allBlockFamilies = [
+	{
+		type: "hero",
+		title: "The complete CMS collection",
+		subtitle: "Every validated public block rendered through the typed dispatcher.",
+		primary_cta: { label: "Explore", url: "/search" },
+	},
+	{ type: "rich_text", body: "Structured editorial copy keeps the collection grounded." },
+	{ type: "image", media_id: "story-image", alt: "CMS collection", caption: "Image block" },
+	{
+		type: "gallery",
+		images: [
+			{ media_id: "story-gallery-one", alt: "Gallery item one", caption: "First view" },
+			{ media_id: "story-gallery-two", alt: "Gallery item two", caption: "Second view" },
+		],
+	},
+	{ type: "video", url: "https://www.youtube.com/embed/dQw4w9WgXcQ", title: "Collection film" },
+	{
+		type: "faq",
+		items: [{ question: "Is every block public?", answer: "Yes, after validation." }],
+	},
+	{ type: "cta", label: "Start shopping", url: "/search", body: "Continue into the catalog." },
+	{
+		type: "promo_banner",
+		title: "Public promotion",
+		body: "Promotion banner content.",
+		link: { label: "View offer", url: "/search" },
+	},
+	{
+		type: "product_rail",
+		title: "Featured products",
+		source: "manual",
+		product_ids: [601],
+		limit: 4,
+		image_aspect: "square",
+	},
+	{
+		type: "category_tiles",
+		title: "Featured categories",
+		category_slugs: ["accessories"],
+		image_aspect: "wide",
+	},
+	{
+		type: "promotion_highlight",
+		title: "Member pricing",
+		badge: "Member offer",
+		promotion_code: "MEMBER15",
+		link: { label: "Learn more", url: "/search" },
+	},
+	{
+		type: "inventory_message",
+		product_id: 601,
+		low_stock_threshold: 5,
+		low_stock_message: "Only a few remain",
+	},
+	{
+		type: "testimonial",
+		quote: "Every section feels intentional.",
+		attribution: "CMS customer",
+		rating: 5,
+	},
+	{
+		type: "social_embed",
+		provider: "youtube",
+		url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+		title: "Behind the collection",
+	},
+	{
+		type: "footer",
+		brand_name: "Colormatic Supply",
+		tagline: "A footer block rendered as validated page content.",
+		columns: [{ title: "Explore", links: [{ label: "Catalog", url: "/search" }] }],
+		social_links: [{ label: "YouTube", url: "https://www.youtube.com" }],
+		copyright: "© 2026 Colormatic Supply",
+		layout: "columns",
+	},
+	{
+		type: "custom_html",
+		html: "<p><strong>Custom HTML</strong> remains isolated in its dedicated renderer.</p>",
+	},
+] satisfies CmsContentBlock[];
+
 export const Default: Story = {
 	render: () =>
 		renderRouteStory({
 			component: CmsPageRoute,
 			componentProps: { data: createData() },
+		}),
+};
+
+export const AllBlockFamilies: Story = {
+	render: () =>
+		renderRouteStory({
+			component: CmsPageRoute,
+			componentProps: {
+				data: createData({
+					page: {
+						...createData().page,
+						id: 3,
+						path: "/cms-blocks",
+						title: "CMS block catalog",
+						blocks: allBlockFamilies,
+					},
+					productRails: {
+						"product_rail:8": [
+							makeProduct({ id: 601, sku: "cms-all-blocks", name: "Studio Carryall" }),
+						],
+					},
+					categoryTiles: {
+						"category_tiles:9": [
+							makeCategory({ id: 401, name: "Accessories", slug: "accessories" }),
+						],
+					},
+					inventoryProducts: {
+						"inventory_message:11": makeProduct({
+							id: 601,
+							sku: "cms-all-blocks",
+							name: "Studio Carryall",
+							stock: 3,
+						}),
+					},
+				}),
+			},
 		}),
 };
 

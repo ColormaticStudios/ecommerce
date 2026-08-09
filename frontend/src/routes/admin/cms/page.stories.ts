@@ -6,6 +6,7 @@ import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
 import { createApiStub, pendingPromise } from "$lib/storybook/api";
 import { renderRouteStory } from "$lib/storybook/render";
 import AdminCmsPage from "./+page.svelte";
+import CmsVisualEditorStory from "./CmsVisualEditorStory.svelte";
 
 type CmsPageResponse = components["schemas"]["CmsPageResponse"];
 type CmsNavigationResponse = components["schemas"]["CmsNavigationResponse"];
@@ -82,6 +83,22 @@ const pageResponse: CmsPageResponse = {
 	current_version: makeVersion(),
 	published_version: makeVersion({ id: 10, version_number: 1 }),
 	has_unpublished_draft: true,
+};
+
+const invalidBlocksPageResponse: CmsPageResponse = {
+	...pageResponse,
+	current_version: makeVersion({
+		payload: {
+			blocks: [
+				{ type: "rich_text", body: "This block remains editable." },
+				{ type: "hero", subtitle: "Missing required title" },
+				{
+					type: "future_personalization",
+					html: '<img src="x" onerror="alert(1)">',
+				},
+			] as unknown as CmsEntryVersion["payload"]["blocks"],
+		},
+	}),
 };
 
 const cleanPublishedPageResponse: CmsPageResponse = {
@@ -382,6 +399,42 @@ export const Loaded: Story = {
 			component: AdminCmsPage,
 			api: createCmsApi(),
 		}),
+};
+
+export const VisualEditorInvalidRawBlock: Story = {
+	render: () =>
+		renderRouteStory({
+			component: CmsVisualEditorStory,
+			componentProps: { invalidRawBlock: true },
+			api: createCmsApi(),
+		}),
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		await expect(
+			await canvas.findByText(/Unsupported “future_personalization” block/)
+		).toBeVisible();
+		await expect(canvas.getByRole("button", { name: "Publish" })).toBeDisabled();
+	},
+};
+
+export const InvalidAndUnsupportedDraftBlocks: Story = {
+	render: () =>
+		renderRouteStory({
+			component: AdminCmsPage,
+			api: createCmsApi([], [], [invalidBlocksPageResponse]),
+		}),
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		await userEvent.click(await canvas.findByRole("button", { name: /shipping/i }));
+		await expect(await canvas.findByText(/Invalid “hero” block/)).toBeVisible();
+		await expect(
+			await canvas.findByText(/Unsupported “future_personalization” block/)
+		).toBeVisible();
+		await expect(canvas.getByRole("button", { name: "Publish" })).toBeDisabled();
+		await userEvent.click(canvas.getAllByText("Inspect preserved raw block")[1]);
+		await expect(await canvas.findByText(/onerror=\\"alert\(1\)\\"/)).toBeVisible();
+		await expect(canvasElement.querySelector('img[src="x"]')).toBeNull();
+	},
 };
 
 export const CleanPublishedPage: Story = {

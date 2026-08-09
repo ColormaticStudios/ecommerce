@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "$lib/api/errors";
+
 const blockPathPattern = /payload\.blocks\[(\d+)\]((?:\.[a-z_]+|\[[^\]]+\])*)\s+(.+)$/i;
 
 const fieldLabels: Record<string, string> = {
@@ -30,14 +32,6 @@ const fieldLabels: Record<string, string> = {
 	link: "link",
 	primary_cta: "primary action",
 };
-
-function rawErrorMessage(error: unknown): string {
-	if (typeof error === "string") return error;
-	if (!error || typeof error !== "object") return "";
-	const candidate = error as { body?: { error?: unknown }; message?: unknown };
-	if (typeof candidate.body?.error === "string") return candidate.body.error;
-	return typeof candidate.message === "string" ? candidate.message : "";
-}
 
 function pathDetails(path: string) {
 	const segments = path.match(/[a-z_]+|\[[^\]]+\]/gi) ?? [];
@@ -88,7 +82,7 @@ function formatBlockError(raw: string): string | null {
 }
 
 export function formatCmsAdminError(error: unknown, fallback: string): string {
-	const raw = rawErrorMessage(error).trim();
+	const raw = getApiErrorMessage(error).trim();
 	if (!raw) return fallback;
 	const blockError = formatBlockError(raw);
 	if (blockError) return blockError;
