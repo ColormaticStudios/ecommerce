@@ -246,7 +246,7 @@
 - `internal/apicontract/openapi.gen.go`
 - `frontend/src/lib/api/generated/openapi.ts`
 3. Add/modify models in `models/` and register migrations in `internal/migrations` (including default-locale backfills from existing fields).
-4. Implement localization services in `internal/services/localization/` and keep handlers in `handlers/` thin.
+4. Implement localization services in `internal/services/localization/` and keep strict endpoints in `internal/httpapi/` thin.
 5. Integrate frontend i18n runtime in `frontend/src/lib/i18n/` and migrate route/component strings incrementally by namespace.
 6. Add admin translation UI flows under `frontend/src/routes/admin`.
 7. Run `make openapi-check`.

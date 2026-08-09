@@ -46,7 +46,7 @@ Use this section order unless there is a strong reason not to:
 ## Architecture Alignment Checklist
 Every roadmap must explicitly map changes to this codebase:
 - API contract: identify `api/openapi.yaml` changes and affected generated handlers.
-- Backend wiring: identify affected `handlers/`, `internal/`, and migration updates in `internal/migrations` (including model registration/backfills inside migration steps).
+- Backend wiring: identify affected strict endpoints in `internal/httpapi/`, domain services in `internal/`, and migration updates in `internal/migrations` (including model registration/backfills inside migration steps).
 - Data model: use existing model conventions (`models.BaseModel`, `models.Money` where relevant).
 - Frontend impact: call out existing fields consumed by `frontend/` and whether changes are additive or breaking.
 - Runtime model: if background work is needed, state where worker lifecycle lives in this repo.

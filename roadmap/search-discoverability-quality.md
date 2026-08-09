@@ -215,7 +215,7 @@
 - `internal/apicontract/openapi.gen.go`
 - `frontend/src/lib/api/generated/openapi.ts`
 3. Add migrations in `internal/migrations` for search config/event tables.
-4. Implement backend services under `internal/search` and keep `handlers/` orchestration-only.
+4. Implement backend services under `internal/search` and keep `internal/httpapi/` orchestration-only.
 5. Integrate storefront/admin frontend changes using generated API types.
 6. Run `make openapi-check`.
 7. Run backend tests with sandbox-safe cache:

@@ -4,7 +4,7 @@
 - There is no first-class outbound communications subsystem for transactional email/SMS.
 - The API and admin UI do not expose communication delivery history or failure reporting.
 - There is no background worker pipeline for outbound send retries or dead-letter handling.
-- Existing backend domain services live in `internal/services/*` and handlers are under `handlers/`.
+- Existing backend domain services live in `internal/services/*` and the generated-strict HTTP boundary is under `internal/httpapi/`.
 
 ## Goals
 - Add transactional email and SMS support with safe default behavior:
@@ -200,7 +200,7 @@
 - outbox persistence,
 - retry scheduler,
 - provider dispatch.
-3. Keep transport/API handlers thin by delegating to service layer from `handlers/`.
+3. Keep strict transport endpoints thin by delegating from `internal/httpapi/` to the service layer.
 4. Add admin API handlers and wire generated server routes.
 5. Add admin UI reporting tab/components in `frontend/src/routes/admin` and `frontend/src/lib/admin`.
 6. Run formatters on touched files:

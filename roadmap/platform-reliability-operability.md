@@ -226,7 +226,7 @@
 1. Add models in `models/` and migrations in `internal/migrations`.
 2. Implement shared runtime in `internal/jobs` and wire startup/shutdown in `main.go`.
 3. Migrate first adopter (`internal/media`) to durable jobs.
-4. Add thin admin ops handlers in `handlers/` and delegate orchestration to services in `internal/services/`.
+4. Add thin generated-strict admin ops endpoints in `internal/httpapi/` and delegate orchestration to services in `internal/services/`.
 5. Add admin operability UI surfaces in `frontend/src/routes/admin` and `frontend/src/lib/admin`.
 6. Add scripts + `Makefile` targets for backup/restore workflows.
 7. Run formatters on touched code files:

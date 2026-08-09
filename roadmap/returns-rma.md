@@ -215,7 +215,7 @@
 - `internal/apicontract/openapi.gen.go`
 - `frontend/src/lib/api/generated/openapi.ts`
 3. Add/reshape models in `models/` and register migration steps in `internal/migrations`.
-4. Implement return orchestration in `internal/services/returns`; keep `handlers/` thin.
+4. Implement return orchestration in `internal/services/returns`; keep `internal/httpapi/` endpoints thin.
 5. Add/extend settings plumbing for `returns.enabled` in storefront config.
 6. Run `make openapi-check`.
 7. Run backend tests with sandbox cache:

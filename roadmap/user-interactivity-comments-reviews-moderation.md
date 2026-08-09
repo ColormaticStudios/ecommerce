@@ -58,7 +58,7 @@
   - `internal/services/reviews/`
   - `internal/services/comments/`
   - `internal/services/moderation/`
-- Thin handlers in `handlers/` that delegate to service methods.
+- Thin generated-strict endpoints in `internal/httpapi/` that delegate to service methods.
 - Base policy settings model for:
   - guest posting enablement,
   - profanity rules,
@@ -265,11 +265,11 @@
 - `frontend/src/lib/api/generated/openapi.ts`
 3. Add/extend models in `models/` and wire migrations in `internal/migrations` (including backfills for rating aggregates if needed).
 4. Implement service logic under `internal/services/reviews`, `internal/services/comments`, and `internal/services/moderation`.
-5. Keep handlers in `handlers/` orchestration-only and reuse generated OpenAPI types.
+5. Keep endpoints in `internal/httpapi/` orchestration-only and reuse generated OpenAPI types.
 6. Implement frontend UX in product and admin routes/components using generated client types.
 7. Run `make openapi-check`.
 8. Run backend tests with sandbox-safe cache:
-- `GOCACHE=/tmp/go-build go test ./handlers/...`
+- `GOCACHE=/tmp/go-build go test ./internal/httpapi/...`
 - `GOCACHE=/tmp/go-build go test ./internal/services/...`
 9. Run frontend checks/tests for touched areas:
 - `cd frontend && bun run check`

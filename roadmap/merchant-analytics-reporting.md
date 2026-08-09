@@ -99,7 +99,7 @@
 ### Deliverables
 - Funnel event schema:
 - `session_started`, `cart_viewed`, `checkout_started`, `shipping_submitted`, `payment_submitted`, `order_placed`, `payment_failed`, `abandoned`.
-- Ingestion from API handlers/services into analytics event writes (async buffered path preferred).
+- Ingestion from strict API endpoints/domain services into analytics event writes (async buffered path preferred).
 - Funnel reporting endpoints:
 - Step conversion matrix.
 - Drop-off by step/reason/channel/device.
@@ -208,7 +208,7 @@
 - `internal/apicontract/openapi.gen.go`
 - `frontend/src/lib/api/generated/openapi.ts`
 3. Add/modify migrations in `internal/migrations` for analytics/reporting tables and indexes.
-4. Implement service logic in `internal/analytics` and keep `handlers/` orchestration-only.
+4. Implement service logic in `internal/analytics` and keep `internal/httpapi/` orchestration-only.
 5. Implement frontend report pages/components in `frontend/src/routes/...` using generated types.
 6. Run `make openapi-check`.
 7. Run backend tests with sandbox-safe cache:

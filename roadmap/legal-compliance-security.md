@@ -280,7 +280,7 @@
 - `internal/apicontract/openapi.gen.go`
 - `frontend/src/lib/api/generated/openapi.ts`
 3. Implement/adjust models and migrations under `models/` and `internal/migrations/`.
-4. Keep handlers thin in `handlers/`; put policy, audit, privacy, and evidence logic in `internal/` services.
+4. Keep strict endpoints thin in `internal/httpapi/`; put policy, audit, privacy, and evidence logic in `internal/` services.
 5. Add backend tests (`GOCACHE=/tmp/go-build go test ./...`) for touched packages.
 6. Add frontend checks for touched UI workflows (`cd frontend && bun run check && bun run lint`).
 7. Run `make openapi-check` before merge.

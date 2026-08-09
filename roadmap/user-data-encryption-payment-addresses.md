@@ -98,7 +98,7 @@
 - `models/saved_addresses` migration to store encrypted fields for:
   - `full_name`, `line1`, `line2`, `city`, `state`, `postal_code`, `phone`.
 - Optional blind index columns for limited exact-match operations (for example normalized postal code hash), if required.
-- Handler/service refactor in `handlers/account_data.go` + `internal/services/...` so handlers stay thin and crypto logic is centralized.
+- Strict endpoint/service refactor in `internal/httpapi/` + `internal/services/...` so transport endpoints stay thin and crypto logic is centralized.
 - Backfill job to encrypt existing plaintext addresses and clear plaintext columns in one cut.
 
 ### Done Criteria
@@ -225,7 +225,7 @@
 - `internal/apicontract/openapi.gen.go`
 - `frontend/src/lib/api/generated/openapi.ts`
 3. Add migrations in `internal/migrations/` and update models in `models/`.
-4. Implement encryption/key logic in `internal/` services; keep `handlers/` thin.
+4. Implement encryption/key logic in `internal/` services; keep `internal/httpapi/` endpoints thin.
 5. Refactor payment/address handlers to consume service layer abstractions.
 6. Run formatter on touched files (`gofmt -w <file>`).
 7. Run backend tests for touched packages (`GOCACHE=/tmp/go-build go test ./...`).

@@ -267,8 +267,8 @@
 - `frontend/src/lib/api/generated/openapi.ts`
 3. Add/reshape models in `models/` following existing conventions (`BaseModel`, `Money` where relevant).
 4. Add migration steps in `internal/migrations` including backfills from legacy order statuses.
-5. Implement fulfillment services in `internal/services/fulfillment`; keep `handlers/` thin.
-6. Update `handlers/orders_*` to read from fulfillment projections rather than coarse `orders.status` shipping semantics.
+5. Implement fulfillment services in `internal/services/fulfillment`; keep `internal/httpapi/` endpoints thin.
+6. Update the strict order endpoints in `internal/httpapi/` to read from fulfillment projections rather than coarse `orders.status` shipping semantics.
 7. Run `make openapi-check`.
 8. Run backend tests with sandbox cache:
 - `GOCACHE=/tmp/go-build go test ./...`
