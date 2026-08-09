@@ -302,7 +302,13 @@ func (r *Repository) ListProducts(filters ProductListFilters) (ProductListResult
 
 	offset := (filters.Page - 1) * filters.Limit
 	var products []models.Product
-	if err := query.Preload("Categories").Offset(offset).Limit(filters.Limit).Find(&products).Error; err != nil {
+	productQuery := query.Preload("Brand").Preload("Categories")
+	if filters.Preview {
+		productQuery = productQuery.Preload("Variants")
+	} else {
+		productQuery = productQuery.Preload("Variants", "is_published = ?", true)
+	}
+	if err := productQuery.Offset(offset).Limit(filters.Limit).Find(&products).Error; err != nil {
 		return ProductListResult{}, err
 	}
 
@@ -311,7 +317,7 @@ func (r *Repository) ListProducts(filters ProductListFilters) (ProductListResult
 
 func (r *Repository) GetPublicProductByID(id string) (models.Product, error) {
 	var product models.Product
-	if err := r.db.Preload("Related", "is_published = ?", true).Preload("Categories").
+	if err := r.db.Preload("Brand").Preload("Related", "is_published = ?", true).Preload("Categories").Preload("Variants", "is_published = ?", true).
 		Where("products.is_published = ?", true).
 		Where(publicCatalogVariantVisibilityClause).
 		First(&product, id).Error; err != nil {
@@ -322,7 +328,7 @@ func (r *Repository) GetPublicProductByID(id string) (models.Product, error) {
 
 func (r *Repository) GetPreviewProductByID(id string) (models.Product, error) {
 	var product models.Product
-	if err := r.db.Preload("Related").Preload("Categories").First(&product, id).Error; err != nil {
+	if err := r.db.Preload("Brand").Preload("Related").Preload("Categories").Preload("Variants").First(&product, id).Error; err != nil {
 		return models.Product{}, err
 	}
 	return product, nil

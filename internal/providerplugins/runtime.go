@@ -395,26 +395,47 @@ func (r mergedTaxRegistry) Provider(providerID string) (taxservice.TaxProvider, 
 }
 
 func (p paymentProvider) Authorize(ctx context.Context, req paymentservice.AuthorizeRequest) (paymentservice.ProviderOperationResult, error) {
+	if err := requireOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return paymentservice.ProviderOperationResult{}, err
+	}
 	var response paymentservice.ProviderOperationResult
 	err := p.runner.run(ctx, "payment.authorize", req, &response)
 	return response, err
 }
 
 func (p paymentProvider) Capture(ctx context.Context, req paymentservice.CaptureRequest) (paymentservice.ProviderOperationResult, error) {
+	if err := requireOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return paymentservice.ProviderOperationResult{}, err
+	}
 	var response paymentservice.ProviderOperationResult
 	err := p.runner.run(ctx, "payment.capture", req, &response)
 	return response, err
 }
 
 func (p paymentProvider) Void(ctx context.Context, req paymentservice.VoidRequest) (paymentservice.ProviderOperationResult, error) {
+	if err := requireOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return paymentservice.ProviderOperationResult{}, err
+	}
 	var response paymentservice.ProviderOperationResult
 	err := p.runner.run(ctx, "payment.void", req, &response)
 	return response, err
 }
 
 func (p paymentProvider) Refund(ctx context.Context, req paymentservice.RefundRequest) (paymentservice.ProviderOperationResult, error) {
+	if err := requireOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return paymentservice.ProviderOperationResult{}, err
+	}
 	var response paymentservice.ProviderOperationResult
 	err := p.runner.run(ctx, "payment.refund", req, &response)
+	return response, err
+}
+
+func (p paymentProvider) GetOutcomeByOperationKey(ctx context.Context, operationKey string) (paymentservice.ProviderOperationOutcome, error) {
+	if strings.TrimSpace(operationKey) == "" {
+		return paymentservice.ProviderOperationOutcome{}, fmt.Errorf("operation key is required")
+	}
+	var response paymentservice.ProviderOperationOutcome
+	err := p.runner.run(ctx, "payment.get_operation", map[string]string{"operation_key": operationKey}, &response)
 	return response, err
 }
 
@@ -462,8 +483,29 @@ func (p shippingProvider) QuoteRates(ctx context.Context, req shippingservice.Qu
 }
 
 func (p shippingProvider) BuyLabel(ctx context.Context, req shippingservice.BuyLabelRequest) (shippingservice.ProviderShipment, error) {
+	if err := requireOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return shippingservice.ProviderShipment{}, err
+	}
 	var response shippingservice.ProviderShipment
 	err := p.runner.run(ctx, "shipping.buy_label", req, &response)
+	return response, err
+}
+
+func (p shippingProvider) CancelLabel(ctx context.Context, req shippingservice.CancelLabelRequest) (shippingservice.ProviderOperationOutcome, error) {
+	if err := requireOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return shippingservice.ProviderOperationOutcome{}, err
+	}
+	var response shippingservice.ProviderOperationOutcome
+	err := p.runner.run(ctx, "shipping.cancel_label", req, &response)
+	return response, err
+}
+
+func (p shippingProvider) GetOutcomeByOperationKey(ctx context.Context, operationKey string) (shippingservice.ProviderOperationOutcome, error) {
+	if strings.TrimSpace(operationKey) == "" {
+		return shippingservice.ProviderOperationOutcome{}, fmt.Errorf("operation key is required")
+	}
+	var response shippingservice.ProviderOperationOutcome
+	err := p.runner.run(ctx, "shipping.get_operation", map[string]string{"operation_key": operationKey}, &response)
 	return response, err
 }
 
@@ -511,8 +553,29 @@ func (p taxProvider) QuoteTax(ctx context.Context, req taxservice.QuoteTaxReques
 }
 
 func (p taxProvider) FinalizeTax(ctx context.Context, req taxservice.FinalizeTaxRequest) (taxservice.TaxFinalized, error) {
+	if err := requireOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return taxservice.TaxFinalized{}, err
+	}
 	var response taxservice.TaxFinalized
 	err := p.runner.run(ctx, "tax.finalize_tax", req, &response)
+	return response, err
+}
+
+func (p taxProvider) CancelFinalization(ctx context.Context, req taxservice.CancelFinalizationRequest) (taxservice.ProviderOperationOutcome, error) {
+	if err := requireOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return taxservice.ProviderOperationOutcome{}, err
+	}
+	var response taxservice.ProviderOperationOutcome
+	err := p.runner.run(ctx, "tax.cancel_finalization", req, &response)
+	return response, err
+}
+
+func (p taxProvider) GetOutcomeByOperationKey(ctx context.Context, operationKey string) (taxservice.ProviderOperationOutcome, error) {
+	if strings.TrimSpace(operationKey) == "" {
+		return taxservice.ProviderOperationOutcome{}, fmt.Errorf("operation key is required")
+	}
+	var response taxservice.ProviderOperationOutcome
+	err := p.runner.run(ctx, "tax.get_operation", map[string]string{"operation_key": operationKey}, &response)
 	return response, err
 }
 
@@ -524,6 +587,16 @@ func (p taxProvider) ExportReport(ctx context.Context, req taxservice.ExportRepo
 		return nil, err
 	}
 	return io.NopCloser(strings.NewReader(response.Content)), nil
+}
+
+func requireOperationIdentity(idempotencyKey, operationKey string) error {
+	if strings.TrimSpace(idempotencyKey) == "" {
+		return fmt.Errorf("idempotency key is required")
+	}
+	if strings.TrimSpace(operationKey) == "" {
+		return fmt.Errorf("operation key is required")
+	}
+	return nil
 }
 
 func (r externalRunner) run(ctx context.Context, action string, input any, into any) error {

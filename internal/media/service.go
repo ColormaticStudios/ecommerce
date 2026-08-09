@@ -15,11 +15,12 @@ const (
 	StatusReady      = "ready"
 	StatusFailed     = "failed"
 
-	OwnerTypeProduct        = "product"
-	OwnerTypeUser           = "user"
-	OwnerTypeBrand          = "brand"
-	OwnerTypeCMSEntry       = "cms_entry"
-	OwnerTypeCMSPageVariant = "cms_page_variant"
+	OwnerTypeProduct           = "product"
+	OwnerTypeUser              = "user"
+	OwnerTypeBrand             = "brand"
+	OwnerTypeCMSEntry          = "cms_entry"
+	OwnerTypeCMSPageVariant    = "cms_page_variant"
+	OwnerTypeCMSContentVariant = "cms_content_variant"
 
 	RoleProductImage      = "product_image"
 	RoleProductDraftImage = "product_draft_image"

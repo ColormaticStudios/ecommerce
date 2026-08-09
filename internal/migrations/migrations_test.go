@@ -566,7 +566,7 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, brandLogoMediaReferencesVersion, status.LatestAppliedVersion)
+	require.Equal(t, providerOperationBackfillVersion, status.LatestAppliedVersion)
 	require.Equal(t, 3, status.PendingCount)
 }
 
@@ -585,6 +585,53 @@ func TestRunAppliesAllOrderedMigrationsAndReplayIsIdempotent(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, LatestVersion(), status.LatestAppliedVersion)
 	require.Equal(t, 0, status.PendingCount)
+}
+
+func TestProviderOperationLedgerMigrationCreatesTablesAndIndexes(t *testing.T) {
+	db := newTestDB(t)
+	migrationIndex := slices.IndexFunc(orderedMigrations, func(migration Migration) bool {
+		return migration.Version == providerOperationLedgerVersion
+	})
+	require.Greater(t, migrationIndex, 0)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex]))
+	require.False(t, db.Migrator().HasTable(&models.ProviderOperation{}))
+
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex+1]))
+	for _, model := range []any{
+		&models.ProviderOperation{},
+		&models.ProviderOperationAttempt{},
+		&models.ProviderReconciliationCase{},
+	} {
+		require.Truef(t, db.Migrator().HasTable(model), "missing table for %T", model)
+	}
+	for _, column := range []string{
+		"operation_key", "parent_operation_id", "provider_outcome", "request_json", "result_json",
+		"lease_owner", "lease_expires_at", "version", "next_attempt_at", "completed_at",
+	} {
+		require.True(t, db.Migrator().HasColumn(&models.ProviderOperation{}, column), column)
+	}
+	for _, column := range []string{"phase", "provider_outcome", "operation_key", "result_json", "retryable"} {
+		require.True(t, db.Migrator().HasColumn(&models.ProviderOperationAttempt{}, column), column)
+	}
+	for _, column := range []string{"case_type", "provider_outcome", "operation_key", "resolution_json", "next_attempt_at"} {
+		require.True(t, db.Migrator().HasColumn(&models.ProviderReconciliationCase{}, column), column)
+	}
+	for _, index := range []struct {
+		model any
+		name  string
+	}{
+		{model: &models.ProviderOperation{}, name: "idx_provider_operations_idempotency"},
+		{model: &models.ProviderOperation{}, name: "idx_provider_operations_operation_key"},
+		{model: &models.ProviderOperationAttempt{}, name: "idx_provider_operation_attempt_number"},
+		{model: &models.ProviderReconciliationCase{}, name: "idx_provider_reconciliation_cases_open"},
+	} {
+		require.True(t, db.Migrator().HasIndex(index.model, index.name), index.name)
+	}
+
+	migration := orderedMigrations[migrationIndex]
+	require.Equal(t, TransactionModeRequired, migration.TransactionMode)
+	require.Contains(t, migration.Tags, "expand")
+	require.NotEmpty(t, migration.PostChecks)
 }
 
 func TestProductAttributeEnumsMigrationBackfillsExistingValues(t *testing.T) {

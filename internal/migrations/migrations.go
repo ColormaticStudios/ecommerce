@@ -107,6 +107,8 @@ const ecommerceCMSLegacyRemovalVersion = "2026062106_remove_legacy_storefront"
 const ecommerceCMSFooterBackfillVersion = "2026062107_cms_footer_empty_backfill"
 const brandLogoMediaReferencesVersion = "2026071001_brand_logo_media_references"
 const brandLogoMediaContractVersion = "2026071002_remove_brand_logo_media_id"
+const providerOperationLedgerVersion = "2026073101_provider_operation_ledger"
+const providerOperationBackfillVersion = "2026073102_backfill_provider_operations"
 const migrationStepAlertThresholdEnvVar = "MIGRATIONS_STEP_ALERT_THRESHOLD_MS"
 
 var versionPattern = regexp.MustCompile(`^\d{10}_[a-z0-9_]+$`)
@@ -1677,6 +1679,547 @@ var orderedMigrations = []Migration{
 			return tx.Exec(`ALTER TABLE brands DROP COLUMN logo_media_id`).Error
 		},
 	},
+	{
+		Version:         providerOperationLedgerVersion,
+		Name:            "add provider operation ledger",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "providers", "ops"},
+		PostChecks: []PostCheck{{
+			Name: "provider_operation_ledger_structures_exist",
+			Check: func(tx *gorm.DB) error {
+				for _, model := range []any{
+					&models.ProviderOperation{},
+					&models.ProviderOperationAttempt{},
+					&models.ProviderReconciliationCase{},
+				} {
+					if !tx.Migrator().HasTable(model) {
+						return fmt.Errorf("missing table for %T", model)
+					}
+				}
+				for _, index := range []struct {
+					model any
+					name  string
+				}{
+					{model: &models.ProviderOperation{}, name: "idx_provider_operations_idempotency"},
+					{model: &models.ProviderOperation{}, name: "idx_provider_operations_operation_key"},
+					{model: &models.ProviderOperationAttempt{}, name: "idx_provider_operation_attempt_number"},
+					{model: &models.ProviderReconciliationCase{}, name: "idx_provider_reconciliation_cases_open"},
+				} {
+					if !tx.Migrator().HasIndex(index.model, index.name) {
+						return fmt.Errorf("missing index %s", index.name)
+					}
+				}
+				return nil
+			},
+		}},
+		Up: func(tx *gorm.DB) error {
+			for _, model := range []any{
+				&models.ProviderOperation{},
+				&models.ProviderOperationAttempt{},
+				&models.ProviderReconciliationCase{},
+			} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			for _, index := range []struct {
+				model any
+				name  string
+			}{
+				{model: &models.ProviderOperation{}, name: "idx_provider_operations_idempotency"},
+				{model: &models.ProviderOperation{}, name: "idx_provider_operations_operation_key"},
+				{model: &models.ProviderOperationAttempt{}, name: "idx_provider_operation_attempt_number"},
+				{model: &models.ProviderReconciliationCase{}, name: "idx_provider_reconciliation_cases_open"},
+			} {
+				if err := ops.CreateIndexIfNotExists(tx, index.model, index.name); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         providerOperationBackfillVersion,
+		Name:            "backfill historical provider operations",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"backfill", "providers", "ops"},
+		PostChecks: []PostCheck{{
+			Name:  "historical_provider_operations_backfilled",
+			Check: providerOperationBackfillReady,
+		}},
+		Up: backfillProviderOperations,
+	},
+}
+
+type legacyProviderPaymentTransaction struct {
+	ID                  uint
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
+	PaymentIntentID     uint
+	Operation           string
+	ProviderTxnID       string
+	IdempotencyKey      string
+	Status              string
+	RawResponseRedacted string
+	Provider            string
+}
+
+type legacyProviderShipment struct {
+	ID                 uint
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+	OrderID            uint
+	Provider           string
+	ProviderShipmentID string
+	Status             string
+	PurchasedAt        *time.Time
+	FinalizedAt        *time.Time
+}
+
+type legacyProviderTaxLine struct {
+	OrderID       uint
+	SnapshotID    uint
+	TaxProviderID string
+	FinalizedAt   time.Time
+}
+
+type legacyProviderTaxFinalization struct {
+	OrderID          uint
+	SnapshotID       uint
+	TaxProviderID    string
+	FirstFinalizedAt time.Time
+	LastFinalizedAt  time.Time
+}
+
+type legacyProviderCallAudit struct {
+	ID                      uint
+	CreatedAt               time.Time
+	UpdatedAt               time.Time
+	ProviderType            string
+	ProviderID              string
+	Environment             string
+	Operation               string
+	CorrelationID           string
+	IdempotencyKey          string
+	Status                  string
+	RequestPayloadRedacted  string
+	ResponsePayloadRedacted string
+	ErrorMessage            string
+}
+
+func backfillProviderOperations(tx *gorm.DB) error {
+	if err := backfillPaymentProviderOperations(tx); err != nil {
+		return err
+	}
+	if err := backfillShippingProviderOperations(tx); err != nil {
+		return err
+	}
+	if err := backfillTaxProviderOperations(tx); err != nil {
+		return err
+	}
+	return backfillUnresolvedProviderAudits(tx)
+}
+
+func backfillPaymentProviderOperations(tx *gorm.DB) error {
+	if !tx.Migrator().HasTable("payment_transactions") || !tx.Migrator().HasTable("payment_intents") {
+		return nil
+	}
+	var rows []legacyProviderPaymentTransaction
+	if err := tx.Session(&gorm.Session{NewDB: true}).Table("payment_transactions").
+		Select("payment_transactions.id, payment_transactions.created_at, payment_transactions.updated_at, payment_transactions.payment_intent_id, payment_transactions.operation, payment_transactions.provider_txn_id, payment_transactions.idempotency_key, payment_transactions.status, payment_transactions.raw_response_redacted, payment_intents.provider").
+		Joins("JOIN payment_intents ON payment_intents.id = payment_transactions.payment_intent_id").
+		Find(&rows).Error; err != nil {
+		return err
+	}
+	for _, row := range rows {
+		key := fmt.Sprintf("legacy:payment_transaction:%d", row.ID)
+		environment := historicalProviderEnvironment(tx, models.ProviderTypePayment, row.Provider, row.Operation, row.IdempotencyKey)
+		status, outcome, uncertain := historicalPaymentStatus(row.Status)
+		metadata := mustJSON(map[string]any{"source": "payment_transactions", "source_id": row.ID, "original_idempotency_key": row.IdempotencyKey})
+		operation := models.ProviderOperation{
+			CreatedAt: row.CreatedAt, UpdatedAt: row.UpdatedAt, OperationKey: key,
+			ProviderType: models.ProviderTypePayment, ProviderID: strings.TrimSpace(row.Provider), Environment: environment,
+			Operation: strings.ToLower(strings.TrimSpace(row.Operation)), IdempotencyKey: key,
+			RequestFingerprint: historicalProviderFingerprint(key), EntityType: "payment_intent", EntityID: row.PaymentIntentID,
+			Status: status, ProviderOutcome: outcome, ProviderReference: strings.TrimSpace(row.ProviderTxnID),
+			RequestJSON: "{}", ResultJSON: historicalResultJSON(row.RawResponseRedacted), MetadataJSON: metadata, Version: 1,
+		}
+		if !uncertain {
+			completedAt := row.UpdatedAt
+			operation.CompletedAt = &completedAt
+		}
+		attemptOutcome := historicalAttemptOutcome(outcome)
+		if err := createHistoricalProviderOperation(tx, operation, models.ProviderOperationAttempt{
+			CreatedAt: row.CreatedAt, UpdatedAt: row.UpdatedAt, AttemptNumber: 1, Phase: "provider", Outcome: attemptOutcome,
+			ProviderOutcome: outcome, ProviderReference: strings.TrimSpace(row.ProviderTxnID), OperationKey: key,
+			ResponsePayloadRedacted: row.RawResponseRedacted, StartedAt: row.CreatedAt, FinishedAt: row.UpdatedAt,
+		}, uncertain, "Historical payment transaction has an uncertain provider outcome."); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func backfillShippingProviderOperations(tx *gorm.DB) error {
+	if !tx.Migrator().HasTable("shipments") {
+		return nil
+	}
+	var rows []legacyProviderShipment
+	if err := tx.Session(&gorm.Session{NewDB: true}).Table("shipments").
+		Select("id, created_at, updated_at, order_id, provider, provider_shipment_id, status, purchased_at, finalized_at").
+		Where("provider_shipment_id <> '' OR purchased_at IS NOT NULL OR finalized_at IS NOT NULL").
+		Find(&rows).Error; err != nil {
+		return err
+	}
+	for _, row := range rows {
+		key := fmt.Sprintf("legacy:shipment:%d", row.ID)
+		completedAt := row.UpdatedAt
+		if row.FinalizedAt != nil {
+			completedAt = *row.FinalizedAt
+		} else if row.PurchasedAt != nil {
+			completedAt = *row.PurchasedAt
+		}
+		operation := models.ProviderOperation{
+			CreatedAt: row.CreatedAt, UpdatedAt: row.UpdatedAt, OperationKey: key,
+			ProviderType: models.ProviderTypeShipping, ProviderID: strings.TrimSpace(row.Provider),
+			Environment: historicalProviderEnvironment(tx, models.ProviderTypeShipping, row.Provider, "buy_label", ""),
+			Operation:   "buy_label", IdempotencyKey: key, RequestFingerprint: historicalProviderFingerprint(key),
+			EntityType: "shipment", EntityID: row.ID, Status: models.ProviderOperationStatusCompleted,
+			ProviderOutcome: models.ProviderOutcomeSucceeded, ProviderReference: strings.TrimSpace(row.ProviderShipmentID),
+			RequestJSON: "{}", ResultJSON: "{}", MetadataJSON: mustJSON(map[string]any{"source": "shipments", "source_id": row.ID, "order_id": row.OrderID, "historical_status": row.Status}),
+			Version: 1, CompletedAt: &completedAt,
+		}
+		if err := createHistoricalProviderOperation(tx, operation, models.ProviderOperationAttempt{
+			CreatedAt: row.CreatedAt, UpdatedAt: row.UpdatedAt, AttemptNumber: 1, Phase: "provider",
+			Outcome: models.ProviderOperationAttemptOutcomeSucceeded, ProviderOutcome: models.ProviderOutcomeSucceeded,
+			ProviderReference: strings.TrimSpace(row.ProviderShipmentID), OperationKey: key, StartedAt: row.CreatedAt, FinishedAt: completedAt,
+		}, false, ""); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func backfillTaxProviderOperations(tx *gorm.DB) error {
+	if !tx.Migrator().HasTable("order_tax_lines") {
+		return nil
+	}
+	rows, err := historicalTaxFinalizations(tx)
+	if err != nil {
+		return err
+	}
+	for _, row := range rows {
+		key := fmt.Sprintf("legacy:tax_finalization:%d:%d:%s", row.OrderID, row.SnapshotID, historicalKeyPart(row.TaxProviderID))
+		operation := models.ProviderOperation{
+			CreatedAt: row.FirstFinalizedAt, UpdatedAt: row.LastFinalizedAt, OperationKey: key,
+			ProviderType: models.ProviderTypeTax, ProviderID: strings.TrimSpace(row.TaxProviderID),
+			Environment: historicalProviderEnvironment(tx, models.ProviderTypeTax, row.TaxProviderID, "finalize_tax", ""),
+			Operation:   "finalize_tax", IdempotencyKey: key, RequestFingerprint: historicalProviderFingerprint(key),
+			EntityType: "order", EntityID: row.OrderID, Status: models.ProviderOperationStatusCompleted,
+			ProviderOutcome: models.ProviderOutcomeSucceeded, RequestJSON: "{}", ResultJSON: "{}",
+			MetadataJSON: mustJSON(map[string]any{"source": "order_tax_lines", "order_id": row.OrderID, "snapshot_id": row.SnapshotID, "provider_id": row.TaxProviderID}),
+			Version:      1, CompletedAt: &row.LastFinalizedAt,
+		}
+		if err := createHistoricalProviderOperation(tx, operation, models.ProviderOperationAttempt{
+			CreatedAt: row.FirstFinalizedAt, UpdatedAt: row.LastFinalizedAt, AttemptNumber: 1, Phase: "provider",
+			Outcome: models.ProviderOperationAttemptOutcomeSucceeded, ProviderOutcome: models.ProviderOutcomeSucceeded,
+			OperationKey: key, StartedAt: row.FirstFinalizedAt, FinishedAt: row.LastFinalizedAt,
+		}, false, ""); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func backfillUnresolvedProviderAudits(tx *gorm.DB) error {
+	if !tx.Migrator().HasTable("provider_call_audits") {
+		return nil
+	}
+	var rows []legacyProviderCallAudit
+	if err := tx.Session(&gorm.Session{NewDB: true}).Table("provider_call_audits").Where("status = ?", models.ProviderCallStatusFailed).Find(&rows).Error; err != nil {
+		return err
+	}
+	for _, row := range rows {
+		if !historicalMutationOperation(row.ProviderType, row.Operation) || historicalAuditRepresented(tx, row) {
+			continue
+		}
+		key := fmt.Sprintf("legacy:provider_call_audit:%d", row.ID)
+		uncertain := historicalErrorUncertain(row.ErrorMessage)
+		status, outcome := models.ProviderOperationStatusFailed, models.ProviderOutcomeFailed
+		if uncertain {
+			status, outcome = models.ProviderOperationStatusReconciliationRequired, models.ProviderOutcomeUnknown
+		}
+		operation := models.ProviderOperation{
+			CreatedAt: row.CreatedAt, UpdatedAt: row.UpdatedAt, OperationKey: key,
+			ProviderType: strings.ToLower(strings.TrimSpace(row.ProviderType)), ProviderID: strings.TrimSpace(row.ProviderID),
+			Environment: normalizedHistoricalEnvironment(row.Environment), Operation: normalizedHistoricalOperation(row.Operation),
+			IdempotencyKey: key, RequestFingerprint: historicalProviderFingerprint(key), CorrelationID: strings.TrimSpace(row.CorrelationID),
+			Status: status, ProviderOutcome: outcome, RequestJSON: historicalResultJSON(row.RequestPayloadRedacted),
+			ResultJSON: historicalResultJSON(row.ResponsePayloadRedacted), MetadataJSON: mustJSON(map[string]any{"source": "provider_call_audits", "source_id": row.ID, "original_idempotency_key": row.IdempotencyKey}),
+			LastError: row.ErrorMessage, Version: 1,
+		}
+		if !uncertain {
+			completedAt := row.UpdatedAt
+			operation.CompletedAt = &completedAt
+		}
+		if err := createHistoricalProviderOperation(tx, operation, models.ProviderOperationAttempt{
+			CreatedAt: row.CreatedAt, UpdatedAt: row.UpdatedAt, AttemptNumber: 1, Phase: "provider",
+			Outcome: historicalAttemptOutcome(outcome), ProviderOutcome: outcome, OperationKey: key,
+			RequestPayloadRedacted: row.RequestPayloadRedacted, ResponsePayloadRedacted: row.ResponsePayloadRedacted,
+			ErrorMessage: row.ErrorMessage, StartedAt: row.CreatedAt, FinishedAt: row.UpdatedAt,
+		}, uncertain, "Historical provider audit may represent an externally applied mutation."); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func createHistoricalProviderOperation(tx *gorm.DB, operation models.ProviderOperation, attempt models.ProviderOperationAttempt, openCase bool, reason string) error {
+	var existing models.ProviderOperation
+	if err := tx.Session(&gorm.Session{NewDB: true}).Where("operation_key = ?", operation.OperationKey).First(&existing).Error; err == nil {
+		return nil
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	if err := tx.Session(&gorm.Session{NewDB: true}).Create(&operation).Error; err != nil {
+		return err
+	}
+	attempt.ProviderOperationID = operation.ID
+	if err := tx.Session(&gorm.Session{NewDB: true}).Create(&attempt).Error; err != nil {
+		return err
+	}
+	if !openCase {
+		return nil
+	}
+	openKey := "open"
+	return tx.Session(&gorm.Session{NewDB: true}).Create(&models.ProviderReconciliationCase{
+		ProviderOperationID: operation.ID, AttemptID: &attempt.ID, OpenKey: &openKey,
+		Status: models.ProviderReconciliationCaseStatusOpen, Reason: reason, CaseType: "historical_uncertain_outcome",
+		ProviderOutcome: models.ProviderOutcomeUnknown, OperationKey: operation.OperationKey, DetailsJSON: operation.MetadataJSON,
+		OpenedAt: operation.UpdatedAt,
+	}).Error
+}
+
+func providerOperationBackfillReady(tx *gorm.DB) error {
+	checks := []struct {
+		table string
+		keys  func(*gorm.DB) ([]string, error)
+	}{
+		{table: "payment_transactions", keys: historicalPaymentOperationKeys},
+		{table: "shipments", keys: historicalShipmentOperationKeys},
+		{table: "order_tax_lines", keys: historicalTaxOperationKeys},
+		{table: "provider_call_audits", keys: historicalAuditOperationKeys},
+	}
+	for _, check := range checks {
+		if !tx.Migrator().HasTable(check.table) {
+			continue
+		}
+		keys, err := check.keys(tx)
+		if err != nil {
+			return err
+		}
+		for _, key := range keys {
+			var count int64
+			if err := tx.Session(&gorm.Session{NewDB: true}).Model(&models.ProviderOperation{}).Where("operation_key = ?", key).Count(&count).Error; err != nil {
+				return err
+			}
+			if count != 1 {
+				return fmt.Errorf("historical provider operation %q is not ready", key)
+			}
+		}
+	}
+	return nil
+}
+
+func historicalPaymentOperationKeys(tx *gorm.DB) ([]string, error) {
+	if !tx.Migrator().HasTable("payment_intents") {
+		return nil, nil
+	}
+	var ids []uint
+	err := tx.Session(&gorm.Session{NewDB: true}).Table("payment_transactions").Pluck("id", &ids).Error
+	return historicalIDKeys("legacy:payment_transaction:", ids), err
+}
+
+func historicalShipmentOperationKeys(tx *gorm.DB) ([]string, error) {
+	var ids []uint
+	err := tx.Session(&gorm.Session{NewDB: true}).Table("shipments").Where("provider_shipment_id <> '' OR purchased_at IS NOT NULL OR finalized_at IS NOT NULL").Pluck("id", &ids).Error
+	return historicalIDKeys("legacy:shipment:", ids), err
+}
+
+func historicalTaxOperationKeys(tx *gorm.DB) ([]string, error) {
+	rows, err := historicalTaxFinalizations(tx)
+	if err != nil {
+		return nil, err
+	}
+	keys := make([]string, 0, len(rows))
+	for _, row := range rows {
+		keys = append(keys, fmt.Sprintf("legacy:tax_finalization:%d:%d:%s", row.OrderID, row.SnapshotID, historicalKeyPart(row.TaxProviderID)))
+	}
+	return keys, nil
+}
+
+func historicalTaxFinalizations(tx *gorm.DB) ([]legacyProviderTaxFinalization, error) {
+	var lines []legacyProviderTaxLine
+	if err := tx.Session(&gorm.Session{NewDB: true}).Table("order_tax_lines").
+		Select("order_id, snapshot_id, tax_provider_id, finalized_at").Find(&lines).Error; err != nil {
+		return nil, err
+	}
+	groups := make(map[string]legacyProviderTaxFinalization)
+	for _, line := range lines {
+		key := fmt.Sprintf("%d:%d:%s", line.OrderID, line.SnapshotID, line.TaxProviderID)
+		group, exists := groups[key]
+		if !exists {
+			groups[key] = legacyProviderTaxFinalization{
+				OrderID: line.OrderID, SnapshotID: line.SnapshotID, TaxProviderID: line.TaxProviderID,
+				FirstFinalizedAt: line.FinalizedAt, LastFinalizedAt: line.FinalizedAt,
+			}
+			continue
+		}
+		if line.FinalizedAt.Before(group.FirstFinalizedAt) {
+			group.FirstFinalizedAt = line.FinalizedAt
+		}
+		if line.FinalizedAt.After(group.LastFinalizedAt) {
+			group.LastFinalizedAt = line.FinalizedAt
+		}
+		groups[key] = group
+	}
+	keys := make([]string, 0, len(groups))
+	for key := range groups {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	result := make([]legacyProviderTaxFinalization, 0, len(keys))
+	for _, key := range keys {
+		result = append(result, groups[key])
+	}
+	return result, nil
+}
+
+func historicalAuditOperationKeys(tx *gorm.DB) ([]string, error) {
+	var rows []legacyProviderCallAudit
+	if err := tx.Session(&gorm.Session{NewDB: true}).Table("provider_call_audits").Where("status = ?", models.ProviderCallStatusFailed).Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	keys := make([]string, 0, len(rows))
+	for _, row := range rows {
+		if historicalMutationOperation(row.ProviderType, row.Operation) && !historicalAuditRepresented(tx, row) {
+			keys = append(keys, fmt.Sprintf("legacy:provider_call_audit:%d", row.ID))
+		}
+	}
+	return keys, nil
+}
+
+func historicalIDKeys(prefix string, ids []uint) []string {
+	keys := make([]string, 0, len(ids))
+	for _, id := range ids {
+		keys = append(keys, fmt.Sprintf("%s%d", prefix, id))
+	}
+	return keys
+}
+
+func historicalProviderEnvironment(tx *gorm.DB, providerType, providerID, operation, idempotencyKey string) string {
+	if !tx.Migrator().HasTable("provider_call_audits") {
+		return models.ProviderEnvironmentSandbox
+	}
+	var environment string
+	query := tx.Session(&gorm.Session{NewDB: true}).Table("provider_call_audits").Select("environment").
+		Where("provider_type = ? AND provider_id = ?", providerType, strings.TrimSpace(providerID))
+	if value := strings.TrimSpace(operation); value != "" {
+		query = query.Where("LOWER(operation) = ?", strings.ToLower(value))
+	}
+	if value := strings.TrimSpace(idempotencyKey); value != "" {
+		query = query.Where("idempotency_key = ?", value)
+	}
+	_ = query.Order("id DESC").Limit(1).Scan(&environment).Error
+	return normalizedHistoricalEnvironment(environment)
+}
+
+func normalizedHistoricalEnvironment(value string) string {
+	if strings.EqualFold(strings.TrimSpace(value), models.ProviderEnvironmentProduction) {
+		return models.ProviderEnvironmentProduction
+	}
+	return models.ProviderEnvironmentSandbox
+}
+
+func historicalPaymentStatus(status string) (string, string, bool) {
+	switch strings.ToUpper(strings.TrimSpace(status)) {
+	case models.PaymentTransactionStatusSucceeded:
+		return models.ProviderOperationStatusCompleted, models.ProviderOutcomeSucceeded, false
+	case models.PaymentTransactionStatusFailed:
+		return models.ProviderOperationStatusFailed, models.ProviderOutcomeFailed, false
+	default:
+		return models.ProviderOperationStatusReconciliationRequired, models.ProviderOutcomeUnknown, true
+	}
+}
+
+func historicalAttemptOutcome(outcome string) string {
+	switch outcome {
+	case models.ProviderOutcomeSucceeded:
+		return models.ProviderOperationAttemptOutcomeSucceeded
+	case models.ProviderOutcomeFailed:
+		return models.ProviderOperationAttemptOutcomeFailed
+	default:
+		return models.ProviderOperationAttemptOutcomeUnknown
+	}
+}
+
+func historicalMutationOperation(providerType, operation string) bool {
+	value := normalizedHistoricalOperation(operation)
+	switch strings.ToLower(strings.TrimSpace(providerType)) {
+	case models.ProviderTypePayment:
+		return value == "authorize" || value == "capture" || value == "void" || value == "refund"
+	case models.ProviderTypeShipping:
+		return value == "buy_label" || value == "cancel_label"
+	case models.ProviderTypeTax:
+		return value == "finalize" || value == "finalize_tax" || value == "cancel" || value == "cancel_tax"
+	default:
+		return false
+	}
+}
+
+func normalizedHistoricalOperation(value string) string {
+	return strings.ToLower(strings.TrimSpace(value))
+}
+
+func historicalAuditRepresented(tx *gorm.DB, audit legacyProviderCallAudit) bool {
+	if !strings.EqualFold(audit.ProviderType, models.ProviderTypePayment) || strings.TrimSpace(audit.IdempotencyKey) == "" || !tx.Migrator().HasTable("payment_transactions") || !tx.Migrator().HasTable("payment_intents") {
+		return false
+	}
+	var count int64
+	_ = tx.Session(&gorm.Session{NewDB: true}).Table("payment_transactions").Joins("JOIN payment_intents ON payment_intents.id = payment_transactions.payment_intent_id").
+		Where("payment_intents.provider = ? AND LOWER(payment_transactions.operation) = ? AND payment_transactions.idempotency_key = ?", strings.TrimSpace(audit.ProviderID), normalizedHistoricalOperation(audit.Operation), strings.TrimSpace(audit.IdempotencyKey)).
+		Count(&count).Error
+	return count > 0
+}
+
+func historicalErrorUncertain(message string) bool {
+	value := strings.ToLower(message)
+	return strings.Contains(value, "timeout") || strings.Contains(value, "timed out") || strings.Contains(value, "deadline") || strings.Contains(value, "unknown outcome") || strings.Contains(value, "connection reset")
+}
+
+func historicalProviderFingerprint(key string) string {
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(key)))
+}
+
+func historicalKeyPart(value string) string {
+	digest := sha256.Sum256([]byte(strings.TrimSpace(value)))
+	return fmt.Sprintf("%x", digest[:8])
+}
+
+func historicalResultJSON(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" || !json.Valid([]byte(value)) {
+		return "{}"
+	}
+	return value
+}
+
+func mustJSON(value any) string {
+	encoded, err := json.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+	return string(encoded)
 }
 
 type productAttributeEnumBackfillRow struct {

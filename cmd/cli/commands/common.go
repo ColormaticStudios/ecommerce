@@ -8,14 +8,12 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"strings"
 
 	"ecommerce/internal/media"
 	"ecommerce/models"
 
-	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 )
@@ -83,85 +81,6 @@ func closeMediaService(svc *media.Service) {
 	closeDB(svc.DB)
 }
 
-func invokeLocalHandler(handler gin.HandlerFunc, req localHandlerRequest) (int, []byte, error) {
-	gin.SetMode(gin.TestMode)
-
-	recorder := httptest.NewRecorder()
-	ctx, _ := gin.CreateTestContext(recorder)
-
-	var body io.Reader = http.NoBody
-	if req.Body != nil {
-		payload, err := json.Marshal(req.Body)
-		if err != nil {
-			return 0, nil, err
-		}
-		body = bytes.NewReader(payload)
-	}
-
-	httpReq := httptest.NewRequest(req.Method, req.Path, body)
-	if req.Body != nil {
-		httpReq.Header.Set("Content-Type", "application/json")
-	}
-	ctx.Request = httpReq
-
-	if req.Subject != "" {
-		ctx.Set("userID", req.Subject)
-	}
-	for key, value := range req.PathParams {
-		ctx.Params = append(ctx.Params, gin.Param{Key: key, Value: value})
-	}
-
-	handler(ctx)
-	return recorder.Code, recorder.Body.Bytes(), nil
-}
-
-func invokeLocalJSON[T any](handler gin.HandlerFunc, req localHandlerRequest) (T, error) {
-	var zero T
-
-	status, body, err := invokeLocalHandler(handler, req)
-	if err != nil {
-		return zero, err
-	}
-	if status >= http.StatusBadRequest {
-		return zero, decodeHandlerError(status, body)
-	}
-	if len(bytes.TrimSpace(body)) == 0 {
-		return zero, nil
-	}
-
-	var value T
-	if err := json.Unmarshal(body, &value); err != nil {
-		return zero, fmt.Errorf("decode handler response: %w", err)
-	}
-	return value, nil
-}
-
-func invokeJSON[T any](handler gin.HandlerFunc, req localHandlerRequest) (T, error) {
-	if isRemoteMode() {
-		return invokeRemoteJSON[T](req.Method, req.Path, req.Body)
-	}
-	return invokeLocalJSON[T](handler, req)
-}
-
-func invokeLocalSuccess(handler gin.HandlerFunc, req localHandlerRequest) error {
-	status, body, err := invokeLocalHandler(handler, req)
-	if err != nil {
-		return err
-	}
-	if status >= http.StatusBadRequest {
-		return decodeHandlerError(status, body)
-	}
-	return nil
-}
-
-func invokeSuccess(handler gin.HandlerFunc, req localHandlerRequest) error {
-	if isRemoteMode() {
-		_, err := invokeRemoteJSON[map[string]any](req.Method, req.Path, req.Body)
-		return err
-	}
-	return invokeLocalSuccess(handler, req)
-}
-
 func invokeRemoteJSON[T any](method string, requestPath string, body any) (T, error) {
 	var zero T
 
@@ -213,26 +132,6 @@ func invokeRemoteJSON[T any](method string, requestPath string, body any) (T, er
 		return zero, fmt.Errorf("decode handler response: %w", err)
 	}
 	return value, nil
-}
-
-func invokeWithDB[T any](req localHandlerRequest, factory func(*gorm.DB) gin.HandlerFunc) (T, error) {
-	if isRemoteMode() {
-		return invokeRemoteJSON[T](req.Method, req.Path, req.Body)
-	}
-
-	db := getDB()
-	defer closeDB(db)
-	return invokeLocalJSON[T](factory(db), req)
-}
-
-func invokeWithMediaService[T any](req localHandlerRequest, factory func(*media.Service) gin.HandlerFunc) (T, error) {
-	if isRemoteMode() {
-		return invokeRemoteJSON[T](req.Method, req.Path, req.Body)
-	}
-
-	mediaService := newMediaService()
-	defer closeMediaService(mediaService)
-	return invokeLocalJSON[T](factory(mediaService), req)
 }
 
 func decodeHandlerError(status int, body []byte) error {

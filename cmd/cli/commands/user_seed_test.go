@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"testing"
 
 	accountdataservice "ecommerce/internal/services/accountdata"
@@ -11,7 +12,7 @@ func TestCreateSavedAddressValidatesAndSetsDefault(t *testing.T) {
 	db := newTestDB(t, &models.SavedAddress{})
 	service := accountdataservice.NewService(db)
 
-	if _, err := service.CreateSavedAddress(1, accountdataservice.CreateSavedAddressInput{
+	if _, err := service.CreateSavedAddress(context.Background(), 1, accountdataservice.CreateSavedAddressInput{
 		FullName:   "",
 		Line1:      "123 Main St",
 		City:       "Portland",
@@ -21,7 +22,7 @@ func TestCreateSavedAddressValidatesAndSetsDefault(t *testing.T) {
 		t.Fatal("expected invalid address error")
 	}
 
-	first, err := service.CreateSavedAddress(1, accountdataservice.CreateSavedAddressInput{
+	first, err := service.CreateSavedAddress(context.Background(), 1, accountdataservice.CreateSavedAddressInput{
 		Label:      "Home",
 		FullName:   "Ada Lovelace",
 		Line1:      "123 Main St",
@@ -36,7 +37,7 @@ func TestCreateSavedAddressValidatesAndSetsDefault(t *testing.T) {
 		t.Fatal("expected first address to be default")
 	}
 
-	second, err := service.CreateSavedAddress(1, accountdataservice.CreateSavedAddressInput{
+	second, err := service.CreateSavedAddress(context.Background(), 1, accountdataservice.CreateSavedAddressInput{
 		Label:      "Office",
 		FullName:   "Ada Lovelace",
 		Line1:      "500 Market St",
@@ -65,7 +66,7 @@ func TestCreateSavedPaymentMethodValidatesAndSetsDefault(t *testing.T) {
 	db := newTestDB(t, &models.SavedPaymentMethod{})
 	service := accountdataservice.NewService(db)
 
-	if _, err := service.CreateSavedPaymentMethod(1, accountdataservice.CreateSavedPaymentMethodInput{
+	if _, err := service.CreateSavedPaymentMethod(context.Background(), 1, accountdataservice.CreateSavedPaymentMethodInput{
 		CardholderName: "Ada Lovelace",
 		CardNumber:     "1234",
 		ExpMonth:       12,
@@ -74,7 +75,7 @@ func TestCreateSavedPaymentMethodValidatesAndSetsDefault(t *testing.T) {
 		t.Fatal("expected invalid card number error")
 	}
 
-	first, err := service.CreateSavedPaymentMethod(1, accountdataservice.CreateSavedPaymentMethodInput{
+	first, err := service.CreateSavedPaymentMethod(context.Background(), 1, accountdataservice.CreateSavedPaymentMethodInput{
 		CardholderName: "Ada Lovelace",
 		CardNumber:     "4111 1111 1111 1111",
 		ExpMonth:       12,
@@ -90,7 +91,7 @@ func TestCreateSavedPaymentMethodValidatesAndSetsDefault(t *testing.T) {
 		t.Fatal("expected first card to be default")
 	}
 
-	second, err := service.CreateSavedPaymentMethod(1, accountdataservice.CreateSavedPaymentMethodInput{
+	second, err := service.CreateSavedPaymentMethod(context.Background(), 1, accountdataservice.CreateSavedPaymentMethodInput{
 		CardholderName: "Ada Lovelace",
 		CardNumber:     "5555 5555 5555 4444",
 		ExpMonth:       1,

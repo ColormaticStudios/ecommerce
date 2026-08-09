@@ -1,11 +1,25 @@
 package commands
 
 import (
+	"go/parser"
+	"go/token"
 	"testing"
 	"time"
 
 	"ecommerce/models"
 )
+
+func TestOrderCLIDoesNotUseSyntheticGinOrHandlers(t *testing.T) {
+	file, err := parser.ParseFile(token.NewFileSet(), "order.go", nil, parser.ImportsOnly)
+	if err != nil {
+		t.Fatalf("parse order.go: %v", err)
+	}
+	for _, imported := range file.Imports {
+		if imported.Path.Value == `"github.com/gin-gonic/gin"` || imported.Path.Value == `"ecommerce/handlers"` {
+			t.Fatalf("order CLI must not import synthetic HTTP dependency %s", imported.Path.Value)
+		}
+	}
+}
 
 func TestBuildOrderInspectResponseIncludesOperationalData(t *testing.T) {
 	db := newTestDB(t,

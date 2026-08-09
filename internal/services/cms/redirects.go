@@ -1,6 +1,7 @@
 package cms
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -28,21 +29,23 @@ type RedirectService struct{ db *gorm.DB }
 
 func NewRedirectService(db *gorm.DB) *RedirectService { return &RedirectService{db: db} }
 
-func (s *RedirectService) List() ([]models.CMSRedirectRule, error) {
+func (s *RedirectService) List(ctx context.Context) ([]models.CMSRedirectRule, error) {
+	db := s.db.WithContext(ctx)
 	var rules []models.CMSRedirectRule
-	err := s.db.Order("priority DESC, source_pattern ASC, id ASC").Find(&rules).Error
+	err := db.Order("priority DESC, source_pattern ASC, id ASC").Find(&rules).Error
 	return rules, err
 }
 
-func (s *RedirectService) Create(input RedirectInput) (*models.CMSRedirectRule, error) {
+func (s *RedirectService) Create(ctx context.Context, input RedirectInput) (*models.CMSRedirectRule, error) {
+	db := s.db.WithContext(ctx)
 	rule, err := normalizeRedirect(input)
 	if err != nil {
 		return nil, err
 	}
-	if err := s.validateRules(0, rule); err != nil {
+	if err := s.validateRules(db, 0, rule); err != nil {
 		return nil, err
 	}
-	if err := s.db.Select("*").Create(&rule).Error; err != nil {
+	if err := db.Select("*").Create(&rule).Error; err != nil {
 		if isUniqueConstraint(err) {
 			return nil, fmt.Errorf("%w: redirect source already exists", ErrInvalidPage)
 		}
@@ -51,9 +54,10 @@ func (s *RedirectService) Create(input RedirectInput) (*models.CMSRedirectRule, 
 	return &rule, nil
 }
 
-func (s *RedirectService) Update(id uint, input RedirectInput) (*models.CMSRedirectRule, error) {
+func (s *RedirectService) Update(ctx context.Context, id uint, input RedirectInput) (*models.CMSRedirectRule, error) {
+	db := s.db.WithContext(ctx)
 	var existing models.CMSRedirectRule
-	if err := s.db.First(&existing, id).Error; err != nil {
+	if err := db.First(&existing, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}
@@ -64,17 +68,18 @@ func (s *RedirectService) Update(id uint, input RedirectInput) (*models.CMSRedir
 		return nil, err
 	}
 	rule.ID, rule.CreatedAt = existing.ID, existing.CreatedAt
-	if err := s.validateRules(id, rule); err != nil {
+	if err := s.validateRules(db, id, rule); err != nil {
 		return nil, err
 	}
-	if err := s.db.Select("*").Save(&rule).Error; err != nil {
+	if err := db.Select("*").Save(&rule).Error; err != nil {
 		return nil, err
 	}
 	return &rule, nil
 }
 
-func (s *RedirectService) Delete(id uint) error {
-	result := s.db.Delete(&models.CMSRedirectRule{}, id)
+func (s *RedirectService) Delete(ctx context.Context, id uint) error {
+	db := s.db.WithContext(ctx)
+	result := db.Delete(&models.CMSRedirectRule{}, id)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -84,12 +89,13 @@ func (s *RedirectService) Delete(id uint) error {
 	return nil
 }
 
-func (s *RedirectService) Resolve(requestPath string) (*models.CMSRedirectRule, string, error) {
+func (s *RedirectService) Resolve(ctx context.Context, requestPath string) (*models.CMSRedirectRule, string, error) {
+	db := s.db.WithContext(ctx)
 	normalized, err := normalizeRedirectPath(requestPath)
 	if err != nil {
 		return nil, "", ErrNotFound
 	}
-	rules, err := s.enabledRules()
+	rules, err := s.enabledRules(db)
 	if err != nil {
 		return nil, "", err
 	}
@@ -101,8 +107,8 @@ func (s *RedirectService) Resolve(requestPath string) (*models.CMSRedirectRule, 
 	return nil, "", ErrNotFound
 }
 
-func (s *RedirectService) validateRules(excludeID uint, candidate models.CMSRedirectRule) error {
-	rules, err := s.enabledRules()
+func (s *RedirectService) validateRules(db *gorm.DB, excludeID uint, candidate models.CMSRedirectRule) error {
+	rules, err := s.enabledRules(db)
 	if err != nil {
 		return err
 	}
@@ -157,7 +163,7 @@ func (s *RedirectService) validateRules(excludeID uint, candidate models.CMSRedi
 		}
 		if !knownCoreRoute(redirectPathOnly(finalTarget)) {
 			var count int64
-			if err := s.db.Table("cms_pages").Joins("JOIN cms_entries ON cms_entries.id = cms_pages.entry_id").
+			if err := db.Table("cms_pages").Joins("JOIN cms_entries ON cms_entries.id = cms_pages.entry_id").
 				Where("cms_pages.path = ? AND cms_pages.visibility = ? AND cms_entries.published_version_id IS NOT NULL", redirectPathOnly(finalTarget), models.CMSPageVisibilityPublic).
 				Count(&count).Error; err != nil {
 				return err
@@ -170,9 +176,9 @@ func (s *RedirectService) validateRules(excludeID uint, candidate models.CMSRedi
 	return nil
 }
 
-func (s *RedirectService) enabledRules() ([]models.CMSRedirectRule, error) {
+func (s *RedirectService) enabledRules(db *gorm.DB) ([]models.CMSRedirectRule, error) {
 	var rules []models.CMSRedirectRule
-	if err := s.db.Where("is_enabled = ?", true).Find(&rules).Error; err != nil {
+	if err := db.Where("is_enabled = ?", true).Find(&rules).Error; err != nil {
 		return nil, err
 	}
 	sortRedirectRules(rules)

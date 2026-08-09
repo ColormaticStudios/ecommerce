@@ -15,6 +15,8 @@ var ErrUnknownTaxProvider = fmt.Errorf("unknown tax provider")
 type TaxProvider interface {
 	QuoteTax(ctx context.Context, req QuoteTaxRequest) (models.Money, error)
 	FinalizeTax(ctx context.Context, req FinalizeTaxRequest) (TaxFinalized, error)
+	CancelFinalization(ctx context.Context, req CancelFinalizationRequest) (ProviderOperationOutcome, error)
+	GetOutcomeByOperationKey(ctx context.Context, operationKey string) (ProviderOperationOutcome, error)
 	ExportReport(ctx context.Context, req ExportReportRequest) (io.ReadCloser, error)
 }
 
@@ -31,11 +33,29 @@ type QuoteTaxRequest struct {
 type FinalizeTaxRequest struct {
 	Provider          string
 	Currency          string
+	IdempotencyKey    string
+	OperationKey      string
+	CorrelationID     string
 	Data              map[string]string
 	Items             []LineInput
 	ShippingAmount    models.Money
 	ExpectedTaxAmount models.Money
 	InclusivePricing  bool
+}
+
+type CancelFinalizationRequest struct {
+	Provider          string
+	ProviderReference string
+	IdempotencyKey    string
+	OperationKey      string
+	CorrelationID     string
+}
+
+type ProviderOperationOutcome struct {
+	OperationKey        string
+	Outcome             string
+	ProviderReference   string
+	RawResponseRedacted string
 }
 
 type LineInput struct {
@@ -61,11 +81,12 @@ type TaxLine struct {
 }
 
 type TaxFinalized struct {
-	Provider         string
-	Currency         string
-	InclusivePricing bool
-	TotalTax         models.Money
-	Lines            []TaxLine
+	Provider          string
+	ProviderReference string
+	Currency          string
+	InclusivePricing  bool
+	TotalTax          models.Money
+	Lines             []TaxLine
 }
 
 type ExportReportRequest struct {
@@ -106,6 +127,9 @@ func (dummyTaxProvider) QuoteTax(_ context.Context, req QuoteTaxRequest) (models
 }
 
 func (dummyTaxProvider) FinalizeTax(_ context.Context, req FinalizeTaxRequest) (TaxFinalized, error) {
+	if err := validateOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return TaxFinalized{}, err
+	}
 	rateBps, jurisdiction := resolveRate(req.Provider, req.Data)
 	lines := make([]TaxLine, 0, len(req.Items)+1)
 	var totalTax models.Money
@@ -150,11 +174,33 @@ func (dummyTaxProvider) FinalizeTax(_ context.Context, req FinalizeTaxRequest) (
 	}
 
 	return TaxFinalized{
-		Provider:         req.Provider,
-		Currency:         req.Currency,
-		InclusivePricing: req.InclusivePricing,
-		TotalTax:         totalTax,
-		Lines:            lines,
+		Provider:          req.Provider,
+		ProviderReference: "dummy-tax|" + req.OperationKey,
+		Currency:          req.Currency,
+		InclusivePricing:  req.InclusivePricing,
+		TotalTax:          totalTax,
+		Lines:             lines,
+	}, nil
+}
+
+func (dummyTaxProvider) CancelFinalization(_ context.Context, req CancelFinalizationRequest) (ProviderOperationOutcome, error) {
+	if err := validateOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return ProviderOperationOutcome{}, err
+	}
+	return ProviderOperationOutcome{
+		OperationKey: req.OperationKey, Outcome: models.ProviderOutcomeSucceeded,
+		ProviderReference: req.ProviderReference, RawResponseRedacted: `{"status":"cancelled"}`,
+	}, nil
+}
+
+func (dummyTaxProvider) GetOutcomeByOperationKey(_ context.Context, operationKey string) (ProviderOperationOutcome, error) {
+	operationKey = strings.TrimSpace(operationKey)
+	if operationKey == "" {
+		return ProviderOperationOutcome{}, fmt.Errorf("operation key is required")
+	}
+	return ProviderOperationOutcome{
+		OperationKey: operationKey, Outcome: models.ProviderOutcomeSucceeded,
+		ProviderReference: "dummy-tax|" + operationKey, RawResponseRedacted: `{"status":"succeeded"}`,
 	}, nil
 }
 
@@ -183,6 +229,16 @@ func (dummyTaxProvider) ExportReport(_ context.Context, req ExportReportRequest)
 		return nil, err
 	}
 	return io.NopCloser(strings.NewReader(builder.String())), nil
+}
+
+func validateOperationIdentity(idempotencyKey, operationKey string) error {
+	if strings.TrimSpace(idempotencyKey) == "" {
+		return fmt.Errorf("idempotency key is required")
+	}
+	if strings.TrimSpace(operationKey) == "" {
+		return fmt.Errorf("operation key is required")
+	}
+	return nil
 }
 
 func resolveRate(provider string, data map[string]string) (int, string) {

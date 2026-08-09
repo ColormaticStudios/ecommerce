@@ -2,17 +2,14 @@ package commands
 
 import (
 	"fmt"
-	"net/http"
+
 	"net/url"
 	"strings"
 	"time"
 
-	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
 
-	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
-	"gorm.io/gorm"
 )
 
 func NewDiscountCmd() *cobra.Command {
@@ -67,16 +64,7 @@ func newListDiscountCampaignsCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List discount campaigns",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := "/api/v1/admin/discounts/campaigns"
-			if trimmed := strings.TrimSpace(status); trimmed != "" {
-				path += "?status=" + url.QueryEscape(trimmed)
-			}
-			resp, err := invokeWithDB[apicontract.DiscountCampaignListResponse](localHandlerRequest{
-				Method: http.MethodGet,
-				Path:   path,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.ListAdminDiscountCampaigns(db)
-			})
+			resp, err := catalogDiscountCampaigns(cmd.Context(), strings.TrimSpace(status))
 			if err != nil {
 				return err
 			}
@@ -109,7 +97,7 @@ func newCreateProductDiscountCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			campaign, err := invokeDiscountCampaignMutation(http.MethodPost, "/api/v1/admin/discounts/campaigns", nil, payload, handlers.CreateAdminDiscountCampaign)
+			campaign, err := catalogCreateDiscount(cmd.Context(), payload)
 			if err != nil {
 				return err
 			}
@@ -134,8 +122,7 @@ func newUpdateProductDiscountCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			path := fmt.Sprintf("/api/v1/admin/discounts/campaigns/%d", id)
-			campaign, err := invokeDiscountCampaignMutation(http.MethodPatch, path, map[string]string{"id": fmt.Sprintf("%d", id)}, payload, handlers.UpdateAdminDiscountCampaign)
+			campaign, err := catalogUpdateDiscount(cmd.Context(), id, payload)
 			if err != nil {
 				return err
 			}
@@ -150,11 +137,11 @@ func newUpdateProductDiscountCmd() *cobra.Command {
 }
 
 func newDisableDiscountCampaignCmd() *cobra.Command {
-	return newSimpleDiscountCampaignActionCmd("disable", "Disable a discount campaign", "disabled", handlers.DisableAdminDiscountCampaign)
+	return newSimpleDiscountCampaignActionCmd("disable", "Disable a discount campaign", "disabled")
 }
 
 func newArchiveDiscountCampaignCmd() *cobra.Command {
-	return newSimpleDiscountCampaignActionCmd("archive", "Archive a discount campaign", "archived", handlers.ArchiveAdminDiscountCampaign)
+	return newSimpleDiscountCampaignActionCmd("archive", "Archive a discount campaign", "archived")
 }
 
 func newScheduleDiscountCampaignCmd() *cobra.Command {
@@ -205,15 +192,7 @@ func newScheduleDiscountCampaignCmd() *cobra.Command {
 				UntilAt:      until,
 				Timezone:     timezonePtr,
 			}
-			path := fmt.Sprintf("/api/v1/admin/discounts/campaigns/%d/schedule", id)
-			schedule, err := invokeWithDB[apicontract.DiscountSchedule](localHandlerRequest{
-				Method:     http.MethodPost,
-				Path:       path,
-				PathParams: map[string]string{"id": fmt.Sprintf("%d", id)},
-				Body:       payload,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.ScheduleAdminDiscountCampaign(db)
-			})
+			schedule, err := catalogDiscountSchedule(cmd.Context(), id, payload)
 			if err != nil {
 				return err
 			}
@@ -247,12 +226,7 @@ func newRunDiscountLifecycleCmd() *cobra.Command {
 		Use:   "run-lifecycle",
 		Short: "Run discount lifecycle processing",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := invokeWithDB[apicontract.DiscountLifecycleRunResponse](localHandlerRequest{
-				Method: http.MethodPost,
-				Path:   "/api/v1/admin/discounts/lifecycle/run",
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.RunAdminDiscountLifecycle(db)
-			})
+			resp, err := catalogDiscountLifecycle(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -279,13 +253,7 @@ func newListDiscountHistoryCmd() *cobra.Command {
 		Use:   "history",
 		Short: "List discount state history",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := discountCampaignScopedPath("/api/v1/admin/discounts/history", campaignID)
-			resp, err := invokeWithDB[apicontract.DiscountStateHistoryListResponse](localHandlerRequest{
-				Method: http.MethodGet,
-				Path:   path,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.ListAdminDiscountHistory(db)
-			})
+			resp, err := catalogDiscountHistory(cmd.Context(), campaignID)
 			if err != nil {
 				return err
 			}
@@ -321,13 +289,7 @@ func newListDiscountAuditCmd() *cobra.Command {
 		Use:   "audit",
 		Short: "List discount audit entries",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := discountCampaignScopedPath("/api/v1/admin/discounts/audit", campaignID)
-			resp, err := invokeWithDB[apicontract.DiscountCampaignAuditListResponse](localHandlerRequest{
-				Method: http.MethodGet,
-				Path:   path,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.ListAdminDiscountAudit(db)
-			})
+			resp, err := catalogDiscountAudit(cmd.Context(), campaignID)
 			if err != nil {
 				return err
 			}
@@ -362,10 +324,7 @@ func newGetDiscountMetricsCmd() *cobra.Command {
 		Use:   "metrics",
 		Short: "Show discount evaluation metrics",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := invokeJSON[apicontract.DiscountEvaluationMetrics](handlers.GetAdminDiscountMetrics(), localHandlerRequest{
-				Method: http.MethodGet,
-				Path:   "/api/v1/admin/discounts/metrics",
-			})
+			resp, err := catalogDiscountMetrics(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -392,12 +351,7 @@ func newRunDiscountReconciliationCmd() *cobra.Command {
 		Use:   "reconcile",
 		Short: "Run discount schedule reconciliation",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := invokeWithDB[apicontract.DiscountReconciliationReport](localHandlerRequest{
-				Method: http.MethodPost,
-				Path:   "/api/v1/admin/discounts/reconciliation/run",
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.RunAdminDiscountReconciliation(db)
-			})
+			resp, err := catalogDiscountReconciliation(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -436,7 +390,7 @@ func newCreatePromotionCmd() *cobra.Command {
 			if err := loadJSONFile(inputFile, &payload); err != nil {
 				return err
 			}
-			campaign, err := invokeDiscountCampaignMutation(http.MethodPost, "/api/v1/admin/discounts/promotions", nil, payload, handlers.CreateAdminPromotionCampaign)
+			campaign, err := catalogCreatePromotion(cmd.Context(), payload)
 			if err != nil {
 				return err
 			}
@@ -460,13 +414,7 @@ func newPreviewPromotionCmd() *cobra.Command {
 			if err := loadJSONFile(inputFile, &payload); err != nil {
 				return err
 			}
-			resp, err := invokeWithDB[apicontract.PromotionEvaluationResponse](localHandlerRequest{
-				Method: http.MethodPost,
-				Path:   "/api/v1/admin/discounts/promotions/preview",
-				Body:   payload,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.PreviewAdminPromotion(db)
-			})
+			resp, err := catalogPreviewPromotion(cmd.Context(), payload)
 			if err != nil {
 				return err
 			}
@@ -495,16 +443,7 @@ func newListPromotionTemplatesCmd() *cobra.Command {
 		Use:   "templates",
 		Short: "List promotion templates",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := "/api/v1/admin/discounts/templates"
-			if includeInactive {
-				path += "?active=false"
-			}
-			resp, err := invokeWithDB[apicontract.PromotionTemplateListResponse](localHandlerRequest{
-				Method: http.MethodGet,
-				Path:   path,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.ListAdminPromotionTemplates(db)
-			})
+			resp, err := catalogPromotionTemplates(cmd.Context(), !includeInactive)
 			if err != nil {
 				return err
 			}
@@ -544,13 +483,7 @@ func newCreatePromotionTemplateCmd() *cobra.Command {
 			if err := loadJSONFile(inputFile, &payload); err != nil {
 				return err
 			}
-			template, err := invokeWithDB[apicontract.PromotionTemplate](localHandlerRequest{
-				Method: http.MethodPost,
-				Path:   "/api/v1/admin/discounts/templates",
-				Body:   payload,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.CreateAdminPromotionTemplate(db)
-			})
+			template, err := catalogCreatePromotionTemplate(cmd.Context(), payload)
 			if err != nil {
 				return err
 			}
@@ -584,8 +517,7 @@ func newInstantiatePromotionTemplateCmd() *cobra.Command {
 			if err := loadJSONFile(inputFile, &payload); err != nil {
 				return err
 			}
-			path := fmt.Sprintf("/api/v1/admin/discounts/templates/%d/instantiate", id)
-			campaign, err := invokeDiscountCampaignMutation(http.MethodPost, path, map[string]string{"id": fmt.Sprintf("%d", id)}, payload, handlers.InstantiateAdminPromotionTemplate)
+			campaign, err := catalogInstantiatePromotionTemplate(cmd.Context(), id, payload)
 			if err != nil {
 				return err
 			}
@@ -691,15 +623,14 @@ func (f productDiscountFlags) toContract(cmd *cobra.Command) (apicontract.Produc
 	}, nil
 }
 
-func newSimpleDiscountCampaignActionCmd(name string, short string, pastTense string, handlerFactory func(*gorm.DB) gin.HandlerFunc) *cobra.Command {
+func newSimpleDiscountCampaignActionCmd(name string, short string, pastTense string) *cobra.Command {
 	var id uint
 	var format string
 	cmd := &cobra.Command{
 		Use:   name,
 		Short: short,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := fmt.Sprintf("/api/v1/admin/discounts/campaigns/%d/%s", id, name)
-			campaign, err := invokeDiscountCampaignMutation(http.MethodPost, path, map[string]string{"id": fmt.Sprintf("%d", id)}, nil, handlerFactory)
+			campaign, err := catalogDiscountAction(cmd.Context(), id, name)
 			if err != nil {
 				return err
 			}
@@ -710,15 +641,6 @@ func newSimpleDiscountCampaignActionCmd(name string, short string, pastTense str
 	addOutputFormatFlag(cmd, &format, string(outputFormatText))
 	cmd.MarkFlagRequired("id")
 	return cmd
-}
-
-func invokeDiscountCampaignMutation(method string, path string, pathParams map[string]string, body any, handlerFactory func(*gorm.DB) gin.HandlerFunc) (apicontract.DiscountCampaign, error) {
-	return invokeWithDB[apicontract.DiscountCampaign](localHandlerRequest{
-		Method:     method,
-		Path:       path,
-		PathParams: pathParams,
-		Body:       body,
-	}, handlerFactory)
 }
 
 func printDiscountCampaignMutation(campaign apicontract.DiscountCampaign, format string, action string) error {

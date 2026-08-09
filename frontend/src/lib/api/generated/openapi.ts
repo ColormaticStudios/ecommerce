@@ -1401,6 +1401,118 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/admin/providers/operations": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminProviderOperations"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/providers/operations/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminProviderOperation"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/providers/operations/{id}/query-outcome": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["queryAdminProviderOperationOutcome"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/providers/operations/{id}/retry-finalize": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["retryFinalizeAdminProviderOperation"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/providers/operations/{id}/retry-compensation": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["retryCompensationAdminProviderOperation"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/providers/reconciliation/cases": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminProviderReconciliationCases"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/providers/reconciliation/cases/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminProviderReconciliationCase"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch: operations["updateAdminProviderReconciliationCase"];
+		trace?: never;
+	};
 	"/api/v1/admin/providers/reconciliation/runs": {
 		parameters: {
 			query?: never;
@@ -2429,6 +2541,70 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
 	schemas: {
+		/** @description A machine-readable issue associated with a request value. */
+		ValidationIssue: {
+			/**
+			 * @description JSON Pointer identifying the request value, or an empty string for the document root.
+			 * @example /items/0/quantity
+			 */
+			path: string;
+			/**
+			 * @description Stable machine-readable issue code.
+			 * @example minimum
+			 */
+			code: string;
+			/**
+			 * @description Safe human-readable explanation of this issue occurrence.
+			 * @example Quantity must be at least 1.
+			 */
+			detail: string;
+		};
+		/** @description RFC 9457 problem details with stable application extensions. */
+		Problem: {
+			/**
+			 * Format: uri
+			 * @description Stable URI identifying the problem category.
+			 * @example https://ecommerce.local/problems/validation-failed
+			 */
+			type: string;
+			/**
+			 * @description Stable human-readable summary of the problem category.
+			 * @example Validation failed
+			 */
+			title: string;
+			/**
+			 * Format: int32
+			 * @description HTTP status code returned for this occurrence.
+			 * @example 422
+			 */
+			status: number;
+			/**
+			 * @description Safe occurrence-specific explanation.
+			 * @example One or more request values are invalid.
+			 */
+			detail: string;
+			/**
+			 * @description URI reference identifying this problem occurrence or related operation.
+			 * @example /api/v1/provider-operations/01J2EXAMPLE
+			 */
+			instance?: string;
+			/**
+			 * @description Stable machine-readable application error code.
+			 * @example validation_failed
+			 */
+			code: string;
+			/**
+			 * @description Identifier used to correlate the response with logs and traces.
+			 * @example 01J2EXAMPLE8Y4Q2S7M9K3N6P5R
+			 */
+			correlation_id: string;
+			/** @description Field or value issues, present when the problem has validation details. */
+			errors?: components["schemas"]["ValidationIssue"][];
+		};
+		/**
+		 * @deprecated
+		 * @description Transitional legacy error body. New and migrated operations use Problem.
+		 */
 		Error: {
 			error: string;
 			code?: string;
@@ -4444,11 +4620,160 @@ export interface components {
 			dead_letter_count: number;
 			rejected_count: number;
 		};
+		ProviderOperationStatusSummary: {
+			total_count: number;
+			active_count: number;
+			unknown_count: number;
+			finalize_retry_count: number;
+			compensation_retry_count: number;
+			failed_count: number;
+			completed_count: number;
+		};
+		ProviderReconciliationCaseSummary: {
+			open_count: number;
+			unassigned_count: number;
+		};
 		ProviderOperationsOverview: {
 			/** @enum {string} */
 			runtime_environment: "sandbox" | "production";
 			credential_service_configured: boolean;
 			webhook_events: components["schemas"]["ProviderWebhookStatusSummary"];
+			operations: components["schemas"]["ProviderOperationStatusSummary"];
+			reconciliation_cases: components["schemas"]["ProviderReconciliationCaseSummary"];
+		};
+		/**
+		 * @description Durable lifecycle state of an externally effective provider operation.
+		 * @enum {string}
+		 */
+		ProviderOperationStatus:
+			| "PREPARED"
+			| "EXECUTING"
+			| "OUTCOME_UNKNOWN"
+			| "PROVIDER_SUCCEEDED"
+			| "FINALIZING"
+			| "FINALIZE_RETRY"
+			| "COMPENSATION_PREPARED"
+			| "COMPENSATING"
+			| "COMPENSATION_SUCCEEDED"
+			| "COMPENSATION_RETRY"
+			| "COMPLETED"
+			| "FAILED"
+			| "RECONCILING"
+			| "RECONCILIATION_REQUIRED";
+		/** @enum {string} */
+		ProviderOperationAttemptOutcome: "SUCCEEDED" | "FAILED" | "UNKNOWN";
+		ProviderOperationAttempt: {
+			id: number;
+			attempt_number: number;
+			phase: string;
+			outcome: components["schemas"]["ProviderOperationAttemptOutcome"];
+			/** @enum {string} */
+			provider_outcome: "SUCCEEDED" | "FAILED" | "UNKNOWN" | "NOT_FOUND" | "";
+			provider_reference?: string;
+			operation_key: string;
+			retryable: boolean;
+			/** @description Safe classified failure metadata; provider payloads and secrets are never exposed. */
+			problem?: components["schemas"]["Problem"] | null;
+			/** Format: date-time */
+			started_at: string;
+			/** Format: date-time */
+			finished_at: string;
+		};
+		/** @enum {string} */
+		ProviderReconciliationCaseStatus: "OPEN" | "RESOLVED";
+		/** @enum {string} */
+		ProviderReconciliationCaseOutcome:
+			| "CONFIRMED_SUCCEEDED"
+			| "CONFIRMED_FAILED"
+			| "RETRY_REQUIRED"
+			| "MANUAL_REVIEW";
+		ProviderReconciliationCase: {
+			id: number;
+			operation_id: number;
+			attempt_id?: number | null;
+			/** @enum {string} */
+			provider_type: "payment" | "shipping" | "tax";
+			provider_id: string;
+			/** @enum {string} */
+			environment: "sandbox" | "production";
+			operation: string;
+			operation_status: components["schemas"]["ProviderOperationStatus"];
+			status: components["schemas"]["ProviderReconciliationCaseStatus"];
+			outcome?: components["schemas"]["ProviderReconciliationCaseOutcome"] | null;
+			/** @description Safe machine-readable reason for reconciliation. */
+			reason: string;
+			case_type: string;
+			/** @enum {string} */
+			provider_outcome: "SUCCEEDED" | "FAILED" | "UNKNOWN" | "NOT_FOUND" | "";
+			operation_key: string;
+			assigned_to?: string | null;
+			resolution_note?: string | null;
+			problem?: components["schemas"]["Problem"] | null;
+			/** Format: date-time */
+			next_attempt_at?: string | null;
+			/** Format: date-time */
+			opened_at: string;
+			/** Format: date-time */
+			resolved_at?: string | null;
+		};
+		ProviderReconciliationCaseUpdate: {
+			assigned_to?: string | null;
+			status?: components["schemas"]["ProviderReconciliationCaseStatus"];
+			outcome?: components["schemas"]["ProviderReconciliationCaseOutcome"];
+			resolution_note?: string;
+		};
+		ProviderReconciliationCaseEnvelope: {
+			case: components["schemas"]["ProviderReconciliationCase"];
+		};
+		ProviderReconciliationCasePage: {
+			data: components["schemas"]["ProviderReconciliationCase"][];
+			pagination: components["schemas"]["Pagination"];
+		};
+		/** @description Safe API representation of a durable provider operation ledger record. */
+		ProviderOperation: {
+			id: number;
+			operation_key: string;
+			/** @enum {string} */
+			provider_type: "payment" | "shipping" | "tax";
+			provider_id: string;
+			/** @enum {string} */
+			environment: "sandbox" | "production";
+			/** @description Stable provider operation kind, such as payment.capture. */
+			operation: string;
+			idempotency_key: string;
+			correlation_id: string;
+			entity_type: string;
+			entity_id: number;
+			status: components["schemas"]["ProviderOperationStatus"];
+			provider_outcome?: string;
+			provider_reference?: string;
+			retryable: boolean;
+			available_actions?: ("query_outcome" | "retry_finalize" | "retry_compensation")[];
+			problem?: components["schemas"]["Problem"] | null;
+			parent_operation_id?: number | null;
+			compensation_operation_id?: number | null;
+			attempts: components["schemas"]["ProviderOperationAttempt"][];
+			reconciliation_cases: components["schemas"]["ProviderReconciliationCase"][];
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+			/** Format: date-time */
+			completed_at?: string | null;
+			/** Format: date-time */
+			next_attempt_at?: string | null;
+		};
+		ProviderOperationEnvelope: {
+			operation: components["schemas"]["ProviderOperation"];
+		};
+		ProviderOperationAcceptedEnvelope: {
+			message: string;
+			operation_key: string;
+			status: components["schemas"]["ProviderOperationStatus"];
+		};
+		ProviderOperationPage: {
+			data: components["schemas"]["ProviderOperation"][];
+			pagination: components["schemas"]["Pagination"];
 		};
 		ProviderReconciliationRunRequest: {
 			/** @enum {string} */
@@ -4671,7 +4996,125 @@ export interface components {
 			updated_at: string;
 		};
 	};
-	responses: never;
+	responses: {
+		/** @description The request is malformed or does not satisfy the operation contract. */
+		BadRequestProblem: {
+			headers: {
+				[name: string]: unknown;
+			};
+			content: {
+				"application/problem+json": components["schemas"]["Problem"];
+			};
+		};
+		/** @description Authentication is required or the supplied credentials are invalid. */
+		AuthenticationRequiredProblem: {
+			headers: {
+				[name: string]: unknown;
+			};
+			content: {
+				"application/problem+json": components["schemas"]["Problem"];
+			};
+		};
+		/** @description The authenticated principal is not allowed to perform this operation. */
+		ForbiddenProblem: {
+			headers: {
+				[name: string]: unknown;
+			};
+			content: {
+				"application/problem+json": components["schemas"]["Problem"];
+			};
+		};
+		/** @description The requested resource does not exist or is not visible to the caller. */
+		NotFoundProblem: {
+			headers: {
+				[name: string]: unknown;
+			};
+			content: {
+				"application/problem+json": components["schemas"]["Problem"];
+			};
+		};
+		/** @description The request conflicts with resource state, version, or idempotency history. */
+		ConflictProblem: {
+			headers: {
+				[name: string]: unknown;
+			};
+			content: {
+				"application/problem+json": components["schemas"]["Problem"];
+			};
+		};
+		/** @description A required capability or configuration is unavailable. */
+		PreconditionFailedProblem: {
+			headers: {
+				[name: string]: unknown;
+			};
+			content: {
+				"application/problem+json": components["schemas"]["Problem"];
+			};
+		};
+		/** @description The request is well-formed but fails semantic validation. */
+		ValidationProblem: {
+			headers: {
+				[name: string]: unknown;
+			};
+			content: {
+				"application/problem+json": components["schemas"]["Problem"];
+			};
+		};
+		/** @description The request payload exceeds the operation's size limit. */
+		PayloadTooLargeProblem: {
+			headers: {
+				[name: string]: unknown;
+			};
+			content: {
+				"application/problem+json": components["schemas"]["Problem"];
+			};
+		};
+		/** @description The caller has exceeded an applicable request limit. */
+		TooManyRequestsProblem: {
+			headers: {
+				[name: string]: unknown;
+			};
+			content: {
+				"application/problem+json": components["schemas"]["Problem"];
+			};
+		};
+		/** @description An unexpected internal error occurred. */
+		InternalServerErrorProblem: {
+			headers: {
+				[name: string]: unknown;
+			};
+			content: {
+				"application/problem+json": components["schemas"]["Problem"];
+			};
+		};
+		/** @description An upstream service returned an invalid or unsuccessful response. */
+		BadGatewayProblem: {
+			headers: {
+				[name: string]: unknown;
+			};
+			content: {
+				"application/problem+json": components["schemas"]["Problem"];
+			};
+		};
+		/** @description A required service or capability is temporarily unavailable. */
+		ServiceUnavailableProblem: {
+			headers: {
+				[name: string]: unknown;
+			};
+			content: {
+				"application/problem+json": components["schemas"]["Problem"];
+			};
+		};
+		/** @description A required upstream operation did not complete before its deadline. */
+		GatewayTimeoutProblem: {
+			headers: {
+				[name: string]: unknown;
+			};
+			content: {
+				"application/problem+json": components["schemas"]["Problem"];
+			};
+		};
+	};
 	parameters: never;
 	requestBodies: never;
 	headers: never;
@@ -4695,30 +5138,17 @@ export interface operations {
 			/** @description Registered */
 			201: {
 				headers: {
+					/** @description Session and CSRF cookies. */
+					"Set-Cookie"?: string[];
 					[name: string]: unknown;
 				};
 				content: {
 					"application/json": components["schemas"]["AuthResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Conflict */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	login: {
@@ -4737,30 +5167,17 @@ export interface operations {
 			/** @description Authenticated */
 			200: {
 				headers: {
+					/** @description Session and CSRF cookies. */
+					"Set-Cookie"?: string[];
 					[name: string]: unknown;
 				};
 				content: {
 					"application/json": components["schemas"]["AuthResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	logout: {
@@ -4775,12 +5192,16 @@ export interface operations {
 			/** @description Logged out */
 			200: {
 				headers: {
+					/** @description Expired session and CSRF cookies. */
+					"Set-Cookie"?: string[];
 					[name: string]: unknown;
 				};
 				content: {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAuthConfig: {
@@ -4801,6 +5222,8 @@ export interface operations {
 					"application/json": components["schemas"]["AuthConfigResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	oidcLogin: {
@@ -4822,6 +5245,8 @@ export interface operations {
 				};
 				content?: never;
 			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	oidcCallback: {
@@ -4840,6 +5265,8 @@ export interface operations {
 			/** @description Callback as JSON */
 			200: {
 				headers: {
+					/** @description Session and CSRF cookies. */
+					"Set-Cookie"?: string[];
 					[name: string]: unknown;
 				};
 				content: {
@@ -4849,28 +5276,15 @@ export interface operations {
 			/** @description Callback as redirect */
 			302: {
 				headers: {
+					/** @description Session and CSRF cookies. */
+					"Set-Cookie"?: string[];
 					[name: string]: unknown;
 				};
 				content?: never;
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listProducts: {
@@ -4905,15 +5319,8 @@ export interface operations {
 					"application/json": components["schemas"]["ProductPage"];
 				};
 			};
-			/** @description Internal server error */
-			500: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listBrands: {
@@ -4934,6 +5341,8 @@ export interface operations {
 					"application/json": components["schemas"]["BrandListResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listCategories: {
@@ -4954,6 +5363,8 @@ export interface operations {
 					"application/json": components["schemas"]["CategoryListResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listProductAttributes: {
@@ -4974,6 +5385,8 @@ export interface operations {
 					"application/json": components["schemas"]["ProductAttributeDefinitionListResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getProduct: {
@@ -4996,15 +5409,9 @@ export interface operations {
 					"application/json": components["schemas"]["Product"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	resolveContentHomepage: {
@@ -5032,15 +5439,9 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPageResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	resolveContentPage: {
@@ -5070,15 +5471,9 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPageResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	recordContentEvent: {
@@ -5103,15 +5498,8 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
-			/** @description Invalid content event */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	resolveContentRedirect: {
@@ -5134,15 +5522,9 @@ export interface operations {
 					"application/json": components["schemas"]["CmsRedirectResolution"];
 				};
 			};
-			/** @description No redirect */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getContentSitemap: {
@@ -5163,6 +5545,8 @@ export interface operations {
 					"application/xml": string;
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getContentNavigation: {
@@ -5185,15 +5569,9 @@ export interface operations {
 					"application/json": components["schemas"]["CmsNavigationResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getContentGlobalRegion: {
@@ -5216,15 +5594,9 @@ export interface operations {
 					"application/json": components["schemas"]["CmsGlobalRegionResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getProfile: {
@@ -5245,15 +5617,10 @@ export interface operations {
 					"application/json": components["schemas"]["User"];
 				};
 			};
-			/** @description Unauthorized */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateProfile: {
@@ -5278,15 +5645,10 @@ export interface operations {
 					"application/json": components["schemas"]["User"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	setProfilePhoto: {
@@ -5313,33 +5675,12 @@ export interface operations {
 					"application/json": components["schemas"]["User"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Conflict */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Too large */
-			413: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			413: components["responses"]["PayloadTooLargeProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteProfilePhoto: {
@@ -5360,6 +5701,10 @@ export interface operations {
 					"application/json": components["schemas"]["User"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listSavedPaymentMethods: {
@@ -5380,6 +5725,10 @@ export interface operations {
 					"application/json": components["schemas"]["SavedPaymentMethod"][];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createSavedPaymentMethod: {
@@ -5404,15 +5753,10 @@ export interface operations {
 					"application/json": components["schemas"]["SavedPaymentMethod"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteSavedPaymentMethod: {
@@ -5435,15 +5779,11 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	setDefaultPaymentMethod: {
@@ -5466,6 +5806,10 @@ export interface operations {
 					"application/json": components["schemas"]["SavedPaymentMethod"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listSavedAddresses: {
@@ -5486,6 +5830,10 @@ export interface operations {
 					"application/json": components["schemas"]["SavedAddress"][];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createSavedAddress: {
@@ -5510,15 +5858,10 @@ export interface operations {
 					"application/json": components["schemas"]["SavedAddress"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteSavedAddress: {
@@ -5541,15 +5884,11 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	setDefaultAddress: {
@@ -5572,6 +5911,10 @@ export interface operations {
 					"application/json": components["schemas"]["SavedAddress"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getCart: {
@@ -5592,6 +5935,10 @@ export interface operations {
 					"application/json": components["schemas"]["Cart"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	addCartItem: {
@@ -5616,6 +5963,10 @@ export interface operations {
 					"application/json": components["schemas"]["Cart"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getCheckoutCart: {
@@ -5636,15 +5987,10 @@ export interface operations {
 					"application/json": components["schemas"]["Cart"];
 				};
 			};
-			/** @description Guest checkout disabled */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getCheckoutCartSummary: {
@@ -5665,15 +6011,10 @@ export interface operations {
 					"application/json": components["schemas"]["CheckoutCartSummary"];
 				};
 			};
-			/** @description Guest checkout disabled */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	addCheckoutCartItem: {
@@ -5698,15 +6039,10 @@ export interface operations {
 					"application/json": components["schemas"]["Cart"];
 				};
 			};
-			/** @description Guest checkout disabled */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteCheckoutCartItem: {
@@ -5729,15 +6065,10 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
-			/** @description Guest checkout disabled */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateCheckoutCartItem: {
@@ -5764,15 +6095,10 @@ export interface operations {
 					"application/json": components["schemas"]["CartItem"];
 				};
 			};
-			/** @description Guest checkout disabled */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteCartItem: {
@@ -5795,6 +6121,10 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateCartItem: {
@@ -5821,6 +6151,10 @@ export interface operations {
 					"application/json": components["schemas"]["CartItem"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listCheckoutPlugins: {
@@ -5841,6 +6175,10 @@ export interface operations {
 					"application/json": components["schemas"]["CheckoutPluginCatalog"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listCheckoutSessionPlugins: {
@@ -5861,15 +6199,10 @@ export interface operations {
 					"application/json": components["schemas"]["CheckoutPluginCatalog"];
 				};
 			};
-			/** @description Guest checkout disabled */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	quoteCheckout: {
@@ -5894,15 +6227,10 @@ export interface operations {
 					"application/json": components["schemas"]["CheckoutQuoteResponse"];
 				};
 			};
-			/** @description Invalid request payload */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	quoteCheckoutSession: {
@@ -5927,24 +6255,10 @@ export interface operations {
 					"application/json": components["schemas"]["CheckoutQuoteResponse"];
 				};
 			};
-			/** @description Invalid request payload */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Guest checkout disabled */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createCheckoutOrder: {
@@ -5971,42 +6285,12 @@ export interface operations {
 					"application/json": components["schemas"]["Order"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Guest checkout disabled */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Idempotency conflict */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Checkout submission rate limited */
-			429: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	authorizeCheckoutOrderPayment: {
@@ -6035,51 +6319,22 @@ export interface operations {
 					"application/json": components["schemas"]["ProcessPaymentResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
+			/** @description Payment authorization is durably recorded and requires reconciliation */
+			202: {
 				headers: {
 					[name: string]: unknown;
 				};
 				content: {
-					"application/json": components["schemas"]["Error"];
+					"application/json": components["schemas"]["ProviderOperationAcceptedEnvelope"];
 				};
 			};
-			/** @description Guest checkout disabled */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Order not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Idempotency conflict */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Checkout submission rate limited */
-			429: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	quoteCheckoutOrderShippingRates: {
@@ -6108,33 +6363,12 @@ export interface operations {
 					"application/json": components["schemas"]["CheckoutOrderShippingRatesResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Order not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Snapshot mismatch */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getCheckoutOrderShippingTracking: {
@@ -6157,15 +6391,11 @@ export interface operations {
 					"application/json": components["schemas"]["CheckoutOrderTrackingResponse"];
 				};
 			};
-			/** @description Order not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	finalizeCheckoutOrderTax: {
@@ -6194,33 +6424,12 @@ export interface operations {
 					"application/json": components["schemas"]["CheckoutOrderTaxFinalizeResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Order not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Snapshot mismatch */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listUserOrders: {
@@ -6247,6 +6456,10 @@ export interface operations {
 					"application/json": components["schemas"]["OrderPage"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createOrder: {
@@ -6271,6 +6484,10 @@ export interface operations {
 					"application/json": components["schemas"]["Order"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	claimGuestOrder: {
@@ -6295,33 +6512,12 @@ export interface operations {
 					"application/json": components["schemas"]["ClaimGuestOrderResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Guest order not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Guest order already claimed */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getUserOrder: {
@@ -6344,15 +6540,11 @@ export interface operations {
 					"application/json": components["schemas"]["Order"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	cancelUserOrder: {
@@ -6375,24 +6567,11 @@ export interface operations {
 					"application/json": components["schemas"]["Order"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminProducts: {
@@ -6429,6 +6608,10 @@ export interface operations {
 					"application/json": components["schemas"]["ProductPage"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createProduct: {
@@ -6453,6 +6636,10 @@ export interface operations {
 					"application/json": components["schemas"]["Product"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminDiscountCampaigns: {
@@ -6475,6 +6662,10 @@ export interface operations {
 					"application/json": components["schemas"]["DiscountCampaignListResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminDiscountCampaign: {
@@ -6499,15 +6690,10 @@ export interface operations {
 					"application/json": components["schemas"]["DiscountCampaign"];
 				};
 			};
-			/** @description Invalid discount campaign */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminPromotionCampaign: {
@@ -6532,15 +6718,10 @@ export interface operations {
 					"application/json": components["schemas"]["DiscountCampaign"];
 				};
 			};
-			/** @description Invalid promotion */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	previewAdminPromotion: {
@@ -6565,15 +6746,10 @@ export interface operations {
 					"application/json": components["schemas"]["PromotionEvaluationResponse"];
 				};
 			};
-			/** @description Invalid preview request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminPromotionTemplates: {
@@ -6596,6 +6772,10 @@ export interface operations {
 					"application/json": components["schemas"]["PromotionTemplateListResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminPromotionTemplate: {
@@ -6620,15 +6800,10 @@ export interface operations {
 					"application/json": components["schemas"]["PromotionTemplate"];
 				};
 			};
-			/** @description Invalid template */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	instantiateAdminPromotionTemplate: {
@@ -6655,24 +6830,11 @@ export interface operations {
 					"application/json": components["schemas"]["DiscountCampaign"];
 				};
 			};
-			/** @description Invalid template instantiation */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Promotion template not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateAdminDiscountCampaign: {
@@ -6699,24 +6861,11 @@ export interface operations {
 					"application/json": components["schemas"]["DiscountCampaign"];
 				};
 			};
-			/** @description Invalid discount campaign */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Discount campaign not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	disableAdminDiscountCampaign: {
@@ -6739,15 +6888,11 @@ export interface operations {
 					"application/json": components["schemas"]["DiscountCampaign"];
 				};
 			};
-			/** @description Discount campaign not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	scheduleAdminDiscountCampaign: {
@@ -6774,24 +6919,11 @@ export interface operations {
 					"application/json": components["schemas"]["DiscountSchedule"];
 				};
 			};
-			/** @description Invalid schedule */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Discount campaign not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	archiveAdminDiscountCampaign: {
@@ -6814,15 +6946,11 @@ export interface operations {
 					"application/json": components["schemas"]["DiscountCampaign"];
 				};
 			};
-			/** @description Discount campaign not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	runAdminDiscountLifecycle: {
@@ -6843,6 +6971,10 @@ export interface operations {
 					"application/json": components["schemas"]["DiscountLifecycleRunResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminDiscountHistory: {
@@ -6865,6 +6997,10 @@ export interface operations {
 					"application/json": components["schemas"]["DiscountStateHistoryListResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminDiscountAudit: {
@@ -6887,6 +7023,10 @@ export interface operations {
 					"application/json": components["schemas"]["DiscountCampaignAuditListResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminDiscountMetrics: {
@@ -6907,6 +7047,10 @@ export interface operations {
 					"application/json": components["schemas"]["DiscountEvaluationMetrics"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	runAdminDiscountReconciliation: {
@@ -6927,6 +7071,10 @@ export interface operations {
 					"application/json": components["schemas"]["DiscountReconciliationReport"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminBrands: {
@@ -6949,6 +7097,10 @@ export interface operations {
 					"application/json": components["schemas"]["BrandListResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminBrand: {
@@ -6973,6 +7125,10 @@ export interface operations {
 					"application/json": components["schemas"]["Brand"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteAdminBrand: {
@@ -6995,6 +7151,10 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateAdminBrand: {
@@ -7021,6 +7181,10 @@ export interface operations {
 					"application/json": components["schemas"]["Brand"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminCategories: {
@@ -7044,6 +7208,10 @@ export interface operations {
 					"application/json": components["schemas"]["CategoryListResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminCategory: {
@@ -7068,6 +7236,10 @@ export interface operations {
 					"application/json": components["schemas"]["Category"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteAdminCategory: {
@@ -7090,6 +7262,10 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateAdminCategory: {
@@ -7116,6 +7292,10 @@ export interface operations {
 					"application/json": components["schemas"]["Category"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminProductAttributes: {
@@ -7136,6 +7316,10 @@ export interface operations {
 					"application/json": components["schemas"]["ProductAttributeDefinitionListResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminProductAttribute: {
@@ -7160,6 +7344,10 @@ export interface operations {
 					"application/json": components["schemas"]["ProductAttributeDefinition"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteAdminProductAttribute: {
@@ -7182,6 +7370,10 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateAdminProductAttribute: {
@@ -7208,6 +7400,10 @@ export interface operations {
 					"application/json": components["schemas"]["ProductAttributeDefinition"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminProduct: {
@@ -7230,15 +7426,11 @@ export interface operations {
 					"application/json": components["schemas"]["Product"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteProduct: {
@@ -7261,6 +7453,10 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateProduct: {
@@ -7287,6 +7483,10 @@ export interface operations {
 					"application/json": components["schemas"]["Product"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	attachProductMedia: {
@@ -7313,6 +7513,10 @@ export interface operations {
 					"application/json": components["schemas"]["Product"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	publishProduct: {
@@ -7335,15 +7539,11 @@ export interface operations {
 					"application/json": components["schemas"]["Product"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	unpublishProduct: {
@@ -7366,15 +7566,11 @@ export interface operations {
 					"application/json": components["schemas"]["Product"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	discardProductDraft: {
@@ -7397,15 +7593,11 @@ export interface operations {
 					"application/json": components["schemas"]["Product"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateProductMediaOrder: {
@@ -7432,6 +7624,10 @@ export interface operations {
 					"application/json": components["schemas"]["Product"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	detachProductMedia: {
@@ -7455,6 +7651,10 @@ export interface operations {
 					"application/json": components["schemas"]["Product"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateProductRelated: {
@@ -7481,6 +7681,10 @@ export interface operations {
 					"application/json": components["schemas"]["Product"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminOrders: {
@@ -7505,6 +7709,10 @@ export interface operations {
 					"application/json": components["schemas"]["OrderPage"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminOrder: {
@@ -7527,6 +7735,10 @@ export interface operations {
 					"application/json": components["schemas"]["Order"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminOrderPayments: {
@@ -7549,15 +7761,11 @@ export interface operations {
 					"application/json": components["schemas"]["OrderPaymentLedger"];
 				};
 			};
-			/** @description Order not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminOrderShippingLabel: {
@@ -7586,33 +7794,12 @@ export interface operations {
 					"application/json": components["schemas"]["AdminOrderShippingLabelResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Order or rate not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Shipment already finalized with a different service */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	captureAdminOrderPayment: {
@@ -7642,33 +7829,21 @@ export interface operations {
 					"application/json": components["schemas"]["AdminOrderPaymentLifecycleResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
+			/** @description Capture is durably recorded and requires reconciliation */
+			202: {
 				headers: {
 					[name: string]: unknown;
 				};
 				content: {
-					"application/json": components["schemas"]["Error"];
+					"application/json": components["schemas"]["ProviderOperationAcceptedEnvelope"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Conflict */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	voidAdminOrderPayment: {
@@ -7694,33 +7869,21 @@ export interface operations {
 					"application/json": components["schemas"]["AdminOrderPaymentLifecycleResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
+			/** @description Void is durably recorded and requires reconciliation */
+			202: {
 				headers: {
 					[name: string]: unknown;
 				};
 				content: {
-					"application/json": components["schemas"]["Error"];
+					"application/json": components["schemas"]["ProviderOperationAcceptedEnvelope"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Conflict */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	refundAdminOrderPayment: {
@@ -7750,33 +7913,21 @@ export interface operations {
 					"application/json": components["schemas"]["AdminOrderPaymentLifecycleResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
+			/** @description Refund is durably recorded and requires reconciliation */
+			202: {
 				headers: {
 					[name: string]: unknown;
 				};
 				content: {
-					"application/json": components["schemas"]["Error"];
+					"application/json": components["schemas"]["ProviderOperationAcceptedEnvelope"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Conflict */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateOrderStatus: {
@@ -7803,6 +7954,10 @@ export interface operations {
 					"application/json": components["schemas"]["Order"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminWebhookEvents: {
@@ -7828,6 +7983,10 @@ export interface operations {
 					"application/json": components["schemas"]["WebhookEventPage"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	exportAdminTaxReport: {
@@ -7853,6 +8012,10 @@ export interface operations {
 					"text/csv": string;
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminProviderCredentials: {
@@ -7875,6 +8038,10 @@ export interface operations {
 					"application/json": components["schemas"]["ProviderCredentialListResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	upsertAdminProviderCredential: {
@@ -7899,24 +8066,11 @@ export interface operations {
 					"application/json": components["schemas"]["ProviderCredentialEnvelope"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Credential encryption is not configured */
-			412: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			412: components["responses"]["PreconditionFailedProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminProviderOperationsOverview: {
@@ -7937,6 +8091,10 @@ export interface operations {
 					"application/json": components["schemas"]["ProviderOperationsOverview"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	rotateAdminProviderCredential: {
@@ -7959,24 +8117,257 @@ export interface operations {
 					"application/json": components["schemas"]["ProviderCredentialEnvelope"];
 				};
 			};
-			/** @description Credential not found */
-			404: {
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			412: components["responses"]["PreconditionFailedProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminProviderOperations: {
+		parameters: {
+			query?: {
+				provider_type?: "payment" | "shipping" | "tax";
+				provider_id?: string;
+				environment?: "sandbox" | "production";
+				operation?: string;
+				status?: components["schemas"]["ProviderOperationStatus"];
+				entity_type?: string;
+				entity_id?: number;
+				page?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Durable provider operations */
+			200: {
 				headers: {
 					[name: string]: unknown;
 				};
 				content: {
-					"application/json": components["schemas"]["Error"];
+					"application/json": components["schemas"]["ProviderOperationPage"];
 				};
 			};
-			/** @description Credential encryption is not configured */
-			412: {
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminProviderOperation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Provider operation with attempt and reconciliation case detail */
+			200: {
 				headers: {
 					[name: string]: unknown;
 				};
 				content: {
-					"application/json": components["schemas"]["Error"];
+					"application/json": components["schemas"]["ProviderOperationEnvelope"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	queryAdminProviderOperationOutcome: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Provider outcome was resolved */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProviderOperationEnvelope"];
+				};
+			};
+			/** @description Provider outcome remains unknown and requires reconciliation */
+			202: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProviderOperationEnvelope"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			412: components["responses"]["PreconditionFailedProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	retryFinalizeAdminProviderOperation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Local finalization retry was safely queued */
+			202: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProviderOperationEnvelope"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	retryCompensationAdminProviderOperation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Compensation retry was safely queued */
+			202: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProviderOperationEnvelope"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminProviderReconciliationCases: {
+		parameters: {
+			query?: {
+				status?: components["schemas"]["ProviderReconciliationCaseStatus"];
+				provider_type?: "payment" | "shipping" | "tax";
+				provider_id?: string;
+				case_type?: string;
+				page?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Provider reconciliation cases */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProviderReconciliationCasePage"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminProviderReconciliationCase: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Provider reconciliation case detail */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProviderReconciliationCaseEnvelope"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	updateAdminProviderReconciliationCase: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["ProviderReconciliationCaseUpdate"];
+			};
+		};
+		responses: {
+			/** @description Updated provider reconciliation case */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProviderReconciliationCaseEnvelope"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminProviderReconciliationRuns: {
@@ -8002,6 +8393,10 @@ export interface operations {
 					"application/json": components["schemas"]["ProviderReconciliationRunPage"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminProviderReconciliationRun: {
@@ -8026,15 +8421,10 @@ export interface operations {
 					"application/json": components["schemas"]["ProviderReconciliationRunEnvelope"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminProviderReconciliationRun: {
@@ -8057,15 +8447,11 @@ export interface operations {
 					"application/json": components["schemas"]["ProviderReconciliationRunEnvelope"];
 				};
 			};
-			/** @description Reconciliation run not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	receiveWebhookEvent: {
@@ -8094,24 +8480,9 @@ export interface operations {
 					"application/json": components["schemas"]["WebhookIngestResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Invalid signature */
-			401: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listUsers: {
@@ -8136,6 +8507,10 @@ export interface operations {
 					"application/json": components["schemas"]["UserPage"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateUserRole: {
@@ -8162,6 +8537,10 @@ export interface operations {
 					"application/json": components["schemas"]["User"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminCheckoutPlugins: {
@@ -8182,6 +8561,10 @@ export interface operations {
 					"application/json": components["schemas"]["CheckoutPluginCatalog"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateAdminCheckoutPlugin: {
@@ -8209,15 +8592,10 @@ export interface operations {
 					"application/json": components["schemas"]["CheckoutPluginCatalog"];
 				};
 			};
-			/** @description Invalid request payload */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminInventoryReservations: {
@@ -8241,15 +8619,10 @@ export interface operations {
 					"application/json": components["schemas"]["InventoryReservationList"];
 				};
 			};
-			/** @description Internal server error */
-			500: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminInventoryAlerts: {
@@ -8273,15 +8646,10 @@ export interface operations {
 					"application/json": components["schemas"]["InventoryAlertList"];
 				};
 			};
-			/** @description Internal server error */
-			500: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	ackAdminInventoryAlert: {
@@ -8304,15 +8672,10 @@ export interface operations {
 					"application/json": components["schemas"]["InventoryAlert"];
 				};
 			};
-			/** @description Invalid alert id */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	resolveAdminInventoryAlert: {
@@ -8335,15 +8698,10 @@ export interface operations {
 					"application/json": components["schemas"]["InventoryAlert"];
 				};
 			};
-			/** @description Invalid alert id */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminInventoryThresholds: {
@@ -8366,6 +8724,10 @@ export interface operations {
 					"application/json": components["schemas"]["InventoryThresholdList"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	upsertAdminInventoryThreshold: {
@@ -8390,15 +8752,10 @@ export interface operations {
 					"application/json": components["schemas"]["InventoryThreshold"];
 				};
 			};
-			/** @description Invalid threshold request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteAdminInventoryThreshold: {
@@ -8421,15 +8778,10 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
-			/** @description Invalid threshold id */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminInventoryAdjustment: {
@@ -8454,15 +8806,10 @@ export interface operations {
 					"application/json": components["schemas"]["InventoryAdjustmentResponse"];
 				};
 			};
-			/** @description Invalid adjustment */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	runAdminInventoryReconciliation: {
@@ -8483,6 +8830,10 @@ export interface operations {
 					"application/json": components["schemas"]["InventoryReconciliationReport"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminInventoryTimeline: {
@@ -8507,15 +8858,10 @@ export interface operations {
 					"application/json": components["schemas"]["InventoryTimeline"];
 				};
 			};
-			/** @description Invalid product variant id */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminPurchaseOrders: {
@@ -8538,6 +8884,10 @@ export interface operations {
 					"application/json": components["schemas"]["PurchaseOrderList"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminPurchaseOrder: {
@@ -8562,15 +8912,10 @@ export interface operations {
 					"application/json": components["schemas"]["PurchaseOrder"];
 				};
 			};
-			/** @description Invalid purchase order */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	issueAdminPurchaseOrder: {
@@ -8593,15 +8938,10 @@ export interface operations {
 					"application/json": components["schemas"]["PurchaseOrder"];
 				};
 			};
-			/** @description Invalid purchase order transition */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	cancelAdminPurchaseOrder: {
@@ -8624,15 +8964,10 @@ export interface operations {
 					"application/json": components["schemas"]["PurchaseOrder"];
 				};
 			};
-			/** @description Invalid purchase order transition */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	receiveAdminPurchaseOrder: {
@@ -8659,15 +8994,10 @@ export interface operations {
 					"application/json": components["schemas"]["PurchaseOrderReceiptResponse"];
 				};
 			};
-			/** @description Invalid receipt */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminCmsPages: {
@@ -8691,6 +9021,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPageListResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminCmsPage: {
@@ -8715,15 +9049,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPageResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	previewAdminCmsPayload: {
@@ -8748,24 +9077,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPreviewResponse"];
 				};
 			};
-			/** @description Invalid preview request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Duplicate path */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminCmsPage: {
@@ -8788,15 +9104,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPageResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteAdminCmsPage: {
@@ -8819,15 +9131,11 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateAdminCmsPage: {
@@ -8854,33 +9162,12 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPageResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Duplicate path */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	publishAdminCmsPage: {
@@ -8907,15 +9194,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPageResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	unpublishAdminCmsPage: {
@@ -8942,15 +9225,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPageResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	discardAdminCmsPageDraft: {
@@ -8980,15 +9259,11 @@ export interface operations {
 				};
 				content?: never;
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminCmsLocales: {
@@ -9009,6 +9284,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsLocaleSettings"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateAdminCmsLocales: {
@@ -9033,15 +9312,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsLocaleSettings"];
 				};
 			};
-			/** @description Invalid locale configuration */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminCmsPageVariants: {
@@ -9064,6 +9338,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPageVariant"][];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminCmsPageVariant: {
@@ -9090,24 +9368,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPageVariant"];
 				};
 			};
-			/** @description Invalid page variant */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Duplicate locale and market variant or localized path */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateAdminCmsPageVariant: {
@@ -9135,15 +9400,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPageVariant"];
 				};
 			};
-			/** @description Invalid page variant */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteAdminCmsPageVariant: {
@@ -9167,6 +9427,10 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	transitionAdminCmsPageVariant: {
@@ -9195,24 +9459,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPageVariant"];
 				};
 			};
-			/** @description Invalid workflow transition */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Insufficient CMS permission */
-			403: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminCmsAuditEvents: {
@@ -9236,6 +9486,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsAuditEvent"][];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminCmsGovernance: {
@@ -9256,6 +9510,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsGovernance"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateAdminCmsGovernance: {
@@ -9280,6 +9538,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsGovernance"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminCmsEntryWorkflow: {
@@ -9302,6 +9564,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsEntryWorkflow"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	transitionAdminCmsEntryWorkflow: {
@@ -9329,6 +9595,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsEntryWorkflow"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminCmsEntryComment: {
@@ -9355,6 +9625,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsChangeComment"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	resolveAdminCmsComment: {
@@ -9377,6 +9651,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsChangeComment"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminCmsEntryVariants: {
@@ -9399,6 +9677,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsEntryVariant"][];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminCmsEntryVariant: {
@@ -9425,6 +9707,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsEntryVariant"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateAdminCmsEntryVariant: {
@@ -9452,6 +9738,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsEntryVariant"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteAdminCmsEntryVariant: {
@@ -9475,6 +9765,10 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	transitionAdminCmsEntryVariant: {
@@ -9503,6 +9797,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsEntryVariant"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminCmsOperations: {
@@ -9523,6 +9821,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsOperations"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	retryAdminCmsInvalidation: {
@@ -9545,6 +9847,10 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	previewAdminCmsRestore: {
@@ -9569,6 +9875,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsRestorePreview"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	exportAdminCmsContent: {
@@ -9589,6 +9899,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsContentExport"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	restoreAdminCmsContent: {
@@ -9613,15 +9927,10 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
-			/** @description Invalid or unsupported CMS export */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	rollbackAdminCmsPage: {
@@ -9648,24 +9957,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPageResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminCmsPageDelivery: {
@@ -9688,15 +9984,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPageDeliveryResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateAdminCmsPageDelivery: {
@@ -9723,24 +10015,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsPageDeliveryResponse"];
 				};
 			};
-			/** @description Invalid delivery settings */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminCmsPageSeo: {
@@ -9763,15 +10042,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsSEOResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateAdminCmsPageSeo: {
@@ -9798,15 +10073,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsSEOResponse"];
 				};
 			};
-			/** @description Invalid SEO metadata */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminCmsRedirects: {
@@ -9827,6 +10097,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsRedirectRule"][];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminCmsRedirect: {
@@ -9851,15 +10125,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsRedirectRule"];
 				};
 			};
-			/** @description Invalid redirect */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteAdminCmsRedirect: {
@@ -9882,6 +10151,10 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateAdminCmsRedirect: {
@@ -9908,15 +10181,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsRedirectRule"];
 				};
 			};
-			/** @description Invalid redirect */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminCmsNavigation: {
@@ -9940,6 +10208,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsNavigationListResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminCmsNavigation: {
@@ -9964,24 +10236,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsNavigationResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Duplicate key */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminCmsNavigation: {
@@ -10004,15 +10263,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsNavigationResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteAdminCmsNavigation: {
@@ -10035,15 +10290,11 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateAdminCmsNavigation: {
@@ -10070,33 +10321,12 @@ export interface operations {
 					"application/json": components["schemas"]["CmsNavigationResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Duplicate key */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	publishAdminCmsNavigation: {
@@ -10123,24 +10353,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsNavigationResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	unpublishAdminCmsNavigation: {
@@ -10167,15 +10384,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsNavigationResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	discardAdminCmsNavigationDraft: {
@@ -10205,15 +10418,11 @@ export interface operations {
 				};
 				content?: never;
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminCmsGlobalRegions: {
@@ -10237,6 +10446,10 @@ export interface operations {
 					"application/json": components["schemas"]["CmsGlobalRegionListResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createAdminCmsGlobalRegion: {
@@ -10261,24 +10474,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsGlobalRegionResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Duplicate key */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminCmsGlobalRegion: {
@@ -10301,15 +10501,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsGlobalRegionResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	deleteAdminCmsGlobalRegion: {
@@ -10332,15 +10528,11 @@ export interface operations {
 					"application/json": components["schemas"]["MessageResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateAdminCmsGlobalRegion: {
@@ -10367,33 +10559,12 @@ export interface operations {
 					"application/json": components["schemas"]["CmsGlobalRegionResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Duplicate key */
-			409: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	publishAdminCmsGlobalRegion: {
@@ -10420,24 +10591,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsGlobalRegionResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	unpublishAdminCmsGlobalRegion: {
@@ -10464,15 +10622,11 @@ export interface operations {
 					"application/json": components["schemas"]["CmsGlobalRegionResponse"];
 				};
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	discardAdminCmsGlobalRegionDraft: {
@@ -10502,15 +10656,11 @@ export interface operations {
 				};
 				content?: never;
 			};
-			/** @description Not found */
-			404: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminWebsiteSettings: {
@@ -10531,15 +10681,10 @@ export interface operations {
 					"application/json": components["schemas"]["WebsiteSettingsResponse"];
 				};
 			};
-			/** @description Internal server error */
-			500: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	updateWebsiteSettings: {
@@ -10564,15 +10709,10 @@ export interface operations {
 					"application/json": components["schemas"]["WebsiteSettingsResponse"];
 				};
 			};
-			/** @description Bad request */
-			400: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["Error"];
-				};
-			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	getAdminPreview: {
@@ -10587,12 +10727,18 @@ export interface operations {
 			/** @description Current preview session state */
 			200: {
 				headers: {
+					/** @description Clears an invalid preview cookie when necessary. */
+					"Set-Cookie"?: string;
 					[name: string]: unknown;
 				};
 				content: {
 					"application/json": components["schemas"]["DraftPreviewSessionResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	startAdminPreview: {
@@ -10607,12 +10753,18 @@ export interface operations {
 			/** @description Preview session started */
 			200: {
 				headers: {
+					/** @description Signed draft preview session cookie. */
+					"Set-Cookie"?: string;
 					[name: string]: unknown;
 				};
 				content: {
 					"application/json": components["schemas"]["DraftPreviewSessionResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	stopAdminPreview: {
@@ -10627,19 +10779,25 @@ export interface operations {
 			/** @description Preview session stopped */
 			200: {
 				headers: {
+					/** @description Expired draft preview session cookie. */
+					"Set-Cookie"?: string;
 					[name: string]: unknown;
 				};
 				content: {
 					"application/json": components["schemas"]["DraftPreviewSessionResponse"];
 				};
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	createMediaUpload: {
 		parameters: {
 			query?: never;
-			header?: {
-				"Tus-Resumable"?: string;
+			header: {
+				"Tus-Resumable": "1.0.0";
 				"Upload-Length"?: number;
 				"Upload-Metadata"?: string;
 			};
@@ -10656,16 +10814,24 @@ export interface operations {
 			201: {
 				headers: {
 					Location?: string;
+					"Tus-Resumable": "1.0.0";
+					"Upload-Offset": number;
 					[name: string]: unknown;
 				};
 				content?: never;
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	headMediaUpload: {
 		parameters: {
 			query?: never;
-			header?: never;
+			header: {
+				"Tus-Resumable": "1.0.0";
+			};
 			path: {
 				path: string;
 			};
@@ -10676,16 +10842,26 @@ export interface operations {
 			/** @description Upload status */
 			200: {
 				headers: {
+					"Tus-Resumable": "1.0.0";
+					"Upload-Offset": number;
+					"Upload-Length": number;
 					[name: string]: unknown;
 				};
 				content?: never;
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	patchMediaUpload: {
 		parameters: {
 			query?: never;
-			header?: never;
+			header: {
+				"Tus-Resumable": "1.0.0";
+				"Upload-Offset": number;
+			};
 			path: {
 				path: string;
 			};
@@ -10700,10 +10876,16 @@ export interface operations {
 			/** @description Upload chunk accepted */
 			204: {
 				headers: {
+					"Tus-Resumable": "1.0.0";
+					"Upload-Offset": number;
 					[name: string]: unknown;
 				};
 				content?: never;
 			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 }

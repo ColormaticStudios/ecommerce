@@ -1,6 +1,7 @@
 package accountdata
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"unicode"
@@ -8,6 +9,17 @@ import (
 	"ecommerce/models"
 
 	"gorm.io/gorm"
+)
+
+var (
+	ErrInvalidCardholderName  = errors.New("Cardholder name is required")
+	ErrInvalidCardNumber      = errors.New("Card number must be 12 to 19 digits")
+	ErrInvalidExpirationMonth = errors.New("Expiration month is invalid")
+	ErrInvalidExpirationYear  = errors.New("Expiration year is invalid")
+	ErrInvalidAddress         = errors.New("Address fields are required")
+	ErrInvalidCountry         = errors.New("Country must be a 2-letter code")
+	ErrPaymentMethodNotFound  = errors.New("payment method not found")
+	ErrAddressNotFound        = errors.New("address not found")
 )
 
 type Service struct {
@@ -40,9 +52,9 @@ func NewService(db *gorm.DB) *Service {
 	return &Service{db: db}
 }
 
-func (s *Service) ListSavedPaymentMethods(userID uint) ([]models.SavedPaymentMethod, error) {
+func (s *Service) ListSavedPaymentMethods(ctx context.Context, userID uint) ([]models.SavedPaymentMethod, error) {
 	var methods []models.SavedPaymentMethod
-	if err := s.db.
+	if err := s.db.WithContext(ctx).
 		Where("user_id = ?", userID).
 		Order("is_default DESC, created_at DESC").
 		Find(&methods).Error; err != nil {
@@ -51,20 +63,24 @@ func (s *Service) ListSavedPaymentMethods(userID uint) ([]models.SavedPaymentMet
 	return methods, nil
 }
 
-func (s *Service) CreateSavedPaymentMethod(userID uint, input CreateSavedPaymentMethodInput) (models.SavedPaymentMethod, error) {
+func (s *Service) CreateSavedPaymentMethod(ctx context.Context, userID uint, input CreateSavedPaymentMethodInput) (models.SavedPaymentMethod, error) {
 	cardDigits := digitsOnly(input.CardNumber)
 	if len(cardDigits) < 12 || len(cardDigits) > 19 {
-		return models.SavedPaymentMethod{}, errors.New("Card number must be 12 to 19 digits")
+		return models.SavedPaymentMethod{}, ErrInvalidCardNumber
 	}
 	if input.ExpMonth < 1 || input.ExpMonth > 12 {
-		return models.SavedPaymentMethod{}, errors.New("Expiration month is invalid")
+		return models.SavedPaymentMethod{}, ErrInvalidExpirationMonth
 	}
 	if input.ExpYear < 2000 || input.ExpYear > 2200 {
-		return models.SavedPaymentMethod{}, errors.New("Expiration year is invalid")
+		return models.SavedPaymentMethod{}, ErrInvalidExpirationYear
+	}
+	if strings.TrimSpace(input.CardholderName) == "" {
+		return models.SavedPaymentMethod{}, ErrInvalidCardholderName
 	}
 
+	db := s.db.WithContext(ctx)
 	var count int64
-	if err := s.db.Model(&models.SavedPaymentMethod{}).Where("user_id = ?", userID).Count(&count).Error; err != nil {
+	if err := db.Model(&models.SavedPaymentMethod{}).Where("user_id = ?", userID).Count(&count).Error; err != nil {
 		return models.SavedPaymentMethod{}, err
 	}
 
@@ -80,7 +96,7 @@ func (s *Service) CreateSavedPaymentMethod(userID uint, input CreateSavedPayment
 		IsDefault:      input.SetDefault || count == 0,
 	}
 
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		if method.IsDefault {
 			if err := tx.Model(&models.SavedPaymentMethod{}).
 				Where("user_id = ?", userID).
@@ -93,12 +109,12 @@ func (s *Service) CreateSavedPaymentMethod(userID uint, input CreateSavedPayment
 	return method, err
 }
 
-func (s *Service) DeleteSavedPaymentMethod(userID uint, methodID uint) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
+func (s *Service) DeleteSavedPaymentMethod(ctx context.Context, userID uint, methodID uint) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var method models.SavedPaymentMethod
 		if err := tx.Where("id = ? AND user_id = ?", methodID, userID).First(&method).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return errors.New("payment method not found")
+				return ErrPaymentMethodNotFound
 			}
 			return err
 		}
@@ -118,12 +134,12 @@ func (s *Service) DeleteSavedPaymentMethod(userID uint, methodID uint) error {
 	})
 }
 
-func (s *Service) SetDefaultPaymentMethod(userID uint, methodID uint) (models.SavedPaymentMethod, error) {
+func (s *Service) SetDefaultPaymentMethod(ctx context.Context, userID uint, methodID uint) (models.SavedPaymentMethod, error) {
 	var method models.SavedPaymentMethod
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where("id = ? AND user_id = ?", methodID, userID).First(&method).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return errors.New("payment method not found")
+				return ErrPaymentMethodNotFound
 			}
 			return err
 		}
@@ -141,9 +157,9 @@ func (s *Service) SetDefaultPaymentMethod(userID uint, methodID uint) (models.Sa
 	return method, nil
 }
 
-func (s *Service) ListSavedAddresses(userID uint) ([]models.SavedAddress, error) {
+func (s *Service) ListSavedAddresses(ctx context.Context, userID uint) ([]models.SavedAddress, error) {
 	var addresses []models.SavedAddress
-	if err := s.db.
+	if err := s.db.WithContext(ctx).
 		Where("user_id = ?", userID).
 		Order("is_default DESC, created_at DESC").
 		Find(&addresses).Error; err != nil {
@@ -152,14 +168,18 @@ func (s *Service) ListSavedAddresses(userID uint) ([]models.SavedAddress, error)
 	return addresses, nil
 }
 
-func (s *Service) CreateSavedAddress(userID uint, input CreateSavedAddressInput) (models.SavedAddress, error) {
+func (s *Service) CreateSavedAddress(ctx context.Context, userID uint, input CreateSavedAddressInput) (models.SavedAddress, error) {
+	if strings.TrimSpace(input.FullName) == "" || strings.TrimSpace(input.Line1) == "" || strings.TrimSpace(input.City) == "" || strings.TrimSpace(input.PostalCode) == "" {
+		return models.SavedAddress{}, ErrInvalidAddress
+	}
 	country := strings.ToUpper(strings.TrimSpace(input.Country))
 	if len(country) != 2 {
-		return models.SavedAddress{}, errors.New("Country must be a 2-letter code")
+		return models.SavedAddress{}, ErrInvalidCountry
 	}
 
+	db := s.db.WithContext(ctx)
 	var count int64
-	if err := s.db.Model(&models.SavedAddress{}).Where("user_id = ?", userID).Count(&count).Error; err != nil {
+	if err := db.Model(&models.SavedAddress{}).Where("user_id = ?", userID).Count(&count).Error; err != nil {
 		return models.SavedAddress{}, err
 	}
 
@@ -177,7 +197,7 @@ func (s *Service) CreateSavedAddress(userID uint, input CreateSavedAddressInput)
 		IsDefault:  input.SetDefault || count == 0,
 	}
 
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		if address.IsDefault {
 			if err := tx.Model(&models.SavedAddress{}).
 				Where("user_id = ?", userID).
@@ -190,12 +210,12 @@ func (s *Service) CreateSavedAddress(userID uint, input CreateSavedAddressInput)
 	return address, err
 }
 
-func (s *Service) DeleteSavedAddress(userID uint, addressID uint) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
+func (s *Service) DeleteSavedAddress(ctx context.Context, userID uint, addressID uint) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var address models.SavedAddress
 		if err := tx.Where("id = ? AND user_id = ?", addressID, userID).First(&address).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return errors.New("address not found")
+				return ErrAddressNotFound
 			}
 			return err
 		}
@@ -215,12 +235,12 @@ func (s *Service) DeleteSavedAddress(userID uint, addressID uint) error {
 	})
 }
 
-func (s *Service) SetDefaultAddress(userID uint, addressID uint) (models.SavedAddress, error) {
+func (s *Service) SetDefaultAddress(ctx context.Context, userID uint, addressID uint) (models.SavedAddress, error) {
 	var address models.SavedAddress
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where("id = ? AND user_id = ?", addressID, userID).First(&address).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return errors.New("address not found")
+				return ErrAddressNotFound
 			}
 			return err
 		}

@@ -37,12 +37,16 @@ func TestExternalProvidersSupportRuntimeOperations(t *testing.T) {
 		Currency:             "USD",
 		Provider:             "ext-pay",
 		IdempotencyKey:       "auth-1",
+		OperationKey:         "op-auth-1",
 		CorrelationID:        "corr-auth",
 		PaymentMethodDisplay: "External Pay",
 		PaymentData:          map[string]string{"token": "tok_test"},
 	})
 	require.NoError(t, err)
 	assert.Equal(t, "ext-pay-auth", authorizeResult.ProviderTxnID)
+	paymentOutcome, err := paymentProvider.GetOutcomeByOperationKey(context.Background(), "op-auth-1")
+	require.NoError(t, err)
+	assert.Equal(t, models.ProviderOutcomeSucceeded, paymentOutcome.Outcome)
 
 	lookupProvider, ok := paymentProvider.(paymentservice.TransactionLookupProvider)
 	require.True(t, ok)
@@ -95,10 +99,20 @@ func TestExternalProvidersSupportRuntimeOperations(t *testing.T) {
 			HeightCM:    10,
 		},
 		IdempotencyKey: "ship-1",
+		OperationKey:   "op-ship-1",
 		CorrelationID:  "corr-ship",
 	})
 	require.NoError(t, err)
 	assert.Equal(t, "ext-shipment-1", shipment.ProviderShipmentID)
+	shippingOutcome, err := shippingProvider.GetOutcomeByOperationKey(context.Background(), "op-ship-1")
+	require.NoError(t, err)
+	assert.Equal(t, models.ProviderOutcomeSucceeded, shippingOutcome.Outcome)
+	cancelled, err := shippingProvider.CancelLabel(context.Background(), shippingservice.CancelLabelRequest{
+		Provider: "ext-ship", ProviderShipmentID: shipment.ProviderShipmentID,
+		IdempotencyKey: "cancel-ship-1", OperationKey: "op-ship-1",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, models.ProviderOutcomeSucceeded, cancelled.Outcome)
 
 	shipmentLookup, ok := shippingProvider.(shippingservice.ShipmentLookupProvider)
 	require.True(t, ok)
@@ -127,6 +141,8 @@ func TestExternalProvidersSupportRuntimeOperations(t *testing.T) {
 	finalized, err := taxProvider.FinalizeTax(context.Background(), taxservice.FinalizeTaxRequest{
 		Provider:          "ext-tax",
 		Currency:          "USD",
+		IdempotencyKey:    "tax-1",
+		OperationKey:      "op-tax-1",
 		Data:              map[string]string{"state": "OR"},
 		Items:             []taxservice.LineInput{{LineType: models.TaxLineTypeItem, Quantity: 1, Amount: models.MoneyFromFloat(100)}},
 		ShippingAmount:    models.MoneyFromFloat(0),
@@ -136,6 +152,15 @@ func TestExternalProvidersSupportRuntimeOperations(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, models.MoneyFromFloat(5.25), finalized.TotalTax)
 	require.Len(t, finalized.Lines, 1)
+	taxOutcome, err := taxProvider.GetOutcomeByOperationKey(context.Background(), "op-tax-1")
+	require.NoError(t, err)
+	assert.Equal(t, models.ProviderOutcomeSucceeded, taxOutcome.Outcome)
+	cancelledTax, err := taxProvider.CancelFinalization(context.Background(), taxservice.CancelFinalizationRequest{
+		Provider: "ext-tax", ProviderReference: finalized.ProviderReference,
+		IdempotencyKey: "cancel-tax-1", OperationKey: "op-tax-1",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, models.ProviderOutcomeSucceeded, cancelledTax.Outcome)
 
 	report, err := taxProvider.ExportReport(context.Background(), taxservice.ExportReportRequest{
 		Provider: "ext-tax",
@@ -271,6 +296,9 @@ case "$payload" in
   *'"action":"payment.refund"'*)
     printf '%s\n' '{"ProviderTxnID":"ext-pay-refund","RawResponseRedacted":"{\"status\":\"refunded\"}"}'
     ;;
+  *'"action":"payment.get_operation"'*)
+    printf '%s\n' '{"OperationKey":"op-auth-1","Outcome":"SUCCEEDED","ProviderTxnID":"ext-pay-auth","RawResponseRedacted":"{\"status\":\"succeeded\"}"}'
+    ;;
   *'"action":"payment.get_transaction"'*)
     printf '%s\n' '{"ProviderTxnID":"ext-pay-auth","Operation":"AUTHORIZE","Amount":15,"Currency":"USD","Status":"SUCCEEDED"}'
     ;;
@@ -287,6 +315,9 @@ case "$payload" in
   *'"action":"shipping.buy_label"'*)
     printf '%s\n' '{"ProviderShipmentID":"ext-shipment-1","TrackingNumber":"EXT123","TrackingURL":"https://tracking.example/ext","LabelURL":"https://labels.example/ext.pdf","ServiceCode":"standard","ServiceName":"Standard"}'
     ;;
+  *'"action":"shipping.cancel_label"'*|*'"action":"shipping.get_operation"'*)
+    printf '%s\n' '{"OperationKey":"op-ship-1","Outcome":"SUCCEEDED","ProviderShipmentID":"ext-shipment-1","RawResponseRedacted":"{\"status\":\"succeeded\"}"}'
+    ;;
   *'"action":"shipping.get_shipment"'*)
     printf '%s\n' '{"ProviderShipmentID":"ext-shipment-1","TrackingNumber":"EXT123","Status":"DELIVERED","ServiceCode":"standard","ServiceName":"Standard"}'
     ;;
@@ -301,6 +332,9 @@ case "$payload" in
     ;;
   *'"action":"tax.finalize_tax"'*)
     printf '%s\n' '{"Provider":"ext-tax","Currency":"USD","InclusivePricing":false,"TotalTax":5.25,"Lines":[{"LineType":"item","Quantity":1,"Jurisdiction":"OR","TaxCode":"external_goods","TaxName":"External Tax","TaxableAmount":100,"TaxAmount":5.25,"TaxRateBasisPoints":525,"Inclusive":false}]}'
+    ;;
+  *'"action":"tax.cancel_finalization"'*|*'"action":"tax.get_operation"'*)
+    printf '%s\n' '{"OperationKey":"op-tax-1","Outcome":"SUCCEEDED","ProviderReference":"ext-tax-1","RawResponseRedacted":"{\"status\":\"succeeded\"}"}'
     ;;
   *'"action":"tax.export_report"'*)
     printf '%s\n' '{"content":"order_id,snapshot_id,line_type,jurisdiction,tax_name,tax_amount,taxable_amount,inclusive\n1,2,item,OR,External Tax,5.25,100.00,false\n"}'

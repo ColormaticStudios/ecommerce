@@ -1,6 +1,7 @@
 package cms
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -53,17 +54,19 @@ type ResolvedLocalization struct {
 	Alternates      []models.CMSPageVariant
 }
 
-func (s *Service) Locales() ([]models.CMSLocale, error) {
+func (s *Service) Locales(ctx context.Context) ([]models.CMSLocale, error) {
+	db := s.db.WithContext(ctx)
 	var locales []models.CMSLocale
-	err := s.db.Order("is_default DESC, code ASC").Find(&locales).Error
+	err := db.Order("is_default DESC, code ASC").Find(&locales).Error
 	return locales, err
 }
 
-func (s *Service) UpdateLocales(inputs []LocaleInput, actor string) ([]models.CMSLocale, error) {
+func (s *Service) UpdateLocales(ctx context.Context, inputs []LocaleInput, actor string) ([]models.CMSLocale, error) {
+	db := s.db.WithContext(ctx)
 	if err := validateLocales(inputs); err != nil {
 		return nil, err
 	}
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		codes := make([]string, 0, len(inputs))
 		for _, input := range inputs {
 			code := normalizeLocale(input.Code)
@@ -96,7 +99,7 @@ func (s *Service) UpdateLocales(inputs []LocaleInput, actor string) ([]models.CM
 	if err != nil {
 		return nil, err
 	}
-	return s.Locales()
+	return s.Locales(ctx)
 }
 
 func validateLocales(inputs []LocaleInput) error {
@@ -147,21 +150,22 @@ func validateLocales(inputs []LocaleInput) error {
 	return nil
 }
 
-func (s *Service) ListVariants(pageID uint) ([]models.CMSPageVariant, error) {
+func (s *Service) ListVariants(ctx context.Context, pageID uint) ([]models.CMSPageVariant, error) {
+	db := s.db.WithContext(ctx)
 	var variants []models.CMSPageVariant
-	err := s.db.Where("page_id = ?", pageID).Order("locale ASC, market ASC, id ASC").Find(&variants).Error
+	err := db.Where("page_id = ?", pageID).Order("locale ASC, market ASC, id ASC").Find(&variants).Error
 	return variants, err
 }
 
-func (s *Service) CreateVariant(pageID uint, input VariantInput) (*models.CMSPageVariant, error) {
-	return s.saveVariant(pageID, 0, input)
+func (s *Service) CreateVariant(ctx context.Context, pageID uint, input VariantInput) (*models.CMSPageVariant, error) {
+	return s.saveVariant(s.db.WithContext(ctx), pageID, 0, input)
 }
 
-func (s *Service) UpdateVariant(pageID, variantID uint, input VariantInput) (*models.CMSPageVariant, error) {
-	return s.saveVariant(pageID, variantID, input)
+func (s *Service) UpdateVariant(ctx context.Context, pageID, variantID uint, input VariantInput) (*models.CMSPageVariant, error) {
+	return s.saveVariant(s.db.WithContext(ctx), pageID, variantID, input)
 }
 
-func (s *Service) saveVariant(pageID, variantID uint, input VariantInput) (*models.CMSPageVariant, error) {
+func (s *Service) saveVariant(db *gorm.DB, pageID, variantID uint, input VariantInput) (*models.CMSPageVariant, error) {
 	input.Locale = normalizeLocale(input.Locale)
 	input.Market = strings.ToUpper(strings.TrimSpace(input.Market))
 	input.Path = strings.TrimSpace(input.Path)
@@ -181,7 +185,7 @@ func (s *Service) saveVariant(pageID, variantID uint, input VariantInput) (*mode
 	if input.Slug == "" {
 		input.Slug = strings.Trim(pathValue, "/")
 	}
-	payload, err := ValidateAndNormalizePayload(input.Payload)
+	payload, err := prepareDraftPayload(input.Payload)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +195,7 @@ func (s *Service) saveVariant(pageID, variantID uint, input VariantInput) (*mode
 	}
 	var saved models.CMSPageVariant
 	var cleanupIDs []string
-	err = s.db.Transaction(func(tx *gorm.DB) error {
+	err = db.Transaction(func(tx *gorm.DB) error {
 		var page models.CMSPage
 		if err := tx.First(&page, pageID).Error; err != nil {
 			return ErrNotFound
@@ -237,9 +241,10 @@ func (s *Service) saveVariant(pageID, variantID uint, input VariantInput) (*mode
 	return &saved, err
 }
 
-func (s *Service) DeleteVariant(pageID, variantID uint, actor string) error {
+func (s *Service) DeleteVariant(ctx context.Context, pageID, variantID uint, actor string) error {
+	db := s.db.WithContext(ctx)
 	var cleanupIDs []string
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		var variant models.CMSPageVariant
 		if err := tx.Where("id = ? AND page_id = ?", variantID, pageID).First(&variant).Error; err != nil {
 			return ErrNotFound
@@ -265,11 +270,12 @@ func (s *Service) DeleteVariant(pageID, variantID uint, actor string) error {
 	return err
 }
 
-func (s *Service) TransitionVariant(pageID, variantID uint, action, actor, comment string) (*models.CMSPageVariant, error) {
-	return s.TransitionVariantAsRole(pageID, variantID, action, actor, "publisher", comment)
+func (s *Service) TransitionVariant(ctx context.Context, pageID, variantID uint, action, actor, comment string) (*models.CMSPageVariant, error) {
+	return s.TransitionVariantAsRole(ctx, pageID, variantID, action, actor, "publisher", comment)
 }
 
-func (s *Service) TransitionVariantAsRole(pageID, variantID uint, action, actor, role, comment string) (*models.CMSPageVariant, error) {
+func (s *Service) TransitionVariantAsRole(ctx context.Context, pageID, variantID uint, action, actor, role, comment string) (*models.CMSPageVariant, error) {
+	db := s.db.WithContext(ctx)
 	if (action == "approve" || action == "request_changes") && role != "editor" && role != "publisher" {
 		return nil, ErrPermissionDenied
 	}
@@ -277,7 +283,7 @@ func (s *Service) TransitionVariantAsRole(pageID, variantID uint, action, actor,
 		return nil, ErrPermissionDenied
 	}
 	var variant models.CMSPageVariant
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ? AND page_id = ?", variantID, pageID).First(&variant).Error; err != nil {
 			return ErrNotFound
 		}
@@ -304,6 +310,9 @@ func (s *Service) TransitionVariantAsRole(pageID, variantID uint, action, actor,
 			if variant.Status != models.CMSVariantStatusApproved {
 				return ErrApprovalRequired
 			}
+			if _, err := publicationPayloadJSON(tx, variant.DraftPayloadJSON); err != nil {
+				return err
+			}
 			variant.Status = models.CMSVariantStatusPublished
 			variant.PublishedPayloadJSON = variant.DraftPayloadJSON
 			variant.PublishedAt = &now
@@ -313,6 +322,9 @@ func (s *Service) TransitionVariantAsRole(pageID, variantID uint, action, actor,
 		case "rollback":
 			if variant.PublishedPayloadJSON == "" || variant.PublishedPayloadJSON == "{}" {
 				return ErrInvalidTransition
+			}
+			if _, err := publicationPayloadJSON(tx, variant.PublishedPayloadJSON); err != nil {
+				return err
 			}
 			variant.DraftPayloadJSON = variant.PublishedPayloadJSON
 			variant.Status = models.CMSVariantStatusPublished
@@ -334,12 +346,13 @@ func (s *Service) TransitionVariantAsRole(pageID, variantID uint, action, actor,
 	return &variant, err
 }
 
-func (s *Service) RoleForSubject(subject string) (string, error) {
+func (s *Service) RoleForSubject(ctx context.Context, subject string) (string, error) {
+	db := s.db.WithContext(ctx)
 	if strings.TrimSpace(subject) == "" {
 		return "author", nil
 	}
 	var assignment models.CMSRoleAssignment
-	if err := s.db.Where("subject = ?", subject).First(&assignment).Error; err != nil {
+	if err := db.Where("subject = ?", subject).First(&assignment).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "publisher", nil
 		}
@@ -351,11 +364,12 @@ func (s *Service) RoleForSubject(subject string) (string, error) {
 	return assignment.Role, nil
 }
 
-func (s *Service) AuditEvents(entryID uint, limit int) ([]models.CMSAuditEvent, error) {
+func (s *Service) AuditEvents(ctx context.Context, entryID uint, limit int) ([]models.CMSAuditEvent, error) {
+	db := s.db.WithContext(ctx)
 	if limit <= 0 || limit > 200 {
 		limit = 100
 	}
-	query := s.db.Order("created_at DESC, id DESC").Limit(limit)
+	query := db.Order("created_at DESC, id DESC").Limit(limit)
 	if entryID != 0 {
 		query = query.Where("entry_id = ?", entryID)
 	}
@@ -364,8 +378,9 @@ func (s *Service) AuditEvents(entryID uint, limit int) ([]models.CMSAuditEvent, 
 	return events, err
 }
 
-func (s *Service) ResolveLocalized(record *PageRecord, requestedLocale, market string, includeDraft bool) (*ResolvedLocalization, error) {
-	locales, err := s.Locales()
+func (s *Service) ResolveLocalized(ctx context.Context, record *PageRecord, requestedLocale, market string, includeDraft bool) (*ResolvedLocalization, error) {
+	db := s.db.WithContext(ctx)
+	locales, err := s.Locales(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -388,7 +403,7 @@ func (s *Service) ResolveLocalized(record *PageRecord, requestedLocale, market s
 	}
 	chain := localeFallbackChain(requestedLocale, defaultLocale, byCode)
 	var variants []models.CMSPageVariant
-	if err := s.db.Where("page_id = ?", record.Page.ID).Order("id ASC").Find(&variants).Error; err != nil {
+	if err := db.Where("page_id = ?", record.Page.ID).Order("id ASC").Find(&variants).Error; err != nil {
 		return nil, err
 	}
 	statusAllowed := func(variant models.CMSPageVariant) bool {
@@ -429,6 +444,13 @@ func (s *Service) ResolveLocalized(record *PageRecord, requestedLocale, market s
 		if version != nil {
 			copyVersion := *version
 			copyVersion.PayloadJSON = payloadJSON
+			if !includeDraft {
+				filtered, _, err := FilterPublicPayloadJSON(copyVersion.PayloadJSON)
+				if err != nil {
+					return nil, err
+				}
+				copyVersion.PayloadJSON = filtered
+			}
 			if includeDraft {
 				record.CurrentVersion = &copyVersion
 			} else {
@@ -451,15 +473,16 @@ func (s *Service) ResolveLocalized(record *PageRecord, requestedLocale, market s
 	return &ResolvedLocalization{RequestedLocale: requestedForMetadata, ResolvedLocale: resolved, Market: market, UsedFallback: resolved != requestedForMetadata || selected == nil, Alternates: alternates}, nil
 }
 
-func (s *Service) ResolveForLocale(requestPath, requestedLocale, market string, includeDraft bool) (*PageRecord, *ResolvedLocalization, error) {
+func (s *Service) ResolveForLocale(ctx context.Context, requestPath, requestedLocale, market string, includeDraft bool) (*PageRecord, *ResolvedLocalization, error) {
+	db := s.db.WithContext(ctx)
 	normalized, err := normalizePath(requestPath)
 	if err != nil {
 		return nil, nil, err
 	}
-	record, err := s.Resolve(normalized, includeDraft)
+	record, err := s.Resolve(ctx, normalized, includeDraft)
 	inferredLocale := ""
 	if errors.Is(err, ErrNotFound) {
-		query := s.db.Where("path = ?", normalized)
+		query := db.Where("path = ?", normalized)
 		if !includeDraft {
 			query = query.Where("status = ?", models.CMSVariantStatusPublished)
 		}
@@ -467,7 +490,7 @@ func (s *Service) ResolveForLocale(requestPath, requestedLocale, market string, 
 		if variantErr := query.Order("market DESC, id ASC").First(&variant).Error; variantErr != nil {
 			return nil, nil, ErrNotFound
 		}
-		record, err = s.Get(variant.PageID)
+		record, err = s.Get(ctx, variant.PageID)
 		inferredLocale = variant.Locale
 	}
 	if err != nil {
@@ -476,7 +499,7 @@ func (s *Service) ResolveForLocale(requestPath, requestedLocale, market string, 
 	if strings.TrimSpace(requestedLocale) == "" {
 		requestedLocale = inferredLocale
 	}
-	localization, err := s.ResolveLocalized(record, requestedLocale, market, includeDraft)
+	localization, err := s.ResolveLocalized(ctx, record, requestedLocale, market, includeDraft)
 	record.Localization = localization
 	return record, localization, err
 }

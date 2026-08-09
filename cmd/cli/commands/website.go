@@ -1,15 +1,17 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
-	"ecommerce/handlers"
+	"ecommerce/internal/apicontract"
+	accountservice "ecommerce/internal/services/account"
 	"ecommerce/internal/services/providerops"
+	"ecommerce/models"
 
-	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
-	"gorm.io/gorm"
 )
 
 func NewWebsiteCmd() *cobra.Command {
@@ -93,7 +95,7 @@ func newImportWebsiteCmd() *cobra.Command {
 		Use:   "import",
 		Short: "Import website settings from JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var settings handlers.WebsiteSettingsPayload
+			var settings apicontract.WebsiteSettings
 			if err := loadJSONFile(filePath, &settings); err != nil {
 				return err
 			}
@@ -150,22 +152,22 @@ func newSetWebsiteCmd() *cobra.Command {
 				settings.CouponCodesEnabled = couponCodesEnabled
 			}
 			if cmd.Flags().Changed("oidc-provider") {
-				settings.OIDCProvider = oidcProvider
+				settings.OidcProvider = oidcProvider
 			}
 			if cmd.Flags().Changed("oidc-client-id") {
-				settings.OIDCClientID = oidcClientID
+				settings.OidcClientId = oidcClientID
 			}
 			if cmd.Flags().Changed("oidc-client-secret") {
-				settings.OIDCClientSecret = oidcClientSecret
+				settings.OidcClientSecret = oidcClientSecret
 			}
 			if cmd.Flags().Changed("clear-oidc-client-secret") {
-				settings.ClearOIDCClientSecret = clearOIDCClientSecret
+				settings.ClearOidcClientSecret = clearOIDCClientSecret
 			}
-			if settings.ClearOIDCClientSecret && settings.OIDCClientSecret != "" {
+			if settings.ClearOidcClientSecret && settings.OidcClientSecret != "" {
 				return fmt.Errorf("--oidc-client-secret and --clear-oidc-client-secret cannot be used together")
 			}
 			if cmd.Flags().Changed("oidc-redirect-uri") {
-				settings.OIDCRedirectURI = oidcRedirectURI
+				settings.OidcRedirectUri = oidcRedirectURI
 			}
 
 			resp, err := updateWebsiteSettings(settings)
@@ -198,38 +200,60 @@ func newSetWebsiteCmd() *cobra.Command {
 	return cmd
 }
 
-func getWebsiteSettings() (handlers.WebsiteSettingsResponse, error) {
-	return invokeWithDB[handlers.WebsiteSettingsResponse](localHandlerRequest{
-		Method: http.MethodGet,
-		Path:   "/api/v1/admin/website",
-	}, func(db *gorm.DB) gin.HandlerFunc {
-		return handlers.GetAdminWebsiteSettings(db)
-	})
+func getWebsiteSettings() (apicontract.WebsiteSettingsResponse, error) {
+	if isRemoteMode() {
+		return invokeRemoteJSON[apicontract.WebsiteSettingsResponse](http.MethodGet, "/api/v1/admin/website", nil)
+	}
+	db := getDB()
+	defer closeDB(db)
+	settings, err := accountservice.NewService(db, newWebsiteCredentialService()).GetWebsiteSettings(context.Background())
+	if err != nil {
+		return apicontract.WebsiteSettingsResponse{}, err
+	}
+	return websiteSettingsContract(settings), nil
 }
 
-func updateWebsiteSettings(settings handlers.WebsiteSettingsPayload) (handlers.WebsiteSettingsResponse, error) {
-	return invokeWithDB[handlers.WebsiteSettingsResponse](localHandlerRequest{
-		Method: http.MethodPut,
-		Path:   "/api/v1/admin/website",
-		Body:   handlers.UpsertWebsiteSettingsRequest{Settings: settings},
-	}, func(db *gorm.DB) gin.HandlerFunc {
-		return handlers.UpsertWebsiteSettingsWithCredentials(db, newWebsiteCredentialService())
+func updateWebsiteSettings(settings apicontract.WebsiteSettings) (apicontract.WebsiteSettingsResponse, error) {
+	if isRemoteMode() {
+		return invokeRemoteJSON[apicontract.WebsiteSettingsResponse](http.MethodPut, "/api/v1/admin/website", apicontract.WebsiteSettingsRequest{Settings: settings})
+	}
+	db := getDB()
+	defer closeDB(db)
+	updated, err := accountservice.NewService(db, newWebsiteCredentialService()).UpdateWebsiteSettings(context.Background(), accountservice.WebsiteSettingsInput{
+		SiteTitle: settings.SiteTitle, AllowGuestCheckout: settings.AllowGuestCheckout, CouponCodesEnabled: settings.CouponCodesEnabled,
+		OIDCProvider: settings.OidcProvider, OIDCClientID: settings.OidcClientId, OIDCClientSecret: settings.OidcClientSecret,
+		ClearOIDCClientSecret: settings.ClearOidcClientSecret, OIDCRedirectURI: settings.OidcRedirectUri,
 	})
+	if err != nil {
+		return apicontract.WebsiteSettingsResponse{}, err
+	}
+	return websiteSettingsContract(updated), nil
 }
 
-func printWebsiteSettings(resp handlers.WebsiteSettingsResponse) {
+func websiteSettingsContract(settings models.WebsiteSettings) apicontract.WebsiteSettingsResponse {
+	return apicontract.WebsiteSettingsResponse{
+		Settings: apicontract.WebsiteSettings{
+			SiteTitle: settings.SiteTitle, AllowGuestCheckout: settings.AllowGuestCheckout, CouponCodesEnabled: settings.CouponCodesEnabled,
+			OidcProvider: settings.OIDCProvider, OidcClientId: settings.OIDCClientID, OidcClientSecret: "",
+			OidcClientSecretConfigured: strings.TrimSpace(settings.OIDCClientSecretEnvelopeJSON) != "", OidcRedirectUri: settings.OIDCRedirectURI,
+		},
+		UpdatedAt: settings.UpdatedAt,
+	}
+}
+
+func printWebsiteSettings(resp apicontract.WebsiteSettingsResponse) {
 	fmt.Printf("Updated: %s\n", resp.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"))
 	fmt.Printf("Allow Guest Checkout: %t\n", resp.Settings.AllowGuestCheckout)
 	fmt.Printf("Coupon Codes Enabled: %t\n", resp.Settings.CouponCodesEnabled)
 	fmt.Printf("OIDC Enabled: %t\n", websiteOIDCConfigured(resp.Settings))
-	fmt.Printf("OIDC Provider: %s\n", resp.Settings.OIDCProvider)
-	fmt.Printf("OIDC Client ID: %s\n", resp.Settings.OIDCClientID)
-	fmt.Printf("OIDC Client Secret Configured: %t\n", resp.Settings.OIDCClientSecretConfigured)
-	fmt.Printf("OIDC Redirect URI: %s\n", resp.Settings.OIDCRedirectURI)
+	fmt.Printf("OIDC Provider: %s\n", resp.Settings.OidcProvider)
+	fmt.Printf("OIDC Client ID: %s\n", resp.Settings.OidcClientId)
+	fmt.Printf("OIDC Client Secret Configured: %t\n", resp.Settings.OidcClientSecretConfigured)
+	fmt.Printf("OIDC Redirect URI: %s\n", resp.Settings.OidcRedirectUri)
 }
 
-func websiteOIDCConfigured(settings handlers.WebsiteSettingsPayload) bool {
-	return settings.OIDCProvider != "" && settings.OIDCClientID != "" && settings.OIDCRedirectURI != ""
+func websiteOIDCConfigured(settings apicontract.WebsiteSettings) bool {
+	return settings.OidcProvider != "" && settings.OidcClientId != "" && settings.OidcRedirectUri != ""
 }
 
 func newWebsiteCredentialService() *providerops.CredentialService {

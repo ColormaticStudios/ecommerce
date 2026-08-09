@@ -1,17 +1,14 @@
 package commands
 
 import (
+	"context"
 	"fmt"
-	"net/http"
-	"net/url"
 	"strings"
 
-	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
+	"ecommerce/internal/httpapi"
 
-	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
-	"gorm.io/gorm"
 )
 
 func NewCategoryCmd() *cobra.Command {
@@ -38,23 +35,13 @@ func newListCategoriesCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List categories",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			params := url.Values{}
-			if trimmed := strings.TrimSpace(query); trimmed != "" {
-				params.Set("q", trimmed)
-			}
-			if includeInactive {
-				params.Set("include_inactive", "true")
-			}
-
-			path := "/api/v1/admin/categories"
-			if encoded := params.Encode(); encoded != "" {
-				path += "?" + encoded
-			}
-			resp, err := invokeWithDB[apicontract.CategoryListResponse](localHandlerRequest{
-				Method: http.MethodGet,
-				Path:   path,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.ListAdminCategories(db)
+			resp, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.CategoryListResponse, error) {
+				trimmed := strings.TrimSpace(query)
+				response, err := endpoints.ListAdminCategories(ctx, apicontract.ListAdminCategoriesRequestObject{Params: apicontract.ListAdminCategoriesParams{Q: &trimmed, IncludeInactive: &includeInactive}})
+				if err != nil {
+					return apicontract.CategoryListResponse{}, err
+				}
+				return apicontract.CategoryListResponse(response.(apicontract.ListAdminCategories200JSONResponse)), nil
 			})
 			if err != nil {
 				return err
@@ -103,12 +90,13 @@ func newCreateCategoryCmd() *cobra.Command {
 		Use:   "create",
 		Short: "Create a category",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			category, err := invokeWithDB[apicontract.Category](localHandlerRequest{
-				Method: http.MethodPost,
-				Path:   "/api/v1/admin/categories",
-				Body:   input.toContract(cmd),
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.CreateAdminCategory(db)
+			payload := input.toContract(cmd)
+			category, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.Category, error) {
+				response, err := endpoints.CreateAdminCategory(ctx, apicontract.CreateAdminCategoryRequestObject{Body: &payload})
+				if err != nil {
+					return apicontract.Category{}, err
+				}
+				return apicontract.Category(response.(apicontract.CreateAdminCategory201JSONResponse)), nil
 			})
 			if err != nil {
 				return err
@@ -142,13 +130,13 @@ func newUpdateCategoryCmd() *cobra.Command {
 		Use:   "update",
 		Short: "Update a category",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			category, err := invokeWithDB[apicontract.Category](localHandlerRequest{
-				Method:     http.MethodPatch,
-				Path:       fmt.Sprintf("/api/v1/admin/categories/%d", id),
-				PathParams: map[string]string{"id": fmt.Sprintf("%d", id)},
-				Body:       input.toContract(cmd),
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.UpdateAdminCategory(db)
+			payload := input.toContract(cmd)
+			category, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.Category, error) {
+				response, err := endpoints.UpdateAdminCategory(ctx, apicontract.UpdateAdminCategoryRequestObject{Id: int(id), Body: &payload})
+				if err != nil {
+					return apicontract.Category{}, err
+				}
+				return apicontract.Category(response.(apicontract.UpdateAdminCategory200JSONResponse)), nil
 			})
 			if err != nil {
 				return err
@@ -182,12 +170,12 @@ func newDeleteCategoryCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete a category",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := invokeWithDB[apicontract.MessageResponse](localHandlerRequest{
-				Method:     http.MethodDelete,
-				Path:       fmt.Sprintf("/api/v1/admin/categories/%d", id),
-				PathParams: map[string]string{"id": fmt.Sprintf("%d", id)},
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.DeleteAdminCategory(db)
+			resp, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.MessageResponse, error) {
+				response, err := endpoints.DeleteAdminCategory(ctx, apicontract.DeleteAdminCategoryRequestObject{Id: int(id)})
+				if err != nil {
+					return apicontract.MessageResponse{}, err
+				}
+				return apicontract.MessageResponse(response.(apicontract.DeleteAdminCategory200JSONResponse)), nil
 			})
 			if err != nil {
 				return err

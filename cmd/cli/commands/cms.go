@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 	"ecommerce/models"
 
 	"github.com/spf13/cobra"
-	"gorm.io/gorm"
 )
 
 type cmsDraftEnvelope struct {
@@ -200,7 +200,7 @@ func newCMSExportCmd() *cobra.Command {
 		Use:   "export",
 		Short: "Export CMS content",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			value, err := cmsExportContent()
+			value, err := cmsExportContent(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -231,7 +231,7 @@ func newCMSRestoreCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if err := cmsRestoreContent(payload); err != nil {
+			if err := cmsRestoreContent(cmd.Context(), payload); err != nil {
 				return err
 			}
 			fmt.Println("✓ CMS content restored")
@@ -283,7 +283,7 @@ func newCMSPageListCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List CMS pages",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			records, total, err := cmsListPages()
+			records, total, err := cmsListPages(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -308,7 +308,7 @@ func newCMSPageGetCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			record, err := cmsGetPage(id)
+			record, err := cmsGetPage(cmd.Context(), id)
 			if err != nil {
 				return err
 			}
@@ -357,7 +357,7 @@ func newCMSPageSaveCmd(update bool) *cobra.Command {
 					return err
 				}
 			}
-			record, err := cmsSavePage(id, input)
+			record, err := cmsSavePage(cmd.Context(), id, input)
 			if err != nil {
 				return err
 			}
@@ -381,7 +381,7 @@ func newCMSPagePublishCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			record, err := cmsPublishPage(id, notes)
+			record, err := cmsPublishPage(cmd.Context(), id, notes)
 			if err != nil {
 				return err
 			}
@@ -404,7 +404,7 @@ func newCMSPageSEOCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			record, err := cmsGetPageSEO(id)
+			record, err := cmsGetPageSEO(cmd.Context(), id)
 			if err != nil {
 				return err
 			}
@@ -427,7 +427,7 @@ func newCMSPageSEOCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				record, err := cmsSetPageSEO(id, input)
+				record, err := cmsSetPageSEO(cmd.Context(), id, input)
 				if err != nil {
 					return err
 				}
@@ -453,7 +453,7 @@ func newCMSPageDeliveryCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			record, err := cmsGetPageDelivery(id)
+			record, err := cmsGetPageDelivery(cmd.Context(), id)
 			if err != nil {
 				return err
 			}
@@ -476,7 +476,7 @@ func newCMSPageDeliveryCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				record, err := cmsSetPageDelivery(id, input)
+				record, err := cmsSetPageDelivery(cmd.Context(), id, input)
 				if err != nil {
 					return err
 				}
@@ -502,7 +502,7 @@ func newCMSPageVariantCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			variants, err := cmsListPageVariants(id)
+			variants, err := cmsListPageVariants(cmd.Context(), id)
 			if err != nil {
 				return err
 			}
@@ -550,7 +550,7 @@ func newCMSPageVariantSaveCmd(update bool) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			variant, err := cmsSavePageVariant(pageID, variantID, input)
+			variant, err := cmsSavePageVariant(cmd.Context(), pageID, variantID, input)
 			if err != nil {
 				return err
 			}
@@ -578,7 +578,7 @@ func newCMSPageVariantTransitionCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			variant, err := cmsTransitionPageVariant(pageID, variantID, args[2], comment)
+			variant, err := cmsTransitionPageVariant(cmd.Context(), pageID, variantID, args[2], comment)
 			if err != nil {
 				return err
 			}
@@ -604,7 +604,7 @@ func newCMSPageVariantDeleteCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if err := cmsDeletePageVariant(pageID, variantID); err != nil {
+			if err := cmsDeletePageVariant(cmd.Context(), pageID, variantID); err != nil {
 				return err
 			}
 			fmt.Println("✓ CMS page variant deleted")
@@ -619,7 +619,7 @@ func newCMSNavigationListCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List CMS navigation menus",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			records, total, err := cmsListNavigation()
+			records, total, err := cmsListNavigation(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -644,7 +644,7 @@ func newCMSNavigationGetCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			record, err := cmsGetNavigation(id)
+			record, err := cmsGetNavigation(cmd.Context(), id)
 			if err != nil {
 				return err
 			}
@@ -684,7 +684,7 @@ func newCMSNavigationSaveCmd(update bool) *cobra.Command {
 					return err
 				}
 			}
-			record, err := cmsSaveNavigation(id, input)
+			record, err := cmsSaveNavigation(cmd.Context(), id, input)
 			if err != nil {
 				return err
 			}
@@ -708,7 +708,7 @@ func newCMSNavigationPublishCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			record, err := cmsPublishNavigation(id, notes)
+			record, err := cmsPublishNavigation(cmd.Context(), id, notes)
 			if err != nil {
 				return err
 			}
@@ -726,7 +726,7 @@ func newCMSGlobalListCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List CMS global regions",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			records, total, err := cmsListGlobals()
+			records, total, err := cmsListGlobals(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -751,7 +751,7 @@ func newCMSGlobalGetCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			record, err := cmsGetGlobal(id)
+			record, err := cmsGetGlobal(cmd.Context(), id)
 			if err != nil {
 				return err
 			}
@@ -792,7 +792,7 @@ func newCMSGlobalSaveCmd(update bool) *cobra.Command {
 					return err
 				}
 			}
-			record, err := cmsSaveGlobal(id, input)
+			record, err := cmsSaveGlobal(cmd.Context(), id, input)
 			if err != nil {
 				return err
 			}
@@ -816,7 +816,7 @@ func newCMSGlobalPublishCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			record, err := cmsPublishGlobal(id, notes)
+			record, err := cmsPublishGlobal(cmd.Context(), id, notes)
 			if err != nil {
 				return err
 			}
@@ -834,7 +834,7 @@ func newCMSRedirectCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List CMS redirects",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rules, err := cmsListRedirects()
+			rules, err := cmsListRedirects(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -853,7 +853,7 @@ func newCMSRedirectCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if err := cmsDeleteRedirect(id); err != nil {
+			if err := cmsDeleteRedirect(cmd.Context(), id); err != nil {
 				return err
 			}
 			fmt.Println("✓ CMS redirect deleted")
@@ -891,7 +891,7 @@ func newCMSRedirectSaveCmd(update bool) *cobra.Command {
 					return err
 				}
 			}
-			rule, err := cmsSaveRedirect(id, cms.RedirectInput{
+			rule, err := cmsSaveRedirect(cmd.Context(), id, cms.RedirectInput{
 				SourcePattern: source, TargetURL: target, MatchType: matchType,
 				RedirectType: redirectType, Priority: priority, IsEnabled: enabled,
 			})
@@ -920,7 +920,7 @@ func newCMSLocaleCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List CMS locales",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			locales, err := cmsListLocales()
+			locales, err := cmsListLocales(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -936,7 +936,7 @@ func newCMSLocaleCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			locales, err := cmsSetLocales(inputs)
+			locales, err := cmsSetLocales(cmd.Context(), inputs)
 			if err != nil {
 				return err
 			}
@@ -957,7 +957,7 @@ func newCMSGovernanceCmd() *cobra.Command {
 		Use:   "get",
 		Short: "Get CMS governance settings",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			value, err := cmsGetGovernance()
+			value, err := cmsGetGovernance(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -973,7 +973,7 @@ func newCMSGovernanceCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			value, err := cmsSetGovernance(input)
+			value, err := cmsSetGovernance(cmd.Context(), input)
 			if err != nil {
 				return err
 			}
@@ -994,7 +994,7 @@ func newCMSAuditCmd() *cobra.Command {
 		Use:   "audit",
 		Short: "List CMS audit events",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			events, err := cmsListAudit(entryID, limit)
+			events, err := cmsListAudit(cmd.Context(), entryID, limit)
 			if err != nil {
 				return err
 			}
@@ -1013,7 +1013,7 @@ func newCMSOperationsCmd() *cobra.Command {
 		Use:   "status",
 		Short: "Show CMS operations status",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			value, err := cmsOperationsStatus()
+			value, err := cmsOperationsStatus(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -1030,7 +1030,7 @@ func newCMSOperationsCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if err := cmsRetryInvalidation(id); err != nil {
+			if err := cmsRetryInvalidation(cmd.Context(), id); err != nil {
 				return err
 			}
 			fmt.Println("✓ CMS invalidation queued")
@@ -1050,7 +1050,7 @@ func newCMSBootstrapCmd() *cobra.Command {
 			}
 			db := getDB()
 			defer closeDB(db)
-			result, err := cms.BootstrapStarterSite(db)
+			result, err := cms.BootstrapStarterSite(cmd.Context(), db)
 			if err != nil {
 				return err
 			}
@@ -1300,26 +1300,26 @@ func printCMSMutation(format string, value any, text string) error {
 	return nil
 }
 
-func cmsExportContent() (any, error) {
+func cmsExportContent(ctx context.Context) (any, error) {
 	if isRemoteMode() {
 		return invokeRemoteJSON[map[string]any](http.MethodGet, "/api/v1/admin/cms/export", nil)
 	}
 	db := getDB()
 	defer closeDB(db)
 	pageService := cms.NewPageService(db)
-	pages, _, err := pageService.List(10000, 0)
+	pages, _, err := pageService.List(ctx, 10000, 0)
 	if err != nil {
 		return nil, err
 	}
-	navigation, _, err := cms.NewNavigationService(db).List(10000, 0)
+	navigation, _, err := cms.NewNavigationService(db).List(ctx, 10000, 0)
 	if err != nil {
 		return nil, err
 	}
-	global, _, err := cms.NewGlobalRegionService(db).List(10000, 0)
+	global, _, err := cms.NewGlobalRegionService(db).List(ctx, 10000, 0)
 	if err != nil {
 		return nil, err
 	}
-	locales, err := pageService.Locales()
+	locales, err := pageService.Locales(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1487,7 +1487,7 @@ func scaffoldVariant() map[string]any {
 	}
 }
 
-func cmsRestoreContent(payload []byte) error {
+func cmsRestoreContent(ctx context.Context, payload []byte) error {
 	if isRemoteMode() {
 		var body map[string]any
 		if err := json.Unmarshal(payload, &body); err != nil {
@@ -1498,28 +1498,28 @@ func cmsRestoreContent(payload []byte) error {
 	}
 	mediaService := newMediaService()
 	defer closeMediaService(mediaService)
-	return cms.NewPageService(mediaService.DB, mediaService).RestoreExport(payload, "")
+	return cms.NewPageService(mediaService.DB, mediaService).RestoreExport(ctx, payload, "")
 }
 
-func cmsListPages() ([]cms.PageRecord, int64, error) {
+func cmsListPages(ctx context.Context) ([]cms.PageRecord, int64, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, 0, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewPageService(db).List(10000, 0)
+	return cms.NewPageService(db).List(ctx, 10000, 0)
 }
 
-func cmsGetPage(id uint) (*cms.PageRecord, error) {
+func cmsGetPage(ctx context.Context, id uint) (*cms.PageRecord, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewPageService(db).Get(id)
+	return cms.NewPageService(db).Get(ctx, id)
 }
 
-func cmsSavePage(id uint, input cms.PageDraftInput) (*cms.PageRecord, error) {
+func cmsSavePage(ctx context.Context, id uint, input cms.PageDraftInput) (*cms.PageRecord, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
@@ -1527,39 +1527,39 @@ func cmsSavePage(id uint, input cms.PageDraftInput) (*cms.PageRecord, error) {
 	defer closeMediaService(mediaService)
 	service := cms.NewPageService(mediaService.DB, mediaService)
 	if id == 0 {
-		return service.CreateDraft(input)
+		return service.CreateDraft(ctx, input)
 	}
-	return service.UpdateDraft(id, input)
+	return service.UpdateDraft(ctx, id, input)
 }
 
-func cmsPublishPage(id uint, notes string) (*cms.PageRecord, error) {
+func cmsPublishPage(ctx context.Context, id uint, notes string) (*cms.PageRecord, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	mediaService := newMediaService()
 	defer closeMediaService(mediaService)
-	return cms.NewPageService(mediaService.DB, mediaService).Publish(id, cms.PublishInput{Notes: notes})
+	return cms.NewPageService(mediaService.DB, mediaService).Publish(ctx, id, cms.PublishInput{Notes: notes})
 }
 
-func cmsListNavigation() ([]cms.NavigationRecord, int64, error) {
+func cmsListNavigation(ctx context.Context) ([]cms.NavigationRecord, int64, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, 0, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewNavigationService(db).List(10000, 0)
+	return cms.NewNavigationService(db).List(ctx, 10000, 0)
 }
 
-func cmsGetNavigation(id uint) (*cms.NavigationRecord, error) {
+func cmsGetNavigation(ctx context.Context, id uint) (*cms.NavigationRecord, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewNavigationService(db).Get(id)
+	return cms.NewNavigationService(db).Get(ctx, id)
 }
 
-func cmsSaveNavigation(id uint, input cms.NavigationDraftInput) (*cms.NavigationRecord, error) {
+func cmsSaveNavigation(ctx context.Context, id uint, input cms.NavigationDraftInput) (*cms.NavigationRecord, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
@@ -1567,39 +1567,39 @@ func cmsSaveNavigation(id uint, input cms.NavigationDraftInput) (*cms.Navigation
 	defer closeDB(db)
 	service := cms.NewNavigationService(db)
 	if id == 0 {
-		return service.CreateDraft(input)
+		return service.CreateDraft(ctx, input)
 	}
-	return service.UpdateDraft(id, input)
+	return service.UpdateDraft(ctx, id, input)
 }
 
-func cmsPublishNavigation(id uint, notes string) (*cms.NavigationRecord, error) {
+func cmsPublishNavigation(ctx context.Context, id uint, notes string) (*cms.NavigationRecord, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewNavigationService(db).Publish(id, cms.PublishInput{Notes: notes})
+	return cms.NewNavigationService(db).Publish(ctx, id, cms.PublishInput{Notes: notes})
 }
 
-func cmsListGlobals() ([]cms.GlobalRegionRecord, int64, error) {
+func cmsListGlobals(ctx context.Context) ([]cms.GlobalRegionRecord, int64, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, 0, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewGlobalRegionService(db).List(10000, 0)
+	return cms.NewGlobalRegionService(db).List(ctx, 10000, 0)
 }
 
-func cmsGetGlobal(id uint) (*cms.GlobalRegionRecord, error) {
+func cmsGetGlobal(ctx context.Context, id uint) (*cms.GlobalRegionRecord, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewGlobalRegionService(db).Get(id)
+	return cms.NewGlobalRegionService(db).Get(ctx, id)
 }
 
-func cmsSaveGlobal(id uint, input cms.GlobalRegionDraftInput) (*cms.GlobalRegionRecord, error) {
+func cmsSaveGlobal(ctx context.Context, id uint, input cms.GlobalRegionDraftInput) (*cms.GlobalRegionRecord, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
@@ -1607,66 +1607,66 @@ func cmsSaveGlobal(id uint, input cms.GlobalRegionDraftInput) (*cms.GlobalRegion
 	defer closeMediaService(mediaService)
 	service := cms.NewGlobalRegionService(mediaService.DB, mediaService)
 	if id == 0 {
-		return service.CreateDraft(input)
+		return service.CreateDraft(ctx, input)
 	}
-	return service.UpdateDraft(id, input)
+	return service.UpdateDraft(ctx, id, input)
 }
 
-func cmsPublishGlobal(id uint, notes string) (*cms.GlobalRegionRecord, error) {
+func cmsPublishGlobal(ctx context.Context, id uint, notes string) (*cms.GlobalRegionRecord, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	mediaService := newMediaService()
 	defer closeMediaService(mediaService)
-	return cms.NewGlobalRegionService(mediaService.DB, mediaService).Publish(id, cms.PublishInput{Notes: notes})
+	return cms.NewGlobalRegionService(mediaService.DB, mediaService).Publish(ctx, id, cms.PublishInput{Notes: notes})
 }
 
-func cmsGetPageSEO(id uint) (*cms.SEORecord, error) {
+func cmsGetPageSEO(ctx context.Context, id uint) (*cms.SEORecord, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewPageService(db).GetSEO(id)
+	return cms.NewPageService(db).GetSEO(ctx, id)
 }
 
-func cmsSetPageSEO(id uint, input cms.SEOInput) (*cms.SEORecord, error) {
+func cmsSetPageSEO(ctx context.Context, id uint, input cms.SEOInput) (*cms.SEORecord, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	mediaService := newMediaService()
 	defer closeMediaService(mediaService)
-	return cms.NewPageService(mediaService.DB, mediaService).UpdateSEO(id, input)
+	return cms.NewPageService(mediaService.DB, mediaService).UpdateSEO(ctx, id, input)
 }
 
-func cmsGetPageDelivery(id uint) (*cms.DeliveryRecord, error) {
+func cmsGetPageDelivery(ctx context.Context, id uint) (*cms.DeliveryRecord, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewPageService(db).GetDelivery(id)
+	return cms.NewPageService(db).GetDelivery(ctx, id)
 }
 
-func cmsSetPageDelivery(id uint, input cms.DeliveryInput) (*cms.DeliveryRecord, error) {
+func cmsSetPageDelivery(ctx context.Context, id uint, input cms.DeliveryInput) (*cms.DeliveryRecord, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewPageService(db).UpdateDelivery(id, input)
+	return cms.NewPageService(db).UpdateDelivery(ctx, id, input)
 }
 
-func cmsListPageVariants(pageID uint) ([]models.CMSPageVariant, error) {
+func cmsListPageVariants(ctx context.Context, pageID uint) ([]models.CMSPageVariant, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewPageService(db).ListVariants(pageID)
+	return cms.NewPageService(db).ListVariants(ctx, pageID)
 }
 
-func cmsSavePageVariant(pageID, variantID uint, input cms.VariantInput) (*models.CMSPageVariant, error) {
+func cmsSavePageVariant(ctx context.Context, pageID, variantID uint, input cms.VariantInput) (*models.CMSPageVariant, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
@@ -1674,39 +1674,39 @@ func cmsSavePageVariant(pageID, variantID uint, input cms.VariantInput) (*models
 	defer closeMediaService(mediaService)
 	service := cms.NewPageService(mediaService.DB, mediaService)
 	if variantID == 0 {
-		return service.CreateVariant(pageID, input)
+		return service.CreateVariant(ctx, pageID, input)
 	}
-	return service.UpdateVariant(pageID, variantID, input)
+	return service.UpdateVariant(ctx, pageID, variantID, input)
 }
 
-func cmsTransitionPageVariant(pageID, variantID uint, action, comment string) (*models.CMSPageVariant, error) {
+func cmsTransitionPageVariant(ctx context.Context, pageID, variantID uint, action, comment string) (*models.CMSPageVariant, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewPageService(db).TransitionVariant(pageID, variantID, action, "cli", comment)
+	return cms.NewPageService(db).TransitionVariant(ctx, pageID, variantID, action, "cli", comment)
 }
 
-func cmsDeletePageVariant(pageID, variantID uint) error {
+func cmsDeletePageVariant(ctx context.Context, pageID, variantID uint) error {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return err
 	}
 	mediaService := newMediaService()
 	defer closeMediaService(mediaService)
-	return cms.NewPageService(mediaService.DB, mediaService).DeleteVariant(pageID, variantID, "cli")
+	return cms.NewPageService(mediaService.DB, mediaService).DeleteVariant(ctx, pageID, variantID, "cli")
 }
 
-func cmsListRedirects() ([]models.CMSRedirectRule, error) {
+func cmsListRedirects(ctx context.Context) ([]models.CMSRedirectRule, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewRedirectService(db).List()
+	return cms.NewRedirectService(db).List(ctx)
 }
 
-func cmsSaveRedirect(id uint, input cms.RedirectInput) (*models.CMSRedirectRule, error) {
+func cmsSaveRedirect(ctx context.Context, id uint, input cms.RedirectInput) (*models.CMSRedirectRule, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
@@ -1714,127 +1714,96 @@ func cmsSaveRedirect(id uint, input cms.RedirectInput) (*models.CMSRedirectRule,
 	defer closeDB(db)
 	service := cms.NewRedirectService(db)
 	if id == 0 {
-		return service.Create(input)
+		return service.Create(ctx, input)
 	}
-	return service.Update(id, input)
+	return service.Update(ctx, id, input)
 }
 
-func cmsDeleteRedirect(id uint) error {
+func cmsDeleteRedirect(ctx context.Context, id uint) error {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewRedirectService(db).Delete(id)
+	return cms.NewRedirectService(db).Delete(ctx, id)
 }
 
-func cmsListLocales() ([]models.CMSLocale, error) {
+func cmsListLocales(ctx context.Context) ([]models.CMSLocale, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewPageService(db).Locales()
+	return cms.NewPageService(db).Locales(ctx)
 }
 
-func cmsSetLocales(inputs []cms.LocaleInput) ([]models.CMSLocale, error) {
+func cmsSetLocales(ctx context.Context, inputs []cms.LocaleInput) ([]models.CMSLocale, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewPageService(db).UpdateLocales(inputs, "cli")
+	return cms.NewPageService(db).UpdateLocales(ctx, inputs, "cli")
 }
 
-func cmsGetGovernance() (map[string]any, error) {
+func cmsGetGovernance(ctx context.Context) (map[string]any, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	var settings models.CMSSettings
-	if err := db.FirstOrCreate(&settings, models.CMSSettings{ID: 1, ApprovalRequired: true}).Error; err != nil {
+	governance, err := cms.NewPageService(db).Governance(ctx)
+	if err != nil {
 		return nil, err
 	}
-	var roles []models.CMSRoleAssignment
-	if err := db.Order("subject ASC").Find(&roles).Error; err != nil {
-		return nil, err
-	}
-	return map[string]any{"approval_required": settings.ApprovalRequired, "invalidation_webhook_url": settings.InvalidationWebhookURL, "roles": roles}, nil
+	return map[string]any{"approval_required": governance.ApprovalRequired, "invalidation_webhook_url": governance.InvalidationWebhookURL, "roles": governance.Roles}, nil
 }
 
-func cmsSetGovernance(input cmsGovernanceEnvelope) (map[string]any, error) {
+func cmsSetGovernance(ctx context.Context, input cmsGovernanceEnvelope) (map[string]any, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	if err := db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Save(&models.CMSSettings{ID: 1, ApprovalRequired: input.ApprovalRequired, InvalidationWebhookURL: strings.TrimSpace(input.InvalidationWebhookURL)}).Error; err != nil {
-			return err
-		}
-		if err := tx.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&models.CMSRoleAssignment{}).Error; err != nil {
-			return err
-		}
-		seen := map[string]bool{}
-		for _, assignment := range input.Roles {
-			subject := strings.TrimSpace(assignment.Subject)
-			if subject == "" || seen[subject] || (assignment.Role != "author" && assignment.Role != "editor" && assignment.Role != "publisher") {
-				return fmt.Errorf("roles require unique subjects and a valid CMS role")
-			}
-			seen[subject] = true
-			if err := tx.Create(&models.CMSRoleAssignment{Subject: subject, Role: assignment.Role}).Error; err != nil {
-				return err
-			}
-		}
-		return nil
-	}); err != nil {
+	roles := make([]cms.RoleAssignmentInput, 0, len(input.Roles))
+	for _, assignment := range input.Roles {
+		roles = append(roles, cms.RoleAssignmentInput{Subject: assignment.Subject, Role: assignment.Role})
+	}
+	governance, err := cms.NewPageService(db).UpdateGovernance(ctx, cms.GovernanceInput{ApprovalRequired: input.ApprovalRequired, InvalidationWebhookURL: input.InvalidationWebhookURL, Roles: roles})
+	if err != nil {
 		return nil, err
 	}
-	return cmsGetGovernance()
+	return map[string]any{"approval_required": governance.ApprovalRequired, "invalidation_webhook_url": governance.InvalidationWebhookURL, "roles": governance.Roles}, nil
 }
 
-func cmsListAudit(entryID uint, limit int) ([]models.CMSAuditEvent, error) {
+func cmsListAudit(ctx context.Context, entryID uint, limit int) ([]models.CMSAuditEvent, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	return cms.NewPageService(db).AuditEvents(entryID, limit)
+	return cms.NewPageService(db).AuditEvents(ctx, entryID, limit)
 }
 
-func cmsOperationsStatus() (map[string]any, error) {
+func cmsOperationsStatus(ctx context.Context) (map[string]any, error) {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return nil, err
 	}
 	db := getDB()
 	defer closeDB(db)
-	var schedules, experiments int64
-	if err := db.Model(&models.CMSSchedule{}).Where("status = ?", models.CMSScheduleStatusPending).Count(&schedules).Error; err != nil {
+	operations, err := cms.NewPageService(db).Operations(ctx)
+	if err != nil {
 		return nil, err
 	}
-	if err := db.Model(&models.CMSExperiment{}).Where("status = ?", models.CMSExperimentStatusActive).Count(&experiments).Error; err != nil {
-		return nil, err
-	}
-	var invalidations []models.CMSInvalidationEvent
-	if err := db.Order("created_at DESC, id DESC").Limit(100).Find(&invalidations).Error; err != nil {
-		return nil, err
-	}
-	return map[string]any{"pending_schedules": schedules, "active_experiments": experiments, "invalidations": invalidations}, nil
+	return map[string]any{"pending_schedules": operations.PendingSchedules, "active_experiments": operations.ActiveExperiments, "invalidations": operations.Invalidations}, nil
 }
 
-func cmsRetryInvalidation(id uint) error {
+func cmsRetryInvalidation(ctx context.Context, id uint) error {
 	if err := requireLocalMode("CMS CLI controls"); err != nil {
 		return err
 	}
 	db := getDB()
 	defer closeDB(db)
-	result := db.Model(&models.CMSInvalidationEvent{}).Where("id = ?", id).Updates(map[string]any{"status": "pending", "last_error": ""})
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return fmt.Errorf("CMS invalidation event not found")
-	}
-	return nil
+	_, err := cms.NewPageService(db).RetryInvalidation(ctx, id)
+	return err
 }

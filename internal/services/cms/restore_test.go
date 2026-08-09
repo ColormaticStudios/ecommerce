@@ -1,6 +1,7 @@
 package cms
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -12,15 +13,15 @@ import (
 func TestRestoreExportReplacesCMSContentAtomically(t *testing.T) {
 	db := newServiceTestDB(t)
 	service := NewPageService(db)
-	original, err := service.CreateDraft(PageDraftInput{
+	original, err := service.CreateDraft(context.Background(), PageDraftInput{
 		Path: "/original", Title: "Original",
 		Payload: PagePayload{"blocks": []any{map[string]any{"type": "rich_text", "body": "Backup content"}}},
 	})
 	require.NoError(t, err)
-	published, err := service.Publish(original.Page.ID, PublishInput{})
+	published, err := service.Publish(context.Background(), original.Page.ID, PublishInput{})
 	require.NoError(t, err)
 
-	locales, err := service.Locales()
+	locales, err := service.Locales(context.Background())
 	require.NoError(t, err)
 	raw, err := json.Marshal(map[string]any{
 		"schema_version": 1,
@@ -35,14 +36,14 @@ func TestRestoreExportReplacesCMSContentAtomically(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, err = service.CreateDraft(PageDraftInput{Path: "/discarded", Title: "Discarded", Payload: PagePayload{}})
+	_, err = service.CreateDraft(context.Background(), PageDraftInput{Path: "/discarded", Title: "Discarded", Payload: PagePayload{}})
 	require.NoError(t, err)
-	require.NoError(t, service.RestoreExport(raw, "publisher-1"))
+	require.NoError(t, service.RestoreExport(context.Background(), raw, "publisher-1"))
 
-	restored, err := service.ResolvePublished("/original")
+	restored, err := service.ResolvePublished(context.Background(), "/original")
 	require.NoError(t, err)
 	require.Contains(t, restored.PublishedVersion.PayloadJSON, "Backup content")
-	_, err = service.Resolve("/discarded", true)
+	_, err = service.Resolve(context.Background(), "/discarded", true)
 	require.ErrorIs(t, err, ErrNotFound)
 
 	var audit models.CMSAuditEvent
@@ -66,11 +67,11 @@ func exportVersionForTest(version *models.CMSEntryVersion) map[string]any {
 
 func TestRestoreExportRejectsInvalidBundleWithoutChangingContent(t *testing.T) {
 	service := NewPageService(newServiceTestDB(t))
-	page, err := service.CreateDraft(PageDraftInput{Path: "/keep", Title: "Keep", Payload: PagePayload{}})
+	page, err := service.CreateDraft(context.Background(), PageDraftInput{Path: "/keep", Title: "Keep", Payload: PagePayload{}})
 	require.NoError(t, err)
 
-	err = service.RestoreExport([]byte(`{"schema_version":99,"locales":[]}`), "publisher-1")
+	err = service.RestoreExport(context.Background(), []byte(`{"schema_version":99,"locales":[]}`), "publisher-1")
 	require.ErrorIs(t, err, ErrInvalidExport)
-	_, err = service.Get(page.Page.ID)
+	_, err = service.Get(context.Background(), page.Page.ID)
 	require.NoError(t, err)
 }

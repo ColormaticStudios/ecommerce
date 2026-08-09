@@ -1,13 +1,27 @@
 openapi: 3.0.3
 info:
   title: Ecommerce API
-  version: 0.2.0
-  description: API contract for backend and frontend type generation.
+  version: 0.3.0
+  description: |
+    API contract for backend and frontend type generation.
+
+    New and migrated operations use RFC 9457 problem details with the
+    `application/problem+json` media type. The legacy `Error` schema remains
+    temporarily available while existing HTTP handlers are migrated.
 servers:
   - url: http://localhost:3000
 security:
   - cookieAuth: []
   - bearerAuth: []
+x-operation-policy:
+  default-max-body-bytes: 1048576
+  admin-path-prefix: /api/v1/admin/
+  admin-roles: [admin]
+  csrf-mode: cookie-authenticated-unsafe
+  body-limits:
+    "POST /api/v1/media/uploads": 524288000
+    "PATCH /api/v1/media/uploads/{path}": 524288000
+    "POST /api/v1/webhooks/{provider}": 2097152
 tags:
   - name: auth
   - name: products
@@ -35,23 +49,22 @@ paths:
       responses:
         "201":
           description: Registered
+          headers:
+            Set-Cookie:
+              description: Session and CSRF cookies.
+              schema:
+                type: array
+                items: { type: string }
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ConflictProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/auth/login:
     post:
       tags: [auth]
@@ -66,23 +79,22 @@ paths:
       responses:
         "200":
           description: Authenticated
+          headers:
+            Set-Cookie:
+              description: Session and CSRF cookies.
+              schema:
+                type: array
+                items: { type: string }
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/auth/logout:
     post:
       tags: [auth]
@@ -91,11 +103,21 @@ paths:
       responses:
         "200":
           description: Logged out
+          headers:
+            Set-Cookie:
+              description: Expired session and CSRF cookies.
+              schema:
+                type: array
+                items: { type: string }
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/auth/config:
     get:
       tags: [auth]
@@ -109,6 +131,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/AuthConfigResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/auth/oidc/login:
     get:
       tags: [auth]
@@ -128,6 +154,10 @@ paths:
         "302":
           description: Redirect to provider
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/auth/oidc/callback:
     get:
       tags: [auth]
@@ -150,25 +180,30 @@ paths:
       responses:
         "200":
           description: Callback as JSON
+          headers:
+            Set-Cookie:
+              description: Session and CSRF cookies.
+              schema:
+                type: array
+                items: { type: string }
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthResponse"
         "302":
           description: Callback as redirect
+          headers:
+            Set-Cookie:
+              description: Session and CSRF cookies.
+              schema:
+                type: array
+                items: { type: string }
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/products:
     get:
       tags: [products]
@@ -243,12 +278,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProductPage"
         "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/InternalServerErrorProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
   /api/v1/brands:
     get:
       tags: [products]
@@ -263,6 +295,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/BrandListResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/categories:
     get:
       tags: [catalog]
@@ -277,6 +313,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/CategoryListResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/product-attributes:
     get:
       tags: [products]
@@ -291,6 +331,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProductAttributeDefinitionListResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/products/{id}:
     get:
       tags: [products]
@@ -312,12 +356,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/Product"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/content:
     get:
       tags: [cms]
@@ -350,12 +393,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsPageResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/content/{path}:
     get:
       tags: [cms]
@@ -401,12 +443,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsPageResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/content/events:
     post:
       tags: [cms]
@@ -426,12 +467,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
         "400":
-          description: Invalid content event
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/content/redirect:
     get:
       tags: [cms]
@@ -451,12 +489,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsRedirectResolution"
         "404":
-          description: No redirect
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/content/sitemap.xml:
     get:
       tags: [cms]
@@ -470,6 +507,10 @@ paths:
               schema:
                 type: string
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/content/navigation/{location}:
     get:
       tags: [cms]
@@ -489,12 +530,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsNavigationResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/content/global/{region}:
     get:
       tags: [cms]
@@ -514,12 +554,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsGlobalRegionResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/:
     get:
       tags: [profile]
@@ -532,11 +571,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
         "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     patch:
       tags: [profile]
       operationId: updateProfile
@@ -554,12 +595,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/profile-photo:
     post:
       tags: [media]
@@ -582,23 +624,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/ConflictProblem"
         "413":
-          description: Too large
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/PayloadTooLargeProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     delete:
       tags: [media]
       operationId: deleteProfilePhoto
@@ -610,6 +646,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/payment-methods:
     get:
       tags: [profile]
@@ -623,6 +667,14 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/SavedPaymentMethod"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [profile]
       operationId: createSavedPaymentMethod
@@ -640,12 +692,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/SavedPaymentMethod"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/payment-methods/{id}:
     delete:
       tags: [profile]
@@ -665,12 +718,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/payment-methods/{id}/default:
     patch:
       tags: [profile]
@@ -690,6 +746,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/SavedPaymentMethod"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/addresses:
     get:
       tags: [profile]
@@ -703,6 +767,14 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/SavedAddress"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [profile]
       operationId: createSavedAddress
@@ -720,12 +792,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/SavedAddress"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/addresses/{id}:
     delete:
       tags: [profile]
@@ -745,12 +818,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/addresses/{id}/default:
     patch:
       tags: [profile]
@@ -770,6 +846,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/SavedAddress"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/cart:
     get:
       tags: [cart]
@@ -781,6 +865,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Cart"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [cart]
       operationId: addCartItem
@@ -798,6 +890,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/Cart"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/checkout/cart:
     get:
       tags: [checkout]
@@ -810,12 +910,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/Cart"
         "403":
-          description: Guest checkout disabled
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ForbiddenProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/checkout/cart/summary:
     get:
       tags: [checkout]
@@ -828,12 +929,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/CheckoutCartSummary"
         "403":
-          description: Guest checkout disabled
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ForbiddenProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/checkout/cart/items:
     post:
       tags: [checkout]
@@ -852,12 +954,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/Cart"
         "403":
-          description: Guest checkout disabled
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ForbiddenProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/checkout/cart/items/{itemId}:
     patch:
       tags: [checkout]
@@ -883,11 +986,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/CartItem"
         "403":
-          description: Guest checkout disabled
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/ForbiddenProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     delete:
       tags: [checkout]
       operationId: deleteCheckoutCartItem
@@ -906,12 +1011,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
         "403":
-          description: Guest checkout disabled
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ForbiddenProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/cart/{itemId}:
     patch:
       tags: [cart]
@@ -936,6 +1042,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CartItem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     delete:
       tags: [cart]
       operationId: deleteCartItem
@@ -954,6 +1068,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/checkout/plugins:
     get:
       tags: [checkout]
@@ -966,6 +1088,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/CheckoutPluginCatalog"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/checkout/plugins:
     get:
       tags: [checkout]
@@ -978,12 +1108,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/CheckoutPluginCatalog"
         "403":
-          description: Guest checkout disabled
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ForbiddenProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/checkout/quote:
     post:
       tags: [checkout]
@@ -1002,12 +1133,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/CheckoutQuoteResponse"
         "400":
-          description: Invalid request payload
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/checkout/quote:
     post:
       tags: [checkout]
@@ -1026,18 +1158,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/CheckoutQuoteResponse"
         "400":
-          description: Invalid request payload
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "403":
-          description: Guest checkout disabled
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ForbiddenProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/checkout/orders:
     post:
       tags: [checkout, orders]
@@ -1062,30 +1189,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/Order"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "403":
-          description: Guest checkout disabled
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/ForbiddenProblem"
         "409":
-          description: Idempotency conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/ConflictProblem"
         "429":
-          description: Checkout submission rate limited
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/TooManyRequestsProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/checkout/orders/{id}/payments/authorize:
     post:
       tags: [checkout, orders]
@@ -1115,37 +1229,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProcessPaymentResponse"
+        "202":
+          description: Payment authorization is durably recorded and requires reconciliation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderOperationAcceptedEnvelope"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "403":
-          description: Guest checkout disabled
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/ForbiddenProblem"
         "404":
-          description: Order not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
         "409":
-          description: Idempotency conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/ConflictProblem"
         "429":
-          description: Checkout submission rate limited
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/TooManyRequestsProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/checkout/orders/{id}/shipping/rates:
     post:
       tags: [checkout, orders]
@@ -1176,24 +1279,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/CheckoutOrderShippingRatesResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Order not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
         "409":
-          description: Snapshot mismatch
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ConflictProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/checkout/orders/{id}/shipping/tracking:
     get:
       tags: [checkout, orders]
@@ -1213,12 +1309,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CheckoutOrderTrackingResponse"
         "404":
-          description: Order not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/checkout/orders/{id}/tax/finalize:
     post:
       tags: [checkout, orders]
@@ -1249,24 +1348,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/CheckoutOrderTaxFinalizeResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Order not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
         "409":
-          description: Snapshot mismatch
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ConflictProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/orders:
     get:
       tags: [orders]
@@ -1304,6 +1396,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrderPage"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [orders]
       operationId: createOrder
@@ -1321,6 +1421,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/Order"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/orders/claim:
     post:
       tags: [orders]
@@ -1339,24 +1447,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/ClaimGuestOrderResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Guest order not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
         "409":
-          description: Guest order already claimed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ConflictProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/orders/{id}:
     get:
       tags: [orders]
@@ -1376,12 +1477,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/Order"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/me/orders/{id}/cancel:
     post:
       tags: [orders]
@@ -1401,18 +1505,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/Order"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/products:
     get:
       tags: [admin]
@@ -1497,6 +1598,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProductPage"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin]
       operationId: createProduct
@@ -1514,6 +1623,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/Product"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/discounts/campaigns:
     get:
       tags: [admin]
@@ -1531,6 +1648,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DiscountCampaignListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin]
       operationId: createAdminDiscountCampaign
@@ -1548,12 +1673,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/DiscountCampaign"
         "400":
-          description: Invalid discount campaign
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/discounts/promotions:
     post:
       tags: [admin]
@@ -1572,12 +1698,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/DiscountCampaign"
         "400":
-          description: Invalid promotion
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/discounts/promotions/preview:
     post:
       tags: [admin]
@@ -1596,12 +1723,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/PromotionEvaluationResponse"
         "400":
-          description: Invalid preview request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/discounts/templates:
     get:
       tags: [admin]
@@ -1618,6 +1746,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PromotionTemplateListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin]
       operationId: createAdminPromotionTemplate
@@ -1635,12 +1771,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/PromotionTemplate"
         "400":
-          description: Invalid template
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/discounts/templates/{id}/instantiate:
     post:
       tags: [admin]
@@ -1666,18 +1803,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/DiscountCampaign"
         "400":
-          description: Invalid template instantiation
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Promotion template not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/discounts/campaigns/{id}:
     patch:
       tags: [admin]
@@ -1703,18 +1837,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/DiscountCampaign"
         "400":
-          description: Invalid discount campaign
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Discount campaign not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/discounts/campaigns/{id}/disable:
     post:
       tags: [admin]
@@ -1734,12 +1865,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/DiscountCampaign"
         "404":
-          description: Discount campaign not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/discounts/campaigns/{id}/schedule:
     post:
       tags: [admin]
@@ -1765,18 +1899,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/DiscountSchedule"
         "400":
-          description: Invalid schedule
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Discount campaign not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/discounts/campaigns/{id}/archive:
     post:
       tags: [admin]
@@ -1796,12 +1927,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/DiscountCampaign"
         "404":
-          description: Discount campaign not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/discounts/lifecycle/run:
     post:
       tags: [admin]
@@ -1814,6 +1948,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/DiscountLifecycleRunResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/discounts/history:
     get:
       tags: [admin]
@@ -1832,6 +1974,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/DiscountStateHistoryListResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/discounts/audit:
     get:
       tags: [admin]
@@ -1850,6 +2000,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/DiscountCampaignAuditListResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/discounts/metrics:
     get:
       tags: [admin]
@@ -1862,6 +2020,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/DiscountEvaluationMetrics"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/discounts/reconciliation/run:
     post:
       tags: [admin]
@@ -1874,6 +2040,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/DiscountReconciliationReport"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/brands:
     get:
       tags: [admin]
@@ -1890,6 +2064,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/BrandListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin]
       operationId: createAdminBrand
@@ -1907,6 +2089,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/Brand"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/brands/{id}:
     patch:
       tags: [admin]
@@ -1931,6 +2121,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Brand"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     delete:
       tags: [admin]
       operationId: deleteAdminBrand
@@ -1949,6 +2147,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/categories:
     get:
       tags: [admin]
@@ -1969,6 +2175,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CategoryListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin]
       operationId: createAdminCategory
@@ -1986,6 +2200,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/Category"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/categories/{id}:
     patch:
       tags: [admin]
@@ -2010,6 +2232,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Category"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     delete:
       tags: [admin]
       operationId: deleteAdminCategory
@@ -2028,6 +2258,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/product-attributes:
     get:
       tags: [admin]
@@ -2039,6 +2277,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProductAttributeDefinitionListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin]
       operationId: createAdminProductAttribute
@@ -2056,6 +2302,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProductAttributeDefinition"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/product-attributes/{id}:
     patch:
       tags: [admin]
@@ -2080,6 +2334,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProductAttributeDefinition"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     delete:
       tags: [admin]
       operationId: deleteAdminProductAttribute
@@ -2098,6 +2360,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/products/{id}:
     get:
       tags: [admin]
@@ -2117,11 +2387,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/Product"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     patch:
       tags: [admin]
       operationId: updateProduct
@@ -2145,6 +2419,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Product"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     delete:
       tags: [admin]
       operationId: deleteProduct
@@ -2163,6 +2445,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/products/{id}/media:
     post:
       tags: [admin, media]
@@ -2188,6 +2478,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/Product"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/products/{id}/publish:
     post:
       tags: [admin]
@@ -2207,12 +2505,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/Product"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/products/{id}/unpublish:
     post:
       tags: [admin]
@@ -2232,12 +2533,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/Product"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/products/{id}/draft:
     delete:
       tags: [admin]
@@ -2257,12 +2561,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/Product"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/products/{id}/media/order:
     patch:
       tags: [admin, media]
@@ -2288,6 +2595,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/Product"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/products/{id}/media/{mediaId}:
     delete:
       tags: [admin, media]
@@ -2312,6 +2627,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/Product"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/products/{id}/related:
     patch:
       tags: [admin]
@@ -2337,6 +2660,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/Product"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/orders:
     get:
       tags: [admin]
@@ -2365,6 +2696,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/OrderPage"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/orders/{id}:
     get:
       tags: [admin]
@@ -2384,6 +2723,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/Order"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/orders/{id}/payments:
     get:
       tags: [admin]
@@ -2403,12 +2750,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/OrderPaymentLedger"
         "404":
-          description: Order not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/orders/{id}/shipping/labels:
     post:
       tags: [admin]
@@ -2439,24 +2789,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/AdminOrderShippingLabelResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Order or rate not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
         "409":
-          description: Shipment already finalized with a different service
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ConflictProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/orders/{id}/payments/{intentId}/capture:
     post:
       tags: [admin]
@@ -2492,25 +2835,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AdminOrderPaymentLifecycleResponse"
+        "202":
+          description: Capture is durably recorded and requires reconciliation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderOperationAcceptedEnvelope"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
         "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ConflictProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/orders/{id}/payments/{intentId}/void:
     post:
       tags: [admin]
@@ -2540,25 +2882,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AdminOrderPaymentLifecycleResponse"
+        "202":
+          description: Void is durably recorded and requires reconciliation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderOperationAcceptedEnvelope"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
         "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ConflictProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/orders/{id}/payments/{intentId}/refund:
     post:
       tags: [admin]
@@ -2594,25 +2935,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AdminOrderPaymentLifecycleResponse"
+        "202":
+          description: Refund is durably recorded and requires reconciliation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderOperationAcceptedEnvelope"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
         "409":
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ConflictProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/orders/{id}/status:
     patch:
       tags: [admin]
@@ -2638,6 +2978,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/Order"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/webhooks/events:
     get:
       tags: [admin]
@@ -2671,6 +3019,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/WebhookEventPage"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/tax/reports/export:
     get:
       tags: [admin]
@@ -2704,6 +3060,14 @@ paths:
                 type: string
                 format: binary
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/providers/credentials:
     get:
       tags: [admin]
@@ -2721,6 +3085,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProviderCredentialListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin]
       operationId: upsertAdminProviderCredential
@@ -2738,18 +3110,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProviderCredentialEnvelope"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "412":
-          description: Credential encryption is not configured
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/PreconditionFailedProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/providers/overview:
     get:
       tags: [admin]
@@ -2762,6 +3131,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProviderOperationsOverview"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/providers/credentials/{id}/rotate:
     post:
       tags: [admin]
@@ -2781,18 +3158,316 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProviderCredentialEnvelope"
         "404":
-          description: Credential not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
         "412":
-          description: Credential encryption is not configured
+          $ref: "#/components/responses/PreconditionFailedProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/providers/operations:
+    get:
+      tags: [admin]
+      operationId: listAdminProviderOperations
+      parameters:
+        - in: query
+          name: provider_type
+          schema:
+            type: string
+            enum: [payment, shipping, tax]
+        - in: query
+          name: provider_id
+          schema:
+            type: string
+        - in: query
+          name: environment
+          schema:
+            type: string
+            enum: [sandbox, production]
+        - in: query
+          name: operation
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            $ref: "#/components/schemas/ProviderOperationStatus"
+        - in: query
+          name: entity_type
+          schema:
+            type: string
+        - in: query
+          name: entity_id
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: Durable provider operations
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-
+                $ref: "#/components/schemas/ProviderOperationPage"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/providers/operations/{id}:
+    get:
+      tags: [admin]
+      operationId: getAdminProviderOperation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Provider operation with attempt and reconciliation case detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderOperationEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/providers/operations/{id}/query-outcome:
+    post:
+      tags: [admin]
+      operationId: queryAdminProviderOperationOutcome
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Provider outcome was resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderOperationEnvelope"
+        "202":
+          description: Provider outcome remains unknown and requires reconciliation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderOperationEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
+        "412":
+          $ref: "#/components/responses/PreconditionFailedProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/providers/operations/{id}/retry-finalize:
+    post:
+      tags: [admin]
+      operationId: retryFinalizeAdminProviderOperation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "202":
+          description: Local finalization retry was safely queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderOperationEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/providers/operations/{id}/retry-compensation:
+    post:
+      tags: [admin]
+      operationId: retryCompensationAdminProviderOperation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "202":
+          description: Compensation retry was safely queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderOperationEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/providers/reconciliation/cases:
+    get:
+      tags: [admin]
+      operationId: listAdminProviderReconciliationCases
+      parameters:
+        - in: query
+          name: status
+          schema:
+            $ref: "#/components/schemas/ProviderReconciliationCaseStatus"
+        - in: query
+          name: provider_type
+          schema:
+            type: string
+            enum: [payment, shipping, tax]
+        - in: query
+          name: provider_id
+          schema:
+            type: string
+        - in: query
+          name: case_type
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: Provider reconciliation cases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderReconciliationCasePage"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/providers/reconciliation/cases/{id}:
+    get:
+      tags: [admin]
+      operationId: getAdminProviderReconciliationCase
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Provider reconciliation case detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderReconciliationCaseEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+    patch:
+      tags: [admin]
+      operationId: updateAdminProviderReconciliationCase
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProviderReconciliationCaseUpdate"
+      responses:
+        "200":
+          description: Updated provider reconciliation case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderReconciliationCaseEnvelope"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/providers/reconciliation/runs:
     get:
       tags: [admin]
@@ -2825,6 +3500,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProviderReconciliationRunPage"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin]
       operationId: createAdminProviderReconciliationRun
@@ -2842,12 +3525,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProviderReconciliationRunEnvelope"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/providers/reconciliation/runs/{id}:
     get:
       tags: [admin]
@@ -2867,12 +3551,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProviderReconciliationRunEnvelope"
         "404":
-          description: Reconciliation run not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/webhooks/{provider}:
     post:
       tags: [webhooks]
@@ -2891,6 +3578,7 @@ paths:
             schema:
               type: object
               additionalProperties: true
+              description: Parsed JSON payload; the transport preserves the exact raw bytes for signature verification.
       responses:
         "200":
           description: Webhook accepted
@@ -2899,18 +3587,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/WebhookIngestResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "401":
-          description: Invalid signature
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/users:
     get:
       tags: [admin]
@@ -2939,6 +3620,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/UserPage"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/users/{id}/role:
     patch:
       tags: [admin]
@@ -2964,6 +3653,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/checkout/plugins:
     get:
       tags: [admin, checkout]
@@ -2976,6 +3673,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/CheckoutPluginCatalog"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/checkout/plugins/{type}/{id}:
     patch:
       tags: [admin, checkout]
@@ -3006,12 +3711,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/CheckoutPluginCatalog"
         "400":
-          description: Invalid request payload
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/inventory/reservations:
     get:
       tags: [admin, inventory]
@@ -3040,12 +3746,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/InventoryReservationList"
         "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/InternalServerErrorProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
   /api/v1/admin/inventory/alerts:
     get:
       tags: [admin, inventory]
@@ -3074,12 +3781,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/InventoryAlertList"
         "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/InternalServerErrorProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
   /api/v1/admin/inventory/alerts/{id}/ack:
     post:
       tags: [admin, inventory]
@@ -3098,12 +3806,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/InventoryAlert"
         "400":
-          description: Invalid alert id
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/inventory/alerts/{id}/resolve:
     post:
       tags: [admin, inventory]
@@ -3122,12 +3831,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/InventoryAlert"
         "400":
-          description: Invalid alert id
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/inventory/thresholds:
     get:
       tags: [admin, inventory]
@@ -3144,6 +3854,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/InventoryThresholdList"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     put:
       tags: [admin, inventory]
       operationId: upsertAdminInventoryThreshold
@@ -3161,12 +3879,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/InventoryThreshold"
         "400":
-          description: Invalid threshold request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/inventory/thresholds/{id}:
     delete:
       tags: [admin, inventory]
@@ -3185,12 +3904,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
         "400":
-          description: Invalid threshold id
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/inventory/adjustments:
     post:
       tags: [admin, inventory]
@@ -3209,12 +3929,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/InventoryAdjustmentResponse"
         "400":
-          description: Invalid adjustment
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/inventory/reconciliation:
     post:
       tags: [admin, inventory]
@@ -3227,6 +3948,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/InventoryReconciliationReport"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/inventory/variants/{product_variant_id}/timeline:
     get:
       tags: [admin, inventory]
@@ -3251,12 +3980,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/InventoryTimeline"
         "400":
-          description: Invalid product variant id
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/purchase-orders:
     get:
       tags: [admin, inventory]
@@ -3275,6 +4005,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PurchaseOrderList"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin, inventory]
       operationId: createAdminPurchaseOrder
@@ -3292,12 +4030,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/PurchaseOrder"
         "400":
-          description: Invalid purchase order
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/purchase-orders/{id}/issue:
     post:
       tags: [admin, inventory]
@@ -3316,12 +4055,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/PurchaseOrder"
         "400":
-          description: Invalid purchase order transition
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/purchase-orders/{id}/cancel:
     post:
       tags: [admin, inventory]
@@ -3340,12 +4080,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/PurchaseOrder"
         "400":
-          description: Invalid purchase order transition
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/purchase-orders/{id}/receive:
     post:
       tags: [admin, inventory]
@@ -3370,12 +4111,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/PurchaseOrderReceiptResponse"
         "400":
-          description: Invalid receipt
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/pages:
     get:
       tags: [admin, cms]
@@ -3399,6 +4141,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CmsPageListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin, cms]
       operationId: createAdminCmsPage
@@ -3416,12 +4166,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsPageResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/preview:
     post:
       tags: [admin, cms]
@@ -3440,17 +4191,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsPreviewResponse"
         "400":
-          description: Invalid preview request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "409":
-          description: Duplicate path
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/ConflictProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/pages/{id}:
     get:
       tags: [admin, cms]
@@ -3470,11 +4219,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsPageResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     patch:
       tags: [admin, cms]
       operationId: updateAdminCmsPage
@@ -3499,23 +4252,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsPageResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
         "409":
-          description: Duplicate path
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/ConflictProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     delete:
       tags: [admin, cms]
       operationId: deleteAdminCmsPage
@@ -3534,12 +4281,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/pages/{id}/publish:
     post:
       tags: [admin, cms]
@@ -3565,12 +4315,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsPageResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/pages/{id}/unpublish:
     post:
       tags: [admin, cms]
@@ -3596,12 +4349,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsPageResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/pages/{id}/draft:
     delete:
       tags: [admin, cms]
@@ -3623,12 +4379,15 @@ paths:
         "204":
           description: Deleted draft-only CMS page
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/locales:
     get:
       tags: [admin, cms]
@@ -3640,6 +4399,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CmsLocaleSettings"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     put:
       tags: [admin, cms]
       operationId: updateAdminCmsLocales
@@ -3657,12 +4424,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsLocaleSettings"
         "400":
-          description: Invalid locale configuration
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/pages/{id}/variants:
     get:
       tags: [admin, cms]
@@ -3683,6 +4451,14 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/CmsPageVariant"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin, cms]
       operationId: createAdminCmsPageVariant
@@ -3707,18 +4483,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsPageVariant"
         "400":
-          description: Invalid page variant
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "409":
-          description: Duplicate locale and market variant or localized path
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ConflictProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/pages/{id}/variants/{variant_id}:
     put:
       tags: [admin, cms]
@@ -3746,11 +4519,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsPageVariant"
         "400":
-          description: Invalid page variant
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     delete:
       tags: [admin, cms]
       operationId: deleteAdminCmsPageVariant
@@ -3771,6 +4546,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/pages/{id}/variants/{variant_id}/{action}:
     post:
       tags: [admin, cms]
@@ -3804,18 +4587,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsPageVariant"
         "400":
-          description: Invalid workflow transition
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "403":
-          description: Insufficient CMS permission
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ForbiddenProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/audit:
     get:
       tags: [admin, cms]
@@ -3837,6 +4615,14 @@ paths:
                 items:
                   $ref: "#/components/schemas/CmsAuditEvent"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/governance:
     get:
       tags: [admin, cms]
@@ -3848,6 +4634,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CmsGovernance"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     put:
       tags: [admin, cms]
       operationId: updateAdminCmsGovernance
@@ -3865,6 +4659,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsGovernance"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/entries/{id}/workflow:
     get:
       tags: [admin, cms]
@@ -3882,6 +4684,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsEntryWorkflow"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/entries/{id}/workflow/{action}:
     post:
       tags: [admin, cms]
@@ -3911,6 +4721,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsEntryWorkflow"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/entries/{id}/comments:
     post:
       tags: [admin, cms]
@@ -3934,6 +4752,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsChangeComment"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/comments/{id}/resolve:
     post:
       tags: [admin, cms]
@@ -3951,6 +4777,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsChangeComment"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/entries/{id}/variants:
     get:
       tags: [admin, cms]
@@ -3969,6 +4803,14 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/CmsEntryVariant"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin, cms]
       operationId: createAdminCmsEntryVariant
@@ -3991,6 +4833,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsEntryVariant"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/entries/{id}/variants/{variant_id}:
     put:
       tags: [admin, cms]
@@ -4017,6 +4867,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CmsEntryVariant"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     delete:
       tags: [admin, cms]
       operationId: deleteAdminCmsEntryVariant
@@ -4037,6 +4895,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/entries/{id}/variants/{variant_id}/{action}:
     post:
       tags: [admin, cms]
@@ -4070,6 +4936,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsEntryVariant"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/operations:
     get:
       tags: [admin, cms]
@@ -4082,6 +4956,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsOperations"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/operations/invalidation/{id}/retry:
     post:
       tags: [admin, cms]
@@ -4099,6 +4981,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/restore/preview:
     post:
       tags: [admin, cms]
@@ -4117,6 +5007,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsRestorePreview"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/export:
     get:
       tags: [admin, cms]
@@ -4128,6 +5026,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CmsContentExport"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin, cms]
       operationId: restoreAdminCmsContent
@@ -4145,12 +5051,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
         "400":
-          description: Invalid or unsupported CMS export
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/pages/{id}/rollback:
     post:
       tags: [admin, cms]
@@ -4176,18 +5083,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsPageResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/pages/{id}/delivery:
     get:
       tags: [admin, cms]
@@ -4207,11 +5111,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsPageDeliveryResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     put:
       tags: [admin, cms]
       operationId: updateAdminCmsPageDelivery
@@ -4236,18 +5144,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsPageDeliveryResponse"
         "400":
-          description: Invalid delivery settings
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/pages/{id}/seo:
     get:
       tags: [admin, cms]
@@ -4267,11 +5172,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsSEOResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     put:
       tags: [admin, cms]
       operationId: updateAdminCmsPageSeo
@@ -4296,12 +5205,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsSEOResponse"
         "400":
-          description: Invalid SEO metadata
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/redirects:
     get:
       tags: [admin, cms]
@@ -4315,6 +5225,14 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/CmsRedirectRule"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin, cms]
       operationId: createAdminCmsRedirect
@@ -4332,12 +5250,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsRedirectRule"
         "400":
-          description: Invalid redirect
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/redirects/{id}:
     patch:
       tags: [admin, cms]
@@ -4363,11 +5282,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsRedirectRule"
         "400":
-          description: Invalid redirect
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     delete:
       tags: [admin, cms]
       operationId: deleteAdminCmsRedirect
@@ -4385,6 +5306,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/navigation:
     get:
       tags: [admin, cms]
@@ -4408,6 +5337,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CmsNavigationListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin, cms]
       operationId: createAdminCmsNavigation
@@ -4425,17 +5362,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsNavigationResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "409":
-          description: Duplicate key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/ConflictProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/navigation/{id}:
     get:
       tags: [admin, cms]
@@ -4455,11 +5390,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsNavigationResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     patch:
       tags: [admin, cms]
       operationId: updateAdminCmsNavigation
@@ -4484,23 +5423,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsNavigationResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
         "409":
-          description: Duplicate key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/ConflictProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     delete:
       tags: [admin, cms]
       operationId: deleteAdminCmsNavigation
@@ -4519,12 +5452,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/navigation/{id}/publish:
     post:
       tags: [admin, cms]
@@ -4550,18 +5486,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsNavigationResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/navigation/{id}/unpublish:
     post:
       tags: [admin, cms]
@@ -4587,12 +5520,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsNavigationResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/navigation/{id}/draft:
     delete:
       tags: [admin, cms]
@@ -4614,12 +5550,15 @@ paths:
         "204":
           description: Deleted draft-only navigation menu
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/global:
     get:
       tags: [admin, cms]
@@ -4643,6 +5582,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CmsGlobalRegionListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     post:
       tags: [admin, cms]
       operationId: createAdminCmsGlobalRegion
@@ -4660,18 +5607,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsGlobalRegionResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "409":
-          description: Duplicate key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/ConflictProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/global/{id}:
     get:
       tags: [admin, cms]
@@ -4691,11 +5635,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsGlobalRegionResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     patch:
       tags: [admin, cms]
       operationId: updateAdminCmsGlobalRegion
@@ -4720,23 +5668,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsGlobalRegionResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/NotFoundProblem"
         "409":
-          description: Duplicate key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/ConflictProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     delete:
       tags: [admin, cms]
       operationId: deleteAdminCmsGlobalRegion
@@ -4755,12 +5697,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/global/{id}/publish:
     post:
       tags: [admin, cms]
@@ -4786,18 +5731,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsGlobalRegionResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/BadRequestProblem"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/global/{id}/unpublish:
     post:
       tags: [admin, cms]
@@ -4823,12 +5765,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/CmsGlobalRegionResponse"
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/global/{id}/draft:
     delete:
       tags: [admin, cms]
@@ -4850,12 +5795,15 @@ paths:
         "204":
           description: Deleted draft-only global region
         "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/NotFoundProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/website:
     get:
       tags: [admin, website]
@@ -4868,11 +5816,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/WebsiteSettingsResponse"
         "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+          $ref: "#/components/responses/InternalServerErrorProblem"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
     put:
       tags: [admin, website]
       operationId: updateWebsiteSettings
@@ -4890,12 +5840,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/WebsiteSettingsResponse"
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/preview:
     get:
       tags: [admin]
@@ -4903,11 +5854,23 @@ paths:
       responses:
         "200":
           description: Current preview session state
+          headers:
+            Set-Cookie:
+              description: Clears an invalid preview cookie when necessary.
+              schema: { type: string }
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/DraftPreviewSessionResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/preview/start:
     post:
       tags: [admin]
@@ -4915,11 +5878,23 @@ paths:
       responses:
         "200":
           description: Preview session started
+          headers:
+            Set-Cookie:
+              description: Signed draft preview session cookie.
+              schema: { type: string }
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/DraftPreviewSessionResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/preview/stop:
     post:
       tags: [admin]
@@ -4927,11 +5902,23 @@ paths:
       responses:
         "200":
           description: Preview session stopped
+          headers:
+            Set-Cookie:
+              description: Expired draft preview session cookie.
+              schema: { type: string }
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/DraftPreviewSessionResponse"
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/media/uploads:
     post:
       tags: [media]
@@ -4939,8 +5926,10 @@ paths:
       parameters:
         - in: header
           name: Tus-Resumable
+          required: true
           schema:
             type: string
+            enum: ["1.0.0"]
         - in: header
           name: Upload-Length
           schema:
@@ -4966,7 +5955,21 @@ paths:
             Location:
               schema:
                 type: string
+            Tus-Resumable:
+              required: true
+              schema: { type: string, enum: ["1.0.0"] }
+            Upload-Offset:
+              required: true
+              schema: { type: integer, format: int64, minimum: 0 }
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/media/uploads/{path}:
     patch:
       tags: [media]
@@ -4977,6 +5980,14 @@ paths:
           required: true
           schema:
             type: string
+        - in: header
+          name: Tus-Resumable
+          required: true
+          schema: { type: string, enum: ["1.0.0"] }
+        - in: header
+          name: Upload-Offset
+          required: true
+          schema: { type: integer, format: int64, minimum: 0 }
       requestBody:
         required: true
         content:
@@ -4987,6 +5998,21 @@ paths:
       responses:
         "204":
           description: Upload chunk accepted
+          headers:
+            Tus-Resumable:
+              required: true
+              schema: { type: string, enum: ["1.0.0"] }
+            Upload-Offset:
+              required: true
+              schema: { type: integer, format: int64, minimum: 0 }
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
     head:
       tags: [media]
       operationId: headMediaUpload
@@ -4996,10 +6022,32 @@ paths:
           required: true
           schema:
             type: string
+        - in: header
+          name: Tus-Resumable
+          required: true
+          schema: { type: string, enum: ["1.0.0"] }
       responses:
         "200":
           description: Upload status
+          headers:
+            Tus-Resumable:
+              required: true
+              schema: { type: string, enum: ["1.0.0"] }
+            Upload-Offset:
+              required: true
+              schema: { type: integer, format: int64, minimum: 0 }
+            Upload-Length:
+              required: true
+              schema: { type: integer, format: int64, minimum: 0 }
 
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
 components:
   securitySchemes:
     cookieAuth:
@@ -5011,9 +6059,152 @@ components:
       scheme: bearer
       bearerFormat: JWT
 
+  responses:
+    BadRequestProblem:
+      description: The request is malformed or does not satisfy the operation contract.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    AuthenticationRequiredProblem:
+      description: Authentication is required or the supplied credentials are invalid.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ForbiddenProblem:
+      description: The authenticated principal is not allowed to perform this operation.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    NotFoundProblem:
+      description: The requested resource does not exist or is not visible to the caller.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ConflictProblem:
+      description: The request conflicts with resource state, version, or idempotency history.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    PreconditionFailedProblem:
+      description: A required capability or configuration is unavailable.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ValidationProblem:
+      description: The request is well-formed but fails semantic validation.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    PayloadTooLargeProblem:
+      description: The request payload exceeds the operation's size limit.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    TooManyRequestsProblem:
+      description: The caller has exceeded an applicable request limit.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    InternalServerErrorProblem:
+      description: An unexpected internal error occurred.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    BadGatewayProblem:
+      description: An upstream service returned an invalid or unsuccessful response.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ServiceUnavailableProblem:
+      description: A required service or capability is temporarily unavailable.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    GatewayTimeoutProblem:
+      description: A required upstream operation did not complete before its deadline.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+
   schemas:
+    ValidationIssue:
+      type: object
+      description: A machine-readable issue associated with a request value.
+      required: [path, code, detail]
+      properties:
+        path:
+          type: string
+          description: JSON Pointer identifying the request value, or an empty string for the document root.
+          example: /items/0/quantity
+        code:
+          type: string
+          description: Stable machine-readable issue code.
+          example: minimum
+        detail:
+          type: string
+          description: Safe human-readable explanation of this issue occurrence.
+          example: Quantity must be at least 1.
+
+    Problem:
+      type: object
+      description: RFC 9457 problem details with stable application extensions.
+      required: [type, title, status, detail, code, correlation_id]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: Stable URI identifying the problem category.
+          example: https://ecommerce.local/problems/validation-failed
+        title:
+          type: string
+          description: Stable human-readable summary of the problem category.
+          example: Validation failed
+        status:
+          type: integer
+          format: int32
+          minimum: 100
+          maximum: 599
+          description: HTTP status code returned for this occurrence.
+          example: 422
+        detail:
+          type: string
+          description: Safe occurrence-specific explanation.
+          example: One or more request values are invalid.
+        instance:
+          type: string
+          description: URI reference identifying this problem occurrence or related operation.
+          example: /api/v1/provider-operations/01J2EXAMPLE
+        code:
+          type: string
+          description: Stable machine-readable application error code.
+          example: validation_failed
+        correlation_id:
+          type: string
+          description: Identifier used to correlate the response with logs and traces.
+          example: 01J2EXAMPLE8Y4Q2S7M9K3N6P5R
+        errors:
+          type: array
+          description: Field or value issues, present when the problem has validation details.
+          items:
+            $ref: "#/components/schemas/ValidationIssue"
+
     Error:
       type: object
+      deprecated: true
+      description: Transitional legacy error body. New and migrated operations use Problem.
       required: [error]
       properties:
         error:
@@ -9605,12 +10796,49 @@ components:
         rejected_count:
           type: integer
 
+    ProviderOperationStatusSummary:
+      type: object
+      required:
+        - total_count
+        - active_count
+        - unknown_count
+        - finalize_retry_count
+        - compensation_retry_count
+        - failed_count
+        - completed_count
+      properties:
+        total_count:
+          type: integer
+        active_count:
+          type: integer
+        unknown_count:
+          type: integer
+        finalize_retry_count:
+          type: integer
+        compensation_retry_count:
+          type: integer
+        failed_count:
+          type: integer
+        completed_count:
+          type: integer
+
+    ProviderReconciliationCaseSummary:
+      type: object
+      required: [open_count, unassigned_count]
+      properties:
+        open_count:
+          type: integer
+        unassigned_count:
+          type: integer
+
     ProviderOperationsOverview:
       type: object
       required:
         - runtime_environment
         - credential_service_configured
         - webhook_events
+        - operations
+        - reconciliation_cases
       properties:
         runtime_environment:
           type: string
@@ -9619,6 +10847,320 @@ components:
           type: boolean
         webhook_events:
           $ref: "#/components/schemas/ProviderWebhookStatusSummary"
+        operations:
+          $ref: "#/components/schemas/ProviderOperationStatusSummary"
+        reconciliation_cases:
+          $ref: "#/components/schemas/ProviderReconciliationCaseSummary"
+
+    ProviderOperationStatus:
+      type: string
+      description: Durable lifecycle state of an externally effective provider operation.
+      enum:
+        - PREPARED
+        - EXECUTING
+        - OUTCOME_UNKNOWN
+        - PROVIDER_SUCCEEDED
+        - FINALIZING
+        - FINALIZE_RETRY
+        - COMPENSATION_PREPARED
+        - COMPENSATING
+        - COMPENSATION_SUCCEEDED
+        - COMPENSATION_RETRY
+        - COMPLETED
+        - FAILED
+        - RECONCILING
+        - RECONCILIATION_REQUIRED
+
+    ProviderOperationAttemptOutcome:
+      type: string
+      enum: [SUCCEEDED, FAILED, UNKNOWN]
+
+    ProviderOperationAttempt:
+      type: object
+      required:
+        - id
+        - attempt_number
+        - phase
+        - outcome
+        - provider_outcome
+        - operation_key
+        - retryable
+        - started_at
+        - finished_at
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        attempt_number:
+          type: integer
+          minimum: 1
+        phase:
+          type: string
+        outcome:
+          $ref: "#/components/schemas/ProviderOperationAttemptOutcome"
+        provider_outcome:
+          type: string
+          enum: [SUCCEEDED, FAILED, UNKNOWN, NOT_FOUND, ""]
+        provider_reference:
+          type: string
+        operation_key:
+          type: string
+        retryable:
+          type: boolean
+        problem:
+          allOf:
+            - $ref: "#/components/schemas/Problem"
+          nullable: true
+          description: Safe classified failure metadata; provider payloads and secrets are never exposed.
+        started_at:
+          type: string
+          format: date-time
+        finished_at:
+          type: string
+          format: date-time
+
+    ProviderReconciliationCaseStatus:
+      type: string
+      enum: [OPEN, RESOLVED]
+
+    ProviderReconciliationCaseOutcome:
+      type: string
+      enum:
+        - CONFIRMED_SUCCEEDED
+        - CONFIRMED_FAILED
+        - RETRY_REQUIRED
+        - MANUAL_REVIEW
+
+    ProviderReconciliationCase:
+      type: object
+      required:
+        - id
+        - operation_id
+        - provider_type
+        - provider_id
+        - environment
+        - operation
+        - operation_status
+        - status
+        - reason
+        - case_type
+        - provider_outcome
+        - operation_key
+        - opened_at
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        operation_id:
+          type: integer
+          minimum: 1
+        attempt_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        provider_type:
+          type: string
+          enum: [payment, shipping, tax]
+        provider_id:
+          type: string
+        environment:
+          type: string
+          enum: [sandbox, production]
+        operation:
+          type: string
+        operation_status:
+          $ref: "#/components/schemas/ProviderOperationStatus"
+        status:
+          $ref: "#/components/schemas/ProviderReconciliationCaseStatus"
+        outcome:
+          allOf:
+            - $ref: "#/components/schemas/ProviderReconciliationCaseOutcome"
+          nullable: true
+        reason:
+          type: string
+          description: Safe machine-readable reason for reconciliation.
+        case_type:
+          type: string
+        provider_outcome:
+          type: string
+          enum: [SUCCEEDED, FAILED, UNKNOWN, NOT_FOUND, ""]
+        operation_key:
+          type: string
+        assigned_to:
+          type: string
+          nullable: true
+        resolution_note:
+          type: string
+          nullable: true
+        problem:
+          allOf:
+            - $ref: "#/components/schemas/Problem"
+          nullable: true
+        next_attempt_at:
+          type: string
+          format: date-time
+          nullable: true
+        opened_at:
+          type: string
+          format: date-time
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ProviderReconciliationCaseUpdate:
+      type: object
+      properties:
+        assigned_to:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/ProviderReconciliationCaseStatus"
+        outcome:
+          $ref: "#/components/schemas/ProviderReconciliationCaseOutcome"
+        resolution_note:
+          type: string
+
+    ProviderReconciliationCaseEnvelope:
+      type: object
+      required: [case]
+      properties:
+        case:
+          $ref: "#/components/schemas/ProviderReconciliationCase"
+
+    ProviderReconciliationCasePage:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProviderReconciliationCase"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    ProviderOperation:
+      type: object
+      description: Safe API representation of a durable provider operation ledger record.
+      required:
+        - id
+        - operation_key
+        - provider_type
+        - provider_id
+        - environment
+        - operation
+        - idempotency_key
+        - correlation_id
+        - entity_type
+        - entity_id
+        - status
+        - retryable
+        - attempts
+        - reconciliation_cases
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        operation_key:
+          type: string
+        provider_type:
+          type: string
+          enum: [payment, shipping, tax]
+        provider_id:
+          type: string
+        environment:
+          type: string
+          enum: [sandbox, production]
+        operation:
+          type: string
+          description: Stable provider operation kind, such as payment.capture.
+        idempotency_key:
+          type: string
+        correlation_id:
+          type: string
+        entity_type:
+          type: string
+        entity_id:
+          type: integer
+          minimum: 1
+        status:
+          $ref: "#/components/schemas/ProviderOperationStatus"
+        provider_outcome:
+          type: string
+        provider_reference:
+          type: string
+        retryable:
+          type: boolean
+        available_actions:
+          type: array
+          items:
+            type: string
+            enum: [query_outcome, retry_finalize, retry_compensation]
+        problem:
+          allOf:
+            - $ref: "#/components/schemas/Problem"
+          nullable: true
+        parent_operation_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        compensation_operation_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        attempts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProviderOperationAttempt"
+        reconciliation_cases:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProviderReconciliationCase"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        next_attempt_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ProviderOperationEnvelope:
+      type: object
+      required: [operation]
+      properties:
+        operation:
+          $ref: "#/components/schemas/ProviderOperation"
+
+    ProviderOperationAcceptedEnvelope:
+      type: object
+      required: [message, operation_key, status]
+      properties:
+        message:
+          type: string
+        operation_key:
+          type: string
+        status:
+          $ref: "#/components/schemas/ProviderOperationStatus"
+
+    ProviderOperationPage:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProviderOperation"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
 
     ProviderReconciliationRunRequest:
       type: object

@@ -9,6 +9,7 @@ FILES=(
 )
 
 "${ROOT_DIR}/scripts/generate-api-contracts.sh"
+(cd "${ROOT_DIR}" && go run ./scripts/openapi-contract)
 
 if [ -n "$(git -C "${ROOT_DIR}" status --porcelain -- "${FILES[@]}")" ]; then
 	echo "Generated API contract files are out of date."

@@ -1,16 +1,14 @@
 package commands
 
 import (
+	"context"
 	"fmt"
-	"net/http"
-	"net/url"
+
 	"strings"
 
-	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
-	"ecommerce/internal/media"
+	"ecommerce/internal/httpapi"
 
-	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 )
 
@@ -36,16 +34,13 @@ func newListBrandsCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List brands",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path := "/api/v1/admin/brands"
-			if trimmed := strings.TrimSpace(query); trimmed != "" {
-				path += "?q=" + url.QueryEscape(trimmed)
-			}
-
-			resp, err := invokeWithMediaService[apicontract.BrandListResponse](localHandlerRequest{
-				Method: http.MethodGet,
-				Path:   path,
-			}, func(mediaService *media.Service) gin.HandlerFunc {
-				return handlers.ListAdminBrands(mediaService.DB, mediaService)
+			resp, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.BrandListResponse, error) {
+				trimmed := strings.TrimSpace(query)
+				response, err := endpoints.ListAdminBrands(ctx, apicontract.ListAdminBrandsRequestObject{Params: apicontract.ListAdminBrandsParams{Q: &trimmed}})
+				if err != nil {
+					return apicontract.BrandListResponse{}, err
+				}
+				return apicontract.BrandListResponse(response.(apicontract.ListAdminBrands200JSONResponse)), nil
 			})
 			if err != nil {
 				return err
@@ -88,12 +83,12 @@ func newCreateBrandCmd() *cobra.Command {
 		Short: "Create a brand",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			payload := input.toContract(cmd)
-			brand, err := invokeWithMediaService[apicontract.Brand](localHandlerRequest{
-				Method: http.MethodPost,
-				Path:   "/api/v1/admin/brands",
-				Body:   payload,
-			}, func(mediaService *media.Service) gin.HandlerFunc {
-				return handlers.CreateAdminBrand(mediaService.DB, mediaService)
+			brand, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.Brand, error) {
+				response, err := endpoints.CreateAdminBrand(ctx, apicontract.CreateAdminBrandRequestObject{Body: &payload})
+				if err != nil {
+					return apicontract.Brand{}, err
+				}
+				return apicontract.Brand(response.(apicontract.CreateAdminBrand201JSONResponse)), nil
 			})
 			if err != nil {
 				return err
@@ -129,13 +124,12 @@ func newUpdateBrandCmd() *cobra.Command {
 		Short: "Update a brand",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			payload := input.toContract(cmd)
-			brand, err := invokeWithMediaService[apicontract.Brand](localHandlerRequest{
-				Method:     http.MethodPatch,
-				Path:       fmt.Sprintf("/api/v1/admin/brands/%d", id),
-				PathParams: map[string]string{"id": fmt.Sprintf("%d", id)},
-				Body:       payload,
-			}, func(mediaService *media.Service) gin.HandlerFunc {
-				return handlers.UpdateAdminBrand(mediaService.DB, mediaService)
+			brand, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.Brand, error) {
+				response, err := endpoints.UpdateAdminBrand(ctx, apicontract.UpdateAdminBrandRequestObject{Id: int(id), Body: &payload})
+				if err != nil {
+					return apicontract.Brand{}, err
+				}
+				return apicontract.Brand(response.(apicontract.UpdateAdminBrand200JSONResponse)), nil
 			})
 			if err != nil {
 				return err
@@ -170,12 +164,12 @@ func newDeleteBrandCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete a brand",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := invokeWithMediaService[apicontract.MessageResponse](localHandlerRequest{
-				Method:     http.MethodDelete,
-				Path:       fmt.Sprintf("/api/v1/admin/brands/%d", id),
-				PathParams: map[string]string{"id": fmt.Sprintf("%d", id)},
-			}, func(mediaService *media.Service) gin.HandlerFunc {
-				return handlers.DeleteAdminBrand(mediaService.DB, mediaService)
+			resp, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.MessageResponse, error) {
+				response, err := endpoints.DeleteAdminBrand(ctx, apicontract.DeleteAdminBrandRequestObject{Id: int(id)})
+				if err != nil {
+					return apicontract.MessageResponse{}, err
+				}
+				return apicontract.MessageResponse(response.(apicontract.DeleteAdminBrand200JSONResponse)), nil
 			})
 			if err != nil {
 				return err

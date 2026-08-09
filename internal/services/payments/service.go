@@ -1,7 +1,6 @@
 package payments
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"ecommerce/internal/dbcontext"
 	checkoutservice "ecommerce/internal/services/checkout"
 	orderservice "ecommerce/internal/services/orders"
 	"ecommerce/models"
@@ -24,7 +22,7 @@ var (
 	ErrSnapshotExpired             = errors.New("checkout snapshot has expired")
 	ErrSnapshotNotFound            = errors.New("checkout snapshot not found")
 	ErrSnapshotOrderMismatch       = errors.New("checkout snapshot no longer matches the order")
-	ErrSnapshotAlreadyBound        = errors.New("checkout snapshot is already bound to a different order")
+	ErrSnapshotAlreadyBound        = errors.New("checkout snapshot is already bound to another order")
 	ErrActivePaymentIntentExists   = errors.New("an active payment intent already exists for this order")
 	ErrPaymentIntentNotFound       = errors.New("payment intent not found")
 	ErrCaptureNotAllowed           = errors.New("payment intent cannot be captured")
@@ -322,76 +320,6 @@ func PrepareAuthorizedPaymentIntent(
 	return intent, txn, nil
 }
 
-func AuthorizePreparedPaymentIntent(
-	ctx context.Context,
-	db *gorm.DB,
-	registry ProviderRegistry,
-	intentID uint,
-	snapshot models.OrderCheckoutSnapshot,
-	correlationID string,
-) (models.PaymentIntent, models.PaymentTransaction, error) {
-	var preparedIntent models.PaymentIntent
-	if err := db.Preload("Transactions", func(db *gorm.DB) *gorm.DB {
-		return db.Order("created_at ASC, id ASC")
-	}).First(&preparedIntent, intentID).Error; err != nil {
-		return models.PaymentIntent{}, models.PaymentTransaction{}, err
-	}
-
-	authorizeTxn, ok := authorizeTransaction(preparedIntent.Transactions)
-	if !ok {
-		return models.PaymentIntent{}, models.PaymentTransaction{}, fmt.Errorf("authorize transaction not found for intent %d", preparedIntent.ID)
-	}
-	if preparedIntent.Status == models.PaymentIntentStatusAuthorized &&
-		authorizeTxn.Status == models.PaymentTransactionStatusSucceeded {
-		return preparedIntent, authorizeTxn, nil
-	}
-	if preparedIntent.Status != models.PaymentIntentStatusRequiresAction ||
-		authorizeTxn.Status != models.PaymentTransactionStatusPending {
-		return models.PaymentIntent{}, models.PaymentTransaction{}, ErrActivePaymentIntentExists
-	}
-
-	provider, err := registry.Provider(snapshot.PaymentProviderID)
-	if err != nil {
-		return models.PaymentIntent{}, models.PaymentTransaction{}, err
-	}
-	paymentData, err := unmarshalStringMap(snapshot.PaymentDataJSON)
-	if err != nil {
-		return models.PaymentIntent{}, models.PaymentTransaction{}, err
-	}
-
-	providerResult, err := provider.Authorize(ctx, AuthorizeRequest{
-		OrderID:              preparedIntent.OrderID,
-		SnapshotID:           snapshot.ID,
-		Amount:               snapshot.Total,
-		Currency:             snapshot.Currency,
-		Provider:             snapshot.PaymentProviderID,
-		IdempotencyKey:       authorizeTxn.IdempotencyKey,
-		CorrelationID:        correlationID,
-		PaymentMethodDisplay: snapshot.PaymentMethodDisplay,
-		PaymentData:          paymentData,
-	})
-	if err != nil {
-		markErr := db.Transaction(func(tx *gorm.DB) error {
-			return markPreparedAuthorizationFailed(tx, preparedIntent.ID, err.Error())
-		})
-		if markErr != nil {
-			return models.PaymentIntent{}, models.PaymentTransaction{}, fmt.Errorf("%w: %v", err, markErr)
-		}
-		return models.PaymentIntent{}, models.PaymentTransaction{}, err
-	}
-
-	var finalizedIntent models.PaymentIntent
-	var finalizedTxn models.PaymentTransaction
-	if err := db.Transaction(func(tx *gorm.DB) error {
-		var finalizeErr error
-		finalizedIntent, finalizedTxn, finalizeErr = finalizePreparedAuthorization(tx, preparedIntent.ID, providerResult)
-		return finalizeErr
-	}); err != nil {
-		return models.PaymentIntent{}, models.PaymentTransaction{}, err
-	}
-	return finalizedIntent, finalizedTxn, nil
-}
-
 func ApplyAuthorizedCheckoutState(
 	tx *gorm.DB,
 	order *models.Order,
@@ -464,206 +392,6 @@ func GetOrderPaymentLedger(db *gorm.DB, orderID uint) ([]models.PaymentIntent, e
 		return nil, err
 	}
 	return intents, nil
-}
-
-func CapturePaymentIntent(
-	ctx context.Context,
-	tx *gorm.DB,
-	registry ProviderRegistry,
-	intent *models.PaymentIntent,
-	amount *models.Money,
-	idempotencyKey string,
-	correlationID string,
-) (models.PaymentTransaction, error) {
-	ctx = dbcontext.WithDB(ctx, tx)
-
-	if intent == nil {
-		return models.PaymentTransaction{}, fmt.Errorf("payment intent is required")
-	}
-	if intent.Status != models.PaymentIntentStatusAuthorized && intent.Status != models.PaymentIntentStatusPartiallyCaptured {
-		return models.PaymentTransaction{}, ErrCaptureNotAllowed
-	}
-
-	remaining := intent.AuthorizedAmount - intent.CapturedAmount
-	captureAmount, err := resolveLifecycleAmount(amount, remaining)
-	if err != nil {
-		return models.PaymentTransaction{}, err
-	}
-
-	provider, err := registry.Provider(intent.Provider)
-	if err != nil {
-		return models.PaymentTransaction{}, err
-	}
-	providerResult, err := provider.Capture(ctx, CaptureRequest{
-		OrderID:          intent.OrderID,
-		IntentID:         intent.ID,
-		Amount:           captureAmount,
-		Currency:         intent.Currency,
-		Provider:         intent.Provider,
-		IdempotencyKey:   idempotencyKey,
-		CorrelationID:    correlationID,
-		ProviderTxnIDRef: latestProviderTxnID(intent.Transactions, models.PaymentTransactionOperationAuthorize),
-	})
-	if err != nil {
-		return models.PaymentTransaction{}, err
-	}
-
-	txn := models.PaymentTransaction{
-		PaymentIntentID:     intent.ID,
-		Operation:           models.PaymentTransactionOperationCapture,
-		ProviderTxnID:       providerResult.ProviderTxnID,
-		IdempotencyKey:      idempotencyKey,
-		Amount:              captureAmount,
-		Status:              models.PaymentTransactionStatusSucceeded,
-		RawResponseRedacted: providerResult.RawResponseRedacted,
-	}
-	if err := tx.Create(&txn).Error; err != nil {
-		return models.PaymentTransaction{}, err
-	}
-
-	intent.CapturedAmount += captureAmount
-	if intent.CapturedAmount >= intent.AuthorizedAmount {
-		intent.CapturedAmount = intent.AuthorizedAmount
-		intent.Status = models.PaymentIntentStatusCaptured
-	} else {
-		intent.Status = models.PaymentIntentStatusPartiallyCaptured
-	}
-	intent.Version++
-	if err := tx.Save(intent).Error; err != nil {
-		return models.PaymentTransaction{}, err
-	}
-	intent.Transactions = append(intent.Transactions, txn)
-	return txn, nil
-}
-
-func VoidPaymentIntent(
-	ctx context.Context,
-	tx *gorm.DB,
-	registry ProviderRegistry,
-	intent *models.PaymentIntent,
-	idempotencyKey string,
-	correlationID string,
-) (models.PaymentTransaction, error) {
-	ctx = dbcontext.WithDB(ctx, tx)
-
-	if intent == nil {
-		return models.PaymentTransaction{}, fmt.Errorf("payment intent is required")
-	}
-	if intent.Status != models.PaymentIntentStatusAuthorized || intent.CapturedAmount > 0 {
-		return models.PaymentTransaction{}, ErrVoidNotAllowed
-	}
-
-	provider, err := registry.Provider(intent.Provider)
-	if err != nil {
-		return models.PaymentTransaction{}, err
-	}
-	voidAmount := intent.AuthorizedAmount
-	providerResult, err := provider.Void(ctx, VoidRequest{
-		OrderID:          intent.OrderID,
-		IntentID:         intent.ID,
-		Amount:           voidAmount,
-		Currency:         intent.Currency,
-		Provider:         intent.Provider,
-		IdempotencyKey:   idempotencyKey,
-		CorrelationID:    correlationID,
-		ProviderTxnIDRef: latestProviderTxnID(intent.Transactions, models.PaymentTransactionOperationAuthorize),
-	})
-	if err != nil {
-		return models.PaymentTransaction{}, err
-	}
-
-	txn := models.PaymentTransaction{
-		PaymentIntentID:     intent.ID,
-		Operation:           models.PaymentTransactionOperationVoid,
-		ProviderTxnID:       providerResult.ProviderTxnID,
-		IdempotencyKey:      idempotencyKey,
-		Amount:              voidAmount,
-		Status:              models.PaymentTransactionStatusSucceeded,
-		RawResponseRedacted: providerResult.RawResponseRedacted,
-	}
-	if err := tx.Create(&txn).Error; err != nil {
-		return models.PaymentTransaction{}, err
-	}
-
-	intent.Status = models.PaymentIntentStatusVoided
-	intent.Version++
-	if err := tx.Save(intent).Error; err != nil {
-		return models.PaymentTransaction{}, err
-	}
-	intent.Transactions = append(intent.Transactions, txn)
-	return txn, nil
-}
-
-func RefundPaymentIntent(
-	ctx context.Context,
-	tx *gorm.DB,
-	registry ProviderRegistry,
-	intent *models.PaymentIntent,
-	amount *models.Money,
-	idempotencyKey string,
-	correlationID string,
-) (models.PaymentTransaction, error) {
-	ctx = dbcontext.WithDB(ctx, tx)
-
-	if intent == nil {
-		return models.PaymentTransaction{}, fmt.Errorf("payment intent is required")
-	}
-	if intent.CapturedAmount <= 0 {
-		return models.PaymentTransaction{}, ErrRefundNotAllowed
-	}
-	if intent.Status != models.PaymentIntentStatusCaptured &&
-		intent.Status != models.PaymentIntentStatusPartiallyCaptured &&
-		intent.Status != models.PaymentIntentStatusRefunded {
-		return models.PaymentTransaction{}, ErrRefundNotAllowed
-	}
-
-	refunded := refundedAmount(intent.Transactions)
-	remaining := intent.CapturedAmount - refunded
-	refundAmount, err := resolveLifecycleAmount(amount, remaining)
-	if err != nil {
-		return models.PaymentTransaction{}, err
-	}
-
-	provider, err := registry.Provider(intent.Provider)
-	if err != nil {
-		return models.PaymentTransaction{}, err
-	}
-	providerResult, err := provider.Refund(ctx, RefundRequest{
-		OrderID:          intent.OrderID,
-		IntentID:         intent.ID,
-		Amount:           refundAmount,
-		Currency:         intent.Currency,
-		Provider:         intent.Provider,
-		IdempotencyKey:   idempotencyKey,
-		CorrelationID:    correlationID,
-		ProviderTxnIDRef: latestProviderTxnID(intent.Transactions, models.PaymentTransactionOperationCapture),
-	})
-	if err != nil {
-		return models.PaymentTransaction{}, err
-	}
-
-	txn := models.PaymentTransaction{
-		PaymentIntentID:     intent.ID,
-		Operation:           models.PaymentTransactionOperationRefund,
-		ProviderTxnID:       providerResult.ProviderTxnID,
-		IdempotencyKey:      idempotencyKey,
-		Amount:              refundAmount,
-		Status:              models.PaymentTransactionStatusSucceeded,
-		RawResponseRedacted: providerResult.RawResponseRedacted,
-	}
-	if err := tx.Create(&txn).Error; err != nil {
-		return models.PaymentTransaction{}, err
-	}
-
-	intent.Version++
-	if refunded+refundAmount >= intent.CapturedAmount {
-		intent.Status = models.PaymentIntentStatusRefunded
-	}
-	if err := tx.Save(intent).Error; err != nil {
-		return models.PaymentTransaction{}, err
-	}
-	intent.Transactions = append(intent.Transactions, txn)
-	return txn, nil
 }
 
 func RefundedAmount(intent models.PaymentIntent) models.Money {

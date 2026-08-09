@@ -18,6 +18,7 @@ type PaymentProvider interface {
 	Capture(ctx context.Context, req CaptureRequest) (ProviderOperationResult, error)
 	Void(ctx context.Context, req VoidRequest) (ProviderOperationResult, error)
 	Refund(ctx context.Context, req RefundRequest) (ProviderOperationResult, error)
+	GetOutcomeByOperationKey(ctx context.Context, operationKey string) (ProviderOperationOutcome, error)
 	VerifyWebhook(ctx context.Context, headers map[string]string, body []byte) (VerifiedWebhookEvent, error)
 }
 
@@ -40,6 +41,7 @@ type AuthorizeRequest struct {
 	Currency             string
 	Provider             string
 	IdempotencyKey       string
+	OperationKey         string
 	CorrelationID        string
 	PaymentMethodDisplay string
 	PaymentData          map[string]string
@@ -52,6 +54,7 @@ type CaptureRequest struct {
 	Currency         string
 	Provider         string
 	IdempotencyKey   string
+	OperationKey     string
 	CorrelationID    string
 	ProviderTxnIDRef string
 }
@@ -63,6 +66,7 @@ type VoidRequest struct {
 	Currency         string
 	Provider         string
 	IdempotencyKey   string
+	OperationKey     string
 	CorrelationID    string
 	ProviderTxnIDRef string
 }
@@ -74,11 +78,19 @@ type RefundRequest struct {
 	Currency         string
 	Provider         string
 	IdempotencyKey   string
+	OperationKey     string
 	CorrelationID    string
 	ProviderTxnIDRef string
 }
 
 type ProviderOperationResult struct {
+	ProviderTxnID       string
+	RawResponseRedacted string
+}
+
+type ProviderOperationOutcome struct {
+	OperationKey        string
+	Outcome             string
 	ProviderTxnID       string
 	RawResponseRedacted string
 }
@@ -126,6 +138,9 @@ func (r *DefaultProviderRegistry) Provider(providerID string) (PaymentProvider, 
 type dummyPaymentProvider struct{}
 
 func (dummyPaymentProvider) Authorize(_ context.Context, req AuthorizeRequest) (ProviderOperationResult, error) {
+	if err := validateOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return ProviderOperationResult{}, err
+	}
 	return ProviderOperationResult{
 		ProviderTxnID: providerTxnID(req.Provider, "authorize", req.OrderID, req.SnapshotID, req.Currency, req.Amount, req.IdempotencyKey),
 		RawResponseRedacted: marshalProviderResponse(map[string]any{
@@ -142,6 +157,9 @@ func (dummyPaymentProvider) Authorize(_ context.Context, req AuthorizeRequest) (
 }
 
 func (dummyPaymentProvider) Capture(_ context.Context, req CaptureRequest) (ProviderOperationResult, error) {
+	if err := validateOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return ProviderOperationResult{}, err
+	}
 	return ProviderOperationResult{
 		ProviderTxnID: providerTxnID(req.Provider, "capture", req.OrderID, req.IntentID, req.Currency, req.Amount, req.IdempotencyKey),
 		RawResponseRedacted: marshalProviderResponse(map[string]any{
@@ -158,6 +176,9 @@ func (dummyPaymentProvider) Capture(_ context.Context, req CaptureRequest) (Prov
 }
 
 func (dummyPaymentProvider) Void(_ context.Context, req VoidRequest) (ProviderOperationResult, error) {
+	if err := validateOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return ProviderOperationResult{}, err
+	}
 	return ProviderOperationResult{
 		ProviderTxnID: providerTxnID(req.Provider, "void", req.OrderID, req.IntentID, req.Currency, req.Amount, req.IdempotencyKey),
 		RawResponseRedacted: marshalProviderResponse(map[string]any{
@@ -174,6 +195,9 @@ func (dummyPaymentProvider) Void(_ context.Context, req VoidRequest) (ProviderOp
 }
 
 func (dummyPaymentProvider) Refund(_ context.Context, req RefundRequest) (ProviderOperationResult, error) {
+	if err := validateOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return ProviderOperationResult{}, err
+	}
 	return ProviderOperationResult{
 		ProviderTxnID: providerTxnID(req.Provider, "refund", req.OrderID, req.IntentID, req.Currency, req.Amount, req.IdempotencyKey),
 		RawResponseRedacted: marshalProviderResponse(map[string]any{
@@ -185,6 +209,22 @@ func (dummyPaymentProvider) Refund(_ context.Context, req RefundRequest) (Provid
 			"currency":            req.Currency,
 			"provider_txn_id_ref": req.ProviderTxnIDRef,
 			"correlation_id":      req.CorrelationID,
+		}),
+	}, nil
+}
+
+func (dummyPaymentProvider) GetOutcomeByOperationKey(_ context.Context, operationKey string) (ProviderOperationOutcome, error) {
+	operationKey = strings.TrimSpace(operationKey)
+	if operationKey == "" {
+		return ProviderOperationOutcome{}, fmt.Errorf("operation key is required")
+	}
+	return ProviderOperationOutcome{
+		OperationKey:  operationKey,
+		Outcome:       models.ProviderOutcomeSucceeded,
+		ProviderTxnID: "dummy-operation|" + operationKey,
+		RawResponseRedacted: marshalProviderResponse(map[string]any{
+			"operation_key": operationKey,
+			"outcome":       models.ProviderOutcomeSucceeded,
 		}),
 	}, nil
 }
@@ -248,6 +288,16 @@ func parseWebhookPayload(body []byte) (VerifiedWebhookEvent, error) {
 		EventType:       strings.TrimSpace(payload.Type),
 		ProviderTxnID:   strings.TrimSpace(payload.Data.ProviderTxnID),
 	}, nil
+}
+
+func validateOperationIdentity(idempotencyKey, operationKey string) error {
+	if strings.TrimSpace(idempotencyKey) == "" {
+		return fmt.Errorf("idempotency key is required")
+	}
+	if strings.TrimSpace(operationKey) == "" {
+		return fmt.Errorf("operation key is required")
+	}
+	return nil
 }
 
 func providerTxnID(providerID, operation string, entityID uint, secondaryID uint, currency string, amount models.Money, idempotencyKey string) string {

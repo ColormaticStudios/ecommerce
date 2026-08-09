@@ -1,6 +1,7 @@
 package cms
 
 import (
+	"context"
 	"encoding/xml"
 	"fmt"
 	"net/url"
@@ -23,7 +24,8 @@ type sitemapURL struct {
 	LastModified string `xml:"lastmod,omitempty"`
 }
 
-func GenerateSitemap(db *gorm.DB, origin string) ([]byte, error) {
+func GenerateSitemap(ctx context.Context, db *gorm.DB, origin string) ([]byte, error) {
+	db = db.WithContext(ctx)
 	origin = strings.TrimSuffix(strings.TrimSpace(origin), "/")
 	if origin == "" {
 		return nil, fmt.Errorf("sitemap origin is required")

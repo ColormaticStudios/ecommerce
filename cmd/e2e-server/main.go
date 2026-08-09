@@ -1,19 +1,28 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
-	"ecommerce/handlers"
-	"ecommerce/internal/apicontract"
+	"ecommerce/internal/checkoutplugins"
+	"ecommerce/internal/httpapi"
 	"ecommerce/internal/httpcors"
 	"ecommerce/internal/migrations"
+	accountservice "ecommerce/internal/services/account"
+	"ecommerce/internal/services/accountdata"
+	authservice "ecommerce/internal/services/auth"
+	providerops "ecommerce/internal/services/providerops"
+	webhookservice "ecommerce/internal/services/webhooks"
 	"ecommerce/models"
 
 	"github.com/gin-contrib/cors"
@@ -201,6 +210,9 @@ func buildSummary(db *gorm.DB, email string) (summaryResponse, error) {
 }
 
 func main() {
+	rootCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	// This binary is test-only. It is intended for local/CI integration + E2E runs.
 	// Do not run this server in production environments.
 	gin.SetMode(gin.ReleaseMode)
@@ -249,9 +261,6 @@ func main() {
 	if err := ensureSeedData(db); err != nil {
 		log.Fatalf("failed to seed e2e data: %v", err)
 	}
-	if err := handlers.ValidateStartupDefaults(); err != nil {
-		log.Fatalf("failed startup defaults validation: %v", err)
-	}
 
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -265,22 +274,69 @@ func main() {
 		ExposeHeaders:    httpcors.ExposeHeaders(),
 		AllowCredentials: true,
 	}))
+	// Capture the test-only route group before strict OpenAPI middleware is added.
+	// These helpers are intentionally outside the production API contract.
+	testRoutes := r.Group(testRoutePrefix)
 
-	apiServer, err := handlers.NewGeneratedAPIServer(db, nil, handlers.GeneratedAPIServerConfig{
-		JWTSecret: e2eJWTSecret,
-		AuthCookieConfig: handlers.AuthCookieConfig{
-			Secure:   false,
-			Domain:   "",
-			SameSite: http.SameSiteLaxMode,
-		},
+	pluginManager := checkoutplugins.NewDefaultManager()
+	providerRuntime := providerops.NewRuntime(db, providerops.RuntimeConfig{})
+	webhookService := webhookservice.NewService(db, providerRuntime.PaymentProviders, providerRuntime.ShippingProviders, log.Default())
+	accountService := accountservice.NewService(db, nil)
+	authService := authservice.NewService(db, e2eJWTSecret, false, accountService)
+	renderer := httpapi.Renderer{Report: func(_ context.Context, err error, problem httpapi.Problem) {
+		log.Printf("e2e HTTP problem code=%s status=%d: %v", problem.Code, problem.Status, err)
+	}}
+	accountEndpoints, err := httpapi.NewAccountEndpoints(httpapi.AccountEndpointsOptions{
+		Auth: authService, Accounts: accountService, AccountData: accountdata.NewService(db), Renderer: renderer,
+		JWTSecret: e2eJWTSecret, Cookies: httpapi.CookieConfig{SameSite: http.SameSiteLaxMode},
 	})
 	if err != nil {
-		log.Fatalf("failed to initialize e2e api server: %v", err)
+		log.Fatalf("failed to initialize e2e account endpoints: %v", err)
 	}
-	apicontract.RegisterHandlers(r, apiServer)
+	catalogEndpoints, err := httpapi.NewCatalogEndpoints(db, nil)
+	if err != nil {
+		log.Fatalf("failed to initialize e2e catalog endpoints: %v", err)
+	}
+	cmsMediaEndpoints, err := httpapi.NewCmsMediaEndpoints(db, nil)
+	if err != nil {
+		log.Fatalf("failed to initialize e2e CMS/media endpoints: %v", err)
+	}
+	checkoutProviderEndpoints, err := httpapi.NewCheckoutProviderEndpoints(httpapi.CheckoutProviderEndpointsOptions{
+		DB: db, CheckoutPlugins: pluginManager, ProviderRuntime: providerRuntime, Webhooks: webhookService, Renderer: renderer,
+	})
+	if err != nil {
+		log.Fatalf("failed to initialize e2e checkout/provider endpoints: %v", err)
+	}
+	apiServer, err := httpapi.NewServer(accountEndpoints, catalogEndpoints, cmsMediaEndpoints, checkoutProviderEndpoints)
+	if err != nil {
+		log.Fatalf("failed to compose e2e strict API server: %v", err)
+	}
+	policies, err := httpapi.ContractPolicySet()
+	if err != nil {
+		log.Fatalf("failed to build e2e operation policies: %v", err)
+	}
+	if err := httpapi.RegisterStrict(r, apiServer, httpapi.RegisterStrictOptions{
+		Strict: httpapi.StrictOptions{Policies: policies}, Renderer: renderer,
+		Security: httpapi.SecurityOptions{PreviewSecret: e2eJWTSecret, Authenticator: httpapi.JWTAuthenticator{
+			Secret: []byte(e2eJWTSecret), ResolveAccountID: func(resolveCtx context.Context, subject string) (uint, error) {
+				user, resolveErr := accountService.UserBySubject(resolveCtx, subject)
+				if errors.Is(resolveErr, accountservice.ErrUserNotFound) {
+					return 0, nil
+				}
+				return user.ID, resolveErr
+			},
+		}},
+	}); err != nil {
+		log.Fatalf("failed to register e2e strict API server: %v", err)
+	}
+	webhookStopped := make(chan struct{})
+	go func() {
+		defer close(webhookStopped)
+		webhookService.Run(rootCtx)
+	}()
 
 	// Test-only helper endpoints consumed by Playwright E2E tests.
-	r.GET(testRoutePrefix+"/summary", func(c *gin.Context) {
+	testRoutes.GET("/summary", func(c *gin.Context) {
 		summary, err := buildSummary(db, c.Query("email"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -288,7 +344,7 @@ func main() {
 		}
 		c.JSON(http.StatusOK, summary)
 	})
-	r.GET(testRoutePrefix+"/login", func(c *gin.Context) {
+	testRoutes.GET("/login", func(c *gin.Context) {
 		email := c.Query("email")
 		if email == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "email query parameter is required"})
@@ -320,7 +376,7 @@ func main() {
 		c.SetCookie("csrf_token", uuid.NewString(), maxAge, "/", "", false, false)
 		c.JSON(http.StatusOK, gin.H{"ok": true})
 	})
-	r.POST(testRoutePrefix+"/users", func(c *gin.Context) {
+	testRoutes.POST("/users", func(c *gin.Context) {
 		var payload testUserPayload
 		if err := c.ShouldBindJSON(&payload); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
@@ -393,7 +449,7 @@ func main() {
 			"role":     user.Role,
 		})
 	})
-	r.POST(testRoutePrefix+"/brands", func(c *gin.Context) {
+	testRoutes.POST("/brands", func(c *gin.Context) {
 		var payload testBrandPayload
 		if err := c.ShouldBindJSON(&payload); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
@@ -461,7 +517,7 @@ func main() {
 			"is_active":   brand.IsActive,
 		})
 	})
-	r.POST(testRoutePrefix+"/cart-item", func(c *gin.Context) {
+	testRoutes.POST("/cart-item", func(c *gin.Context) {
 		var payload struct {
 			Email            string `json:"email"`
 			ProductVariantID uint   `json:"product_variant_id"`
@@ -566,7 +622,7 @@ func main() {
 		}
 		c.JSON(http.StatusOK, gin.H{"ok": true})
 	})
-	r.POST(testRoutePrefix+"/saved-checkout-data", func(c *gin.Context) {
+	testRoutes.POST("/saved-checkout-data", func(c *gin.Context) {
 		var payload struct {
 			Email string `json:"email"`
 		}
@@ -635,12 +691,49 @@ func main() {
 	})
 
 	addr := fmt.Sprintf(":%d", port)
+	server := &http.Server{
+		Addr:              addr,
+		Handler:           r,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
 	log.Printf("e2e api server listening on %s", addr)
 	if !verboseLogs {
 		log.SetOutput(io.Discard)
 	}
-	if err := r.Run(addr); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to run e2e api server: %v\n", err)
+	serverErr := make(chan error, 1)
+	go func() {
+		serverErr <- server.ListenAndServe()
+	}()
+
+	var listenErr error
+	select {
+	case <-rootCtx.Done():
+	case err := <-serverErr:
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			listenErr = err
+			fmt.Fprintf(os.Stderr, "failed to run e2e api server: %v\n", err)
+			stop()
+		}
+	}
+
+	stop()
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to shut down e2e api server: %v\n", err)
+	}
+	select {
+	case <-webhookStopped:
+	case <-shutdownCtx.Done():
+		fmt.Fprintln(os.Stderr, "timed out waiting for e2e webhook worker shutdown")
+	}
+	if sqlDB, err := db.DB(); err == nil {
+		_ = sqlDB.Close()
+	}
+	if listenErr != nil {
 		os.Exit(1)
 	}
 }

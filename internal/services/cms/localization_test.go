@@ -14,7 +14,7 @@ import (
 func TestLocaleConfigurationRejectsFallbackCycles(t *testing.T) {
 	service := NewPageService(newServiceTestDB(t))
 
-	_, err := service.UpdateLocales([]LocaleInput{
+	_, err := service.UpdateLocales(context.Background(), []LocaleInput{
 		{Code: "en-US", Name: "English", Enabled: true, IsDefault: true, FallbackLocale: "fr-FR"},
 		{Code: "fr-FR", Name: "French", Enabled: true, FallbackLocale: "en-US"},
 	}, "admin-1")
@@ -70,48 +70,48 @@ func TestInvalidationWebhookResolverPrefersStoredGovernanceURL(t *testing.T) {
 
 func TestPageVariantWorkflowAndLocaleMarketFallback(t *testing.T) {
 	service := NewPageService(newServiceTestDB(t))
-	_, err := service.UpdateLocales([]LocaleInput{
+	_, err := service.UpdateLocales(context.Background(), []LocaleInput{
 		{Code: "en-US", Name: "English", Enabled: true, IsDefault: true},
 		{Code: "fr", Name: "French", Enabled: true, FallbackLocale: "en-US"},
 		{Code: "fr-CA", Name: "French (Canada)", Enabled: true, FallbackLocale: "fr"},
 	}, "admin-1")
 	require.NoError(t, err)
 
-	page, err := service.CreateDraft(PageDraftInput{
+	page, err := service.CreateDraft(context.Background(), PageDraftInput{
 		Path: "/shipping", Title: "Shipping",
 		Payload: PagePayload{"blocks": []any{map[string]any{"type": "rich_text", "body": "Shipping"}}},
 	})
 	require.NoError(t, err)
-	_, err = service.Publish(page.Page.ID, PublishInput{})
+	_, err = service.Publish(context.Background(), page.Page.ID, PublishInput{})
 	require.NoError(t, err)
 
-	variant, err := service.CreateVariant(page.Page.ID, VariantInput{
+	variant, err := service.CreateVariant(context.Background(), page.Page.ID, VariantInput{
 		Locale: "fr", Path: "/livraison", Title: "Livraison", Actor: "author-1",
 		Payload: PagePayload{"blocks": []any{map[string]any{"type": "rich_text", "body": "Livraison France"}}},
 	})
 	require.NoError(t, err)
-	_, err = service.TransitionVariant(page.Page.ID, variant.ID, "publish", "publisher-1", "")
+	_, err = service.TransitionVariant(context.Background(), page.Page.ID, variant.ID, "publish", "publisher-1", "")
 	require.ErrorIs(t, err, ErrApprovalRequired)
 
-	variant, err = service.TransitionVariant(page.Page.ID, variant.ID, "submit", "author-1", "Ready for review")
+	variant, err = service.TransitionVariant(context.Background(), page.Page.ID, variant.ID, "submit", "author-1", "Ready for review")
 	require.NoError(t, err)
 	require.Equal(t, models.CMSVariantStatusInReview, variant.Status)
-	_, err = service.TransitionVariantAsRole(page.Page.ID, variant.ID, "approve", "author-1", "author", "")
+	_, err = service.TransitionVariantAsRole(context.Background(), page.Page.ID, variant.ID, "approve", "author-1", "author", "")
 	require.ErrorIs(t, err, ErrPermissionDenied)
-	variant, err = service.TransitionVariant(page.Page.ID, variant.ID, "approve", "editor-1", "Approved")
+	variant, err = service.TransitionVariant(context.Background(), page.Page.ID, variant.ID, "approve", "editor-1", "Approved")
 	require.NoError(t, err)
-	variant, err = service.TransitionVariant(page.Page.ID, variant.ID, "publish", "publisher-1", "Published")
+	variant, err = service.TransitionVariant(context.Background(), page.Page.ID, variant.ID, "publish", "publisher-1", "Published")
 	require.NoError(t, err)
 	require.Equal(t, models.CMSVariantStatusPublished, variant.Status)
 
-	resolved, localization, err := service.ResolveForLocale("/livraison", "fr-CA", "CA", false)
+	resolved, localization, err := service.ResolveForLocale(context.Background(), "/livraison", "fr-CA", "CA", false)
 	require.NoError(t, err)
 	require.Equal(t, "Livraison", resolved.Page.Title)
 	require.Equal(t, "fr", localization.ResolvedLocale)
 	require.True(t, localization.UsedFallback)
 	require.Contains(t, resolved.PublishedVersion.PayloadJSON, "Livraison France")
 
-	events, err := service.AuditEvents(page.Entry.ID, 20)
+	events, err := service.AuditEvents(context.Background(), page.Entry.ID, 20)
 	require.NoError(t, err)
 	require.GreaterOrEqual(t, len(events), 4)
 }

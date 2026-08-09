@@ -1,6 +1,7 @@
 package cms
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -9,7 +10,7 @@ import (
 func TestNavigationPublishBlocksMissingInternalPageTarget(t *testing.T) {
 	service := NewNavigationService(newServiceTestDB(t))
 
-	created, err := service.CreateDraft(NavigationDraftInput{
+	created, err := service.CreateDraft(context.Background(), NavigationDraftInput{
 		Key:      "main",
 		Title:    "Main",
 		Location: "header",
@@ -19,24 +20,24 @@ func TestNavigationPublishBlocksMissingInternalPageTarget(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, err = service.Publish(created.Menu.ID, PublishInput{})
+	_, err = service.Publish(context.Background(), created.Menu.ID, PublishInput{})
 	require.ErrorIs(t, err, ErrInvalidPage)
 }
 
 func TestNavigationPublishesAndResolvesSnapshot(t *testing.T) {
 	db := newServiceTestDB(t)
 	pageService := NewPageService(db)
-	page, err := pageService.CreateDraft(PageDraftInput{
+	page, err := pageService.CreateDraft(context.Background(), PageDraftInput{
 		Path:    "/shipping",
 		Title:   "Shipping",
 		Payload: PagePayload{"blocks": []any{map[string]any{"type": "rich_text", "body": "Shipping"}}},
 	})
 	require.NoError(t, err)
-	_, err = pageService.Publish(page.Page.ID, PublishInput{})
+	_, err = pageService.Publish(context.Background(), page.Page.ID, PublishInput{})
 	require.NoError(t, err)
 
 	service := NewNavigationService(db)
-	created, err := service.CreateDraft(NavigationDraftInput{
+	created, err := service.CreateDraft(context.Background(), NavigationDraftInput{
 		Key:      "main",
 		Title:    "Main",
 		Location: "header",
@@ -45,11 +46,11 @@ func TestNavigationPublishesAndResolvesSnapshot(t *testing.T) {
 		},
 	})
 	require.NoError(t, err)
-	published, err := service.Publish(created.Menu.ID, PublishInput{})
+	published, err := service.Publish(context.Background(), created.Menu.ID, PublishInput{})
 	require.NoError(t, err)
 	require.NotNil(t, published.PublishedVersion)
 
-	_, err = service.UpdateDraft(created.Menu.ID, NavigationDraftInput{
+	_, err = service.UpdateDraft(context.Background(), created.Menu.ID, NavigationDraftInput{
 		Key:      "main",
 		Title:    "Main",
 		Location: "header",
@@ -59,11 +60,11 @@ func TestNavigationPublishesAndResolvesSnapshot(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	resolved, err := service.Resolve("header", false)
+	resolved, err := service.Resolve(context.Background(), "header", false)
 	require.NoError(t, err)
 	require.Equal(t, "Shipping", resolved.Items[0].Label)
 
-	preview, err := service.Resolve("header", true)
+	preview, err := service.Resolve(context.Background(), "header", true)
 	require.NoError(t, err)
 	require.Equal(t, "Shipping draft", preview.Items[0].Label)
 }
@@ -71,7 +72,7 @@ func TestNavigationPublishesAndResolvesSnapshot(t *testing.T) {
 func TestNavigationServiceDeleteRemovesMenuFromResolution(t *testing.T) {
 	service := NewNavigationService(newServiceTestDB(t))
 
-	created, err := service.CreateDraft(NavigationDraftInput{
+	created, err := service.CreateDraft(context.Background(), NavigationDraftInput{
 		Key:      "footer",
 		Title:    "Footer",
 		Location: "footer",
@@ -80,21 +81,21 @@ func TestNavigationServiceDeleteRemovesMenuFromResolution(t *testing.T) {
 		},
 	})
 	require.NoError(t, err)
-	_, err = service.Publish(created.Menu.ID, PublishInput{})
+	_, err = service.Publish(context.Background(), created.Menu.ID, PublishInput{})
 	require.NoError(t, err)
 
-	require.NoError(t, service.Delete(created.Menu.ID, nil))
+	require.NoError(t, service.Delete(context.Background(), created.Menu.ID, nil))
 
-	_, err = service.Get(created.Menu.ID)
+	_, err = service.Get(context.Background(), created.Menu.ID)
 	require.ErrorIs(t, err, ErrNotFound)
-	_, err = service.Resolve("footer", false)
+	_, err = service.Resolve(context.Background(), "footer", false)
 	require.ErrorIs(t, err, ErrNotFound)
 }
 
 func TestNavigationServiceUnpublishAndDiscardDraft(t *testing.T) {
 	service := NewNavigationService(newServiceTestDB(t))
 
-	created, err := service.CreateDraft(NavigationDraftInput{
+	created, err := service.CreateDraft(context.Background(), NavigationDraftInput{
 		Key:      "main",
 		Title:    "Main",
 		Location: "header",
@@ -103,18 +104,18 @@ func TestNavigationServiceUnpublishAndDiscardDraft(t *testing.T) {
 		},
 	})
 	require.NoError(t, err)
-	published, err := service.Publish(created.Menu.ID, PublishInput{})
+	published, err := service.Publish(context.Background(), created.Menu.ID, PublishInput{})
 	require.NoError(t, err)
 
-	unpublished, err := service.Unpublish(created.Menu.ID, PublishInput{})
+	unpublished, err := service.Unpublish(context.Background(), created.Menu.ID, PublishInput{})
 	require.NoError(t, err)
 	require.Nil(t, unpublished.Entry.PublishedVersionID)
-	_, err = service.Resolve("header", false)
+	_, err = service.Resolve(context.Background(), "header", false)
 	require.ErrorIs(t, err, ErrNotFound)
 
-	_, err = service.Publish(created.Menu.ID, PublishInput{})
+	_, err = service.Publish(context.Background(), created.Menu.ID, PublishInput{})
 	require.NoError(t, err)
-	_, err = service.UpdateDraft(created.Menu.ID, NavigationDraftInput{
+	_, err = service.UpdateDraft(context.Background(), created.Menu.ID, NavigationDraftInput{
 		Key:      "main",
 		Title:    "Main",
 		Location: "header",
@@ -123,7 +124,7 @@ func TestNavigationServiceUnpublishAndDiscardDraft(t *testing.T) {
 		},
 	})
 	require.NoError(t, err)
-	reverted, deleted, err := service.DiscardDraft(created.Menu.ID, PublishInput{})
+	reverted, deleted, err := service.DiscardDraft(context.Background(), created.Menu.ID, PublishInput{})
 	require.NoError(t, err)
 	require.False(t, deleted)
 	require.False(t, reverted.HasUnpublishedDraft)

@@ -1,6 +1,7 @@
 package cms
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -53,12 +54,13 @@ func NewNavigationService(db *gorm.DB) *NavigationService {
 	return &NavigationService{db: db}
 }
 
-func (s *NavigationService) CreateDraft(input NavigationDraftInput) (*NavigationRecord, error) {
+func (s *NavigationService) CreateDraft(ctx context.Context, input NavigationDraftInput) (*NavigationRecord, error) {
+	db := s.db.WithContext(ctx)
 	if err := s.validateInput(&input); err != nil {
 		return nil, err
 	}
 	var record *NavigationRecord
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		var existing models.CMSNavigationMenu
 		err := tx.Unscoped().Where("key = ?", input.Key).First(&existing).Error
 		if err == nil {
@@ -99,12 +101,13 @@ func (s *NavigationService) CreateDraft(input NavigationDraftInput) (*Navigation
 	return record, err
 }
 
-func (s *NavigationService) UpdateDraft(id uint, input NavigationDraftInput) (*NavigationRecord, error) {
+func (s *NavigationService) UpdateDraft(ctx context.Context, id uint, input NavigationDraftInput) (*NavigationRecord, error) {
+	db := s.db.WithContext(ctx)
 	if err := s.validateInput(&input); err != nil {
 		return nil, err
 	}
 	var record *NavigationRecord
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		menu, entry, err := loadNavigationMenuEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
@@ -157,9 +160,10 @@ func (s *NavigationService) UpdateDraft(id uint, input NavigationDraftInput) (*N
 	return record, err
 }
 
-func (s *NavigationService) Publish(id uint, input PublishInput) (*NavigationRecord, error) {
+func (s *NavigationService) Publish(ctx context.Context, id uint, input PublishInput) (*NavigationRecord, error) {
+	db := s.db.WithContext(ctx)
 	var record *NavigationRecord
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		menu, entry, err := loadNavigationMenuEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
@@ -199,9 +203,10 @@ func (s *NavigationService) Publish(id uint, input PublishInput) (*NavigationRec
 	return record, err
 }
 
-func (s *NavigationService) Unpublish(id uint, input PublishInput) (*NavigationRecord, error) {
+func (s *NavigationService) Unpublish(ctx context.Context, id uint, input PublishInput) (*NavigationRecord, error) {
+	db := s.db.WithContext(ctx)
 	var record *NavigationRecord
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		menu, entry, err := loadNavigationMenuEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
@@ -226,10 +231,11 @@ func (s *NavigationService) Unpublish(id uint, input PublishInput) (*NavigationR
 	return record, err
 }
 
-func (s *NavigationService) DiscardDraft(id uint, input PublishInput) (*NavigationRecord, bool, error) {
+func (s *NavigationService) DiscardDraft(ctx context.Context, id uint, input PublishInput) (*NavigationRecord, bool, error) {
+	db := s.db.WithContext(ctx)
 	var record *NavigationRecord
 	deleted := false
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		menu, entry, err := loadNavigationMenuEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
@@ -258,8 +264,9 @@ func (s *NavigationService) DiscardDraft(id uint, input PublishInput) (*Navigati
 	return record, deleted, err
 }
 
-func (s *NavigationService) Delete(id uint, actorID *uint) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
+func (s *NavigationService) Delete(ctx context.Context, id uint, actorID *uint) error {
+	db := s.db.WithContext(ctx)
+	return db.Transaction(func(tx *gorm.DB) error {
 		menu, entry, err := loadNavigationMenuEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
@@ -290,30 +297,32 @@ func (s *NavigationService) deleteLoadedMenu(tx *gorm.DB, menu models.CMSNavigat
 	return nil
 }
 
-func (s *NavigationService) Get(id uint) (*NavigationRecord, error) {
-	menu, entry, err := loadNavigationMenuEntry(s.db, id, clause.Locking{})
+func (s *NavigationService) Get(ctx context.Context, id uint) (*NavigationRecord, error) {
+	db := s.db.WithContext(ctx)
+	menu, entry, err := loadNavigationMenuEntry(db, id, clause.Locking{})
 	if err != nil {
 		return nil, err
 	}
 	var items []models.CMSNavigationItem
-	if err := s.db.Where("menu_id = ?", menu.ID).Order("sort_order ASC, id ASC").Find(&items).Error; err != nil {
+	if err := db.Where("menu_id = ?", menu.ID).Order("sort_order ASC, id ASC").Find(&items).Error; err != nil {
 		return nil, err
 	}
-	return assembleNavigationRecord(s.db, menu, entry, items)
+	return assembleNavigationRecord(db, menu, entry, items)
 }
 
-func (s *NavigationService) List(limit, offset int) ([]NavigationRecord, int64, error) {
+func (s *NavigationService) List(ctx context.Context, limit, offset int) ([]NavigationRecord, int64, error) {
+	db := s.db.WithContext(ctx)
 	var total int64
-	if err := s.db.Model(&models.CMSNavigationMenu{}).Count(&total).Error; err != nil {
+	if err := db.Model(&models.CMSNavigationMenu{}).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 	var menus []models.CMSNavigationMenu
-	if err := s.db.Order("updated_at DESC, id DESC").Limit(limit).Offset(offset).Find(&menus).Error; err != nil {
+	if err := db.Order("updated_at DESC, id DESC").Limit(limit).Offset(offset).Find(&menus).Error; err != nil {
 		return nil, 0, err
 	}
 	records := make([]NavigationRecord, 0, len(menus))
 	for _, menu := range menus {
-		record, err := s.Get(menu.ID)
+		record, err := s.Get(ctx, menu.ID)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -322,19 +331,20 @@ func (s *NavigationService) List(limit, offset int) ([]NavigationRecord, int64, 
 	return records, total, nil
 }
 
-func (s *NavigationService) Resolve(location string, includeDraft bool) (*NavigationRecord, error) {
+func (s *NavigationService) Resolve(ctx context.Context, location string, includeDraft bool) (*NavigationRecord, error) {
+	db := s.db.WithContext(ctx)
 	location = strings.TrimSpace(location)
 	if location == "" {
 		return nil, fmt.Errorf("%w: location is required", ErrInvalidPage)
 	}
 	var menu models.CMSNavigationMenu
-	if err := s.db.Where("location = ?", location).Order("updated_at DESC, id DESC").First(&menu).Error; err != nil {
+	if err := db.Where("location = ?", location).Order("updated_at DESC, id DESC").First(&menu).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}
 		return nil, err
 	}
-	record, err := s.Get(menu.ID)
+	record, err := s.Get(ctx, menu.ID)
 	if err != nil {
 		return nil, err
 	}

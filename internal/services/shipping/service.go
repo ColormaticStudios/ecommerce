@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"ecommerce/internal/dbcontext"
 	orderservice "ecommerce/internal/services/orders"
 	paymentservice "ecommerce/internal/services/payments"
 	"ecommerce/models"
@@ -24,81 +23,83 @@ var (
 
 const pendingShipmentProviderIDPrefix = "pending:"
 
-func QuoteAndPersistRates(
-	ctx context.Context,
-	tx *gorm.DB,
-	registry ProviderRegistry,
-	order models.Order,
-	snapshot models.OrderCheckoutSnapshot,
-	now time.Time,
-) ([]models.ShipmentRate, error) {
-	ctx = dbcontext.WithDB(ctx, tx)
+type RateQuotePlan struct {
+	Order        models.Order
+	Snapshot     models.OrderCheckoutSnapshot
+	ShippingData map[string]string
+	Request      QuoteRatesRequest
+	StoredRates  []models.ShipmentRate
+}
 
+func PrepareRateQuote(db *gorm.DB, order models.Order, snapshot models.OrderCheckoutSnapshot) (RateQuotePlan, error) {
+	plan := RateQuotePlan{Order: order, Snapshot: snapshot}
 	var existingShipment models.Shipment
-	err := tx.Preload("Rates").
+	err := db.Preload("Rates").
 		Where("order_id = ? AND snapshot_id = ? AND provider = ?", order.ID, snapshot.ID, snapshot.ShippingProviderID).
 		First(&existingShipment).Error
 	if err == nil && existingShipment.FinalizedAt != nil {
 		if len(existingShipment.Rates) > 0 {
-			return existingShipment.Rates, nil
+			plan.StoredRates = existingShipment.Rates
+			return plan, nil
 		}
 		var selectedRate models.ShipmentRate
-		if rateErr := tx.Where("id = ?", existingShipment.ShipmentRateID).First(&selectedRate).Error; rateErr == nil {
-			return []models.ShipmentRate{selectedRate}, nil
+		if rateErr := db.Where("id = ?", existingShipment.ShipmentRateID).First(&selectedRate).Error; rateErr == nil {
+			plan.StoredRates = []models.ShipmentRate{selectedRate}
+			return plan, nil
 		}
 	}
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, err
-	}
-
-	provider, err := registry.Provider(snapshot.ShippingProviderID)
-	if err != nil {
-		return nil, err
+		return RateQuotePlan{}, err
 	}
 
 	shippingData, err := unmarshalStringMap(snapshot.ShippingDataJSON)
 	if err != nil {
-		return nil, err
+		return RateQuotePlan{}, err
 	}
-	rates, err := provider.QuoteRates(ctx, QuoteRatesRequest{
+	plan.ShippingData = shippingData
+	plan.Request = QuoteRatesRequest{
 		OrderID:               order.ID,
 		SnapshotID:            snapshot.ID,
 		Currency:              snapshot.Currency,
 		ShippingAddressPretty: snapshot.ShippingAddressPretty,
 		ShippingAmount:        snapshot.ShippingAmount,
 		ShippingData:          shippingData,
-	})
+	}
+	return plan, nil
+}
+
+func QuotePreparedRates(ctx context.Context, registry ProviderRegistry, plan RateQuotePlan) ([]QuotedRate, error) {
+	provider, err := registry.Provider(plan.Snapshot.ShippingProviderID)
 	if err != nil {
 		return nil, err
 	}
+	return provider.QuoteRates(ctx, plan.Request)
+}
 
-	if err := tx.Where("order_id = ? AND snapshot_id = ? AND provider = ? AND shipment_id IS NULL", order.ID, snapshot.ID, snapshot.ShippingProviderID).
+func PersistQuotedRates(tx *gorm.DB, plan RateQuotePlan, rates []QuotedRate) ([]models.ShipmentRate, error) {
+	if len(plan.StoredRates) > 0 {
+		return plan.StoredRates, nil
+	}
+	if err := tx.Where("order_id = ? AND snapshot_id = ? AND provider = ? AND shipment_id IS NULL", plan.Order.ID, plan.Snapshot.ID, plan.Snapshot.ShippingProviderID).
 		Delete(&models.ShipmentRate{}).Error; err != nil {
 		return nil, err
 	}
 
-	selectedServiceCode := selectedServiceCode(snapshot.ShippingProviderID, shippingData)
+	selectedCode := selectedServiceCode(plan.Snapshot.ShippingProviderID, plan.ShippingData)
 	modelRates := make([]models.ShipmentRate, 0, len(rates))
 	selectedIndex := -1
 	for i, rate := range rates {
-		selected := rate.ServiceCode == selectedServiceCode
-		if !selected && selectedServiceCode == "" && rate.Amount == snapshot.ShippingAmount {
+		selected := rate.ServiceCode == selectedCode
+		if !selected && selectedCode == "" && rate.Amount == plan.Snapshot.ShippingAmount {
 			selected = true
 		}
 		if selected && selectedIndex == -1 {
 			selectedIndex = i
 		}
 		modelRates = append(modelRates, models.ShipmentRate{
-			OrderID:        order.ID,
-			SnapshotID:     snapshot.ID,
-			Provider:       snapshot.ShippingProviderID,
-			ProviderRateID: rate.ProviderRateID,
-			ServiceCode:    rate.ServiceCode,
-			ServiceName:    rate.ServiceName,
-			Amount:         rate.Amount,
-			Currency:       rate.Currency,
-			Selected:       selected,
-			ExpiresAt:      rate.ExpiresAt,
+			OrderID: plan.Order.ID, SnapshotID: plan.Snapshot.ID, Provider: plan.Snapshot.ShippingProviderID,
+			ProviderRateID: rate.ProviderRateID, ServiceCode: rate.ServiceCode, ServiceName: rate.ServiceName,
+			Amount: rate.Amount, Currency: rate.Currency, Selected: selected, ExpiresAt: rate.ExpiresAt,
 		})
 	}
 	if len(modelRates) > 0 && selectedIndex == -1 {
@@ -112,6 +113,54 @@ func QuoteAndPersistRates(
 	return modelRates, nil
 }
 
+func QuoteAndPersistRates(ctx context.Context, db *gorm.DB, registry ProviderRegistry, order models.Order, snapshot models.OrderCheckoutSnapshot, _ time.Time) ([]models.ShipmentRate, error) {
+	plan, err := PrepareRateQuote(db, order, snapshot)
+	if err != nil || len(plan.StoredRates) > 0 {
+		return plan.StoredRates, err
+	}
+	rates, err := QuotePreparedRates(ctx, registry, plan)
+	if err != nil {
+		return nil, err
+	}
+	var stored []models.ShipmentRate
+	err = db.Transaction(func(tx *gorm.DB) error {
+		var persistErr error
+		stored, persistErr = PersistQuotedRates(tx, plan, rates)
+		return persistErr
+	})
+	return stored, err
+}
+
+type PreparedLabelPurchase struct {
+	Shipment     models.Shipment
+	Rate         models.ShipmentRate
+	Snapshot     models.OrderCheckoutSnapshot
+	Package      PackageInput
+	EffectiveKey string
+	AlreadyDone  bool
+}
+
+func PrepareLabelPurchase(db *gorm.DB, orderID, rateID uint, pkg PackageInput, idempotencyKey string) (PreparedLabelPurchase, error) {
+	var prepared PreparedLabelPurchase
+	err := db.Transaction(func(tx *gorm.DB) error {
+		var err error
+		prepared.Shipment, prepared.Rate, prepared.Snapshot, prepared.EffectiveKey, prepared.AlreadyDone, err = prepareLabelPurchase(tx, orderID, rateID, pkg, idempotencyKey)
+		prepared.Package = pkg
+		return err
+	})
+	return prepared, err
+}
+
+func FinalizeLabelPurchase(db *gorm.DB, shipmentID uint, providerShipment ProviderShipment, now time.Time) (models.Shipment, error) {
+	var shipment models.Shipment
+	err := db.Transaction(func(tx *gorm.DB) error {
+		var err error
+		shipment, err = finalizeLabelPurchase(tx, shipmentID, providerShipment, now)
+		return err
+	})
+	return shipment, err
+}
+
 func PurchaseLabel(
 	ctx context.Context,
 	db *gorm.DB,
@@ -123,57 +172,34 @@ func PurchaseLabel(
 	correlationID string,
 	now time.Time,
 ) (models.Shipment, error) {
-	var (
-		preparedShipment models.Shipment
-		rate             models.ShipmentRate
-		snapshot         models.OrderCheckoutSnapshot
-		effectiveKey     string
-		alreadyDone      bool
-	)
-	if err := db.Transaction(func(tx *gorm.DB) error {
-		var prepErr error
-		preparedShipment, rate, snapshot, effectiveKey, alreadyDone, prepErr = prepareLabelPurchase(
-			tx,
-			orderID,
-			rateID,
-			pkg,
-			idempotencyKey,
-		)
-		return prepErr
-	}); err != nil {
+	prepared, err := PrepareLabelPurchase(db, orderID, rateID, pkg, idempotencyKey)
+	if err != nil {
 		return models.Shipment{}, err
 	}
-	if alreadyDone {
-		return preparedShipment, nil
+	if prepared.AlreadyDone {
+		return prepared.Shipment, nil
 	}
 
-	provider, err := registry.Provider(rate.Provider)
+	provider, err := registry.Provider(prepared.Rate.Provider)
 	if err != nil {
 		return models.Shipment{}, err
 	}
 	providerShipment, err := provider.BuyLabel(ctx, BuyLabelRequest{
 		OrderID:               orderID,
-		SnapshotID:            snapshot.ID,
-		Provider:              rate.Provider,
-		Rate:                  rate,
-		ShippingAddressPretty: snapshot.ShippingAddressPretty,
+		SnapshotID:            prepared.Snapshot.ID,
+		Provider:              prepared.Rate.Provider,
+		Rate:                  prepared.Rate,
+		ShippingAddressPretty: prepared.Snapshot.ShippingAddressPretty,
 		Package:               pkg,
-		IdempotencyKey:        effectiveKey,
+		IdempotencyKey:        prepared.EffectiveKey,
+		OperationKey:          prepared.EffectiveKey,
 		CorrelationID:         correlationID,
 	})
 	if err != nil {
 		return models.Shipment{}, err
 	}
 
-	var finalized models.Shipment
-	if err := db.Transaction(func(tx *gorm.DB) error {
-		var finalizeErr error
-		finalized, finalizeErr = finalizeLabelPurchase(tx, preparedShipment.ID, providerShipment, now)
-		return finalizeErr
-	}); err != nil {
-		return models.Shipment{}, err
-	}
-	return finalized, nil
+	return FinalizeLabelPurchase(db, prepared.Shipment.ID, providerShipment, now)
 }
 
 func GetShipment(db *gorm.DB, shipmentID uint) (models.Shipment, error) {
@@ -437,8 +463,6 @@ func finalizeLabelPurchase(
 	updates := map[string]any{
 		"provider_shipment_id": providerShipment.ProviderShipmentID,
 		"status":               models.ShipmentStatusLabelPurchased,
-		"service_code":         providerShipment.ServiceCode,
-		"service_name":         providerShipment.ServiceName,
 		"tracking_number":      providerShipment.TrackingNumber,
 		"tracking_url":         providerShipment.TrackingURL,
 		"label_url":            providerShipment.LabelURL,

@@ -1,6 +1,7 @@
 package cms
 
 import (
+	"context"
 	"errors"
 
 	"ecommerce/models"
@@ -20,7 +21,8 @@ type BootstrapResult struct {
 // BootstrapStarterSite creates a usable, published CMS site when the corresponding
 // page paths and global/navigation keys do not already exist. It is safe to run again:
 // existing entries are left untouched so merchant-authored content is preserved.
-func BootstrapStarterSite(db *gorm.DB) (BootstrapResult, error) {
+func BootstrapStarterSite(ctx context.Context, db *gorm.DB) (BootstrapResult, error) {
+	db = db.WithContext(ctx)
 	result := BootstrapResult{CreatedPages: []string{}}
 	pageService := NewPageService(db)
 
@@ -29,12 +31,12 @@ func BootstrapStarterSite(db *gorm.DB) (BootstrapResult, error) {
 		err := db.Where("path = ?", page.Path).First(&existing).Error
 		switch {
 		case err == nil:
-			if page.Path == "/" && isGeneratedLegacyHomepage(pageService, existing.ID) {
-				record, err := pageService.UpdateDraft(existing.ID, page)
+			if page.Path == "/" && isGeneratedLegacyHomepage(ctx, pageService, existing.ID) {
+				record, err := pageService.UpdateDraft(ctx, existing.ID, page)
 				if err != nil {
 					return result, err
 				}
-				if _, err := pageService.Publish(record.Page.ID, PublishInput{Notes: "Replace generated legacy homepage with starter site"}); err != nil {
+				if _, err := pageService.Publish(ctx, record.Page.ID, PublishInput{Notes: "Replace generated legacy homepage with starter site"}); err != nil {
 					return result, err
 				}
 				result.UpgradedHomepage = true
@@ -44,11 +46,11 @@ func BootstrapStarterSite(db *gorm.DB) (BootstrapResult, error) {
 			return result, err
 		}
 
-		record, err := pageService.CreateDraft(page)
+		record, err := pageService.CreateDraft(ctx, page)
 		if err != nil {
 			return result, err
 		}
-		if _, err := pageService.Publish(record.Page.ID, PublishInput{Notes: "Starter site bootstrap"}); err != nil {
+		if _, err := pageService.Publish(ctx, record.Page.ID, PublishInput{Notes: "Starter site bootstrap"}); err != nil {
 			return result, err
 		}
 		result.CreatedPages = append(result.CreatedPages, page.Path)
@@ -62,11 +64,11 @@ func BootstrapStarterSite(db *gorm.DB) (BootstrapResult, error) {
 		return result, err
 	default:
 		navigationService := NewNavigationService(db)
-		record, err := navigationService.CreateDraft(starterNavigation())
+		record, err := navigationService.CreateDraft(ctx, starterNavigation())
 		if err != nil {
 			return result, err
 		}
-		if _, err := navigationService.Publish(record.Menu.ID, PublishInput{Notes: "Starter site bootstrap"}); err != nil {
+		if _, err := navigationService.Publish(ctx, record.Menu.ID, PublishInput{Notes: "Starter site bootstrap"}); err != nil {
 			return result, err
 		}
 		result.CreatedNavigation = true
@@ -80,11 +82,11 @@ func BootstrapStarterSite(db *gorm.DB) (BootstrapResult, error) {
 		return result, err
 	default:
 		globalService := NewGlobalRegionService(db)
-		record, err := globalService.CreateDraft(starterFooter())
+		record, err := globalService.CreateDraft(ctx, starterFooter())
 		if err != nil {
 			return result, err
 		}
-		if _, err := globalService.Publish(record.Region.ID, PublishInput{Notes: "Starter site bootstrap"}); err != nil {
+		if _, err := globalService.Publish(ctx, record.Region.ID, PublishInput{Notes: "Starter site bootstrap"}); err != nil {
 			return result, err
 		}
 		result.CreatedFooter = true
@@ -96,8 +98,8 @@ func BootstrapStarterSite(db *gorm.DB) (BootstrapResult, error) {
 // isGeneratedLegacyHomepage identifies only the fallback page created by the
 // storefront-to-CMS migration when no legacy homepage configuration existed. It
 // deliberately does not match migrated custom content or merchant-edited pages.
-func isGeneratedLegacyHomepage(service *Service, pageID uint) bool {
-	record, err := service.Get(pageID)
+func isGeneratedLegacyHomepage(ctx context.Context, service *Service, pageID uint) bool {
+	record, err := service.Get(ctx, pageID)
 	if err != nil || record.HasUnpublishedDraft || record.Page.Title != "Home" || record.PublishedVersion == nil {
 		return false
 	}

@@ -54,7 +54,7 @@ func newListUserAddressesCmd() *cobra.Command {
 				return err
 			}
 
-			addresses, err := accountdataservice.NewService(db).ListSavedAddresses(user.ID)
+			addresses, err := accountdataservice.NewService(db).ListSavedAddresses(cmd.Context(), user.ID)
 			if err != nil {
 				return err
 			}
@@ -104,7 +104,7 @@ func newAddUserAddressCmd() *cobra.Command {
 				return err
 			}
 
-			address, err := accountdataservice.NewService(db).CreateSavedAddress(user.ID, accountdataservice.CreateSavedAddressInput{
+			address, err := accountdataservice.NewService(db).CreateSavedAddress(cmd.Context(), user.ID, accountdataservice.CreateSavedAddressInput{
 				Label:      input.label,
 				FullName:   input.fullName,
 				Line1:      input.line1,
@@ -161,7 +161,7 @@ func newDeleteUserAddressCmd() *cobra.Command {
 				return err
 			}
 
-			if err := accountdataservice.NewService(db).DeleteSavedAddress(user.ID, addressID); err != nil {
+			if err := accountdataservice.NewService(db).DeleteSavedAddress(cmd.Context(), user.ID, addressID); err != nil {
 				if err.Error() == "address not found" {
 					return errors.New("saved address not found")
 				}
@@ -195,7 +195,7 @@ func newDefaultUserAddressCmd() *cobra.Command {
 				return err
 			}
 
-			if _, err := accountdataservice.NewService(db).SetDefaultAddress(user.ID, addressID); err != nil {
+			if _, err := accountdataservice.NewService(db).SetDefaultAddress(cmd.Context(), user.ID, addressID); err != nil {
 				if err.Error() == "address not found" {
 					return errors.New("saved address not found")
 				}
@@ -229,7 +229,7 @@ func newListUserCardsCmd() *cobra.Command {
 				return err
 			}
 
-			methods, err := accountdataservice.NewService(db).ListSavedPaymentMethods(user.ID)
+			methods, err := accountdataservice.NewService(db).ListSavedPaymentMethods(cmd.Context(), user.ID)
 			if err != nil {
 				return err
 			}
@@ -279,7 +279,7 @@ func newAddUserCardCmd() *cobra.Command {
 				return err
 			}
 
-			method, err := accountdataservice.NewService(db).CreateSavedPaymentMethod(user.ID, accountdataservice.CreateSavedPaymentMethodInput{
+			method, err := accountdataservice.NewService(db).CreateSavedPaymentMethod(cmd.Context(), user.ID, accountdataservice.CreateSavedPaymentMethodInput{
 				CardholderName: input.cardholderName,
 				CardNumber:     input.cardNumber,
 				ExpMonth:       input.expMonth,
@@ -331,7 +331,7 @@ func newDeleteUserCardCmd() *cobra.Command {
 				return err
 			}
 
-			if err := accountdataservice.NewService(db).DeleteSavedPaymentMethod(user.ID, methodID); err != nil {
+			if err := accountdataservice.NewService(db).DeleteSavedPaymentMethod(cmd.Context(), user.ID, methodID); err != nil {
 				if err.Error() == "payment method not found" {
 					return errors.New("saved payment card not found")
 				}
@@ -365,7 +365,7 @@ func newDefaultUserCardCmd() *cobra.Command {
 				return err
 			}
 
-			if _, err := accountdataservice.NewService(db).SetDefaultPaymentMethod(user.ID, methodID); err != nil {
+			if _, err := accountdataservice.NewService(db).SetDefaultPaymentMethod(cmd.Context(), user.ID, methodID); err != nil {
 				if err.Error() == "payment method not found" {
 					return errors.New("saved payment card not found")
 				}

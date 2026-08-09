@@ -21,6 +21,7 @@ for file in "${FILES[@]}"; do
 done
 
 "${ROOT_DIR}/scripts/generate-api-contracts.sh"
+(cd "${ROOT_DIR}" && go run ./scripts/openapi-contract)
 
 changed=0
 for file in "${FILES[@]}"; do

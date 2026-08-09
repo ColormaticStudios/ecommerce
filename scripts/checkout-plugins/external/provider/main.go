@@ -117,6 +117,14 @@ func main() {
 			"ProviderTxnID":       "externalpay-refund",
 			"RawResponseRedacted": `{"status":"refunded"}`,
 		})
+	case "payment.get_operation":
+		requireCredential(req, "api_key")
+		writeJSON(map[string]string{
+			"OperationKey":        operationKey(req.Input),
+			"Outcome":             "SUCCEEDED",
+			"ProviderTxnID":       "externalpay-operation",
+			"RawResponseRedacted": `{"status":"succeeded"}`,
+		})
 	case "payment.get_transaction":
 		requireCredential(req, "api_key")
 		writeJSON(map[string]any{
@@ -154,6 +162,14 @@ func main() {
 			"LabelURL":           "https://labels.example.test/externalcarrier.pdf",
 			"ServiceCode":        "standard",
 			"ServiceName":        "Standard",
+		})
+	case "shipping.cancel_label", "shipping.get_operation":
+		requireCredential(req, "carrier_key")
+		writeJSON(map[string]string{
+			"OperationKey":        operationKey(req.Input),
+			"Outcome":             "SUCCEEDED",
+			"ProviderShipmentID":  "externalcarrier-shipment",
+			"RawResponseRedacted": `{"status":"succeeded"}`,
 		})
 	case "shipping.get_shipment":
 		requireCredential(req, "carrier_key")
@@ -200,6 +216,14 @@ func main() {
 				"TaxRateBasisPoints": 700,
 				"Inclusive":          false,
 			}},
+		})
+	case "tax.cancel_finalization", "tax.get_operation":
+		requireCredential(req, "tax_key")
+		writeJSON(map[string]string{
+			"OperationKey":        operationKey(req.Input),
+			"Outcome":             "SUCCEEDED",
+			"ProviderReference":   "externalrate-operation",
+			"RawResponseRedacted": `{"status":"succeeded"}`,
 		})
 	case "tax.export_report":
 		requireCredential(req, "tax_key")
@@ -351,6 +375,21 @@ func requireCredential(req request, key string) {
 		writeJSON(map[string]string{"error": "missing credential: " + key})
 		os.Exit(1)
 	}
+}
+
+func operationKey(raw json.RawMessage) string {
+	var input struct {
+		OperationKey string `json:"OperationKey"`
+	}
+	_ = json.Unmarshal(raw, &input)
+	if strings.TrimSpace(input.OperationKey) == "" {
+		var snakeCase struct {
+			OperationKey string `json:"operation_key"`
+		}
+		_ = json.Unmarshal(raw, &snakeCase)
+		input.OperationKey = snakeCase.OperationKey
+	}
+	return firstNonEmpty(input.OperationKey, "example-operation")
 }
 
 func mustDecodeInput(raw json.RawMessage, into any) {

@@ -1,6 +1,7 @@
 package orders
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -62,6 +63,26 @@ func seedVariant(t *testing.T, db *gorm.DB, sku string, stock int) models.Produc
 	}
 	require.NoError(t, db.Create(&variant).Error)
 	return variant
+}
+
+func TestCreateAggregatesDuplicateVariantStock(t *testing.T) {
+	db := newOrdersTestDB(t)
+	variant := seedVariant(t, db, "SKU-AGGREGATE", 5)
+	userID := uint(1)
+	session := seedOrderSession(t, db, &userID)
+
+	_, err := NewService(db).Create(context.Background(), session.ID, &userID, nil, []CreateItemInput{
+		{ProductVariantID: variant.ID, Quantity: 3},
+		{ProductVariantID: variant.ID, Quantity: 3},
+	})
+	var stockErr *InsufficientStockError
+	require.ErrorAs(t, err, &stockErr)
+	assert.Equal(t, 6, stockErr.Requested)
+	assert.Equal(t, 5, stockErr.Available)
+
+	var count int64
+	require.NoError(t, db.Model(&models.Order{}).Count(&count).Error)
+	assert.Zero(t, count)
 }
 
 func TestApplyStatusTransition_CommitsStock(t *testing.T) {

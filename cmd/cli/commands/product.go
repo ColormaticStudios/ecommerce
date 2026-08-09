@@ -2,6 +2,7 @@ package commands
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -14,9 +15,10 @@ import (
 	"strconv"
 	"strings"
 
-	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
+	"ecommerce/internal/httpapi"
 	"ecommerce/internal/media"
+	catalogadminservice "ecommerce/internal/services/catalogadmin"
 	"ecommerce/models"
 
 	"github.com/spf13/cobra"
@@ -96,10 +98,12 @@ func newCreateProductCmd() *cobra.Command {
 					log.Fatalf("Error loading product JSON: %v", err)
 				}
 
-				product, err := invokeLocalJSON[apicontract.Product](handlers.CreateProduct(db), localHandlerRequest{
-					Method: http.MethodPost,
-					Path:   "/api/v1/admin/products",
-					Body:   input,
+				product, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.Product, error) {
+					response, err := endpoints.CreateProduct(ctx, apicontract.CreateProductRequestObject{Body: &input})
+					if err != nil {
+						return apicontract.Product{}, err
+					}
+					return apicontract.Product(response.(apicontract.CreateProduct201JSONResponse)), nil
 				})
 				if err != nil {
 					log.Fatal(err)
@@ -749,12 +753,12 @@ func newUploadProductMediaCmd() *cobra.Command {
 				log.Fatalf("Failed to initialize media directories: %v", err)
 			}
 
-			mediaObj, err := mediaService.ImportFile(filePath)
+			mediaObj, err := mediaService.ImportFile(cmd.Context(), filePath)
 			if err != nil {
 				log.Fatalf("Upload failed: %v", err)
 			}
 
-			if err := handlers.AttachProductMediaToDraft(db, mediaService, &product, []string{mediaObj.ID}); err != nil {
+			if _, err := catalogadminservice.NewService(db, mediaService).AttachMedia(cmd.Context(), product.ID, []string{mediaObj.ID}); err != nil {
 				_ = mediaService.DeleteIfOrphan(mediaObj.ID)
 				log.Fatalf("Failed to attach media: %v", err)
 			}
@@ -855,13 +859,12 @@ func invokeProductUpdate(productID uint, input apicontract.ProductUpsertInput) (
 	if isRemoteMode() {
 		return invokeRemoteJSON[apicontract.Product](http.MethodPatch, fmt.Sprintf("/api/v1/admin/products/%d", productID), input)
 	}
-	db := getDB()
-	defer closeDB(db)
-	return invokeLocalJSON[apicontract.Product](handlers.UpdateProduct(db), localHandlerRequest{
-		Method:     http.MethodPatch,
-		Path:       fmt.Sprintf("/api/v1/admin/products/%d", productID),
-		PathParams: map[string]string{"id": fmt.Sprintf("%d", productID)},
-		Body:       input,
+	return withCatalogEndpoints(context.Background(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.Product, error) {
+		response, err := endpoints.UpdateProduct(ctx, apicontract.UpdateProductRequestObject{Id: int(productID), Body: &input})
+		if err != nil {
+			return apicontract.Product{}, err
+		}
+		return apicontract.Product(response.(apicontract.UpdateProduct200JSONResponse)), nil
 	})
 }
 

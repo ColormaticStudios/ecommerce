@@ -1,12 +1,12 @@
 package commands
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 
-	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/media"
 	catalogadmin "ecommerce/internal/services/catalogadmin"
@@ -26,11 +26,7 @@ func loadCurrentProductUpsertInput(db *gorm.DB, mediaService *media.Service, pro
 		return catalogadmin.ProductContractToUpsertInput(contract), nil
 	}
 
-	contract, err := invokeLocalJSON[apicontract.Product](handlers.GetAdminProductByID(db, mediaService), localHandlerRequest{
-		Method:     "GET",
-		Path:       fmt.Sprintf("/api/v1/admin/products/%d", productID),
-		PathParams: map[string]string{"id": fmt.Sprintf("%d", productID)},
-	})
+	contract, err := catalogGetProduct(context.Background(), productID)
 	if err != nil {
 		return apicontract.ProductUpsertInput{}, err
 	}

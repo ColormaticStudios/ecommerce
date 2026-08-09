@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,12 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
+	"ecommerce/internal/httpapi"
 	"ecommerce/internal/media"
 	"ecommerce/models"
 
-	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 )
@@ -88,12 +88,23 @@ func newListOrdersCmd() *cobra.Command {
 				path += "?" + encoded
 			}
 
-			resp, err := invokeWithMediaService[apicontract.OrderPage](localHandlerRequest{
-				Method: http.MethodGet,
-				Path:   path,
-			}, func(mediaService *media.Service) gin.HandlerFunc {
-				return handlers.GetAllOrders(mediaService.DB, mediaService)
-			})
+			var resp apicontract.OrderPage
+			var err error
+			if isRemoteMode() {
+				resp, err = invokeRemoteJSON[apicontract.OrderPage](http.MethodGet, path, nil)
+			} else {
+				mediaService := newMediaService()
+				defer closeMediaService(mediaService)
+				endpoints, endpointErr := httpapi.NewCheckoutProviderEndpoints(httpapi.CheckoutProviderEndpointsOptions{DB: mediaService.DB, Media: mediaService})
+				if endpointErr != nil {
+					return endpointErr
+				}
+				response, endpointErr := endpoints.ListAdminOrders(cmd.Context(), apicontract.ListAdminOrdersRequestObject{Params: apicontract.ListAdminOrdersParams{Q: stringPointer(query), Page: positiveIntPointer(page), Limit: positiveIntPointer(limit)}})
+				if endpointErr != nil {
+					return endpointErr
+				}
+				resp = apicontract.OrderPage(response.(apicontract.ListAdminOrders200JSONResponse))
+			}
 			if err != nil {
 				return err
 			}
@@ -138,6 +149,54 @@ func newListOrdersCmd() *cobra.Command {
 	return cmd
 }
 
+func stringPointer(value string) *string {
+	if strings.TrimSpace(value) == "" {
+		return nil
+	}
+	value = strings.TrimSpace(value)
+	return &value
+}
+func positiveIntPointer(value int) *int {
+	if value < 1 {
+		return nil
+	}
+	return &value
+}
+
+func loadAdminOrder(ctx context.Context, id uint) (apicontract.Order, error) {
+	if isRemoteMode() {
+		return invokeRemoteJSON[apicontract.Order](http.MethodGet, fmt.Sprintf("/api/v1/admin/orders/%d", id), nil)
+	}
+	mediaService := newMediaService()
+	defer closeMediaService(mediaService)
+	endpoints, err := httpapi.NewCheckoutProviderEndpoints(httpapi.CheckoutProviderEndpointsOptions{DB: mediaService.DB, Media: mediaService})
+	if err != nil {
+		return apicontract.Order{}, err
+	}
+	response, err := endpoints.GetAdminOrder(ctx, apicontract.GetAdminOrderRequestObject{Id: int(id)})
+	if err != nil {
+		return apicontract.Order{}, err
+	}
+	return apicontract.Order(response.(apicontract.GetAdminOrder200JSONResponse)), nil
+}
+
+func loadAdminOrderPayments(ctx context.Context, id uint) (apicontract.OrderPaymentLedger, error) {
+	if isRemoteMode() {
+		return invokeRemoteJSON[apicontract.OrderPaymentLedger](http.MethodGet, fmt.Sprintf("/api/v1/admin/orders/%d/payments", id), nil)
+	}
+	db := getDB()
+	defer closeDB(db)
+	endpoints, err := httpapi.NewCheckoutProviderEndpoints(httpapi.CheckoutProviderEndpointsOptions{DB: db})
+	if err != nil {
+		return apicontract.OrderPaymentLedger{}, err
+	}
+	response, err := endpoints.GetAdminOrderPayments(ctx, apicontract.GetAdminOrderPaymentsRequestObject{Id: int(id)})
+	if err != nil {
+		return apicontract.OrderPaymentLedger{}, err
+	}
+	return apicontract.OrderPaymentLedger(response.(apicontract.GetAdminOrderPayments200JSONResponse)), nil
+}
+
 func newGetOrderCmd() *cobra.Command {
 	var id uint
 	var format string
@@ -146,13 +205,7 @@ func newGetOrderCmd() *cobra.Command {
 		Use:   "get",
 		Short: "Get a single order",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			order, err := invokeWithMediaService[apicontract.Order](localHandlerRequest{
-				Method:     http.MethodGet,
-				Path:       fmt.Sprintf("/api/v1/admin/orders/%d", id),
-				PathParams: map[string]string{"id": fmt.Sprintf("%d", id)},
-			}, func(mediaService *media.Service) gin.HandlerFunc {
-				return handlers.GetAdminOrderByID(mediaService.DB, mediaService)
-			})
+			order, err := loadAdminOrder(cmd.Context(), id)
 			if err != nil {
 				return err
 			}
@@ -189,13 +242,7 @@ func newGetOrderPaymentsCmd() *cobra.Command {
 		Use:   "payments",
 		Short: "Get payment ledger for an order",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ledger, err := invokeWithDB[apicontract.OrderPaymentLedger](localHandlerRequest{
-				Method:     http.MethodGet,
-				Path:       fmt.Sprintf("/api/v1/admin/orders/%d/payments", id),
-				PathParams: map[string]string{"id": fmt.Sprintf("%d", id)},
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.GetAdminOrderPayments(db)
-			})
+			ledger, err := loadAdminOrderPayments(cmd.Context(), id)
 			if err != nil {
 				return err
 			}
@@ -279,23 +326,20 @@ func newInspectOrderCmd() *cobra.Command {
 }
 
 func buildOrderInspectResponse(db *gorm.DB, mediaService *media.Service, orderID uint) (orderInspectResponse, error) {
-	order, err := invokeLocalJSON[apicontract.Order](handlers.GetAdminOrderByID(db, mediaService), localHandlerRequest{
-		Method:     http.MethodGet,
-		Path:       fmt.Sprintf("/api/v1/admin/orders/%d", orderID),
-		PathParams: map[string]string{"id": fmt.Sprintf("%d", orderID)},
-	})
+	endpoints, err := httpapi.NewCheckoutProviderEndpoints(httpapi.CheckoutProviderEndpointsOptions{DB: db, Media: mediaService})
 	if err != nil {
 		return orderInspectResponse{}, err
 	}
-
-	payments, err := invokeLocalJSON[apicontract.OrderPaymentLedger](handlers.GetAdminOrderPayments(db), localHandlerRequest{
-		Method:     http.MethodGet,
-		Path:       fmt.Sprintf("/api/v1/admin/orders/%d/payments", orderID),
-		PathParams: map[string]string{"id": fmt.Sprintf("%d", orderID)},
-	})
+	orderResponse, err := endpoints.GetAdminOrder(context.Background(), apicontract.GetAdminOrderRequestObject{Id: int(orderID)})
 	if err != nil {
 		return orderInspectResponse{}, err
 	}
+	order := apicontract.Order(orderResponse.(apicontract.GetAdminOrder200JSONResponse))
+	paymentResponse, err := endpoints.GetAdminOrderPayments(context.Background(), apicontract.GetAdminOrderPaymentsRequestObject{Id: int(orderID)})
+	if err != nil {
+		return orderInspectResponse{}, err
+	}
+	payments := apicontract.OrderPaymentLedger(paymentResponse.(apicontract.GetAdminOrderPayments200JSONResponse))
 
 	var orderRow models.Order
 	if err := db.First(&orderRow, orderID).Error; err != nil {

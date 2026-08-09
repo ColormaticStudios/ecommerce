@@ -1,6 +1,7 @@
 package media
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -180,7 +181,7 @@ func TestImportFilePersistsAndProcessesLocalUpload(t *testing.T) {
 	sourcePath := filepath.Join(t.TempDir(), "manual-upload.txt")
 	require.NoError(t, os.WriteFile(sourcePath, []byte("hello from cli"), 0o644))
 
-	mediaObj, err := service.ImportFile(sourcePath)
+	mediaObj, err := service.ImportFile(context.Background(), sourcePath)
 	require.NoError(t, err)
 
 	assert.Equal(t, StatusReady, mediaObj.Status)

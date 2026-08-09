@@ -1,6 +1,7 @@
 package media
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -49,15 +50,16 @@ func (s *Service) markJobFailed(jobID string) {
 	})
 }
 
-func (s *Service) WaitUntilReady(mediaID string, timeout time.Duration) (models.MediaObject, error) {
+func (s *Service) WaitUntilReady(ctx context.Context, mediaID string, timeout time.Duration) (models.MediaObject, error) {
 	if strings.TrimSpace(mediaID) == "" {
 		return models.MediaObject{}, ErrMediaNotFound
 	}
 
 	deadline := time.Now().Add(timeout)
+	db := s.DB.WithContext(ctx)
 	for {
 		var mediaObj models.MediaObject
-		if err := s.DB.First(&mediaObj, "id = ?", mediaID).Error; err != nil {
+		if err := db.First(&mediaObj, "id = ?", mediaID).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				if timeout > 0 && time.Now().Before(deadline) {
 					time.Sleep(150 * time.Millisecond)
@@ -83,10 +85,11 @@ func (s *Service) WaitUntilReady(mediaID string, timeout time.Duration) (models.
 	}
 }
 
-func (s *Service) ImportFile(filePath string) (models.MediaObject, error) {
+func (s *Service) ImportFile(ctx context.Context, filePath string) (models.MediaObject, error) {
 	if strings.TrimSpace(filePath) == "" {
 		return models.MediaObject{}, errors.New("file path is required")
 	}
+	s = s.withContext(ctx)
 	if err := s.EnsureDirs(); err != nil {
 		return models.MediaObject{}, err
 	}
@@ -123,7 +126,7 @@ func (s *Service) ImportFile(filePath string) (models.MediaObject, error) {
 		return models.MediaObject{}, err
 	}
 
-	return s.WaitUntilReady(job.ID, 0)
+	return s.WaitUntilReady(ctx, job.ID, 0)
 }
 
 func copyFile(src string, dest string) error {

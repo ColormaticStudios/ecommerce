@@ -1,19 +1,18 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"net/http"
+
 	"net/url"
 	"strconv"
 	"strings"
 
-	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
+	"ecommerce/internal/httpapi"
 
-	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
-	"gorm.io/gorm"
 )
 
 func NewInventoryCmd() *cobra.Command {
@@ -56,12 +55,16 @@ func newInventoryReservationsListCmd() *cobra.Command {
 				log.Fatal(err)
 			}
 
-			path := inventoryListPath("/api/v1/admin/inventory/reservations", statuses, limit, 100)
-			response, err := invokeWithDB[apicontract.InventoryReservationList](localHandlerRequest{
-				Method: http.MethodGet,
-				Path:   path,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.ListAdminInventoryReservations(db)
+			response, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.InventoryReservationList, error) {
+				values := make([]apicontract.ListAdminInventoryReservationsParamsStatus, 0, len(statuses))
+				for _, value := range statuses {
+					values = append(values, apicontract.ListAdminInventoryReservationsParamsStatus(strings.ToUpper(value)))
+				}
+				result, err := endpoints.ListAdminInventoryReservations(ctx, apicontract.ListAdminInventoryReservationsRequestObject{Params: apicontract.ListAdminInventoryReservationsParams{Status: &values, Limit: &limit}})
+				if err != nil {
+					return apicontract.InventoryReservationList{}, err
+				}
+				return apicontract.InventoryReservationList(result.(apicontract.ListAdminInventoryReservations200JSONResponse)), nil
 			})
 			if err != nil {
 				log.Fatal(err)
@@ -86,8 +89,8 @@ func newInventoryAlertsCmd() *cobra.Command {
 		Short: "Inventory alert commands",
 	}
 	cmd.AddCommand(newInventoryAlertsListCmd())
-	cmd.AddCommand(newInventoryAlertActionCmd("ack", "Acknowledge an inventory alert", handlers.AckAdminInventoryAlert))
-	cmd.AddCommand(newInventoryAlertActionCmd("resolve", "Resolve an inventory alert", handlers.ResolveAdminInventoryAlert))
+	cmd.AddCommand(newInventoryAlertActionCmd("ack", "Acknowledge an inventory alert"))
+	cmd.AddCommand(newInventoryAlertActionCmd("resolve", "Resolve an inventory alert"))
 	return cmd
 }
 
@@ -105,12 +108,16 @@ func newInventoryAlertsListCmd() *cobra.Command {
 				log.Fatal(err)
 			}
 
-			path := inventoryListPath("/api/v1/admin/inventory/alerts", statuses, limit, 100)
-			response, err := invokeWithDB[apicontract.InventoryAlertList](localHandlerRequest{
-				Method: http.MethodGet,
-				Path:   path,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.ListAdminInventoryAlerts(db)
+			response, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.InventoryAlertList, error) {
+				values := make([]apicontract.ListAdminInventoryAlertsParamsStatus, 0, len(statuses))
+				for _, value := range statuses {
+					values = append(values, apicontract.ListAdminInventoryAlertsParamsStatus(strings.ToUpper(value)))
+				}
+				result, err := endpoints.ListAdminInventoryAlerts(ctx, apicontract.ListAdminInventoryAlertsRequestObject{Params: apicontract.ListAdminInventoryAlertsParams{Status: &values, Limit: &limit}})
+				if err != nil {
+					return apicontract.InventoryAlertList{}, err
+				}
+				return apicontract.InventoryAlertList(result.(apicontract.ListAdminInventoryAlerts200JSONResponse)), nil
 			})
 			if err != nil {
 				log.Fatal(err)
@@ -129,7 +136,7 @@ func newInventoryAlertsListCmd() *cobra.Command {
 	return cmd
 }
 
-func newInventoryAlertActionCmd(name string, short string, factory func(*gorm.DB) gin.HandlerFunc) *cobra.Command {
+func newInventoryAlertActionCmd(name string, short string) *cobra.Command {
 	var alertID int
 	var format string
 
@@ -145,14 +152,20 @@ func newInventoryAlertActionCmd(name string, short string, factory func(*gorm.DB
 				log.Fatal(err)
 			}
 
-			path := fmt.Sprintf("/api/v1/admin/inventory/alerts/%d/%s", alertID, name)
-			alert, err := invokeWithDB[apicontract.InventoryAlert](localHandlerRequest{
-				Method: http.MethodPost,
-				Path:   path,
-				PathParams: map[string]string{
-					"id": strconv.Itoa(alertID),
-				},
-			}, factory)
+			alert, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.InventoryAlert, error) {
+				if name == "ack" {
+					result, err := endpoints.AckAdminInventoryAlert(ctx, apicontract.AckAdminInventoryAlertRequestObject{Id: alertID})
+					if err != nil {
+						return apicontract.InventoryAlert{}, err
+					}
+					return apicontract.InventoryAlert(result.(apicontract.AckAdminInventoryAlert200JSONResponse)), nil
+				}
+				result, err := endpoints.ResolveAdminInventoryAlert(ctx, apicontract.ResolveAdminInventoryAlertRequestObject{Id: alertID})
+				if err != nil {
+					return apicontract.InventoryAlert{}, err
+				}
+				return apicontract.InventoryAlert(result.(apicontract.ResolveAdminInventoryAlert200JSONResponse)), nil
+			})
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -196,15 +209,16 @@ func newInventoryThresholdsListCmd() *cobra.Command {
 				log.Fatal(err)
 			}
 
-			path := "/api/v1/admin/inventory/thresholds"
-			if variantID > 0 {
-				path += "?product_variant_id=" + strconv.Itoa(variantID)
-			}
-			response, err := invokeWithDB[apicontract.InventoryThresholdList](localHandlerRequest{
-				Method: http.MethodGet,
-				Path:   path,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.ListAdminInventoryThresholds(db)
+			response, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.InventoryThresholdList, error) {
+				var id *int
+				if variantID > 0 {
+					id = &variantID
+				}
+				result, err := endpoints.ListAdminInventoryThresholds(ctx, apicontract.ListAdminInventoryThresholdsRequestObject{Params: apicontract.ListAdminInventoryThresholdsParams{ProductVariantId: id}})
+				if err != nil {
+					return apicontract.InventoryThresholdList{}, err
+				}
+				return apicontract.InventoryThresholdList(result.(apicontract.ListAdminInventoryThresholds200JSONResponse)), nil
 			})
 			if err != nil {
 				log.Fatal(err)
@@ -250,12 +264,12 @@ func newInventoryThresholdSetCmd() *cobra.Command {
 				ProductVariantId: productVariantID,
 				LowStockQuantity: lowStock,
 			}
-			threshold, err := invokeWithDB[apicontract.InventoryThreshold](localHandlerRequest{
-				Method: http.MethodPut,
-				Path:   "/api/v1/admin/inventory/thresholds",
-				Body:   body,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.UpsertAdminInventoryThreshold(db)
+			threshold, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.InventoryThreshold, error) {
+				result, err := endpoints.UpsertAdminInventoryThreshold(ctx, apicontract.UpsertAdminInventoryThresholdRequestObject{Body: &body})
+				if err != nil {
+					return apicontract.InventoryThreshold{}, err
+				}
+				return apicontract.InventoryThreshold(result.(apicontract.UpsertAdminInventoryThreshold200JSONResponse)), nil
 			})
 			if err != nil {
 				log.Fatal(err)
@@ -287,14 +301,12 @@ func newInventoryThresholdDeleteCmd() *cobra.Command {
 			if thresholdID < 1 {
 				log.Fatal("provide --id")
 			}
-			_, err := invokeWithDB[apicontract.MessageResponse](localHandlerRequest{
-				Method: http.MethodDelete,
-				Path:   fmt.Sprintf("/api/v1/admin/inventory/thresholds/%d", thresholdID),
-				PathParams: map[string]string{
-					"id": strconv.Itoa(thresholdID),
-				},
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.DeleteAdminInventoryThreshold(db)
+			_, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.MessageResponse, error) {
+				result, err := endpoints.DeleteAdminInventoryThreshold(ctx, apicontract.DeleteAdminInventoryThresholdRequestObject{Id: thresholdID})
+				if err != nil {
+					return apicontract.MessageResponse{}, err
+				}
+				return apicontract.MessageResponse(result.(apicontract.DeleteAdminInventoryThreshold200JSONResponse)), nil
 			})
 			if err != nil {
 				log.Fatal(err)
@@ -353,12 +365,12 @@ func newInventoryAdjustmentCmd() *cobra.Command {
 				body.ApprovedByType = &approvedByType
 			}
 
-			response, err := invokeWithDB[apicontract.InventoryAdjustmentResponse](localHandlerRequest{
-				Method: http.MethodPost,
-				Path:   "/api/v1/admin/inventory/adjustments",
-				Body:   body,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.CreateAdminInventoryAdjustment(db)
+			response, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.InventoryAdjustmentResponse, error) {
+				result, err := endpoints.CreateAdminInventoryAdjustment(ctx, apicontract.CreateAdminInventoryAdjustmentRequestObject{Body: &body})
+				if err != nil {
+					return apicontract.InventoryAdjustmentResponse{}, err
+				}
+				return apicontract.InventoryAdjustmentResponse(result.(apicontract.CreateAdminInventoryAdjustment201JSONResponse)), nil
 			})
 			if err != nil {
 				log.Fatal(err)
@@ -397,11 +409,12 @@ func newInventoryReconcileCmd() *cobra.Command {
 				log.Fatal(err)
 			}
 
-			report, err := invokeWithDB[apicontract.InventoryReconciliationReport](localHandlerRequest{
-				Method: http.MethodPost,
-				Path:   "/api/v1/admin/inventory/reconciliation",
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.RunAdminInventoryReconciliation(db)
+			report, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.InventoryReconciliationReport, error) {
+				result, err := endpoints.RunAdminInventoryReconciliation(ctx, apicontract.RunAdminInventoryReconciliationRequestObject{})
+				if err != nil {
+					return apicontract.InventoryReconciliationReport{}, err
+				}
+				return apicontract.InventoryReconciliationReport(result.(apicontract.RunAdminInventoryReconciliation200JSONResponse)), nil
 			})
 			if err != nil {
 				log.Fatal(err)
@@ -435,18 +448,12 @@ func newInventoryTimelineCmd() *cobra.Command {
 				log.Fatal(err)
 			}
 
-			path := fmt.Sprintf("/api/v1/admin/inventory/variants/%d/timeline", variantID)
-			if limit > 0 {
-				path += "?limit=" + strconv.Itoa(limit)
-			}
-			timeline, err := invokeWithDB[apicontract.InventoryTimeline](localHandlerRequest{
-				Method: http.MethodGet,
-				Path:   path,
-				PathParams: map[string]string{
-					"product_variant_id": strconv.Itoa(variantID),
-				},
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.GetAdminInventoryTimeline(db)
+			timeline, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.InventoryTimeline, error) {
+				result, err := endpoints.GetAdminInventoryTimeline(ctx, apicontract.GetAdminInventoryTimelineRequestObject{ProductVariantId: variantID, Params: apicontract.GetAdminInventoryTimelineParams{Limit: &limit}})
+				if err != nil {
+					return apicontract.InventoryTimeline{}, err
+				}
+				return apicontract.InventoryTimeline(result.(apicontract.GetAdminInventoryTimeline200JSONResponse)), nil
 			})
 			if err != nil {
 				log.Fatal(err)

@@ -97,21 +97,9 @@ func syncPayloadMediaReferences(tx *gorm.DB, ownerType string, ownerID uint, pay
 	if !tx.Migrator().HasTable(&models.MediaReference{}) {
 		return nil, nil
 	}
-	ids := collectPayloadMediaIDs(payload)
-	for _, id := range ids {
-		var object models.MediaObject
-		if err := tx.First(&object, "id = ?", id).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, fmt.Errorf("%w: media %q was not found", ErrInvalidPage, id)
-			}
-			return nil, err
-		}
-		if object.Status != media.StatusReady || strings.TrimSpace(object.OriginalPath) == "" {
-			return nil, fmt.Errorf("%w: media %q is not ready", ErrInvalidPage, id)
-		}
-		if !strings.HasPrefix(object.MimeType, "image/") {
-			return nil, fmt.Errorf("%w: media %q must be an image", ErrInvalidPage, id)
-		}
+	ids, err := validatePayloadMedia(tx, payload)
+	if err != nil {
+		return nil, err
 	}
 	var existing []models.MediaReference
 	if err := tx.Where("owner_type = ? AND owner_id = ? AND role = ?", ownerType, ownerID, role).
@@ -140,6 +128,59 @@ func syncPayloadMediaReferences(tx *gorm.DB, ownerType string, ownerID uint, pay
 		}
 	}
 	return removed, nil
+}
+
+func validatePayloadMedia(tx *gorm.DB, payload PagePayload) ([]string, error) {
+	if !tx.Migrator().HasTable(&models.MediaReference{}) {
+		return nil, nil
+	}
+	ids := collectPayloadMediaIDs(payload)
+	for _, id := range ids {
+		var object models.MediaObject
+		if err := tx.First(&object, "id = ?", id).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, fmt.Errorf("%w: media %q was not found", ErrInvalidPage, id)
+			}
+			return nil, err
+		}
+		if object.Status != media.StatusReady || strings.TrimSpace(object.OriginalPath) == "" {
+			return nil, fmt.Errorf("%w: media %q is not ready", ErrInvalidPage, id)
+		}
+		if !strings.HasPrefix(object.MimeType, "image/") {
+			return nil, fmt.Errorf("%w: media %q must be an image", ErrInvalidPage, id)
+		}
+	}
+	return ids, nil
+}
+
+func publicationPayload(tx *gorm.DB, version models.CMSEntryVersion) (PagePayload, error) {
+	payload, err := payloadFromVersion(version)
+	if err != nil {
+		return nil, fmt.Errorf("%w: payload is not valid JSON", ErrInvalidPage)
+	}
+	normalized, _, err := requirePublishablePayload(payload)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := validatePayloadMedia(tx, normalized); err != nil {
+		return nil, err
+	}
+	return normalized, nil
+}
+
+func publicationPayloadJSON(tx *gorm.DB, raw string) (PagePayload, error) {
+	var payload PagePayload
+	if err := json.Unmarshal([]byte(raw), &payload); err != nil {
+		return nil, fmt.Errorf("%w: payload is not valid JSON", ErrInvalidPage)
+	}
+	normalized, _, err := requirePublishablePayload(payload)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := validatePayloadMedia(tx, normalized); err != nil {
+		return nil, err
+	}
+	return normalized, nil
 }
 
 func (s *Service) cleanupOrphanMedia(ids []string) {

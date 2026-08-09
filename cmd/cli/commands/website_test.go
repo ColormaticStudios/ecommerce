@@ -3,7 +3,7 @@ package commands
 import (
 	"testing"
 
-	"ecommerce/handlers"
+	"ecommerce/internal/apicontract"
 )
 
 func TestRootCommandIncludesWebsiteSettingsGroup(t *testing.T) {
@@ -29,16 +29,16 @@ func TestRootCommandIncludesCategoryGroup(t *testing.T) {
 }
 
 func TestWebsiteOIDCConfiguredRequiresCoreFields(t *testing.T) {
-	settings := handlers.WebsiteSettingsPayload{
-		OIDCProvider:    "https://issuer.example",
-		OIDCClientID:    "client-id",
-		OIDCRedirectURI: "https://shop.example/api/v1/auth/oidc/callback",
+	settings := apicontract.WebsiteSettings{
+		OidcProvider:    "https://issuer.example",
+		OidcClientId:    "client-id",
+		OidcRedirectUri: "https://shop.example/api/v1/auth/oidc/callback",
 	}
 	if !websiteOIDCConfigured(settings) {
 		t.Fatalf("expected OIDC to be configured")
 	}
 
-	settings.OIDCClientID = ""
+	settings.OidcClientId = ""
 	if websiteOIDCConfigured(settings) {
 		t.Fatalf("expected OIDC to be unconfigured without client id")
 	}

@@ -21,8 +21,27 @@ func newTaxTestDB(t *testing.T) *gorm.DB {
 	dsn := "file:" + t.Name() + "?mode=memory&cache=shared"
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	require.NoError(t, err)
-	require.NoError(t, db.AutoMigrate(&models.OrderTaxLine{}, &models.TaxExport{}))
+	require.NoError(t, db.AutoMigrate(&models.OrderCheckoutSnapshot{}, &models.OrderTaxLine{}, &models.TaxExport{}))
 	return db
+}
+
+func TestPersistTaxFinalizationIsIdempotent(t *testing.T) {
+	db := newTaxTestDB(t)
+	snapshot := models.OrderCheckoutSnapshot{TaxProviderID: "dummy-us-tax", Currency: "USD"}
+	require.NoError(t, db.Create(&snapshot).Error)
+	order := models.Order{}
+	order.ID = 12
+	input := FinalizeInput{Order: order, Snapshot: snapshot}
+	result := TaxFinalized{Provider: "dummy-us-tax", ProviderReference: "tax-ref", Currency: "USD", TotalTax: 125, Lines: []TaxLine{{LineType: models.TaxLineTypeItem, Quantity: 1, TaxableAmount: 2000, TaxAmount: 125, TaxRateBasisPoints: 625}}}
+
+	first, err := PersistTaxFinalization(db, input, result, time.Now().UTC())
+	require.NoError(t, err)
+	second, err := PersistTaxFinalization(db, input, result, time.Now().UTC().Add(time.Minute))
+	require.NoError(t, err)
+	require.Equal(t, first.TotalTax, second.TotalTax)
+	var count int64
+	require.NoError(t, db.Model(&models.OrderTaxLine{}).Where("order_id = ? AND snapshot_id = ?", input.Order.ID, snapshot.ID).Count(&count).Error)
+	require.EqualValues(t, 1, count)
 }
 
 func TestExportOrderTaxesUsesAllExporterForMixedProviders(t *testing.T) {

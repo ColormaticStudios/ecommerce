@@ -1,6 +1,7 @@
 package cms
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -72,13 +73,14 @@ func NewPageService(db *gorm.DB, mediaServices ...*media.Service) *Service {
 	return &Service{db: db, media: mediaService}
 }
 
-func (s *Service) CreateDraft(input PageDraftInput) (*PageRecord, error) {
+func (s *Service) CreateDraft(ctx context.Context, input PageDraftInput) (*PageRecord, error) {
+	db := s.db.WithContext(ctx)
 	if err := validateDraftInput(&input); err != nil {
 		return nil, err
 	}
 	var record *PageRecord
 	var cleanupIDs []string
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		var existing models.CMSPage
 		err := tx.Unscoped().Where("path = ?", input.Path).First(&existing).Error
 		if err == nil {
@@ -135,13 +137,14 @@ func (s *Service) CreateDraft(input PageDraftInput) (*PageRecord, error) {
 	return record, err
 }
 
-func (s *Service) UpdateDraft(id uint, input PageDraftInput) (*PageRecord, error) {
+func (s *Service) UpdateDraft(ctx context.Context, id uint, input PageDraftInput) (*PageRecord, error) {
+	db := s.db.WithContext(ctx)
 	if err := validateDraftInput(&input); err != nil {
 		return nil, err
 	}
 	var record *PageRecord
 	var cleanupIDs []string
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		page, entry, err := loadPageEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
@@ -196,16 +199,25 @@ func (s *Service) UpdateDraft(id uint, input PageDraftInput) (*PageRecord, error
 	return record, err
 }
 
-func (s *Service) Publish(id uint, input PublishInput) (*PageRecord, error) {
+func (s *Service) Publish(ctx context.Context, id uint, input PublishInput) (*PageRecord, error) {
+	db := s.db.WithContext(ctx)
 	var record *PageRecord
 	var cleanupIDs []string
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		page, entry, err := loadPageEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
 		}
 		if entry.CurrentVersionID == nil {
 			return ErrNoDraft
+		}
+		var currentVersion models.CMSEntryVersion
+		if err := tx.Where("id = ? AND entry_id = ?", *entry.CurrentVersionID, entry.ID).First(&currentVersion).Error; err != nil {
+			return err
+		}
+		payload, err := publicationPayload(tx, currentVersion)
+		if err != nil {
+			return err
 		}
 		publication := models.CMSPublication{
 			EntryID:     entry.ID,
@@ -228,14 +240,6 @@ func (s *Service) Publish(id uint, input PublishInput) (*PageRecord, error) {
 		if err := tx.Save(&entry).Error; err != nil {
 			return err
 		}
-		var currentVersion models.CMSEntryVersion
-		if err := tx.Where("id = ? AND entry_id = ?", *entry.CurrentVersionID, entry.ID).First(&currentVersion).Error; err != nil {
-			return err
-		}
-		payload, err := payloadFromVersion(currentVersion)
-		if err != nil {
-			return err
-		}
 		cleanupIDs, err = syncContentMediaReferences(tx, entry.ID, payload, media.RoleCMSContent)
 		if err != nil {
 			return err
@@ -253,10 +257,11 @@ func (s *Service) Publish(id uint, input PublishInput) (*PageRecord, error) {
 	return record, err
 }
 
-func (s *Service) Rollback(id uint, input RollbackInput) (*PageRecord, error) {
+func (s *Service) Rollback(ctx context.Context, id uint, input RollbackInput) (*PageRecord, error) {
+	db := s.db.WithContext(ctx)
 	var record *PageRecord
 	var cleanupIDs []string
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		page, entry, err := loadPageEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
@@ -266,6 +271,10 @@ func (s *Service) Rollback(id uint, input RollbackInput) (*PageRecord, error) {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return ErrNotFound
 			}
+			return err
+		}
+		payload, err := publicationPayload(tx, target)
+		if err != nil {
 			return err
 		}
 		var previous models.CMSPublication
@@ -298,10 +307,6 @@ func (s *Service) Rollback(id uint, input RollbackInput) (*PageRecord, error) {
 		if err := tx.Save(&entry).Error; err != nil {
 			return err
 		}
-		payload, err := payloadFromVersion(target)
-		if err != nil {
-			return err
-		}
 		cleanupIDs, err = syncContentMediaReferences(tx, entry.ID, payload, media.RoleCMSContent)
 		if err != nil {
 			return err
@@ -319,9 +324,10 @@ func (s *Service) Rollback(id uint, input RollbackInput) (*PageRecord, error) {
 	return record, err
 }
 
-func (s *Service) Unpublish(id uint, input PublishInput) (*PageRecord, error) {
+func (s *Service) Unpublish(ctx context.Context, id uint, input PublishInput) (*PageRecord, error) {
+	db := s.db.WithContext(ctx)
 	var record *PageRecord
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		page, entry, err := loadPageEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
@@ -346,11 +352,12 @@ func (s *Service) Unpublish(id uint, input PublishInput) (*PageRecord, error) {
 	return record, err
 }
 
-func (s *Service) DiscardDraft(id uint, input PublishInput) (*PageRecord, bool, error) {
+func (s *Service) DiscardDraft(ctx context.Context, id uint, input PublishInput) (*PageRecord, bool, error) {
+	db := s.db.WithContext(ctx)
 	var record *PageRecord
 	deleted := false
 	var cleanupIDs []string
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		page, entry, err := loadPageEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
@@ -389,9 +396,10 @@ func (s *Service) DiscardDraft(id uint, input PublishInput) (*PageRecord, bool, 
 	return record, deleted, err
 }
 
-func (s *Service) Delete(id uint, actorID *uint) error {
+func (s *Service) Delete(ctx context.Context, id uint, actorID *uint) error {
+	db := s.db.WithContext(ctx)
 	var cleanupIDs []string
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		page, entry, err := loadPageEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
@@ -481,26 +489,28 @@ func (s *Service) deleteLoadedPage(tx *gorm.DB, page models.CMSPage, entry model
 	return cleanupIDs, nil
 }
 
-func (s *Service) Get(id uint) (*PageRecord, error) {
-	page, entry, err := loadPageEntry(s.db, id, clause.Locking{})
+func (s *Service) Get(ctx context.Context, id uint) (*PageRecord, error) {
+	db := s.db.WithContext(ctx)
+	page, entry, err := loadPageEntry(db, id, clause.Locking{})
 	if err != nil {
 		return nil, err
 	}
-	return assembleRecord(s.db, page, entry)
+	return assembleRecord(db, page, entry)
 }
 
-func (s *Service) List(limit, offset int) ([]PageRecord, int64, error) {
+func (s *Service) List(ctx context.Context, limit, offset int) ([]PageRecord, int64, error) {
+	db := s.db.WithContext(ctx)
 	var total int64
-	if err := s.db.Model(&models.CMSPage{}).Count(&total).Error; err != nil {
+	if err := db.Model(&models.CMSPage{}).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 	var pages []models.CMSPage
-	if err := s.db.Order("updated_at DESC, id DESC").Limit(limit).Offset(offset).Find(&pages).Error; err != nil {
+	if err := db.Order("updated_at DESC, id DESC").Limit(limit).Offset(offset).Find(&pages).Error; err != nil {
 		return nil, 0, err
 	}
 	records := make([]PageRecord, 0, len(pages))
 	for _, page := range pages {
-		record, err := s.Get(page.ID)
+		record, err := s.Get(ctx, page.ID)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -509,23 +519,24 @@ func (s *Service) List(limit, offset int) ([]PageRecord, int64, error) {
 	return records, total, nil
 }
 
-func (s *Service) ResolvePublished(requestPath string) (*PageRecord, error) {
-	return s.Resolve(requestPath, false)
+func (s *Service) ResolvePublished(ctx context.Context, requestPath string) (*PageRecord, error) {
+	return s.Resolve(ctx, requestPath, false)
 }
 
-func (s *Service) Resolve(requestPath string, includeDraft bool) (*PageRecord, error) {
+func (s *Service) Resolve(ctx context.Context, requestPath string, includeDraft bool) (*PageRecord, error) {
+	db := s.db.WithContext(ctx)
 	normalized, err := normalizePath(requestPath)
 	if err != nil {
 		return nil, err
 	}
 	var page models.CMSPage
-	if err := s.db.Where("path = ? AND visibility = ?", normalized, models.CMSPageVisibilityPublic).First(&page).Error; err != nil {
+	if err := db.Where("path = ? AND visibility = ?", normalized, models.CMSPageVisibilityPublic).First(&page).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}
 		return nil, err
 	}
-	record, err := s.Get(page.ID)
+	record, err := s.Get(ctx, page.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -537,6 +548,15 @@ func (s *Service) Resolve(requestPath string, includeDraft bool) (*PageRecord, e
 	}
 	if record.Entry.PublishedVersionID == nil {
 		return nil, ErrNotFound
+	}
+	if record.PublishedVersion != nil {
+		filtered, _, err := FilterPublicPayloadJSON(record.PublishedVersion.PayloadJSON)
+		if err != nil {
+			return nil, err
+		}
+		version := *record.PublishedVersion
+		version.PayloadJSON = filtered
+		record.PublishedVersion = &version
 	}
 	return record, nil
 }
@@ -570,9 +590,11 @@ func validateDraftInput(input *PageDraftInput) error {
 	if input.Payload == nil {
 		input.Payload = PagePayload{}
 	}
-	if err := validateAndNormalizePayload(input.Payload); err != nil {
+	normalizedPayload, err := prepareDraftPayload(input.Payload)
+	if err != nil {
 		return err
 	}
+	input.Payload = normalizedPayload
 	return nil
 }
 

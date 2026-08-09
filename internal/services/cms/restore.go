@@ -1,6 +1,7 @@
 package cms
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -77,7 +78,8 @@ type restoreBundle struct {
 	} `json:"variants"`
 }
 
-func (s *Service) RestoreExport(raw []byte, actor string) error {
+func (s *Service) RestoreExport(ctx context.Context, raw []byte, actor string) error {
+	db := s.db.WithContext(ctx)
 	var bundle restoreBundle
 	if err := json.Unmarshal(raw, &bundle); err != nil {
 		return fmt.Errorf("%w: malformed JSON", ErrInvalidExport)
@@ -99,7 +101,7 @@ func (s *Service) RestoreExport(raw []byte, actor string) error {
 		return err
 	}
 
-	return s.db.Transaction(func(tx *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
 		for _, deletion := range []struct {
 			model any
 			query string

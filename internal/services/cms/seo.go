@@ -1,6 +1,7 @@
 package cms
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -39,20 +40,22 @@ var allowedJSONLDTypes = map[string]bool{
 	"FAQPage": true, "Product": true,
 }
 
-func (s *Service) GetSEO(pageID uint) (*SEORecord, error) {
-	page, _, err := loadPageEntry(s.db, pageID, clause.Locking{})
+func (s *Service) GetSEO(ctx context.Context, pageID uint) (*SEORecord, error) {
+	db := s.db.WithContext(ctx)
+	page, _, err := loadPageEntry(db, pageID, clause.Locking{})
 	if err != nil {
 		return nil, err
 	}
-	metadata, err := loadOrDefaultSEO(s.db, page)
+	metadata, err := loadOrDefaultSEO(db, page)
 	if err != nil {
 		return nil, err
 	}
 	return &SEORecord{Metadata: metadata, Issues: seoIssues(metadata)}, nil
 }
 
-func (s *Service) UpdateSEO(pageID uint, input SEOInput) (*SEORecord, error) {
-	page, entry, err := loadPageEntry(s.db, pageID, clause.Locking{})
+func (s *Service) UpdateSEO(ctx context.Context, pageID uint, input SEOInput) (*SEORecord, error) {
+	db := s.db.WithContext(ctx)
+	page, entry, err := loadPageEntry(db, pageID, clause.Locking{})
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +64,7 @@ func (s *Service) UpdateSEO(pageID uint, input SEOInput) (*SEORecord, error) {
 		return nil, err
 	}
 	var cleanupIDs []string
-	err = s.db.Transaction(func(tx *gorm.DB) error {
+	err = db.Transaction(func(tx *gorm.DB) error {
 		var existing models.SEOMetadata
 		findErr := tx.Where("entity_type = ? AND entity_id = ?", "cms_page", page.ID).First(&existing).Error
 		if findErr == nil {

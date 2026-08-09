@@ -13,6 +13,7 @@ import (
 	"ecommerce/models"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 var ErrTaxLinesNotFound = errors.New("tax lines not found")
@@ -21,95 +22,53 @@ type FinalizeInput struct {
 	Order            models.Order
 	Snapshot         models.OrderCheckoutSnapshot
 	InclusivePricing *bool
+	IdempotencyKey   string
+	OperationKey     string
+	CorrelationID    string
 }
 
-func FinalizeOrderTax(
-	ctx context.Context,
-	tx *gorm.DB,
-	registry ProviderRegistry,
-	input FinalizeInput,
-) (TaxFinalized, error) {
-	ctx = dbcontext.WithDB(ctx, tx)
+type TaxFinalizationPlan struct {
+	Input            FinalizeInput
+	Request          FinalizeTaxRequest
+	StoredResult     TaxFinalized
+	AlreadyFinalized bool
+}
 
+func PrepareTaxFinalization(db *gorm.DB, input FinalizeInput) (TaxFinalizationPlan, error) {
 	if strings.TrimSpace(input.Snapshot.TaxProviderID) == "" {
-		return TaxFinalized{}, fmt.Errorf("snapshot tax provider is required")
+		return TaxFinalizationPlan{}, fmt.Errorf("snapshot tax provider is required")
 	}
-
 	var existing []models.OrderTaxLine
-	if err := tx.Where("order_id = ? AND snapshot_id = ?", input.Order.ID, input.Snapshot.ID).
-		Order("id ASC").
-		Find(&existing).Error; err != nil {
-		return TaxFinalized{}, err
+	if err := db.Where("order_id = ? AND snapshot_id = ?", input.Order.ID, input.Snapshot.ID).Order("id ASC").Find(&existing).Error; err != nil {
+		return TaxFinalizationPlan{}, err
 	}
 	if len(existing) > 0 {
-		return fromStoredLines(existing, input.Snapshot.TaxProviderID, input.Snapshot.Currency), nil
+		return TaxFinalizationPlan{Input: input, StoredResult: fromStoredLines(existing, input.Snapshot.TaxProviderID, input.Snapshot.Currency), AlreadyFinalized: true}, nil
 	}
 
-	result, err := ComputeTaxFinalization(ctx, tx, registry, input)
+	request, err := BuildTaxFinalizationRequest(db, input)
 	if err != nil {
-		return TaxFinalized{}, err
+		return TaxFinalizationPlan{}, err
 	}
-
-	timestamp := time.Now().UTC()
-	records := make([]models.OrderTaxLine, 0, len(result.Lines))
-	for _, line := range result.Lines {
-		records = append(records, models.OrderTaxLine{
-			OrderID:            input.Order.ID,
-			SnapshotID:         input.Snapshot.ID,
-			SnapshotItemID:     line.SnapshotItemID,
-			LineType:           line.LineType,
-			TaxProviderID:      input.Snapshot.TaxProviderID,
-			ProductVariantID:   line.ProductVariantID,
-			Jurisdiction:       line.Jurisdiction,
-			TaxCode:            line.TaxCode,
-			TaxName:            line.TaxName,
-			Quantity:           line.Quantity,
-			TaxableAmount:      line.TaxableAmount,
-			TaxAmount:          line.TaxAmount,
-			TaxRateBasisPoints: line.TaxRateBasisPoints,
-			Inclusive:          line.Inclusive,
-			FinalizedAt:        timestamp,
-		})
-	}
-	if len(records) > 0 {
-		if err := tx.Create(&records).Error; err != nil {
-			return TaxFinalized{}, err
-		}
-	}
-	return result, nil
+	return TaxFinalizationPlan{Input: input, Request: request}, nil
 }
 
-func ComputeTaxFinalization(
-	ctx context.Context,
-	tx *gorm.DB,
-	registry ProviderRegistry,
-	input FinalizeInput,
-) (TaxFinalized, error) {
-	ctx = dbcontext.WithDB(ctx, tx)
-
-	provider, err := registry.Provider(input.Snapshot.TaxProviderID)
-	if err != nil {
-		return TaxFinalized{}, err
-	}
-
+func BuildTaxFinalizationRequest(db *gorm.DB, input FinalizeInput) (FinalizeTaxRequest, error) {
 	taxData, err := unmarshalStringMap(input.Snapshot.TaxDataJSON)
 	if err != nil {
-		return TaxFinalized{}, err
+		return FinalizeTaxRequest{}, err
 	}
 	shippingData, err := unmarshalStringMap(input.Snapshot.ShippingDataJSON)
 	if err != nil {
-		return TaxFinalized{}, err
+		return FinalizeTaxRequest{}, err
 	}
 	data := mergeTaxData(taxData, shippingData)
-
-	config, err := resolveNexusConfig(tx, input.Snapshot.TaxProviderID, data)
+	config, err := resolveNexusConfig(db, input.Snapshot.TaxProviderID, data)
 	if err != nil {
-		return TaxFinalized{}, err
+		return FinalizeTaxRequest{}, err
 	}
-	if config != nil {
-		if strings.TrimSpace(data["tax_exempt"]) == "" && strings.TrimSpace(config.ExemptionCode) != "" {
-			data["tax_exempt"] = "true"
-		}
+	if config != nil && strings.TrimSpace(data["tax_exempt"]) == "" && strings.TrimSpace(config.ExemptionCode) != "" {
+		data["tax_exempt"] = "true"
 	}
 
 	inclusivePricing := false
@@ -118,29 +77,88 @@ func ComputeTaxFinalization(
 	} else if config != nil {
 		inclusivePricing = config.InclusivePricing
 	}
-
 	items := make([]LineInput, 0, len(input.Snapshot.Items))
 	for _, item := range input.Snapshot.Items {
-		snapshotItemID := item.ID
-		productVariantID := item.ProductVariantID
-		items = append(items, LineInput{
-			SnapshotItemID:   &snapshotItemID,
-			LineType:         models.TaxLineTypeItem,
-			ProductVariantID: &productVariantID,
-			Quantity:         item.Quantity,
-			Amount:           item.Price.Mul(item.Quantity),
-		})
+		snapshotItemID, productVariantID := item.ID, item.ProductVariantID
+		items = append(items, LineInput{SnapshotItemID: &snapshotItemID, LineType: models.TaxLineTypeItem, ProductVariantID: &productVariantID, Quantity: item.Quantity, Amount: item.Price.Mul(item.Quantity)})
 	}
+	operationKey := strings.TrimSpace(input.OperationKey)
+	if operationKey == "" {
+		operationKey = fmt.Sprintf("tax-finalize-snapshot-%d", input.Snapshot.ID)
+	}
+	idempotencyKey := strings.TrimSpace(input.IdempotencyKey)
+	if idempotencyKey == "" {
+		idempotencyKey = operationKey
+	}
+	return FinalizeTaxRequest{
+		Provider: input.Snapshot.TaxProviderID, Currency: input.Snapshot.Currency, IdempotencyKey: idempotencyKey,
+		OperationKey: operationKey, CorrelationID: input.CorrelationID, Data: data, Items: items,
+		ShippingAmount: input.Snapshot.ShippingAmount, ExpectedTaxAmount: input.Snapshot.TaxAmount, InclusivePricing: inclusivePricing,
+	}, nil
+}
 
-	return provider.FinalizeTax(ctx, FinalizeTaxRequest{
-		Provider:          input.Snapshot.TaxProviderID,
-		Currency:          input.Snapshot.Currency,
-		Data:              data,
-		Items:             items,
-		ShippingAmount:    input.Snapshot.ShippingAmount,
-		ExpectedTaxAmount: input.Snapshot.TaxAmount,
-		InclusivePricing:  inclusivePricing,
+func PersistTaxFinalization(db *gorm.DB, input FinalizeInput, result TaxFinalized, now time.Time) (TaxFinalized, error) {
+	var stored TaxFinalized
+	err := db.Transaction(func(tx *gorm.DB) error {
+		var snapshot models.OrderCheckoutSnapshot
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Select("id").First(&snapshot, input.Snapshot.ID).Error; err != nil {
+			return err
+		}
+		var existing []models.OrderTaxLine
+		if err := tx.Where("order_id = ? AND snapshot_id = ?", input.Order.ID, input.Snapshot.ID).Order("id ASC").Find(&existing).Error; err != nil {
+			return err
+		}
+		if len(existing) > 0 {
+			stored = fromStoredLines(existing, input.Snapshot.TaxProviderID, input.Snapshot.Currency)
+			return nil
+		}
+		timestamp := now.UTC()
+		records := make([]models.OrderTaxLine, 0, len(result.Lines))
+		for _, line := range result.Lines {
+			records = append(records, models.OrderTaxLine{
+				OrderID: input.Order.ID, SnapshotID: input.Snapshot.ID, SnapshotItemID: line.SnapshotItemID, LineType: line.LineType,
+				TaxProviderID: input.Snapshot.TaxProviderID, ProductVariantID: line.ProductVariantID, Jurisdiction: line.Jurisdiction,
+				TaxCode: line.TaxCode, TaxName: line.TaxName, Quantity: line.Quantity, TaxableAmount: line.TaxableAmount,
+				TaxAmount: line.TaxAmount, TaxRateBasisPoints: line.TaxRateBasisPoints, Inclusive: line.Inclusive, FinalizedAt: timestamp,
+			})
+		}
+		if len(records) > 0 {
+			if err := tx.Create(&records).Error; err != nil {
+				return err
+			}
+		}
+		stored = result
+		return nil
 	})
+	return stored, err
+}
+
+func FinalizeOrderTax(ctx context.Context, db *gorm.DB, registry ProviderRegistry, input FinalizeInput) (TaxFinalized, error) {
+	plan, err := PrepareTaxFinalization(db, input)
+	if err != nil || plan.AlreadyFinalized {
+		return plan.StoredResult, err
+	}
+	provider, err := registry.Provider(plan.Request.Provider)
+	if err != nil {
+		return TaxFinalized{}, err
+	}
+	result, err := provider.FinalizeTax(ctx, plan.Request)
+	if err != nil {
+		return TaxFinalized{}, err
+	}
+	return PersistTaxFinalization(db, input, result, time.Now().UTC())
+}
+
+func ComputeTaxFinalization(ctx context.Context, db *gorm.DB, registry ProviderRegistry, input FinalizeInput) (TaxFinalized, error) {
+	request, err := BuildTaxFinalizationRequest(db, input)
+	if err != nil {
+		return TaxFinalized{}, err
+	}
+	provider, err := registry.Provider(request.Provider)
+	if err != nil {
+		return TaxFinalized{}, err
+	}
+	return provider.FinalizeTax(ctx, request)
 }
 
 func LoadOrderTaxLines(db *gorm.DB, orderID uint) ([]models.OrderTaxLine, error) {

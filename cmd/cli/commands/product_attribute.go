@@ -1,16 +1,14 @@
 package commands
 
 import (
+	"context"
 	"fmt"
-	"net/http"
 	"strings"
 
-	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
+	"ecommerce/internal/httpapi"
 
-	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
-	"gorm.io/gorm"
 )
 
 func NewProductAttributeCmd() *cobra.Command {
@@ -35,11 +33,12 @@ func newListProductAttributesCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List product attribute definitions",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := invokeWithDB[apicontract.ProductAttributeDefinitionListResponse](localHandlerRequest{
-				Method: http.MethodGet,
-				Path:   "/api/v1/admin/product-attributes",
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.ListAdminProductAttributes(db)
+			resp, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.ProductAttributeDefinitionListResponse, error) {
+				response, err := endpoints.ListAdminProductAttributes(ctx, apicontract.ListAdminProductAttributesRequestObject{})
+				if err != nil {
+					return apicontract.ProductAttributeDefinitionListResponse{}, err
+				}
+				return apicontract.ProductAttributeDefinitionListResponse(response.(apicontract.ListAdminProductAttributes200JSONResponse)), nil
 			})
 			if err != nil {
 				return err
@@ -90,12 +89,12 @@ func newCreateProductAttributeCmd() *cobra.Command {
 		Short: "Create a product attribute definition",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			payload := input.toContract(cmd)
-			attribute, err := invokeWithDB[apicontract.ProductAttributeDefinition](localHandlerRequest{
-				Method: http.MethodPost,
-				Path:   "/api/v1/admin/product-attributes",
-				Body:   payload,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.CreateAdminProductAttribute(db)
+			attribute, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.ProductAttributeDefinition, error) {
+				response, err := endpoints.CreateAdminProductAttribute(ctx, apicontract.CreateAdminProductAttributeRequestObject{Body: &payload})
+				if err != nil {
+					return apicontract.ProductAttributeDefinition{}, err
+				}
+				return apicontract.ProductAttributeDefinition(response.(apicontract.CreateAdminProductAttribute201JSONResponse)), nil
 			})
 			if err != nil {
 				return err
@@ -132,13 +131,12 @@ func newUpdateProductAttributeCmd() *cobra.Command {
 		Short: "Update a product attribute definition",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			payload := input.toContract(cmd)
-			attribute, err := invokeWithDB[apicontract.ProductAttributeDefinition](localHandlerRequest{
-				Method:     http.MethodPatch,
-				Path:       fmt.Sprintf("/api/v1/admin/product-attributes/%d", id),
-				PathParams: map[string]string{"id": fmt.Sprintf("%d", id)},
-				Body:       payload,
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.UpdateAdminProductAttribute(db)
+			attribute, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.ProductAttributeDefinition, error) {
+				response, err := endpoints.UpdateAdminProductAttribute(ctx, apicontract.UpdateAdminProductAttributeRequestObject{Id: int(id), Body: &payload})
+				if err != nil {
+					return apicontract.ProductAttributeDefinition{}, err
+				}
+				return apicontract.ProductAttributeDefinition(response.(apicontract.UpdateAdminProductAttribute200JSONResponse)), nil
 			})
 			if err != nil {
 				return err
@@ -174,12 +172,12 @@ func newDeleteProductAttributeCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete a product attribute definition",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := invokeWithDB[apicontract.MessageResponse](localHandlerRequest{
-				Method:     http.MethodDelete,
-				Path:       fmt.Sprintf("/api/v1/admin/product-attributes/%d", id),
-				PathParams: map[string]string{"id": fmt.Sprintf("%d", id)},
-			}, func(db *gorm.DB) gin.HandlerFunc {
-				return handlers.DeleteAdminProductAttribute(db)
+			resp, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.MessageResponse, error) {
+				response, err := endpoints.DeleteAdminProductAttribute(ctx, apicontract.DeleteAdminProductAttributeRequestObject{Id: int(id)})
+				if err != nil {
+					return apicontract.MessageResponse{}, err
+				}
+				return apicontract.MessageResponse(response.(apicontract.DeleteAdminProductAttribute200JSONResponse)), nil
 			})
 			if err != nil {
 				return err

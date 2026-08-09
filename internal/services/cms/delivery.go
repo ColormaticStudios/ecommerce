@@ -103,17 +103,19 @@ type ContentEventInput struct {
 	EventType           string
 }
 
-func (s *Service) GetDelivery(pageID uint) (*DeliveryRecord, error) {
-	_, entry, err := loadPageEntry(s.db, pageID, clause.Locking{})
+func (s *Service) GetDelivery(ctx context.Context, pageID uint) (*DeliveryRecord, error) {
+	db := s.db.WithContext(ctx)
+	_, entry, err := loadPageEntry(db, pageID, clause.Locking{})
 	if err != nil {
 		return nil, err
 	}
-	return loadDeliveryRecord(s.db, entry.ID)
+	return loadDeliveryRecord(db, entry.ID)
 }
 
-func (s *Service) UpdateDelivery(pageID uint, input DeliveryInput) (*DeliveryRecord, error) {
+func (s *Service) UpdateDelivery(ctx context.Context, pageID uint, input DeliveryInput) (*DeliveryRecord, error) {
+	db := s.db.WithContext(ctx)
 	var entryID uint
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		_, entry, err := loadPageEntry(tx, pageID, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
@@ -145,7 +147,7 @@ func (s *Service) UpdateDelivery(pageID uint, input DeliveryInput) (*DeliveryRec
 	if err != nil {
 		return nil, err
 	}
-	return loadDeliveryRecord(s.db, entryID)
+	return loadDeliveryRecord(db, entryID)
 }
 
 func replaceSchedule(tx *gorm.DB, entry models.CMSEntry, input *ScheduleInput) error {
@@ -327,11 +329,12 @@ func loadDeliveryRecord(db *gorm.DB, entryID uint) (*DeliveryRecord, error) {
 	return record, nil
 }
 
-func (s *Service) ResolveDelivery(record *PageRecord, request RequestContext, now time.Time) (*DeliveryDecision, bool, error) {
+func (s *Service) ResolveDelivery(ctx context.Context, record *PageRecord, request RequestContext, now time.Time) (*DeliveryDecision, bool, error) {
+	db := s.db.WithContext(ctx)
 	if record.PublishedVersion == nil {
 		return nil, false, ErrNotFound
 	}
-	delivery, err := loadDeliveryRecord(s.db, record.Entry.ID)
+	delivery, err := loadDeliveryRecord(db, record.Entry.ID)
 	if err != nil {
 		return nil, false, err
 	}
@@ -355,9 +358,10 @@ func (s *Service) ResolveDelivery(record *PageRecord, request RequestContext, no
 	return decision, true, nil
 }
 
-func (s *Service) LoadVersion(entryID, versionID uint) (*models.CMSEntryVersion, error) {
+func (s *Service) LoadVersion(ctx context.Context, entryID, versionID uint) (*models.CMSEntryVersion, error) {
+	db := s.db.WithContext(ctx)
 	var version models.CMSEntryVersion
-	if err := s.db.Where("id = ? AND entry_id = ?", versionID, entryID).First(&version).Error; err != nil {
+	if err := db.Where("id = ? AND entry_id = ?", versionID, entryID).First(&version).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}
@@ -445,13 +449,14 @@ func experimentActive(experiment models.CMSExperiment, now time.Time) bool {
 		(experiment.EndsAt == nil || now.Before(*experiment.EndsAt))
 }
 
-func (s *Service) RecordContentEvent(input ContentEventInput) error {
+func (s *Service) RecordContentEvent(ctx context.Context, input ContentEventInput) error {
+	db := s.db.WithContext(ctx)
 	if input.ContentVersionID == 0 || strings.TrimSpace(input.CorrelationID) == "" ||
 		(input.EventType != "impression" && input.EventType != "conversion") {
 		return fmt.Errorf("%w: invalid content event", ErrInvalidDelivery)
 	}
 	var version models.CMSEntryVersion
-	if err := s.db.First(&version, input.ContentVersionID).Error; err != nil {
+	if err := db.First(&version, input.ContentVersionID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ErrNotFound
 		}
@@ -467,7 +472,7 @@ func (s *Service) RecordContentEvent(input ContentEventInput) error {
 			return fmt.Errorf("%w: experiment variant is required", ErrInvalidDelivery)
 		}
 		var count int64
-		if err := s.db.Model(&models.CMSExperimentVariant{}).
+		if err := db.Model(&models.CMSExperimentVariant{}).
 			Where("id = ? AND experiment_id = ? AND version_id = ?", *input.ExperimentVariantID, *input.ExperimentID, input.ContentVersionID).
 			Count(&count).Error; err != nil {
 			return err
@@ -476,7 +481,7 @@ func (s *Service) RecordContentEvent(input ContentEventInput) error {
 			return fmt.Errorf("%w: event does not match an experiment variant", ErrInvalidDelivery)
 		}
 	}
-	err := s.db.Create(&event).Error
+	err := db.Create(&event).Error
 	if err == nil {
 		return nil
 	}
@@ -492,7 +497,8 @@ type ReconcileSummary struct {
 	CompletedExperiments int
 }
 
-func ReconcileDelivery(db *gorm.DB, now time.Time, mediaServices ...*media.Service) (ReconcileSummary, error) {
+func ReconcileDelivery(ctx context.Context, db *gorm.DB, now time.Time, mediaServices ...*media.Service) (ReconcileSummary, error) {
+	db = db.WithContext(ctx)
 	summary := ReconcileSummary{}
 	service := NewPageService(db, mediaServices...)
 	var schedules []models.CMSSchedule
@@ -512,6 +518,14 @@ func ReconcileDelivery(db *gorm.DB, now time.Time, mediaServices ...*media.Servi
 			}
 			transitionedAt := now.UTC()
 			if schedule.Status == models.CMSScheduleStatusPending && !now.Before(schedule.PublishAt) {
+				var version models.CMSEntryVersion
+				if err := tx.Where("id = ? AND entry_id = ?", schedule.VersionID, entry.ID).First(&version).Error; err != nil {
+					return err
+				}
+				payload, err := publicationPayload(tx, version)
+				if err != nil {
+					return err
+				}
 				publication := models.CMSPublication{EntryID: entry.ID, VersionID: schedule.VersionID, PublishedAt: transitionedAt, Notes: "Scheduled publication"}
 				if err := tx.Create(&publication).Error; err != nil {
 					return err
@@ -521,14 +535,6 @@ func ReconcileDelivery(db *gorm.DB, now time.Time, mediaServices ...*media.Servi
 				schedule.Status = models.CMSScheduleStatusActive
 				schedule.LastTransitionAt = &transitionedAt
 				summary.Published++
-				var version models.CMSEntryVersion
-				if err := tx.Where("id = ? AND entry_id = ?", schedule.VersionID, entry.ID).First(&version).Error; err != nil {
-					return err
-				}
-				payload, err := payloadFromVersion(version)
-				if err != nil {
-					return err
-				}
 				cleanupIDs, err = syncContentMediaReferences(tx, entry.ID, payload, media.RoleCMSContent)
 				if err != nil {
 					return err
@@ -579,7 +585,7 @@ func StartDeliveryWorker(ctx context.Context, db *gorm.DB, interval time.Duratio
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 		for {
-			if summary, err := ReconcileDelivery(db, time.Now().UTC(), mediaServices...); err != nil {
+			if summary, err := ReconcileDelivery(ctx, db, time.Now().UTC(), mediaServices...); err != nil {
 				logger.Printf("[ERROR] CMS delivery reconciliation failed: %v", err)
 			} else if summary.Published > 0 || summary.Unpublished > 0 || summary.CompletedExperiments > 0 {
 				logger.Printf("[INFO] CMS delivery reconciliation published=%d unpublished=%d completed_experiments=%d", summary.Published, summary.Unpublished, summary.CompletedExperiments)

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	paymentservice "ecommerce/internal/services/payments"
@@ -35,6 +36,7 @@ type Service struct {
 	Queue             chan uint
 	MaxAttempts       int
 	InitialBackoff    time.Duration
+	activeProcessors  atomic.Int32
 }
 
 func NewService(
@@ -65,15 +67,47 @@ func NewService(
 }
 
 func (s *Service) StartProcessor() {
+	if s == nil {
+		return
+	}
+	s.activeProcessors.Add(1)
 	go func() {
-		for eventID := range s.Queue {
-			s.processWithRetry(context.Background(), eventID)
-		}
+		defer s.activeProcessors.Add(-1)
+		s.run(context.Background())
 	}()
+}
+
+// Run processes queued webhook events until the context is canceled or the
+// queue is closed. Constructors intentionally do not start this worker.
+func (s *Service) Run(ctx context.Context) {
+	if s == nil {
+		return
+	}
+	s.activeProcessors.Add(1)
+	defer s.activeProcessors.Add(-1)
+	s.run(ctx)
+}
+
+func (s *Service) run(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case eventID, ok := <-s.Queue:
+			if !ok {
+				return
+			}
+			s.processWithRetry(ctx, eventID)
+		}
+	}
 }
 
 func (s *Service) Enqueue(eventID uint) {
 	if s == nil || s.Queue == nil || eventID == 0 {
+		return
+	}
+	if s.activeProcessors.Load() == 0 {
+		go s.processWithRetry(context.Background(), eventID)
 		return
 	}
 	select {
@@ -138,15 +172,16 @@ func (s *Service) ReceiveWebhook(
 		Payload:         string(body),
 		ReceivedAt:      now,
 	}
-	if err := s.DB.Create(&event).Error; err != nil {
+	db := s.DB.WithContext(ctx)
+	if err := db.Create(&event).Error; err != nil {
 		if isUniqueConstraintError(err) {
 			var existing models.WebhookEvent
-			if lookupErr := s.DB.Where("provider = ? AND provider_event_id = ?", provider, providerEventID).First(&existing).Error; lookupErr != nil {
+			if lookupErr := db.Where("provider = ? AND provider_event_id = ?", provider, providerEventID).First(&existing).Error; lookupErr != nil {
 				return models.WebhookEvent{}, false, lookupErr
 			}
 			if existing.ProcessedAt == nil {
 				if EventStatus(&existing, s.MaxAttempts) == EventStatusDeadLetter {
-					if resetErr := s.DB.Model(&models.WebhookEvent{}).
+					if resetErr := db.Model(&models.WebhookEvent{}).
 						Where("id = ? AND processed_at IS NULL", existing.ID).
 						Updates(map[string]any{
 							"attempt_count": 0,
@@ -205,77 +240,93 @@ func (s *Service) processWithRetry(ctx context.Context, eventID uint) {
 }
 
 func (s *Service) ProcessStoredEvent(ctx context.Context, eventID uint) error {
-	var processErr error
-	err := s.DB.Transaction(func(tx *gorm.DB) error {
-		var event models.WebhookEvent
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&event, eventID).Error; err != nil {
+	var event models.WebhookEvent
+	if err := s.DB.WithContext(ctx).First(&event, eventID).Error; err != nil {
+		return err
+	}
+	if event.ProcessedAt != nil || EventStatus(&event, s.MaxAttempts) == EventStatusDeadLetter {
+		return nil
+	}
+
+	var (
+		processErr    error
+		paymentEvent  *paymentservice.VerifiedWebhookEvent
+		shippingEvent *shippingservice.TrackingWebhookEvent
+	)
+	eventType := strings.ToLower(strings.TrimSpace(event.EventType))
+	switch {
+	case strings.HasPrefix(eventType, "payment."):
+		provider, err := s.Providers.Provider(event.Provider)
+		if err != nil {
+			processErr = err
+			break
+		}
+		parser, ok := provider.(paymentservice.StoredWebhookParser)
+		if !ok {
+			processErr = fmt.Errorf("payment provider %s does not support stored webhook parsing", event.Provider)
+			break
+		}
+		parsed, err := parser.ParseStoredWebhook(ctx, []byte(event.Payload))
+		if err != nil {
+			processErr = err
+			break
+		}
+		paymentEvent = &parsed
+	case strings.HasPrefix(eventType, "tracking."), strings.HasPrefix(eventType, "shipment."):
+		provider, err := s.ShippingProviders.Provider(event.Provider)
+		if err != nil {
+			processErr = err
+			break
+		}
+		parser, ok := provider.(shippingservice.StoredWebhookParser)
+		if !ok {
+			processErr = fmt.Errorf("shipping provider %s does not support stored webhook parsing", event.Provider)
+			break
+		}
+		parsed, err := parser.ParseStoredWebhook(ctx, []byte(event.Payload))
+		if err != nil {
+			processErr = err
+			break
+		}
+		shippingEvent = &parsed
+	default:
+		processErr = fmt.Errorf("unsupported webhook event type: %s", event.EventType)
+	}
+
+	err := s.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var locked models.WebhookEvent
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&locked, eventID).Error; err != nil {
 			return err
 		}
-		if event.ProcessedAt != nil || EventStatus(&event, s.MaxAttempts) == EventStatusDeadLetter {
+		if locked.ProcessedAt != nil || EventStatus(&locked, s.MaxAttempts) == EventStatusDeadLetter {
+			processErr = nil
 			return nil
 		}
 
-		event.AttemptCount++
-		if err := tx.Model(&models.WebhookEvent{}).
-			Where("id = ?", event.ID).
-			Update("attempt_count", event.AttemptCount).Error; err != nil {
+		locked.AttemptCount++
+		if err := tx.Model(&models.WebhookEvent{}).Where("id = ?", locked.ID).Update("attempt_count", locked.AttemptCount).Error; err != nil {
 			return err
 		}
-
-		switch {
-		case strings.HasPrefix(strings.ToLower(strings.TrimSpace(event.EventType)), "payment."):
-			provider, err := s.Providers.Provider(event.Provider)
-			if err != nil {
+		if processErr != nil {
+			return markWebhookFailure(tx, &locked, processErr)
+		}
+		if paymentEvent != nil {
+			if _, _, _, err := paymentservice.ApplyWebhookPaymentEvent(tx, *paymentEvent, fmt.Sprintf("webhook:%d", locked.ID)); err != nil {
 				processErr = err
-				return markWebhookFailure(tx, &event, err)
+				return markWebhookFailure(tx, &locked, err)
 			}
-			parser, ok := provider.(paymentservice.StoredWebhookParser)
-			if !ok {
-				processErr = fmt.Errorf("payment provider %s does not support stored webhook parsing", event.Provider)
-				return markWebhookFailure(tx, &event, processErr)
-			}
-			parsed, err := parser.ParseStoredWebhook(ctx, []byte(event.Payload))
-			if err != nil {
+		} else if shippingEvent != nil {
+			if _, _, err := shippingservice.ApplyTrackingEvent(tx, *shippingEvent, fmt.Sprintf("webhook:%d", locked.ID)); err != nil {
 				processErr = err
-				return markWebhookFailure(tx, &event, err)
+				return markWebhookFailure(tx, &locked, err)
 			}
-			if _, _, _, err := paymentservice.ApplyWebhookPaymentEvent(tx, parsed, fmt.Sprintf("webhook:%d", event.ID)); err != nil {
-				processErr = err
-				return markWebhookFailure(tx, &event, err)
-			}
-		case strings.HasPrefix(strings.ToLower(strings.TrimSpace(event.EventType)), "tracking."),
-			strings.HasPrefix(strings.ToLower(strings.TrimSpace(event.EventType)), "shipment."):
-			provider, err := s.ShippingProviders.Provider(event.Provider)
-			if err != nil {
-				processErr = err
-				return markWebhookFailure(tx, &event, err)
-			}
-			parser, ok := provider.(shippingservice.StoredWebhookParser)
-			if !ok {
-				processErr = fmt.Errorf("shipping provider %s does not support stored webhook parsing", event.Provider)
-				return markWebhookFailure(tx, &event, processErr)
-			}
-			parsed, err := parser.ParseStoredWebhook(ctx, []byte(event.Payload))
-			if err != nil {
-				processErr = err
-				return markWebhookFailure(tx, &event, err)
-			}
-			if _, _, err := shippingservice.ApplyTrackingEvent(tx, parsed, fmt.Sprintf("webhook:%d", event.ID)); err != nil {
-				processErr = err
-				return markWebhookFailure(tx, &event, err)
-			}
-		default:
-			processErr = fmt.Errorf("unsupported webhook event type: %s", event.EventType)
-			return markWebhookFailure(tx, &event, processErr)
 		}
 
 		now := time.Now().UTC()
-		return tx.Model(&models.WebhookEvent{}).
-			Where("id = ?", event.ID).
-			Updates(map[string]any{
-				"processed_at": now,
-				"last_error":   "",
-			}).Error
+		return tx.Model(&models.WebhookEvent{}).Where("id = ?", locked.ID).Updates(map[string]any{
+			"processed_at": now,
+			"last_error":   "",
+		}).Error
 	})
 	if err != nil {
 		return err

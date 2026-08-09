@@ -17,6 +17,8 @@ var ErrInvalidShippingWebhookSignature = fmt.Errorf("invalid shipping webhook si
 type ShippingProvider interface {
 	QuoteRates(ctx context.Context, req QuoteRatesRequest) ([]QuotedRate, error)
 	BuyLabel(ctx context.Context, req BuyLabelRequest) (ProviderShipment, error)
+	CancelLabel(ctx context.Context, req CancelLabelRequest) (ProviderOperationOutcome, error)
+	GetOutcomeByOperationKey(ctx context.Context, operationKey string) (ProviderOperationOutcome, error)
 	VerifyWebhook(ctx context.Context, headers map[string]string, body []byte) (TrackingWebhookEvent, error)
 }
 
@@ -66,7 +68,23 @@ type BuyLabelRequest struct {
 	ShippingAddressPretty string
 	Package               PackageInput
 	IdempotencyKey        string
+	OperationKey          string
 	CorrelationID         string
+}
+
+type CancelLabelRequest struct {
+	Provider           string
+	ProviderShipmentID string
+	IdempotencyKey     string
+	OperationKey       string
+	CorrelationID      string
+}
+
+type ProviderOperationOutcome struct {
+	OperationKey        string
+	Outcome             string
+	ProviderShipmentID  string
+	RawResponseRedacted string
 }
 
 type ProviderShipment struct {
@@ -158,6 +176,9 @@ func (dummyGroundProvider) QuoteRates(_ context.Context, req QuoteRatesRequest) 
 }
 
 func (dummyGroundProvider) BuyLabel(_ context.Context, req BuyLabelRequest) (ProviderShipment, error) {
+	if err := validateOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return ProviderShipment{}, err
+	}
 	suffix := sanitizeKey(req.IdempotencyKey)
 	if suffix == "" {
 		suffix = "nolabelkey"
@@ -170,6 +191,14 @@ func (dummyGroundProvider) BuyLabel(_ context.Context, req BuyLabelRequest) (Pro
 		ServiceCode:        req.Rate.ServiceCode,
 		ServiceName:        req.Rate.ServiceName,
 	}, nil
+}
+
+func (dummyGroundProvider) CancelLabel(_ context.Context, req CancelLabelRequest) (ProviderOperationOutcome, error) {
+	return dummyShippingCancellation(req)
+}
+
+func (dummyGroundProvider) GetOutcomeByOperationKey(_ context.Context, operationKey string) (ProviderOperationOutcome, error) {
+	return dummyShippingOutcome(operationKey)
 }
 
 func (dummyGroundProvider) VerifyWebhook(_ context.Context, headers map[string]string, body []byte) (TrackingWebhookEvent, error) {
@@ -204,6 +233,9 @@ func (dummyPickupProvider) QuoteRates(_ context.Context, req QuoteRatesRequest) 
 }
 
 func (dummyPickupProvider) BuyLabel(_ context.Context, req BuyLabelRequest) (ProviderShipment, error) {
+	if err := validateOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return ProviderShipment{}, err
+	}
 	suffix := sanitizeKey(req.IdempotencyKey)
 	if suffix == "" {
 		suffix = "nopickupkey"
@@ -216,6 +248,14 @@ func (dummyPickupProvider) BuyLabel(_ context.Context, req BuyLabelRequest) (Pro
 		ServiceCode:        req.Rate.ServiceCode,
 		ServiceName:        req.Rate.ServiceName,
 	}, nil
+}
+
+func (dummyPickupProvider) CancelLabel(_ context.Context, req CancelLabelRequest) (ProviderOperationOutcome, error) {
+	return dummyShippingCancellation(req)
+}
+
+func (dummyPickupProvider) GetOutcomeByOperationKey(_ context.Context, operationKey string) (ProviderOperationOutcome, error) {
+	return dummyShippingOutcome(operationKey)
 }
 
 func (dummyPickupProvider) VerifyWebhook(_ context.Context, headers map[string]string, body []byte) (TrackingWebhookEvent, error) {
@@ -299,6 +339,37 @@ func trackingStatusFromEventType(eventType string) string {
 	default:
 		return ""
 	}
+}
+
+func validateOperationIdentity(idempotencyKey, operationKey string) error {
+	if strings.TrimSpace(idempotencyKey) == "" {
+		return fmt.Errorf("idempotency key is required")
+	}
+	if strings.TrimSpace(operationKey) == "" {
+		return fmt.Errorf("operation key is required")
+	}
+	return nil
+}
+
+func dummyShippingCancellation(req CancelLabelRequest) (ProviderOperationOutcome, error) {
+	if err := validateOperationIdentity(req.IdempotencyKey, req.OperationKey); err != nil {
+		return ProviderOperationOutcome{}, err
+	}
+	return ProviderOperationOutcome{
+		OperationKey: req.OperationKey, Outcome: models.ProviderOutcomeSucceeded,
+		ProviderShipmentID: req.ProviderShipmentID, RawResponseRedacted: `{"status":"cancelled"}`,
+	}, nil
+}
+
+func dummyShippingOutcome(operationKey string) (ProviderOperationOutcome, error) {
+	operationKey = strings.TrimSpace(operationKey)
+	if operationKey == "" {
+		return ProviderOperationOutcome{}, fmt.Errorf("operation key is required")
+	}
+	return ProviderOperationOutcome{
+		OperationKey: operationKey, Outcome: models.ProviderOutcomeSucceeded,
+		ProviderShipmentID: "dummy-shipment|" + operationKey, RawResponseRedacted: `{"status":"succeeded"}`,
+	}, nil
 }
 
 func sanitizeKey(value string) string {

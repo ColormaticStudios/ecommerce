@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"context"
 	"strconv"
 
 	"ecommerce/internal/media"
@@ -11,7 +12,7 @@ import (
 )
 
 type Service struct {
-	repo *catalogrepo.Repository
+	db *gorm.DB
 }
 
 type ListProductsInput struct {
@@ -39,11 +40,12 @@ type ListProductsOutput struct {
 
 func NewService(db *gorm.DB, mediaService *media.Service) *Service {
 	_ = mediaService
-	return &Service{repo: catalogrepo.NewRepository(db)}
+	return &Service{db: db}
 }
 
-func (s *Service) ListProducts(input ListProductsInput) (ListProductsOutput, error) {
-	result, err := s.repo.ListProducts(catalogrepo.ProductListFilters{
+func (s *Service) ListProducts(ctx context.Context, input ListProductsInput) (ListProductsOutput, error) {
+	repo := catalogrepo.NewRepository(s.db.WithContext(ctx))
+	result, err := repo.ListProducts(catalogrepo.ProductListFilters{
 		SearchTerm:                input.SearchTerm,
 		MinPrice:                  input.MinPrice,
 		MaxPrice:                  input.MaxPrice,
@@ -71,16 +73,17 @@ func (s *Service) ListProducts(input ListProductsInput) (ListProductsOutput, err
 	return ListProductsOutput{Products: result.Products, Total: result.Total, TotalPages: totalPages}, nil
 }
 
-func (s *Service) GetProductByID(id string, preview bool) (models.Product, error) {
+func (s *Service) GetProductByID(ctx context.Context, id string, preview bool) (models.Product, error) {
+	repo := catalogrepo.NewRepository(s.db.WithContext(ctx))
 	if preview {
-		product, err := s.repo.GetPreviewProductByID(id)
+		product, err := repo.GetPreviewProductByID(id)
 		if err != nil {
 			return models.Product{}, err
 		}
 		return product, nil
 	}
 
-	product, err := s.repo.GetPublicProductByID(id)
+	product, err := repo.GetPublicProductByID(id)
 	if err != nil {
 		return models.Product{}, err
 	}

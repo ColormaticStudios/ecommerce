@@ -1,6 +1,7 @@
 package cms
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -27,7 +28,7 @@ func newServiceTestDB(t *testing.T) *gorm.DB {
 func TestPageServiceCreatePublishResolveAndRollback(t *testing.T) {
 	service := NewPageService(newServiceTestDB(t))
 
-	created, err := service.CreateDraft(PageDraftInput{
+	created, err := service.CreateDraft(context.Background(), PageDraftInput{
 		Path:    "/shipping",
 		Title:   "Shipping",
 		Payload: PagePayload{"headline": "Draft shipping"},
@@ -35,16 +36,16 @@ func TestPageServiceCreatePublishResolveAndRollback(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, created.HasUnpublishedDraft)
 
-	_, err = service.ResolvePublished("/shipping")
+	_, err = service.ResolvePublished(context.Background(), "/shipping")
 	require.ErrorIs(t, err, ErrNotFound)
 
-	published, err := service.Publish(created.Page.ID, PublishInput{Notes: "go live"})
+	published, err := service.Publish(context.Background(), created.Page.ID, PublishInput{Notes: "go live"})
 	require.NoError(t, err)
 	require.False(t, published.HasUnpublishedDraft)
 	require.NotNil(t, published.PublishedVersion)
 	require.Equal(t, "Draft shipping", published.PublishedVersionPayload()["headline"])
 
-	updated, err := service.UpdateDraft(created.Page.ID, PageDraftInput{
+	updated, err := service.UpdateDraft(context.Background(), created.Page.ID, PageDraftInput{
 		Path:    "/shipping",
 		Title:   "Shipping",
 		Payload: PagePayload{"headline": "Updated shipping"},
@@ -52,11 +53,11 @@ func TestPageServiceCreatePublishResolveAndRollback(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, updated.HasUnpublishedDraft)
 
-	resolved, err := service.ResolvePublished("/shipping")
+	resolved, err := service.ResolvePublished(context.Background(), "/shipping")
 	require.NoError(t, err)
 	require.Equal(t, "Draft shipping", resolved.PublishedVersionPayload()["headline"])
 
-	rolledBack, err := service.Rollback(created.Page.ID, RollbackInput{VersionID: published.PublishedVersion.ID})
+	rolledBack, err := service.Rollback(context.Background(), created.Page.ID, RollbackInput{VersionID: published.PublishedVersion.ID})
 	require.NoError(t, err)
 	require.False(t, rolledBack.HasUnpublishedDraft)
 	require.Equal(t, published.PublishedVersion.ID, rolledBack.PublishedVersion.ID)
@@ -65,50 +66,50 @@ func TestPageServiceCreatePublishResolveAndRollback(t *testing.T) {
 func TestPageServiceDeleteRemovesPageFromResolution(t *testing.T) {
 	service := NewPageService(newServiceTestDB(t))
 
-	created, err := service.CreateDraft(PageDraftInput{
+	created, err := service.CreateDraft(context.Background(), PageDraftInput{
 		Path:    "/delete-me",
 		Title:   "Delete me",
 		Payload: PagePayload{"blocks": []any{map[string]any{"type": "rich_text", "body": "Temporary"}}},
 	})
 	require.NoError(t, err)
-	_, err = service.Publish(created.Page.ID, PublishInput{})
+	_, err = service.Publish(context.Background(), created.Page.ID, PublishInput{})
 	require.NoError(t, err)
 
-	require.NoError(t, service.Delete(created.Page.ID, nil))
+	require.NoError(t, service.Delete(context.Background(), created.Page.ID, nil))
 
-	_, err = service.Get(created.Page.ID)
+	_, err = service.Get(context.Background(), created.Page.ID)
 	require.ErrorIs(t, err, ErrNotFound)
-	_, err = service.ResolvePublished("/delete-me")
+	_, err = service.ResolvePublished(context.Background(), "/delete-me")
 	require.ErrorIs(t, err, ErrNotFound)
 }
 
 func TestPageServiceUnpublishAndDiscardDraft(t *testing.T) {
 	service := NewPageService(newServiceTestDB(t))
 
-	created, err := service.CreateDraft(PageDraftInput{
+	created, err := service.CreateDraft(context.Background(), PageDraftInput{
 		Path:    "/lifecycle",
 		Title:   "Lifecycle",
 		Payload: PagePayload{"blocks": []any{map[string]any{"type": "rich_text", "body": "Published"}}},
 	})
 	require.NoError(t, err)
-	published, err := service.Publish(created.Page.ID, PublishInput{})
+	published, err := service.Publish(context.Background(), created.Page.ID, PublishInput{})
 	require.NoError(t, err)
 
-	unpublished, err := service.Unpublish(created.Page.ID, PublishInput{})
+	unpublished, err := service.Unpublish(context.Background(), created.Page.ID, PublishInput{})
 	require.NoError(t, err)
 	require.Nil(t, unpublished.Entry.PublishedVersionID)
-	_, err = service.ResolvePublished("/lifecycle")
+	_, err = service.ResolvePublished(context.Background(), "/lifecycle")
 	require.ErrorIs(t, err, ErrNotFound)
 
-	_, err = service.Publish(created.Page.ID, PublishInput{})
+	_, err = service.Publish(context.Background(), created.Page.ID, PublishInput{})
 	require.NoError(t, err)
-	_, err = service.UpdateDraft(created.Page.ID, PageDraftInput{
+	_, err = service.UpdateDraft(context.Background(), created.Page.ID, PageDraftInput{
 		Path:    "/lifecycle",
 		Title:   "Lifecycle",
 		Payload: PagePayload{"blocks": []any{map[string]any{"type": "rich_text", "body": "Draft"}}},
 	})
 	require.NoError(t, err)
-	reverted, deleted, err := service.DiscardDraft(created.Page.ID, PublishInput{})
+	reverted, deleted, err := service.DiscardDraft(context.Background(), created.Page.ID, PublishInput{})
 	require.NoError(t, err)
 	require.False(t, deleted)
 	require.False(t, reverted.HasUnpublishedDraft)
@@ -118,30 +119,30 @@ func TestPageServiceUnpublishAndDiscardDraft(t *testing.T) {
 func TestPageServiceDiscardDraftOnlyDeletesPage(t *testing.T) {
 	service := NewPageService(newServiceTestDB(t))
 
-	created, err := service.CreateDraft(PageDraftInput{
+	created, err := service.CreateDraft(context.Background(), PageDraftInput{
 		Path:    "/draft-only",
 		Title:   "Draft only",
 		Payload: PagePayload{"blocks": []any{map[string]any{"type": "rich_text", "body": "Draft"}}},
 	})
 	require.NoError(t, err)
-	_, deleted, err := service.DiscardDraft(created.Page.ID, PublishInput{})
+	_, deleted, err := service.DiscardDraft(context.Background(), created.Page.ID, PublishInput{})
 	require.NoError(t, err)
 	require.True(t, deleted)
-	_, err = service.Get(created.Page.ID)
+	_, err = service.Get(context.Background(), created.Page.ID)
 	require.ErrorIs(t, err, ErrNotFound)
 }
 
 func TestPageServiceRejectsDuplicatePath(t *testing.T) {
 	service := NewPageService(newServiceTestDB(t))
 
-	_, err := service.CreateDraft(PageDraftInput{
+	_, err := service.CreateDraft(context.Background(), PageDraftInput{
 		Path:    "/about",
 		Title:   "About",
 		Payload: PagePayload{"body": "one"},
 	})
 	require.NoError(t, err)
 
-	_, err = service.CreateDraft(PageDraftInput{
+	_, err = service.CreateDraft(context.Background(), PageDraftInput{
 		Path:    "about",
 		Title:   "About duplicate",
 		Payload: PagePayload{"body": "two"},
@@ -152,7 +153,7 @@ func TestPageServiceRejectsDuplicatePath(t *testing.T) {
 func TestPageServiceValidatesBlocksAndSanitizesCustomHTML(t *testing.T) {
 	service := NewPageService(newServiceTestDB(t))
 
-	created, err := service.CreateDraft(PageDraftInput{
+	created, err := service.CreateDraft(context.Background(), PageDraftInput{
 		Path:  "/privacy",
 		Title: "Privacy",
 		Payload: PagePayload{
@@ -172,20 +173,22 @@ func TestPageServiceValidatesBlocksAndSanitizesCustomHTML(t *testing.T) {
 	require.NotContains(t, customHTML, "script")
 	require.NotContains(t, customHTML, "onclick")
 
-	_, err = service.CreateDraft(PageDraftInput{
+	invalid, err := service.CreateDraft(context.Background(), PageDraftInput{
 		Path:  "/broken",
 		Title: "Broken",
 		Payload: PagePayload{
 			"blocks": []any{map[string]any{"type": "hero"}},
 		},
 	})
+	require.NoError(t, err)
+	_, err = service.Publish(context.Background(), invalid.Page.ID, PublishInput{})
 	require.ErrorIs(t, err, ErrInvalidPage)
 }
 
 func TestPageServiceValidatesProductRailBlocks(t *testing.T) {
 	service := NewPageService(newServiceTestDB(t))
 
-	created, err := service.CreateDraft(PageDraftInput{
+	created, err := service.CreateDraft(context.Background(), PageDraftInput{
 		Path:  "/campaign",
 		Title: "Campaign",
 		Payload: PagePayload{
@@ -208,7 +211,7 @@ func TestPageServiceValidatesProductRailBlocks(t *testing.T) {
 	require.Equal(t, "product_rail", block["type"])
 	require.Equal(t, float64(8), block["limit"])
 
-	_, err = service.CreateDraft(PageDraftInput{
+	invalid, err := service.CreateDraft(context.Background(), PageDraftInput{
 		Path:  "/broken-campaign",
 		Title: "Broken campaign",
 		Payload: PagePayload{
@@ -220,13 +223,15 @@ func TestPageServiceValidatesProductRailBlocks(t *testing.T) {
 			}},
 		},
 	})
+	require.NoError(t, err)
+	_, err = service.Publish(context.Background(), invalid.Page.ID, PublishInput{})
 	require.ErrorIs(t, err, ErrInvalidPage)
 }
 
 func TestPageServiceValidatesCommerceCampaignBlocks(t *testing.T) {
 	service := NewPageService(newServiceTestDB(t))
 
-	created, err := service.CreateDraft(PageDraftInput{
+	created, err := service.CreateDraft(context.Background(), PageDraftInput{
 		Path:  "/summer-sale",
 		Title: "Summer sale",
 		Payload: PagePayload{
@@ -268,7 +273,7 @@ func TestPageServiceValidatesCommerceCampaignBlocks(t *testing.T) {
 	require.Equal(t, []any{"new-arrivals", "sale"}, blocks[0].(map[string]any)["category_slugs"])
 	require.Equal(t, float64(42), blocks[2].(map[string]any)["product_id"])
 
-	_, err = service.CreateDraft(PageDraftInput{
+	badSocial, err := service.CreateDraft(context.Background(), PageDraftInput{
 		Path:  "/bad-social",
 		Title: "Bad social",
 		Payload: PagePayload{
@@ -279,9 +284,11 @@ func TestPageServiceValidatesCommerceCampaignBlocks(t *testing.T) {
 			}},
 		},
 	})
+	require.NoError(t, err)
+	_, err = service.Publish(context.Background(), badSocial.Page.ID, PublishInput{})
 	require.ErrorIs(t, err, ErrInvalidPage)
 
-	_, err = service.CreateDraft(PageDraftInput{
+	badCategories, err := service.CreateDraft(context.Background(), PageDraftInput{
 		Path:  "/bad-category-tiles",
 		Title: "Bad category tiles",
 		Payload: PagePayload{
@@ -292,6 +299,8 @@ func TestPageServiceValidatesCommerceCampaignBlocks(t *testing.T) {
 			}},
 		},
 	})
+	require.NoError(t, err)
+	_, err = service.Publish(context.Background(), badCategories.Page.ID, PublishInput{})
 	require.ErrorIs(t, err, ErrInvalidPage)
 }
 
@@ -304,18 +313,18 @@ func TestPageServiceTracksDraftAndLiveMediaReferences(t *testing.T) {
 		}).Error)
 	}
 	service := NewPageService(db, mediaService)
-	created, err := service.CreateDraft(PageDraftInput{
+	created, err := service.CreateDraft(context.Background(), PageDraftInput{
 		Path: "/media-page", Title: "Media page",
 		Payload: PagePayload{"blocks": []any{map[string]any{"type": "image", "media_id": "cms-old"}}},
 	})
 	require.NoError(t, err)
 	requireCMSMediaReference(t, db, created.Entry.ID, media.RoleCMSDraftContent, "cms-old")
 
-	_, err = service.Publish(created.Page.ID, PublishInput{})
+	_, err = service.Publish(context.Background(), created.Page.ID, PublishInput{})
 	require.NoError(t, err)
 	requireCMSMediaReference(t, db, created.Entry.ID, media.RoleCMSContent, "cms-old")
 
-	_, err = service.UpdateDraft(created.Page.ID, PageDraftInput{
+	_, err = service.UpdateDraft(context.Background(), created.Page.ID, PageDraftInput{
 		Path: "/media-page", Title: "Media page",
 		Payload: PagePayload{"blocks": []any{map[string]any{"type": "image", "media_id": "cms-new"}}},
 	})
@@ -325,7 +334,7 @@ func TestPageServiceTracksDraftAndLiveMediaReferences(t *testing.T) {
 	require.NoError(t, db.Model(&models.MediaObject{}).Where("id = ?", "cms-old").Count(&oldCount).Error)
 	require.EqualValues(t, 1, oldCount, "published media must not be cleaned while still live")
 
-	_, err = service.Publish(created.Page.ID, PublishInput{})
+	_, err = service.Publish(context.Background(), created.Page.ID, PublishInput{})
 	require.NoError(t, err)
 	requireCMSMediaReference(t, db, created.Entry.ID, media.RoleCMSContent, "cms-new")
 	require.NoError(t, db.Model(&models.MediaObject{}).Where("id = ?", "cms-old").Count(&oldCount).Error)
@@ -345,7 +354,7 @@ func TestPageServiceRejectsMediaThatIsNotReadyForAttachment(t *testing.T) {
 	service := NewPageService(db, media.NewService(db, t.TempDir(), "/media", nil))
 	for _, mediaID := range []string{"processing-image", "failed-image", "missing-source"} {
 		t.Run(mediaID, func(t *testing.T) {
-			_, err := service.CreateDraft(PageDraftInput{
+			_, err := service.CreateDraft(context.Background(), PageDraftInput{
 				Path:  "/" + mediaID,
 				Title: mediaID,
 				Payload: PagePayload{"blocks": []any{

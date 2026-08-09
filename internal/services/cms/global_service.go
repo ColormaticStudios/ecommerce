@@ -1,6 +1,7 @@
 package cms
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -45,13 +46,14 @@ func NewGlobalRegionService(db *gorm.DB, mediaServices ...*media.Service) *Globa
 	return &GlobalRegionService{db: db, media: mediaService}
 }
 
-func (s *GlobalRegionService) CreateDraft(input GlobalRegionDraftInput) (*GlobalRegionRecord, error) {
+func (s *GlobalRegionService) CreateDraft(ctx context.Context, input GlobalRegionDraftInput) (*GlobalRegionRecord, error) {
+	db := s.db.WithContext(ctx)
 	if err := validateGlobalInput(&input); err != nil {
 		return nil, err
 	}
 	var record *GlobalRegionRecord
 	var cleanupIDs []string
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		var existing models.CMSGlobalRegion
 		err := tx.Unscoped().Where("key = ?", input.Key).First(&existing).Error
 		if err == nil {
@@ -95,13 +97,14 @@ func (s *GlobalRegionService) CreateDraft(input GlobalRegionDraftInput) (*Global
 	return record, err
 }
 
-func (s *GlobalRegionService) UpdateDraft(id uint, input GlobalRegionDraftInput) (*GlobalRegionRecord, error) {
+func (s *GlobalRegionService) UpdateDraft(ctx context.Context, id uint, input GlobalRegionDraftInput) (*GlobalRegionRecord, error) {
+	db := s.db.WithContext(ctx)
 	if err := validateGlobalInput(&input); err != nil {
 		return nil, err
 	}
 	var record *GlobalRegionRecord
 	var cleanupIDs []string
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		region, entry, err := loadGlobalRegionEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
@@ -157,16 +160,25 @@ func (s *GlobalRegionService) UpdateDraft(id uint, input GlobalRegionDraftInput)
 	return record, err
 }
 
-func (s *GlobalRegionService) Publish(id uint, input PublishInput) (*GlobalRegionRecord, error) {
+func (s *GlobalRegionService) Publish(ctx context.Context, id uint, input PublishInput) (*GlobalRegionRecord, error) {
+	db := s.db.WithContext(ctx)
 	var record *GlobalRegionRecord
 	var cleanupIDs []string
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		region, entry, err := loadGlobalRegionEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
 		}
 		if entry.CurrentVersionID == nil {
 			return ErrNoDraft
+		}
+		var version models.CMSEntryVersion
+		if err := tx.Where("id = ? AND entry_id = ?", *entry.CurrentVersionID, entry.ID).First(&version).Error; err != nil {
+			return err
+		}
+		payload, err := publicationPayload(tx, version)
+		if err != nil {
+			return err
 		}
 		publication := models.CMSPublication{EntryID: entry.ID, VersionID: *entry.CurrentVersionID, PublishedBy: input.ActorID, PublishedAt: time.Now().UTC(), Notes: input.Notes}
 		if err := tx.Create(&publication).Error; err != nil {
@@ -181,14 +193,6 @@ func (s *GlobalRegionService) Publish(id uint, input PublishInput) (*GlobalRegio
 		entry.Status = models.CMSEntryStatusPublished
 		entry.PublishedVersionID = entry.CurrentVersionID
 		if err := tx.Save(&entry).Error; err != nil {
-			return err
-		}
-		var version models.CMSEntryVersion
-		if err := tx.Where("id = ? AND entry_id = ?", *entry.CurrentVersionID, entry.ID).First(&version).Error; err != nil {
-			return err
-		}
-		payload, err := payloadFromVersion(version)
-		if err != nil {
 			return err
 		}
 		cleanupIDs, err = syncContentMediaReferences(tx, entry.ID, payload, media.RoleCMSContent)
@@ -217,9 +221,10 @@ func (s *GlobalRegionService) cleanupOrphanMedia(ids []string) {
 	}
 }
 
-func (s *GlobalRegionService) Unpublish(id uint, input PublishInput) (*GlobalRegionRecord, error) {
+func (s *GlobalRegionService) Unpublish(ctx context.Context, id uint, input PublishInput) (*GlobalRegionRecord, error) {
+	db := s.db.WithContext(ctx)
 	var record *GlobalRegionRecord
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		region, entry, err := loadGlobalRegionEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
@@ -244,11 +249,12 @@ func (s *GlobalRegionService) Unpublish(id uint, input PublishInput) (*GlobalReg
 	return record, err
 }
 
-func (s *GlobalRegionService) DiscardDraft(id uint, input PublishInput) (*GlobalRegionRecord, bool, error) {
+func (s *GlobalRegionService) DiscardDraft(ctx context.Context, id uint, input PublishInput) (*GlobalRegionRecord, bool, error) {
+	db := s.db.WithContext(ctx)
 	var record *GlobalRegionRecord
 	deleted := false
 	var cleanupIDs []string
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		region, entry, err := loadGlobalRegionEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
@@ -287,9 +293,10 @@ func (s *GlobalRegionService) DiscardDraft(id uint, input PublishInput) (*Global
 	return record, deleted, err
 }
 
-func (s *GlobalRegionService) Delete(id uint, actorID *uint) error {
+func (s *GlobalRegionService) Delete(ctx context.Context, id uint, actorID *uint) error {
+	db := s.db.WithContext(ctx)
 	var cleanupIDs []string
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		region, entry, err := loadGlobalRegionEntry(tx, id, clause.Locking{Strength: "UPDATE"})
 		if err != nil {
 			return err
@@ -333,26 +340,28 @@ func (s *GlobalRegionService) deleteLoadedRegion(tx *gorm.DB, region models.CMSG
 	return cleanupIDs, nil
 }
 
-func (s *GlobalRegionService) Get(id uint) (*GlobalRegionRecord, error) {
-	region, entry, err := loadGlobalRegionEntry(s.db, id, clause.Locking{})
+func (s *GlobalRegionService) Get(ctx context.Context, id uint) (*GlobalRegionRecord, error) {
+	db := s.db.WithContext(ctx)
+	region, entry, err := loadGlobalRegionEntry(db, id, clause.Locking{})
 	if err != nil {
 		return nil, err
 	}
-	return assembleGlobalRegionRecord(s.db, region, entry)
+	return assembleGlobalRegionRecord(db, region, entry)
 }
 
-func (s *GlobalRegionService) List(limit, offset int) ([]GlobalRegionRecord, int64, error) {
+func (s *GlobalRegionService) List(ctx context.Context, limit, offset int) ([]GlobalRegionRecord, int64, error) {
+	db := s.db.WithContext(ctx)
 	var total int64
-	if err := s.db.Model(&models.CMSGlobalRegion{}).Count(&total).Error; err != nil {
+	if err := db.Model(&models.CMSGlobalRegion{}).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 	var regions []models.CMSGlobalRegion
-	if err := s.db.Order("updated_at DESC, id DESC").Limit(limit).Offset(offset).Find(&regions).Error; err != nil {
+	if err := db.Order("updated_at DESC, id DESC").Limit(limit).Offset(offset).Find(&regions).Error; err != nil {
 		return nil, 0, err
 	}
 	records := make([]GlobalRegionRecord, 0, len(regions))
 	for _, region := range regions {
-		record, err := s.Get(region.ID)
+		record, err := s.Get(ctx, region.ID)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -361,13 +370,14 @@ func (s *GlobalRegionService) List(limit, offset int) ([]GlobalRegionRecord, int
 	return records, total, nil
 }
 
-func (s *GlobalRegionService) Resolve(regionKey string, includeDraft bool) (*GlobalRegionRecord, error) {
+func (s *GlobalRegionService) Resolve(ctx context.Context, regionKey string, includeDraft bool) (*GlobalRegionRecord, error) {
+	db := s.db.WithContext(ctx)
 	regionKey = strings.TrimSpace(regionKey)
 	if regionKey == "" {
 		return nil, fmt.Errorf("%w: region is required", ErrInvalidPage)
 	}
 	var region models.CMSGlobalRegion
-	query := s.db.Where("cms_global_regions.region = ?", regionKey)
+	query := db.Where("cms_global_regions.region = ?", regionKey)
 	if !includeDraft {
 		query = query.
 			Joins("JOIN cms_entries ON cms_entries.id = cms_global_regions.entry_id").
@@ -379,7 +389,7 @@ func (s *GlobalRegionService) Resolve(regionKey string, includeDraft bool) (*Glo
 		}
 		return nil, err
 	}
-	record, err := s.Get(region.ID)
+	record, err := s.Get(ctx, region.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -389,6 +399,13 @@ func (s *GlobalRegionService) Resolve(regionKey string, includeDraft bool) (*Glo
 	if record.PublishedVersion == nil {
 		return nil, ErrNotFound
 	}
+	filtered, _, err := FilterPublicPayloadJSON(record.PublishedVersion.PayloadJSON)
+	if err != nil {
+		return nil, err
+	}
+	version := *record.PublishedVersion
+	version.PayloadJSON = filtered
+	record.PublishedVersion = &version
 	return record, nil
 }
 
@@ -402,7 +419,12 @@ func validateGlobalInput(input *GlobalRegionDraftInput) error {
 	if input.Payload == nil {
 		input.Payload = PagePayload{}
 	}
-	return validateAndNormalizePayload(input.Payload)
+	normalizedPayload, err := prepareDraftPayload(input.Payload)
+	if err != nil {
+		return err
+	}
+	input.Payload = normalizedPayload
+	return nil
 }
 
 func createGlobalVersion(tx *gorm.DB, entryID uint, versionNumber uint, input GlobalRegionDraftInput) (*models.CMSEntryVersion, error) {

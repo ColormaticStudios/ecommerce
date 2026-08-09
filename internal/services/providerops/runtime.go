@@ -17,17 +17,24 @@ import (
 )
 
 type RuntimeConfig struct {
-	Environment       string
-	Credentials       *CredentialService
-	PaymentProviders  paymentservice.ProviderRegistry
-	ShippingProviders shippingservice.ProviderRegistry
-	TaxProviders      taxservice.ProviderRegistry
+	Environment         string
+	Credentials         *CredentialService
+	PaymentProviders    paymentservice.ProviderRegistry
+	ShippingProviders   shippingservice.ProviderRegistry
+	TaxProviders        taxservice.ProviderRegistry
+	ExecutionTimeout    time.Duration
+	QueryTimeout        time.Duration
+	CompensationTimeout time.Duration
+	LeaseDuration       time.Duration
 }
 
 type Runtime struct {
 	Environment       string
 	Credentials       *CredentialService
 	Audit             *AuditService
+	Operations        *OperationService
+	Executor          *OperationExecutor
+	Recovery          *RecoveryWorker
 	PaymentProviders  paymentservice.ProviderRegistry
 	ShippingProviders shippingservice.ProviderRegistry
 	TaxProviders      taxservice.ProviderRegistry
@@ -59,10 +66,18 @@ func NewRuntime(db *gorm.DB, cfg RuntimeConfig) *Runtime {
 		baseTax = taxservice.NewDefaultProviderRegistry()
 	}
 
+	executor := NewOperationExecutorWithConfig(db, OperationExecutorConfig{
+		ExecutionTimeout:    cfg.ExecutionTimeout,
+		QueryTimeout:        cfg.QueryTimeout,
+		CompensationTimeout: cfg.CompensationTimeout,
+		LeaseDuration:       cfg.LeaseDuration,
+	})
 	runtime := &Runtime{
 		Environment: environment,
 		Credentials: credentials,
 		Audit:       audit,
+		Operations:  executor.Store(),
+		Executor:    executor,
 	}
 	runtime.PaymentProviders = paymentRegistryWrapper{
 		base:        basePayment,
@@ -89,7 +104,46 @@ func NewRuntime(db *gorm.DB, cfg RuntimeConfig) *Runtime {
 		runtime.ShippingProviders,
 		runtime.TaxProviders,
 	)
+	resolver := NewRuntimeLifecycleResolver(
+		executor.Lifecycles(),
+		runtime.PaymentProviders,
+		runtime.ShippingProviders,
+		runtime.TaxProviders,
+	)
+	runtime.Recovery = NewRecoveryWorker(executor, resolver, RecoveryWorkerConfig{})
 	return runtime
+}
+
+// BindDatabase attaches persistence to a runtime assembled before the process
+// database was available while preserving its configured providers and timeouts.
+func (r *Runtime) BindDatabase(db *gorm.DB) {
+	if r == nil || db == nil || (r.Executor != nil && r.Executor.store != nil && r.Executor.store.db != nil) {
+		return
+	}
+	config := OperationExecutorConfig{}
+	if r.Executor != nil {
+		config = r.Executor.config
+	}
+	audit := NewAuditService(db)
+	if registry, ok := r.PaymentProviders.(paymentRegistryWrapper); ok {
+		registry.audit = audit
+		r.PaymentProviders = registry
+	}
+	if registry, ok := r.ShippingProviders.(shippingRegistryWrapper); ok {
+		registry.audit = audit
+		r.ShippingProviders = registry
+	}
+	if registry, ok := r.TaxProviders.(taxRegistryWrapper); ok {
+		registry.audit = audit
+		r.TaxProviders = registry
+	}
+	executor := NewOperationExecutorWithConfig(db, config)
+	r.Audit = audit
+	r.Operations = executor.Store()
+	r.Executor = executor
+	r.Reconciliation = NewReconciliationService(db, r.Environment, r.PaymentProviders, r.ShippingProviders, r.TaxProviders)
+	resolver := NewRuntimeLifecycleResolver(executor.Lifecycles(), r.PaymentProviders, r.ShippingProviders, r.TaxProviders)
+	r.Recovery = NewRecoveryWorker(executor, resolver, RecoveryWorkerConfig{})
 }
 
 type paymentRegistryWrapper struct {
@@ -159,6 +213,14 @@ func (w paymentProviderWrapper) Refund(ctx context.Context, req paymentservice.R
 		}
 		return w.PaymentProvider.Refund(callCtx, req)
 	})
+}
+
+func (w paymentProviderWrapper) GetOutcomeByOperationKey(ctx context.Context, operationKey string) (paymentservice.ProviderOperationOutcome, error) {
+	callCtx, err := w.prepareContext(ctx, w.providerID, "")
+	if err != nil {
+		return paymentservice.ProviderOperationOutcome{}, err
+	}
+	return w.PaymentProvider.GetOutcomeByOperationKey(callCtx, operationKey)
 }
 
 func (w paymentProviderWrapper) GetTransaction(ctx context.Context, providerTxnID string) (paymentservice.ProviderTransaction, error) {
@@ -382,6 +444,22 @@ func (w shippingProviderWrapper) BuyLabel(ctx context.Context, req shippingservi
 	return response, err
 }
 
+func (w shippingProviderWrapper) CancelLabel(ctx context.Context, req shippingservice.CancelLabelRequest) (shippingservice.ProviderOperationOutcome, error) {
+	callCtx, err := w.prepareContext(ctx, "")
+	if err != nil {
+		return shippingservice.ProviderOperationOutcome{}, err
+	}
+	return w.ShippingProvider.CancelLabel(callCtx, req)
+}
+
+func (w shippingProviderWrapper) GetOutcomeByOperationKey(ctx context.Context, operationKey string) (shippingservice.ProviderOperationOutcome, error) {
+	callCtx, err := w.prepareContext(ctx, "")
+	if err != nil {
+		return shippingservice.ProviderOperationOutcome{}, err
+	}
+	return w.ShippingProvider.GetOutcomeByOperationKey(callCtx, operationKey)
+}
+
 func (w shippingProviderWrapper) GetShipment(ctx context.Context, providerShipmentID string) (shippingservice.ProviderShipmentState, error) {
 	lookupProvider, ok := w.ShippingProvider.(shippingservice.ShipmentLookupProvider)
 	if !ok {
@@ -544,6 +622,22 @@ func (w taxProviderWrapper) FinalizeTax(ctx context.Context, req taxservice.Fina
 		Latency:         time.Since(start),
 	})
 	return response, err
+}
+
+func (w taxProviderWrapper) CancelFinalization(ctx context.Context, req taxservice.CancelFinalizationRequest) (taxservice.ProviderOperationOutcome, error) {
+	callCtx, err := w.prepareContext(ctx, "")
+	if err != nil {
+		return taxservice.ProviderOperationOutcome{}, err
+	}
+	return w.TaxProvider.CancelFinalization(callCtx, req)
+}
+
+func (w taxProviderWrapper) GetOutcomeByOperationKey(ctx context.Context, operationKey string) (taxservice.ProviderOperationOutcome, error) {
+	callCtx, err := w.prepareContext(ctx, "")
+	if err != nil {
+		return taxservice.ProviderOperationOutcome{}, err
+	}
+	return w.TaxProvider.GetOutcomeByOperationKey(callCtx, operationKey)
 }
 
 func (w taxProviderWrapper) ExportReport(ctx context.Context, req taxservice.ExportReportRequest) (io.ReadCloser, error) {

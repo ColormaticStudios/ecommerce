@@ -79,44 +79,46 @@ func (s *ReconciliationService) Run(ctx context.Context, input ReconciliationRun
 	var drifts []models.ProviderReconciliationDrift
 	checkedCount := 0
 
-	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(&run).Error; err != nil {
-			return err
-		}
+	// Persist the run before provider lookup. Provider calls below intentionally
+	// execute without an open database transaction.
+	if err := s.db.WithContext(ctx).Create(&run).Error; err != nil {
+		return models.ProviderReconciliationRun{}, nil, err
+	}
 
-		switch providerType {
-		case models.ProviderTypePayment:
-			checkedCount, drifts, err = s.reconcilePayments(ctx, providerID)
-		case models.ProviderTypeShipping:
-			checkedCount, drifts, err = s.reconcileShipments(ctx, providerID)
-		case models.ProviderTypeTax:
-			checkedCount, drifts, err = s.reconcileTaxes(ctx, providerID)
-		default:
-			err = ErrInvalidProviderType
-		}
-		if err != nil {
-			run.Status = models.ProviderReconciliationStatusFailed
-			run.ErrorCount++
-		}
+	switch providerType {
+	case models.ProviderTypePayment:
+		checkedCount, drifts, err = s.reconcilePayments(ctx, providerID)
+	case models.ProviderTypeShipping:
+		checkedCount, drifts, err = s.reconcileShipments(ctx, providerID)
+	case models.ProviderTypeTax:
+		checkedCount, drifts, err = s.reconcileTaxes(ctx, providerID)
+	default:
+		err = ErrInvalidProviderType
+	}
+	if err != nil {
+		run.Status = models.ProviderReconciliationStatusFailed
+		run.ErrorCount++
+	}
 
-		run.CheckedCount = checkedCount
-		run.DriftCount = len(drifts)
-		finishedAt := time.Now().UTC()
-		run.FinishedAt = &finishedAt
-		summary, summaryErr := json.Marshal(map[string]any{
-			"provider_type": providerType,
-			"provider_id":   providerID,
-			"environment":   s.environment,
-			"trigger":       trigger,
-			"checked_count": run.CheckedCount,
-			"drift_count":   run.DriftCount,
-			"error_count":   run.ErrorCount,
-		})
-		if summaryErr != nil {
-			return summaryErr
-		}
-		run.SummaryJSON = string(summary)
+	run.CheckedCount = checkedCount
+	run.DriftCount = len(drifts)
+	finishedAt := time.Now().UTC()
+	run.FinishedAt = &finishedAt
+	summary, summaryErr := json.Marshal(map[string]any{
+		"provider_type": providerType,
+		"provider_id":   providerID,
+		"environment":   s.environment,
+		"trigger":       trigger,
+		"checked_count": run.CheckedCount,
+		"drift_count":   run.DriftCount,
+		"error_count":   run.ErrorCount,
+	})
+	if summaryErr != nil {
+		return models.ProviderReconciliationRun{}, nil, summaryErr
+	}
+	run.SummaryJSON = string(summary)
 
+	if persistErr := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for i := range drifts {
 			drifts[i].RunID = run.ID
 		}
@@ -135,9 +137,8 @@ func (s *ReconciliationService) Run(ctx context.Context, input ReconciliationRun
 				"finished_at":   run.FinishedAt,
 				"summary_json":  run.SummaryJSON,
 			}).Error
-	})
-	if err != nil {
-		return models.ProviderReconciliationRun{}, nil, err
+	}); persistErr != nil {
+		return models.ProviderReconciliationRun{}, nil, persistErr
 	}
 
 	if loadErr := s.db.WithContext(ctx).Preload("Drifts", func(db *gorm.DB) *gorm.DB {

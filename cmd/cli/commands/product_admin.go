@@ -6,7 +6,6 @@ import (
 	"os"
 	"reflect"
 
-	"ecommerce/handlers"
 	"ecommerce/internal/apicontract"
 	"ecommerce/models"
 
@@ -134,9 +133,7 @@ func newApplyProductDraftCmd() *cobra.Command {
 			if isRemoteMode() {
 				updated, err = invokeRemoteJSON[apicontract.Product](req.Method, req.Path, req.Body)
 			} else {
-				db := getDB()
-				defer closeDB(db)
-				updated, err = invokeLocalJSON[apicontract.Product](handlers.UpdateProduct(db), req)
+				updated, err = catalogUpdateProduct(cmd.Context(), product.ID, input)
 			}
 			if err != nil {
 				return err
@@ -275,9 +272,7 @@ func newDiscardProductDraftCmd() *cobra.Command {
 			if isRemoteMode() {
 				updated, err = invokeRemoteJSON[apicontract.Product](req.Method, req.Path, nil)
 			} else {
-				mediaService := newMediaService()
-				defer closeMediaService(mediaService)
-				updated, err = invokeLocalJSON[apicontract.Product](handlers.DiscardProductDraft(mediaService.DB, mediaService), req)
+				updated, err = catalogDiscardProduct(cmd.Context(), product.ID)
 			}
 			if err != nil {
 				return err
@@ -327,9 +322,7 @@ func newPublishProductCmd() *cobra.Command {
 			if isRemoteMode() {
 				updated, err = invokeRemoteJSON[apicontract.Product](req.Method, req.Path, nil)
 			} else {
-				mediaService := newMediaService()
-				defer closeMediaService(mediaService)
-				updated, err = invokeLocalJSON[apicontract.Product](handlers.PublishProduct(mediaService.DB, mediaService), req)
+				updated, err = catalogPublishProduct(cmd.Context(), product.ID)
 			}
 			if err != nil {
 				return err
@@ -382,9 +375,7 @@ func newUnpublishProductCmd() *cobra.Command {
 			if isRemoteMode() {
 				updated, err = invokeRemoteJSON[apicontract.Product](req.Method, req.Path, nil)
 			} else {
-				mediaService := newMediaService()
-				defer closeMediaService(mediaService)
-				updated, err = invokeLocalJSON[apicontract.Product](handlers.UnpublishProduct(mediaService.DB, mediaService), req)
+				updated, err = catalogUnpublishProduct(cmd.Context(), product.ID)
 			}
 			if err != nil {
 				return err
