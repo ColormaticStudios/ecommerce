@@ -22,6 +22,7 @@ import {
 import { API_BASE_URL } from "$lib/config";
 import { fetchProduct, fetchProducts, type ListProductsQuery } from "$lib/api/openapi-client";
 import { buildOIDCLoginUrl } from "$lib/auth";
+import { ApiProblemError, isApiProblem } from "$lib/api/errors";
 import { appendQueryParams } from "$lib/api/http";
 import type { components, paths } from "$lib/api/generated/openapi";
 import * as cartDomain from "$lib/api/domains/cart";
@@ -47,6 +48,11 @@ type ProviderCredential = components["schemas"]["ProviderCredential"];
 type ProviderCredentialRequest = components["schemas"]["ProviderCredentialRequest"];
 type ProviderCredentialListResponse = components["schemas"]["ProviderCredentialListResponse"];
 type ProviderOperationsOverview = components["schemas"]["ProviderOperationsOverview"];
+type ProviderOperation = components["schemas"]["ProviderOperation"];
+type ProviderOperationPage = components["schemas"]["ProviderOperationPage"];
+type ProviderReconciliationCase = components["schemas"]["ProviderReconciliationCase"];
+type ProviderReconciliationCasePage = components["schemas"]["ProviderReconciliationCasePage"];
+type ProviderReconciliationCaseUpdate = components["schemas"]["ProviderReconciliationCaseUpdate"];
 type ProviderReconciliationRun = components["schemas"]["ProviderReconciliationRun"];
 type ProviderReconciliationRunRequest = components["schemas"]["ProviderReconciliationRunRequest"];
 type ProviderReconciliationRunPage = components["schemas"]["ProviderReconciliationRunPage"];
@@ -151,6 +157,10 @@ type ListAdminProviderCredentialsQuery =
 	paths["/api/v1/admin/providers/credentials"]["get"]["parameters"]["query"];
 type ListAdminWebhookEventsQuery =
 	paths["/api/v1/admin/webhooks/events"]["get"]["parameters"]["query"];
+type ListAdminProviderOperationsQuery =
+	paths["/api/v1/admin/providers/operations"]["get"]["parameters"]["query"];
+type ListAdminProviderReconciliationCasesQuery =
+	paths["/api/v1/admin/providers/reconciliation/cases"]["get"]["parameters"]["query"];
 type ListAdminProviderReconciliationRunsQuery =
 	paths["/api/v1/admin/providers/reconciliation/runs"]["get"]["parameters"]["query"];
 type ListAdminInventoryReservationsQuery =
@@ -303,8 +313,7 @@ export class API {
 		});
 
 		const text = await response.text();
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		let body: any;
+		let body: unknown;
 
 		try {
 			body = text ? JSON.parse(text) : null;
@@ -318,11 +327,7 @@ export class API {
 				this.authStateResolved = true;
 			}
 			this.handleCsrfForbidden(response.status, body);
-			throw {
-				status: response.status,
-				statusText: response.statusText,
-				body,
-			};
+			throw new ApiProblemError(response.status, response.statusText, body);
 		}
 
 		return body as T;
@@ -434,11 +439,7 @@ export class API {
 		} = await fetchProducts(this.baseUrl, params);
 
 		if (error || !response) {
-			throw {
-				status: rawResponse.status,
-				statusText: rawResponse.statusText,
-				body: error,
-			};
+			throw new ApiProblemError(rawResponse.status, rawResponse.statusText, error);
 		}
 
 		const data = response.data.map(parseProduct).map((product) => {
@@ -458,11 +459,7 @@ export class API {
 	public async getProduct(id: number): Promise<ProductModel> {
 		const { data: response, error, response: rawResponse } = await fetchProduct(this.baseUrl, id);
 		if (error || !response) {
-			throw {
-				status: rawResponse.status,
-				statusText: rawResponse.statusText,
-				body: error,
-			};
+			throw new ApiProblemError(rawResponse.status, rawResponse.statusText, error);
 		}
 
 		const Product: ProductModel = parseProduct(response);
@@ -770,6 +767,77 @@ export class API {
 
 	public async getAdminProviderOperationsOverview(): Promise<ProviderOperationsOverview> {
 		return await this.request<ProviderOperationsOverview>("GET", "/admin/providers/overview");
+	}
+
+	public async listAdminProviderOperations(
+		params: ListAdminProviderOperationsQuery = {}
+	): Promise<ProviderOperationPage> {
+		return await this.request<ProviderOperationPage>(
+			"GET",
+			"/admin/providers/operations",
+			undefined,
+			params as Record<string, unknown>
+		);
+	}
+
+	public async getAdminProviderOperation(id: number): Promise<ProviderOperation> {
+		const response = await this.request<components["schemas"]["ProviderOperationEnvelope"]>(
+			"GET",
+			`/admin/providers/operations/${id}`
+		);
+		return response.operation;
+	}
+
+	public async queryAdminProviderOperationOutcome(id: number): Promise<ProviderOperation> {
+		const response = await this.request<components["schemas"]["ProviderOperationEnvelope"]>(
+			"POST",
+			`/admin/providers/operations/${id}/query-outcome`
+		);
+		return response.operation;
+	}
+
+	public async retryFinalizeAdminProviderOperation(id: number): Promise<ProviderOperation> {
+		const response = await this.request<components["schemas"]["ProviderOperationEnvelope"]>(
+			"POST",
+			`/admin/providers/operations/${id}/retry-finalize`
+		);
+		return response.operation;
+	}
+
+	public async retryCompensationAdminProviderOperation(id: number): Promise<ProviderOperation> {
+		const response = await this.request<components["schemas"]["ProviderOperationEnvelope"]>(
+			"POST",
+			`/admin/providers/operations/${id}/retry-compensation`
+		);
+		return response.operation;
+	}
+
+	public async listAdminProviderReconciliationCases(
+		params: ListAdminProviderReconciliationCasesQuery = {}
+	): Promise<ProviderReconciliationCasePage> {
+		return await this.request<ProviderReconciliationCasePage>(
+			"GET",
+			"/admin/providers/reconciliation/cases",
+			undefined,
+			params as Record<string, unknown>
+		);
+	}
+
+	public async getAdminProviderReconciliationCase(id: number): Promise<ProviderReconciliationCase> {
+		const response = await this.request<
+			components["schemas"]["ProviderReconciliationCaseEnvelope"]
+		>("GET", `/admin/providers/reconciliation/cases/${id}`);
+		return response.case;
+	}
+
+	public async updateAdminProviderReconciliationCase(
+		id: number,
+		data: ProviderReconciliationCaseUpdate
+	): Promise<ProviderReconciliationCase> {
+		const response = await this.request<
+			components["schemas"]["ProviderReconciliationCaseEnvelope"]
+		>("PATCH", `/admin/providers/reconciliation/cases/${id}`, data);
+		return response.case;
 	}
 
 	public async listAdminWebhookEvents(
@@ -1737,8 +1805,7 @@ export class API {
 			await this.getProfile();
 			return true;
 		} catch (err) {
-			const error = err as { status?: number };
-			if (error.status === 401 || error.status === 404) {
+			if (isApiProblem(err) && (err.status === 401 || err.status === 404)) {
 				this.authenticated = false;
 				this.authStateResolved = true;
 				return false;

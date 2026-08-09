@@ -1,13 +1,10 @@
+import { ApiProblemError, isApiProblem, type ApiProblem } from "$lib/api/errors";
 import { API_BASE_URL } from "$lib/config";
 import type { RequestEvent } from "@sveltejs/kit";
 
 const API_ROUTE = "/api/v1";
 
-export interface ServerAPIError {
-	status: number;
-	statusText: string;
-	body: unknown;
-}
+export type ServerAPIError = ApiProblem;
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -79,11 +76,7 @@ export async function serverRequest<T>(
 	}
 
 	if (!response.ok) {
-		throw {
-			status: response.status,
-			statusText: response.statusText,
-			body,
-		} as ServerAPIError;
+		throw new ApiProblemError(response.status, response.statusText, body);
 	}
 
 	return body as T;
@@ -96,8 +89,7 @@ export async function serverIsAuthenticated(
 		await serverRequest(event, "/me/");
 		return true;
 	} catch (err) {
-		const error = err as ServerAPIError;
-		if (error.status === 401) {
+		if (isApiProblem(err) && err.status === 401) {
 			return false;
 		}
 		throw err;

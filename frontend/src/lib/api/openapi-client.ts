@@ -8,11 +8,11 @@ export type ListProductsQuery = paths["/api/v1/products"]["get"]["parameters"]["
 export type ListProductsSuccess =
 	paths["/api/v1/products"]["get"]["responses"]["200"]["content"]["application/json"];
 export type ListProductsFailure =
-	paths["/api/v1/products"]["get"]["responses"]["500"]["content"]["application/json"];
+	paths["/api/v1/products"]["get"]["responses"]["500"]["content"]["application/problem+json"];
 export type GetProductSuccess =
 	paths["/api/v1/products/{id}"]["get"]["responses"]["200"]["content"]["application/json"];
 export type GetProductFailure =
-	paths["/api/v1/products/{id}"]["get"]["responses"]["404"]["content"]["application/json"];
+	paths["/api/v1/products/{id}"]["get"]["responses"]["404"]["content"]["application/problem+json"];
 
 export async function fetchProducts(baseUrl = DEFAULT_BASE_URL, query?: ListProductsQuery) {
 	const url = new URL("/api/v1/products", baseUrl);
