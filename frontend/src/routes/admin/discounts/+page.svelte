@@ -17,10 +17,12 @@
 	import {
 		buildAction,
 		buildCondition,
+		buildProductDiscountInput,
 		buildScheduleInput,
 		buildTargets,
 		compactString,
 		isoFromLocalDateTime,
+		localDateFromISO,
 		localDateTimeFromISO,
 		parseOptionalPositiveInt,
 		type PromotionLevelInput,
@@ -302,41 +304,28 @@
 	}
 
 	function buildProductDiscountPayload(): ProductDiscountInput | null {
-		const starts_at = isoFromLocalDateTime(discountStartsAt);
-		if (!discountName.trim()) {
-			notices.pushError("Campaign name is required.");
-			return null;
-		}
-		if (selectedProductIds.length === 0) {
-			notices.pushError("Select at least one product.");
-			return null;
-		}
-		if (!starts_at) {
-			notices.pushError("Start date is required.");
-			return null;
-		}
-		const value = Number(discountValue);
-		if (!Number.isFinite(value) || value <= 0) {
-			notices.pushError("Discount value must be positive.");
+		const { payload, error } = buildProductDiscountInput({
+			name: discountName,
+			productIds: selectedProductIds,
+			discountMode,
+			discountValue,
+			startsAt: discountStartsAt,
+			endsAt: discountEndsAt,
+			priority: discountPriority,
+			isExclusive: discountExclusive,
+			status: discountStatus,
+			couponCode: discountCouponCode,
+			channels: selectedChannels("discount"),
+			customerSegment: discountCustomerSegment,
+			globalUsageCap: discountGlobalUsageCap,
+			perCustomerUsageCap: discountPerCustomerUsageCap,
+		});
+		if (error) {
+			notices.pushError(error);
 			return null;
 		}
 
-		return {
-			name: discountName.trim(),
-			product_ids: selectedProductIds,
-			discount_mode: discountMode,
-			discount_value: value,
-			starts_at,
-			ends_at: isoFromLocalDateTime(discountEndsAt),
-			priority: Number(discountPriority || 0),
-			is_exclusive: discountExclusive,
-			status: discountStatus,
-			coupon_code: compactString(discountCouponCode) ?? null,
-			channels: selectedChannels("discount"),
-			customer_segment: compactString(discountCustomerSegment),
-			global_usage_cap: parseOptionalPositiveInt(discountGlobalUsageCap),
-			per_customer_usage_cap: parseOptionalPositiveInt(discountPerCustomerUsageCap),
-		};
+		return payload;
 	}
 
 	function editCampaign(campaign: DiscountCampaign) {
@@ -352,7 +341,7 @@
 		discountMode = campaign.discount_mode;
 		discountValue = String(campaign.discount_value);
 		discountStartsAt = localDateTimeFromISO(campaign.starts_at);
-		discountEndsAt = localDateTimeFromISO(campaign.ends_at);
+		discountEndsAt = localDateFromISO(campaign.ends_at);
 		discountPriority = String(campaign.priority);
 		discountExclusive = campaign.is_exclusive;
 		discountStatus = campaign.status === "disabled" ? "disabled" : "active";
@@ -893,12 +882,7 @@
 						</div>
 						<div>
 							{@render fieldLabel("Ends", "discount-ends")}
-							<TextInput
-								id="discount-ends"
-								tone="admin"
-								type="datetime-local"
-								bind:value={discountEndsAt}
-							/>
+							<TextInput id="discount-ends" tone="admin" type="date" bind:value={discountEndsAt} />
 						</div>
 					</div>
 

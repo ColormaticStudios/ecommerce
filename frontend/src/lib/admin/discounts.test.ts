@@ -2,8 +2,10 @@ import { expect, test } from "vitest";
 import {
 	buildAction,
 	buildCondition,
+	buildProductDiscountInput,
 	buildScheduleInput,
 	buildTargets,
+	localDateFromISO,
 	parseIdList,
 	parseOptionalPositiveInt,
 } from "./discounts";
@@ -88,4 +90,121 @@ test("buildScheduleInput validates required dates", () => {
 	expect(schedule?.schedule_type).toBe("recurring");
 	expect(schedule?.recurrence).toBe("weekly");
 	expect(schedule?.timezone).toBe("UTC");
+});
+
+test("buildProductDiscountInput preserves an end date", () => {
+	const { payload, error } = buildProductDiscountInput({
+		name: "  5% off  ",
+		productIds: [3],
+		discountMode: "percent",
+		discountValue: "5",
+		startsAt: "2026-05-23T21:28",
+		endsAt: "2026-05-24T21:28",
+		priority: "0",
+		isExclusive: false,
+		status: "active",
+		couponCode: "",
+		channels: ["web"],
+		customerSegment: "",
+		globalUsageCap: "",
+		perCustomerUsageCap: "",
+	});
+
+	expect(error).toBeNull();
+	expect(payload?.name).toBe("5% off");
+	expect(payload?.product_ids).toEqual([3]);
+	expect(payload?.ends_at).toBe(new Date("2026-05-24T21:28").toISOString());
+});
+
+test("buildProductDiscountInput treats date-only end dates as local midnight", () => {
+	const { payload, error } = buildProductDiscountInput({
+		name: "5% off",
+		productIds: [3],
+		discountMode: "percent",
+		discountValue: "5",
+		startsAt: "2026-05-23T21:28",
+		endsAt: "2026-05-24",
+		priority: "0",
+		isExclusive: false,
+		status: "active",
+		couponCode: "",
+		channels: ["web"],
+		customerSegment: "",
+		globalUsageCap: "",
+		perCustomerUsageCap: "",
+	});
+
+	expect(error).toBeNull();
+	expect(payload?.ends_at).toBe(new Date("2026-05-24T00:00").toISOString());
+});
+
+test("localDateFromISO formats existing end dates for the date input", () => {
+	expect(localDateFromISO(new Date("2026-05-24T21:28").toISOString())).toBe("2026-05-24");
+	expect(localDateFromISO(null)).toBe("");
+});
+
+test("buildProductDiscountInput keeps open-ended discounts explicit", () => {
+	const { payload, error } = buildProductDiscountInput({
+		name: "5% off",
+		productIds: [3],
+		discountMode: "percent",
+		discountValue: "5",
+		startsAt: "2026-05-23T21:28",
+		endsAt: "",
+		priority: "0",
+		isExclusive: false,
+		status: "active",
+		couponCode: "",
+		channels: ["web"],
+		customerSegment: "",
+		globalUsageCap: "",
+		perCustomerUsageCap: "",
+	});
+
+	expect(error).toBeNull();
+	expect(payload?.ends_at).toBeNull();
+});
+
+test("buildProductDiscountInput rejects invalid end dates instead of dropping them", () => {
+	const { payload, error } = buildProductDiscountInput({
+		name: "5% off",
+		productIds: [3],
+		discountMode: "percent",
+		discountValue: "5",
+		startsAt: "2026-05-23T21:28",
+		endsAt: "not-a-date",
+		priority: "0",
+		isExclusive: false,
+		status: "active",
+		couponCode: "",
+		channels: ["web"],
+		customerSegment: "",
+		globalUsageCap: "",
+		perCustomerUsageCap: "",
+	});
+
+	expect(payload).toBeNull();
+	expect(error).toBe("End date must be a valid date and time.");
+});
+
+test("buildProductDiscountInput rejects end dates before the start date", () => {
+	const { payload, error } = buildProductDiscountInput({
+		name: "5% off",
+		productIds: [3],
+		discountMode: "percent",
+		discountValue: "5",
+		startsAt: "2026-05-23T21:28",
+		endsAt: "2026-05-23T21:27",
+		priority: "0",
+		isExclusive: false,
+		status: "active",
+		couponCode: "",
+		channels: ["web"],
+		customerSegment: "",
+		globalUsageCap: "",
+		perCustomerUsageCap: "",
+	});
+
+	expect(payload).toBeNull();
+	expect(error).toBe("End date must be after the start date.");
 });

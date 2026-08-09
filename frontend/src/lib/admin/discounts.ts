@@ -36,10 +36,12 @@ export function parseOptionalMoney(value: string): number | undefined {
 }
 
 export function isoFromLocalDateTime(value: string): string | null {
-	if (!value.trim()) {
+	const trimmed = value.trim();
+	if (!trimmed) {
 		return null;
 	}
-	const parsed = new Date(value);
+	const normalized = /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? `${trimmed}T00:00` : trimmed;
+	const parsed = new Date(normalized);
 	return Number.isNaN(parsed.valueOf()) ? null : parsed.toISOString();
 }
 
@@ -53,6 +55,18 @@ export function localDateTimeFromISO(value: string | null | undefined): string {
 	}
 	const offsetMs = parsed.getTimezoneOffset() * 60 * 1000;
 	return new Date(parsed.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+export function localDateFromISO(value: string | null | undefined): string {
+	if (!value) {
+		return "";
+	}
+	const parsed = new Date(value);
+	if (Number.isNaN(parsed.valueOf())) {
+		return "";
+	}
+	const offsetMs = parsed.getTimezoneOffset() * 60 * 1000;
+	return new Date(parsed.getTime() - offsetMs).toISOString().slice(0, 10);
 }
 
 export function compactString(value: string): string | undefined {
@@ -147,5 +161,65 @@ export function buildScheduleInput(input: {
 		window_end,
 		until_at: isoFromLocalDateTime(input.untilAt),
 		timezone: input.timezone.trim() || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+	};
+}
+
+export function buildProductDiscountInput(input: {
+	name: string;
+	productIds: number[];
+	discountMode: ProductDiscountInput["discount_mode"];
+	discountValue: string;
+	startsAt: string;
+	endsAt: string;
+	priority: string;
+	isExclusive: boolean;
+	status: NonNullable<ProductDiscountInput["status"]>;
+	couponCode: string;
+	channels: Array<"web" | "app" | "admin">;
+	customerSegment: string;
+	globalUsageCap: string;
+	perCustomerUsageCap: string;
+}): { payload: ProductDiscountInput | null; error: string | null } {
+	const starts_at = isoFromLocalDateTime(input.startsAt);
+	const name = input.name.trim();
+	if (!name) {
+		return { payload: null, error: "Campaign name is required." };
+	}
+	if (input.productIds.length === 0) {
+		return { payload: null, error: "Select at least one product." };
+	}
+	if (!starts_at) {
+		return { payload: null, error: "Start date is required." };
+	}
+	const ends_at = isoFromLocalDateTime(input.endsAt);
+	if (input.endsAt.trim() && !ends_at) {
+		return { payload: null, error: "End date must be a valid date and time." };
+	}
+	if (ends_at && new Date(ends_at) <= new Date(starts_at)) {
+		return { payload: null, error: "End date must be after the start date." };
+	}
+	const value = Number(input.discountValue);
+	if (!Number.isFinite(value) || value <= 0) {
+		return { payload: null, error: "Discount value must be positive." };
+	}
+
+	return {
+		payload: {
+			name,
+			product_ids: input.productIds,
+			discount_mode: input.discountMode,
+			discount_value: value,
+			starts_at,
+			ends_at,
+			priority: Number(input.priority || 0),
+			is_exclusive: input.isExclusive,
+			status: input.status,
+			coupon_code: compactString(input.couponCode) ?? null,
+			channels: input.channels,
+			customer_segment: compactString(input.customerSegment),
+			global_usage_cap: parseOptionalPositiveInt(input.globalUsageCap),
+			per_customer_usage_cap: parseOptionalPositiveInt(input.perCustomerUsageCap),
+		},
+		error: null,
 	};
 }
