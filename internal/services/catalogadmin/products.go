@@ -254,17 +254,46 @@ func (s *Service) PublishProduct(ctx context.Context, id uint) (models.Product, 
 		if err := tx.Select("*").Save(&product).Error; err != nil {
 			return err
 		}
-		if err := tx.Where("product_id = ?", id).Delete(&models.ProductVariant{}).Error; err != nil {
+		var liveVariants []models.ProductVariant
+		if err := tx.Where("product_id = ?", id).Find(&liveVariants).Error; err != nil {
 			return err
 		}
+		liveVariantsBySKU := make(map[string]*models.ProductVariant, len(liveVariants))
+		for index := range liveVariants {
+			liveVariantsBySKU[liveVariants[index].SKU] = &liveVariants[index]
+		}
+		var defaultVariantID *uint
 		for _, item := range draft.VariantDrafts {
 			if item.IsDeleted {
 				continue
 			}
-			value := models.ProductVariant{ProductID: id, SKU: item.SKU, Title: item.Title, Price: item.Price, CompareAtPrice: item.CompareAtPrice, Stock: item.Stock, Position: item.Position, IsPublished: item.IsPublished, WeightGrams: item.WeightGrams, LengthCm: item.LengthCm, WidthCm: item.WidthCm, HeightCm: item.HeightCm}
-			if err := tx.Select("*").Create(&value).Error; err != nil {
+			value, exists := liveVariantsBySKU[item.SKU]
+			if !exists {
+				value = &models.ProductVariant{ProductID: id, SKU: item.SKU}
+			}
+			value.Title, value.Price, value.CompareAtPrice, value.Stock = item.Title, item.Price, item.CompareAtPrice, item.Stock
+			value.Position, value.IsPublished = item.Position, item.IsPublished
+			value.WeightGrams, value.LengthCm, value.WidthCm, value.HeightCm = item.WeightGrams, item.LengthCm, item.WidthCm, item.HeightCm
+			if exists {
+				if err := tx.Select("*").Save(value).Error; err != nil {
+					return err
+				}
+				delete(liveVariantsBySKU, item.SKU)
+			} else if err := tx.Select("*").Create(value).Error; err != nil {
 				return err
 			}
+			if draft.DefaultVariantSKU == item.SKU || (defaultVariantID == nil && draft.DefaultVariantSKU == "") {
+				variantID := value.ID
+				defaultVariantID = &variantID
+			}
+		}
+		for _, value := range liveVariantsBySKU {
+			if err := tx.Delete(value).Error; err != nil {
+				return err
+			}
+		}
+		if err := tx.Model(&product).Update("default_variant_id", defaultVariantID).Error; err != nil {
+			return err
 		}
 		if err := tx.Where("product_id = ?", id).Delete(&models.ProductCategory{}).Error; err != nil {
 			return err
