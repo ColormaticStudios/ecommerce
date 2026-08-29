@@ -133,8 +133,32 @@ type CmsSEOInput = components["schemas"]["CmsSEOInput"];
 type CmsSEOResponse = components["schemas"]["CmsSEOResponse"];
 type CmsRedirectInput = components["schemas"]["CmsRedirectInput"];
 type CmsRedirectRule = components["schemas"]["CmsRedirectRule"];
-type CmsLocaleSettings = components["schemas"]["CmsLocaleSettings"];
-type CmsLocaleSettingsInput = components["schemas"]["CmsLocaleSettingsInput"];
+type LocalizationLocaleList = components["schemas"]["LocalizationLocaleList"];
+type LocalizationLocaleSettingsInput = components["schemas"]["LocalizationLocaleSettingsInput"];
+type LocalizationBundle = components["schemas"]["LocalizationBundle"];
+type TranslationQueueResponse = components["schemas"]["TranslationQueueResponse"];
+type TranslationValue = components["schemas"]["TranslationValue"];
+type TranslationValueInput = components["schemas"]["TranslationValueInput"];
+type TranslationTransitionInput = components["schemas"]["TranslationTransitionInput"];
+type TranslationComment = components["schemas"]["TranslationComment"];
+type TranslationCommentListResponse = components["schemas"]["TranslationCommentListResponse"];
+type TranslationKeyUsageListInput = components["schemas"]["TranslationKeyUsageListInput"];
+type TranslationKeyUsageListResponse = components["schemas"]["TranslationKeyUsageListResponse"];
+type TranslationRelease = components["schemas"]["TranslationRelease"];
+type TranslationReleaseListResponse = components["schemas"]["TranslationReleaseListResponse"];
+type TranslationReleaseInput = components["schemas"]["TranslationReleaseInput"];
+type TranslationReleaseQuality = components["schemas"]["TranslationReleaseQuality"];
+type TranslationImportInput = components["schemas"]["TranslationImportInput"];
+type TranslationImportReport = components["schemas"]["TranslationImportReport"];
+type TranslationExportInput = components["schemas"]["TranslationExportInput"];
+type TranslationExportDocument = components["schemas"]["TranslationExportDocument"];
+type LocalizationGlossaryListResponse = components["schemas"]["LocalizationGlossaryListResponse"];
+type LocalizationGlossaryInput = components["schemas"]["LocalizationGlossaryInput"];
+type LocalizationGlossaryTerm = components["schemas"]["LocalizationGlossaryTerm"];
+type LocalizationAssigneeListResponse = components["schemas"]["LocalizationAssigneeListResponse"];
+type LocalizationRolloutListResponse = components["schemas"]["LocalizationRolloutListResponse"];
+type LocalizationRolloutSettingsInput = components["schemas"]["LocalizationRolloutSettingsInput"];
+type LocalizationMetricsResponse = components["schemas"]["LocalizationMetricsResponse"];
 type CmsPageVariant = components["schemas"]["CmsPageVariant"];
 type CmsPageVariantInput = components["schemas"]["CmsPageVariantInput"];
 type CmsAuditEvent = components["schemas"]["CmsAuditEvent"];
@@ -143,6 +167,12 @@ type CmsRestorePreview = components["schemas"]["CmsRestorePreview"];
 type CmsGovernance = components["schemas"]["CmsGovernance"];
 type CmsGovernanceInput = components["schemas"]["CmsGovernanceInput"];
 type CmsOperations = components["schemas"]["CmsOperations"];
+type ListAdminLocalizationKeysQuery = NonNullable<
+	paths["/api/v1/admin/localization/keys"]["get"]["parameters"]["query"]
+>;
+type ListAdminLocalizationAssigneesQuery = NonNullable<
+	paths["/api/v1/admin/localization/assignees"]["get"]["parameters"]["query"]
+>;
 type ListUserOrdersQuery = paths["/api/v1/me/orders"]["get"]["parameters"]["query"];
 type ListAdminBrandsQuery = NonNullable<
 	paths["/api/v1/admin/brands"]["get"]["parameters"]["query"]
@@ -334,9 +364,11 @@ export class API {
 	}
 
 	private isCsrfForbidden(status: number, body: unknown): boolean {
-		if (status !== 403 || typeof body !== "object" || body === null || !("error" in body)) {
+		if (status !== 403 || typeof body !== "object" || body === null) {
 			return false;
 		}
+		if ("error_code" in body && body.error_code === "csrf_failed") return true;
+		if (!("error" in body)) return false;
 
 		const message = String((body as { error?: unknown }).error ?? "").toLowerCase();
 		return message.includes("csrf token");
@@ -1348,12 +1380,190 @@ export class API {
 		return this.request<CmsPageListResponse>("GET", "/admin/cms/pages");
 	}
 
-	public async getAdminCmsLocales(): Promise<CmsLocaleSettings> {
-		return this.request<CmsLocaleSettings>("GET", "/admin/cms/locales");
+	public async listAdminLocalizationLocales(): Promise<LocalizationLocaleList> {
+		return this.request<LocalizationLocaleList>("GET", "/admin/localization/locales");
 	}
 
-	public async updateAdminCmsLocales(data: CmsLocaleSettingsInput): Promise<CmsLocaleSettings> {
-		return this.request<CmsLocaleSettings>("PUT", "/admin/cms/locales", data);
+	public async listLocalizationLocales(): Promise<LocalizationLocaleList> {
+		return this.request<LocalizationLocaleList>("GET", "/localization/locales");
+	}
+
+	public async getLocalizationBundle(
+		locale: string,
+		namespace?: string,
+		domain?: components["schemas"]["LocalizationRolloutDomain"]
+	): Promise<LocalizationBundle> {
+		return this.request<LocalizationBundle>(
+			"GET",
+			`/localization/bundles/${encodeURIComponent(locale)}`,
+			undefined,
+			namespace || domain ? { namespace, domain } : undefined
+		);
+	}
+
+	public async replaceAdminLocalizationLocales(
+		data: LocalizationLocaleSettingsInput
+	): Promise<LocalizationLocaleList> {
+		return this.request<LocalizationLocaleList>("PUT", "/admin/localization/locales", data);
+	}
+
+	public async listAdminLocalizationKeys(
+		params: ListAdminLocalizationKeysQuery = {}
+	): Promise<TranslationQueueResponse> {
+		return this.request<TranslationQueueResponse>(
+			"GET",
+			"/admin/localization/keys",
+			undefined,
+			params as Record<string, unknown>
+		);
+	}
+
+	public async listAdminLocalizationAssignees(
+		params: ListAdminLocalizationAssigneesQuery = {}
+	): Promise<LocalizationAssigneeListResponse> {
+		return this.request(
+			"GET",
+			"/admin/localization/assignees",
+			undefined,
+			params as Record<string, unknown>
+		);
+	}
+
+	public async listAdminLocalizationRollouts(): Promise<LocalizationRolloutListResponse> {
+		return this.request("GET", "/admin/localization/rollouts");
+	}
+
+	public async replaceAdminLocalizationRollouts(
+		data: LocalizationRolloutSettingsInput
+	): Promise<LocalizationRolloutListResponse> {
+		return this.request("PUT", "/admin/localization/rollouts", data);
+	}
+
+	public async getAdminLocalizationMetrics(): Promise<LocalizationMetricsResponse> {
+		return this.request("GET", "/admin/localization/metrics");
+	}
+
+	public async listAdminLocalizationValues(
+		keyId: number
+	): Promise<components["schemas"]["TranslationValueListResponse"]> {
+		return this.request("GET", `/admin/localization/keys/${keyId}/values`);
+	}
+
+	public async listAdminLocalizationKeyUsages(
+		keyId: number
+	): Promise<TranslationKeyUsageListResponse> {
+		return this.request("GET", `/admin/localization/keys/${keyId}/usages`);
+	}
+
+	public async replaceAdminLocalizationKeyUsages(
+		keyId: number,
+		data: TranslationKeyUsageListInput
+	): Promise<TranslationKeyUsageListResponse> {
+		return this.request("PUT", `/admin/localization/keys/${keyId}/usages`, data);
+	}
+
+	public async putAdminLocalizationValue(
+		keyId: number,
+		locale: string,
+		data: TranslationValueInput
+	): Promise<TranslationValue> {
+		return this.request(
+			"PUT",
+			`/admin/localization/keys/${keyId}/values/${encodeURIComponent(locale)}`,
+			data
+		);
+	}
+
+	public async submitAdminLocalizationValueReview(
+		valueId: number,
+		data: TranslationTransitionInput = {}
+	): Promise<TranslationValue> {
+		return this.request("POST", `/admin/localization/values/${valueId}/submit-review`, data);
+	}
+
+	public async publishAdminLocalizationValue(
+		valueId: number,
+		data: TranslationTransitionInput = {}
+	): Promise<TranslationValue> {
+		return this.request("POST", `/admin/localization/values/${valueId}/publish`, data);
+	}
+
+	public async listAdminLocalizationComments(
+		valueId: number
+	): Promise<TranslationCommentListResponse> {
+		return this.request("GET", `/admin/localization/values/${valueId}/comments`);
+	}
+
+	public async createAdminLocalizationComment(
+		valueId: number,
+		comment: string
+	): Promise<TranslationComment> {
+		return this.request("POST", `/admin/localization/values/${valueId}/comments`, { comment });
+	}
+
+	public async listAdminLocalizationReleases(): Promise<TranslationReleaseListResponse> {
+		return this.request("GET", "/admin/localization/releases");
+	}
+
+	public async createAdminLocalizationRelease(
+		data: TranslationReleaseInput
+	): Promise<TranslationRelease> {
+		return this.request("POST", "/admin/localization/releases", data);
+	}
+
+	public async activateAdminLocalizationRelease(id: number): Promise<TranslationRelease> {
+		const release = await this.request<TranslationRelease>(
+			"POST",
+			`/admin/localization/releases/${id}/activate`
+		);
+		broadcastStorefrontStateChange();
+		return release;
+	}
+
+	public async getAdminLocalizationReleaseQuality(id: number): Promise<TranslationReleaseQuality> {
+		return this.request("GET", `/admin/localization/releases/${id}/quality`);
+	}
+
+	public async rollbackAdminLocalizationRelease(id: number): Promise<TranslationRelease> {
+		const release = await this.request<TranslationRelease>(
+			"POST",
+			`/admin/localization/releases/${id}/rollback`
+		);
+		broadcastStorefrontStateChange();
+		return release;
+	}
+
+	public async importAdminLocalization(
+		data: TranslationImportInput
+	): Promise<TranslationImportReport> {
+		return this.request("POST", "/admin/localization/import", data);
+	}
+
+	public async exportAdminLocalization(
+		data: TranslationExportInput
+	): Promise<TranslationExportDocument> {
+		return this.request("POST", "/admin/localization/export", data);
+	}
+
+	public async listAdminLocalizationGlossary(
+		locale?: string
+	): Promise<LocalizationGlossaryListResponse> {
+		return this.request(
+			"GET",
+			"/admin/localization/glossary",
+			undefined,
+			locale ? { locale } : undefined
+		);
+	}
+
+	public async putAdminLocalizationGlossaryTerm(
+		data: LocalizationGlossaryInput
+	): Promise<LocalizationGlossaryTerm> {
+		return this.request("PUT", "/admin/localization/glossary", data);
+	}
+
+	public async deleteAdminLocalizationGlossaryTerm(id: number): Promise<void> {
+		await this.request("DELETE", `/admin/localization/glossary/${id}`);
 	}
 
 	public async listAdminCmsPageVariants(pageId: number): Promise<CmsPageVariant[]> {

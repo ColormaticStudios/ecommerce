@@ -9,8 +9,10 @@
 	import { resolve } from "$app/paths";
 	import { navigating } from "$app/state";
 	import type { LayoutData } from "./$types";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 
 	const api = getContext<API>("api");
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 
 	let menuOpen = $state(false);
 	let menuRef = $state<HTMLDivElement | null>(null);
@@ -155,7 +157,10 @@
 		} catch (err) {
 			console.error(err);
 			exitingDraftPreview = false;
-			draftPreviewError = "Could not exit draft view.";
+			draftPreviewError = $localization.translate(
+				"storefront.shell.exit_preview_error",
+				"Could not exit draft view."
+			);
 		}
 	}
 
@@ -202,11 +207,11 @@
 			class="pointer-events-none fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-full border border-gray-200 bg-white/95 px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-900/95 dark:text-gray-200"
 			role="status"
 			aria-live="polite"
-			aria-label="Page loading"
+			aria-label={$localization.translate("storefront.shell.page_loading", "Page loading")}
 		>
 			<span class="inline-flex items-center gap-2">
 				<i class="bi bi-arrow-repeat inline-block animate-spin"></i>
-				Loading...
+				{$localization.translate("storefront.shell.loading", "Loading...")}
 			</span>
 		</div>
 	{/if}
@@ -218,10 +223,12 @@
 		>
 			<span class="inline-flex items-center gap-1.5">
 				<i class="bi bi-eye"></i>
-				Viewing draft preview
+				{$localization.translate("storefront.shell.viewing_draft_preview", "Viewing draft preview")}
 				{#if draftPreviewExpiresLabel}
 					<span class="text-[10px] text-amber-700/90 dark:text-amber-200/80">
-						until {draftPreviewExpiresLabel}
+						{$localization.translate("storefront.shell.until_time", "until {time}", {
+							time: draftPreviewExpiresLabel,
+						})}
 					</span>
 				{/if}
 			</span>
@@ -231,7 +238,9 @@
 				disabled={exitingDraftPreview}
 				onclick={exitDraftPreview}
 			>
-				{exitingDraftPreview ? "Exiting..." : "Exit"}
+				{exitingDraftPreview
+					? $localization.translate("storefront.shell.exiting", "Exiting...")
+					: $localization.translate("storefront.shell.exit", "Exit")}
 			</button>
 			{#if draftPreviewError}
 				<span class="text-[10px] text-rose-700 dark:text-rose-300">{draftPreviewError}</span>
@@ -305,13 +314,17 @@
 			{/if}
 		</div>
 		<div class="flex items-center gap-3">
-			<a href={resolve("/search")} class="navlink text-lg" aria-label="search">
+			<a
+				href={resolve("/search")}
+				class="navlink text-lg"
+				aria-label={$localization.translate("storefront.shell.search", "Search")}
+			>
 				<i class="bi bi-search"></i>
 			</a>
 			<a
 				href={resolve("/cart")}
 				class="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:border-gray-600 dark:hover:bg-gray-700"
-				aria-label="View cart"
+				aria-label={$localization.translate("storefront.shell.view_cart", "View cart")}
 			>
 				<i class="bi bi-cart text-lg"></i>
 				{#if cartCountLoading}
@@ -366,20 +379,20 @@
 									class="menu-item"
 									onclick={() => (menuOpen = false)}
 								>
-									Admin
+									{$localization.translate("storefront.shell.admin", "Admin")}
 									<i class="bi bi-shield-lock"></i>
 								</a>
 							{/if}
 							<a href={resolve("/checkout")} class="menu-item" onclick={() => (menuOpen = false)}>
-								Checkout
+								{$localization.translate("checkout.title", "Checkout")}
 								<i class="bi bi-credit-card"></i>
 							</a>
 							<a href={resolve("/profile")} class="menu-item" onclick={() => (menuOpen = false)}>
-								Edit profile
+								{$localization.translate("storefront.shell.edit_profile", "Edit profile")}
 								<i class="bi bi-person"></i>
 							</a>
 							<a href={resolve("/orders")} class="menu-item" onclick={() => (menuOpen = false)}>
-								Orders
+								{$localization.translate("storefront.shell.orders", "Orders")}
 								<i class="bi bi-receipt"></i>
 							</a>
 							<button
@@ -390,7 +403,7 @@
 									void $userStore.logOut();
 								}}
 							>
-								Sign out
+								{$localization.translate("storefront.shell.sign_out", "Sign out")}
 								<i class="bi bi-box-arrow-right"></i>
 							</button>
 						</div>
@@ -398,8 +411,12 @@
 				</div>
 			{:else}
 				<div>
-					<a href={resolve("/login")} class="navlink">Log In</a>
-					<a href={resolve("/signup")} class="navlink">Sign Up</a>
+					<a href={resolve("/login")} class="navlink"
+						>{$localization.translate("storefront.shell.sign_in", "Log In")}</a
+					>
+					<a href={resolve("/signup")} class="navlink"
+						>{$localization.translate("storefront.shell.sign_up", "Sign Up")}</a
+					>
 				</div>
 			{/if}
 		</div>

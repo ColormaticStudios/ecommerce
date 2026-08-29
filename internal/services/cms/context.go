@@ -127,18 +127,16 @@ func (s *Service) PreviewRestore(ctx context.Context, raw []byte) (valid bool, s
 	}
 	schemaVersion = bundle.SchemaVersion
 	pages, navigation, globals, variants = len(bundle.Pages), len(bundle.Navigation), len(bundle.GlobalRegions), len(bundle.Variants)
-	if bundle.SchemaVersion != 1 {
+	if bundle.SchemaVersion != 2 {
 		validationErrors = append(validationErrors, fmt.Sprintf("unsupported schema version %d", bundle.SchemaVersion))
 	}
 	if err := validateRestoreBundle(bundle); err != nil {
 		validationErrors = append(validationErrors, err.Error())
 	}
-	localeInputs := make([]LocaleInput, 0, len(bundle.Locales))
-	for _, locale := range bundle.Locales {
-		localeInputs = append(localeInputs, LocaleInput{Code: locale.Code, Name: locale.Name, Enabled: locale.Enabled, IsDefault: locale.IsDefault, FallbackLocale: stringValue(locale.FallbackLocale)})
-	}
-	if err := validateLocales(localeInputs); err != nil {
-		validationErrors = append(validationErrors, err.Error())
+	for _, variant := range bundle.Variants {
+		if _, err := s.localization.RequireEnabledLocale(ctx, variant.Locale); err != nil {
+			validationErrors = append(validationErrors, fmt.Sprintf("variant %d references unavailable locale %q", variant.ID, variant.Locale))
+		}
 	}
 	return len(validationErrors) == 0, schemaVersion, pages, navigation, globals, variants, warnings, validationErrors
 }
@@ -158,8 +156,11 @@ func (s *Service) ListEntryVariants(ctx context.Context, entryID uint) ([]models
 func (s *Service) SaveEntryVariant(ctx context.Context, entryID, variantID uint, input EntryVariantInput) (*models.CMSContentVariant, error) {
 	input.Locale = normalizeLocale(input.Locale)
 	input.Market = strings.ToUpper(strings.TrimSpace(input.Market))
-	if !localeCodePattern.MatchString(input.Locale) || (input.Market != "" && !marketCodePattern.MatchString(input.Market)) {
+	if input.Locale == "" || (input.Market != "" && !marketCodePattern.MatchString(input.Market)) {
 		return nil, ErrInvalidLocale
+	}
+	if _, err := s.localization.RequireEnabledLocale(ctx, input.Locale); err != nil {
+		return nil, fmt.Errorf("%w: locale must exist and be enabled: %v", ErrInvalidLocale, err)
 	}
 	payload, err := prepareDraftPayload(input.Payload)
 	if err != nil {

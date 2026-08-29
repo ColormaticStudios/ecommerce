@@ -9,6 +9,7 @@ import (
 	"ecommerce/internal/apperror"
 	"ecommerce/internal/media"
 	"ecommerce/internal/services/categories"
+	localizationservice "ecommerce/internal/services/localization"
 	"ecommerce/models"
 
 	"gorm.io/gorm"
@@ -19,6 +20,13 @@ const (
 	maxDescriptionLength = 500
 	maxCategoryDepth     = 5
 )
+
+func optionalString(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
+}
 
 type Service struct {
 	db    *gorm.DB
@@ -56,7 +64,12 @@ func (s *Service) CreateBrand(ctx context.Context, input apicontract.BrandInput)
 		if err := tx.Select("*").Create(&brand).Error; err != nil {
 			return err
 		}
-		return replaceBrandLogo(tx, brand.ID, logoID)
+		if err := replaceBrandLogo(tx, brand.ID, logoID); err != nil {
+			return err
+		}
+		return localizationservice.SyncDefaultEntityLocalization(tx, localizationservice.EntityTypeBrand, brand.ID, map[string]string{
+			"name": brand.Name, "description": optionalString(brand.Description),
+		}, nil)
 	})
 	return brand, err
 }
@@ -79,6 +92,11 @@ func (s *Service) UpdateBrand(ctx context.Context, id uint, input apicontract.Br
 	var removed []string
 	err = db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Save(&brand).Error; err != nil {
+			return err
+		}
+		if err := localizationservice.SyncDefaultEntityLocalization(tx, localizationservice.EntityTypeBrand, brand.ID, map[string]string{
+			"name": brand.Name, "description": optionalString(brand.Description),
+		}, nil); err != nil {
 			return err
 		}
 		var err error
@@ -232,7 +250,15 @@ func (s *Service) CreateCategory(ctx context.Context, input apicontract.Category
 	if err != nil {
 		return models.Category{}, err
 	}
-	return category, db.Select("*").Create(&category).Error
+	err = db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Select("*").Create(&category).Error; err != nil {
+			return err
+		}
+		return localizationservice.SyncDefaultEntityLocalization(tx, localizationservice.EntityTypeCategory, category.ID, map[string]string{
+			"name": category.Name, "description": optionalString(category.Description),
+		}, nil)
+	})
+	return category, err
 }
 
 func (s *Service) UpdateCategory(ctx context.Context, id uint, input apicontract.CategoryInput) (models.Category, error) {
@@ -259,6 +285,11 @@ func (s *Service) UpdateCategory(ctx context.Context, id uint, input apicontract
 	category.ParentID, category.Path, category.Depth = normalized.ParentID, normalized.Path, normalized.Depth
 	err = db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Save(&category).Error; err != nil {
+			return err
+		}
+		if err := localizationservice.SyncDefaultEntityLocalization(tx, localizationservice.EntityTypeCategory, category.ID, map[string]string{
+			"name": category.Name, "description": optionalString(category.Description),
+		}, nil); err != nil {
 			return err
 		}
 		return rebuildCategoryPaths(tx, category)

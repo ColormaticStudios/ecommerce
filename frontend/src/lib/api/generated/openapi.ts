@@ -4,6 +4,390 @@
  */
 
 export interface paths {
+	"/api/v1/localization/locales": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listLocalizationLocales"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/localization/bundles/{locale}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getLocalizationBundle"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/localization/bundles/{locale}/meta": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getLocalizationBundleMeta"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/locales": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminLocalizationLocales"];
+		put: operations["replaceAdminLocalizationLocales"];
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/keys": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminLocalizationKeys"];
+		put?: never;
+		post: operations["createAdminLocalizationKey"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/keys/{id}/values": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminLocalizationValues"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/keys/{id}/usages": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminLocalizationKeyUsages"];
+		put: operations["replaceAdminLocalizationKeyUsages"];
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/keys/{id}/values/{locale}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put: operations["putAdminLocalizationValue"];
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/values/{id}/submit-review": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["submitAdminLocalizationValueReview"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/values/{id}/publish": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["publishAdminLocalizationValue"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/values/{id}/comments": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminLocalizationComments"];
+		put?: never;
+		post: operations["createAdminLocalizationComment"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/releases": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminLocalizationReleases"];
+		put?: never;
+		post: operations["createAdminLocalizationRelease"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/releases/{id}/activate": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["activateAdminLocalizationRelease"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/releases/{id}/quality": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminLocalizationReleaseQuality"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/releases/{id}/rollback": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["rollbackAdminLocalizationRelease"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/import": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["importAdminLocalization"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/export": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["exportAdminLocalization"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/glossary": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminLocalizationGlossary"];
+		put: operations["putAdminLocalizationGlossaryTerm"];
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/glossary/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete: operations["deleteAdminLocalizationGlossaryTerm"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/roles": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminLocalizationRoles"];
+		put: operations["putAdminLocalizationRole"];
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/assignees": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminLocalizationAssignees"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/rollouts": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminLocalizationRollouts"];
+		put: operations["replaceAdminLocalizationRollouts"];
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/metrics": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminLocalizationMetrics"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/localization/entities/{entity_type}/{entity_id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getAdminEntityLocalization"];
+		put: operations["putAdminEntityLocalization"];
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/auth/register": {
 		parameters: {
 			query?: never;
@@ -1929,22 +2313,6 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/api/v1/admin/cms/locales": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get: operations["getAdminCmsLocales"];
-		put: operations["updateAdminCmsLocales"];
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
 	"/api/v1/admin/cms/pages/{id}/variants": {
 		parameters: {
 			query?: never;
@@ -2541,6 +2909,406 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
 	schemas: {
+		LocalizationLocale: {
+			/** @example fr-CA */
+			code: string;
+			/** @example French (Canada) */
+			name: string;
+			is_enabled: boolean;
+			is_default: boolean;
+			/** @example fr */
+			fallback_locale?: string | null;
+			/** @description Uppercase market codes that use this locale as their market default. */
+			default_for_markets: string[];
+		};
+		LocalizationLocaleInput: {
+			code: string;
+			name: string;
+			is_enabled: boolean;
+			is_default: boolean;
+			fallback_locale?: string | null;
+			default_for_markets: string[];
+		};
+		LocalizationLocaleList: {
+			default_locale: string;
+			locales: components["schemas"]["LocalizationLocale"][];
+		};
+		LocalizationLocaleSettingsInput: {
+			locales: components["schemas"]["LocalizationLocaleInput"][];
+		};
+		LocalizationResolution: {
+			requested_locale: string;
+			resolved_locale: string;
+			/** @enum {string} */
+			source: "explicit" | "account" | "market" | "global";
+			fallback_chain: string[];
+			used_fallback: boolean;
+		};
+		TranslationReleaseMeta: {
+			id: number;
+			name: string;
+			snapshot_hash: string;
+			version: string;
+			/** Format: date-time */
+			published_at: string;
+		};
+		LocalizationBundleMeta: {
+			resolution: components["schemas"]["LocalizationResolution"];
+			release: components["schemas"]["TranslationReleaseMeta"];
+		};
+		LocalizationBundleMessage: {
+			value: string;
+			requested_locale: string;
+			source_locale: string;
+			used_fallback: boolean;
+			missing_translation: boolean;
+		};
+		LocalizationBundle: components["schemas"]["LocalizationBundleMeta"] & {
+			messages: {
+				[key: string]: components["schemas"]["LocalizationBundleMessage"];
+			};
+		};
+		TranslationKey: {
+			id: number;
+			namespace: string;
+			key: string;
+			source_text: string;
+			description: string;
+			owner_domain: string;
+			is_deprecated: boolean;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		TranslationKeyInput: {
+			/** @enum {string} */
+			namespace: "storefront" | "checkout" | "admin" | "errors" | "communications";
+			key: string;
+			source_text: string;
+			description?: string;
+			owner_domain: string;
+		};
+		TranslationKeyUsage: {
+			id: number;
+			translation_key_id: number;
+			route: string;
+			component: string;
+			description: string;
+			position: number;
+			screenshot_media_id?: string | null;
+			screenshot_url?: string | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		TranslationKeyUsageInput: {
+			route: string;
+			component: string;
+			description: string;
+			position: number;
+			screenshot_media_id?: string | null;
+		};
+		TranslationKeyUsageListInput: {
+			usages: components["schemas"]["TranslationKeyUsageInput"][];
+		};
+		TranslationKeyUsageListResponse: {
+			usages: components["schemas"]["TranslationKeyUsage"][];
+		};
+		TranslationValue: {
+			id: number;
+			translation_key_id: number;
+			locale: string;
+			value: string;
+			/** @enum {string} */
+			state: "draft" | "review" | "published";
+			version: number;
+			updated_by?: number | null;
+			reviewed_by?: number | null;
+			assignee_id?: number | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+			validation_issues: components["schemas"]["ValidationIssue"][];
+		};
+		TranslationValueInput: {
+			value: string;
+			assignee_id?: number | null;
+			expected_version?: number;
+			change_summary?: string;
+		};
+		TranslationTransitionInput: {
+			change_summary?: string;
+		};
+		TranslationValueListResponse: {
+			values: components["schemas"]["TranslationValue"][];
+		};
+		TranslationQueueItem: {
+			key: components["schemas"]["TranslationKey"];
+			locale: string;
+			latest_value?: components["schemas"]["TranslationValue"] | null;
+			published_value?: components["schemas"]["TranslationValue"] | null;
+			missing: boolean;
+			stale: boolean;
+			validation_issues: components["schemas"]["ValidationIssue"][];
+			preview_url: string;
+		};
+		TranslationQueueResponse: {
+			items: components["schemas"]["TranslationQueueItem"][];
+			pagination: components["schemas"]["Pagination"];
+		};
+		TranslationComment: {
+			id: number;
+			translation_value_id: number;
+			author_id?: number | null;
+			author_name: string;
+			comment: string;
+			/** Format: date-time */
+			resolved_at?: string | null;
+			/** Format: date-time */
+			created_at: string;
+		};
+		TranslationCommentInput: {
+			comment: string;
+		};
+		TranslationCommentListResponse: {
+			comments: components["schemas"]["TranslationComment"][];
+		};
+		TranslationRelease: {
+			id: number;
+			name: string;
+			/** @enum {string} */
+			status: "draft" | "active" | "superseded";
+			notes: string;
+			snapshot_hash: string;
+			/** Format: date-time */
+			published_at?: string | null;
+			published_by?: number | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		TranslationReleaseQualityMissing: {
+			locale: string;
+			/** @enum {string} */
+			namespace: "checkout" | "errors" | "communications";
+			key: string;
+		};
+		TranslationReleaseQuality: {
+			release_id: number;
+			ready: boolean;
+			required_locales: string[];
+			critical_namespaces: ("checkout" | "errors" | "communications")[];
+			missing_count: number;
+			missing: components["schemas"]["TranslationReleaseQualityMissing"][];
+		};
+		TranslationReleaseInput: {
+			name: string;
+			notes?: string;
+		};
+		TranslationReleaseListResponse: {
+			releases: components["schemas"]["TranslationRelease"][];
+		};
+		/** @enum {string} */
+		TranslationDocumentFormat: "json" | "csv" | "xliff";
+		TranslationExportInput: {
+			locale: string;
+			namespace?: string;
+			format: components["schemas"]["TranslationDocumentFormat"];
+		};
+		TranslationExportDocument: {
+			locale: string;
+			namespace?: string;
+			format: components["schemas"]["TranslationDocumentFormat"];
+			filename: string;
+			content: string;
+		};
+		TranslationImportInput: {
+			locale: string;
+			namespace?: string;
+			format: components["schemas"]["TranslationDocumentFormat"];
+			content: string;
+			dry_run: boolean;
+		};
+		TranslationImportEntry: {
+			key: string;
+			/** @enum {string} */
+			status: "created" | "unchanged" | "conflict" | "invalid";
+			detail: string;
+		};
+		TranslationImportReport: {
+			dry_run: boolean;
+			created: number;
+			unchanged: number;
+			conflicts: number;
+			invalid: number;
+			entries: components["schemas"]["TranslationImportEntry"][];
+		};
+		LocalizationGlossaryTerm: {
+			id: number;
+			locale: string;
+			source_term: string;
+			translated_term: string;
+			description: string;
+			is_locked: boolean;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		LocalizationGlossaryInput: {
+			locale: string;
+			source_term: string;
+			translated_term: string;
+			description?: string;
+			is_locked: boolean;
+		};
+		LocalizationGlossaryListResponse: {
+			terms: components["schemas"]["LocalizationGlossaryTerm"][];
+		};
+		LocalizationRoleAssignment: {
+			id: number;
+			subject: string;
+			/** @enum {string} */
+			role: "translator" | "editor" | "publisher";
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		LocalizationRoleInput: {
+			subject: string;
+			/** @enum {string} */
+			role: "translator" | "editor" | "publisher";
+		};
+		LocalizationRoleListResponse: {
+			assignments: components["schemas"]["LocalizationRoleAssignment"][];
+		};
+		LocalizationAssignee: {
+			id: number;
+			name: string;
+			/** Format: email */
+			email: string;
+			/** @enum {string} */
+			localization_role: "translator" | "editor" | "publisher";
+		};
+		LocalizationAssigneeListResponse: {
+			assignees: components["schemas"]["LocalizationAssignee"][];
+		};
+		/** @enum {string} */
+		LocalizationRolloutDomain:
+			| "storefront"
+			| "checkout"
+			| "account"
+			| "admin"
+			| "communications"
+			| "errors";
+		LocalizationRollout: {
+			locale: string;
+			domain: components["schemas"]["LocalizationRolloutDomain"];
+			is_enabled: boolean;
+			percentage: number;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		LocalizationRolloutInput: {
+			locale: string;
+			domain: components["schemas"]["LocalizationRolloutDomain"];
+			is_enabled: boolean;
+			percentage: number;
+		};
+		LocalizationRolloutSettingsInput: {
+			rollouts: components["schemas"]["LocalizationRolloutInput"][];
+		};
+		LocalizationRolloutListResponse: {
+			rollouts: components["schemas"]["LocalizationRollout"][];
+		};
+		/** @enum {string} */
+		LocalizationMetricType:
+			| "missing_key"
+			| "fallback_hit"
+			| "rollout_fallback"
+			| "publish_latency"
+			| "rollback";
+		LocalizationMetricHotspot: {
+			metric_type: components["schemas"]["LocalizationMetricType"];
+			locale: string;
+			domain: string;
+			key: string;
+			count: number;
+			average_value: number;
+			maximum_value: number;
+			/** Format: date-time */
+			last_seen_at: string;
+		};
+		LocalizationLocaleMetricRate: {
+			locale: string;
+			lookup_count: number;
+			missing_key_count: number;
+			fallback_hit_count: number;
+			missing_key_rate: number;
+			fallback_hit_rate: number;
+		};
+		LocalizationMetricsResponse: {
+			lookup_count: number;
+			missing_key_count: number;
+			missing_key_rate: number;
+			fallback_hit_count: number;
+			fallback_hit_rate: number;
+			rollout_fallback_count: number;
+			publish_count: number;
+			average_publish_latency_ms: number;
+			maximum_publish_latency_ms: number;
+			rollback_count: number;
+			locale_rates: components["schemas"]["LocalizationLocaleMetricRate"][];
+			hotspots: components["schemas"]["LocalizationMetricHotspot"][];
+			/** Format: date-time */
+			generated_at: string;
+		};
+		/** @enum {string} */
+		LocalizedEntityType:
+			| "product"
+			| "product_variant"
+			| "product_option"
+			| "product_option_value"
+			| "brand"
+			| "category"
+			| "website_settings"
+			| "seo_metadata";
+		LocalizedFieldSet: {
+			locale: string;
+			fields: {
+				[key: string]: string;
+			};
+		};
+		EntityLocalizationInput: {
+			locale: string;
+			fields: {
+				[key: string]: string;
+			};
+			change_summary?: string;
+		};
+		EntityLocalizationResolution: {
+			requested_locale: string;
+			resolved_locale: string;
+			fallback_chain: string[];
+			fields: {
+				[key: string]: string;
+			};
+			source_locales: {
+				[key: string]: string;
+			};
+			used_fallback: boolean;
+		};
+		EntityLocalizationResponse: {
+			entity_type: components["schemas"]["LocalizedEntityType"];
+			entity_id: number;
+			localizations: components["schemas"]["LocalizedFieldSet"][];
+			resolved: components["schemas"]["EntityLocalizationResolution"];
+		};
 		/** @description A machine-readable issue associated with a request value. */
 		ValidationIssue: {
 			/**
@@ -2592,7 +3360,13 @@ export interface components {
 			 * @description Stable machine-readable application error code.
 			 * @example validation_failed
 			 */
-			code: string;
+			error_code: string;
+			/** @description Optional localization key for rendering the problem detail. */
+			message_key?: string;
+			/** @description Structured string, number, or boolean values interpolated into the localized message. */
+			message_params?: {
+				[key: string]: string | number | boolean;
+			};
 			/**
 			 * @description Identifier used to correlate the response with logs and traces.
 			 * @example 01J2EXAMPLE8Y4Q2S7M9K3N6P5R
@@ -2990,26 +3764,6 @@ export interface components {
 			/** @enum {string} */
 			layout: "columns" | "centered" | "minimal";
 		};
-		CmsLocale: {
-			code: string;
-			name: string;
-			enabled: boolean;
-			is_default: boolean;
-			fallback_locale?: string | null;
-		};
-		CmsLocaleInput: {
-			code: string;
-			name: string;
-			enabled: boolean;
-			is_default: boolean;
-			fallback_locale?: string | null;
-		};
-		CmsLocaleSettings: {
-			locales: components["schemas"]["CmsLocale"][];
-		};
-		CmsLocaleSettingsInput: {
-			locales: components["schemas"]["CmsLocaleInput"][];
-		};
 		CmsPageVariant: {
 			id: number;
 			page_id: number;
@@ -3166,7 +3920,6 @@ export interface components {
 			schema_version: number;
 			/** Format: date-time */
 			exported_at: string;
-			locales: components["schemas"]["CmsLocale"][];
 			pages: components["schemas"]["CmsPageResponse"][];
 			navigation: components["schemas"]["CmsNavigationResponse"][];
 			global_regions: components["schemas"]["CmsGlobalRegionResponse"][];
@@ -3397,6 +4150,8 @@ export interface components {
 			/** @enum {string} */
 			role: "admin" | "customer";
 			currency: string;
+			/** @description Persisted account locale preference as a canonical BCP 47 tag. */
+			locale: string;
 			/** Format: date-time */
 			created_at: string;
 			/** Format: date-time */
@@ -3425,6 +4180,8 @@ export interface components {
 		UpdateProfileRequest: {
 			name?: string;
 			currency?: string;
+			/** @description Enabled platform locale to persist as the account preference. */
+			locale?: string;
 			profile_photo_url?: string;
 		};
 		Brand: {
@@ -3434,6 +4191,7 @@ export interface components {
 			description?: string | null;
 			logo_url?: string | null;
 			is_active: boolean;
+			localization?: components["schemas"]["EntityLocalizationResolution"];
 		};
 		BrandListResponse: {
 			data: components["schemas"]["Brand"][];
@@ -3458,6 +4216,7 @@ export interface components {
 			parent_id?: number | null;
 			path: string;
 			depth: number;
+			localization?: components["schemas"]["EntityLocalizationResolution"];
 		};
 		CategoryListResponse: {
 			data: components["schemas"]["Category"][];
@@ -3923,6 +4682,7 @@ export interface components {
 			has_draft_changes?: boolean;
 			/** Format: date-time */
 			draft_updated_at?: string | null;
+			localization?: components["schemas"]["EntityLocalizationResolution"];
 		};
 		RelatedProduct: {
 			id: number;
@@ -4986,6 +5746,7 @@ export interface components {
 			/** @description Set true on update to remove the stored OIDC client secret. */
 			clear_oidc_client_secret: boolean;
 			oidc_redirect_uri: string;
+			localization?: components["schemas"]["EntityLocalizationResolution"];
 		};
 		WebsiteSettingsRequest: {
 			settings: components["schemas"]["WebsiteSettings"];
@@ -5122,6 +5883,962 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+	listLocalizationLocales: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Enabled platform locales and the global default */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["LocalizationLocaleList"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getLocalizationBundle: {
+		parameters: {
+			query?: {
+				namespace?: "storefront" | "checkout" | "admin" | "errors" | "communications";
+				domain?: components["schemas"]["LocalizationRolloutDomain"];
+			};
+			header?: {
+				"If-None-Match"?: string;
+			};
+			path: {
+				locale: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Deterministic bundle from the active translation release */
+			200: {
+				headers: {
+					ETag?: string;
+					"Cache-Control"?: string;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["LocalizationBundle"];
+				};
+			};
+			/** @description The requested bundle version is already cached by the client */
+			304: {
+				headers: {
+					ETag?: string;
+					"Cache-Control"?: string;
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
+		};
+	};
+	getLocalizationBundleMeta: {
+		parameters: {
+			query?: {
+				domain?: components["schemas"]["LocalizationRolloutDomain"];
+			};
+			header?: {
+				"If-None-Match"?: string;
+			};
+			path: {
+				locale: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Locale fallback and active-release metadata */
+			200: {
+				headers: {
+					ETag?: string;
+					"Cache-Control"?: string;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["LocalizationBundleMeta"];
+				};
+			};
+			/** @description The requested bundle metadata version is already cached by the client */
+			304: {
+				headers: {
+					ETag?: string;
+					"Cache-Control"?: string;
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
+		};
+	};
+	listAdminLocalizationLocales: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Complete platform locale registry */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["LocalizationLocaleList"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	replaceAdminLocalizationLocales: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["LocalizationLocaleSettingsInput"];
+			};
+		};
+		responses: {
+			/** @description Replaced platform locale registry */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["LocalizationLocaleList"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminLocalizationKeys: {
+		parameters: {
+			query?: {
+				locale?: string;
+				namespace?: string;
+				state?: "draft" | "review" | "published";
+				assignee_id?: number;
+				missing?: boolean;
+				stale?: boolean;
+				q?: string;
+				page?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Filtered translation work queue */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationQueueResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createAdminLocalizationKey: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["TranslationKeyInput"];
+			};
+		};
+		responses: {
+			/** @description Created translation key */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationKey"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminLocalizationValues: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Version history for a translation key */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationValueListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminLocalizationKeyUsages: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Translation key usage context and screenshots */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationKeyUsageListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	replaceAdminLocalizationKeyUsages: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["TranslationKeyUsageListInput"];
+			};
+		};
+		responses: {
+			/** @description Replaced translation key usage context */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationKeyUsageListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	putAdminLocalizationValue: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+				locale: string;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["TranslationValueInput"];
+			};
+		};
+		responses: {
+			/** @description Created draft translation version */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationValue"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	submitAdminLocalizationValueReview: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": components["schemas"]["TranslationTransitionInput"];
+			};
+		};
+		responses: {
+			/** @description Translation submitted for review */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationValue"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	publishAdminLocalizationValue: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": components["schemas"]["TranslationTransitionInput"];
+			};
+		};
+		responses: {
+			/** @description Published translation value */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationValue"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminLocalizationComments: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Review comments for a translation value */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationCommentListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createAdminLocalizationComment: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["TranslationCommentInput"];
+			};
+		};
+		responses: {
+			/** @description Added review comment */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationComment"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminLocalizationReleases: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Translation release history */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationReleaseListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createAdminLocalizationRelease: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["TranslationReleaseInput"];
+			};
+		};
+		responses: {
+			/** @description Created immutable draft release */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationRelease"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	activateAdminLocalizationRelease: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Activated translation release */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationRelease"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminLocalizationReleaseQuality: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Critical-namespace locale coverage for an immutable release */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationReleaseQuality"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	rollbackAdminLocalizationRelease: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Created and activated an immutable copy of the selected prior release */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationRelease"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	importAdminLocalization: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["TranslationImportInput"];
+			};
+		};
+		responses: {
+			/** @description Validated import report */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationImportReport"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	exportAdminLocalization: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["TranslationExportInput"];
+			};
+		};
+		responses: {
+			/** @description Translation export document */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TranslationExportDocument"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminLocalizationGlossary: {
+		parameters: {
+			query?: {
+				locale?: string;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Localization glossary terms */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["LocalizationGlossaryListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	putAdminLocalizationGlossaryTerm: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["LocalizationGlossaryInput"];
+			};
+		};
+		responses: {
+			/** @description Created or updated glossary term */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["LocalizationGlossaryTerm"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	deleteAdminLocalizationGlossaryTerm: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Glossary term deleted */
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminLocalizationRoles: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Localization role assignments */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["LocalizationRoleListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	putAdminLocalizationRole: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["LocalizationRoleInput"];
+			};
+		};
+		responses: {
+			/** @description Created or updated localization role assignment */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["LocalizationRoleAssignment"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminLocalizationAssignees: {
+		parameters: {
+			query?: {
+				q?: string;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Searchable users with access to localization controls */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["LocalizationAssigneeListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminLocalizationRollouts: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Per-locale rollout controls for each localization domain */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["LocalizationRolloutListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	replaceAdminLocalizationRollouts: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["LocalizationRolloutSettingsInput"];
+			};
+		};
+		responses: {
+			/** @description Replaced per-locale localization rollout controls */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["LocalizationRolloutListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminLocalizationMetrics: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Localization fallback, missing-key, rollout, and publishing health */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["LocalizationMetricsResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminEntityLocalization: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				entity_type: components["schemas"]["LocalizedEntityType"];
+				entity_id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Localized fields for one entity */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["EntityLocalizationResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	putAdminEntityLocalization: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				entity_type: components["schemas"]["LocalizedEntityType"];
+				entity_id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["EntityLocalizationInput"];
+			};
+		};
+		responses: {
+			/** @description Replaced localized fields for one locale */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["EntityLocalizationResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
 	register: {
 		parameters: {
 			query?: never;
@@ -9263,58 +10980,6 @@ export interface operations {
 			401: components["responses"]["AuthenticationRequiredProblem"];
 			403: components["responses"]["ForbiddenProblem"];
 			404: components["responses"]["NotFoundProblem"];
-			500: components["responses"]["InternalServerErrorProblem"];
-		};
-	};
-	getAdminCmsLocales: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody?: never;
-		responses: {
-			/** @description CMS locale registry and fallback configuration */
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["CmsLocaleSettings"];
-				};
-			};
-			400: components["responses"]["BadRequestProblem"];
-			401: components["responses"]["AuthenticationRequiredProblem"];
-			403: components["responses"]["ForbiddenProblem"];
-			500: components["responses"]["InternalServerErrorProblem"];
-		};
-	};
-	updateAdminCmsLocales: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				"application/json": components["schemas"]["CmsLocaleSettingsInput"];
-			};
-		};
-		responses: {
-			/** @description Updated CMS locale registry */
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					"application/json": components["schemas"]["CmsLocaleSettings"];
-				};
-			};
-			400: components["responses"]["BadRequestProblem"];
-			401: components["responses"]["AuthenticationRequiredProblem"];
-			403: components["responses"]["ForbiddenProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};

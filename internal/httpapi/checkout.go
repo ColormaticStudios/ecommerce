@@ -92,6 +92,10 @@ func checkoutEndpointError(err error) error {
 		return problemError(http.StatusBadRequest, "invalid_quantity", err.Error(), err)
 	case errors.Is(err, checkoutservice.ErrVariantNotFound), errors.Is(err, checkoutservice.ErrCartItemNotFound):
 		return problemError(http.StatusNotFound, "not_found", err.Error(), err)
+	case errors.Is(err, orderservice.ErrOrderAlreadyClaimed):
+		return problemError(http.StatusConflict, "order_already_claimed", "This order was already claimed by another account", err)
+	case errors.Is(err, orderservice.ErrInvalidClaim):
+		return problemError(http.StatusBadRequest, "invalid_claim", "The guest order claim is invalid", err)
 	case errors.Is(err, orderservice.ErrOrderNotFound):
 		return problemError(http.StatusNotFound, "not_found", "Order not found", err)
 	case errors.Is(err, checkoutservice.ErrIdempotencyConflict):
@@ -419,7 +423,7 @@ func (e *CheckoutProviderEndpoints) ClaimGuestOrder(ctx context.Context, r apico
 	}
 	o, replay, err := e.orders.ClaimGuest(ctx, id, string(r.Body.Email), r.Body.ConfirmationToken)
 	if err != nil {
-		return nil, err
+		return nil, checkoutEndpointError(err)
 	}
 	message := "Order linked to your account"
 	if replay {

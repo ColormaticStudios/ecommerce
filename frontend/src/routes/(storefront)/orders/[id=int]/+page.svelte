@@ -5,7 +5,12 @@
 	import Button from "$lib/components/Button.svelte";
 	import ButtonLink from "$lib/components/ButtonLink.svelte";
 	import Card from "$lib/components/Card.svelte";
-	import { formatOrderStatusLabel, getOrderStatusTone } from "$lib/components/order-status";
+	import {
+		getOrderStatusTone,
+		localizeOrderStatus,
+		localizeShipmentStatus,
+	} from "$lib/components/order-status";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 	import Toast from "$lib/components/Toast.svelte";
 	import { type OrderModel, type ShipmentModel } from "$lib/models";
 	import { formatPrice } from "$lib/utils";
@@ -17,6 +22,7 @@
 	import { shouldShowShipmentEmptyState } from "./page-state";
 
 	const api: API = getContext("api");
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 
 	interface Props {
 		data: PageData;
@@ -80,14 +86,6 @@
 		});
 	}
 
-	function formatStatusLabel(value: string) {
-		return value
-			.toLowerCase()
-			.split("_")
-			.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-			.join(" ");
-	}
-
 	function getShipmentStatusTone(status: ShipmentModel["status"]) {
 		switch (status) {
 			case "DELIVERED":
@@ -137,7 +135,10 @@
 		}
 		if (typeof window !== "undefined") {
 			const confirmed = window.confirm(
-				"Cancel this order? This cannot be undone and eligible items will be restocked."
+				$localization.translate(
+					"storefront.order.cancel_confirmation",
+					"Cancel this order? This cannot be undone and eligible items will be restocked."
+				)
 			);
 			if (!confirmed) {
 				return;
@@ -148,11 +149,15 @@
 		errorMessage = "";
 		try {
 			order = await api.cancelOrder(order.id);
-			showToast("Order cancelled.");
+			showToast(
+				$localization.translate("storefront.order.cancelled_confirmation", "Order cancelled.")
+			);
 		} catch (err) {
 			console.error(err);
 			const error = err as { body?: { error?: string } };
-			errorMessage = error.body?.error ?? "Unable to cancel order.";
+			errorMessage =
+				error.body?.error ??
+				$localization.translate("storefront.order.cancel_error", "Unable to cancel order.");
 		} finally {
 			cancelling = false;
 		}
@@ -232,7 +237,7 @@
 							Order #{order.id}, placed {formatDate(order.created_at)}.
 						</p>
 						<Badge tone={getOrderStatusTone(order.status)}>
-							{formatOrderStatusLabel(order.status)}
+							{localizeOrderStatus($localization, order.status)}
 						</Badge>
 					</div>
 
@@ -405,7 +410,7 @@
 											</div>
 											<div class="flex flex-col items-start gap-2 sm:items-end">
 												<Badge tone={getShipmentStatusTone(shipment.status)}>
-													{formatStatusLabel(shipment.status)}
+													{localizeShipmentStatus($localization, shipment.status)}
 												</Badge>
 												{#if shipment.tracking_url}
 													<ButtonLink
@@ -486,7 +491,7 @@
 																		</p>
 																	</div>
 																	<div class="text-right text-sm text-gray-500 dark:text-gray-400">
-																		<p>{formatStatusLabel(event.status)}</p>
+																		<p>{localizeShipmentStatus($localization, event.status)}</p>
 																		<p class="mt-1">{formatDate(event.occurred_at)}</p>
 																	</div>
 																</div>

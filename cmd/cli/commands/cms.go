@@ -76,16 +76,6 @@ type cmsDeliveryEnvelope struct {
 	} `json:"experiment"`
 }
 
-type cmsLocaleEnvelope struct {
-	Locales []struct {
-		Code           string `json:"code"`
-		Name           string `json:"name"`
-		Enabled        bool   `json:"enabled"`
-		IsDefault      bool   `json:"is_default"`
-		FallbackLocale string `json:"fallback_locale"`
-	} `json:"locales"`
-}
-
 type cmsVariantEnvelope struct {
 	Locale        string          `json:"locale"`
 	Market        string          `json:"market"`
@@ -183,7 +173,6 @@ func NewCMSCmd() *cobra.Command {
 	cmd.AddCommand(newCMSNavigationCmd())
 	cmd.AddCommand(newCMSGlobalCmd())
 	cmd.AddCommand(newCMSRedirectCmd())
-	cmd.AddCommand(newCMSLocaleCmd())
 	cmd.AddCommand(newCMSGovernanceCmd())
 	cmd.AddCommand(newCMSAuditCmd())
 	cmd.AddCommand(newCMSOperationsCmd())
@@ -913,43 +902,6 @@ func newCMSRedirectSaveCmd(update bool) *cobra.Command {
 	return cmd
 }
 
-func newCMSLocaleCmd() *cobra.Command {
-	var filePath string
-	cmd := &cobra.Command{Use: "locale", Short: "CMS locale controls"}
-	cmd.AddCommand(&cobra.Command{
-		Use:   "list",
-		Short: "List CMS locales",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			locales, err := cmsListLocales(cmd.Context())
-			if err != nil {
-				return err
-			}
-			printJSON(locales)
-			return nil
-		},
-	})
-	saveCmd := &cobra.Command{
-		Use:   "set",
-		Short: "Update CMS locales from JSON",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			inputs, err := loadCMSLocaleInputs(filePath)
-			if err != nil {
-				return err
-			}
-			locales, err := cmsSetLocales(cmd.Context(), inputs)
-			if err != nil {
-				return err
-			}
-			printJSON(locales)
-			return nil
-		},
-	}
-	saveCmd.Flags().StringVar(&filePath, "file", "", "Path to locales JSON")
-	saveCmd.MarkFlagRequired("file")
-	cmd.AddCommand(saveCmd)
-	return cmd
-}
-
 func newCMSGovernanceCmd() *cobra.Command {
 	var filePath string
 	cmd := &cobra.Command{Use: "governance", Short: "CMS governance controls"}
@@ -1222,20 +1174,6 @@ func loadCMSDeliveryInput(path string) (cms.DeliveryInput, error) {
 	return input, nil
 }
 
-func loadCMSLocaleInputs(path string) ([]cms.LocaleInput, error) {
-	var envelope cmsLocaleEnvelope
-	if err := loadJSONFile(path, &envelope); err != nil {
-		return nil, err
-	}
-	inputs := make([]cms.LocaleInput, 0, len(envelope.Locales))
-	for _, locale := range envelope.Locales {
-		inputs = append(inputs, cms.LocaleInput{
-			Code: locale.Code, Name: locale.Name, Enabled: locale.Enabled, IsDefault: locale.IsDefault, FallbackLocale: locale.FallbackLocale,
-		})
-	}
-	return inputs, nil
-}
-
 func loadCMSVariantInput(path string) (cms.VariantInput, error) {
 	var envelope cmsVariantEnvelope
 	if err := loadJSONFile(path, &envelope); err != nil {
@@ -1319,18 +1257,13 @@ func cmsExportContent(ctx context.Context) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	locales, err := pageService.Locales(ctx)
-	if err != nil {
-		return nil, err
-	}
 	var variants []models.CMSPageVariant
 	if err := db.Order("id ASC").Find(&variants).Error; err != nil {
 		return nil, err
 	}
 	return map[string]any{
-		"schema_version": 1,
+		"schema_version": 2,
 		"exported_at":    time.Now().UTC(),
-		"locales":        locales,
 		"pages":          cmsExportPages(pages),
 		"navigation":     cmsExportNavigationMenus(navigation),
 		"global_regions": cmsExportGlobalRegions(global),
@@ -1726,24 +1659,6 @@ func cmsDeleteRedirect(ctx context.Context, id uint) error {
 	db := getDB()
 	defer closeDB(db)
 	return cms.NewRedirectService(db).Delete(ctx, id)
-}
-
-func cmsListLocales(ctx context.Context) ([]models.CMSLocale, error) {
-	if err := requireLocalMode("CMS CLI controls"); err != nil {
-		return nil, err
-	}
-	db := getDB()
-	defer closeDB(db)
-	return cms.NewPageService(db).Locales(ctx)
-}
-
-func cmsSetLocales(ctx context.Context, inputs []cms.LocaleInput) ([]models.CMSLocale, error) {
-	if err := requireLocalMode("CMS CLI controls"); err != nil {
-		return nil, err
-	}
-	db := getDB()
-	defer closeDB(db)
-	return cms.NewPageService(db).UpdateLocales(ctx, inputs, "cli")
 }
 
 func cmsGetGovernance(ctx context.Context) (map[string]any, error) {

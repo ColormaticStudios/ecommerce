@@ -24,6 +24,7 @@ Frontend-specific docs are in:
 - Product catalog and admin product management
 - Cart, guest checkout, and order workflows
 - CMS content management with draft/preview publishing
+- Platform-wide localization with deterministic locale negotiation, account preferences, source catalogs, and release-backed bundles
 - Media upload/processing pipeline
 - Runtime-extensible checkout providers (payment, shipping, tax)
 - Runtime-loadable provider executables for payment, shipping, and tax services

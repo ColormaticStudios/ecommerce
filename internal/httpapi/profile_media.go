@@ -27,6 +27,14 @@ func (e *CmsMediaEndpoints) SetProfilePhoto(ctx context.Context, request apicont
 	}
 	object, err := e.media.WaitUntilReady(ctx, request.Body.MediaId, 0)
 	if err != nil {
+		switch {
+		case errors.Is(err, media.ErrMediaNotFound):
+			return nil, problemError(http.StatusBadRequest, "invalid_media", "The selected media does not exist.", err)
+		case errors.Is(err, media.ErrMediaStillProcessing):
+			return nil, problemError(http.StatusConflict, "media_processing", "Media is still processing.", err)
+		case errors.Is(err, media.ErrMediaProcessingFailed):
+			return nil, problemError(http.StatusConflict, "media_processing_failed", "Media processing failed.", err)
+		}
 		return nil, err
 	}
 	if !strings.HasPrefix(object.MimeType, "image/") {

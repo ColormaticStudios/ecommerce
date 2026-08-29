@@ -126,12 +126,15 @@ func (s *AccountEndpoints) principalUser(ctx context.Context) (models.User, erro
 }
 
 func problemError(status int, code, detail string, cause error) error {
-	return ErrorProblem(Problem{Status: status, Code: code, Detail: detail}, cause)
+	return ErrorProblem(Problem{Status: status, Code: code, Detail: detail, MessageKey: "errors." + code}, cause)
 }
 
 func (s *AccountEndpoints) contractProblem(ctx context.Context, status int, err error) apicontract.Problem {
 	problem := s.renderer.FromError(ctx, status, err)
-	contract := apicontract.Problem{Type: problem.Type, Title: problem.Title, Status: int32(problem.Status), Detail: problem.Detail, Code: problem.Code, CorrelationId: problem.CorrelationID}
+	contract := apicontract.Problem{Type: problem.Type, Title: problem.Title, Status: int32(problem.Status), Detail: problem.Detail, ErrorCode: problem.Code, CorrelationId: problem.CorrelationID}
+	if problem.MessageKey != "" {
+		contract.MessageKey = &problem.MessageKey
+	}
 	if problem.Instance != "" {
 		contract.Instance = &problem.Instance
 	}
@@ -164,7 +167,7 @@ func modelUser(user models.User) apicontract.User {
 		value := user.DeletedAt.Time
 		deletedAt = &value
 	}
-	return apicontract.User{Id: int(user.ID), Subject: user.Subject, Username: user.Username, Email: user.Email, Name: &name, ProfilePhotoUrl: &photo, Role: apicontract.UserRole(user.Role), Currency: user.Currency, CreatedAt: user.CreatedAt, UpdatedAt: user.UpdatedAt, DeletedAt: deletedAt}
+	return apicontract.User{Id: int(user.ID), Subject: user.Subject, Username: user.Username, Email: user.Email, Name: &name, ProfilePhotoUrl: &photo, Role: apicontract.UserRole(user.Role), Currency: user.Currency, Locale: user.Locale, CreatedAt: user.CreatedAt, UpdatedAt: user.UpdatedAt, DeletedAt: deletedAt}
 }
 
 func modelAddress(address models.SavedAddress) apicontract.SavedAddress {

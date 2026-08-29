@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"ecommerce/internal/media"
+	"ecommerce/internal/requestctx"
+	localizationservice "ecommerce/internal/services/localization"
 	"ecommerce/models"
 
 	"gorm.io/gorm"
@@ -23,17 +25,8 @@ var (
 	ErrInvalidTransition = errors.New("invalid CMS workflow transition")
 	ErrApprovalRequired  = errors.New("CMS variant must be approved before publishing")
 	ErrPermissionDenied  = errors.New("insufficient CMS permission")
-	localeCodePattern    = regexp.MustCompile(`^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$`)
 	marketCodePattern    = regexp.MustCompile(`^[A-Z]{2,3}$`)
 )
-
-type LocaleInput struct {
-	Code           string
-	Name           string
-	Enabled        bool
-	IsDefault      bool
-	FallbackLocale string
-}
 
 type VariantInput struct {
 	Locale        string
@@ -52,102 +45,6 @@ type ResolvedLocalization struct {
 	Market          string
 	UsedFallback    bool
 	Alternates      []models.CMSPageVariant
-}
-
-func (s *Service) Locales(ctx context.Context) ([]models.CMSLocale, error) {
-	db := s.db.WithContext(ctx)
-	var locales []models.CMSLocale
-	err := db.Order("is_default DESC, code ASC").Find(&locales).Error
-	return locales, err
-}
-
-func (s *Service) UpdateLocales(ctx context.Context, inputs []LocaleInput, actor string) ([]models.CMSLocale, error) {
-	db := s.db.WithContext(ctx)
-	if err := validateLocales(inputs); err != nil {
-		return nil, err
-	}
-	err := db.Transaction(func(tx *gorm.DB) error {
-		codes := make([]string, 0, len(inputs))
-		for _, input := range inputs {
-			code := normalizeLocale(input.Code)
-			codes = append(codes, code)
-			var locale models.CMSLocale
-			err := tx.Unscoped().Where("code = ?", code).First(&locale).Error
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				locale = models.CMSLocale{Code: code}
-			} else if err != nil {
-				return err
-			}
-			locale.DeletedAt = gorm.DeletedAt{}
-			locale.Name = strings.TrimSpace(input.Name)
-			locale.Enabled = input.Enabled
-			locale.IsDefault = input.IsDefault
-			locale.FallbackLocale = normalizeLocale(input.FallbackLocale)
-			if locale.ID == 0 {
-				if err := tx.Select("*").Create(&locale).Error; err != nil {
-					return err
-				}
-			} else if err := tx.Save(&locale).Error; err != nil {
-				return err
-			}
-		}
-		if err := tx.Model(&models.CMSLocale{}).Where("code NOT IN ?", codes).Update("enabled", false).Error; err != nil {
-			return err
-		}
-		return createAuditEvent(tx, 0, nil, nil, "locales.updated", actor, fmt.Sprintf("configured %d locales", len(inputs)))
-	})
-	if err != nil {
-		return nil, err
-	}
-	return s.Locales(ctx)
-}
-
-func validateLocales(inputs []LocaleInput) error {
-	if len(inputs) == 0 {
-		return fmt.Errorf("%w: at least one locale is required", ErrInvalidLocale)
-	}
-	known := make(map[string]LocaleInput, len(inputs))
-	defaults := 0
-	for _, input := range inputs {
-		code := normalizeLocale(input.Code)
-		if !localeCodePattern.MatchString(code) || strings.TrimSpace(input.Name) == "" {
-			return fmt.Errorf("%w: locale code and name are required", ErrInvalidLocale)
-		}
-		if _, exists := known[code]; exists {
-			return fmt.Errorf("%w: duplicate locale %s", ErrInvalidLocale, code)
-		}
-		known[code] = input
-		if input.IsDefault {
-			defaults++
-			if !input.Enabled {
-				return fmt.Errorf("%w: default locale must be enabled", ErrInvalidLocale)
-			}
-		}
-	}
-	if defaults != 1 {
-		return fmt.Errorf("%w: exactly one default locale is required", ErrInvalidLocale)
-	}
-	for code, input := range known {
-		fallback := normalizeLocale(input.FallbackLocale)
-		if fallback == "" {
-			continue
-		}
-		if fallback == code {
-			return fmt.Errorf("%w: locale cannot fall back to itself", ErrInvalidLocale)
-		}
-		if _, exists := known[fallback]; !exists {
-			return fmt.Errorf("%w: fallback locale %s is not configured", ErrInvalidLocale, fallback)
-		}
-		seen := map[string]bool{code: true}
-		for fallback != "" {
-			if seen[fallback] {
-				return fmt.Errorf("%w: fallback cycle includes %s", ErrInvalidLocale, fallback)
-			}
-			seen[fallback] = true
-			fallback = normalizeLocale(known[fallback].FallbackLocale)
-		}
-	}
-	return nil
 }
 
 func (s *Service) ListVariants(ctx context.Context, pageID uint) ([]models.CMSPageVariant, error) {
@@ -171,8 +68,11 @@ func (s *Service) saveVariant(db *gorm.DB, pageID, variantID uint, input Variant
 	input.Path = strings.TrimSpace(input.Path)
 	input.Title = strings.TrimSpace(input.Title)
 	input.Slug = strings.TrimSpace(input.Slug)
-	if input.Locale == "" || !localeCodePattern.MatchString(input.Locale) || input.Title == "" {
+	if input.Locale == "" || input.Title == "" {
 		return nil, fmt.Errorf("%w: locale and title are required", ErrInvalidPage)
+	}
+	if _, err := s.localization.RequireEnabledLocale(db.Statement.Context, input.Locale); err != nil {
+		return nil, fmt.Errorf("%w: locale must exist and be enabled: %v", ErrInvalidLocale, err)
 	}
 	if input.Market != "" && !marketCodePattern.MatchString(input.Market) {
 		return nil, fmt.Errorf("%w: market must be a 2 or 3 letter region code", ErrInvalidPage)
@@ -380,28 +280,25 @@ func (s *Service) AuditEvents(ctx context.Context, entryID uint, limit int) ([]m
 
 func (s *Service) ResolveLocalized(ctx context.Context, record *PageRecord, requestedLocale, market string, includeDraft bool) (*ResolvedLocalization, error) {
 	db := s.db.WithContext(ctx)
-	locales, err := s.Locales(ctx)
-	if err != nil {
-		return nil, err
-	}
-	requestedLocale = normalizeLocale(requestedLocale)
 	market = strings.ToUpper(strings.TrimSpace(market))
-	defaultLocale := "en-US"
-	byCode := make(map[string]models.CMSLocale, len(locales))
-	for _, locale := range locales {
-		byCode[locale.Code] = locale
-		if locale.IsDefault {
-			defaultLocale = locale.Code
+	var resolution localizationservice.Resolution
+	if negotiated, ok := requestctx.LocaleResolutionFrom(ctx); ok && strings.TrimSpace(requestedLocale) == "" {
+		resolution = localizationservice.Resolution{
+			RequestedLocale: negotiated.RequestedLocale, ResolvedLocale: negotiated.ResolvedLocale,
+			Source: negotiated.Source, FallbackChain: negotiated.FallbackChain, UsedFallback: negotiated.UsedFallback,
+		}
+		if market == "" {
+			market = negotiated.Market
+		}
+	} else {
+		var err error
+		resolution, err = s.localization.ResolveLocale(ctx, localizationservice.ResolutionInput{ExplicitLocale: requestedLocale})
+		if err != nil {
+			return nil, err
 		}
 	}
-	if requestedLocale == "" {
-		requestedLocale = defaultLocale
-	}
-	requestedForMetadata := requestedLocale
-	if configured, exists := byCode[requestedLocale]; !exists || !configured.Enabled {
-		requestedLocale = defaultLocale
-	}
-	chain := localeFallbackChain(requestedLocale, defaultLocale, byCode)
+	requestedForMetadata := resolution.RequestedLocale
+	chain := resolution.FallbackChain
 	var variants []models.CMSPageVariant
 	if err := db.Where("page_id = ?", record.Page.ID).Order("id ASC").Find(&variants).Error; err != nil {
 		return nil, err
@@ -427,7 +324,7 @@ func (s *Service) ResolveLocalized(ctx context.Context, record *PageRecord, requ
 			break
 		}
 	}
-	resolved := defaultLocale
+	resolved := resolution.ResolvedLocale
 	if selected != nil {
 		resolved = selected.Locale
 		record.Page.Path = selected.Path
@@ -470,7 +367,7 @@ func (s *Service) ResolveLocalized(ctx context.Context, record *PageRecord, requ
 		}
 		return alternates[i].Locale < alternates[j].Locale
 	})
-	return &ResolvedLocalization{RequestedLocale: requestedForMetadata, ResolvedLocale: resolved, Market: market, UsedFallback: resolved != requestedForMetadata || selected == nil, Alternates: alternates}, nil
+	return &ResolvedLocalization{RequestedLocale: requestedForMetadata, ResolvedLocale: resolved, Market: market, UsedFallback: resolution.UsedFallback || resolved != resolution.ResolvedLocale || selected == nil, Alternates: alternates}, nil
 }
 
 func (s *Service) ResolveForLocale(ctx context.Context, requestPath, requestedLocale, market string, includeDraft bool) (*PageRecord, *ResolvedLocalization, error) {
@@ -504,44 +401,12 @@ func (s *Service) ResolveForLocale(ctx context.Context, requestPath, requestedLo
 	return record, localization, err
 }
 
-func localeFallbackChain(requested, defaultLocale string, locales map[string]models.CMSLocale) []string {
-	chain := make([]string, 0, 4)
-	seen := map[string]bool{}
-	current := requested
-	for current != "" && !seen[current] {
-		seen[current] = true
-		chain = append(chain, current)
-		configured, ok := locales[current]
-		if ok && configured.FallbackLocale != "" {
-			current = configured.FallbackLocale
-			continue
-		}
-		if separator := strings.IndexByte(current, '-'); separator > 0 {
-			current = current[:separator]
-			continue
-		}
-		current = ""
-	}
-	if !seen[defaultLocale] {
-		chain = append(chain, defaultLocale)
-	}
-	return chain
-}
-
 func normalizeLocale(value string) string {
-	parts := strings.Split(strings.TrimSpace(value), "-")
-	if len(parts) == 0 || parts[0] == "" {
+	normalized, err := localizationservice.NormalizeLocale(value)
+	if err != nil {
 		return ""
 	}
-	parts[0] = strings.ToLower(parts[0])
-	for index := 1; index < len(parts); index++ {
-		if len(parts[index]) == 2 || len(parts[index]) == 3 && index == len(parts)-1 {
-			parts[index] = strings.ToUpper(parts[index])
-		} else {
-			parts[index] = strings.ToLower(parts[index])
-		}
-	}
-	return strings.Join(parts, "-")
+	return normalized
 }
 
 func createAuditEvent(tx *gorm.DB, entryID uint, versionID, variantID *uint, action, actor, detail string) error {

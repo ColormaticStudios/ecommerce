@@ -41,7 +41,7 @@ func TestCmsMediaEndpointsCoversExactStrictFamily(t *testing.T) {
 		"ListAdminCmsEntryVariants", "CreateAdminCmsEntryVariant", "DeleteAdminCmsEntryVariant", "UpdateAdminCmsEntryVariant", "TransitionAdminCmsEntryVariant",
 		"GetAdminCmsEntryWorkflow", "TransitionAdminCmsEntryWorkflow", "ExportAdminCmsContent", "RestoreAdminCmsContent",
 		"ListAdminCmsGlobalRegions", "CreateAdminCmsGlobalRegion", "DeleteAdminCmsGlobalRegion", "GetAdminCmsGlobalRegion", "UpdateAdminCmsGlobalRegion", "DiscardAdminCmsGlobalRegionDraft", "PublishAdminCmsGlobalRegion", "UnpublishAdminCmsGlobalRegion",
-		"GetAdminCmsGovernance", "UpdateAdminCmsGovernance", "GetAdminCmsLocales", "UpdateAdminCmsLocales",
+		"GetAdminCmsGovernance", "UpdateAdminCmsGovernance",
 		"ListAdminCmsNavigation", "CreateAdminCmsNavigation", "DeleteAdminCmsNavigation", "GetAdminCmsNavigation", "UpdateAdminCmsNavigation", "DiscardAdminCmsNavigationDraft", "PublishAdminCmsNavigation", "UnpublishAdminCmsNavigation",
 		"GetAdminCmsOperations", "RetryAdminCmsInvalidation",
 		"ListAdminCmsPages", "CreateAdminCmsPage", "DeleteAdminCmsPage", "GetAdminCmsPage", "UpdateAdminCmsPage", "GetAdminCmsPageDelivery", "UpdateAdminCmsPageDelivery", "DiscardAdminCmsPageDraft", "PublishAdminCmsPage", "RollbackAdminCmsPage", "GetAdminCmsPageSeo", "UpdateAdminCmsPageSeo", "UnpublishAdminCmsPage",

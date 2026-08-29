@@ -16,8 +16,8 @@ type SavedAddressPayload = components["schemas"]["SavedAddress"];
 type SavedPaymentMethodPayload = components["schemas"]["SavedPaymentMethod"];
 
 function isGuestCheckoutDisabled(body: unknown): boolean {
-	return typeof body === "object" && body !== null && "code" in body
-		? (body as { code?: unknown }).code === "guest_checkout_disabled"
+	return typeof body === "object" && body !== null && "error_code" in body
+		? (body as { error_code?: unknown }).error_code === "guest_checkout_disabled"
 		: false;
 }
 

@@ -21,12 +21,9 @@ func TestRestoreExportReplacesCMSContentAtomically(t *testing.T) {
 	published, err := service.Publish(context.Background(), original.Page.ID, PublishInput{})
 	require.NoError(t, err)
 
-	locales, err := service.Locales(context.Background())
-	require.NoError(t, err)
 	raw, err := json.Marshal(map[string]any{
-		"schema_version": 1,
+		"schema_version": 2,
 		"exported_at":    "2026-06-21T00:00:00Z",
-		"locales":        locales,
 		"pages": []any{map[string]any{
 			"page": published.Page, "entry": published.Entry,
 			"current_version": exportVersionForTest(published.CurrentVersion), "published_version": exportVersionForTest(published.PublishedVersion),
@@ -70,7 +67,7 @@ func TestRestoreExportRejectsInvalidBundleWithoutChangingContent(t *testing.T) {
 	page, err := service.CreateDraft(context.Background(), PageDraftInput{Path: "/keep", Title: "Keep", Payload: PagePayload{}})
 	require.NoError(t, err)
 
-	err = service.RestoreExport(context.Background(), []byte(`{"schema_version":99,"locales":[]}`), "publisher-1")
+	err = service.RestoreExport(context.Background(), []byte(`{"schema_version":99}`), "publisher-1")
 	require.ErrorIs(t, err, ErrInvalidExport)
 	_, err = service.Get(context.Background(), page.Page.ID)
 	require.NoError(t, err)

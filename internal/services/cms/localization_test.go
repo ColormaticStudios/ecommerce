@@ -6,20 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	localizationservice "ecommerce/internal/services/localization"
 	"ecommerce/models"
 
 	"github.com/stretchr/testify/require"
 )
-
-func TestLocaleConfigurationRejectsFallbackCycles(t *testing.T) {
-	service := NewPageService(newServiceTestDB(t))
-
-	_, err := service.UpdateLocales(context.Background(), []LocaleInput{
-		{Code: "en-US", Name: "English", Enabled: true, IsDefault: true, FallbackLocale: "fr-FR"},
-		{Code: "fr-FR", Name: "French", Enabled: true, FallbackLocale: "en-US"},
-	}, "admin-1")
-	require.ErrorIs(t, err, ErrInvalidLocale)
-}
 
 func TestInvalidationWebhookDeliveryMarksOutboxEventSent(t *testing.T) {
 	db := newServiceTestDB(t)
@@ -69,12 +60,13 @@ func TestInvalidationWebhookResolverPrefersStoredGovernanceURL(t *testing.T) {
 }
 
 func TestPageVariantWorkflowAndLocaleMarketFallback(t *testing.T) {
-	service := NewPageService(newServiceTestDB(t))
-	_, err := service.UpdateLocales(context.Background(), []LocaleInput{
-		{Code: "en-US", Name: "English", Enabled: true, IsDefault: true},
-		{Code: "fr", Name: "French", Enabled: true, FallbackLocale: "en-US"},
-		{Code: "fr-CA", Name: "French (Canada)", Enabled: true, FallbackLocale: "fr"},
-	}, "admin-1")
+	db := newServiceTestDB(t)
+	service := NewPageService(db)
+	_, err := localizationservice.NewService(db).ReplaceLocales(context.Background(), []localizationservice.LocaleInput{
+		{Code: "en-US", Name: "English", IsEnabled: true, IsDefault: true},
+		{Code: "fr", Name: "French", IsEnabled: true, FallbackLocale: "en-US"},
+		{Code: "fr-CA", Name: "French (Canada)", IsEnabled: true, FallbackLocale: "fr"},
+	})
 	require.NoError(t, err)
 
 	page, err := service.CreateDraft(context.Background(), PageDraftInput{

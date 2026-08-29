@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"ecommerce/internal/apicontract"
 	"ecommerce/models"
 
 	"github.com/stretchr/testify/require"
@@ -12,11 +13,38 @@ import (
 	"gorm.io/gorm"
 )
 
+func TestBrandMutationsSynchronizeDefaultLocalization(t *testing.T) {
+	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	require.NoError(t, err)
+	require.NoError(t, db.AutoMigrate(&models.Locale{}, &models.LocalizedEntityValue{}, &models.Brand{}, &models.MediaReference{}))
+	require.NoError(t, db.Select("*").Create(&models.Locale{Code: "en-US", Name: "English", IsEnabled: true, IsDefault: true}).Error)
+
+	service := NewService(db, nil)
+	description := "Original description"
+	slug := "original"
+	active := true
+	brand, err := service.CreateBrand(context.Background(), apicontract.BrandInput{Name: "Original", Slug: &slug, Description: &description, IsActive: &active})
+	require.NoError(t, err)
+	description = "Updated description"
+	slug = "updated"
+	_, err = service.UpdateBrand(context.Background(), brand.ID, apicontract.BrandInput{Name: "Updated", Slug: &slug, Description: &description, IsActive: &active})
+	require.NoError(t, err)
+
+	var rows []models.LocalizedEntityValue
+	require.NoError(t, db.Where("entity_type = ? AND entity_id = ?", "brand", brand.ID).Order("field").Find(&rows).Error)
+	require.Len(t, rows, 2)
+	require.Equal(t, "Updated description", rows[0].Value)
+	require.Equal(t, "Updated", rows[1].Value)
+}
+
 func TestPublishProductUpdatesExistingVariantWithSameSKU(t *testing.T) {
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	require.NoError(t, err)
 	require.NoError(t, db.AutoMigrate(
+		&models.Locale{},
+		&models.LocalizedEntityValue{},
 		&models.Product{},
 		&models.ProductVariant{},
 		&models.ProductDraft{},
@@ -28,6 +56,7 @@ func TestPublishProductUpdatesExistingVariantWithSameSKU(t *testing.T) {
 		&models.ProductOptionDraft{},
 		&models.MediaReference{},
 	))
+	require.NoError(t, db.Select("*").Create(&models.Locale{Code: "en-US", Name: "English", IsEnabled: true, IsDefault: true}).Error)
 	require.NoError(t, db.Exec("CREATE UNIQUE INDEX idx_product_variants_sku_unique ON product_variants (sku)").Error)
 
 	product := models.Product{SKU: "CLPILLO-001", Name: "Colormatic Logo Pillow", Price: models.MoneyFromFloat(15), Stock: 100, IsPublished: true}
@@ -49,4 +78,10 @@ func TestPublishProductUpdatesExistingVariantWithSameSKU(t *testing.T) {
 	require.Equal(t, 20.0, published.Variants[0].Price.Float64())
 	require.NotNil(t, published.DefaultVariantID)
 	require.Equal(t, variant.ID, *published.DefaultVariantID)
+	var productLocalization models.LocalizedEntityValue
+	require.NoError(t, db.Where("entity_type = ? AND entity_id = ? AND field = ?", "product", product.ID, "name").First(&productLocalization).Error)
+	require.Equal(t, product.Name, productLocalization.Value)
+	var variantLocalization models.LocalizedEntityValue
+	require.NoError(t, db.Where("entity_type = ? AND entity_id = ? AND field = ?", "product_variant", variant.ID, "title").First(&variantLocalization).Error)
+	require.Equal(t, "Updated Pillow", variantLocalization.Value)
 }

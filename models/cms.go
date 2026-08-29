@@ -200,15 +200,6 @@ type CMSRedirectRule struct {
 	IsEnabled     bool   `json:"is_enabled" gorm:"not null;default:true;index"`
 }
 
-type CMSLocale struct {
-	BaseModel
-	Code           string `json:"code" gorm:"size:35;not null;uniqueIndex"`
-	Name           string `json:"name" gorm:"size:128;not null"`
-	Enabled        bool   `json:"enabled" gorm:"not null;default:true;index"`
-	IsDefault      bool   `json:"is_default" gorm:"not null;default:false;index"`
-	FallbackLocale string `json:"fallback_locale" gorm:"size:35;not null;default:''"`
-}
-
 type CMSVariantStatus string
 
 const (

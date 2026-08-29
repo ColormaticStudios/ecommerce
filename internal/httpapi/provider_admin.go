@@ -238,7 +238,11 @@ func (e *CheckoutProviderEndpoints) GetAdminProviderReconciliationRun(ctx contex
 
 func providerAdminProblem(ctx context.Context, renderer Renderer, status int, code, detail string, cause error) apicontract.Problem {
 	problem := renderer.FromError(ctx, status, ErrorProblem(Problem{Status: status, Code: code, Detail: detail}, cause))
-	return apicontract.Problem{Type: problem.Type, Title: problem.Title, Status: int32(problem.Status), Detail: problem.Detail, Code: problem.Code, CorrelationId: problem.CorrelationID}
+	contract := apicontract.Problem{Type: problem.Type, Title: problem.Title, Status: int32(problem.Status), Detail: problem.Detail, ErrorCode: problem.Code, CorrelationId: problem.CorrelationID}
+	if problem.MessageKey != "" {
+		contract.MessageKey = &problem.MessageKey
+	}
+	return contract
 }
 
 func pagination(page, limit int, total int64) apicontract.Pagination {
@@ -279,7 +283,7 @@ func providerOperationContract(v models.ProviderOperation, compensationID *uint,
 				Title:         "Provider Operation Failed",
 				Status:        http.StatusBadGateway,
 				Detail:        a.ErrorMessage,
-				Code:          "provider_operation_failed",
+				ErrorCode:     "provider_operation_failed",
 				CorrelationId: v.CorrelationID,
 			}
 		}

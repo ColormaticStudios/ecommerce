@@ -15,4 +15,5 @@ type User struct {
 	// Preferences & Roles
 	Role     string `json:"role" gorm:"default:customer"` // "admin" or "customer"
 	Currency string `json:"currency" gorm:"size:3;default:USD"`
+	Locale   string `json:"locale" gorm:"size:35;not null;default:en-US;index"`
 }

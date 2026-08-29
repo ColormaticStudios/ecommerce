@@ -11,6 +11,7 @@ export class User implements UserModel {
 	name: string | null;
 	role: "admin" | "customer";
 	currency: string;
+	locale: string;
 	profile_photo_url: string | null;
 	created_at: Date;
 	updated_at: Date;
@@ -25,6 +26,7 @@ export class User implements UserModel {
 		name: string | null,
 		role: "admin" | "customer",
 		currency: string,
+		locale: string,
 		profile_photo_url: string | null,
 		created_at: Date,
 		updated_at: Date,
@@ -38,6 +40,7 @@ export class User implements UserModel {
 		this.name = name;
 		this.role = role;
 		this.currency = currency;
+		this.locale = locale;
 		this.profile_photo_url = profile_photo_url;
 		this.created_at = created_at;
 		this.updated_at = updated_at;
@@ -77,6 +80,7 @@ export async function getProfile(api: API): Promise<User | null> {
 			userData.name,
 			userData.role,
 			userData.currency,
+			userData.locale,
 			userData.profile_photo_url,
 			userData.created_at,
 			userData.updated_at,

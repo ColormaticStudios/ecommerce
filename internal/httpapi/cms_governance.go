@@ -330,15 +330,11 @@ func (e *CmsMediaEndpoints) exportCMS(ctx context.Context) (apicontract.CmsConte
 	if err != nil {
 		return apicontract.CmsContentExport{}, err
 	}
-	locales, err := e.pages.Locales(ctx)
-	if err != nil {
-		return apicontract.CmsContentExport{}, err
-	}
 	var variants []models.CMSPageVariant
 	if err := e.db.WithContext(ctx).Order("id ASC").Find(&variants).Error; err != nil {
 		return apicontract.CmsContentExport{}, err
 	}
-	result := apicontract.CmsContentExport{SchemaVersion: 1, ExportedAt: time.Now().UTC(), Pages: []apicontract.CmsPageResponse{}, Navigation: []apicontract.CmsNavigationResponse{}, GlobalRegions: []apicontract.CmsGlobalRegionResponse{}, Locales: []apicontract.CmsLocale{}, Variants: []apicontract.CmsPageVariant{}}
+	result := apicontract.CmsContentExport{SchemaVersion: 2, ExportedAt: time.Now().UTC(), Pages: []apicontract.CmsPageResponse{}, Navigation: []apicontract.CmsNavigationResponse{}, GlobalRegions: []apicontract.CmsGlobalRegionResponse{}, Variants: []apicontract.CmsPageVariant{}}
 	for i := range pages {
 		value, err := contractPageRecord(&pages[i], false)
 		if err != nil {
@@ -359,9 +355,6 @@ func (e *CmsMediaEndpoints) exportCMS(ctx context.Context) (apicontract.CmsConte
 			return result, err
 		}
 		result.GlobalRegions = append(result.GlobalRegions, value)
-	}
-	for _, locale := range locales {
-		result.Locales = append(result.Locales, contractLocale(locale))
 	}
 	for _, variant := range variants {
 		value, err := contractPageVariant(variant)

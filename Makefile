@@ -1,4 +1,4 @@
-.PHONY: all api cli run test test-services test-handlers test-integration check clean release openapi-gen openapi-check openapi-check-ci openapi-docs migrate migrate-plan migrate-check migrate-status migrate-lint migrate-guard migrate-snapshot migrate-drift-check migrate-ci-gate migrate-forward-compat test-migrations test-e2e-postgres test-e2e-sqlite
+.PHONY: all api cli run test test-services test-handlers test-integration check localization-check localization-performance clean release openapi-gen openapi-check openapi-check-ci openapi-docs migrate migrate-plan migrate-check migrate-status migrate-lint migrate-guard migrate-snapshot migrate-drift-check migrate-ci-gate migrate-forward-compat test-migrations test-e2e-postgres test-e2e-sqlite
 
 # Build the API server and the CLI tool
 all: api cli
@@ -25,14 +25,22 @@ test-services:
 	go test ./internal/services/...
 
 test-handlers:
-	go test ./handlers
+	go test ./internal/httpapi
 
 test-integration:
-	go test ./handlers -run Integration
+	go test ./internal/httpapi -run Integration
 
-check: openapi-check
+check: openapi-check localization-check localization-performance
 	go test ./internal/services/...
-	go test ./handlers
+	go test ./internal/httpapi
+
+localization-check:
+	@cd frontend && bun run localization:check
+	@cd frontend && bun run localization:quality
+
+localization-performance:
+	@go test ./internal/services/localization ./internal/httpapi -run 'PerformanceBudget' -count=1
+	@cd frontend && bun run localization:performance
 
 # Apply database migrations
 migrate:

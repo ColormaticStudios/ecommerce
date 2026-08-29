@@ -144,40 +144,6 @@ func (e *CmsMediaEndpoints) UpdateAdminCmsPageDelivery(ctx context.Context, requ
 	return apicontract.UpdateAdminCmsPageDelivery200JSONResponse(value), err
 }
 
-func contractLocale(locale models.CMSLocale) apicontract.CmsLocale {
-	return apicontract.CmsLocale{Code: locale.Code, Name: locale.Name, Enabled: locale.Enabled, IsDefault: locale.IsDefault, FallbackLocale: optionalCMSString(locale.FallbackLocale)}
-}
-func (e *CmsMediaEndpoints) GetAdminCmsLocales(ctx context.Context, _ apicontract.GetAdminCmsLocalesRequestObject) (apicontract.GetAdminCmsLocalesResponseObject, error) {
-	locales, err := e.pages.Locales(ctx)
-	if err != nil {
-		return nil, err
-	}
-	data := make([]apicontract.CmsLocale, 0, len(locales))
-	for _, locale := range locales {
-		data = append(data, contractLocale(locale))
-	}
-	return apicontract.GetAdminCmsLocales200JSONResponse{Locales: data}, nil
-}
-func (e *CmsMediaEndpoints) UpdateAdminCmsLocales(ctx context.Context, request apicontract.UpdateAdminCmsLocalesRequestObject) (apicontract.UpdateAdminCmsLocalesResponseObject, error) {
-	if request.Body == nil {
-		return nil, errors.New("CMS locale body is required")
-	}
-	inputs := make([]cms.LocaleInput, 0, len(request.Body.Locales))
-	for _, locale := range request.Body.Locales {
-		inputs = append(inputs, cms.LocaleInput{Code: locale.Code, Name: locale.Name, Enabled: locale.Enabled, IsDefault: locale.IsDefault, FallbackLocale: stringPointerValue(locale.FallbackLocale)})
-	}
-	actor, _ := cmsActor(ctx)
-	locales, err := e.pages.UpdateLocales(ctx, inputs, actor)
-	if err != nil {
-		return nil, err
-	}
-	data := make([]apicontract.CmsLocale, 0, len(locales))
-	for _, locale := range locales {
-		data = append(data, contractLocale(locale))
-	}
-	return apicontract.UpdateAdminCmsLocales200JSONResponse{Locales: data}, nil
-}
-
 func contractRedirect(rule models.CMSRedirectRule) apicontract.CmsRedirectRule {
 	return apicontract.CmsRedirectRule{Id: int(rule.ID), SourcePattern: rule.SourcePattern, MatchType: apicontract.CmsRedirectRuleMatchType(rule.MatchType), TargetUrl: rule.TargetURL, RedirectType: apicontract.CmsRedirectRuleRedirectType(rule.RedirectType), Priority: rule.Priority, IsEnabled: rule.IsEnabled, CreatedAt: rule.CreatedAt, UpdatedAt: rule.UpdatedAt}
 }

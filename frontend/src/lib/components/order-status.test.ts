@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatOrderStatusLabel, getOrderStatusTone } from "./order-status";
+import { createFallbackLocalization } from "$lib/localization/runtime";
+import {
+	formatOrderStatusLabel,
+	getOrderStatusTone,
+	localizeOrderStatus,
+	localizeShipmentStatus,
+} from "./order-status";
 
 describe("getOrderStatusTone", () => {
 	it("matches the admin order badge tones", () => {
@@ -17,5 +23,13 @@ describe("formatOrderStatusLabel", () => {
 	it("formats order statuses for customer-facing copy", () => {
 		expect(formatOrderStatusLabel("PENDING")).toBe("Pending");
 		expect(formatOrderStatusLabel("REFUNDED")).toBe("Refunded");
+	});
+});
+
+describe("localized fulfillment statuses", () => {
+	it("returns readable source copy when a translation is unavailable", () => {
+		const localization = createFallbackLocalization();
+		expect(localizeOrderStatus(localization, "SHIPPED")).toBe("Shipped");
+		expect(localizeShipmentStatus(localization, "LABEL_PURCHASED")).toBe("Label purchased");
 	});
 });

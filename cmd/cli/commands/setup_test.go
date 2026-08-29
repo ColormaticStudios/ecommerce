@@ -129,7 +129,7 @@ func TestRunLocalAccountLoginUsesPasswordPrompt(t *testing.T) {
 			User: apicontract.User{
 				Email:    expectedEmail,
 				Username: "admin",
-				Role:     apicontract.Admin,
+				Role:     apicontract.UserRoleAdmin,
 			},
 		}
 		if err := json.NewEncoder(w).Encode(resp); err != nil {

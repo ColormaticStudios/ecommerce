@@ -21,16 +21,18 @@ const (
 	OwnerTypeCMSEntry          = "cms_entry"
 	OwnerTypeCMSPageVariant    = "cms_page_variant"
 	OwnerTypeCMSContentVariant = "cms_content_variant"
+	OwnerTypeTranslationUsage  = "translation_key_usage"
 
-	RoleProductImage      = "product_image"
-	RoleProductDraftImage = "product_draft_image"
-	RoleProfilePhoto      = "profile_photo"
-	RoleBrandLogo         = "brand_logo"
-	RoleCMSContent        = "cms_content"
-	RoleCMSDraftContent   = "cms_draft_content"
-	RoleCMSSEO            = "cms_seo"
-	DefaultMediaRoot      = "media"
-	DefaultPublicPath     = "/media"
+	RoleProductImage          = "product_image"
+	RoleProductDraftImage     = "product_draft_image"
+	RoleProfilePhoto          = "profile_photo"
+	RoleBrandLogo             = "brand_logo"
+	RoleCMSContent            = "cms_content"
+	RoleCMSDraftContent       = "cms_draft_content"
+	RoleCMSSEO                = "cms_seo"
+	RoleTranslationScreenshot = "translation_screenshot"
+	DefaultMediaRoot          = "media"
+	DefaultPublicPath         = "/media"
 )
 
 type Service struct {

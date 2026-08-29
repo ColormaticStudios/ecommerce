@@ -221,11 +221,11 @@ const (
 
 // Defines values for CmsPageVariantStatus.
 const (
-	Approved         CmsPageVariantStatus = "approved"
-	ChangesRequested CmsPageVariantStatus = "changes_requested"
-	Draft            CmsPageVariantStatus = "draft"
-	InReview         CmsPageVariantStatus = "in_review"
-	Published        CmsPageVariantStatus = "published"
+	CmsPageVariantStatusApproved         CmsPageVariantStatus = "approved"
+	CmsPageVariantStatusChangesRequested CmsPageVariantStatus = "changes_requested"
+	CmsPageVariantStatusDraft            CmsPageVariantStatus = "draft"
+	CmsPageVariantStatusInReview         CmsPageVariantStatus = "in_review"
+	CmsPageVariantStatusPublished        CmsPageVariantStatus = "published"
 )
 
 // Defines values for CmsPreviewBlockStatus.
@@ -314,9 +314,9 @@ const (
 
 // Defines values for CmsRoleAssignmentRole.
 const (
-	Author    CmsRoleAssignmentRole = "author"
-	Editor    CmsRoleAssignmentRole = "editor"
-	Publisher CmsRoleAssignmentRole = "publisher"
+	CmsRoleAssignmentRoleAuthor    CmsRoleAssignmentRole = "author"
+	CmsRoleAssignmentRoleEditor    CmsRoleAssignmentRole = "editor"
+	CmsRoleAssignmentRolePublisher CmsRoleAssignmentRole = "publisher"
 )
 
 // Defines values for CmsSEOInputRobots.
@@ -487,6 +487,66 @@ const (
 	InventoryReservationStatusCONSUMED InventoryReservationStatus = "CONSUMED"
 	InventoryReservationStatusEXPIRED  InventoryReservationStatus = "EXPIRED"
 	InventoryReservationStatusRELEASED InventoryReservationStatus = "RELEASED"
+)
+
+// Defines values for LocalizationAssigneeLocalizationRole.
+const (
+	LocalizationAssigneeLocalizationRoleEditor     LocalizationAssigneeLocalizationRole = "editor"
+	LocalizationAssigneeLocalizationRolePublisher  LocalizationAssigneeLocalizationRole = "publisher"
+	LocalizationAssigneeLocalizationRoleTranslator LocalizationAssigneeLocalizationRole = "translator"
+)
+
+// Defines values for LocalizationMetricType.
+const (
+	LocalizationMetricTypeFallbackHit     LocalizationMetricType = "fallback_hit"
+	LocalizationMetricTypeMissingKey      LocalizationMetricType = "missing_key"
+	LocalizationMetricTypePublishLatency  LocalizationMetricType = "publish_latency"
+	LocalizationMetricTypeRollback        LocalizationMetricType = "rollback"
+	LocalizationMetricTypeRolloutFallback LocalizationMetricType = "rollout_fallback"
+)
+
+// Defines values for LocalizationResolutionSource.
+const (
+	Account  LocalizationResolutionSource = "account"
+	Explicit LocalizationResolutionSource = "explicit"
+	Global   LocalizationResolutionSource = "global"
+	Market   LocalizationResolutionSource = "market"
+)
+
+// Defines values for LocalizationRoleAssignmentRole.
+const (
+	LocalizationRoleAssignmentRoleEditor     LocalizationRoleAssignmentRole = "editor"
+	LocalizationRoleAssignmentRolePublisher  LocalizationRoleAssignmentRole = "publisher"
+	LocalizationRoleAssignmentRoleTranslator LocalizationRoleAssignmentRole = "translator"
+)
+
+// Defines values for LocalizationRoleInputRole.
+const (
+	LocalizationRoleInputRoleEditor     LocalizationRoleInputRole = "editor"
+	LocalizationRoleInputRolePublisher  LocalizationRoleInputRole = "publisher"
+	LocalizationRoleInputRoleTranslator LocalizationRoleInputRole = "translator"
+)
+
+// Defines values for LocalizationRolloutDomain.
+const (
+	LocalizationRolloutDomainAccount        LocalizationRolloutDomain = "account"
+	LocalizationRolloutDomainAdmin          LocalizationRolloutDomain = "admin"
+	LocalizationRolloutDomainCheckout       LocalizationRolloutDomain = "checkout"
+	LocalizationRolloutDomainCommunications LocalizationRolloutDomain = "communications"
+	LocalizationRolloutDomainErrors         LocalizationRolloutDomain = "errors"
+	LocalizationRolloutDomainStorefront     LocalizationRolloutDomain = "storefront"
+)
+
+// Defines values for LocalizedEntityType.
+const (
+	LocalizedEntityTypeBrand              LocalizedEntityType = "brand"
+	LocalizedEntityTypeCategory           LocalizedEntityType = "category"
+	LocalizedEntityTypeProduct            LocalizedEntityType = "product"
+	LocalizedEntityTypeProductOption      LocalizedEntityType = "product_option"
+	LocalizedEntityTypeProductOptionValue LocalizedEntityType = "product_option_value"
+	LocalizedEntityTypeProductVariant     LocalizedEntityType = "product_variant"
+	LocalizedEntityTypeSeoMetadata        LocalizedEntityType = "seo_metadata"
+	LocalizedEntityTypeWebsiteSettings    LocalizedEntityType = "website_settings"
 )
 
 // Defines values for OrderStatus.
@@ -830,6 +890,58 @@ const (
 	TrackingEventStatusLABELPURCHASED TrackingEventStatus = "LABEL_PURCHASED"
 )
 
+// Defines values for TranslationDocumentFormat.
+const (
+	TranslationDocumentFormatCsv   TranslationDocumentFormat = "csv"
+	TranslationDocumentFormatJson  TranslationDocumentFormat = "json"
+	TranslationDocumentFormatXliff TranslationDocumentFormat = "xliff"
+)
+
+// Defines values for TranslationImportEntryStatus.
+const (
+	Conflict  TranslationImportEntryStatus = "conflict"
+	Created   TranslationImportEntryStatus = "created"
+	Invalid   TranslationImportEntryStatus = "invalid"
+	Unchanged TranslationImportEntryStatus = "unchanged"
+)
+
+// Defines values for TranslationKeyInputNamespace.
+const (
+	TranslationKeyInputNamespaceAdmin          TranslationKeyInputNamespace = "admin"
+	TranslationKeyInputNamespaceCheckout       TranslationKeyInputNamespace = "checkout"
+	TranslationKeyInputNamespaceCommunications TranslationKeyInputNamespace = "communications"
+	TranslationKeyInputNamespaceErrors         TranslationKeyInputNamespace = "errors"
+	TranslationKeyInputNamespaceStorefront     TranslationKeyInputNamespace = "storefront"
+)
+
+// Defines values for TranslationReleaseStatus.
+const (
+	TranslationReleaseStatusActive     TranslationReleaseStatus = "active"
+	TranslationReleaseStatusDraft      TranslationReleaseStatus = "draft"
+	TranslationReleaseStatusSuperseded TranslationReleaseStatus = "superseded"
+)
+
+// Defines values for TranslationReleaseQualityCriticalNamespaces.
+const (
+	TranslationReleaseQualityCriticalNamespacesCheckout       TranslationReleaseQualityCriticalNamespaces = "checkout"
+	TranslationReleaseQualityCriticalNamespacesCommunications TranslationReleaseQualityCriticalNamespaces = "communications"
+	TranslationReleaseQualityCriticalNamespacesErrors         TranslationReleaseQualityCriticalNamespaces = "errors"
+)
+
+// Defines values for TranslationReleaseQualityMissingNamespace.
+const (
+	TranslationReleaseQualityMissingNamespaceCheckout       TranslationReleaseQualityMissingNamespace = "checkout"
+	TranslationReleaseQualityMissingNamespaceCommunications TranslationReleaseQualityMissingNamespace = "communications"
+	TranslationReleaseQualityMissingNamespaceErrors         TranslationReleaseQualityMissingNamespace = "errors"
+)
+
+// Defines values for TranslationValueState.
+const (
+	TranslationValueStateDraft     TranslationValueState = "draft"
+	TranslationValueStatePublished TranslationValueState = "published"
+	TranslationValueStateReview    TranslationValueState = "review"
+)
+
 // Defines values for UpdateOrderStatusRequestStatus.
 const (
 	UpdateOrderStatusRequestStatusCANCELLED UpdateOrderStatusRequestStatus = "CANCELLED"
@@ -849,8 +961,8 @@ const (
 
 // Defines values for UserRole.
 const (
-	Admin    UserRole = "admin"
-	Customer UserRole = "customer"
+	UserRoleAdmin    UserRole = "admin"
+	UserRoleCustomer UserRole = "customer"
 )
 
 // Defines values for WebhookEventRecordStatus.
@@ -887,11 +999,11 @@ const (
 
 // Defines values for TransitionAdminCmsPageVariantParamsAction.
 const (
-	Approve        TransitionAdminCmsPageVariantParamsAction = "approve"
-	Publish        TransitionAdminCmsPageVariantParamsAction = "publish"
-	RequestChanges TransitionAdminCmsPageVariantParamsAction = "request_changes"
-	Rollback       TransitionAdminCmsPageVariantParamsAction = "rollback"
-	Submit         TransitionAdminCmsPageVariantParamsAction = "submit"
+	TransitionAdminCmsPageVariantParamsActionApprove        TransitionAdminCmsPageVariantParamsAction = "approve"
+	TransitionAdminCmsPageVariantParamsActionPublish        TransitionAdminCmsPageVariantParamsAction = "publish"
+	TransitionAdminCmsPageVariantParamsActionRequestChanges TransitionAdminCmsPageVariantParamsAction = "request_changes"
+	TransitionAdminCmsPageVariantParamsActionRollback       TransitionAdminCmsPageVariantParamsAction = "rollback"
+	TransitionAdminCmsPageVariantParamsActionSubmit         TransitionAdminCmsPageVariantParamsAction = "submit"
 )
 
 // Defines values for ListAdminDiscountCampaignsParamsStatus.
@@ -915,6 +1027,13 @@ const (
 	ListAdminInventoryReservationsParamsStatusCONSUMED ListAdminInventoryReservationsParamsStatus = "CONSUMED"
 	ListAdminInventoryReservationsParamsStatusEXPIRED  ListAdminInventoryReservationsParamsStatus = "EXPIRED"
 	ListAdminInventoryReservationsParamsStatusRELEASED ListAdminInventoryReservationsParamsStatus = "RELEASED"
+)
+
+// Defines values for ListAdminLocalizationKeysParamsState.
+const (
+	ListAdminLocalizationKeysParamsStateDraft     ListAdminLocalizationKeysParamsState = "draft"
+	ListAdminLocalizationKeysParamsStatePublished ListAdminLocalizationKeysParamsState = "published"
+	ListAdminLocalizationKeysParamsStateReview    ListAdminLocalizationKeysParamsState = "review"
 )
 
 // Defines values for ListAdminProductsParamsSort.
@@ -966,7 +1085,7 @@ const (
 
 // Defines values for ExportAdminTaxReportParamsFormat.
 const (
-	Csv ExportAdminTaxReportParamsFormat = "csv"
+	ExportAdminTaxReportParamsFormatCsv ExportAdminTaxReportParamsFormat = "csv"
 )
 
 // Defines values for ListAdminWebhookEventsParamsStatus.
@@ -999,6 +1118,15 @@ const (
 	ResolveContentPageParamsDeviceDesktop ResolveContentPageParamsDevice = "desktop"
 	ResolveContentPageParamsDeviceMobile  ResolveContentPageParamsDevice = "mobile"
 	ResolveContentPageParamsDeviceTablet  ResolveContentPageParamsDevice = "tablet"
+)
+
+// Defines values for GetLocalizationBundleParamsNamespace.
+const (
+	GetLocalizationBundleParamsNamespaceAdmin          GetLocalizationBundleParamsNamespace = "admin"
+	GetLocalizationBundleParamsNamespaceCheckout       GetLocalizationBundleParamsNamespace = "checkout"
+	GetLocalizationBundleParamsNamespaceCommunications GetLocalizationBundleParamsNamespace = "communications"
+	GetLocalizationBundleParamsNamespaceErrors         GetLocalizationBundleParamsNamespace = "errors"
+	GetLocalizationBundleParamsNamespaceStorefront     GetLocalizationBundleParamsNamespace = "storefront"
 )
 
 // Defines values for ListUserOrdersParamsStatus.
@@ -1107,12 +1235,13 @@ type AuthorizeCheckoutOrderPaymentRequest struct {
 
 // Brand defines model for Brand.
 type Brand struct {
-	Description *string `json:"description"`
-	Id          int     `json:"id"`
-	IsActive    bool    `json:"is_active"`
-	LogoUrl     *string `json:"logo_url"`
-	Name        string  `json:"name"`
-	Slug        string  `json:"slug"`
+	Description  *string                       `json:"description"`
+	Id           int                           `json:"id"`
+	IsActive     bool                          `json:"is_active"`
+	Localization *EntityLocalizationResolution `json:"localization,omitempty"`
+	LogoUrl      *string                       `json:"logo_url"`
+	Name         string                        `json:"name"`
+	Slug         string                        `json:"slug"`
 }
 
 // BrandInput defines model for BrandInput.
@@ -1163,15 +1292,16 @@ type CartItem struct {
 
 // Category defines model for Category.
 type Category struct {
-	Depth       int     `json:"depth"`
-	Description *string `json:"description"`
-	Id          int     `json:"id"`
-	IsActive    bool    `json:"is_active"`
-	Name        string  `json:"name"`
-	ParentId    *int    `json:"parent_id"`
-	Path        string  `json:"path"`
-	Slug        string  `json:"slug"`
-	SortOrder   int     `json:"sort_order"`
+	Depth        int                           `json:"depth"`
+	Description  *string                       `json:"description"`
+	Id           int                           `json:"id"`
+	IsActive     bool                          `json:"is_active"`
+	Localization *EntityLocalizationResolution `json:"localization,omitempty"`
+	Name         string                        `json:"name"`
+	ParentId     *int                          `json:"parent_id"`
+	Path         string                        `json:"path"`
+	Slug         string                        `json:"slug"`
+	SortOrder    int                           `json:"sort_order"`
 }
 
 // CategoryInput defines model for CategoryInput.
@@ -1398,7 +1528,6 @@ type CmsContentEventRequestEventType string
 type CmsContentExport struct {
 	ExportedAt    time.Time                 `json:"exported_at"`
 	GlobalRegions []CmsGlobalRegionResponse `json:"global_regions"`
-	Locales       []CmsLocale               `json:"locales"`
 	Navigation    []CmsNavigationResponse   `json:"navigation"`
 	Pages         []CmsPageResponse         `json:"pages"`
 	SchemaVersion int                       `json:"schema_version"`
@@ -1701,34 +1830,6 @@ type CmsInventoryMessageBlockType string
 type CmsLink struct {
 	Label string `json:"label"`
 	Url   string `json:"url"`
-}
-
-// CmsLocale defines model for CmsLocale.
-type CmsLocale struct {
-	Code           string  `json:"code"`
-	Enabled        bool    `json:"enabled"`
-	FallbackLocale *string `json:"fallback_locale"`
-	IsDefault      bool    `json:"is_default"`
-	Name           string  `json:"name"`
-}
-
-// CmsLocaleInput defines model for CmsLocaleInput.
-type CmsLocaleInput struct {
-	Code           string  `json:"code"`
-	Enabled        bool    `json:"enabled"`
-	FallbackLocale *string `json:"fallback_locale"`
-	IsDefault      bool    `json:"is_default"`
-	Name           string  `json:"name"`
-}
-
-// CmsLocaleSettings defines model for CmsLocaleSettings.
-type CmsLocaleSettings struct {
-	Locales []CmsLocale `json:"locales"`
-}
-
-// CmsLocaleSettingsInput defines model for CmsLocaleSettingsInput.
-type CmsLocaleSettingsInput struct {
-	Locales []CmsLocaleInput `json:"locales"`
 }
 
 // CmsNavigationDraftRequest defines model for CmsNavigationDraftRequest.
@@ -2454,6 +2555,31 @@ type DraftPreviewSessionResponse struct {
 	ExpiresAt *time.Time `json:"expires_at"`
 }
 
+// EntityLocalizationInput defines model for EntityLocalizationInput.
+type EntityLocalizationInput struct {
+	ChangeSummary *string           `json:"change_summary,omitempty"`
+	Fields        map[string]string `json:"fields"`
+	Locale        string            `json:"locale"`
+}
+
+// EntityLocalizationResolution defines model for EntityLocalizationResolution.
+type EntityLocalizationResolution struct {
+	FallbackChain   []string          `json:"fallback_chain"`
+	Fields          map[string]string `json:"fields"`
+	RequestedLocale string            `json:"requested_locale"`
+	ResolvedLocale  string            `json:"resolved_locale"`
+	SourceLocales   map[string]string `json:"source_locales"`
+	UsedFallback    bool              `json:"used_fallback"`
+}
+
+// EntityLocalizationResponse defines model for EntityLocalizationResponse.
+type EntityLocalizationResponse struct {
+	EntityId      int                          `json:"entity_id"`
+	EntityType    LocalizedEntityType          `json:"entity_type"`
+	Localizations []LocalizedFieldSet          `json:"localizations"`
+	Resolved      EntityLocalizationResolution `json:"resolved"`
+}
+
 // Error Transitional legacy error body. New and migrated operations use Problem.
 type Error struct {
 	Code  *string `json:"code,omitempty"`
@@ -2635,6 +2761,222 @@ type InventoryTimeline struct {
 	Reservations     []InventoryReservation `json:"reservations"`
 }
 
+// LocalizationAssignee defines model for LocalizationAssignee.
+type LocalizationAssignee struct {
+	Email            openapi_types.Email                  `json:"email"`
+	Id               int                                  `json:"id"`
+	LocalizationRole LocalizationAssigneeLocalizationRole `json:"localization_role"`
+	Name             string                               `json:"name"`
+}
+
+// LocalizationAssigneeLocalizationRole defines model for LocalizationAssignee.LocalizationRole.
+type LocalizationAssigneeLocalizationRole string
+
+// LocalizationAssigneeListResponse defines model for LocalizationAssigneeListResponse.
+type LocalizationAssigneeListResponse struct {
+	Assignees []LocalizationAssignee `json:"assignees"`
+}
+
+// LocalizationBundle defines model for LocalizationBundle.
+type LocalizationBundle struct {
+	Messages   map[string]LocalizationBundleMessage `json:"messages"`
+	Release    TranslationReleaseMeta               `json:"release"`
+	Resolution LocalizationResolution               `json:"resolution"`
+}
+
+// LocalizationBundleMessage defines model for LocalizationBundleMessage.
+type LocalizationBundleMessage struct {
+	MissingTranslation bool   `json:"missing_translation"`
+	RequestedLocale    string `json:"requested_locale"`
+	SourceLocale       string `json:"source_locale"`
+	UsedFallback       bool   `json:"used_fallback"`
+	Value              string `json:"value"`
+}
+
+// LocalizationBundleMeta defines model for LocalizationBundleMeta.
+type LocalizationBundleMeta struct {
+	Release    TranslationReleaseMeta `json:"release"`
+	Resolution LocalizationResolution `json:"resolution"`
+}
+
+// LocalizationGlossaryInput defines model for LocalizationGlossaryInput.
+type LocalizationGlossaryInput struct {
+	Description    *string `json:"description,omitempty"`
+	IsLocked       bool    `json:"is_locked"`
+	Locale         string  `json:"locale"`
+	SourceTerm     string  `json:"source_term"`
+	TranslatedTerm string  `json:"translated_term"`
+}
+
+// LocalizationGlossaryListResponse defines model for LocalizationGlossaryListResponse.
+type LocalizationGlossaryListResponse struct {
+	Terms []LocalizationGlossaryTerm `json:"terms"`
+}
+
+// LocalizationGlossaryTerm defines model for LocalizationGlossaryTerm.
+type LocalizationGlossaryTerm struct {
+	CreatedAt      time.Time `json:"created_at"`
+	Description    string    `json:"description"`
+	Id             int       `json:"id"`
+	IsLocked       bool      `json:"is_locked"`
+	Locale         string    `json:"locale"`
+	SourceTerm     string    `json:"source_term"`
+	TranslatedTerm string    `json:"translated_term"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+// LocalizationLocale defines model for LocalizationLocale.
+type LocalizationLocale struct {
+	Code string `json:"code"`
+
+	// DefaultForMarkets Uppercase market codes that use this locale as their market default.
+	DefaultForMarkets []string `json:"default_for_markets"`
+	FallbackLocale    *string  `json:"fallback_locale"`
+	IsDefault         bool     `json:"is_default"`
+	IsEnabled         bool     `json:"is_enabled"`
+	Name              string   `json:"name"`
+}
+
+// LocalizationLocaleInput defines model for LocalizationLocaleInput.
+type LocalizationLocaleInput struct {
+	Code              string   `json:"code"`
+	DefaultForMarkets []string `json:"default_for_markets"`
+	FallbackLocale    *string  `json:"fallback_locale"`
+	IsDefault         bool     `json:"is_default"`
+	IsEnabled         bool     `json:"is_enabled"`
+	Name              string   `json:"name"`
+}
+
+// LocalizationLocaleList defines model for LocalizationLocaleList.
+type LocalizationLocaleList struct {
+	DefaultLocale string               `json:"default_locale"`
+	Locales       []LocalizationLocale `json:"locales"`
+}
+
+// LocalizationLocaleMetricRate defines model for LocalizationLocaleMetricRate.
+type LocalizationLocaleMetricRate struct {
+	FallbackHitCount int     `json:"fallback_hit_count"`
+	FallbackHitRate  float32 `json:"fallback_hit_rate"`
+	Locale           string  `json:"locale"`
+	LookupCount      int     `json:"lookup_count"`
+	MissingKeyCount  int     `json:"missing_key_count"`
+	MissingKeyRate   float32 `json:"missing_key_rate"`
+}
+
+// LocalizationLocaleSettingsInput defines model for LocalizationLocaleSettingsInput.
+type LocalizationLocaleSettingsInput struct {
+	Locales []LocalizationLocaleInput `json:"locales"`
+}
+
+// LocalizationMetricHotspot defines model for LocalizationMetricHotspot.
+type LocalizationMetricHotspot struct {
+	AverageValue float32                `json:"average_value"`
+	Count        int                    `json:"count"`
+	Domain       string                 `json:"domain"`
+	Key          string                 `json:"key"`
+	LastSeenAt   time.Time              `json:"last_seen_at"`
+	Locale       string                 `json:"locale"`
+	MaximumValue int                    `json:"maximum_value"`
+	MetricType   LocalizationMetricType `json:"metric_type"`
+}
+
+// LocalizationMetricType defines model for LocalizationMetricType.
+type LocalizationMetricType string
+
+// LocalizationMetricsResponse defines model for LocalizationMetricsResponse.
+type LocalizationMetricsResponse struct {
+	AveragePublishLatencyMs float32                        `json:"average_publish_latency_ms"`
+	FallbackHitCount        int                            `json:"fallback_hit_count"`
+	FallbackHitRate         float32                        `json:"fallback_hit_rate"`
+	GeneratedAt             time.Time                      `json:"generated_at"`
+	Hotspots                []LocalizationMetricHotspot    `json:"hotspots"`
+	LocaleRates             []LocalizationLocaleMetricRate `json:"locale_rates"`
+	LookupCount             int                            `json:"lookup_count"`
+	MaximumPublishLatencyMs int                            `json:"maximum_publish_latency_ms"`
+	MissingKeyCount         int                            `json:"missing_key_count"`
+	MissingKeyRate          float32                        `json:"missing_key_rate"`
+	PublishCount            int                            `json:"publish_count"`
+	RollbackCount           int                            `json:"rollback_count"`
+	RolloutFallbackCount    int                            `json:"rollout_fallback_count"`
+}
+
+// LocalizationResolution defines model for LocalizationResolution.
+type LocalizationResolution struct {
+	FallbackChain   []string                     `json:"fallback_chain"`
+	RequestedLocale string                       `json:"requested_locale"`
+	ResolvedLocale  string                       `json:"resolved_locale"`
+	Source          LocalizationResolutionSource `json:"source"`
+	UsedFallback    bool                         `json:"used_fallback"`
+}
+
+// LocalizationResolutionSource defines model for LocalizationResolution.Source.
+type LocalizationResolutionSource string
+
+// LocalizationRoleAssignment defines model for LocalizationRoleAssignment.
+type LocalizationRoleAssignment struct {
+	CreatedAt time.Time                      `json:"created_at"`
+	Id        int                            `json:"id"`
+	Role      LocalizationRoleAssignmentRole `json:"role"`
+	Subject   string                         `json:"subject"`
+	UpdatedAt time.Time                      `json:"updated_at"`
+}
+
+// LocalizationRoleAssignmentRole defines model for LocalizationRoleAssignment.Role.
+type LocalizationRoleAssignmentRole string
+
+// LocalizationRoleInput defines model for LocalizationRoleInput.
+type LocalizationRoleInput struct {
+	Role    LocalizationRoleInputRole `json:"role"`
+	Subject string                    `json:"subject"`
+}
+
+// LocalizationRoleInputRole defines model for LocalizationRoleInput.Role.
+type LocalizationRoleInputRole string
+
+// LocalizationRoleListResponse defines model for LocalizationRoleListResponse.
+type LocalizationRoleListResponse struct {
+	Assignments []LocalizationRoleAssignment `json:"assignments"`
+}
+
+// LocalizationRollout defines model for LocalizationRollout.
+type LocalizationRollout struct {
+	Domain     LocalizationRolloutDomain `json:"domain"`
+	IsEnabled  bool                      `json:"is_enabled"`
+	Locale     string                    `json:"locale"`
+	Percentage int                       `json:"percentage"`
+	UpdatedAt  time.Time                 `json:"updated_at"`
+}
+
+// LocalizationRolloutDomain defines model for LocalizationRolloutDomain.
+type LocalizationRolloutDomain string
+
+// LocalizationRolloutInput defines model for LocalizationRolloutInput.
+type LocalizationRolloutInput struct {
+	Domain     LocalizationRolloutDomain `json:"domain"`
+	IsEnabled  bool                      `json:"is_enabled"`
+	Locale     string                    `json:"locale"`
+	Percentage int                       `json:"percentage"`
+}
+
+// LocalizationRolloutListResponse defines model for LocalizationRolloutListResponse.
+type LocalizationRolloutListResponse struct {
+	Rollouts []LocalizationRollout `json:"rollouts"`
+}
+
+// LocalizationRolloutSettingsInput defines model for LocalizationRolloutSettingsInput.
+type LocalizationRolloutSettingsInput struct {
+	Rollouts []LocalizationRolloutInput `json:"rollouts"`
+}
+
+// LocalizedEntityType defines model for LocalizedEntityType.
+type LocalizedEntityType string
+
+// LocalizedFieldSet defines model for LocalizedFieldSet.
+type LocalizedFieldSet struct {
+	Fields map[string]string `json:"fields"`
+	Locale string            `json:"locale"`
+}
+
 // LoginRequest defines model for LoginRequest.
 type LoginRequest struct {
 	Email    string `json:"email"`
@@ -2757,20 +3099,26 @@ type PriceBreakdown struct {
 
 // Problem RFC 9457 problem details with stable application extensions.
 type Problem struct {
-	// Code Stable machine-readable application error code.
-	Code string `json:"code"`
-
 	// CorrelationId Identifier used to correlate the response with logs and traces.
 	CorrelationId string `json:"correlation_id"`
 
 	// Detail Safe occurrence-specific explanation.
 	Detail string `json:"detail"`
 
+	// ErrorCode Stable machine-readable application error code.
+	ErrorCode string `json:"error_code"`
+
 	// Errors Field or value issues, present when the problem has validation details.
 	Errors *[]ValidationIssue `json:"errors,omitempty"`
 
 	// Instance URI reference identifying this problem occurrence or related operation.
 	Instance *string `json:"instance,omitempty"`
+
+	// MessageKey Optional localization key for rendering the problem detail.
+	MessageKey *string `json:"message_key,omitempty"`
+
+	// MessageParams Structured string, number, or boolean values interpolated into the localized message.
+	MessageParams *map[string]Problem_MessageParams_AdditionalProperties `json:"message_params,omitempty"`
 
 	// Status HTTP status code returned for this occurrence.
 	Status int32 `json:"status"`
@@ -2780,6 +3128,20 @@ type Problem struct {
 
 	// Type Stable URI identifying the problem category.
 	Type string `json:"type"`
+}
+
+// ProblemMessageParams0 defines model for .
+type ProblemMessageParams0 = string
+
+// ProblemMessageParams1 defines model for .
+type ProblemMessageParams1 = float32
+
+// ProblemMessageParams2 defines model for .
+type ProblemMessageParams2 = bool
+
+// Problem_MessageParams_AdditionalProperties defines model for Problem.message_params.AdditionalProperties.
+type Problem_MessageParams_AdditionalProperties struct {
+	union json.RawMessage
 }
 
 // ProcessPaymentInputAddress defines model for ProcessPaymentInputAddress.
@@ -2823,36 +3185,37 @@ type ProcessPaymentResponse struct {
 
 // Product defines model for Product.
 type Product struct {
-	AppliedCampaigns  *[]AppliedCampaign      `json:"applied_campaigns,omitempty"`
-	Attributes        []ProductAttributeValue `json:"attributes"`
-	BasePrice         *float64                `json:"base_price,omitempty"`
-	Brand             *Brand                  `json:"brand,omitempty"`
-	Categories        []Category              `json:"categories"`
-	CoverImage        *string                 `json:"cover_image"`
-	CreatedAt         time.Time               `json:"created_at"`
-	DefaultVariantId  *int                    `json:"default_variant_id"`
-	DefaultVariantSku *string                 `json:"default_variant_sku"`
-	DeletedAt         *time.Time              `json:"deleted_at"`
-	Description       string                  `json:"description"`
-	DiscountAmount    *float64                `json:"discount_amount,omitempty"`
-	DraftUpdatedAt    *time.Time              `json:"draft_updated_at"`
-	FinalPrice        *float64                `json:"final_price,omitempty"`
-	HasDraftChanges   *bool                   `json:"has_draft_changes,omitempty"`
-	Id                int                     `json:"id"`
-	Images            []string                `json:"images"`
-	IsPublished       *bool                   `json:"is_published,omitempty"`
-	Name              string                  `json:"name"`
-	Options           []ProductOption         `json:"options"`
-	Price             float64                 `json:"price"`
-	PriceBreakdown    *PriceBreakdown         `json:"price_breakdown,omitempty"`
-	PriceRange        ProductPriceRange       `json:"price_range"`
-	RelatedProducts   []RelatedProduct        `json:"related_products"`
-	Seo               ProductSEO              `json:"seo"`
-	Sku               string                  `json:"sku"`
-	Stock             int                     `json:"stock"`
-	Subtitle          *string                 `json:"subtitle"`
-	UpdatedAt         time.Time               `json:"updated_at"`
-	Variants          []ProductVariant        `json:"variants"`
+	AppliedCampaigns  *[]AppliedCampaign            `json:"applied_campaigns,omitempty"`
+	Attributes        []ProductAttributeValue       `json:"attributes"`
+	BasePrice         *float64                      `json:"base_price,omitempty"`
+	Brand             *Brand                        `json:"brand,omitempty"`
+	Categories        []Category                    `json:"categories"`
+	CoverImage        *string                       `json:"cover_image"`
+	CreatedAt         time.Time                     `json:"created_at"`
+	DefaultVariantId  *int                          `json:"default_variant_id"`
+	DefaultVariantSku *string                       `json:"default_variant_sku"`
+	DeletedAt         *time.Time                    `json:"deleted_at"`
+	Description       string                        `json:"description"`
+	DiscountAmount    *float64                      `json:"discount_amount,omitempty"`
+	DraftUpdatedAt    *time.Time                    `json:"draft_updated_at"`
+	FinalPrice        *float64                      `json:"final_price,omitempty"`
+	HasDraftChanges   *bool                         `json:"has_draft_changes,omitempty"`
+	Id                int                           `json:"id"`
+	Images            []string                      `json:"images"`
+	IsPublished       *bool                         `json:"is_published,omitempty"`
+	Localization      *EntityLocalizationResolution `json:"localization,omitempty"`
+	Name              string                        `json:"name"`
+	Options           []ProductOption               `json:"options"`
+	Price             float64                       `json:"price"`
+	PriceBreakdown    *PriceBreakdown               `json:"price_breakdown,omitempty"`
+	PriceRange        ProductPriceRange             `json:"price_range"`
+	RelatedProducts   []RelatedProduct              `json:"related_products"`
+	Seo               ProductSEO                    `json:"seo"`
+	Sku               string                        `json:"sku"`
+	Stock             int                           `json:"stock"`
+	Subtitle          *string                       `json:"subtitle"`
+	UpdatedAt         time.Time                     `json:"updated_at"`
+	Variants          []ProductVariant              `json:"variants"`
 }
 
 // ProductAttributeDefinition defines model for ProductAttributeDefinition.
@@ -3759,6 +4122,247 @@ type TrackingEvent struct {
 // TrackingEventStatus defines model for TrackingEvent.Status.
 type TrackingEventStatus string
 
+// TranslationComment defines model for TranslationComment.
+type TranslationComment struct {
+	AuthorId           *int       `json:"author_id"`
+	AuthorName         string     `json:"author_name"`
+	Comment            string     `json:"comment"`
+	CreatedAt          time.Time  `json:"created_at"`
+	Id                 int        `json:"id"`
+	ResolvedAt         *time.Time `json:"resolved_at"`
+	TranslationValueId int        `json:"translation_value_id"`
+}
+
+// TranslationCommentInput defines model for TranslationCommentInput.
+type TranslationCommentInput struct {
+	Comment string `json:"comment"`
+}
+
+// TranslationCommentListResponse defines model for TranslationCommentListResponse.
+type TranslationCommentListResponse struct {
+	Comments []TranslationComment `json:"comments"`
+}
+
+// TranslationDocumentFormat defines model for TranslationDocumentFormat.
+type TranslationDocumentFormat string
+
+// TranslationExportDocument defines model for TranslationExportDocument.
+type TranslationExportDocument struct {
+	Content   string                    `json:"content"`
+	Filename  string                    `json:"filename"`
+	Format    TranslationDocumentFormat `json:"format"`
+	Locale    string                    `json:"locale"`
+	Namespace *string                   `json:"namespace,omitempty"`
+}
+
+// TranslationExportInput defines model for TranslationExportInput.
+type TranslationExportInput struct {
+	Format    TranslationDocumentFormat `json:"format"`
+	Locale    string                    `json:"locale"`
+	Namespace *string                   `json:"namespace,omitempty"`
+}
+
+// TranslationImportEntry defines model for TranslationImportEntry.
+type TranslationImportEntry struct {
+	Detail string                       `json:"detail"`
+	Key    string                       `json:"key"`
+	Status TranslationImportEntryStatus `json:"status"`
+}
+
+// TranslationImportEntryStatus defines model for TranslationImportEntry.Status.
+type TranslationImportEntryStatus string
+
+// TranslationImportInput defines model for TranslationImportInput.
+type TranslationImportInput struct {
+	Content   string                    `json:"content"`
+	DryRun    bool                      `json:"dry_run"`
+	Format    TranslationDocumentFormat `json:"format"`
+	Locale    string                    `json:"locale"`
+	Namespace *string                   `json:"namespace,omitempty"`
+}
+
+// TranslationImportReport defines model for TranslationImportReport.
+type TranslationImportReport struct {
+	Conflicts int                      `json:"conflicts"`
+	Created   int                      `json:"created"`
+	DryRun    bool                     `json:"dry_run"`
+	Entries   []TranslationImportEntry `json:"entries"`
+	Invalid   int                      `json:"invalid"`
+	Unchanged int                      `json:"unchanged"`
+}
+
+// TranslationKey defines model for TranslationKey.
+type TranslationKey struct {
+	CreatedAt    time.Time `json:"created_at"`
+	Description  string    `json:"description"`
+	Id           int       `json:"id"`
+	IsDeprecated bool      `json:"is_deprecated"`
+	Key          string    `json:"key"`
+	Namespace    string    `json:"namespace"`
+	OwnerDomain  string    `json:"owner_domain"`
+	SourceText   string    `json:"source_text"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+// TranslationKeyInput defines model for TranslationKeyInput.
+type TranslationKeyInput struct {
+	Description *string                      `json:"description,omitempty"`
+	Key         string                       `json:"key"`
+	Namespace   TranslationKeyInputNamespace `json:"namespace"`
+	OwnerDomain string                       `json:"owner_domain"`
+	SourceText  string                       `json:"source_text"`
+}
+
+// TranslationKeyInputNamespace defines model for TranslationKeyInput.Namespace.
+type TranslationKeyInputNamespace string
+
+// TranslationKeyUsage defines model for TranslationKeyUsage.
+type TranslationKeyUsage struct {
+	Component         string    `json:"component"`
+	CreatedAt         time.Time `json:"created_at"`
+	Description       string    `json:"description"`
+	Id                int       `json:"id"`
+	Position          int       `json:"position"`
+	Route             string    `json:"route"`
+	ScreenshotMediaId *string   `json:"screenshot_media_id"`
+	ScreenshotUrl     *string   `json:"screenshot_url"`
+	TranslationKeyId  int       `json:"translation_key_id"`
+	UpdatedAt         time.Time `json:"updated_at"`
+}
+
+// TranslationKeyUsageInput defines model for TranslationKeyUsageInput.
+type TranslationKeyUsageInput struct {
+	Component         string  `json:"component"`
+	Description       string  `json:"description"`
+	Position          int     `json:"position"`
+	Route             string  `json:"route"`
+	ScreenshotMediaId *string `json:"screenshot_media_id"`
+}
+
+// TranslationKeyUsageListInput defines model for TranslationKeyUsageListInput.
+type TranslationKeyUsageListInput struct {
+	Usages []TranslationKeyUsageInput `json:"usages"`
+}
+
+// TranslationKeyUsageListResponse defines model for TranslationKeyUsageListResponse.
+type TranslationKeyUsageListResponse struct {
+	Usages []TranslationKeyUsage `json:"usages"`
+}
+
+// TranslationQueueItem defines model for TranslationQueueItem.
+type TranslationQueueItem struct {
+	Key              TranslationKey    `json:"key"`
+	LatestValue      *TranslationValue `json:"latest_value"`
+	Locale           string            `json:"locale"`
+	Missing          bool              `json:"missing"`
+	PreviewUrl       string            `json:"preview_url"`
+	PublishedValue   *TranslationValue `json:"published_value"`
+	Stale            bool              `json:"stale"`
+	ValidationIssues []ValidationIssue `json:"validation_issues"`
+}
+
+// TranslationQueueResponse defines model for TranslationQueueResponse.
+type TranslationQueueResponse struct {
+	Items      []TranslationQueueItem `json:"items"`
+	Pagination Pagination             `json:"pagination"`
+}
+
+// TranslationRelease defines model for TranslationRelease.
+type TranslationRelease struct {
+	CreatedAt    time.Time                `json:"created_at"`
+	Id           int                      `json:"id"`
+	Name         string                   `json:"name"`
+	Notes        string                   `json:"notes"`
+	PublishedAt  *time.Time               `json:"published_at"`
+	PublishedBy  *int                     `json:"published_by"`
+	SnapshotHash string                   `json:"snapshot_hash"`
+	Status       TranslationReleaseStatus `json:"status"`
+	UpdatedAt    time.Time                `json:"updated_at"`
+}
+
+// TranslationReleaseStatus defines model for TranslationRelease.Status.
+type TranslationReleaseStatus string
+
+// TranslationReleaseInput defines model for TranslationReleaseInput.
+type TranslationReleaseInput struct {
+	Name  string  `json:"name"`
+	Notes *string `json:"notes,omitempty"`
+}
+
+// TranslationReleaseListResponse defines model for TranslationReleaseListResponse.
+type TranslationReleaseListResponse struct {
+	Releases []TranslationRelease `json:"releases"`
+}
+
+// TranslationReleaseMeta defines model for TranslationReleaseMeta.
+type TranslationReleaseMeta struct {
+	Id           int       `json:"id"`
+	Name         string    `json:"name"`
+	PublishedAt  time.Time `json:"published_at"`
+	SnapshotHash string    `json:"snapshot_hash"`
+	Version      string    `json:"version"`
+}
+
+// TranslationReleaseQuality defines model for TranslationReleaseQuality.
+type TranslationReleaseQuality struct {
+	CriticalNamespaces []TranslationReleaseQualityCriticalNamespaces `json:"critical_namespaces"`
+	Missing            []TranslationReleaseQualityMissing            `json:"missing"`
+	MissingCount       int                                           `json:"missing_count"`
+	Ready              bool                                          `json:"ready"`
+	ReleaseId          int                                           `json:"release_id"`
+	RequiredLocales    []string                                      `json:"required_locales"`
+}
+
+// TranslationReleaseQualityCriticalNamespaces defines model for TranslationReleaseQuality.CriticalNamespaces.
+type TranslationReleaseQualityCriticalNamespaces string
+
+// TranslationReleaseQualityMissing defines model for TranslationReleaseQualityMissing.
+type TranslationReleaseQualityMissing struct {
+	Key       string                                    `json:"key"`
+	Locale    string                                    `json:"locale"`
+	Namespace TranslationReleaseQualityMissingNamespace `json:"namespace"`
+}
+
+// TranslationReleaseQualityMissingNamespace defines model for TranslationReleaseQualityMissing.Namespace.
+type TranslationReleaseQualityMissingNamespace string
+
+// TranslationTransitionInput defines model for TranslationTransitionInput.
+type TranslationTransitionInput struct {
+	ChangeSummary *string `json:"change_summary,omitempty"`
+}
+
+// TranslationValue defines model for TranslationValue.
+type TranslationValue struct {
+	AssigneeId       *int                  `json:"assignee_id"`
+	CreatedAt        time.Time             `json:"created_at"`
+	Id               int                   `json:"id"`
+	Locale           string                `json:"locale"`
+	ReviewedBy       *int                  `json:"reviewed_by"`
+	State            TranslationValueState `json:"state"`
+	TranslationKeyId int                   `json:"translation_key_id"`
+	UpdatedAt        time.Time             `json:"updated_at"`
+	UpdatedBy        *int                  `json:"updated_by"`
+	ValidationIssues []ValidationIssue     `json:"validation_issues"`
+	Value            string                `json:"value"`
+	Version          int                   `json:"version"`
+}
+
+// TranslationValueState defines model for TranslationValue.State.
+type TranslationValueState string
+
+// TranslationValueInput defines model for TranslationValueInput.
+type TranslationValueInput struct {
+	AssigneeId      *int    `json:"assignee_id"`
+	ChangeSummary   *string `json:"change_summary,omitempty"`
+	ExpectedVersion *int    `json:"expected_version,omitempty"`
+	Value           string  `json:"value"`
+}
+
+// TranslationValueListResponse defines model for TranslationValueListResponse.
+type TranslationValueListResponse struct {
+	Values []TranslationValue `json:"values"`
+}
+
 // UpdateCartItemRequest defines model for UpdateCartItemRequest.
 type UpdateCartItemRequest struct {
 	Quantity int `json:"quantity"`
@@ -3779,7 +4383,10 @@ type UpdateOrderStatusRequestStatus string
 
 // UpdateProfileRequest defines model for UpdateProfileRequest.
 type UpdateProfileRequest struct {
-	Currency        *string `json:"currency,omitempty"`
+	Currency *string `json:"currency,omitempty"`
+
+	// Locale Enabled platform locale to persist as the account preference.
+	Locale          *string `json:"locale,omitempty"`
 	Name            *string `json:"name,omitempty"`
 	ProfilePhotoUrl *string `json:"profile_photo_url,omitempty"`
 }
@@ -3799,17 +4406,20 @@ type UpdateUserRoleRequestRole string
 
 // User defines model for User.
 type User struct {
-	CreatedAt       time.Time  `json:"created_at"`
-	Currency        string     `json:"currency"`
-	DeletedAt       *time.Time `json:"deleted_at"`
-	Email           string     `json:"email"`
-	Id              int        `json:"id"`
-	Name            *string    `json:"name"`
-	ProfilePhotoUrl *string    `json:"profile_photo_url"`
-	Role            UserRole   `json:"role"`
-	Subject         string     `json:"subject"`
-	UpdatedAt       time.Time  `json:"updated_at"`
-	Username        string     `json:"username"`
+	CreatedAt time.Time  `json:"created_at"`
+	Currency  string     `json:"currency"`
+	DeletedAt *time.Time `json:"deleted_at"`
+	Email     string     `json:"email"`
+	Id        int        `json:"id"`
+
+	// Locale Persisted account locale preference as a canonical BCP 47 tag.
+	Locale          string    `json:"locale"`
+	Name            *string   `json:"name"`
+	ProfilePhotoUrl *string   `json:"profile_photo_url"`
+	Role            UserRole  `json:"role"`
+	Subject         string    `json:"subject"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	Username        string    `json:"username"`
 }
 
 // UserRole defines model for User.Role.
@@ -3873,8 +4483,9 @@ type WebsiteSettings struct {
 	ClearOidcClientSecret bool `json:"clear_oidc_client_secret"`
 
 	// CouponCodesEnabled Controls whether coupon-code-gated campaigns can be applied.
-	CouponCodesEnabled bool   `json:"coupon_codes_enabled"`
-	OidcClientId       string `json:"oidc_client_id"`
+	CouponCodesEnabled bool                          `json:"coupon_codes_enabled"`
+	Localization       *EntityLocalizationResolution `json:"localization,omitempty"`
+	OidcClientId       string                        `json:"oidc_client_id"`
 
 	// OidcClientSecret Write-only client secret. Responses always return an empty string.
 	OidcClientSecret string `json:"oidc_client_secret"`
@@ -4033,6 +4644,33 @@ type ListAdminInventoryThresholdsParams struct {
 type GetAdminInventoryTimelineParams struct {
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
+
+// ListAdminLocalizationAssigneesParams defines parameters for ListAdminLocalizationAssignees.
+type ListAdminLocalizationAssigneesParams struct {
+	Q     *string `form:"q,omitempty" json:"q,omitempty"`
+	Limit *int    `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ListAdminLocalizationGlossaryParams defines parameters for ListAdminLocalizationGlossary.
+type ListAdminLocalizationGlossaryParams struct {
+	Locale *string `form:"locale,omitempty" json:"locale,omitempty"`
+}
+
+// ListAdminLocalizationKeysParams defines parameters for ListAdminLocalizationKeys.
+type ListAdminLocalizationKeysParams struct {
+	Locale     *string                               `form:"locale,omitempty" json:"locale,omitempty"`
+	Namespace  *string                               `form:"namespace,omitempty" json:"namespace,omitempty"`
+	State      *ListAdminLocalizationKeysParamsState `form:"state,omitempty" json:"state,omitempty"`
+	AssigneeId *int                                  `form:"assignee_id,omitempty" json:"assignee_id,omitempty"`
+	Missing    *bool                                 `form:"missing,omitempty" json:"missing,omitempty"`
+	Stale      *bool                                 `form:"stale,omitempty" json:"stale,omitempty"`
+	Q          *string                               `form:"q,omitempty" json:"q,omitempty"`
+	Page       *int                                  `form:"page,omitempty" json:"page,omitempty"`
+	Limit      *int                                  `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ListAdminLocalizationKeysParamsState defines parameters for ListAdminLocalizationKeys.
+type ListAdminLocalizationKeysParamsState string
 
 // ListAdminOrdersParams defines parameters for ListAdminOrders.
 type ListAdminOrdersParams struct {
@@ -4239,6 +4877,22 @@ type ResolveContentPageParams struct {
 // ResolveContentPageParamsDevice defines parameters for ResolveContentPage.
 type ResolveContentPageParamsDevice string
 
+// GetLocalizationBundleParams defines parameters for GetLocalizationBundle.
+type GetLocalizationBundleParams struct {
+	Namespace   *GetLocalizationBundleParamsNamespace `form:"namespace,omitempty" json:"namespace,omitempty"`
+	Domain      *LocalizationRolloutDomain            `form:"domain,omitempty" json:"domain,omitempty"`
+	IfNoneMatch *string                               `json:"If-None-Match,omitempty"`
+}
+
+// GetLocalizationBundleParamsNamespace defines parameters for GetLocalizationBundle.
+type GetLocalizationBundleParamsNamespace string
+
+// GetLocalizationBundleMetaParams defines parameters for GetLocalizationBundleMeta.
+type GetLocalizationBundleMetaParams struct {
+	Domain      *LocalizationRolloutDomain `form:"domain,omitempty" json:"domain,omitempty"`
+	IfNoneMatch *string                    `json:"If-None-Match,omitempty"`
+}
+
 // ListUserOrdersParams defines parameters for ListUserOrders.
 type ListUserOrdersParams struct {
 	Status    *ListUserOrdersParamsStatus `form:"status,omitempty" json:"status,omitempty"`
@@ -4355,9 +5009,6 @@ type UnpublishAdminCmsGlobalRegionJSONRequestBody = CmsPublishRequest
 // UpdateAdminCmsGovernanceJSONRequestBody defines body for UpdateAdminCmsGovernance for application/json ContentType.
 type UpdateAdminCmsGovernanceJSONRequestBody = CmsGovernanceInput
 
-// UpdateAdminCmsLocalesJSONRequestBody defines body for UpdateAdminCmsLocales for application/json ContentType.
-type UpdateAdminCmsLocalesJSONRequestBody = CmsLocaleSettingsInput
-
 // CreateAdminCmsNavigationJSONRequestBody defines body for CreateAdminCmsNavigation for application/json ContentType.
 type CreateAdminCmsNavigationJSONRequestBody = CmsNavigationDraftRequest
 
@@ -4438,6 +5089,48 @@ type CreateAdminInventoryAdjustmentJSONRequestBody = InventoryAdjustmentRequest
 
 // UpsertAdminInventoryThresholdJSONRequestBody defines body for UpsertAdminInventoryThreshold for application/json ContentType.
 type UpsertAdminInventoryThresholdJSONRequestBody = InventoryThresholdRequest
+
+// PutAdminEntityLocalizationJSONRequestBody defines body for PutAdminEntityLocalization for application/json ContentType.
+type PutAdminEntityLocalizationJSONRequestBody = EntityLocalizationInput
+
+// ExportAdminLocalizationJSONRequestBody defines body for ExportAdminLocalization for application/json ContentType.
+type ExportAdminLocalizationJSONRequestBody = TranslationExportInput
+
+// PutAdminLocalizationGlossaryTermJSONRequestBody defines body for PutAdminLocalizationGlossaryTerm for application/json ContentType.
+type PutAdminLocalizationGlossaryTermJSONRequestBody = LocalizationGlossaryInput
+
+// ImportAdminLocalizationJSONRequestBody defines body for ImportAdminLocalization for application/json ContentType.
+type ImportAdminLocalizationJSONRequestBody = TranslationImportInput
+
+// CreateAdminLocalizationKeyJSONRequestBody defines body for CreateAdminLocalizationKey for application/json ContentType.
+type CreateAdminLocalizationKeyJSONRequestBody = TranslationKeyInput
+
+// ReplaceAdminLocalizationKeyUsagesJSONRequestBody defines body for ReplaceAdminLocalizationKeyUsages for application/json ContentType.
+type ReplaceAdminLocalizationKeyUsagesJSONRequestBody = TranslationKeyUsageListInput
+
+// PutAdminLocalizationValueJSONRequestBody defines body for PutAdminLocalizationValue for application/json ContentType.
+type PutAdminLocalizationValueJSONRequestBody = TranslationValueInput
+
+// ReplaceAdminLocalizationLocalesJSONRequestBody defines body for ReplaceAdminLocalizationLocales for application/json ContentType.
+type ReplaceAdminLocalizationLocalesJSONRequestBody = LocalizationLocaleSettingsInput
+
+// CreateAdminLocalizationReleaseJSONRequestBody defines body for CreateAdminLocalizationRelease for application/json ContentType.
+type CreateAdminLocalizationReleaseJSONRequestBody = TranslationReleaseInput
+
+// PutAdminLocalizationRoleJSONRequestBody defines body for PutAdminLocalizationRole for application/json ContentType.
+type PutAdminLocalizationRoleJSONRequestBody = LocalizationRoleInput
+
+// ReplaceAdminLocalizationRolloutsJSONRequestBody defines body for ReplaceAdminLocalizationRollouts for application/json ContentType.
+type ReplaceAdminLocalizationRolloutsJSONRequestBody = LocalizationRolloutSettingsInput
+
+// CreateAdminLocalizationCommentJSONRequestBody defines body for CreateAdminLocalizationComment for application/json ContentType.
+type CreateAdminLocalizationCommentJSONRequestBody = TranslationCommentInput
+
+// PublishAdminLocalizationValueJSONRequestBody defines body for PublishAdminLocalizationValue for application/json ContentType.
+type PublishAdminLocalizationValueJSONRequestBody = TranslationTransitionInput
+
+// SubmitAdminLocalizationValueReviewJSONRequestBody defines body for SubmitAdminLocalizationValueReview for application/json ContentType.
+type SubmitAdminLocalizationValueReviewJSONRequestBody = TranslationTransitionInput
 
 // CaptureAdminOrderPaymentJSONRequestBody defines body for CaptureAdminOrderPayment for application/json ContentType.
 type CaptureAdminOrderPaymentJSONRequestBody = AdminOrderPaymentAmountRequest
@@ -5130,6 +5823,94 @@ func (t *CmsContentBlock) UnmarshalJSON(b []byte) error {
 	return err
 }
 
+// AsProblemMessageParams0 returns the union data inside the Problem_MessageParams_AdditionalProperties as a ProblemMessageParams0
+func (t Problem_MessageParams_AdditionalProperties) AsProblemMessageParams0() (ProblemMessageParams0, error) {
+	var body ProblemMessageParams0
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromProblemMessageParams0 overwrites any union data inside the Problem_MessageParams_AdditionalProperties as the provided ProblemMessageParams0
+func (t *Problem_MessageParams_AdditionalProperties) FromProblemMessageParams0(v ProblemMessageParams0) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeProblemMessageParams0 performs a merge with any union data inside the Problem_MessageParams_AdditionalProperties, using the provided ProblemMessageParams0
+func (t *Problem_MessageParams_AdditionalProperties) MergeProblemMessageParams0(v ProblemMessageParams0) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsProblemMessageParams1 returns the union data inside the Problem_MessageParams_AdditionalProperties as a ProblemMessageParams1
+func (t Problem_MessageParams_AdditionalProperties) AsProblemMessageParams1() (ProblemMessageParams1, error) {
+	var body ProblemMessageParams1
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromProblemMessageParams1 overwrites any union data inside the Problem_MessageParams_AdditionalProperties as the provided ProblemMessageParams1
+func (t *Problem_MessageParams_AdditionalProperties) FromProblemMessageParams1(v ProblemMessageParams1) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeProblemMessageParams1 performs a merge with any union data inside the Problem_MessageParams_AdditionalProperties, using the provided ProblemMessageParams1
+func (t *Problem_MessageParams_AdditionalProperties) MergeProblemMessageParams1(v ProblemMessageParams1) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsProblemMessageParams2 returns the union data inside the Problem_MessageParams_AdditionalProperties as a ProblemMessageParams2
+func (t Problem_MessageParams_AdditionalProperties) AsProblemMessageParams2() (ProblemMessageParams2, error) {
+	var body ProblemMessageParams2
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromProblemMessageParams2 overwrites any union data inside the Problem_MessageParams_AdditionalProperties as the provided ProblemMessageParams2
+func (t *Problem_MessageParams_AdditionalProperties) FromProblemMessageParams2(v ProblemMessageParams2) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeProblemMessageParams2 performs a merge with any union data inside the Problem_MessageParams_AdditionalProperties, using the provided ProblemMessageParams2
+func (t *Problem_MessageParams_AdditionalProperties) MergeProblemMessageParams2(v ProblemMessageParams2) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t Problem_MessageParams_AdditionalProperties) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *Problem_MessageParams_AdditionalProperties) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
 
@@ -5330,14 +6111,6 @@ type ClientInterface interface {
 	UpdateAdminCmsGovernanceWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	UpdateAdminCmsGovernance(ctx context.Context, body UpdateAdminCmsGovernanceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetAdminCmsLocales request
-	GetAdminCmsLocales(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// UpdateAdminCmsLocalesWithBody request with any body
-	UpdateAdminCmsLocalesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	UpdateAdminCmsLocales(ctx context.Context, body UpdateAdminCmsLocalesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListAdminCmsNavigation request
 	ListAdminCmsNavigation(ctx context.Context, params *ListAdminCmsNavigationParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5572,6 +6345,124 @@ type ClientInterface interface {
 
 	// GetAdminInventoryTimeline request
 	GetAdminInventoryTimeline(ctx context.Context, productVariantId int, params *GetAdminInventoryTimelineParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminLocalizationAssignees request
+	ListAdminLocalizationAssignees(ctx context.Context, params *ListAdminLocalizationAssigneesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAdminEntityLocalization request
+	GetAdminEntityLocalization(ctx context.Context, entityType LocalizedEntityType, entityId int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutAdminEntityLocalizationWithBody request with any body
+	PutAdminEntityLocalizationWithBody(ctx context.Context, entityType LocalizedEntityType, entityId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutAdminEntityLocalization(ctx context.Context, entityType LocalizedEntityType, entityId int, body PutAdminEntityLocalizationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ExportAdminLocalizationWithBody request with any body
+	ExportAdminLocalizationWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ExportAdminLocalization(ctx context.Context, body ExportAdminLocalizationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminLocalizationGlossary request
+	ListAdminLocalizationGlossary(ctx context.Context, params *ListAdminLocalizationGlossaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutAdminLocalizationGlossaryTermWithBody request with any body
+	PutAdminLocalizationGlossaryTermWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutAdminLocalizationGlossaryTerm(ctx context.Context, body PutAdminLocalizationGlossaryTermJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteAdminLocalizationGlossaryTerm request
+	DeleteAdminLocalizationGlossaryTerm(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ImportAdminLocalizationWithBody request with any body
+	ImportAdminLocalizationWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ImportAdminLocalization(ctx context.Context, body ImportAdminLocalizationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminLocalizationKeys request
+	ListAdminLocalizationKeys(ctx context.Context, params *ListAdminLocalizationKeysParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateAdminLocalizationKeyWithBody request with any body
+	CreateAdminLocalizationKeyWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateAdminLocalizationKey(ctx context.Context, body CreateAdminLocalizationKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminLocalizationKeyUsages request
+	ListAdminLocalizationKeyUsages(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ReplaceAdminLocalizationKeyUsagesWithBody request with any body
+	ReplaceAdminLocalizationKeyUsagesWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ReplaceAdminLocalizationKeyUsages(ctx context.Context, id int, body ReplaceAdminLocalizationKeyUsagesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminLocalizationValues request
+	ListAdminLocalizationValues(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutAdminLocalizationValueWithBody request with any body
+	PutAdminLocalizationValueWithBody(ctx context.Context, id int, locale string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutAdminLocalizationValue(ctx context.Context, id int, locale string, body PutAdminLocalizationValueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminLocalizationLocales request
+	ListAdminLocalizationLocales(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ReplaceAdminLocalizationLocalesWithBody request with any body
+	ReplaceAdminLocalizationLocalesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ReplaceAdminLocalizationLocales(ctx context.Context, body ReplaceAdminLocalizationLocalesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAdminLocalizationMetrics request
+	GetAdminLocalizationMetrics(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminLocalizationReleases request
+	ListAdminLocalizationReleases(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateAdminLocalizationReleaseWithBody request with any body
+	CreateAdminLocalizationReleaseWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateAdminLocalizationRelease(ctx context.Context, body CreateAdminLocalizationReleaseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ActivateAdminLocalizationRelease request
+	ActivateAdminLocalizationRelease(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAdminLocalizationReleaseQuality request
+	GetAdminLocalizationReleaseQuality(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RollbackAdminLocalizationRelease request
+	RollbackAdminLocalizationRelease(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminLocalizationRoles request
+	ListAdminLocalizationRoles(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutAdminLocalizationRoleWithBody request with any body
+	PutAdminLocalizationRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutAdminLocalizationRole(ctx context.Context, body PutAdminLocalizationRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminLocalizationRollouts request
+	ListAdminLocalizationRollouts(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ReplaceAdminLocalizationRolloutsWithBody request with any body
+	ReplaceAdminLocalizationRolloutsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ReplaceAdminLocalizationRollouts(ctx context.Context, body ReplaceAdminLocalizationRolloutsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminLocalizationComments request
+	ListAdminLocalizationComments(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateAdminLocalizationCommentWithBody request with any body
+	CreateAdminLocalizationCommentWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateAdminLocalizationComment(ctx context.Context, id int, body CreateAdminLocalizationCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PublishAdminLocalizationValueWithBody request with any body
+	PublishAdminLocalizationValueWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PublishAdminLocalizationValue(ctx context.Context, id int, body PublishAdminLocalizationValueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SubmitAdminLocalizationValueReviewWithBody request with any body
+	SubmitAdminLocalizationValueReviewWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	SubmitAdminLocalizationValueReview(ctx context.Context, id int, body SubmitAdminLocalizationValueReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListAdminOrders request
 	ListAdminOrders(ctx context.Context, params *ListAdminOrdersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5868,6 +6759,15 @@ type ClientInterface interface {
 
 	// ResolveContentPage request
 	ResolveContentPage(ctx context.Context, path string, params *ResolveContentPageParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetLocalizationBundle request
+	GetLocalizationBundle(ctx context.Context, locale string, params *GetLocalizationBundleParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetLocalizationBundleMeta request
+	GetLocalizationBundleMeta(ctx context.Context, locale string, params *GetLocalizationBundleMetaParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListLocalizationLocales request
+	ListLocalizationLocales(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetProfile request
 	GetProfile(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -6546,42 +7446,6 @@ func (c *Client) UpdateAdminCmsGovernanceWithBody(ctx context.Context, contentTy
 
 func (c *Client) UpdateAdminCmsGovernance(ctx context.Context, body UpdateAdminCmsGovernanceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdateAdminCmsGovernanceRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetAdminCmsLocales(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetAdminCmsLocalesRequest(c.Server)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) UpdateAdminCmsLocalesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewUpdateAdminCmsLocalesRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) UpdateAdminCmsLocales(ctx context.Context, body UpdateAdminCmsLocalesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewUpdateAdminCmsLocalesRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -7626,6 +8490,534 @@ func (c *Client) DeleteAdminInventoryThreshold(ctx context.Context, id int, reqE
 
 func (c *Client) GetAdminInventoryTimeline(ctx context.Context, productVariantId int, params *GetAdminInventoryTimelineParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAdminInventoryTimelineRequest(c.Server, productVariantId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminLocalizationAssignees(ctx context.Context, params *ListAdminLocalizationAssigneesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminLocalizationAssigneesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAdminEntityLocalization(ctx context.Context, entityType LocalizedEntityType, entityId int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAdminEntityLocalizationRequest(c.Server, entityType, entityId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutAdminEntityLocalizationWithBody(ctx context.Context, entityType LocalizedEntityType, entityId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutAdminEntityLocalizationRequestWithBody(c.Server, entityType, entityId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutAdminEntityLocalization(ctx context.Context, entityType LocalizedEntityType, entityId int, body PutAdminEntityLocalizationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutAdminEntityLocalizationRequest(c.Server, entityType, entityId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ExportAdminLocalizationWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExportAdminLocalizationRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ExportAdminLocalization(ctx context.Context, body ExportAdminLocalizationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExportAdminLocalizationRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminLocalizationGlossary(ctx context.Context, params *ListAdminLocalizationGlossaryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminLocalizationGlossaryRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutAdminLocalizationGlossaryTermWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutAdminLocalizationGlossaryTermRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutAdminLocalizationGlossaryTerm(ctx context.Context, body PutAdminLocalizationGlossaryTermJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutAdminLocalizationGlossaryTermRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteAdminLocalizationGlossaryTerm(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAdminLocalizationGlossaryTermRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ImportAdminLocalizationWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewImportAdminLocalizationRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ImportAdminLocalization(ctx context.Context, body ImportAdminLocalizationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewImportAdminLocalizationRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminLocalizationKeys(ctx context.Context, params *ListAdminLocalizationKeysParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminLocalizationKeysRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminLocalizationKeyWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminLocalizationKeyRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminLocalizationKey(ctx context.Context, body CreateAdminLocalizationKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminLocalizationKeyRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminLocalizationKeyUsages(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminLocalizationKeyUsagesRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ReplaceAdminLocalizationKeyUsagesWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReplaceAdminLocalizationKeyUsagesRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ReplaceAdminLocalizationKeyUsages(ctx context.Context, id int, body ReplaceAdminLocalizationKeyUsagesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReplaceAdminLocalizationKeyUsagesRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminLocalizationValues(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminLocalizationValuesRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutAdminLocalizationValueWithBody(ctx context.Context, id int, locale string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutAdminLocalizationValueRequestWithBody(c.Server, id, locale, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutAdminLocalizationValue(ctx context.Context, id int, locale string, body PutAdminLocalizationValueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutAdminLocalizationValueRequest(c.Server, id, locale, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminLocalizationLocales(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminLocalizationLocalesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ReplaceAdminLocalizationLocalesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReplaceAdminLocalizationLocalesRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ReplaceAdminLocalizationLocales(ctx context.Context, body ReplaceAdminLocalizationLocalesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReplaceAdminLocalizationLocalesRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAdminLocalizationMetrics(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAdminLocalizationMetricsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminLocalizationReleases(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminLocalizationReleasesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminLocalizationReleaseWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminLocalizationReleaseRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminLocalizationRelease(ctx context.Context, body CreateAdminLocalizationReleaseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminLocalizationReleaseRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ActivateAdminLocalizationRelease(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewActivateAdminLocalizationReleaseRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAdminLocalizationReleaseQuality(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAdminLocalizationReleaseQualityRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RollbackAdminLocalizationRelease(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRollbackAdminLocalizationReleaseRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminLocalizationRoles(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminLocalizationRolesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutAdminLocalizationRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutAdminLocalizationRoleRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutAdminLocalizationRole(ctx context.Context, body PutAdminLocalizationRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutAdminLocalizationRoleRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminLocalizationRollouts(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminLocalizationRolloutsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ReplaceAdminLocalizationRolloutsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReplaceAdminLocalizationRolloutsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ReplaceAdminLocalizationRollouts(ctx context.Context, body ReplaceAdminLocalizationRolloutsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReplaceAdminLocalizationRolloutsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminLocalizationComments(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminLocalizationCommentsRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminLocalizationCommentWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminLocalizationCommentRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminLocalizationComment(ctx context.Context, id int, body CreateAdminLocalizationCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminLocalizationCommentRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PublishAdminLocalizationValueWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPublishAdminLocalizationValueRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PublishAdminLocalizationValue(ctx context.Context, id int, body PublishAdminLocalizationValueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPublishAdminLocalizationValueRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SubmitAdminLocalizationValueReviewWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSubmitAdminLocalizationValueReviewRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SubmitAdminLocalizationValueReview(ctx context.Context, id int, body SubmitAdminLocalizationValueReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSubmitAdminLocalizationValueReviewRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -8922,6 +10314,42 @@ func (c *Client) GetContentSitemap(ctx context.Context, reqEditors ...RequestEdi
 
 func (c *Client) ResolveContentPage(ctx context.Context, path string, params *ResolveContentPageParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewResolveContentPageRequest(c.Server, path, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetLocalizationBundle(ctx context.Context, locale string, params *GetLocalizationBundleParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetLocalizationBundleRequest(c.Server, locale, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetLocalizationBundleMeta(ctx context.Context, locale string, params *GetLocalizationBundleMetaParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetLocalizationBundleMetaRequest(c.Server, locale, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListLocalizationLocales(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListLocalizationLocalesRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -10783,73 +12211,6 @@ func NewUpdateAdminCmsGovernanceRequestWithBody(server string, contentType strin
 	}
 
 	operationPath := fmt.Sprintf("/api/v1/admin/cms/governance")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("PUT", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewGetAdminCmsLocalesRequest generates requests for GetAdminCmsLocales
-func NewGetAdminCmsLocalesRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v1/admin/cms/locales")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewUpdateAdminCmsLocalesRequest calls the generic UpdateAdminCmsLocales builder with application/json body
-func NewUpdateAdminCmsLocalesRequest(server string, body UpdateAdminCmsLocalesJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewUpdateAdminCmsLocalesRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewUpdateAdminCmsLocalesRequestWithBody generates requests for UpdateAdminCmsLocales with any type of body
-func NewUpdateAdminCmsLocalesRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v1/admin/cms/locales")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -13386,6 +14747,1327 @@ func NewGetAdminInventoryTimelineRequest(server string, productVariantId int, pa
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewListAdminLocalizationAssigneesRequest generates requests for ListAdminLocalizationAssignees
+func NewListAdminLocalizationAssigneesRequest(server string, params *ListAdminLocalizationAssigneesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/assignees")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Q != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "q", runtime.ParamLocationQuery, *params.Q); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAdminEntityLocalizationRequest generates requests for GetAdminEntityLocalization
+func NewGetAdminEntityLocalizationRequest(server string, entityType LocalizedEntityType, entityId int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "entity_type", runtime.ParamLocationPath, entityType)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "entity_id", runtime.ParamLocationPath, entityId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/entities/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutAdminEntityLocalizationRequest calls the generic PutAdminEntityLocalization builder with application/json body
+func NewPutAdminEntityLocalizationRequest(server string, entityType LocalizedEntityType, entityId int, body PutAdminEntityLocalizationJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutAdminEntityLocalizationRequestWithBody(server, entityType, entityId, "application/json", bodyReader)
+}
+
+// NewPutAdminEntityLocalizationRequestWithBody generates requests for PutAdminEntityLocalization with any type of body
+func NewPutAdminEntityLocalizationRequestWithBody(server string, entityType LocalizedEntityType, entityId int, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "entity_type", runtime.ParamLocationPath, entityType)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "entity_id", runtime.ParamLocationPath, entityId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/entities/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewExportAdminLocalizationRequest calls the generic ExportAdminLocalization builder with application/json body
+func NewExportAdminLocalizationRequest(server string, body ExportAdminLocalizationJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewExportAdminLocalizationRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewExportAdminLocalizationRequestWithBody generates requests for ExportAdminLocalization with any type of body
+func NewExportAdminLocalizationRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/export")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListAdminLocalizationGlossaryRequest generates requests for ListAdminLocalizationGlossary
+func NewListAdminLocalizationGlossaryRequest(server string, params *ListAdminLocalizationGlossaryParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/glossary")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Locale != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "locale", runtime.ParamLocationQuery, *params.Locale); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutAdminLocalizationGlossaryTermRequest calls the generic PutAdminLocalizationGlossaryTerm builder with application/json body
+func NewPutAdminLocalizationGlossaryTermRequest(server string, body PutAdminLocalizationGlossaryTermJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutAdminLocalizationGlossaryTermRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPutAdminLocalizationGlossaryTermRequestWithBody generates requests for PutAdminLocalizationGlossaryTerm with any type of body
+func NewPutAdminLocalizationGlossaryTermRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/glossary")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteAdminLocalizationGlossaryTermRequest generates requests for DeleteAdminLocalizationGlossaryTerm
+func NewDeleteAdminLocalizationGlossaryTermRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/glossary/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewImportAdminLocalizationRequest calls the generic ImportAdminLocalization builder with application/json body
+func NewImportAdminLocalizationRequest(server string, body ImportAdminLocalizationJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewImportAdminLocalizationRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewImportAdminLocalizationRequestWithBody generates requests for ImportAdminLocalization with any type of body
+func NewImportAdminLocalizationRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/import")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListAdminLocalizationKeysRequest generates requests for ListAdminLocalizationKeys
+func NewListAdminLocalizationKeysRequest(server string, params *ListAdminLocalizationKeysParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/keys")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Locale != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "locale", runtime.ParamLocationQuery, *params.Locale); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Namespace != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "namespace", runtime.ParamLocationQuery, *params.Namespace); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.State != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "state", runtime.ParamLocationQuery, *params.State); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.AssigneeId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "assignee_id", runtime.ParamLocationQuery, *params.AssigneeId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Missing != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "missing", runtime.ParamLocationQuery, *params.Missing); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Stale != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "stale", runtime.ParamLocationQuery, *params.Stale); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Q != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "q", runtime.ParamLocationQuery, *params.Q); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateAdminLocalizationKeyRequest calls the generic CreateAdminLocalizationKey builder with application/json body
+func NewCreateAdminLocalizationKeyRequest(server string, body CreateAdminLocalizationKeyJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateAdminLocalizationKeyRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateAdminLocalizationKeyRequestWithBody generates requests for CreateAdminLocalizationKey with any type of body
+func NewCreateAdminLocalizationKeyRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/keys")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListAdminLocalizationKeyUsagesRequest generates requests for ListAdminLocalizationKeyUsages
+func NewListAdminLocalizationKeyUsagesRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/keys/%s/usages", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewReplaceAdminLocalizationKeyUsagesRequest calls the generic ReplaceAdminLocalizationKeyUsages builder with application/json body
+func NewReplaceAdminLocalizationKeyUsagesRequest(server string, id int, body ReplaceAdminLocalizationKeyUsagesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewReplaceAdminLocalizationKeyUsagesRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewReplaceAdminLocalizationKeyUsagesRequestWithBody generates requests for ReplaceAdminLocalizationKeyUsages with any type of body
+func NewReplaceAdminLocalizationKeyUsagesRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/keys/%s/usages", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListAdminLocalizationValuesRequest generates requests for ListAdminLocalizationValues
+func NewListAdminLocalizationValuesRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/keys/%s/values", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutAdminLocalizationValueRequest calls the generic PutAdminLocalizationValue builder with application/json body
+func NewPutAdminLocalizationValueRequest(server string, id int, locale string, body PutAdminLocalizationValueJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutAdminLocalizationValueRequestWithBody(server, id, locale, "application/json", bodyReader)
+}
+
+// NewPutAdminLocalizationValueRequestWithBody generates requests for PutAdminLocalizationValue with any type of body
+func NewPutAdminLocalizationValueRequestWithBody(server string, id int, locale string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "locale", runtime.ParamLocationPath, locale)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/keys/%s/values/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListAdminLocalizationLocalesRequest generates requests for ListAdminLocalizationLocales
+func NewListAdminLocalizationLocalesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/locales")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewReplaceAdminLocalizationLocalesRequest calls the generic ReplaceAdminLocalizationLocales builder with application/json body
+func NewReplaceAdminLocalizationLocalesRequest(server string, body ReplaceAdminLocalizationLocalesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewReplaceAdminLocalizationLocalesRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewReplaceAdminLocalizationLocalesRequestWithBody generates requests for ReplaceAdminLocalizationLocales with any type of body
+func NewReplaceAdminLocalizationLocalesRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/locales")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetAdminLocalizationMetricsRequest generates requests for GetAdminLocalizationMetrics
+func NewGetAdminLocalizationMetricsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/metrics")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListAdminLocalizationReleasesRequest generates requests for ListAdminLocalizationReleases
+func NewListAdminLocalizationReleasesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/releases")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateAdminLocalizationReleaseRequest calls the generic CreateAdminLocalizationRelease builder with application/json body
+func NewCreateAdminLocalizationReleaseRequest(server string, body CreateAdminLocalizationReleaseJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateAdminLocalizationReleaseRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateAdminLocalizationReleaseRequestWithBody generates requests for CreateAdminLocalizationRelease with any type of body
+func NewCreateAdminLocalizationReleaseRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/releases")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewActivateAdminLocalizationReleaseRequest generates requests for ActivateAdminLocalizationRelease
+func NewActivateAdminLocalizationReleaseRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/releases/%s/activate", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAdminLocalizationReleaseQualityRequest generates requests for GetAdminLocalizationReleaseQuality
+func NewGetAdminLocalizationReleaseQualityRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/releases/%s/quality", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRollbackAdminLocalizationReleaseRequest generates requests for RollbackAdminLocalizationRelease
+func NewRollbackAdminLocalizationReleaseRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/releases/%s/rollback", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListAdminLocalizationRolesRequest generates requests for ListAdminLocalizationRoles
+func NewListAdminLocalizationRolesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/roles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutAdminLocalizationRoleRequest calls the generic PutAdminLocalizationRole builder with application/json body
+func NewPutAdminLocalizationRoleRequest(server string, body PutAdminLocalizationRoleJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutAdminLocalizationRoleRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPutAdminLocalizationRoleRequestWithBody generates requests for PutAdminLocalizationRole with any type of body
+func NewPutAdminLocalizationRoleRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/roles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListAdminLocalizationRolloutsRequest generates requests for ListAdminLocalizationRollouts
+func NewListAdminLocalizationRolloutsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/rollouts")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewReplaceAdminLocalizationRolloutsRequest calls the generic ReplaceAdminLocalizationRollouts builder with application/json body
+func NewReplaceAdminLocalizationRolloutsRequest(server string, body ReplaceAdminLocalizationRolloutsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewReplaceAdminLocalizationRolloutsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewReplaceAdminLocalizationRolloutsRequestWithBody generates requests for ReplaceAdminLocalizationRollouts with any type of body
+func NewReplaceAdminLocalizationRolloutsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/rollouts")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListAdminLocalizationCommentsRequest generates requests for ListAdminLocalizationComments
+func NewListAdminLocalizationCommentsRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/values/%s/comments", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateAdminLocalizationCommentRequest calls the generic CreateAdminLocalizationComment builder with application/json body
+func NewCreateAdminLocalizationCommentRequest(server string, id int, body CreateAdminLocalizationCommentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateAdminLocalizationCommentRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewCreateAdminLocalizationCommentRequestWithBody generates requests for CreateAdminLocalizationComment with any type of body
+func NewCreateAdminLocalizationCommentRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/values/%s/comments", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPublishAdminLocalizationValueRequest calls the generic PublishAdminLocalizationValue builder with application/json body
+func NewPublishAdminLocalizationValueRequest(server string, id int, body PublishAdminLocalizationValueJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPublishAdminLocalizationValueRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewPublishAdminLocalizationValueRequestWithBody generates requests for PublishAdminLocalizationValue with any type of body
+func NewPublishAdminLocalizationValueRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/values/%s/publish", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewSubmitAdminLocalizationValueReviewRequest calls the generic SubmitAdminLocalizationValueReview builder with application/json body
+func NewSubmitAdminLocalizationValueReviewRequest(server string, id int, body SubmitAdminLocalizationValueReviewJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSubmitAdminLocalizationValueReviewRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewSubmitAdminLocalizationValueReviewRequestWithBody generates requests for SubmitAdminLocalizationValueReview with any type of body
+func NewSubmitAdminLocalizationValueReviewRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/localization/values/%s/submit-review", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -17476,6 +20158,191 @@ func NewResolveContentPageRequest(server string, path string, params *ResolveCon
 	return req, nil
 }
 
+// NewGetLocalizationBundleRequest generates requests for GetLocalizationBundle
+func NewGetLocalizationBundleRequest(server string, locale string, params *GetLocalizationBundleParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "locale", runtime.ParamLocationPath, locale)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/localization/bundles/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Namespace != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "namespace", runtime.ParamLocationQuery, *params.Namespace); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Domain != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "domain", runtime.ParamLocationQuery, *params.Domain); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.IfNoneMatch != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "If-None-Match", runtime.ParamLocationHeader, *params.IfNoneMatch)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("If-None-Match", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewGetLocalizationBundleMetaRequest generates requests for GetLocalizationBundleMeta
+func NewGetLocalizationBundleMetaRequest(server string, locale string, params *GetLocalizationBundleMetaParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "locale", runtime.ParamLocationPath, locale)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/localization/bundles/%s/meta", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Domain != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "domain", runtime.ParamLocationQuery, *params.Domain); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.IfNoneMatch != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "If-None-Match", runtime.ParamLocationHeader, *params.IfNoneMatch)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("If-None-Match", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewListLocalizationLocalesRequest generates requests for ListLocalizationLocales
+func NewListLocalizationLocalesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/localization/locales")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetProfileRequest generates requests for GetProfile
 func NewGetProfileRequest(server string) (*http.Request, error) {
 	var err error
@@ -19013,14 +21880,6 @@ type ClientWithResponsesInterface interface {
 
 	UpdateAdminCmsGovernanceWithResponse(ctx context.Context, body UpdateAdminCmsGovernanceJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAdminCmsGovernanceClientResponse, error)
 
-	// GetAdminCmsLocalesWithResponse request
-	GetAdminCmsLocalesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAdminCmsLocalesClientResponse, error)
-
-	// UpdateAdminCmsLocalesWithBodyWithResponse request with any body
-	UpdateAdminCmsLocalesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAdminCmsLocalesClientResponse, error)
-
-	UpdateAdminCmsLocalesWithResponse(ctx context.Context, body UpdateAdminCmsLocalesJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAdminCmsLocalesClientResponse, error)
-
 	// ListAdminCmsNavigationWithResponse request
 	ListAdminCmsNavigationWithResponse(ctx context.Context, params *ListAdminCmsNavigationParams, reqEditors ...RequestEditorFn) (*ListAdminCmsNavigationClientResponse, error)
 
@@ -19254,6 +22113,124 @@ type ClientWithResponsesInterface interface {
 
 	// GetAdminInventoryTimelineWithResponse request
 	GetAdminInventoryTimelineWithResponse(ctx context.Context, productVariantId int, params *GetAdminInventoryTimelineParams, reqEditors ...RequestEditorFn) (*GetAdminInventoryTimelineClientResponse, error)
+
+	// ListAdminLocalizationAssigneesWithResponse request
+	ListAdminLocalizationAssigneesWithResponse(ctx context.Context, params *ListAdminLocalizationAssigneesParams, reqEditors ...RequestEditorFn) (*ListAdminLocalizationAssigneesClientResponse, error)
+
+	// GetAdminEntityLocalizationWithResponse request
+	GetAdminEntityLocalizationWithResponse(ctx context.Context, entityType LocalizedEntityType, entityId int, reqEditors ...RequestEditorFn) (*GetAdminEntityLocalizationClientResponse, error)
+
+	// PutAdminEntityLocalizationWithBodyWithResponse request with any body
+	PutAdminEntityLocalizationWithBodyWithResponse(ctx context.Context, entityType LocalizedEntityType, entityId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAdminEntityLocalizationClientResponse, error)
+
+	PutAdminEntityLocalizationWithResponse(ctx context.Context, entityType LocalizedEntityType, entityId int, body PutAdminEntityLocalizationJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAdminEntityLocalizationClientResponse, error)
+
+	// ExportAdminLocalizationWithBodyWithResponse request with any body
+	ExportAdminLocalizationWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ExportAdminLocalizationClientResponse, error)
+
+	ExportAdminLocalizationWithResponse(ctx context.Context, body ExportAdminLocalizationJSONRequestBody, reqEditors ...RequestEditorFn) (*ExportAdminLocalizationClientResponse, error)
+
+	// ListAdminLocalizationGlossaryWithResponse request
+	ListAdminLocalizationGlossaryWithResponse(ctx context.Context, params *ListAdminLocalizationGlossaryParams, reqEditors ...RequestEditorFn) (*ListAdminLocalizationGlossaryClientResponse, error)
+
+	// PutAdminLocalizationGlossaryTermWithBodyWithResponse request with any body
+	PutAdminLocalizationGlossaryTermWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAdminLocalizationGlossaryTermClientResponse, error)
+
+	PutAdminLocalizationGlossaryTermWithResponse(ctx context.Context, body PutAdminLocalizationGlossaryTermJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAdminLocalizationGlossaryTermClientResponse, error)
+
+	// DeleteAdminLocalizationGlossaryTermWithResponse request
+	DeleteAdminLocalizationGlossaryTermWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteAdminLocalizationGlossaryTermClientResponse, error)
+
+	// ImportAdminLocalizationWithBodyWithResponse request with any body
+	ImportAdminLocalizationWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImportAdminLocalizationClientResponse, error)
+
+	ImportAdminLocalizationWithResponse(ctx context.Context, body ImportAdminLocalizationJSONRequestBody, reqEditors ...RequestEditorFn) (*ImportAdminLocalizationClientResponse, error)
+
+	// ListAdminLocalizationKeysWithResponse request
+	ListAdminLocalizationKeysWithResponse(ctx context.Context, params *ListAdminLocalizationKeysParams, reqEditors ...RequestEditorFn) (*ListAdminLocalizationKeysClientResponse, error)
+
+	// CreateAdminLocalizationKeyWithBodyWithResponse request with any body
+	CreateAdminLocalizationKeyWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAdminLocalizationKeyClientResponse, error)
+
+	CreateAdminLocalizationKeyWithResponse(ctx context.Context, body CreateAdminLocalizationKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAdminLocalizationKeyClientResponse, error)
+
+	// ListAdminLocalizationKeyUsagesWithResponse request
+	ListAdminLocalizationKeyUsagesWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*ListAdminLocalizationKeyUsagesClientResponse, error)
+
+	// ReplaceAdminLocalizationKeyUsagesWithBodyWithResponse request with any body
+	ReplaceAdminLocalizationKeyUsagesWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReplaceAdminLocalizationKeyUsagesClientResponse, error)
+
+	ReplaceAdminLocalizationKeyUsagesWithResponse(ctx context.Context, id int, body ReplaceAdminLocalizationKeyUsagesJSONRequestBody, reqEditors ...RequestEditorFn) (*ReplaceAdminLocalizationKeyUsagesClientResponse, error)
+
+	// ListAdminLocalizationValuesWithResponse request
+	ListAdminLocalizationValuesWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*ListAdminLocalizationValuesClientResponse, error)
+
+	// PutAdminLocalizationValueWithBodyWithResponse request with any body
+	PutAdminLocalizationValueWithBodyWithResponse(ctx context.Context, id int, locale string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAdminLocalizationValueClientResponse, error)
+
+	PutAdminLocalizationValueWithResponse(ctx context.Context, id int, locale string, body PutAdminLocalizationValueJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAdminLocalizationValueClientResponse, error)
+
+	// ListAdminLocalizationLocalesWithResponse request
+	ListAdminLocalizationLocalesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminLocalizationLocalesClientResponse, error)
+
+	// ReplaceAdminLocalizationLocalesWithBodyWithResponse request with any body
+	ReplaceAdminLocalizationLocalesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReplaceAdminLocalizationLocalesClientResponse, error)
+
+	ReplaceAdminLocalizationLocalesWithResponse(ctx context.Context, body ReplaceAdminLocalizationLocalesJSONRequestBody, reqEditors ...RequestEditorFn) (*ReplaceAdminLocalizationLocalesClientResponse, error)
+
+	// GetAdminLocalizationMetricsWithResponse request
+	GetAdminLocalizationMetricsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAdminLocalizationMetricsClientResponse, error)
+
+	// ListAdminLocalizationReleasesWithResponse request
+	ListAdminLocalizationReleasesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminLocalizationReleasesClientResponse, error)
+
+	// CreateAdminLocalizationReleaseWithBodyWithResponse request with any body
+	CreateAdminLocalizationReleaseWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAdminLocalizationReleaseClientResponse, error)
+
+	CreateAdminLocalizationReleaseWithResponse(ctx context.Context, body CreateAdminLocalizationReleaseJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAdminLocalizationReleaseClientResponse, error)
+
+	// ActivateAdminLocalizationReleaseWithResponse request
+	ActivateAdminLocalizationReleaseWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*ActivateAdminLocalizationReleaseClientResponse, error)
+
+	// GetAdminLocalizationReleaseQualityWithResponse request
+	GetAdminLocalizationReleaseQualityWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetAdminLocalizationReleaseQualityClientResponse, error)
+
+	// RollbackAdminLocalizationReleaseWithResponse request
+	RollbackAdminLocalizationReleaseWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*RollbackAdminLocalizationReleaseClientResponse, error)
+
+	// ListAdminLocalizationRolesWithResponse request
+	ListAdminLocalizationRolesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminLocalizationRolesClientResponse, error)
+
+	// PutAdminLocalizationRoleWithBodyWithResponse request with any body
+	PutAdminLocalizationRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAdminLocalizationRoleClientResponse, error)
+
+	PutAdminLocalizationRoleWithResponse(ctx context.Context, body PutAdminLocalizationRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAdminLocalizationRoleClientResponse, error)
+
+	// ListAdminLocalizationRolloutsWithResponse request
+	ListAdminLocalizationRolloutsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminLocalizationRolloutsClientResponse, error)
+
+	// ReplaceAdminLocalizationRolloutsWithBodyWithResponse request with any body
+	ReplaceAdminLocalizationRolloutsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReplaceAdminLocalizationRolloutsClientResponse, error)
+
+	ReplaceAdminLocalizationRolloutsWithResponse(ctx context.Context, body ReplaceAdminLocalizationRolloutsJSONRequestBody, reqEditors ...RequestEditorFn) (*ReplaceAdminLocalizationRolloutsClientResponse, error)
+
+	// ListAdminLocalizationCommentsWithResponse request
+	ListAdminLocalizationCommentsWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*ListAdminLocalizationCommentsClientResponse, error)
+
+	// CreateAdminLocalizationCommentWithBodyWithResponse request with any body
+	CreateAdminLocalizationCommentWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAdminLocalizationCommentClientResponse, error)
+
+	CreateAdminLocalizationCommentWithResponse(ctx context.Context, id int, body CreateAdminLocalizationCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAdminLocalizationCommentClientResponse, error)
+
+	// PublishAdminLocalizationValueWithBodyWithResponse request with any body
+	PublishAdminLocalizationValueWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PublishAdminLocalizationValueClientResponse, error)
+
+	PublishAdminLocalizationValueWithResponse(ctx context.Context, id int, body PublishAdminLocalizationValueJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishAdminLocalizationValueClientResponse, error)
+
+	// SubmitAdminLocalizationValueReviewWithBodyWithResponse request with any body
+	SubmitAdminLocalizationValueReviewWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SubmitAdminLocalizationValueReviewClientResponse, error)
+
+	SubmitAdminLocalizationValueReviewWithResponse(ctx context.Context, id int, body SubmitAdminLocalizationValueReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*SubmitAdminLocalizationValueReviewClientResponse, error)
 
 	// ListAdminOrdersWithResponse request
 	ListAdminOrdersWithResponse(ctx context.Context, params *ListAdminOrdersParams, reqEditors ...RequestEditorFn) (*ListAdminOrdersClientResponse, error)
@@ -19550,6 +22527,15 @@ type ClientWithResponsesInterface interface {
 
 	// ResolveContentPageWithResponse request
 	ResolveContentPageWithResponse(ctx context.Context, path string, params *ResolveContentPageParams, reqEditors ...RequestEditorFn) (*ResolveContentPageClientResponse, error)
+
+	// GetLocalizationBundleWithResponse request
+	GetLocalizationBundleWithResponse(ctx context.Context, locale string, params *GetLocalizationBundleParams, reqEditors ...RequestEditorFn) (*GetLocalizationBundleClientResponse, error)
+
+	// GetLocalizationBundleMetaWithResponse request
+	GetLocalizationBundleMetaWithResponse(ctx context.Context, locale string, params *GetLocalizationBundleMetaParams, reqEditors ...RequestEditorFn) (*GetLocalizationBundleMetaClientResponse, error)
+
+	// ListLocalizationLocalesWithResponse request
+	ListLocalizationLocalesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListLocalizationLocalesClientResponse, error)
 
 	// GetProfileWithResponse request
 	GetProfileWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetProfileClientResponse, error)
@@ -20496,58 +23482,6 @@ func (r UpdateAdminCmsGovernanceClientResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r UpdateAdminCmsGovernanceClientResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetAdminCmsLocalesClientResponse struct {
-	Body                      []byte
-	HTTPResponse              *http.Response
-	JSON200                   *CmsLocaleSettings
-	ApplicationproblemJSON400 *BadRequestProblem
-	ApplicationproblemJSON401 *AuthenticationRequiredProblem
-	ApplicationproblemJSON403 *ForbiddenProblem
-	ApplicationproblemJSON500 *InternalServerErrorProblem
-}
-
-// Status returns HTTPResponse.Status
-func (r GetAdminCmsLocalesClientResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetAdminCmsLocalesClientResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type UpdateAdminCmsLocalesClientResponse struct {
-	Body                      []byte
-	HTTPResponse              *http.Response
-	JSON200                   *CmsLocaleSettings
-	ApplicationproblemJSON400 *BadRequestProblem
-	ApplicationproblemJSON401 *AuthenticationRequiredProblem
-	ApplicationproblemJSON403 *ForbiddenProblem
-	ApplicationproblemJSON500 *InternalServerErrorProblem
-}
-
-// Status returns HTTPResponse.Status
-func (r UpdateAdminCmsLocalesClientResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r UpdateAdminCmsLocalesClientResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -22134,6 +25068,818 @@ func (r GetAdminInventoryTimelineClientResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetAdminInventoryTimelineClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminLocalizationAssigneesClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *LocalizationAssigneeListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminLocalizationAssigneesClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminLocalizationAssigneesClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAdminEntityLocalizationClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *EntityLocalizationResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAdminEntityLocalizationClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAdminEntityLocalizationClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutAdminEntityLocalizationClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *EntityLocalizationResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r PutAdminEntityLocalizationClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutAdminEntityLocalizationClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ExportAdminLocalizationClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *TranslationExportDocument
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ExportAdminLocalizationClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ExportAdminLocalizationClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminLocalizationGlossaryClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *LocalizationGlossaryListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminLocalizationGlossaryClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminLocalizationGlossaryClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutAdminLocalizationGlossaryTermClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *LocalizationGlossaryTerm
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r PutAdminLocalizationGlossaryTermClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutAdminLocalizationGlossaryTermClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteAdminLocalizationGlossaryTermClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteAdminLocalizationGlossaryTermClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteAdminLocalizationGlossaryTermClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ImportAdminLocalizationClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *TranslationImportReport
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ImportAdminLocalizationClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ImportAdminLocalizationClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminLocalizationKeysClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *TranslationQueueResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminLocalizationKeysClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminLocalizationKeysClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateAdminLocalizationKeyClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON201                   *TranslationKey
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateAdminLocalizationKeyClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateAdminLocalizationKeyClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminLocalizationKeyUsagesClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *TranslationKeyUsageListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminLocalizationKeyUsagesClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminLocalizationKeyUsagesClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ReplaceAdminLocalizationKeyUsagesClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *TranslationKeyUsageListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ReplaceAdminLocalizationKeyUsagesClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ReplaceAdminLocalizationKeyUsagesClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminLocalizationValuesClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *TranslationValueListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminLocalizationValuesClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminLocalizationValuesClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutAdminLocalizationValueClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *TranslationValue
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r PutAdminLocalizationValueClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutAdminLocalizationValueClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminLocalizationLocalesClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *LocalizationLocaleList
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminLocalizationLocalesClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminLocalizationLocalesClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ReplaceAdminLocalizationLocalesClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *LocalizationLocaleList
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ReplaceAdminLocalizationLocalesClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ReplaceAdminLocalizationLocalesClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAdminLocalizationMetricsClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *LocalizationMetricsResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAdminLocalizationMetricsClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAdminLocalizationMetricsClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminLocalizationReleasesClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *TranslationReleaseListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminLocalizationReleasesClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminLocalizationReleasesClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateAdminLocalizationReleaseClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON201                   *TranslationRelease
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateAdminLocalizationReleaseClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateAdminLocalizationReleaseClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ActivateAdminLocalizationReleaseClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *TranslationRelease
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ActivateAdminLocalizationReleaseClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ActivateAdminLocalizationReleaseClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAdminLocalizationReleaseQualityClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *TranslationReleaseQuality
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAdminLocalizationReleaseQualityClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAdminLocalizationReleaseQualityClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RollbackAdminLocalizationReleaseClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON201                   *TranslationRelease
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r RollbackAdminLocalizationReleaseClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RollbackAdminLocalizationReleaseClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminLocalizationRolesClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *LocalizationRoleListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminLocalizationRolesClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminLocalizationRolesClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutAdminLocalizationRoleClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *LocalizationRoleAssignment
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r PutAdminLocalizationRoleClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutAdminLocalizationRoleClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminLocalizationRolloutsClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *LocalizationRolloutListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminLocalizationRolloutsClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminLocalizationRolloutsClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ReplaceAdminLocalizationRolloutsClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *LocalizationRolloutListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ReplaceAdminLocalizationRolloutsClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ReplaceAdminLocalizationRolloutsClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminLocalizationCommentsClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *TranslationCommentListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminLocalizationCommentsClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminLocalizationCommentsClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateAdminLocalizationCommentClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON201                   *TranslationComment
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateAdminLocalizationCommentClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateAdminLocalizationCommentClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PublishAdminLocalizationValueClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *TranslationValue
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r PublishAdminLocalizationValueClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PublishAdminLocalizationValueClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type SubmitAdminLocalizationValueReviewClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *TranslationValue
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r SubmitAdminLocalizationValueReviewClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SubmitAdminLocalizationValueReviewClientResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -24239,6 +27985,80 @@ func (r ResolveContentPageClientResponse) StatusCode() int {
 	return 0
 }
 
+type GetLocalizationBundleClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *LocalizationBundle
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+	ApplicationproblemJSON503 *ServiceUnavailableProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r GetLocalizationBundleClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetLocalizationBundleClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetLocalizationBundleMetaClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *LocalizationBundleMeta
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+	ApplicationproblemJSON503 *ServiceUnavailableProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r GetLocalizationBundleMetaClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetLocalizationBundleMetaClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListLocalizationLocalesClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *LocalizationLocaleList
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListLocalizationLocalesClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListLocalizationLocalesClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetProfileClientResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
@@ -25434,32 +29254,6 @@ func (c *ClientWithResponses) UpdateAdminCmsGovernanceWithResponse(ctx context.C
 	return ParseUpdateAdminCmsGovernanceClientResponse(rsp)
 }
 
-// GetAdminCmsLocalesWithResponse request returning *GetAdminCmsLocalesClientResponse
-func (c *ClientWithResponses) GetAdminCmsLocalesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAdminCmsLocalesClientResponse, error) {
-	rsp, err := c.GetAdminCmsLocales(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetAdminCmsLocalesClientResponse(rsp)
-}
-
-// UpdateAdminCmsLocalesWithBodyWithResponse request with arbitrary body returning *UpdateAdminCmsLocalesClientResponse
-func (c *ClientWithResponses) UpdateAdminCmsLocalesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAdminCmsLocalesClientResponse, error) {
-	rsp, err := c.UpdateAdminCmsLocalesWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseUpdateAdminCmsLocalesClientResponse(rsp)
-}
-
-func (c *ClientWithResponses) UpdateAdminCmsLocalesWithResponse(ctx context.Context, body UpdateAdminCmsLocalesJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAdminCmsLocalesClientResponse, error) {
-	rsp, err := c.UpdateAdminCmsLocales(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseUpdateAdminCmsLocalesClientResponse(rsp)
-}
-
 // ListAdminCmsNavigationWithResponse request returning *ListAdminCmsNavigationClientResponse
 func (c *ClientWithResponses) ListAdminCmsNavigationWithResponse(ctx context.Context, params *ListAdminCmsNavigationParams, reqEditors ...RequestEditorFn) (*ListAdminCmsNavigationClientResponse, error) {
 	rsp, err := c.ListAdminCmsNavigation(ctx, params, reqEditors...)
@@ -26214,6 +30008,388 @@ func (c *ClientWithResponses) GetAdminInventoryTimelineWithResponse(ctx context.
 		return nil, err
 	}
 	return ParseGetAdminInventoryTimelineClientResponse(rsp)
+}
+
+// ListAdminLocalizationAssigneesWithResponse request returning *ListAdminLocalizationAssigneesClientResponse
+func (c *ClientWithResponses) ListAdminLocalizationAssigneesWithResponse(ctx context.Context, params *ListAdminLocalizationAssigneesParams, reqEditors ...RequestEditorFn) (*ListAdminLocalizationAssigneesClientResponse, error) {
+	rsp, err := c.ListAdminLocalizationAssignees(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminLocalizationAssigneesClientResponse(rsp)
+}
+
+// GetAdminEntityLocalizationWithResponse request returning *GetAdminEntityLocalizationClientResponse
+func (c *ClientWithResponses) GetAdminEntityLocalizationWithResponse(ctx context.Context, entityType LocalizedEntityType, entityId int, reqEditors ...RequestEditorFn) (*GetAdminEntityLocalizationClientResponse, error) {
+	rsp, err := c.GetAdminEntityLocalization(ctx, entityType, entityId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAdminEntityLocalizationClientResponse(rsp)
+}
+
+// PutAdminEntityLocalizationWithBodyWithResponse request with arbitrary body returning *PutAdminEntityLocalizationClientResponse
+func (c *ClientWithResponses) PutAdminEntityLocalizationWithBodyWithResponse(ctx context.Context, entityType LocalizedEntityType, entityId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAdminEntityLocalizationClientResponse, error) {
+	rsp, err := c.PutAdminEntityLocalizationWithBody(ctx, entityType, entityId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutAdminEntityLocalizationClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutAdminEntityLocalizationWithResponse(ctx context.Context, entityType LocalizedEntityType, entityId int, body PutAdminEntityLocalizationJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAdminEntityLocalizationClientResponse, error) {
+	rsp, err := c.PutAdminEntityLocalization(ctx, entityType, entityId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutAdminEntityLocalizationClientResponse(rsp)
+}
+
+// ExportAdminLocalizationWithBodyWithResponse request with arbitrary body returning *ExportAdminLocalizationClientResponse
+func (c *ClientWithResponses) ExportAdminLocalizationWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ExportAdminLocalizationClientResponse, error) {
+	rsp, err := c.ExportAdminLocalizationWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExportAdminLocalizationClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) ExportAdminLocalizationWithResponse(ctx context.Context, body ExportAdminLocalizationJSONRequestBody, reqEditors ...RequestEditorFn) (*ExportAdminLocalizationClientResponse, error) {
+	rsp, err := c.ExportAdminLocalization(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExportAdminLocalizationClientResponse(rsp)
+}
+
+// ListAdminLocalizationGlossaryWithResponse request returning *ListAdminLocalizationGlossaryClientResponse
+func (c *ClientWithResponses) ListAdminLocalizationGlossaryWithResponse(ctx context.Context, params *ListAdminLocalizationGlossaryParams, reqEditors ...RequestEditorFn) (*ListAdminLocalizationGlossaryClientResponse, error) {
+	rsp, err := c.ListAdminLocalizationGlossary(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminLocalizationGlossaryClientResponse(rsp)
+}
+
+// PutAdminLocalizationGlossaryTermWithBodyWithResponse request with arbitrary body returning *PutAdminLocalizationGlossaryTermClientResponse
+func (c *ClientWithResponses) PutAdminLocalizationGlossaryTermWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAdminLocalizationGlossaryTermClientResponse, error) {
+	rsp, err := c.PutAdminLocalizationGlossaryTermWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutAdminLocalizationGlossaryTermClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutAdminLocalizationGlossaryTermWithResponse(ctx context.Context, body PutAdminLocalizationGlossaryTermJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAdminLocalizationGlossaryTermClientResponse, error) {
+	rsp, err := c.PutAdminLocalizationGlossaryTerm(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutAdminLocalizationGlossaryTermClientResponse(rsp)
+}
+
+// DeleteAdminLocalizationGlossaryTermWithResponse request returning *DeleteAdminLocalizationGlossaryTermClientResponse
+func (c *ClientWithResponses) DeleteAdminLocalizationGlossaryTermWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteAdminLocalizationGlossaryTermClientResponse, error) {
+	rsp, err := c.DeleteAdminLocalizationGlossaryTerm(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAdminLocalizationGlossaryTermClientResponse(rsp)
+}
+
+// ImportAdminLocalizationWithBodyWithResponse request with arbitrary body returning *ImportAdminLocalizationClientResponse
+func (c *ClientWithResponses) ImportAdminLocalizationWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImportAdminLocalizationClientResponse, error) {
+	rsp, err := c.ImportAdminLocalizationWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseImportAdminLocalizationClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) ImportAdminLocalizationWithResponse(ctx context.Context, body ImportAdminLocalizationJSONRequestBody, reqEditors ...RequestEditorFn) (*ImportAdminLocalizationClientResponse, error) {
+	rsp, err := c.ImportAdminLocalization(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseImportAdminLocalizationClientResponse(rsp)
+}
+
+// ListAdminLocalizationKeysWithResponse request returning *ListAdminLocalizationKeysClientResponse
+func (c *ClientWithResponses) ListAdminLocalizationKeysWithResponse(ctx context.Context, params *ListAdminLocalizationKeysParams, reqEditors ...RequestEditorFn) (*ListAdminLocalizationKeysClientResponse, error) {
+	rsp, err := c.ListAdminLocalizationKeys(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminLocalizationKeysClientResponse(rsp)
+}
+
+// CreateAdminLocalizationKeyWithBodyWithResponse request with arbitrary body returning *CreateAdminLocalizationKeyClientResponse
+func (c *ClientWithResponses) CreateAdminLocalizationKeyWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAdminLocalizationKeyClientResponse, error) {
+	rsp, err := c.CreateAdminLocalizationKeyWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminLocalizationKeyClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateAdminLocalizationKeyWithResponse(ctx context.Context, body CreateAdminLocalizationKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAdminLocalizationKeyClientResponse, error) {
+	rsp, err := c.CreateAdminLocalizationKey(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminLocalizationKeyClientResponse(rsp)
+}
+
+// ListAdminLocalizationKeyUsagesWithResponse request returning *ListAdminLocalizationKeyUsagesClientResponse
+func (c *ClientWithResponses) ListAdminLocalizationKeyUsagesWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*ListAdminLocalizationKeyUsagesClientResponse, error) {
+	rsp, err := c.ListAdminLocalizationKeyUsages(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminLocalizationKeyUsagesClientResponse(rsp)
+}
+
+// ReplaceAdminLocalizationKeyUsagesWithBodyWithResponse request with arbitrary body returning *ReplaceAdminLocalizationKeyUsagesClientResponse
+func (c *ClientWithResponses) ReplaceAdminLocalizationKeyUsagesWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReplaceAdminLocalizationKeyUsagesClientResponse, error) {
+	rsp, err := c.ReplaceAdminLocalizationKeyUsagesWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReplaceAdminLocalizationKeyUsagesClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) ReplaceAdminLocalizationKeyUsagesWithResponse(ctx context.Context, id int, body ReplaceAdminLocalizationKeyUsagesJSONRequestBody, reqEditors ...RequestEditorFn) (*ReplaceAdminLocalizationKeyUsagesClientResponse, error) {
+	rsp, err := c.ReplaceAdminLocalizationKeyUsages(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReplaceAdminLocalizationKeyUsagesClientResponse(rsp)
+}
+
+// ListAdminLocalizationValuesWithResponse request returning *ListAdminLocalizationValuesClientResponse
+func (c *ClientWithResponses) ListAdminLocalizationValuesWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*ListAdminLocalizationValuesClientResponse, error) {
+	rsp, err := c.ListAdminLocalizationValues(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminLocalizationValuesClientResponse(rsp)
+}
+
+// PutAdminLocalizationValueWithBodyWithResponse request with arbitrary body returning *PutAdminLocalizationValueClientResponse
+func (c *ClientWithResponses) PutAdminLocalizationValueWithBodyWithResponse(ctx context.Context, id int, locale string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAdminLocalizationValueClientResponse, error) {
+	rsp, err := c.PutAdminLocalizationValueWithBody(ctx, id, locale, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutAdminLocalizationValueClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutAdminLocalizationValueWithResponse(ctx context.Context, id int, locale string, body PutAdminLocalizationValueJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAdminLocalizationValueClientResponse, error) {
+	rsp, err := c.PutAdminLocalizationValue(ctx, id, locale, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutAdminLocalizationValueClientResponse(rsp)
+}
+
+// ListAdminLocalizationLocalesWithResponse request returning *ListAdminLocalizationLocalesClientResponse
+func (c *ClientWithResponses) ListAdminLocalizationLocalesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminLocalizationLocalesClientResponse, error) {
+	rsp, err := c.ListAdminLocalizationLocales(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminLocalizationLocalesClientResponse(rsp)
+}
+
+// ReplaceAdminLocalizationLocalesWithBodyWithResponse request with arbitrary body returning *ReplaceAdminLocalizationLocalesClientResponse
+func (c *ClientWithResponses) ReplaceAdminLocalizationLocalesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReplaceAdminLocalizationLocalesClientResponse, error) {
+	rsp, err := c.ReplaceAdminLocalizationLocalesWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReplaceAdminLocalizationLocalesClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) ReplaceAdminLocalizationLocalesWithResponse(ctx context.Context, body ReplaceAdminLocalizationLocalesJSONRequestBody, reqEditors ...RequestEditorFn) (*ReplaceAdminLocalizationLocalesClientResponse, error) {
+	rsp, err := c.ReplaceAdminLocalizationLocales(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReplaceAdminLocalizationLocalesClientResponse(rsp)
+}
+
+// GetAdminLocalizationMetricsWithResponse request returning *GetAdminLocalizationMetricsClientResponse
+func (c *ClientWithResponses) GetAdminLocalizationMetricsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAdminLocalizationMetricsClientResponse, error) {
+	rsp, err := c.GetAdminLocalizationMetrics(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAdminLocalizationMetricsClientResponse(rsp)
+}
+
+// ListAdminLocalizationReleasesWithResponse request returning *ListAdminLocalizationReleasesClientResponse
+func (c *ClientWithResponses) ListAdminLocalizationReleasesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminLocalizationReleasesClientResponse, error) {
+	rsp, err := c.ListAdminLocalizationReleases(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminLocalizationReleasesClientResponse(rsp)
+}
+
+// CreateAdminLocalizationReleaseWithBodyWithResponse request with arbitrary body returning *CreateAdminLocalizationReleaseClientResponse
+func (c *ClientWithResponses) CreateAdminLocalizationReleaseWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAdminLocalizationReleaseClientResponse, error) {
+	rsp, err := c.CreateAdminLocalizationReleaseWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminLocalizationReleaseClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateAdminLocalizationReleaseWithResponse(ctx context.Context, body CreateAdminLocalizationReleaseJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAdminLocalizationReleaseClientResponse, error) {
+	rsp, err := c.CreateAdminLocalizationRelease(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminLocalizationReleaseClientResponse(rsp)
+}
+
+// ActivateAdminLocalizationReleaseWithResponse request returning *ActivateAdminLocalizationReleaseClientResponse
+func (c *ClientWithResponses) ActivateAdminLocalizationReleaseWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*ActivateAdminLocalizationReleaseClientResponse, error) {
+	rsp, err := c.ActivateAdminLocalizationRelease(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseActivateAdminLocalizationReleaseClientResponse(rsp)
+}
+
+// GetAdminLocalizationReleaseQualityWithResponse request returning *GetAdminLocalizationReleaseQualityClientResponse
+func (c *ClientWithResponses) GetAdminLocalizationReleaseQualityWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetAdminLocalizationReleaseQualityClientResponse, error) {
+	rsp, err := c.GetAdminLocalizationReleaseQuality(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAdminLocalizationReleaseQualityClientResponse(rsp)
+}
+
+// RollbackAdminLocalizationReleaseWithResponse request returning *RollbackAdminLocalizationReleaseClientResponse
+func (c *ClientWithResponses) RollbackAdminLocalizationReleaseWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*RollbackAdminLocalizationReleaseClientResponse, error) {
+	rsp, err := c.RollbackAdminLocalizationRelease(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRollbackAdminLocalizationReleaseClientResponse(rsp)
+}
+
+// ListAdminLocalizationRolesWithResponse request returning *ListAdminLocalizationRolesClientResponse
+func (c *ClientWithResponses) ListAdminLocalizationRolesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminLocalizationRolesClientResponse, error) {
+	rsp, err := c.ListAdminLocalizationRoles(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminLocalizationRolesClientResponse(rsp)
+}
+
+// PutAdminLocalizationRoleWithBodyWithResponse request with arbitrary body returning *PutAdminLocalizationRoleClientResponse
+func (c *ClientWithResponses) PutAdminLocalizationRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAdminLocalizationRoleClientResponse, error) {
+	rsp, err := c.PutAdminLocalizationRoleWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutAdminLocalizationRoleClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutAdminLocalizationRoleWithResponse(ctx context.Context, body PutAdminLocalizationRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAdminLocalizationRoleClientResponse, error) {
+	rsp, err := c.PutAdminLocalizationRole(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutAdminLocalizationRoleClientResponse(rsp)
+}
+
+// ListAdminLocalizationRolloutsWithResponse request returning *ListAdminLocalizationRolloutsClientResponse
+func (c *ClientWithResponses) ListAdminLocalizationRolloutsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminLocalizationRolloutsClientResponse, error) {
+	rsp, err := c.ListAdminLocalizationRollouts(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminLocalizationRolloutsClientResponse(rsp)
+}
+
+// ReplaceAdminLocalizationRolloutsWithBodyWithResponse request with arbitrary body returning *ReplaceAdminLocalizationRolloutsClientResponse
+func (c *ClientWithResponses) ReplaceAdminLocalizationRolloutsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReplaceAdminLocalizationRolloutsClientResponse, error) {
+	rsp, err := c.ReplaceAdminLocalizationRolloutsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReplaceAdminLocalizationRolloutsClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) ReplaceAdminLocalizationRolloutsWithResponse(ctx context.Context, body ReplaceAdminLocalizationRolloutsJSONRequestBody, reqEditors ...RequestEditorFn) (*ReplaceAdminLocalizationRolloutsClientResponse, error) {
+	rsp, err := c.ReplaceAdminLocalizationRollouts(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReplaceAdminLocalizationRolloutsClientResponse(rsp)
+}
+
+// ListAdminLocalizationCommentsWithResponse request returning *ListAdminLocalizationCommentsClientResponse
+func (c *ClientWithResponses) ListAdminLocalizationCommentsWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*ListAdminLocalizationCommentsClientResponse, error) {
+	rsp, err := c.ListAdminLocalizationComments(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminLocalizationCommentsClientResponse(rsp)
+}
+
+// CreateAdminLocalizationCommentWithBodyWithResponse request with arbitrary body returning *CreateAdminLocalizationCommentClientResponse
+func (c *ClientWithResponses) CreateAdminLocalizationCommentWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAdminLocalizationCommentClientResponse, error) {
+	rsp, err := c.CreateAdminLocalizationCommentWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminLocalizationCommentClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateAdminLocalizationCommentWithResponse(ctx context.Context, id int, body CreateAdminLocalizationCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAdminLocalizationCommentClientResponse, error) {
+	rsp, err := c.CreateAdminLocalizationComment(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminLocalizationCommentClientResponse(rsp)
+}
+
+// PublishAdminLocalizationValueWithBodyWithResponse request with arbitrary body returning *PublishAdminLocalizationValueClientResponse
+func (c *ClientWithResponses) PublishAdminLocalizationValueWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PublishAdminLocalizationValueClientResponse, error) {
+	rsp, err := c.PublishAdminLocalizationValueWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePublishAdminLocalizationValueClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) PublishAdminLocalizationValueWithResponse(ctx context.Context, id int, body PublishAdminLocalizationValueJSONRequestBody, reqEditors ...RequestEditorFn) (*PublishAdminLocalizationValueClientResponse, error) {
+	rsp, err := c.PublishAdminLocalizationValue(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePublishAdminLocalizationValueClientResponse(rsp)
+}
+
+// SubmitAdminLocalizationValueReviewWithBodyWithResponse request with arbitrary body returning *SubmitAdminLocalizationValueReviewClientResponse
+func (c *ClientWithResponses) SubmitAdminLocalizationValueReviewWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SubmitAdminLocalizationValueReviewClientResponse, error) {
+	rsp, err := c.SubmitAdminLocalizationValueReviewWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSubmitAdminLocalizationValueReviewClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) SubmitAdminLocalizationValueReviewWithResponse(ctx context.Context, id int, body SubmitAdminLocalizationValueReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*SubmitAdminLocalizationValueReviewClientResponse, error) {
+	rsp, err := c.SubmitAdminLocalizationValueReview(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSubmitAdminLocalizationValueReviewClientResponse(rsp)
 }
 
 // ListAdminOrdersWithResponse request returning *ListAdminOrdersClientResponse
@@ -27158,6 +31334,33 @@ func (c *ClientWithResponses) ResolveContentPageWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParseResolveContentPageClientResponse(rsp)
+}
+
+// GetLocalizationBundleWithResponse request returning *GetLocalizationBundleClientResponse
+func (c *ClientWithResponses) GetLocalizationBundleWithResponse(ctx context.Context, locale string, params *GetLocalizationBundleParams, reqEditors ...RequestEditorFn) (*GetLocalizationBundleClientResponse, error) {
+	rsp, err := c.GetLocalizationBundle(ctx, locale, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetLocalizationBundleClientResponse(rsp)
+}
+
+// GetLocalizationBundleMetaWithResponse request returning *GetLocalizationBundleMetaClientResponse
+func (c *ClientWithResponses) GetLocalizationBundleMetaWithResponse(ctx context.Context, locale string, params *GetLocalizationBundleMetaParams, reqEditors ...RequestEditorFn) (*GetLocalizationBundleMetaClientResponse, error) {
+	rsp, err := c.GetLocalizationBundleMeta(ctx, locale, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetLocalizationBundleMetaClientResponse(rsp)
+}
+
+// ListLocalizationLocalesWithResponse request returning *ListLocalizationLocalesClientResponse
+func (c *ClientWithResponses) ListLocalizationLocalesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListLocalizationLocalesClientResponse, error) {
+	rsp, err := c.ListLocalizationLocales(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListLocalizationLocalesClientResponse(rsp)
 }
 
 // GetProfileWithResponse request returning *GetProfileClientResponse
@@ -29256,114 +33459,6 @@ func ParseUpdateAdminCmsGovernanceClientResponse(rsp *http.Response) (*UpdateAdm
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest CmsGovernance
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest BadRequestProblem
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest AuthenticationRequiredProblem
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ForbiddenProblem
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest InternalServerErrorProblem
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetAdminCmsLocalesClientResponse parses an HTTP response from a GetAdminCmsLocalesWithResponse call
-func ParseGetAdminCmsLocalesClientResponse(rsp *http.Response) (*GetAdminCmsLocalesClientResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetAdminCmsLocalesClientResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest CmsLocaleSettings
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest BadRequestProblem
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest AuthenticationRequiredProblem
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
-		var dest ForbiddenProblem
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON403 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest InternalServerErrorProblem
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseUpdateAdminCmsLocalesClientResponse parses an HTTP response from a UpdateAdminCmsLocalesWithResponse call
-func ParseUpdateAdminCmsLocalesClientResponse(rsp *http.Response) (*UpdateAdminCmsLocalesClientResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &UpdateAdminCmsLocalesClientResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest CmsLocaleSettings
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -32811,6 +36906,1850 @@ func ParseGetAdminInventoryTimelineClientResponse(rsp *http.Response) (*GetAdmin
 			return nil, err
 		}
 		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminLocalizationAssigneesClientResponse parses an HTTP response from a ListAdminLocalizationAssigneesWithResponse call
+func ParseListAdminLocalizationAssigneesClientResponse(rsp *http.Response) (*ListAdminLocalizationAssigneesClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminLocalizationAssigneesClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LocalizationAssigneeListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAdminEntityLocalizationClientResponse parses an HTTP response from a GetAdminEntityLocalizationWithResponse call
+func ParseGetAdminEntityLocalizationClientResponse(rsp *http.Response) (*GetAdminEntityLocalizationClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAdminEntityLocalizationClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EntityLocalizationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutAdminEntityLocalizationClientResponse parses an HTTP response from a PutAdminEntityLocalizationWithResponse call
+func ParsePutAdminEntityLocalizationClientResponse(rsp *http.Response) (*PutAdminEntityLocalizationClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutAdminEntityLocalizationClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EntityLocalizationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseExportAdminLocalizationClientResponse parses an HTTP response from a ExportAdminLocalizationWithResponse call
+func ParseExportAdminLocalizationClientResponse(rsp *http.Response) (*ExportAdminLocalizationClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ExportAdminLocalizationClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TranslationExportDocument
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminLocalizationGlossaryClientResponse parses an HTTP response from a ListAdminLocalizationGlossaryWithResponse call
+func ParseListAdminLocalizationGlossaryClientResponse(rsp *http.Response) (*ListAdminLocalizationGlossaryClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminLocalizationGlossaryClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LocalizationGlossaryListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutAdminLocalizationGlossaryTermClientResponse parses an HTTP response from a PutAdminLocalizationGlossaryTermWithResponse call
+func ParsePutAdminLocalizationGlossaryTermClientResponse(rsp *http.Response) (*PutAdminLocalizationGlossaryTermClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutAdminLocalizationGlossaryTermClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LocalizationGlossaryTerm
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteAdminLocalizationGlossaryTermClientResponse parses an HTTP response from a DeleteAdminLocalizationGlossaryTermWithResponse call
+func ParseDeleteAdminLocalizationGlossaryTermClientResponse(rsp *http.Response) (*DeleteAdminLocalizationGlossaryTermClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteAdminLocalizationGlossaryTermClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseImportAdminLocalizationClientResponse parses an HTTP response from a ImportAdminLocalizationWithResponse call
+func ParseImportAdminLocalizationClientResponse(rsp *http.Response) (*ImportAdminLocalizationClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ImportAdminLocalizationClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TranslationImportReport
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminLocalizationKeysClientResponse parses an HTTP response from a ListAdminLocalizationKeysWithResponse call
+func ParseListAdminLocalizationKeysClientResponse(rsp *http.Response) (*ListAdminLocalizationKeysClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminLocalizationKeysClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TranslationQueueResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateAdminLocalizationKeyClientResponse parses an HTTP response from a CreateAdminLocalizationKeyWithResponse call
+func ParseCreateAdminLocalizationKeyClientResponse(rsp *http.Response) (*CreateAdminLocalizationKeyClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateAdminLocalizationKeyClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest TranslationKey
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminLocalizationKeyUsagesClientResponse parses an HTTP response from a ListAdminLocalizationKeyUsagesWithResponse call
+func ParseListAdminLocalizationKeyUsagesClientResponse(rsp *http.Response) (*ListAdminLocalizationKeyUsagesClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminLocalizationKeyUsagesClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TranslationKeyUsageListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseReplaceAdminLocalizationKeyUsagesClientResponse parses an HTTP response from a ReplaceAdminLocalizationKeyUsagesWithResponse call
+func ParseReplaceAdminLocalizationKeyUsagesClientResponse(rsp *http.Response) (*ReplaceAdminLocalizationKeyUsagesClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ReplaceAdminLocalizationKeyUsagesClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TranslationKeyUsageListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminLocalizationValuesClientResponse parses an HTTP response from a ListAdminLocalizationValuesWithResponse call
+func ParseListAdminLocalizationValuesClientResponse(rsp *http.Response) (*ListAdminLocalizationValuesClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminLocalizationValuesClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TranslationValueListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutAdminLocalizationValueClientResponse parses an HTTP response from a PutAdminLocalizationValueWithResponse call
+func ParsePutAdminLocalizationValueClientResponse(rsp *http.Response) (*PutAdminLocalizationValueClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutAdminLocalizationValueClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TranslationValue
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminLocalizationLocalesClientResponse parses an HTTP response from a ListAdminLocalizationLocalesWithResponse call
+func ParseListAdminLocalizationLocalesClientResponse(rsp *http.Response) (*ListAdminLocalizationLocalesClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminLocalizationLocalesClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LocalizationLocaleList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseReplaceAdminLocalizationLocalesClientResponse parses an HTTP response from a ReplaceAdminLocalizationLocalesWithResponse call
+func ParseReplaceAdminLocalizationLocalesClientResponse(rsp *http.Response) (*ReplaceAdminLocalizationLocalesClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ReplaceAdminLocalizationLocalesClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LocalizationLocaleList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAdminLocalizationMetricsClientResponse parses an HTTP response from a GetAdminLocalizationMetricsWithResponse call
+func ParseGetAdminLocalizationMetricsClientResponse(rsp *http.Response) (*GetAdminLocalizationMetricsClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAdminLocalizationMetricsClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LocalizationMetricsResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminLocalizationReleasesClientResponse parses an HTTP response from a ListAdminLocalizationReleasesWithResponse call
+func ParseListAdminLocalizationReleasesClientResponse(rsp *http.Response) (*ListAdminLocalizationReleasesClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminLocalizationReleasesClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TranslationReleaseListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateAdminLocalizationReleaseClientResponse parses an HTTP response from a CreateAdminLocalizationReleaseWithResponse call
+func ParseCreateAdminLocalizationReleaseClientResponse(rsp *http.Response) (*CreateAdminLocalizationReleaseClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateAdminLocalizationReleaseClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest TranslationRelease
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseActivateAdminLocalizationReleaseClientResponse parses an HTTP response from a ActivateAdminLocalizationReleaseWithResponse call
+func ParseActivateAdminLocalizationReleaseClientResponse(rsp *http.Response) (*ActivateAdminLocalizationReleaseClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ActivateAdminLocalizationReleaseClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TranslationRelease
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAdminLocalizationReleaseQualityClientResponse parses an HTTP response from a GetAdminLocalizationReleaseQualityWithResponse call
+func ParseGetAdminLocalizationReleaseQualityClientResponse(rsp *http.Response) (*GetAdminLocalizationReleaseQualityClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAdminLocalizationReleaseQualityClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TranslationReleaseQuality
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRollbackAdminLocalizationReleaseClientResponse parses an HTTP response from a RollbackAdminLocalizationReleaseWithResponse call
+func ParseRollbackAdminLocalizationReleaseClientResponse(rsp *http.Response) (*RollbackAdminLocalizationReleaseClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RollbackAdminLocalizationReleaseClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest TranslationRelease
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminLocalizationRolesClientResponse parses an HTTP response from a ListAdminLocalizationRolesWithResponse call
+func ParseListAdminLocalizationRolesClientResponse(rsp *http.Response) (*ListAdminLocalizationRolesClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminLocalizationRolesClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LocalizationRoleListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutAdminLocalizationRoleClientResponse parses an HTTP response from a PutAdminLocalizationRoleWithResponse call
+func ParsePutAdminLocalizationRoleClientResponse(rsp *http.Response) (*PutAdminLocalizationRoleClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutAdminLocalizationRoleClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LocalizationRoleAssignment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminLocalizationRolloutsClientResponse parses an HTTP response from a ListAdminLocalizationRolloutsWithResponse call
+func ParseListAdminLocalizationRolloutsClientResponse(rsp *http.Response) (*ListAdminLocalizationRolloutsClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminLocalizationRolloutsClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LocalizationRolloutListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseReplaceAdminLocalizationRolloutsClientResponse parses an HTTP response from a ReplaceAdminLocalizationRolloutsWithResponse call
+func ParseReplaceAdminLocalizationRolloutsClientResponse(rsp *http.Response) (*ReplaceAdminLocalizationRolloutsClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ReplaceAdminLocalizationRolloutsClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LocalizationRolloutListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminLocalizationCommentsClientResponse parses an HTTP response from a ListAdminLocalizationCommentsWithResponse call
+func ParseListAdminLocalizationCommentsClientResponse(rsp *http.Response) (*ListAdminLocalizationCommentsClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminLocalizationCommentsClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TranslationCommentListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateAdminLocalizationCommentClientResponse parses an HTTP response from a CreateAdminLocalizationCommentWithResponse call
+func ParseCreateAdminLocalizationCommentClientResponse(rsp *http.Response) (*CreateAdminLocalizationCommentClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateAdminLocalizationCommentClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest TranslationComment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePublishAdminLocalizationValueClientResponse parses an HTTP response from a PublishAdminLocalizationValueWithResponse call
+func ParsePublishAdminLocalizationValueClientResponse(rsp *http.Response) (*PublishAdminLocalizationValueClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PublishAdminLocalizationValueClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TranslationValue
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSubmitAdminLocalizationValueReviewClientResponse parses an HTTP response from a SubmitAdminLocalizationValueReviewWithResponse call
+func ParseSubmitAdminLocalizationValueReviewClientResponse(rsp *http.Response) (*SubmitAdminLocalizationValueReviewClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SubmitAdminLocalizationValueReviewClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TranslationValue
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest InternalServerErrorProblem
@@ -37277,6 +43216,140 @@ func ParseResolveContentPageClientResponse(rsp *http.Response) (*ResolveContentP
 	return response, nil
 }
 
+// ParseGetLocalizationBundleClientResponse parses an HTTP response from a GetLocalizationBundleWithResponse call
+func ParseGetLocalizationBundleClientResponse(rsp *http.Response) (*GetLocalizationBundleClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetLocalizationBundleClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LocalizationBundle
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ServiceUnavailableProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetLocalizationBundleMetaClientResponse parses an HTTP response from a GetLocalizationBundleMetaWithResponse call
+func ParseGetLocalizationBundleMetaClientResponse(rsp *http.Response) (*GetLocalizationBundleMetaClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetLocalizationBundleMetaClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LocalizationBundleMeta
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ServiceUnavailableProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListLocalizationLocalesClientResponse parses an HTTP response from a ListLocalizationLocalesWithResponse call
+func ParseListLocalizationLocalesClientResponse(rsp *http.Response) (*ListLocalizationLocalesClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListLocalizationLocalesClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LocalizationLocaleList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetProfileClientResponse parses an HTTP response from a GetProfileWithResponse call
 func ParseGetProfileClientResponse(rsp *http.Response) (*GetProfileClientResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -38989,12 +45062,6 @@ type ServerInterface interface {
 	// (PUT /api/v1/admin/cms/governance)
 	UpdateAdminCmsGovernance(c *gin.Context)
 
-	// (GET /api/v1/admin/cms/locales)
-	GetAdminCmsLocales(c *gin.Context)
-
-	// (PUT /api/v1/admin/cms/locales)
-	UpdateAdminCmsLocales(c *gin.Context)
-
 	// (GET /api/v1/admin/cms/navigation)
 	ListAdminCmsNavigation(c *gin.Context, params ListAdminCmsNavigationParams)
 
@@ -39174,6 +45241,96 @@ type ServerInterface interface {
 
 	// (GET /api/v1/admin/inventory/variants/{product_variant_id}/timeline)
 	GetAdminInventoryTimeline(c *gin.Context, productVariantId int, params GetAdminInventoryTimelineParams)
+
+	// (GET /api/v1/admin/localization/assignees)
+	ListAdminLocalizationAssignees(c *gin.Context, params ListAdminLocalizationAssigneesParams)
+
+	// (GET /api/v1/admin/localization/entities/{entity_type}/{entity_id})
+	GetAdminEntityLocalization(c *gin.Context, entityType LocalizedEntityType, entityId int)
+
+	// (PUT /api/v1/admin/localization/entities/{entity_type}/{entity_id})
+	PutAdminEntityLocalization(c *gin.Context, entityType LocalizedEntityType, entityId int)
+
+	// (POST /api/v1/admin/localization/export)
+	ExportAdminLocalization(c *gin.Context)
+
+	// (GET /api/v1/admin/localization/glossary)
+	ListAdminLocalizationGlossary(c *gin.Context, params ListAdminLocalizationGlossaryParams)
+
+	// (PUT /api/v1/admin/localization/glossary)
+	PutAdminLocalizationGlossaryTerm(c *gin.Context)
+
+	// (DELETE /api/v1/admin/localization/glossary/{id})
+	DeleteAdminLocalizationGlossaryTerm(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/localization/import)
+	ImportAdminLocalization(c *gin.Context)
+
+	// (GET /api/v1/admin/localization/keys)
+	ListAdminLocalizationKeys(c *gin.Context, params ListAdminLocalizationKeysParams)
+
+	// (POST /api/v1/admin/localization/keys)
+	CreateAdminLocalizationKey(c *gin.Context)
+
+	// (GET /api/v1/admin/localization/keys/{id}/usages)
+	ListAdminLocalizationKeyUsages(c *gin.Context, id int)
+
+	// (PUT /api/v1/admin/localization/keys/{id}/usages)
+	ReplaceAdminLocalizationKeyUsages(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/localization/keys/{id}/values)
+	ListAdminLocalizationValues(c *gin.Context, id int)
+
+	// (PUT /api/v1/admin/localization/keys/{id}/values/{locale})
+	PutAdminLocalizationValue(c *gin.Context, id int, locale string)
+
+	// (GET /api/v1/admin/localization/locales)
+	ListAdminLocalizationLocales(c *gin.Context)
+
+	// (PUT /api/v1/admin/localization/locales)
+	ReplaceAdminLocalizationLocales(c *gin.Context)
+
+	// (GET /api/v1/admin/localization/metrics)
+	GetAdminLocalizationMetrics(c *gin.Context)
+
+	// (GET /api/v1/admin/localization/releases)
+	ListAdminLocalizationReleases(c *gin.Context)
+
+	// (POST /api/v1/admin/localization/releases)
+	CreateAdminLocalizationRelease(c *gin.Context)
+
+	// (POST /api/v1/admin/localization/releases/{id}/activate)
+	ActivateAdminLocalizationRelease(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/localization/releases/{id}/quality)
+	GetAdminLocalizationReleaseQuality(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/localization/releases/{id}/rollback)
+	RollbackAdminLocalizationRelease(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/localization/roles)
+	ListAdminLocalizationRoles(c *gin.Context)
+
+	// (PUT /api/v1/admin/localization/roles)
+	PutAdminLocalizationRole(c *gin.Context)
+
+	// (GET /api/v1/admin/localization/rollouts)
+	ListAdminLocalizationRollouts(c *gin.Context)
+
+	// (PUT /api/v1/admin/localization/rollouts)
+	ReplaceAdminLocalizationRollouts(c *gin.Context)
+
+	// (GET /api/v1/admin/localization/values/{id}/comments)
+	ListAdminLocalizationComments(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/localization/values/{id}/comments)
+	CreateAdminLocalizationComment(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/localization/values/{id}/publish)
+	PublishAdminLocalizationValue(c *gin.Context, id int)
+
+	// (POST /api/v1/admin/localization/values/{id}/submit-review)
+	SubmitAdminLocalizationValueReview(c *gin.Context, id int)
 
 	// (GET /api/v1/admin/orders)
 	ListAdminOrders(c *gin.Context, params ListAdminOrdersParams)
@@ -39414,6 +45571,15 @@ type ServerInterface interface {
 
 	// (GET /api/v1/content/{path})
 	ResolveContentPage(c *gin.Context, path string, params ResolveContentPageParams)
+
+	// (GET /api/v1/localization/bundles/{locale})
+	GetLocalizationBundle(c *gin.Context, locale string, params GetLocalizationBundleParams)
+
+	// (GET /api/v1/localization/bundles/{locale}/meta)
+	GetLocalizationBundleMeta(c *gin.Context, locale string, params GetLocalizationBundleMetaParams)
+
+	// (GET /api/v1/localization/locales)
+	ListLocalizationLocales(c *gin.Context)
 
 	// (GET /api/v1/me/)
 	GetProfile(c *gin.Context)
@@ -40407,40 +46573,6 @@ func (siw *ServerInterfaceWrapper) UpdateAdminCmsGovernance(c *gin.Context) {
 	}
 
 	siw.Handler.UpdateAdminCmsGovernance(c)
-}
-
-// GetAdminCmsLocales operation middleware
-func (siw *ServerInterfaceWrapper) GetAdminCmsLocales(c *gin.Context) {
-
-	c.Set(CookieAuthScopes, []string{})
-
-	c.Set(BearerAuthScopes, []string{})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.GetAdminCmsLocales(c)
-}
-
-// UpdateAdminCmsLocales operation middleware
-func (siw *ServerInterfaceWrapper) UpdateAdminCmsLocales(c *gin.Context) {
-
-	c.Set(CookieAuthScopes, []string{})
-
-	c.Set(BearerAuthScopes, []string{})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.UpdateAdminCmsLocales(c)
 }
 
 // ListAdminCmsNavigation operation middleware
@@ -42031,6 +48163,808 @@ func (siw *ServerInterfaceWrapper) GetAdminInventoryTimeline(c *gin.Context) {
 	}
 
 	siw.Handler.GetAdminInventoryTimeline(c, productVariantId, params)
+}
+
+// ListAdminLocalizationAssignees operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminLocalizationAssignees(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminLocalizationAssigneesParams
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "q", c.Request.URL.Query(), &params.Q)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminLocalizationAssignees(c, params)
+}
+
+// GetAdminEntityLocalization operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminEntityLocalization(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "entity_type" -------------
+	var entityType LocalizedEntityType
+
+	err = runtime.BindStyledParameterWithOptions("simple", "entity_type", c.Param("entity_type"), &entityType, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter entity_type: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "entity_id" -------------
+	var entityId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "entity_id", c.Param("entity_id"), &entityId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter entity_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminEntityLocalization(c, entityType, entityId)
+}
+
+// PutAdminEntityLocalization operation middleware
+func (siw *ServerInterfaceWrapper) PutAdminEntityLocalization(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "entity_type" -------------
+	var entityType LocalizedEntityType
+
+	err = runtime.BindStyledParameterWithOptions("simple", "entity_type", c.Param("entity_type"), &entityType, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter entity_type: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "entity_id" -------------
+	var entityId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "entity_id", c.Param("entity_id"), &entityId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter entity_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PutAdminEntityLocalization(c, entityType, entityId)
+}
+
+// ExportAdminLocalization operation middleware
+func (siw *ServerInterfaceWrapper) ExportAdminLocalization(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ExportAdminLocalization(c)
+}
+
+// ListAdminLocalizationGlossary operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminLocalizationGlossary(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminLocalizationGlossaryParams
+
+	// ------------- Optional query parameter "locale" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "locale", c.Request.URL.Query(), &params.Locale)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter locale: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminLocalizationGlossary(c, params)
+}
+
+// PutAdminLocalizationGlossaryTerm operation middleware
+func (siw *ServerInterfaceWrapper) PutAdminLocalizationGlossaryTerm(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PutAdminLocalizationGlossaryTerm(c)
+}
+
+// DeleteAdminLocalizationGlossaryTerm operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAdminLocalizationGlossaryTerm(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteAdminLocalizationGlossaryTerm(c, id)
+}
+
+// ImportAdminLocalization operation middleware
+func (siw *ServerInterfaceWrapper) ImportAdminLocalization(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ImportAdminLocalization(c)
+}
+
+// ListAdminLocalizationKeys operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminLocalizationKeys(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminLocalizationKeysParams
+
+	// ------------- Optional query parameter "locale" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "locale", c.Request.URL.Query(), &params.Locale)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter locale: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "namespace" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "namespace", c.Request.URL.Query(), &params.Namespace)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter namespace: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "state" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "state", c.Request.URL.Query(), &params.State)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter state: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "assignee_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "assignee_id", c.Request.URL.Query(), &params.AssigneeId)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter assignee_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "missing" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "missing", c.Request.URL.Query(), &params.Missing)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter missing: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "stale" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "stale", c.Request.URL.Query(), &params.Stale)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter stale: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "q", c.Request.URL.Query(), &params.Q)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminLocalizationKeys(c, params)
+}
+
+// CreateAdminLocalizationKey operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminLocalizationKey(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminLocalizationKey(c)
+}
+
+// ListAdminLocalizationKeyUsages operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminLocalizationKeyUsages(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminLocalizationKeyUsages(c, id)
+}
+
+// ReplaceAdminLocalizationKeyUsages operation middleware
+func (siw *ServerInterfaceWrapper) ReplaceAdminLocalizationKeyUsages(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ReplaceAdminLocalizationKeyUsages(c, id)
+}
+
+// ListAdminLocalizationValues operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminLocalizationValues(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminLocalizationValues(c, id)
+}
+
+// PutAdminLocalizationValue operation middleware
+func (siw *ServerInterfaceWrapper) PutAdminLocalizationValue(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "locale" -------------
+	var locale string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "locale", c.Param("locale"), &locale, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter locale: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PutAdminLocalizationValue(c, id, locale)
+}
+
+// ListAdminLocalizationLocales operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminLocalizationLocales(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminLocalizationLocales(c)
+}
+
+// ReplaceAdminLocalizationLocales operation middleware
+func (siw *ServerInterfaceWrapper) ReplaceAdminLocalizationLocales(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ReplaceAdminLocalizationLocales(c)
+}
+
+// GetAdminLocalizationMetrics operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminLocalizationMetrics(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminLocalizationMetrics(c)
+}
+
+// ListAdminLocalizationReleases operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminLocalizationReleases(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminLocalizationReleases(c)
+}
+
+// CreateAdminLocalizationRelease operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminLocalizationRelease(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminLocalizationRelease(c)
+}
+
+// ActivateAdminLocalizationRelease operation middleware
+func (siw *ServerInterfaceWrapper) ActivateAdminLocalizationRelease(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ActivateAdminLocalizationRelease(c, id)
+}
+
+// GetAdminLocalizationReleaseQuality operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminLocalizationReleaseQuality(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminLocalizationReleaseQuality(c, id)
+}
+
+// RollbackAdminLocalizationRelease operation middleware
+func (siw *ServerInterfaceWrapper) RollbackAdminLocalizationRelease(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RollbackAdminLocalizationRelease(c, id)
+}
+
+// ListAdminLocalizationRoles operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminLocalizationRoles(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminLocalizationRoles(c)
+}
+
+// PutAdminLocalizationRole operation middleware
+func (siw *ServerInterfaceWrapper) PutAdminLocalizationRole(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PutAdminLocalizationRole(c)
+}
+
+// ListAdminLocalizationRollouts operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminLocalizationRollouts(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminLocalizationRollouts(c)
+}
+
+// ReplaceAdminLocalizationRollouts operation middleware
+func (siw *ServerInterfaceWrapper) ReplaceAdminLocalizationRollouts(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ReplaceAdminLocalizationRollouts(c)
+}
+
+// ListAdminLocalizationComments operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminLocalizationComments(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminLocalizationComments(c, id)
+}
+
+// CreateAdminLocalizationComment operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminLocalizationComment(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminLocalizationComment(c, id)
+}
+
+// PublishAdminLocalizationValue operation middleware
+func (siw *ServerInterfaceWrapper) PublishAdminLocalizationValue(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PublishAdminLocalizationValue(c, id)
+}
+
+// SubmitAdminLocalizationValueReview operation middleware
+func (siw *ServerInterfaceWrapper) SubmitAdminLocalizationValueReview(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.SubmitAdminLocalizationValueReview(c, id)
 }
 
 // ListAdminOrders operation middleware
@@ -44623,6 +51557,139 @@ func (siw *ServerInterfaceWrapper) ResolveContentPage(c *gin.Context) {
 	siw.Handler.ResolveContentPage(c, path, params)
 }
 
+// GetLocalizationBundle operation middleware
+func (siw *ServerInterfaceWrapper) GetLocalizationBundle(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "locale" -------------
+	var locale string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "locale", c.Param("locale"), &locale, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter locale: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetLocalizationBundleParams
+
+	// ------------- Optional query parameter "namespace" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "namespace", c.Request.URL.Query(), &params.Namespace)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter namespace: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "domain" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "domain", c.Request.URL.Query(), &params.Domain)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter domain: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "If-None-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-None-Match")]; found {
+		var IfNoneMatch string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for If-None-Match, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-None-Match", valueList[0], &IfNoneMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter If-None-Match: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IfNoneMatch = &IfNoneMatch
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetLocalizationBundle(c, locale, params)
+}
+
+// GetLocalizationBundleMeta operation middleware
+func (siw *ServerInterfaceWrapper) GetLocalizationBundleMeta(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "locale" -------------
+	var locale string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "locale", c.Param("locale"), &locale, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter locale: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetLocalizationBundleMetaParams
+
+	// ------------- Optional query parameter "domain" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "domain", c.Request.URL.Query(), &params.Domain)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter domain: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	headers := c.Request.Header
+
+	// ------------- Optional header parameter "If-None-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-None-Match")]; found {
+		var IfNoneMatch string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandler(c, fmt.Errorf("Expected one value for If-None-Match, got %d", n), http.StatusBadRequest)
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-None-Match", valueList[0], &IfNoneMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter If-None-Match: %w", err), http.StatusBadRequest)
+			return
+		}
+
+		params.IfNoneMatch = &IfNoneMatch
+
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetLocalizationBundleMeta(c, locale, params)
+}
+
+// ListLocalizationLocales operation middleware
+func (siw *ServerInterfaceWrapper) ListLocalizationLocales(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListLocalizationLocales(c)
+}
+
 // GetProfile operation middleware
 func (siw *ServerInterfaceWrapper) GetProfile(c *gin.Context) {
 
@@ -45589,8 +52656,6 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/api/v1/admin/cms/global/:id/unpublish", wrapper.UnpublishAdminCmsGlobalRegion)
 	router.GET(options.BaseURL+"/api/v1/admin/cms/governance", wrapper.GetAdminCmsGovernance)
 	router.PUT(options.BaseURL+"/api/v1/admin/cms/governance", wrapper.UpdateAdminCmsGovernance)
-	router.GET(options.BaseURL+"/api/v1/admin/cms/locales", wrapper.GetAdminCmsLocales)
-	router.PUT(options.BaseURL+"/api/v1/admin/cms/locales", wrapper.UpdateAdminCmsLocales)
 	router.GET(options.BaseURL+"/api/v1/admin/cms/navigation", wrapper.ListAdminCmsNavigation)
 	router.POST(options.BaseURL+"/api/v1/admin/cms/navigation", wrapper.CreateAdminCmsNavigation)
 	router.DELETE(options.BaseURL+"/api/v1/admin/cms/navigation/:id", wrapper.DeleteAdminCmsNavigation)
@@ -45651,6 +52716,36 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.PUT(options.BaseURL+"/api/v1/admin/inventory/thresholds", wrapper.UpsertAdminInventoryThreshold)
 	router.DELETE(options.BaseURL+"/api/v1/admin/inventory/thresholds/:id", wrapper.DeleteAdminInventoryThreshold)
 	router.GET(options.BaseURL+"/api/v1/admin/inventory/variants/:product_variant_id/timeline", wrapper.GetAdminInventoryTimeline)
+	router.GET(options.BaseURL+"/api/v1/admin/localization/assignees", wrapper.ListAdminLocalizationAssignees)
+	router.GET(options.BaseURL+"/api/v1/admin/localization/entities/:entity_type/:entity_id", wrapper.GetAdminEntityLocalization)
+	router.PUT(options.BaseURL+"/api/v1/admin/localization/entities/:entity_type/:entity_id", wrapper.PutAdminEntityLocalization)
+	router.POST(options.BaseURL+"/api/v1/admin/localization/export", wrapper.ExportAdminLocalization)
+	router.GET(options.BaseURL+"/api/v1/admin/localization/glossary", wrapper.ListAdminLocalizationGlossary)
+	router.PUT(options.BaseURL+"/api/v1/admin/localization/glossary", wrapper.PutAdminLocalizationGlossaryTerm)
+	router.DELETE(options.BaseURL+"/api/v1/admin/localization/glossary/:id", wrapper.DeleteAdminLocalizationGlossaryTerm)
+	router.POST(options.BaseURL+"/api/v1/admin/localization/import", wrapper.ImportAdminLocalization)
+	router.GET(options.BaseURL+"/api/v1/admin/localization/keys", wrapper.ListAdminLocalizationKeys)
+	router.POST(options.BaseURL+"/api/v1/admin/localization/keys", wrapper.CreateAdminLocalizationKey)
+	router.GET(options.BaseURL+"/api/v1/admin/localization/keys/:id/usages", wrapper.ListAdminLocalizationKeyUsages)
+	router.PUT(options.BaseURL+"/api/v1/admin/localization/keys/:id/usages", wrapper.ReplaceAdminLocalizationKeyUsages)
+	router.GET(options.BaseURL+"/api/v1/admin/localization/keys/:id/values", wrapper.ListAdminLocalizationValues)
+	router.PUT(options.BaseURL+"/api/v1/admin/localization/keys/:id/values/:locale", wrapper.PutAdminLocalizationValue)
+	router.GET(options.BaseURL+"/api/v1/admin/localization/locales", wrapper.ListAdminLocalizationLocales)
+	router.PUT(options.BaseURL+"/api/v1/admin/localization/locales", wrapper.ReplaceAdminLocalizationLocales)
+	router.GET(options.BaseURL+"/api/v1/admin/localization/metrics", wrapper.GetAdminLocalizationMetrics)
+	router.GET(options.BaseURL+"/api/v1/admin/localization/releases", wrapper.ListAdminLocalizationReleases)
+	router.POST(options.BaseURL+"/api/v1/admin/localization/releases", wrapper.CreateAdminLocalizationRelease)
+	router.POST(options.BaseURL+"/api/v1/admin/localization/releases/:id/activate", wrapper.ActivateAdminLocalizationRelease)
+	router.GET(options.BaseURL+"/api/v1/admin/localization/releases/:id/quality", wrapper.GetAdminLocalizationReleaseQuality)
+	router.POST(options.BaseURL+"/api/v1/admin/localization/releases/:id/rollback", wrapper.RollbackAdminLocalizationRelease)
+	router.GET(options.BaseURL+"/api/v1/admin/localization/roles", wrapper.ListAdminLocalizationRoles)
+	router.PUT(options.BaseURL+"/api/v1/admin/localization/roles", wrapper.PutAdminLocalizationRole)
+	router.GET(options.BaseURL+"/api/v1/admin/localization/rollouts", wrapper.ListAdminLocalizationRollouts)
+	router.PUT(options.BaseURL+"/api/v1/admin/localization/rollouts", wrapper.ReplaceAdminLocalizationRollouts)
+	router.GET(options.BaseURL+"/api/v1/admin/localization/values/:id/comments", wrapper.ListAdminLocalizationComments)
+	router.POST(options.BaseURL+"/api/v1/admin/localization/values/:id/comments", wrapper.CreateAdminLocalizationComment)
+	router.POST(options.BaseURL+"/api/v1/admin/localization/values/:id/publish", wrapper.PublishAdminLocalizationValue)
+	router.POST(options.BaseURL+"/api/v1/admin/localization/values/:id/submit-review", wrapper.SubmitAdminLocalizationValueReview)
 	router.GET(options.BaseURL+"/api/v1/admin/orders", wrapper.ListAdminOrders)
 	router.GET(options.BaseURL+"/api/v1/admin/orders/:id", wrapper.GetAdminOrder)
 	router.GET(options.BaseURL+"/api/v1/admin/orders/:id/payments", wrapper.GetAdminOrderPayments)
@@ -45731,6 +52826,9 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/api/v1/content/redirect", wrapper.ResolveContentRedirect)
 	router.GET(options.BaseURL+"/api/v1/content/sitemap.xml", wrapper.GetContentSitemap)
 	router.GET(options.BaseURL+"/api/v1/content/:path", wrapper.ResolveContentPage)
+	router.GET(options.BaseURL+"/api/v1/localization/bundles/:locale", wrapper.GetLocalizationBundle)
+	router.GET(options.BaseURL+"/api/v1/localization/bundles/:locale/meta", wrapper.GetLocalizationBundleMeta)
+	router.GET(options.BaseURL+"/api/v1/localization/locales", wrapper.ListLocalizationLocales)
 	router.GET(options.BaseURL+"/api/v1/me/", wrapper.GetProfile)
 	router.PATCH(options.BaseURL+"/api/v1/me/", wrapper.UpdateProfile)
 	router.GET(options.BaseURL+"/api/v1/me/addresses", wrapper.ListSavedAddresses)
@@ -47845,127 +54943,6 @@ type UpdateAdminCmsGovernance500ApplicationProblemPlusJSONResponse struct {
 }
 
 func (response UpdateAdminCmsGovernance500ApplicationProblemPlusJSONResponse) VisitUpdateAdminCmsGovernanceResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/problem+json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetAdminCmsLocalesRequestObject struct {
-}
-
-type GetAdminCmsLocalesResponseObject interface {
-	VisitGetAdminCmsLocalesResponse(w http.ResponseWriter) error
-}
-
-type GetAdminCmsLocales200JSONResponse CmsLocaleSettings
-
-func (response GetAdminCmsLocales200JSONResponse) VisitGetAdminCmsLocalesResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetAdminCmsLocales400ApplicationProblemPlusJSONResponse struct {
-	BadRequestProblemApplicationProblemPlusJSONResponse
-}
-
-func (response GetAdminCmsLocales400ApplicationProblemPlusJSONResponse) VisitGetAdminCmsLocalesResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/problem+json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetAdminCmsLocales401ApplicationProblemPlusJSONResponse struct {
-	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
-}
-
-func (response GetAdminCmsLocales401ApplicationProblemPlusJSONResponse) VisitGetAdminCmsLocalesResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/problem+json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetAdminCmsLocales403ApplicationProblemPlusJSONResponse struct {
-	ForbiddenProblemApplicationProblemPlusJSONResponse
-}
-
-func (response GetAdminCmsLocales403ApplicationProblemPlusJSONResponse) VisitGetAdminCmsLocalesResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/problem+json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetAdminCmsLocales500ApplicationProblemPlusJSONResponse struct {
-	InternalServerErrorProblemApplicationProblemPlusJSONResponse
-}
-
-func (response GetAdminCmsLocales500ApplicationProblemPlusJSONResponse) VisitGetAdminCmsLocalesResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/problem+json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type UpdateAdminCmsLocalesRequestObject struct {
-	Body *UpdateAdminCmsLocalesJSONRequestBody
-}
-
-type UpdateAdminCmsLocalesResponseObject interface {
-	VisitUpdateAdminCmsLocalesResponse(w http.ResponseWriter) error
-}
-
-type UpdateAdminCmsLocales200JSONResponse CmsLocaleSettings
-
-func (response UpdateAdminCmsLocales200JSONResponse) VisitUpdateAdminCmsLocalesResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type UpdateAdminCmsLocales400ApplicationProblemPlusJSONResponse struct {
-	BadRequestProblemApplicationProblemPlusJSONResponse
-}
-
-func (response UpdateAdminCmsLocales400ApplicationProblemPlusJSONResponse) VisitUpdateAdminCmsLocalesResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/problem+json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type UpdateAdminCmsLocales401ApplicationProblemPlusJSONResponse struct {
-	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
-}
-
-func (response UpdateAdminCmsLocales401ApplicationProblemPlusJSONResponse) VisitUpdateAdminCmsLocalesResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/problem+json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type UpdateAdminCmsLocales403ApplicationProblemPlusJSONResponse struct {
-	ForbiddenProblemApplicationProblemPlusJSONResponse
-}
-
-func (response UpdateAdminCmsLocales403ApplicationProblemPlusJSONResponse) VisitUpdateAdminCmsLocalesResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/problem+json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type UpdateAdminCmsLocales500ApplicationProblemPlusJSONResponse struct {
-	InternalServerErrorProblemApplicationProblemPlusJSONResponse
-}
-
-func (response UpdateAdminCmsLocales500ApplicationProblemPlusJSONResponse) VisitUpdateAdminCmsLocalesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(500)
 
@@ -51943,6 +58920,2202 @@ type GetAdminInventoryTimeline500ApplicationProblemPlusJSONResponse struct {
 }
 
 func (response GetAdminInventoryTimeline500ApplicationProblemPlusJSONResponse) VisitGetAdminInventoryTimelineResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationAssigneesRequestObject struct {
+	Params ListAdminLocalizationAssigneesParams
+}
+
+type ListAdminLocalizationAssigneesResponseObject interface {
+	VisitListAdminLocalizationAssigneesResponse(w http.ResponseWriter) error
+}
+
+type ListAdminLocalizationAssignees200JSONResponse LocalizationAssigneeListResponse
+
+func (response ListAdminLocalizationAssignees200JSONResponse) VisitListAdminLocalizationAssigneesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationAssignees400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationAssignees400ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationAssigneesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationAssignees401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationAssignees401ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationAssigneesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationAssignees403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationAssignees403ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationAssigneesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationAssignees500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationAssignees500ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationAssigneesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminEntityLocalizationRequestObject struct {
+	EntityType LocalizedEntityType `json:"entity_type"`
+	EntityId   int                 `json:"entity_id"`
+}
+
+type GetAdminEntityLocalizationResponseObject interface {
+	VisitGetAdminEntityLocalizationResponse(w http.ResponseWriter) error
+}
+
+type GetAdminEntityLocalization200JSONResponse EntityLocalizationResponse
+
+func (response GetAdminEntityLocalization200JSONResponse) VisitGetAdminEntityLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminEntityLocalization400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminEntityLocalization400ApplicationProblemPlusJSONResponse) VisitGetAdminEntityLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminEntityLocalization401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminEntityLocalization401ApplicationProblemPlusJSONResponse) VisitGetAdminEntityLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminEntityLocalization403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminEntityLocalization403ApplicationProblemPlusJSONResponse) VisitGetAdminEntityLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminEntityLocalization404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminEntityLocalization404ApplicationProblemPlusJSONResponse) VisitGetAdminEntityLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminEntityLocalization500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminEntityLocalization500ApplicationProblemPlusJSONResponse) VisitGetAdminEntityLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminEntityLocalizationRequestObject struct {
+	EntityType LocalizedEntityType `json:"entity_type"`
+	EntityId   int                 `json:"entity_id"`
+	Body       *PutAdminEntityLocalizationJSONRequestBody
+}
+
+type PutAdminEntityLocalizationResponseObject interface {
+	VisitPutAdminEntityLocalizationResponse(w http.ResponseWriter) error
+}
+
+type PutAdminEntityLocalization200JSONResponse EntityLocalizationResponse
+
+func (response PutAdminEntityLocalization200JSONResponse) VisitPutAdminEntityLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminEntityLocalization400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminEntityLocalization400ApplicationProblemPlusJSONResponse) VisitPutAdminEntityLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminEntityLocalization401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminEntityLocalization401ApplicationProblemPlusJSONResponse) VisitPutAdminEntityLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminEntityLocalization403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminEntityLocalization403ApplicationProblemPlusJSONResponse) VisitPutAdminEntityLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminEntityLocalization404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminEntityLocalization404ApplicationProblemPlusJSONResponse) VisitPutAdminEntityLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminEntityLocalization422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminEntityLocalization422ApplicationProblemPlusJSONResponse) VisitPutAdminEntityLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminEntityLocalization500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminEntityLocalization500ApplicationProblemPlusJSONResponse) VisitPutAdminEntityLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ExportAdminLocalizationRequestObject struct {
+	Body *ExportAdminLocalizationJSONRequestBody
+}
+
+type ExportAdminLocalizationResponseObject interface {
+	VisitExportAdminLocalizationResponse(w http.ResponseWriter) error
+}
+
+type ExportAdminLocalization200JSONResponse TranslationExportDocument
+
+func (response ExportAdminLocalization200JSONResponse) VisitExportAdminLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ExportAdminLocalization400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ExportAdminLocalization400ApplicationProblemPlusJSONResponse) VisitExportAdminLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ExportAdminLocalization401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ExportAdminLocalization401ApplicationProblemPlusJSONResponse) VisitExportAdminLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ExportAdminLocalization403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ExportAdminLocalization403ApplicationProblemPlusJSONResponse) VisitExportAdminLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ExportAdminLocalization500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ExportAdminLocalization500ApplicationProblemPlusJSONResponse) VisitExportAdminLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationGlossaryRequestObject struct {
+	Params ListAdminLocalizationGlossaryParams
+}
+
+type ListAdminLocalizationGlossaryResponseObject interface {
+	VisitListAdminLocalizationGlossaryResponse(w http.ResponseWriter) error
+}
+
+type ListAdminLocalizationGlossary200JSONResponse LocalizationGlossaryListResponse
+
+func (response ListAdminLocalizationGlossary200JSONResponse) VisitListAdminLocalizationGlossaryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationGlossary400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationGlossary400ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationGlossaryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationGlossary401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationGlossary401ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationGlossaryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationGlossary403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationGlossary403ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationGlossaryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationGlossary500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationGlossary500ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationGlossaryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationGlossaryTermRequestObject struct {
+	Body *PutAdminLocalizationGlossaryTermJSONRequestBody
+}
+
+type PutAdminLocalizationGlossaryTermResponseObject interface {
+	VisitPutAdminLocalizationGlossaryTermResponse(w http.ResponseWriter) error
+}
+
+type PutAdminLocalizationGlossaryTerm200JSONResponse LocalizationGlossaryTerm
+
+func (response PutAdminLocalizationGlossaryTerm200JSONResponse) VisitPutAdminLocalizationGlossaryTermResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationGlossaryTerm400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationGlossaryTerm400ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationGlossaryTermResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationGlossaryTerm401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationGlossaryTerm401ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationGlossaryTermResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationGlossaryTerm403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationGlossaryTerm403ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationGlossaryTermResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationGlossaryTerm422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationGlossaryTerm422ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationGlossaryTermResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationGlossaryTerm500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationGlossaryTerm500ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationGlossaryTermResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminLocalizationGlossaryTermRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DeleteAdminLocalizationGlossaryTermResponseObject interface {
+	VisitDeleteAdminLocalizationGlossaryTermResponse(w http.ResponseWriter) error
+}
+
+type DeleteAdminLocalizationGlossaryTerm204Response struct {
+}
+
+func (response DeleteAdminLocalizationGlossaryTerm204Response) VisitDeleteAdminLocalizationGlossaryTermResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteAdminLocalizationGlossaryTerm400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminLocalizationGlossaryTerm400ApplicationProblemPlusJSONResponse) VisitDeleteAdminLocalizationGlossaryTermResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminLocalizationGlossaryTerm401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminLocalizationGlossaryTerm401ApplicationProblemPlusJSONResponse) VisitDeleteAdminLocalizationGlossaryTermResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminLocalizationGlossaryTerm403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminLocalizationGlossaryTerm403ApplicationProblemPlusJSONResponse) VisitDeleteAdminLocalizationGlossaryTermResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminLocalizationGlossaryTerm404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminLocalizationGlossaryTerm404ApplicationProblemPlusJSONResponse) VisitDeleteAdminLocalizationGlossaryTermResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminLocalizationGlossaryTerm500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminLocalizationGlossaryTerm500ApplicationProblemPlusJSONResponse) VisitDeleteAdminLocalizationGlossaryTermResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ImportAdminLocalizationRequestObject struct {
+	Body *ImportAdminLocalizationJSONRequestBody
+}
+
+type ImportAdminLocalizationResponseObject interface {
+	VisitImportAdminLocalizationResponse(w http.ResponseWriter) error
+}
+
+type ImportAdminLocalization200JSONResponse TranslationImportReport
+
+func (response ImportAdminLocalization200JSONResponse) VisitImportAdminLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ImportAdminLocalization400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ImportAdminLocalization400ApplicationProblemPlusJSONResponse) VisitImportAdminLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ImportAdminLocalization401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ImportAdminLocalization401ApplicationProblemPlusJSONResponse) VisitImportAdminLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ImportAdminLocalization403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ImportAdminLocalization403ApplicationProblemPlusJSONResponse) VisitImportAdminLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ImportAdminLocalization409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ImportAdminLocalization409ApplicationProblemPlusJSONResponse) VisitImportAdminLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ImportAdminLocalization422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ImportAdminLocalization422ApplicationProblemPlusJSONResponse) VisitImportAdminLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ImportAdminLocalization500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ImportAdminLocalization500ApplicationProblemPlusJSONResponse) VisitImportAdminLocalizationResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationKeysRequestObject struct {
+	Params ListAdminLocalizationKeysParams
+}
+
+type ListAdminLocalizationKeysResponseObject interface {
+	VisitListAdminLocalizationKeysResponse(w http.ResponseWriter) error
+}
+
+type ListAdminLocalizationKeys200JSONResponse TranslationQueueResponse
+
+func (response ListAdminLocalizationKeys200JSONResponse) VisitListAdminLocalizationKeysResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationKeys400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationKeys400ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationKeysResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationKeys401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationKeys401ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationKeysResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationKeys403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationKeys403ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationKeysResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationKeys500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationKeys500ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationKeysResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationKeyRequestObject struct {
+	Body *CreateAdminLocalizationKeyJSONRequestBody
+}
+
+type CreateAdminLocalizationKeyResponseObject interface {
+	VisitCreateAdminLocalizationKeyResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminLocalizationKey201JSONResponse TranslationKey
+
+func (response CreateAdminLocalizationKey201JSONResponse) VisitCreateAdminLocalizationKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationKey400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationKey400ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationKey401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationKey401ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationKey403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationKey403ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationKey409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationKey409ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationKey422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationKey422ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationKey500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationKey500ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationKeyResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationKeyUsagesRequestObject struct {
+	Id int `json:"id"`
+}
+
+type ListAdminLocalizationKeyUsagesResponseObject interface {
+	VisitListAdminLocalizationKeyUsagesResponse(w http.ResponseWriter) error
+}
+
+type ListAdminLocalizationKeyUsages200JSONResponse TranslationKeyUsageListResponse
+
+func (response ListAdminLocalizationKeyUsages200JSONResponse) VisitListAdminLocalizationKeyUsagesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationKeyUsages400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationKeyUsages400ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationKeyUsagesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationKeyUsages401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationKeyUsages401ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationKeyUsagesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationKeyUsages403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationKeyUsages403ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationKeyUsagesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationKeyUsages404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationKeyUsages404ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationKeyUsagesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationKeyUsages500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationKeyUsages500ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationKeyUsagesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationKeyUsagesRequestObject struct {
+	Id   int `json:"id"`
+	Body *ReplaceAdminLocalizationKeyUsagesJSONRequestBody
+}
+
+type ReplaceAdminLocalizationKeyUsagesResponseObject interface {
+	VisitReplaceAdminLocalizationKeyUsagesResponse(w http.ResponseWriter) error
+}
+
+type ReplaceAdminLocalizationKeyUsages200JSONResponse TranslationKeyUsageListResponse
+
+func (response ReplaceAdminLocalizationKeyUsages200JSONResponse) VisitReplaceAdminLocalizationKeyUsagesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationKeyUsages400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ReplaceAdminLocalizationKeyUsages400ApplicationProblemPlusJSONResponse) VisitReplaceAdminLocalizationKeyUsagesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationKeyUsages401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ReplaceAdminLocalizationKeyUsages401ApplicationProblemPlusJSONResponse) VisitReplaceAdminLocalizationKeyUsagesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationKeyUsages403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ReplaceAdminLocalizationKeyUsages403ApplicationProblemPlusJSONResponse) VisitReplaceAdminLocalizationKeyUsagesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationKeyUsages404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ReplaceAdminLocalizationKeyUsages404ApplicationProblemPlusJSONResponse) VisitReplaceAdminLocalizationKeyUsagesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationKeyUsages500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ReplaceAdminLocalizationKeyUsages500ApplicationProblemPlusJSONResponse) VisitReplaceAdminLocalizationKeyUsagesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationValuesRequestObject struct {
+	Id int `json:"id"`
+}
+
+type ListAdminLocalizationValuesResponseObject interface {
+	VisitListAdminLocalizationValuesResponse(w http.ResponseWriter) error
+}
+
+type ListAdminLocalizationValues200JSONResponse TranslationValueListResponse
+
+func (response ListAdminLocalizationValues200JSONResponse) VisitListAdminLocalizationValuesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationValues400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationValues400ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationValuesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationValues401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationValues401ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationValuesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationValues403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationValues403ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationValuesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationValues404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationValues404ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationValuesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationValues500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationValues500ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationValuesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationValueRequestObject struct {
+	Id     int    `json:"id"`
+	Locale string `json:"locale"`
+	Body   *PutAdminLocalizationValueJSONRequestBody
+}
+
+type PutAdminLocalizationValueResponseObject interface {
+	VisitPutAdminLocalizationValueResponse(w http.ResponseWriter) error
+}
+
+type PutAdminLocalizationValue200JSONResponse TranslationValue
+
+func (response PutAdminLocalizationValue200JSONResponse) VisitPutAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationValue400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationValue400ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationValue401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationValue401ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationValue403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationValue403ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationValue404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationValue404ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationValue409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationValue409ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationValue422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationValue422ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationValue500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationValue500ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationLocalesRequestObject struct {
+}
+
+type ListAdminLocalizationLocalesResponseObject interface {
+	VisitListAdminLocalizationLocalesResponse(w http.ResponseWriter) error
+}
+
+type ListAdminLocalizationLocales200JSONResponse LocalizationLocaleList
+
+func (response ListAdminLocalizationLocales200JSONResponse) VisitListAdminLocalizationLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationLocales400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationLocales400ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationLocales401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationLocales401ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationLocales403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationLocales403ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationLocales500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationLocales500ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationLocalesRequestObject struct {
+	Body *ReplaceAdminLocalizationLocalesJSONRequestBody
+}
+
+type ReplaceAdminLocalizationLocalesResponseObject interface {
+	VisitReplaceAdminLocalizationLocalesResponse(w http.ResponseWriter) error
+}
+
+type ReplaceAdminLocalizationLocales200JSONResponse LocalizationLocaleList
+
+func (response ReplaceAdminLocalizationLocales200JSONResponse) VisitReplaceAdminLocalizationLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationLocales400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ReplaceAdminLocalizationLocales400ApplicationProblemPlusJSONResponse) VisitReplaceAdminLocalizationLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationLocales401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ReplaceAdminLocalizationLocales401ApplicationProblemPlusJSONResponse) VisitReplaceAdminLocalizationLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationLocales403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ReplaceAdminLocalizationLocales403ApplicationProblemPlusJSONResponse) VisitReplaceAdminLocalizationLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationLocales500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ReplaceAdminLocalizationLocales500ApplicationProblemPlusJSONResponse) VisitReplaceAdminLocalizationLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminLocalizationMetricsRequestObject struct {
+}
+
+type GetAdminLocalizationMetricsResponseObject interface {
+	VisitGetAdminLocalizationMetricsResponse(w http.ResponseWriter) error
+}
+
+type GetAdminLocalizationMetrics200JSONResponse LocalizationMetricsResponse
+
+func (response GetAdminLocalizationMetrics200JSONResponse) VisitGetAdminLocalizationMetricsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminLocalizationMetrics400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminLocalizationMetrics400ApplicationProblemPlusJSONResponse) VisitGetAdminLocalizationMetricsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminLocalizationMetrics401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminLocalizationMetrics401ApplicationProblemPlusJSONResponse) VisitGetAdminLocalizationMetricsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminLocalizationMetrics403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminLocalizationMetrics403ApplicationProblemPlusJSONResponse) VisitGetAdminLocalizationMetricsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminLocalizationMetrics500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminLocalizationMetrics500ApplicationProblemPlusJSONResponse) VisitGetAdminLocalizationMetricsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationReleasesRequestObject struct {
+}
+
+type ListAdminLocalizationReleasesResponseObject interface {
+	VisitListAdminLocalizationReleasesResponse(w http.ResponseWriter) error
+}
+
+type ListAdminLocalizationReleases200JSONResponse TranslationReleaseListResponse
+
+func (response ListAdminLocalizationReleases200JSONResponse) VisitListAdminLocalizationReleasesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationReleases400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationReleases400ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationReleasesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationReleases401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationReleases401ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationReleasesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationReleases403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationReleases403ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationReleasesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationReleases500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationReleases500ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationReleasesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationReleaseRequestObject struct {
+	Body *CreateAdminLocalizationReleaseJSONRequestBody
+}
+
+type CreateAdminLocalizationReleaseResponseObject interface {
+	VisitCreateAdminLocalizationReleaseResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminLocalizationRelease201JSONResponse TranslationRelease
+
+func (response CreateAdminLocalizationRelease201JSONResponse) VisitCreateAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationRelease400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationRelease400ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationRelease401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationRelease401ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationRelease403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationRelease403ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationRelease422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationRelease422ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationRelease500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationRelease500ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ActivateAdminLocalizationReleaseRequestObject struct {
+	Id int `json:"id"`
+}
+
+type ActivateAdminLocalizationReleaseResponseObject interface {
+	VisitActivateAdminLocalizationReleaseResponse(w http.ResponseWriter) error
+}
+
+type ActivateAdminLocalizationRelease200JSONResponse TranslationRelease
+
+func (response ActivateAdminLocalizationRelease200JSONResponse) VisitActivateAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ActivateAdminLocalizationRelease400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ActivateAdminLocalizationRelease400ApplicationProblemPlusJSONResponse) VisitActivateAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ActivateAdminLocalizationRelease401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ActivateAdminLocalizationRelease401ApplicationProblemPlusJSONResponse) VisitActivateAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ActivateAdminLocalizationRelease403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ActivateAdminLocalizationRelease403ApplicationProblemPlusJSONResponse) VisitActivateAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ActivateAdminLocalizationRelease404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ActivateAdminLocalizationRelease404ApplicationProblemPlusJSONResponse) VisitActivateAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ActivateAdminLocalizationRelease409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ActivateAdminLocalizationRelease409ApplicationProblemPlusJSONResponse) VisitActivateAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ActivateAdminLocalizationRelease422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ActivateAdminLocalizationRelease422ApplicationProblemPlusJSONResponse) VisitActivateAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ActivateAdminLocalizationRelease500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ActivateAdminLocalizationRelease500ApplicationProblemPlusJSONResponse) VisitActivateAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminLocalizationReleaseQualityRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetAdminLocalizationReleaseQualityResponseObject interface {
+	VisitGetAdminLocalizationReleaseQualityResponse(w http.ResponseWriter) error
+}
+
+type GetAdminLocalizationReleaseQuality200JSONResponse TranslationReleaseQuality
+
+func (response GetAdminLocalizationReleaseQuality200JSONResponse) VisitGetAdminLocalizationReleaseQualityResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminLocalizationReleaseQuality400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminLocalizationReleaseQuality400ApplicationProblemPlusJSONResponse) VisitGetAdminLocalizationReleaseQualityResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminLocalizationReleaseQuality401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminLocalizationReleaseQuality401ApplicationProblemPlusJSONResponse) VisitGetAdminLocalizationReleaseQualityResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminLocalizationReleaseQuality403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminLocalizationReleaseQuality403ApplicationProblemPlusJSONResponse) VisitGetAdminLocalizationReleaseQualityResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminLocalizationReleaseQuality404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminLocalizationReleaseQuality404ApplicationProblemPlusJSONResponse) VisitGetAdminLocalizationReleaseQualityResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminLocalizationReleaseQuality500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminLocalizationReleaseQuality500ApplicationProblemPlusJSONResponse) VisitGetAdminLocalizationReleaseQualityResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RollbackAdminLocalizationReleaseRequestObject struct {
+	Id int `json:"id"`
+}
+
+type RollbackAdminLocalizationReleaseResponseObject interface {
+	VisitRollbackAdminLocalizationReleaseResponse(w http.ResponseWriter) error
+}
+
+type RollbackAdminLocalizationRelease201JSONResponse TranslationRelease
+
+func (response RollbackAdminLocalizationRelease201JSONResponse) VisitRollbackAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RollbackAdminLocalizationRelease400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response RollbackAdminLocalizationRelease400ApplicationProblemPlusJSONResponse) VisitRollbackAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RollbackAdminLocalizationRelease401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response RollbackAdminLocalizationRelease401ApplicationProblemPlusJSONResponse) VisitRollbackAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RollbackAdminLocalizationRelease403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response RollbackAdminLocalizationRelease403ApplicationProblemPlusJSONResponse) VisitRollbackAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RollbackAdminLocalizationRelease404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response RollbackAdminLocalizationRelease404ApplicationProblemPlusJSONResponse) VisitRollbackAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RollbackAdminLocalizationRelease409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response RollbackAdminLocalizationRelease409ApplicationProblemPlusJSONResponse) VisitRollbackAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RollbackAdminLocalizationRelease422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response RollbackAdminLocalizationRelease422ApplicationProblemPlusJSONResponse) VisitRollbackAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RollbackAdminLocalizationRelease500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response RollbackAdminLocalizationRelease500ApplicationProblemPlusJSONResponse) VisitRollbackAdminLocalizationReleaseResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationRolesRequestObject struct {
+}
+
+type ListAdminLocalizationRolesResponseObject interface {
+	VisitListAdminLocalizationRolesResponse(w http.ResponseWriter) error
+}
+
+type ListAdminLocalizationRoles200JSONResponse LocalizationRoleListResponse
+
+func (response ListAdminLocalizationRoles200JSONResponse) VisitListAdminLocalizationRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationRoles400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationRoles400ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationRoles401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationRoles401ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationRoles403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationRoles403ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationRoles500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationRoles500ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationRoleRequestObject struct {
+	Body *PutAdminLocalizationRoleJSONRequestBody
+}
+
+type PutAdminLocalizationRoleResponseObject interface {
+	VisitPutAdminLocalizationRoleResponse(w http.ResponseWriter) error
+}
+
+type PutAdminLocalizationRole200JSONResponse LocalizationRoleAssignment
+
+func (response PutAdminLocalizationRole200JSONResponse) VisitPutAdminLocalizationRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationRole400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationRole400ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationRole401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationRole401ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationRole403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationRole403ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationRole422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationRole422ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutAdminLocalizationRole500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PutAdminLocalizationRole500ApplicationProblemPlusJSONResponse) VisitPutAdminLocalizationRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationRolloutsRequestObject struct {
+}
+
+type ListAdminLocalizationRolloutsResponseObject interface {
+	VisitListAdminLocalizationRolloutsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminLocalizationRollouts200JSONResponse LocalizationRolloutListResponse
+
+func (response ListAdminLocalizationRollouts200JSONResponse) VisitListAdminLocalizationRolloutsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationRollouts400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationRollouts400ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationRolloutsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationRollouts401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationRollouts401ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationRolloutsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationRollouts403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationRollouts403ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationRolloutsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationRollouts500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationRollouts500ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationRolloutsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationRolloutsRequestObject struct {
+	Body *ReplaceAdminLocalizationRolloutsJSONRequestBody
+}
+
+type ReplaceAdminLocalizationRolloutsResponseObject interface {
+	VisitReplaceAdminLocalizationRolloutsResponse(w http.ResponseWriter) error
+}
+
+type ReplaceAdminLocalizationRollouts200JSONResponse LocalizationRolloutListResponse
+
+func (response ReplaceAdminLocalizationRollouts200JSONResponse) VisitReplaceAdminLocalizationRolloutsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationRollouts400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ReplaceAdminLocalizationRollouts400ApplicationProblemPlusJSONResponse) VisitReplaceAdminLocalizationRolloutsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationRollouts401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ReplaceAdminLocalizationRollouts401ApplicationProblemPlusJSONResponse) VisitReplaceAdminLocalizationRolloutsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationRollouts403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ReplaceAdminLocalizationRollouts403ApplicationProblemPlusJSONResponse) VisitReplaceAdminLocalizationRolloutsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationRollouts422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ReplaceAdminLocalizationRollouts422ApplicationProblemPlusJSONResponse) VisitReplaceAdminLocalizationRolloutsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReplaceAdminLocalizationRollouts500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ReplaceAdminLocalizationRollouts500ApplicationProblemPlusJSONResponse) VisitReplaceAdminLocalizationRolloutsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationCommentsRequestObject struct {
+	Id int `json:"id"`
+}
+
+type ListAdminLocalizationCommentsResponseObject interface {
+	VisitListAdminLocalizationCommentsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminLocalizationComments200JSONResponse TranslationCommentListResponse
+
+func (response ListAdminLocalizationComments200JSONResponse) VisitListAdminLocalizationCommentsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationComments400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationComments400ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationCommentsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationComments401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationComments401ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationCommentsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationComments403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationComments403ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationCommentsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationComments404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationComments404ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationCommentsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminLocalizationComments500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminLocalizationComments500ApplicationProblemPlusJSONResponse) VisitListAdminLocalizationCommentsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationCommentRequestObject struct {
+	Id   int `json:"id"`
+	Body *CreateAdminLocalizationCommentJSONRequestBody
+}
+
+type CreateAdminLocalizationCommentResponseObject interface {
+	VisitCreateAdminLocalizationCommentResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminLocalizationComment201JSONResponse TranslationComment
+
+func (response CreateAdminLocalizationComment201JSONResponse) VisitCreateAdminLocalizationCommentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationComment400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationComment400ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationCommentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationComment401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationComment401ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationCommentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationComment403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationComment403ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationCommentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationComment404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationComment404ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationCommentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminLocalizationComment500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminLocalizationComment500ApplicationProblemPlusJSONResponse) VisitCreateAdminLocalizationCommentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminLocalizationValueRequestObject struct {
+	Id   int `json:"id"`
+	Body *PublishAdminLocalizationValueJSONRequestBody
+}
+
+type PublishAdminLocalizationValueResponseObject interface {
+	VisitPublishAdminLocalizationValueResponse(w http.ResponseWriter) error
+}
+
+type PublishAdminLocalizationValue200JSONResponse TranslationValue
+
+func (response PublishAdminLocalizationValue200JSONResponse) VisitPublishAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminLocalizationValue400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PublishAdminLocalizationValue400ApplicationProblemPlusJSONResponse) VisitPublishAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminLocalizationValue401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PublishAdminLocalizationValue401ApplicationProblemPlusJSONResponse) VisitPublishAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminLocalizationValue403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PublishAdminLocalizationValue403ApplicationProblemPlusJSONResponse) VisitPublishAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminLocalizationValue404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PublishAdminLocalizationValue404ApplicationProblemPlusJSONResponse) VisitPublishAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminLocalizationValue409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PublishAdminLocalizationValue409ApplicationProblemPlusJSONResponse) VisitPublishAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminLocalizationValue422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PublishAdminLocalizationValue422ApplicationProblemPlusJSONResponse) VisitPublishAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PublishAdminLocalizationValue500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PublishAdminLocalizationValue500ApplicationProblemPlusJSONResponse) VisitPublishAdminLocalizationValueResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubmitAdminLocalizationValueReviewRequestObject struct {
+	Id   int `json:"id"`
+	Body *SubmitAdminLocalizationValueReviewJSONRequestBody
+}
+
+type SubmitAdminLocalizationValueReviewResponseObject interface {
+	VisitSubmitAdminLocalizationValueReviewResponse(w http.ResponseWriter) error
+}
+
+type SubmitAdminLocalizationValueReview200JSONResponse TranslationValue
+
+func (response SubmitAdminLocalizationValueReview200JSONResponse) VisitSubmitAdminLocalizationValueReviewResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubmitAdminLocalizationValueReview400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SubmitAdminLocalizationValueReview400ApplicationProblemPlusJSONResponse) VisitSubmitAdminLocalizationValueReviewResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubmitAdminLocalizationValueReview401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SubmitAdminLocalizationValueReview401ApplicationProblemPlusJSONResponse) VisitSubmitAdminLocalizationValueReviewResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubmitAdminLocalizationValueReview403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SubmitAdminLocalizationValueReview403ApplicationProblemPlusJSONResponse) VisitSubmitAdminLocalizationValueReviewResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubmitAdminLocalizationValueReview404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SubmitAdminLocalizationValueReview404ApplicationProblemPlusJSONResponse) VisitSubmitAdminLocalizationValueReviewResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubmitAdminLocalizationValueReview409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SubmitAdminLocalizationValueReview409ApplicationProblemPlusJSONResponse) VisitSubmitAdminLocalizationValueReviewResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubmitAdminLocalizationValueReview422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SubmitAdminLocalizationValueReview422ApplicationProblemPlusJSONResponse) VisitSubmitAdminLocalizationValueReviewResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SubmitAdminLocalizationValueReview500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SubmitAdminLocalizationValueReview500ApplicationProblemPlusJSONResponse) VisitSubmitAdminLocalizationValueReviewResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(500)
 
@@ -57154,6 +66327,198 @@ func (response ResolveContentPage500ApplicationProblemPlusJSONResponse) VisitRes
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetLocalizationBundleRequestObject struct {
+	Locale string `json:"locale"`
+	Params GetLocalizationBundleParams
+}
+
+type GetLocalizationBundleResponseObject interface {
+	VisitGetLocalizationBundleResponse(w http.ResponseWriter) error
+}
+
+type GetLocalizationBundle200ResponseHeaders struct {
+	CacheControl string
+	ETag         string
+}
+
+type GetLocalizationBundle200JSONResponse struct {
+	Body    LocalizationBundle
+	Headers GetLocalizationBundle200ResponseHeaders
+}
+
+func (response GetLocalizationBundle200JSONResponse) VisitGetLocalizationBundleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", fmt.Sprint(response.Headers.CacheControl))
+	w.Header().Set("ETag", fmt.Sprint(response.Headers.ETag))
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type GetLocalizationBundle304ResponseHeaders struct {
+	CacheControl string
+	ETag         string
+}
+
+type GetLocalizationBundle304Response struct {
+	Headers GetLocalizationBundle304ResponseHeaders
+}
+
+func (response GetLocalizationBundle304Response) VisitGetLocalizationBundleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Cache-Control", fmt.Sprint(response.Headers.CacheControl))
+	w.Header().Set("ETag", fmt.Sprint(response.Headers.ETag))
+	w.WriteHeader(304)
+	return nil
+}
+
+type GetLocalizationBundle400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetLocalizationBundle400ApplicationProblemPlusJSONResponse) VisitGetLocalizationBundleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetLocalizationBundle500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetLocalizationBundle500ApplicationProblemPlusJSONResponse) VisitGetLocalizationBundleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetLocalizationBundle503ApplicationProblemPlusJSONResponse struct {
+	ServiceUnavailableProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetLocalizationBundle503ApplicationProblemPlusJSONResponse) VisitGetLocalizationBundleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetLocalizationBundleMetaRequestObject struct {
+	Locale string `json:"locale"`
+	Params GetLocalizationBundleMetaParams
+}
+
+type GetLocalizationBundleMetaResponseObject interface {
+	VisitGetLocalizationBundleMetaResponse(w http.ResponseWriter) error
+}
+
+type GetLocalizationBundleMeta200ResponseHeaders struct {
+	CacheControl string
+	ETag         string
+}
+
+type GetLocalizationBundleMeta200JSONResponse struct {
+	Body    LocalizationBundleMeta
+	Headers GetLocalizationBundleMeta200ResponseHeaders
+}
+
+func (response GetLocalizationBundleMeta200JSONResponse) VisitGetLocalizationBundleMetaResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", fmt.Sprint(response.Headers.CacheControl))
+	w.Header().Set("ETag", fmt.Sprint(response.Headers.ETag))
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type GetLocalizationBundleMeta304ResponseHeaders struct {
+	CacheControl string
+	ETag         string
+}
+
+type GetLocalizationBundleMeta304Response struct {
+	Headers GetLocalizationBundleMeta304ResponseHeaders
+}
+
+func (response GetLocalizationBundleMeta304Response) VisitGetLocalizationBundleMetaResponse(w http.ResponseWriter) error {
+	w.Header().Set("Cache-Control", fmt.Sprint(response.Headers.CacheControl))
+	w.Header().Set("ETag", fmt.Sprint(response.Headers.ETag))
+	w.WriteHeader(304)
+	return nil
+}
+
+type GetLocalizationBundleMeta400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetLocalizationBundleMeta400ApplicationProblemPlusJSONResponse) VisitGetLocalizationBundleMetaResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetLocalizationBundleMeta500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetLocalizationBundleMeta500ApplicationProblemPlusJSONResponse) VisitGetLocalizationBundleMetaResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetLocalizationBundleMeta503ApplicationProblemPlusJSONResponse struct {
+	ServiceUnavailableProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetLocalizationBundleMeta503ApplicationProblemPlusJSONResponse) VisitGetLocalizationBundleMetaResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListLocalizationLocalesRequestObject struct {
+}
+
+type ListLocalizationLocalesResponseObject interface {
+	VisitListLocalizationLocalesResponse(w http.ResponseWriter) error
+}
+
+type ListLocalizationLocales200JSONResponse LocalizationLocaleList
+
+func (response ListLocalizationLocales200JSONResponse) VisitListLocalizationLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListLocalizationLocales400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListLocalizationLocales400ApplicationProblemPlusJSONResponse) VisitListLocalizationLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListLocalizationLocales500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListLocalizationLocales500ApplicationProblemPlusJSONResponse) VisitListLocalizationLocalesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetProfileRequestObject struct {
 }
 
@@ -59129,12 +68494,6 @@ type StrictServerInterface interface {
 	// (PUT /api/v1/admin/cms/governance)
 	UpdateAdminCmsGovernance(ctx context.Context, request UpdateAdminCmsGovernanceRequestObject) (UpdateAdminCmsGovernanceResponseObject, error)
 
-	// (GET /api/v1/admin/cms/locales)
-	GetAdminCmsLocales(ctx context.Context, request GetAdminCmsLocalesRequestObject) (GetAdminCmsLocalesResponseObject, error)
-
-	// (PUT /api/v1/admin/cms/locales)
-	UpdateAdminCmsLocales(ctx context.Context, request UpdateAdminCmsLocalesRequestObject) (UpdateAdminCmsLocalesResponseObject, error)
-
 	// (GET /api/v1/admin/cms/navigation)
 	ListAdminCmsNavigation(ctx context.Context, request ListAdminCmsNavigationRequestObject) (ListAdminCmsNavigationResponseObject, error)
 
@@ -59314,6 +68673,96 @@ type StrictServerInterface interface {
 
 	// (GET /api/v1/admin/inventory/variants/{product_variant_id}/timeline)
 	GetAdminInventoryTimeline(ctx context.Context, request GetAdminInventoryTimelineRequestObject) (GetAdminInventoryTimelineResponseObject, error)
+
+	// (GET /api/v1/admin/localization/assignees)
+	ListAdminLocalizationAssignees(ctx context.Context, request ListAdminLocalizationAssigneesRequestObject) (ListAdminLocalizationAssigneesResponseObject, error)
+
+	// (GET /api/v1/admin/localization/entities/{entity_type}/{entity_id})
+	GetAdminEntityLocalization(ctx context.Context, request GetAdminEntityLocalizationRequestObject) (GetAdminEntityLocalizationResponseObject, error)
+
+	// (PUT /api/v1/admin/localization/entities/{entity_type}/{entity_id})
+	PutAdminEntityLocalization(ctx context.Context, request PutAdminEntityLocalizationRequestObject) (PutAdminEntityLocalizationResponseObject, error)
+
+	// (POST /api/v1/admin/localization/export)
+	ExportAdminLocalization(ctx context.Context, request ExportAdminLocalizationRequestObject) (ExportAdminLocalizationResponseObject, error)
+
+	// (GET /api/v1/admin/localization/glossary)
+	ListAdminLocalizationGlossary(ctx context.Context, request ListAdminLocalizationGlossaryRequestObject) (ListAdminLocalizationGlossaryResponseObject, error)
+
+	// (PUT /api/v1/admin/localization/glossary)
+	PutAdminLocalizationGlossaryTerm(ctx context.Context, request PutAdminLocalizationGlossaryTermRequestObject) (PutAdminLocalizationGlossaryTermResponseObject, error)
+
+	// (DELETE /api/v1/admin/localization/glossary/{id})
+	DeleteAdminLocalizationGlossaryTerm(ctx context.Context, request DeleteAdminLocalizationGlossaryTermRequestObject) (DeleteAdminLocalizationGlossaryTermResponseObject, error)
+
+	// (POST /api/v1/admin/localization/import)
+	ImportAdminLocalization(ctx context.Context, request ImportAdminLocalizationRequestObject) (ImportAdminLocalizationResponseObject, error)
+
+	// (GET /api/v1/admin/localization/keys)
+	ListAdminLocalizationKeys(ctx context.Context, request ListAdminLocalizationKeysRequestObject) (ListAdminLocalizationKeysResponseObject, error)
+
+	// (POST /api/v1/admin/localization/keys)
+	CreateAdminLocalizationKey(ctx context.Context, request CreateAdminLocalizationKeyRequestObject) (CreateAdminLocalizationKeyResponseObject, error)
+
+	// (GET /api/v1/admin/localization/keys/{id}/usages)
+	ListAdminLocalizationKeyUsages(ctx context.Context, request ListAdminLocalizationKeyUsagesRequestObject) (ListAdminLocalizationKeyUsagesResponseObject, error)
+
+	// (PUT /api/v1/admin/localization/keys/{id}/usages)
+	ReplaceAdminLocalizationKeyUsages(ctx context.Context, request ReplaceAdminLocalizationKeyUsagesRequestObject) (ReplaceAdminLocalizationKeyUsagesResponseObject, error)
+
+	// (GET /api/v1/admin/localization/keys/{id}/values)
+	ListAdminLocalizationValues(ctx context.Context, request ListAdminLocalizationValuesRequestObject) (ListAdminLocalizationValuesResponseObject, error)
+
+	// (PUT /api/v1/admin/localization/keys/{id}/values/{locale})
+	PutAdminLocalizationValue(ctx context.Context, request PutAdminLocalizationValueRequestObject) (PutAdminLocalizationValueResponseObject, error)
+
+	// (GET /api/v1/admin/localization/locales)
+	ListAdminLocalizationLocales(ctx context.Context, request ListAdminLocalizationLocalesRequestObject) (ListAdminLocalizationLocalesResponseObject, error)
+
+	// (PUT /api/v1/admin/localization/locales)
+	ReplaceAdminLocalizationLocales(ctx context.Context, request ReplaceAdminLocalizationLocalesRequestObject) (ReplaceAdminLocalizationLocalesResponseObject, error)
+
+	// (GET /api/v1/admin/localization/metrics)
+	GetAdminLocalizationMetrics(ctx context.Context, request GetAdminLocalizationMetricsRequestObject) (GetAdminLocalizationMetricsResponseObject, error)
+
+	// (GET /api/v1/admin/localization/releases)
+	ListAdminLocalizationReleases(ctx context.Context, request ListAdminLocalizationReleasesRequestObject) (ListAdminLocalizationReleasesResponseObject, error)
+
+	// (POST /api/v1/admin/localization/releases)
+	CreateAdminLocalizationRelease(ctx context.Context, request CreateAdminLocalizationReleaseRequestObject) (CreateAdminLocalizationReleaseResponseObject, error)
+
+	// (POST /api/v1/admin/localization/releases/{id}/activate)
+	ActivateAdminLocalizationRelease(ctx context.Context, request ActivateAdminLocalizationReleaseRequestObject) (ActivateAdminLocalizationReleaseResponseObject, error)
+
+	// (GET /api/v1/admin/localization/releases/{id}/quality)
+	GetAdminLocalizationReleaseQuality(ctx context.Context, request GetAdminLocalizationReleaseQualityRequestObject) (GetAdminLocalizationReleaseQualityResponseObject, error)
+
+	// (POST /api/v1/admin/localization/releases/{id}/rollback)
+	RollbackAdminLocalizationRelease(ctx context.Context, request RollbackAdminLocalizationReleaseRequestObject) (RollbackAdminLocalizationReleaseResponseObject, error)
+
+	// (GET /api/v1/admin/localization/roles)
+	ListAdminLocalizationRoles(ctx context.Context, request ListAdminLocalizationRolesRequestObject) (ListAdminLocalizationRolesResponseObject, error)
+
+	// (PUT /api/v1/admin/localization/roles)
+	PutAdminLocalizationRole(ctx context.Context, request PutAdminLocalizationRoleRequestObject) (PutAdminLocalizationRoleResponseObject, error)
+
+	// (GET /api/v1/admin/localization/rollouts)
+	ListAdminLocalizationRollouts(ctx context.Context, request ListAdminLocalizationRolloutsRequestObject) (ListAdminLocalizationRolloutsResponseObject, error)
+
+	// (PUT /api/v1/admin/localization/rollouts)
+	ReplaceAdminLocalizationRollouts(ctx context.Context, request ReplaceAdminLocalizationRolloutsRequestObject) (ReplaceAdminLocalizationRolloutsResponseObject, error)
+
+	// (GET /api/v1/admin/localization/values/{id}/comments)
+	ListAdminLocalizationComments(ctx context.Context, request ListAdminLocalizationCommentsRequestObject) (ListAdminLocalizationCommentsResponseObject, error)
+
+	// (POST /api/v1/admin/localization/values/{id}/comments)
+	CreateAdminLocalizationComment(ctx context.Context, request CreateAdminLocalizationCommentRequestObject) (CreateAdminLocalizationCommentResponseObject, error)
+
+	// (POST /api/v1/admin/localization/values/{id}/publish)
+	PublishAdminLocalizationValue(ctx context.Context, request PublishAdminLocalizationValueRequestObject) (PublishAdminLocalizationValueResponseObject, error)
+
+	// (POST /api/v1/admin/localization/values/{id}/submit-review)
+	SubmitAdminLocalizationValueReview(ctx context.Context, request SubmitAdminLocalizationValueReviewRequestObject) (SubmitAdminLocalizationValueReviewResponseObject, error)
 
 	// (GET /api/v1/admin/orders)
 	ListAdminOrders(ctx context.Context, request ListAdminOrdersRequestObject) (ListAdminOrdersResponseObject, error)
@@ -59554,6 +69003,15 @@ type StrictServerInterface interface {
 
 	// (GET /api/v1/content/{path})
 	ResolveContentPage(ctx context.Context, request ResolveContentPageRequestObject) (ResolveContentPageResponseObject, error)
+
+	// (GET /api/v1/localization/bundles/{locale})
+	GetLocalizationBundle(ctx context.Context, request GetLocalizationBundleRequestObject) (GetLocalizationBundleResponseObject, error)
+
+	// (GET /api/v1/localization/bundles/{locale}/meta)
+	GetLocalizationBundleMeta(ctx context.Context, request GetLocalizationBundleMetaRequestObject) (GetLocalizationBundleMetaResponseObject, error)
+
+	// (GET /api/v1/localization/locales)
+	ListLocalizationLocales(ctx context.Context, request ListLocalizationLocalesRequestObject) (ListLocalizationLocalesResponseObject, error)
 
 	// (GET /api/v1/me/)
 	GetProfile(ctx context.Context, request GetProfileRequestObject) (GetProfileResponseObject, error)
@@ -60633,64 +70091,6 @@ func (sh *strictHandler) UpdateAdminCmsGovernance(ctx *gin.Context) {
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(UpdateAdminCmsGovernanceResponseObject); ok {
 		if err := validResponse.VisitUpdateAdminCmsGovernanceResponse(ctx.Writer); err != nil {
-			ctx.Error(err)
-		}
-	} else if response != nil {
-		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
-// GetAdminCmsLocales operation middleware
-func (sh *strictHandler) GetAdminCmsLocales(ctx *gin.Context) {
-	var request GetAdminCmsLocalesRequestObject
-
-	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.GetAdminCmsLocales(ctx, request.(GetAdminCmsLocalesRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetAdminCmsLocales")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		ctx.Error(err)
-		ctx.Status(http.StatusInternalServerError)
-	} else if validResponse, ok := response.(GetAdminCmsLocalesResponseObject); ok {
-		if err := validResponse.VisitGetAdminCmsLocalesResponse(ctx.Writer); err != nil {
-			ctx.Error(err)
-		}
-	} else if response != nil {
-		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
-// UpdateAdminCmsLocales operation middleware
-func (sh *strictHandler) UpdateAdminCmsLocales(ctx *gin.Context) {
-	var request UpdateAdminCmsLocalesRequestObject
-
-	var body UpdateAdminCmsLocalesJSONRequestBody
-	if err := ctx.ShouldBindJSON(&body); err != nil {
-		ctx.Status(http.StatusBadRequest)
-		ctx.Error(err)
-		return
-	}
-	request.Body = &body
-
-	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.UpdateAdminCmsLocales(ctx, request.(UpdateAdminCmsLocalesRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "UpdateAdminCmsLocales")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		ctx.Error(err)
-		ctx.Status(http.StatusInternalServerError)
-	} else if validResponse, ok := response.(UpdateAdminCmsLocalesResponseObject); ok {
-		if err := validResponse.VisitUpdateAdminCmsLocalesResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -62498,6 +71898,905 @@ func (sh *strictHandler) GetAdminInventoryTimeline(ctx *gin.Context, productVari
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(GetAdminInventoryTimelineResponseObject); ok {
 		if err := validResponse.VisitGetAdminInventoryTimelineResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminLocalizationAssignees operation middleware
+func (sh *strictHandler) ListAdminLocalizationAssignees(ctx *gin.Context, params ListAdminLocalizationAssigneesParams) {
+	var request ListAdminLocalizationAssigneesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminLocalizationAssignees(ctx, request.(ListAdminLocalizationAssigneesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminLocalizationAssignees")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminLocalizationAssigneesResponseObject); ok {
+		if err := validResponse.VisitListAdminLocalizationAssigneesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminEntityLocalization operation middleware
+func (sh *strictHandler) GetAdminEntityLocalization(ctx *gin.Context, entityType LocalizedEntityType, entityId int) {
+	var request GetAdminEntityLocalizationRequestObject
+
+	request.EntityType = entityType
+	request.EntityId = entityId
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminEntityLocalization(ctx, request.(GetAdminEntityLocalizationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminEntityLocalization")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminEntityLocalizationResponseObject); ok {
+		if err := validResponse.VisitGetAdminEntityLocalizationResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutAdminEntityLocalization operation middleware
+func (sh *strictHandler) PutAdminEntityLocalization(ctx *gin.Context, entityType LocalizedEntityType, entityId int) {
+	var request PutAdminEntityLocalizationRequestObject
+
+	request.EntityType = entityType
+	request.EntityId = entityId
+
+	var body PutAdminEntityLocalizationJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PutAdminEntityLocalization(ctx, request.(PutAdminEntityLocalizationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutAdminEntityLocalization")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PutAdminEntityLocalizationResponseObject); ok {
+		if err := validResponse.VisitPutAdminEntityLocalizationResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ExportAdminLocalization operation middleware
+func (sh *strictHandler) ExportAdminLocalization(ctx *gin.Context) {
+	var request ExportAdminLocalizationRequestObject
+
+	var body ExportAdminLocalizationJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ExportAdminLocalization(ctx, request.(ExportAdminLocalizationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ExportAdminLocalization")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ExportAdminLocalizationResponseObject); ok {
+		if err := validResponse.VisitExportAdminLocalizationResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminLocalizationGlossary operation middleware
+func (sh *strictHandler) ListAdminLocalizationGlossary(ctx *gin.Context, params ListAdminLocalizationGlossaryParams) {
+	var request ListAdminLocalizationGlossaryRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminLocalizationGlossary(ctx, request.(ListAdminLocalizationGlossaryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminLocalizationGlossary")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminLocalizationGlossaryResponseObject); ok {
+		if err := validResponse.VisitListAdminLocalizationGlossaryResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutAdminLocalizationGlossaryTerm operation middleware
+func (sh *strictHandler) PutAdminLocalizationGlossaryTerm(ctx *gin.Context) {
+	var request PutAdminLocalizationGlossaryTermRequestObject
+
+	var body PutAdminLocalizationGlossaryTermJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PutAdminLocalizationGlossaryTerm(ctx, request.(PutAdminLocalizationGlossaryTermRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutAdminLocalizationGlossaryTerm")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PutAdminLocalizationGlossaryTermResponseObject); ok {
+		if err := validResponse.VisitPutAdminLocalizationGlossaryTermResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteAdminLocalizationGlossaryTerm operation middleware
+func (sh *strictHandler) DeleteAdminLocalizationGlossaryTerm(ctx *gin.Context, id int) {
+	var request DeleteAdminLocalizationGlossaryTermRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAdminLocalizationGlossaryTerm(ctx, request.(DeleteAdminLocalizationGlossaryTermRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAdminLocalizationGlossaryTerm")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteAdminLocalizationGlossaryTermResponseObject); ok {
+		if err := validResponse.VisitDeleteAdminLocalizationGlossaryTermResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ImportAdminLocalization operation middleware
+func (sh *strictHandler) ImportAdminLocalization(ctx *gin.Context) {
+	var request ImportAdminLocalizationRequestObject
+
+	var body ImportAdminLocalizationJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ImportAdminLocalization(ctx, request.(ImportAdminLocalizationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ImportAdminLocalization")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ImportAdminLocalizationResponseObject); ok {
+		if err := validResponse.VisitImportAdminLocalizationResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminLocalizationKeys operation middleware
+func (sh *strictHandler) ListAdminLocalizationKeys(ctx *gin.Context, params ListAdminLocalizationKeysParams) {
+	var request ListAdminLocalizationKeysRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminLocalizationKeys(ctx, request.(ListAdminLocalizationKeysRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminLocalizationKeys")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminLocalizationKeysResponseObject); ok {
+		if err := validResponse.VisitListAdminLocalizationKeysResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminLocalizationKey operation middleware
+func (sh *strictHandler) CreateAdminLocalizationKey(ctx *gin.Context) {
+	var request CreateAdminLocalizationKeyRequestObject
+
+	var body CreateAdminLocalizationKeyJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminLocalizationKey(ctx, request.(CreateAdminLocalizationKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminLocalizationKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminLocalizationKeyResponseObject); ok {
+		if err := validResponse.VisitCreateAdminLocalizationKeyResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminLocalizationKeyUsages operation middleware
+func (sh *strictHandler) ListAdminLocalizationKeyUsages(ctx *gin.Context, id int) {
+	var request ListAdminLocalizationKeyUsagesRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminLocalizationKeyUsages(ctx, request.(ListAdminLocalizationKeyUsagesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminLocalizationKeyUsages")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminLocalizationKeyUsagesResponseObject); ok {
+		if err := validResponse.VisitListAdminLocalizationKeyUsagesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ReplaceAdminLocalizationKeyUsages operation middleware
+func (sh *strictHandler) ReplaceAdminLocalizationKeyUsages(ctx *gin.Context, id int) {
+	var request ReplaceAdminLocalizationKeyUsagesRequestObject
+
+	request.Id = id
+
+	var body ReplaceAdminLocalizationKeyUsagesJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ReplaceAdminLocalizationKeyUsages(ctx, request.(ReplaceAdminLocalizationKeyUsagesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ReplaceAdminLocalizationKeyUsages")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ReplaceAdminLocalizationKeyUsagesResponseObject); ok {
+		if err := validResponse.VisitReplaceAdminLocalizationKeyUsagesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminLocalizationValues operation middleware
+func (sh *strictHandler) ListAdminLocalizationValues(ctx *gin.Context, id int) {
+	var request ListAdminLocalizationValuesRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminLocalizationValues(ctx, request.(ListAdminLocalizationValuesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminLocalizationValues")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminLocalizationValuesResponseObject); ok {
+		if err := validResponse.VisitListAdminLocalizationValuesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutAdminLocalizationValue operation middleware
+func (sh *strictHandler) PutAdminLocalizationValue(ctx *gin.Context, id int, locale string) {
+	var request PutAdminLocalizationValueRequestObject
+
+	request.Id = id
+	request.Locale = locale
+
+	var body PutAdminLocalizationValueJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PutAdminLocalizationValue(ctx, request.(PutAdminLocalizationValueRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutAdminLocalizationValue")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PutAdminLocalizationValueResponseObject); ok {
+		if err := validResponse.VisitPutAdminLocalizationValueResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminLocalizationLocales operation middleware
+func (sh *strictHandler) ListAdminLocalizationLocales(ctx *gin.Context) {
+	var request ListAdminLocalizationLocalesRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminLocalizationLocales(ctx, request.(ListAdminLocalizationLocalesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminLocalizationLocales")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminLocalizationLocalesResponseObject); ok {
+		if err := validResponse.VisitListAdminLocalizationLocalesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ReplaceAdminLocalizationLocales operation middleware
+func (sh *strictHandler) ReplaceAdminLocalizationLocales(ctx *gin.Context) {
+	var request ReplaceAdminLocalizationLocalesRequestObject
+
+	var body ReplaceAdminLocalizationLocalesJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ReplaceAdminLocalizationLocales(ctx, request.(ReplaceAdminLocalizationLocalesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ReplaceAdminLocalizationLocales")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ReplaceAdminLocalizationLocalesResponseObject); ok {
+		if err := validResponse.VisitReplaceAdminLocalizationLocalesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminLocalizationMetrics operation middleware
+func (sh *strictHandler) GetAdminLocalizationMetrics(ctx *gin.Context) {
+	var request GetAdminLocalizationMetricsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminLocalizationMetrics(ctx, request.(GetAdminLocalizationMetricsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminLocalizationMetrics")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminLocalizationMetricsResponseObject); ok {
+		if err := validResponse.VisitGetAdminLocalizationMetricsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminLocalizationReleases operation middleware
+func (sh *strictHandler) ListAdminLocalizationReleases(ctx *gin.Context) {
+	var request ListAdminLocalizationReleasesRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminLocalizationReleases(ctx, request.(ListAdminLocalizationReleasesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminLocalizationReleases")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminLocalizationReleasesResponseObject); ok {
+		if err := validResponse.VisitListAdminLocalizationReleasesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminLocalizationRelease operation middleware
+func (sh *strictHandler) CreateAdminLocalizationRelease(ctx *gin.Context) {
+	var request CreateAdminLocalizationReleaseRequestObject
+
+	var body CreateAdminLocalizationReleaseJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminLocalizationRelease(ctx, request.(CreateAdminLocalizationReleaseRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminLocalizationRelease")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminLocalizationReleaseResponseObject); ok {
+		if err := validResponse.VisitCreateAdminLocalizationReleaseResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ActivateAdminLocalizationRelease operation middleware
+func (sh *strictHandler) ActivateAdminLocalizationRelease(ctx *gin.Context, id int) {
+	var request ActivateAdminLocalizationReleaseRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ActivateAdminLocalizationRelease(ctx, request.(ActivateAdminLocalizationReleaseRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ActivateAdminLocalizationRelease")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ActivateAdminLocalizationReleaseResponseObject); ok {
+		if err := validResponse.VisitActivateAdminLocalizationReleaseResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminLocalizationReleaseQuality operation middleware
+func (sh *strictHandler) GetAdminLocalizationReleaseQuality(ctx *gin.Context, id int) {
+	var request GetAdminLocalizationReleaseQualityRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminLocalizationReleaseQuality(ctx, request.(GetAdminLocalizationReleaseQualityRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminLocalizationReleaseQuality")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminLocalizationReleaseQualityResponseObject); ok {
+		if err := validResponse.VisitGetAdminLocalizationReleaseQualityResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RollbackAdminLocalizationRelease operation middleware
+func (sh *strictHandler) RollbackAdminLocalizationRelease(ctx *gin.Context, id int) {
+	var request RollbackAdminLocalizationReleaseRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RollbackAdminLocalizationRelease(ctx, request.(RollbackAdminLocalizationReleaseRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RollbackAdminLocalizationRelease")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(RollbackAdminLocalizationReleaseResponseObject); ok {
+		if err := validResponse.VisitRollbackAdminLocalizationReleaseResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminLocalizationRoles operation middleware
+func (sh *strictHandler) ListAdminLocalizationRoles(ctx *gin.Context) {
+	var request ListAdminLocalizationRolesRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminLocalizationRoles(ctx, request.(ListAdminLocalizationRolesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminLocalizationRoles")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminLocalizationRolesResponseObject); ok {
+		if err := validResponse.VisitListAdminLocalizationRolesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutAdminLocalizationRole operation middleware
+func (sh *strictHandler) PutAdminLocalizationRole(ctx *gin.Context) {
+	var request PutAdminLocalizationRoleRequestObject
+
+	var body PutAdminLocalizationRoleJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PutAdminLocalizationRole(ctx, request.(PutAdminLocalizationRoleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutAdminLocalizationRole")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PutAdminLocalizationRoleResponseObject); ok {
+		if err := validResponse.VisitPutAdminLocalizationRoleResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminLocalizationRollouts operation middleware
+func (sh *strictHandler) ListAdminLocalizationRollouts(ctx *gin.Context) {
+	var request ListAdminLocalizationRolloutsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminLocalizationRollouts(ctx, request.(ListAdminLocalizationRolloutsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminLocalizationRollouts")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminLocalizationRolloutsResponseObject); ok {
+		if err := validResponse.VisitListAdminLocalizationRolloutsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ReplaceAdminLocalizationRollouts operation middleware
+func (sh *strictHandler) ReplaceAdminLocalizationRollouts(ctx *gin.Context) {
+	var request ReplaceAdminLocalizationRolloutsRequestObject
+
+	var body ReplaceAdminLocalizationRolloutsJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ReplaceAdminLocalizationRollouts(ctx, request.(ReplaceAdminLocalizationRolloutsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ReplaceAdminLocalizationRollouts")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ReplaceAdminLocalizationRolloutsResponseObject); ok {
+		if err := validResponse.VisitReplaceAdminLocalizationRolloutsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminLocalizationComments operation middleware
+func (sh *strictHandler) ListAdminLocalizationComments(ctx *gin.Context, id int) {
+	var request ListAdminLocalizationCommentsRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminLocalizationComments(ctx, request.(ListAdminLocalizationCommentsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminLocalizationComments")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminLocalizationCommentsResponseObject); ok {
+		if err := validResponse.VisitListAdminLocalizationCommentsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminLocalizationComment operation middleware
+func (sh *strictHandler) CreateAdminLocalizationComment(ctx *gin.Context, id int) {
+	var request CreateAdminLocalizationCommentRequestObject
+
+	request.Id = id
+
+	var body CreateAdminLocalizationCommentJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminLocalizationComment(ctx, request.(CreateAdminLocalizationCommentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminLocalizationComment")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminLocalizationCommentResponseObject); ok {
+		if err := validResponse.VisitCreateAdminLocalizationCommentResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PublishAdminLocalizationValue operation middleware
+func (sh *strictHandler) PublishAdminLocalizationValue(ctx *gin.Context, id int) {
+	var request PublishAdminLocalizationValueRequestObject
+
+	request.Id = id
+
+	var body PublishAdminLocalizationValueJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PublishAdminLocalizationValue(ctx, request.(PublishAdminLocalizationValueRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PublishAdminLocalizationValue")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PublishAdminLocalizationValueResponseObject); ok {
+		if err := validResponse.VisitPublishAdminLocalizationValueResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SubmitAdminLocalizationValueReview operation middleware
+func (sh *strictHandler) SubmitAdminLocalizationValueReview(ctx *gin.Context, id int) {
+	var request SubmitAdminLocalizationValueReviewRequestObject
+
+	request.Id = id
+
+	var body SubmitAdminLocalizationValueReviewJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.SubmitAdminLocalizationValueReview(ctx, request.(SubmitAdminLocalizationValueReviewRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SubmitAdminLocalizationValueReview")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(SubmitAdminLocalizationValueReviewResponseObject); ok {
+		if err := validResponse.VisitSubmitAdminLocalizationValueReviewResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -64851,6 +75150,87 @@ func (sh *strictHandler) ResolveContentPage(ctx *gin.Context, path string, param
 	}
 }
 
+// GetLocalizationBundle operation middleware
+func (sh *strictHandler) GetLocalizationBundle(ctx *gin.Context, locale string, params GetLocalizationBundleParams) {
+	var request GetLocalizationBundleRequestObject
+
+	request.Locale = locale
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetLocalizationBundle(ctx, request.(GetLocalizationBundleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetLocalizationBundle")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetLocalizationBundleResponseObject); ok {
+		if err := validResponse.VisitGetLocalizationBundleResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetLocalizationBundleMeta operation middleware
+func (sh *strictHandler) GetLocalizationBundleMeta(ctx *gin.Context, locale string, params GetLocalizationBundleMetaParams) {
+	var request GetLocalizationBundleMetaRequestObject
+
+	request.Locale = locale
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetLocalizationBundleMeta(ctx, request.(GetLocalizationBundleMetaRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetLocalizationBundleMeta")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetLocalizationBundleMetaResponseObject); ok {
+		if err := validResponse.VisitGetLocalizationBundleMetaResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListLocalizationLocales operation middleware
+func (sh *strictHandler) ListLocalizationLocales(ctx *gin.Context) {
+	var request ListLocalizationLocalesRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListLocalizationLocales(ctx, request.(ListLocalizationLocalesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListLocalizationLocales")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListLocalizationLocalesResponseObject); ok {
+		if err := validResponse.VisitListLocalizationLocalesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // GetProfile operation middleware
 func (sh *strictHandler) GetProfile(ctx *gin.Context) {
 	var request GetProfileRequestObject
@@ -65720,379 +76100,447 @@ func (sh *strictHandler) ReceiveWebhookEvent(ctx *gin.Context, provider string) 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"9f8PAAD//04fGNSswgMA",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

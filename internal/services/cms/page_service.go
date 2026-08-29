@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"ecommerce/internal/media"
+	localizationservice "ecommerce/internal/services/localization"
 	"ecommerce/models"
 
 	"gorm.io/gorm"
@@ -61,8 +62,9 @@ type PageRecord struct {
 }
 
 type Service struct {
-	db    *gorm.DB
-	media *media.Service
+	db           *gorm.DB
+	media        *media.Service
+	localization *localizationservice.Service
 }
 
 func NewPageService(db *gorm.DB, mediaServices ...*media.Service) *Service {
@@ -70,7 +72,7 @@ func NewPageService(db *gorm.DB, mediaServices ...*media.Service) *Service {
 	if len(mediaServices) > 0 {
 		mediaService = mediaServices[0]
 	}
-	return &Service{db: db, media: mediaService}
+	return &Service{db: db, media: mediaService, localization: localizationservice.NewService(db)}
 }
 
 func (s *Service) CreateDraft(ctx context.Context, input PageDraftInput) (*PageRecord, error) {

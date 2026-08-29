@@ -11,6 +11,7 @@ export interface UserModel {
 	name: string | null;
 	role: UserRole;
 	currency: string;
+	locale: string;
 	profile_photo_url: string | null;
 	created_at: Date;
 	updated_at: Date;
@@ -28,6 +29,7 @@ export function parseProfile(profile: ProfileModel): UserModel {
 		name: profile.name,
 		role: profile.role,
 		currency: profile.currency,
+		locale: profile.locale,
 		profile_photo_url: profile.profile_photo_url,
 		created_at: parseDate(profile.created_at) ?? new Date(),
 		updated_at: parseDate(profile.updated_at) ?? new Date(),

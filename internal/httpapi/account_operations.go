@@ -39,11 +39,14 @@ func (s *AccountEndpoints) UpdateProfile(ctx context.Context, request apicontrac
 		problem := s.contractProblem(ctx, http.StatusBadRequest, problemError(http.StatusBadRequest, "invalid_request", "A profile update body is required.", nil))
 		return apicontract.UpdateProfile400ApplicationProblemPlusJSONResponse{BadRequestProblemApplicationProblemPlusJSONResponse: apicontract.BadRequestProblemApplicationProblemPlusJSONResponse(problem)}, nil
 	}
-	user, err := s.accounts.UpdateProfile(ctx, principal.Subject, accountservice.UpdateProfileInput{Name: request.Body.Name, Currency: request.Body.Currency, ProfilePhotoURL: request.Body.ProfilePhotoUrl})
+	user, err := s.accounts.UpdateProfile(ctx, principal.Subject, accountservice.UpdateProfileInput{Name: request.Body.Name, Currency: request.Body.Currency, Locale: request.Body.Locale, ProfilePhotoURL: request.Body.ProfilePhotoUrl})
 	if err != nil {
 		switch {
 		case errors.Is(err, accountservice.ErrInvalidCurrency):
 			problem := s.contractProblem(ctx, http.StatusBadRequest, problemError(http.StatusBadRequest, "invalid_currency", err.Error(), err))
+			return apicontract.UpdateProfile400ApplicationProblemPlusJSONResponse{BadRequestProblemApplicationProblemPlusJSONResponse: apicontract.BadRequestProblemApplicationProblemPlusJSONResponse(problem)}, nil
+		case errors.Is(err, accountservice.ErrInvalidLocale):
+			problem := s.contractProblem(ctx, http.StatusBadRequest, problemError(http.StatusBadRequest, "invalid_locale", err.Error(), err))
 			return apicontract.UpdateProfile400ApplicationProblemPlusJSONResponse{BadRequestProblemApplicationProblemPlusJSONResponse: apicontract.BadRequestProblemApplicationProblemPlusJSONResponse(problem)}, nil
 		case errors.Is(err, accountservice.ErrUserNotFound):
 			problem := s.contractProblem(ctx, http.StatusUnauthorized, problemError(http.StatusUnauthorized, "authentication_required", "The authenticated account is unavailable.", err))

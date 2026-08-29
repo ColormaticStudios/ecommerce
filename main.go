@@ -20,12 +20,14 @@ import (
 	"ecommerce/internal/media"
 	"ecommerce/internal/migrations"
 	"ecommerce/internal/providerplugins"
+	"ecommerce/internal/requestctx"
 	accountservice "ecommerce/internal/services/account"
 	"ecommerce/internal/services/accountdata"
 	authservice "ecommerce/internal/services/auth"
 	checkoutservice "ecommerce/internal/services/checkout"
 	cmsservice "ecommerce/internal/services/cms"
 	inventoryservice "ecommerce/internal/services/inventory"
+	localizationservice "ecommerce/internal/services/localization"
 	paymentservice "ecommerce/internal/services/payments"
 	providerops "ecommerce/internal/services/providerops"
 	shippingservice "ecommerce/internal/services/shipping"
@@ -324,7 +326,11 @@ func run(parentCtx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("initialize checkout/provider endpoints: %w", err)
 	}
-	apiServer, err := httpapi.NewServer(accountEndpoints, catalogEndpoints, cmsMediaEndpoints, checkoutProviderEndpoints)
+	localizationEndpoints, err := httpapi.NewLocalizationEndpointsWithMedia(db, mediaService)
+	if err != nil {
+		return fmt.Errorf("initialize localization endpoints: %w", err)
+	}
+	apiServer, err := httpapi.NewServer(accountEndpoints, catalogEndpoints, cmsMediaEndpoints, checkoutProviderEndpoints, localizationEndpoints)
 	if err != nil {
 		return fmt.Errorf("compose strict API server: %w", err)
 	}
@@ -334,6 +340,16 @@ func run(parentCtx context.Context) error {
 	}
 	if err := httpapi.RegisterStrict(r, apiServer, httpapi.RegisterStrictOptions{
 		Strict: httpapi.StrictOptions{Policies: policies}, Renderer: renderer,
+		Localization: &httpapi.LocalizationNegotiationOptions{
+			Service: localizationservice.NewService(db),
+			ResolveAccountPreference: func(resolveCtx context.Context, principal requestctx.Principal) (string, error) {
+				user, resolveErr := accountService.UserBySubject(resolveCtx, principal.Subject)
+				if errors.Is(resolveErr, accountservice.ErrUserNotFound) {
+					return "", nil
+				}
+				return user.Locale, resolveErr
+			},
+		},
 		Security: httpapi.SecurityOptions{PreviewSecret: jwtSecret, Authenticator: httpapi.JWTAuthenticator{
 			Secret: []byte(jwtSecret), ResolveAccountID: func(resolveCtx context.Context, subject string) (uint, error) {
 				user, resolveErr := accountService.UserBySubject(resolveCtx, subject)

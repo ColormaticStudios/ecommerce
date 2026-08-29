@@ -2,6 +2,10 @@
 	import { resolve } from "$app/paths";
 	import { adminNavItems, type AdminSectionId } from "$lib/admin/navigation";
 	import IconButton from "$lib/components/IconButton.svelte";
+	import { getContext } from "svelte";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
+
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 
 	interface Props {
 		activeSection: AdminSectionId;
@@ -32,21 +36,25 @@
 	>
 		<div class={collapsed && !mobile ? "flex justify-center" : "min-w-0"}>
 			{#if !collapsed || mobile}
-				<p class="text-sm font-semibold text-gray-950 dark:text-gray-50">Admin</p>
-				<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Operations console</p>
+				<p class="text-sm font-semibold text-gray-950 dark:text-gray-50">
+					{$localization.translate("admin.shell.title", "Admin")}
+				</p>
+				<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+					{$localization.translate("admin.shell.operations_console", "Operations console")}
+				</p>
 				<a
 					href={resolve("/")}
 					class="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-gray-600 transition hover:text-gray-950 dark:text-gray-300 dark:hover:text-gray-50"
 				>
 					<i class="bi bi-arrow-left"></i>
-					Back to storefront
+					{$localization.translate("admin.shell.storefront", "Back to storefront")}
 				</a>
 			{:else}
 				<a
 					href={resolve("/")}
 					class="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-700 transition hover:bg-gray-200 hover:text-gray-950 dark:text-gray-200 dark:hover:bg-gray-800 dark:hover:text-gray-50"
-					aria-label="Back to storefront"
-					title="Back to storefront"
+					aria-label={$localization.translate("admin.shell.storefront", "Back to storefront")}
+					title={$localization.translate("admin.shell.storefront", "Back to storefront")}
 				>
 					<i class="bi bi-arrow-left"></i>
 				</a>
@@ -81,6 +89,7 @@
 		{#each adminNavItems as item (item.id)}
 			<a
 				href={resolve(item.href)}
+				onclick={() => onClose?.()}
 				class={`group flex items-center gap-3 rounded-xl px-3 py-2.5 transition ${
 					item.id === activeSection
 						? "bg-gray-900 text-white shadow-sm dark:bg-gray-100 dark:text-gray-900"
@@ -89,7 +98,9 @@
 							: "text-gray-700 hover:bg-gray-200/70 dark:text-gray-300 dark:hover:bg-gray-800"
 				}`}
 				aria-current={item.id === activeSection ? "page" : undefined}
-				title={collapsed && !mobile ? item.label : undefined}
+				title={collapsed && !mobile
+					? $localization.translate(item.messageKey, item.label)
+					: undefined}
 			>
 				<span
 					class={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sm ${
@@ -103,7 +114,9 @@
 					<i class={`bi ${item.icon}`}></i>
 				</span>
 				{#if !collapsed || mobile}
-					<span class="truncate text-sm font-medium">{item.label}</span>
+					<span class="truncate text-sm font-medium"
+						>{$localization.translate(item.messageKey, item.label)}</span
+					>
 				{/if}
 			</a>
 		{/each}

@@ -6,8 +6,8 @@ import { serverIsAuthenticated, serverRequest, type ServerAPIError } from "$lib/
 type CartPayload = components["schemas"]["Cart"];
 
 function isGuestCheckoutDisabled(body: unknown): boolean {
-	return typeof body === "object" && body !== null && "code" in body
-		? (body as { code?: unknown }).code === "guest_checkout_disabled"
+	return typeof body === "object" && body !== null && "error_code" in body
+		? (body as { error_code?: unknown }).error_code === "guest_checkout_disabled"
 		: false;
 }
 

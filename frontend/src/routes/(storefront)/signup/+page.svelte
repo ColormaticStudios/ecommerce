@@ -11,8 +11,11 @@
 	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 	import type { PageData } from "./$types";
+	import { getLocalizedApiErrorMessage } from "$lib/api/errors";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 
 	let api: API = getContext("api");
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 
 	interface Props {
 		data: PageData;
@@ -62,8 +65,14 @@
 				name: name,
 			});
 		} catch (err) {
-			const error = err as { body?: { error?: string } };
-			errorMessage = error.body?.error ?? "Unable to create account. Please check your details.";
+			errorMessage = getLocalizedApiErrorMessage(
+				err,
+				localization.translate.bind(localization),
+				$localization.translate(
+					"storefront.account.create_error",
+					"Unable to create account. Please check your details."
+				)
+			);
 			console.error(err);
 			return;
 		}
@@ -79,11 +88,17 @@
 </script>
 
 <AuthFormShell
-	title="Sign Up"
+	title={$localization.translate("storefront.account.sign_up", "Sign Up")}
 	{oidcEnabled}
-	oidcDescription="Your account will be created automatically the first time your provider signs you in."
+	oidcDescription={$localization.translate(
+		"storefront.account.provider_create",
+		"Your account will be created automatically the first time your provider signs you in."
+	)}
 	showUnavailable={!localSignInEnabled && !oidcEnabled}
-	unavailableMessage="Account creation is currently unavailable."
+	unavailableMessage={$localization.translate(
+		"storefront.account.creation_unavailable",
+		"Account creation is currently unavailable."
+	)}
 	onOidc={continueWithOIDC}
 >
 	{#if localSignInEnabled}
@@ -92,24 +107,47 @@
 				bind:value={username}
 				type="text"
 				name="username"
-				placeholder="Username"
+				placeholder={$localization.translate("storefront.account.username", "Username")}
 				required
 			/>
-			<TextInput bind:value={email} type="email" name="email" placeholder="Email" required />
-			<TextInput bind:value={name} type="text" name="name" placeholder="Name (optional)" />
-			<Password bind:value={password} name="password" placeholder="Password" />
+			<TextInput
+				bind:value={email}
+				type="email"
+				name="email"
+				placeholder={$localization.translate("storefront.account.email", "Email")}
+				required
+			/>
+			<TextInput
+				bind:value={name}
+				type="text"
+				name="name"
+				placeholder={$localization.translate("storefront.account.name_optional", "Name (optional)")}
+			/>
+			<Password
+				bind:value={password}
+				name="password"
+				placeholder={$localization.translate("storefront.account.password", "Password")}
+			/>
 			<Password
 				bind:value={passwordMatcher}
 				name="confirm_password"
-				placeholder="Confirm Password"
+				placeholder={$localization.translate(
+					"storefront.account.confirm_password",
+					"Confirm Password"
+				)}
 			/>
-			<Button variant="primary" size="large" type="submit">Create Account</Button>
+			<Button variant="primary" size="large" type="submit"
+				>{$localization.translate("storefront.account.create_account", "Create Account")}</Button
+			>
 		</form>
 	{/if}
 	{#if !doPasswordsMatch}
 		<div class="w-full">
 			<Alert
-				message="Passwords do not match."
+				message={$localization.translate(
+					"storefront.account.passwords_mismatch",
+					"Passwords do not match."
+				)}
 				tone="error"
 				icon="bi-x-circle-fill"
 				onClose={() => (doPasswordsMatch = true)}

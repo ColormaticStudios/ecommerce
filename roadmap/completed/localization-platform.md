@@ -1,12 +1,17 @@
 # Localization and Translation Management Roadmap
 
+## Terminology
+- Always use the full word `localization` in code, paths, identifiers, documentation, and user-facing copy.
+- Numeronym abbreviations for localization and internationalization are prohibited throughout every phase of this roadmap.
+
 ## Current Baseline
-- There is no first-class localization subsystem in backend or frontend for runtime locale resolution, message lookup, or translation lifecycle management.
-- Storefront content is stored as single-language JSON in `models.StorefrontSettings` (`config_json`, `draft_config_json`) and edited via `/api/v1/admin/storefront*`.
-- Frontend routes/components under `frontend/src/routes` and `frontend/src/lib/components` contain hard-coded English UI strings.
-- API/user-visible errors are primarily English message strings; there is no stable localization key contract for error rendering.
+- P0 and the platform foundations of P1 through P4 are implemented: the platform owns locale configuration, fallback, translation lifecycle, request negotiation, bundle delivery, account preferences, market defaults, entity-localized fields, translation operations, usage context, rollout controls, and localized communication rendering.
+- CMS consumes the shared locale registry and resolver instead of owning a runtime locale system.
+- Core storefront, cart, checkout, account, and admin-shell strings use localization keys; remaining surfaces migrate incrementally in later phases.
+- Problem-details responses expose stable `error_code`, optional `message_key`, and structured `message_params` for localized frontend rendering.
+- `defaults/localization.en-US.json` is the extracted baseline source catalog and is protected against migration-seed drift by tests.
 - Customer communications roadmap (`roadmap/customer-communications-email-sms.md`) introduces outbound delivery infrastructure, but not localized template management.
-- Ecommerce CMS includes localization, but only for CMS entities and not platform-wide UI copy/admin text/transactional messaging.
+- Ecommerce CMS owns localized content variants while consuming the shared platform registry and fallback contract.
 
 ## Goals
 - Localize all user-facing text across storefront, checkout, account, admin, transactional communications, and API-driven UI states.
@@ -54,6 +59,8 @@
   - Canonical customer mutation surface remains `/api/v1/checkout/*`; localization must not introduce alternate checkout APIs.
 
 ## P0: Localization Domain Foundation
+Status: Complete.
+
 ### Scope
 - Introduce locale registry, fallback rules, key namespace model, and publication semantics.
 - Define request locale resolution contract for API and frontend loaders.
@@ -77,13 +84,15 @@
 - Locale registry and key/value state transitions are covered by backend tests for valid and invalid paths.
 
 ## P1: Runtime Integration and Key Migration
+Status: Partially complete. Runtime integration and core-route migration are complete; repository-wide storefront/admin copy migration remains open.
+
 ### Scope
-- Integrate i18n runtime in frontend and backend.
+- Integrate the localization runtime in frontend and backend.
 - Replace hard-coded user-facing strings with key-based lookup across core pages/components.
 - Standardize localized error handling contract.
 
 ### Deliverables
-- Frontend i18n module in `frontend/src/lib/i18n/`:
+- Frontend localization module in `frontend/src/lib/localization/`:
 - locale store,
 - bundle loader/cache,
 - formatting helpers (plural/select/interpolation).
@@ -100,9 +109,11 @@
 ### Done Criteria
 - Core storefront/cart/checkout/account/admin shell strings are rendered through translation keys.
 - API errors can be localized in frontend without parsing English strings.
-- Missing key behavior is visible in non-production (debug marker) and tracked in logs/metrics.
+- Missing keys render readable source copy in every environment and are tracked in logs/metrics without exposing internal key markers to users.
 
 ## P2: Entity Localization (CMS, Storefront, Catalog, Legal Copy)
+Status: Complete for the currently supported CMS, storefront-settings, catalog, and SEO entity policies. Additional legal surfaces remain ordinary CMS content until dedicated contracts are introduced.
+
 ### Scope
 - Localize content entities that are merchant-authored or customer-visible domain data.
 - Provide compatibility path from single-language fields to localized variants.
@@ -124,6 +135,8 @@
 - Legacy single-language response fields are either removed (breaking cut) or clearly marked deprecated with removal phase.
 
 ## P3: Translation Admin UX and Workflow
+Status: Complete. Translation keys support multiple structured usage records with route/component guidance and optional screenshots owned by the media subsystem.
+
 ### Scope
 - Deliver translation operations UX for admins/editors with high throughput and quality controls.
 - Implement role-gated approval and publish flow.
@@ -151,6 +164,8 @@
 - Publish actions create audit events with actor, locale, namespace, and change summary.
 
 ## P4: Communications, System Messages, and Rollout Controls
+Status: Complete for localization rendering and rollout controls only. Provider delivery, retries, and proof that messages are sent remain unimplemented and owned by `roadmap/customer-communications-email-sms.md`.
+
 ### Scope
 - Extend localization to outbound communications and operational/user status messaging.
 - Roll out locale-aware behavior safely with feature flags and monitoring.
@@ -177,6 +192,8 @@
 - Operational dashboards can identify missing translation hotspots and publish regressions.
 
 ## P5: Hardening and Compatibility Cleanup
+Status: Partially complete. Release safety, ETags, cache invalidation, rollback, and local performance gates are implemented. Repository-wide hard-coded-copy enforcement and deployed regional p95 verification remain open.
+
 ### Scope
 - Remove temporary compatibility wrappers and enforce localization quality bar in CI.
 - Finalize breaking API/schema cleanup.
@@ -247,7 +264,7 @@
 - `frontend/src/lib/api/generated/openapi.ts`
 3. Add/modify models in `models/` and register migrations in `internal/migrations` (including default-locale backfills from existing fields).
 4. Implement localization services in `internal/services/localization/` and keep strict endpoints in `internal/httpapi/` thin.
-5. Integrate frontend i18n runtime in `frontend/src/lib/i18n/` and migrate route/component strings incrementally by namespace.
+5. Integrate the frontend localization runtime in `frontend/src/lib/localization/` and migrate route/component strings incrementally by namespace.
 6. Add admin translation UI flows under `frontend/src/routes/admin`.
 7. Run `make openapi-check`.
 8. Run backend tests with sandbox cache: `GOCACHE=/tmp/go-build go test ./...`.
@@ -262,7 +279,6 @@
 - Roadmap overlap with CMS P6 can create duplicate implementations if ownership is not explicitly reassigned.
 
 ## Immediate Next Slice
-1. Finalize key namespace taxonomy (`storefront`, `checkout`, `admin`, `errors`, `communications`) and locale fallback policy.
-2. Draft OpenAPI additions for locale/bundle/admin translation endpoints plus standardized `error_code`/`message_key` schema.
-3. Implement `locales`, `translation_keys`, `translation_values`, and `translation_releases` models with migrations and backfill of current storefront/default copy into `en-US`.
-4. Land frontend `frontend/src/lib/i18n` runtime with bundle loading and migrate one vertical end-to-end (`/cart` + checkout error messages) as the proving slice.
+1. Expand source extraction and hard-coded-copy enforcement beyond the current checkout-focused file policy when the repository-wide UI migration is approved.
+2. Implement the separate communications outbox/provider roadmap and consume `RenderCommunication` before delivery.
+3. Validate the documented regional bundle-fetch p95 in a deployed environment; local CI continues to enforce deterministic backend, endpoint, and frontend lookup budgets.

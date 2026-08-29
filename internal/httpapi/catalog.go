@@ -13,10 +13,12 @@ import (
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/apperror"
 	"ecommerce/internal/media"
+	"ecommerce/internal/requestctx"
 	catalogservice "ecommerce/internal/services/catalog"
 	catalogadminservice "ecommerce/internal/services/catalogadmin"
 	discountservice "ecommerce/internal/services/discounts"
 	inventoryservice "ecommerce/internal/services/inventory"
+	localizationservice "ecommerce/internal/services/localization"
 	"ecommerce/models"
 
 	"gorm.io/gorm"
@@ -33,6 +35,7 @@ type CatalogEndpoints struct {
 	catalogAdmin *catalogadminservice.Service
 	inventory    *inventoryservice.Service
 	discounts    *discountservice.Service
+	localization *localizationservice.Service
 }
 
 func NewCatalogEndpoints(db *gorm.DB, mediaService *media.Service) (*CatalogEndpoints, error) {
@@ -46,6 +49,7 @@ func NewCatalogEndpoints(db *gorm.DB, mediaService *media.Service) (*CatalogEndp
 		catalogAdmin: catalogadminservice.NewService(db, mediaService),
 		inventory:    inventoryservice.NewService(db),
 		discounts:    discountservice.NewService(db),
+		localization: localizationservice.NewService(db),
 	}, nil
 }
 
@@ -235,13 +239,26 @@ func (e *CatalogEndpoints) productToContract(ctx context.Context, product models
 	}
 	categories := make([]apicontract.Category, 0, len(product.Categories))
 	for _, category := range product.Categories {
-		categories = append(categories, categoryContract(category))
+		contract, err := e.categoryContract(ctx, category, !admin)
+		if err != nil {
+			return apicontract.Product{}, err
+		}
+		categories = append(categories, contract)
 	}
 	related := make([]apicontract.RelatedProduct, 0, len(product.Related))
 	for _, value := range product.Related {
 		price := value.Price.Float64()
 		description := value.Description
-		related = append(related, apicontract.RelatedProduct{Id: int(value.ID), Sku: value.SKU, Name: value.Name, Description: &description, Price: &price, Stock: value.Stock, CoverImage: value.CoverImage})
+		name := value.Name
+		if !admin {
+			localized, err := e.resolveEntityLocalization(ctx, localizationservice.EntityTypeProduct, value.ID)
+			if err != nil {
+				return apicontract.Product{}, err
+			}
+			name = localized.Fields["name"]
+			description = localized.Fields["description"]
+		}
+		related = append(related, apicontract.RelatedProduct{Id: int(value.ID), Sku: value.SKU, Name: name, Description: &description, Price: &price, Stock: value.Stock, CoverImage: value.CoverImage})
 	}
 	variants := make([]apicontract.ProductVariant, 0, len(product.Variants))
 	minPrice, maxPrice := product.Price.Float64(), product.Price.Float64()
@@ -262,7 +279,15 @@ func (e *CatalogEndpoints) productToContract(ctx context.Context, product models
 			converted := value.CompareAtPrice.Float64()
 			compareAt = &converted
 		}
-		variants = append(variants, apicontract.ProductVariant{Id: &id, Sku: value.SKU, Title: value.Title, Price: price, CompareAtPrice: compareAt, Stock: value.Stock, Position: value.Position, IsPublished: value.IsPublished, WeightGrams: value.WeightGrams, LengthCm: value.LengthCm, WidthCm: value.WidthCm, HeightCm: value.HeightCm, Selections: []apicontract.ProductVariantSelection{}})
+		title := value.Title
+		if !admin {
+			localized, err := e.resolveEntityLocalization(ctx, localizationservice.EntityTypeProductVariant, value.ID)
+			if err != nil {
+				return apicontract.Product{}, err
+			}
+			title = localized.Fields["title"]
+		}
+		variants = append(variants, apicontract.ProductVariant{Id: &id, Sku: value.SKU, Title: title, Price: price, CompareAtPrice: compareAt, Stock: value.Stock, Position: value.Position, IsPublished: value.IsPublished, WeightGrams: value.WeightGrams, LengthCm: value.LengthCm, WidthCm: value.WidthCm, HeightCm: value.HeightCm, Selections: []apicontract.ProductVariantSelection{}})
 	}
 	var defaultVariantID *int
 	if product.DefaultVariantID != nil {
@@ -284,13 +309,43 @@ func (e *CatalogEndpoints) productToContract(ctx context.Context, product models
 	published, draft := product.IsPublished, product.DraftUpdatedAt != nil
 	result := apicontract.Product{Id: int(product.ID), Sku: product.SKU, Name: product.Name, Subtitle: product.Subtitle, Description: product.Description, Price: product.Price.Float64(), Stock: product.Stock, Images: images, CoverImage: cover, Categories: categories, RelatedProducts: related, Options: []apicontract.ProductOption{}, Attributes: []apicontract.ProductAttributeValue{}, Seo: apicontract.ProductSEO{}, PriceRange: apicontract.ProductPriceRange{Min: minPrice, Max: maxPrice}, DefaultVariantId: defaultVariantID, DefaultVariantSku: defaultVariantSKU, Variants: variants, CreatedAt: product.CreatedAt, UpdatedAt: product.UpdatedAt, DeletedAt: deletedAt(product.DeletedAt)}
 	if product.Brand != nil {
-		brand := e.brandContract(*product.Brand)
+		brand, err := e.brandContract(ctx, *product.Brand, !admin)
+		if err != nil {
+			return apicontract.Product{}, err
+		}
 		result.Brand = &brand
+	}
+	if !admin {
+		localized, err := e.resolveEntityLocalization(ctx, localizationservice.EntityTypeProduct, product.ID)
+		if err != nil {
+			return apicontract.Product{}, err
+		}
+		result.Name = localized.Fields["name"]
+		result.Description = localized.Fields["description"]
+		if subtitle, ok := localized.Fields["subtitle"]; ok {
+			result.Subtitle = &subtitle
+		} else {
+			result.Subtitle = nil
+		}
+		contract := contractEntityResolution(localized)
+		result.Localization = &contract
 	}
 	if admin {
 		result.IsPublished, result.HasDraftChanges, result.DraftUpdatedAt = &published, &draft, product.DraftUpdatedAt
 	}
 	return result, nil
+}
+
+func (e *CatalogEndpoints) resolveEntityLocalization(ctx context.Context, entityType localizationservice.EntityType, entityID uint) (localizationservice.EntityResolution, error) {
+	input := localizationservice.ResolutionInput{}
+	if resolution, ok := requestctx.LocaleResolutionFrom(ctx); ok {
+		input.ExplicitLocale = resolution.ResolvedLocale
+	}
+	value, err := e.localization.EntityLocalizations(ctx, entityType, entityID, input)
+	if err != nil {
+		return localizationservice.EntityResolution{}, err
+	}
+	return value.Resolved, nil
 }
 
 func catalogEndpointError(err error) error {

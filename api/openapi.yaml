@@ -34,7 +34,684 @@ tags:
   - name: storefront
   - name: cms
   - name: website
+  - name: localization
 paths:
+  /api/v1/localization/locales:
+    get:
+      tags: [localization]
+      operationId: listLocalizationLocales
+      security: []
+      responses:
+        "200":
+          description: Enabled platform locales and the global default
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocalizationLocaleList"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/localization/bundles/{locale}:
+    get:
+      tags: [localization]
+      operationId: getLocalizationBundle
+      security: []
+      parameters:
+        - in: path
+          name: locale
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: namespace
+          schema:
+            type: string
+            enum: [storefront, checkout, admin, errors, communications]
+        - in: query
+          name: domain
+          schema:
+            $ref: "#/components/schemas/LocalizationRolloutDomain"
+        - in: header
+          name: If-None-Match
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deterministic bundle from the active translation release
+          headers:
+            ETag:
+              schema: { type: string }
+            Cache-Control:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocalizationBundle"
+        "304":
+          description: The requested bundle version is already cached by the client
+          headers:
+            ETag:
+              schema: { type: string }
+            Cache-Control:
+              schema: { type: string }
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/localization/bundles/{locale}/meta:
+    get:
+      tags: [localization]
+      operationId: getLocalizationBundleMeta
+      security: []
+      parameters:
+        - in: path
+          name: locale
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: domain
+          schema:
+            $ref: "#/components/schemas/LocalizationRolloutDomain"
+        - in: header
+          name: If-None-Match
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Locale fallback and active-release metadata
+          headers:
+            ETag:
+              schema: { type: string }
+            Cache-Control:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocalizationBundleMeta"
+        "304":
+          description: The requested bundle metadata version is already cached by the client
+          headers:
+            ETag:
+              schema: { type: string }
+            Cache-Control:
+              schema: { type: string }
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/localization/locales:
+    get:
+      tags: [admin, localization]
+      operationId: listAdminLocalizationLocales
+      responses:
+        "200":
+          description: Complete platform locale registry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocalizationLocaleList"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+    put:
+      tags: [admin, localization]
+      operationId: replaceAdminLocalizationLocales
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocalizationLocaleSettingsInput"
+      responses:
+        "200":
+          description: Replaced platform locale registry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocalizationLocaleList"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/localization/keys:
+    get:
+      tags: [admin, localization]
+      operationId: listAdminLocalizationKeys
+      parameters:
+        - { in: query, name: locale, schema: { type: string } }
+        - { in: query, name: namespace, schema: { type: string } }
+        - { in: query, name: state, schema: { type: string, enum: [draft, review, published] } }
+        - { in: query, name: assignee_id, schema: { type: integer, minimum: 1 } }
+        - { in: query, name: missing, schema: { type: boolean } }
+        - { in: query, name: stale, schema: { type: boolean } }
+        - { in: query, name: q, schema: { type: string } }
+        - { in: query, name: page, schema: { type: integer, minimum: 1, default: 1 } }
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+      responses:
+        "200":
+          description: Filtered translation work queue
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationQueueResponse" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+    post:
+      tags: [admin, localization]
+      operationId: createAdminLocalizationKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TranslationKeyInput" }
+      responses:
+        "201":
+          description: Created translation key
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationKey" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "409": { $ref: "#/components/responses/ConflictProblem" }
+        "422": { $ref: "#/components/responses/ValidationProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/keys/{id}/values:
+    get:
+      tags: [admin, localization]
+      operationId: listAdminLocalizationValues
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200":
+          description: Version history for a translation key
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationValueListResponse" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "404": { $ref: "#/components/responses/NotFoundProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/keys/{id}/usages:
+    get:
+      tags: [admin, localization]
+      operationId: listAdminLocalizationKeyUsages
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200":
+          description: Translation key usage context and screenshots
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationKeyUsageListResponse" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "404": { $ref: "#/components/responses/NotFoundProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+    put:
+      tags: [admin, localization]
+      operationId: replaceAdminLocalizationKeyUsages
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, minimum: 1 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TranslationKeyUsageListInput" }
+      responses:
+        "200":
+          description: Replaced translation key usage context
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationKeyUsageListResponse" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "404": { $ref: "#/components/responses/NotFoundProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/keys/{id}/values/{locale}:
+    put:
+      tags: [admin, localization]
+      operationId: putAdminLocalizationValue
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, minimum: 1 } }
+        - { in: path, name: locale, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TranslationValueInput" }
+      responses:
+        "200":
+          description: Created draft translation version
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationValue" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "404": { $ref: "#/components/responses/NotFoundProblem" }
+        "409": { $ref: "#/components/responses/ConflictProblem" }
+        "422": { $ref: "#/components/responses/ValidationProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/values/{id}/submit-review:
+    post:
+      tags: [admin, localization]
+      operationId: submitAdminLocalizationValueReview
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, minimum: 1 } }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TranslationTransitionInput" }
+      responses:
+        "200":
+          description: Translation submitted for review
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationValue" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "404": { $ref: "#/components/responses/NotFoundProblem" }
+        "409": { $ref: "#/components/responses/ConflictProblem" }
+        "422": { $ref: "#/components/responses/ValidationProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/values/{id}/publish:
+    post:
+      tags: [admin, localization]
+      operationId: publishAdminLocalizationValue
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, minimum: 1 } }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TranslationTransitionInput" }
+      responses:
+        "200":
+          description: Published translation value
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationValue" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "404": { $ref: "#/components/responses/NotFoundProblem" }
+        "409": { $ref: "#/components/responses/ConflictProblem" }
+        "422": { $ref: "#/components/responses/ValidationProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/values/{id}/comments:
+    get:
+      tags: [admin, localization]
+      operationId: listAdminLocalizationComments
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200":
+          description: Review comments for a translation value
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationCommentListResponse" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "404": { $ref: "#/components/responses/NotFoundProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+    post:
+      tags: [admin, localization]
+      operationId: createAdminLocalizationComment
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, minimum: 1 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TranslationCommentInput" }
+      responses:
+        "201":
+          description: Added review comment
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationComment" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "404": { $ref: "#/components/responses/NotFoundProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/releases:
+    get:
+      tags: [admin, localization]
+      operationId: listAdminLocalizationReleases
+      responses:
+        "200":
+          description: Translation release history
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationReleaseListResponse" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+    post:
+      tags: [admin, localization]
+      operationId: createAdminLocalizationRelease
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TranslationReleaseInput" }
+      responses:
+        "201":
+          description: Created immutable draft release
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationRelease" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "422": { $ref: "#/components/responses/ValidationProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/releases/{id}/activate:
+    post:
+      tags: [admin, localization]
+      operationId: activateAdminLocalizationRelease
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200":
+          description: Activated translation release
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationRelease" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "404": { $ref: "#/components/responses/NotFoundProblem" }
+        "409": { $ref: "#/components/responses/ConflictProblem" }
+        "422": { $ref: "#/components/responses/ValidationProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/releases/{id}/quality:
+    get:
+      tags: [admin, localization]
+      operationId: getAdminLocalizationReleaseQuality
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200":
+          description: Critical-namespace locale coverage for an immutable release
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationReleaseQuality" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "404": { $ref: "#/components/responses/NotFoundProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/releases/{id}/rollback:
+    post:
+      tags: [admin, localization]
+      operationId: rollbackAdminLocalizationRelease
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        "201":
+          description: Created and activated an immutable copy of the selected prior release
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationRelease" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "404": { $ref: "#/components/responses/NotFoundProblem" }
+        "409": { $ref: "#/components/responses/ConflictProblem" }
+        "422": { $ref: "#/components/responses/ValidationProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/import:
+    post:
+      tags: [admin, localization]
+      operationId: importAdminLocalization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TranslationImportInput" }
+      responses:
+        "200":
+          description: Validated import report
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationImportReport" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "409": { $ref: "#/components/responses/ConflictProblem" }
+        "422": { $ref: "#/components/responses/ValidationProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/export:
+    post:
+      tags: [admin, localization]
+      operationId: exportAdminLocalization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TranslationExportInput" }
+      responses:
+        "200":
+          description: Translation export document
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TranslationExportDocument" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/glossary:
+    get:
+      tags: [admin, localization]
+      operationId: listAdminLocalizationGlossary
+      parameters:
+        - { in: query, name: locale, schema: { type: string } }
+      responses:
+        "200":
+          description: Localization glossary terms
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LocalizationGlossaryListResponse" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+    put:
+      tags: [admin, localization]
+      operationId: putAdminLocalizationGlossaryTerm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LocalizationGlossaryInput" }
+      responses:
+        "200":
+          description: Created or updated glossary term
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LocalizationGlossaryTerm" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "422": { $ref: "#/components/responses/ValidationProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/glossary/{id}:
+    delete:
+      tags: [admin, localization]
+      operationId: deleteAdminLocalizationGlossaryTerm
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        "204": { description: Glossary term deleted }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "404": { $ref: "#/components/responses/NotFoundProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/roles:
+    get:
+      tags: [admin, localization]
+      operationId: listAdminLocalizationRoles
+      responses:
+        "200":
+          description: Localization role assignments
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LocalizationRoleListResponse" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+    put:
+      tags: [admin, localization]
+      operationId: putAdminLocalizationRole
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LocalizationRoleInput" }
+      responses:
+        "200":
+          description: Created or updated localization role assignment
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LocalizationRoleAssignment" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "422": { $ref: "#/components/responses/ValidationProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/assignees:
+    get:
+      tags: [admin, localization]
+      operationId: listAdminLocalizationAssignees
+      parameters:
+        - { in: query, name: q, schema: { type: string } }
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        "200":
+          description: Searchable users with access to localization controls
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LocalizationAssigneeListResponse" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/rollouts:
+    get:
+      tags: [admin, localization]
+      operationId: listAdminLocalizationRollouts
+      responses:
+        "200":
+          description: Per-locale rollout controls for each localization domain
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LocalizationRolloutListResponse" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+    put:
+      tags: [admin, localization]
+      operationId: replaceAdminLocalizationRollouts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LocalizationRolloutSettingsInput" }
+      responses:
+        "200":
+          description: Replaced per-locale localization rollout controls
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LocalizationRolloutListResponse" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "422": { $ref: "#/components/responses/ValidationProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/metrics:
+    get:
+      tags: [admin, localization]
+      operationId: getAdminLocalizationMetrics
+      responses:
+        "200":
+          description: Localization fallback, missing-key, rollout, and publishing health
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LocalizationMetricsResponse" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+  /api/v1/admin/localization/entities/{entity_type}/{entity_id}:
+    get:
+      tags: [admin, localization]
+      operationId: getAdminEntityLocalization
+      parameters:
+        - { in: path, name: entity_type, required: true, schema: { $ref: "#/components/schemas/LocalizedEntityType" } }
+        - { in: path, name: entity_id, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200":
+          description: Localized fields for one entity
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EntityLocalizationResponse" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "404": { $ref: "#/components/responses/NotFoundProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
+    put:
+      tags: [admin, localization]
+      operationId: putAdminEntityLocalization
+      parameters:
+        - { in: path, name: entity_type, required: true, schema: { $ref: "#/components/schemas/LocalizedEntityType" } }
+        - { in: path, name: entity_id, required: true, schema: { type: integer, minimum: 1 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EntityLocalizationInput" }
+      responses:
+        "200":
+          description: Replaced localized fields for one locale
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EntityLocalizationResponse" }
+        "400": { $ref: "#/components/responses/BadRequestProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationRequiredProblem" }
+        "403": { $ref: "#/components/responses/ForbiddenProblem" }
+        "404": { $ref: "#/components/responses/NotFoundProblem" }
+        "422": { $ref: "#/components/responses/ValidationProblem" }
+        "500": { $ref: "#/components/responses/InternalServerErrorProblem" }
   /api/v1/auth/register:
     post:
       tags: [auth]
@@ -4388,49 +5065,6 @@ paths:
           $ref: "#/components/responses/ForbiddenProblem"
         "500":
           $ref: "#/components/responses/InternalServerErrorProblem"
-  /api/v1/admin/cms/locales:
-    get:
-      tags: [admin, cms]
-      operationId: getAdminCmsLocales
-      responses:
-        "200":
-          description: CMS locale registry and fallback configuration
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CmsLocaleSettings"
-        "400":
-          $ref: "#/components/responses/BadRequestProblem"
-        "401":
-          $ref: "#/components/responses/AuthenticationRequiredProblem"
-        "403":
-          $ref: "#/components/responses/ForbiddenProblem"
-        "500":
-          $ref: "#/components/responses/InternalServerErrorProblem"
-    put:
-      tags: [admin, cms]
-      operationId: updateAdminCmsLocales
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CmsLocaleSettingsInput"
-      responses:
-        "200":
-          description: Updated CMS locale registry
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CmsLocaleSettings"
-        "400":
-          $ref: "#/components/responses/BadRequestProblem"
-        "401":
-          $ref: "#/components/responses/AuthenticationRequiredProblem"
-        "403":
-          $ref: "#/components/responses/ForbiddenProblem"
-        "500":
-          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/cms/pages/{id}/variants:
     get:
       tags: [admin, cms]
@@ -6140,6 +6774,630 @@ components:
             $ref: "#/components/schemas/Problem"
 
   schemas:
+    LocalizationLocale:
+      type: object
+      required: [code, name, is_enabled, is_default, default_for_markets]
+      properties:
+        code:
+          type: string
+          example: fr-CA
+        name:
+          type: string
+          example: French (Canada)
+        is_enabled:
+          type: boolean
+        is_default:
+          type: boolean
+        fallback_locale:
+          type: string
+          nullable: true
+          example: fr
+        default_for_markets:
+          type: array
+          description: Uppercase market codes that use this locale as their market default.
+          items:
+            type: string
+            pattern: "^[A-Z]{2,3}$"
+
+    LocalizationLocaleInput:
+      type: object
+      required: [code, name, is_enabled, is_default, default_for_markets]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        is_enabled:
+          type: boolean
+        is_default:
+          type: boolean
+        fallback_locale:
+          type: string
+          nullable: true
+        default_for_markets:
+          type: array
+          items:
+            type: string
+            pattern: "^[A-Z]{2,3}$"
+
+    LocalizationLocaleList:
+      type: object
+      required: [default_locale, locales]
+      properties:
+        default_locale:
+          type: string
+        locales:
+          type: array
+          items:
+            $ref: "#/components/schemas/LocalizationLocale"
+
+    LocalizationLocaleSettingsInput:
+      type: object
+      required: [locales]
+      properties:
+        locales:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/LocalizationLocaleInput"
+
+    LocalizationResolution:
+      type: object
+      required: [requested_locale, resolved_locale, source, fallback_chain, used_fallback]
+      properties:
+        requested_locale:
+          type: string
+        resolved_locale:
+          type: string
+        source:
+          type: string
+          enum: [explicit, account, market, global]
+        fallback_chain:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        used_fallback:
+          type: boolean
+
+    TranslationReleaseMeta:
+      type: object
+      required: [id, name, snapshot_hash, version, published_at]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        snapshot_hash:
+          type: string
+          minLength: 64
+          maxLength: 64
+        version:
+          type: string
+          minLength: 64
+          maxLength: 64
+        published_at:
+          type: string
+          format: date-time
+
+    LocalizationBundleMeta:
+      type: object
+      required: [resolution, release]
+      properties:
+        resolution:
+          $ref: "#/components/schemas/LocalizationResolution"
+        release:
+          $ref: "#/components/schemas/TranslationReleaseMeta"
+
+    LocalizationBundleMessage:
+      type: object
+      required: [value, requested_locale, source_locale, used_fallback, missing_translation]
+      properties:
+        value:
+          type: string
+          minLength: 1
+        requested_locale:
+          type: string
+        source_locale:
+          type: string
+        used_fallback:
+          type: boolean
+        missing_translation:
+          type: boolean
+
+    LocalizationBundle:
+      allOf:
+        - $ref: "#/components/schemas/LocalizationBundleMeta"
+        - type: object
+          required: [messages]
+          properties:
+            messages:
+              type: object
+              additionalProperties:
+                $ref: "#/components/schemas/LocalizationBundleMessage"
+
+    TranslationKey:
+      type: object
+      required: [id, namespace, key, source_text, description, owner_domain, is_deprecated, created_at, updated_at]
+      properties:
+        id: { type: integer, minimum: 1 }
+        namespace: { type: string }
+        key: { type: string }
+        source_text: { type: string }
+        description: { type: string }
+        owner_domain: { type: string }
+        is_deprecated: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    TranslationKeyInput:
+      type: object
+      required: [namespace, key, source_text, owner_domain]
+      properties:
+        namespace: { type: string, enum: [storefront, checkout, admin, errors, communications] }
+        key: { type: string }
+        source_text: { type: string, minLength: 1 }
+        description: { type: string }
+        owner_domain: { type: string, minLength: 1 }
+
+    TranslationKeyUsage:
+      type: object
+      required: [id, translation_key_id, route, component, description, position, created_at, updated_at]
+      properties:
+        id: { type: integer, minimum: 1 }
+        translation_key_id: { type: integer, minimum: 1 }
+        route: { type: string }
+        component: { type: string }
+        description: { type: string }
+        position: { type: integer, minimum: 0 }
+        screenshot_media_id: { type: string, nullable: true }
+        screenshot_url: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    TranslationKeyUsageInput:
+      type: object
+      required: [route, component, description, position]
+      properties:
+        route: { type: string, maxLength: 512 }
+        component: { type: string, maxLength: 255 }
+        description: { type: string, maxLength: 2000 }
+        position: { type: integer, minimum: 0 }
+        screenshot_media_id: { type: string, nullable: true }
+
+    TranslationKeyUsageListInput:
+      type: object
+      required: [usages]
+      properties:
+        usages:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/TranslationKeyUsageInput" }
+
+    TranslationKeyUsageListResponse:
+      type: object
+      required: [usages]
+      properties:
+        usages:
+          type: array
+          items: { $ref: "#/components/schemas/TranslationKeyUsage" }
+
+    TranslationValue:
+      type: object
+      required: [id, translation_key_id, locale, value, state, version, created_at, updated_at, validation_issues]
+      properties:
+        id: { type: integer, minimum: 1 }
+        translation_key_id: { type: integer, minimum: 1 }
+        locale: { type: string }
+        value: { type: string }
+        state: { type: string, enum: [draft, review, published] }
+        version: { type: integer, minimum: 1 }
+        updated_by: { type: integer, minimum: 1, nullable: true }
+        reviewed_by: { type: integer, minimum: 1, nullable: true }
+        assignee_id: { type: integer, minimum: 1, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        validation_issues:
+          type: array
+          items: { $ref: "#/components/schemas/ValidationIssue" }
+
+    TranslationValueInput:
+      type: object
+      required: [value]
+      properties:
+        value: { type: string, minLength: 1 }
+        assignee_id: { type: integer, minimum: 1, nullable: true }
+        expected_version: { type: integer, minimum: 0 }
+        change_summary: { type: string }
+
+    TranslationTransitionInput:
+      type: object
+      properties:
+        change_summary: { type: string }
+
+    TranslationValueListResponse:
+      type: object
+      required: [values]
+      properties:
+        values:
+          type: array
+          items: { $ref: "#/components/schemas/TranslationValue" }
+
+    TranslationQueueItem:
+      type: object
+      required: [key, locale, missing, stale, validation_issues, preview_url]
+      properties:
+        key: { $ref: "#/components/schemas/TranslationKey" }
+        locale: { type: string }
+        latest_value:
+          allOf: [{ $ref: "#/components/schemas/TranslationValue" }]
+          nullable: true
+        published_value:
+          allOf: [{ $ref: "#/components/schemas/TranslationValue" }]
+          nullable: true
+        missing: { type: boolean }
+        stale: { type: boolean }
+        validation_issues:
+          type: array
+          items: { $ref: "#/components/schemas/ValidationIssue" }
+        preview_url: { type: string }
+
+    TranslationQueueResponse:
+      type: object
+      required: [items, pagination]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/TranslationQueueItem" }
+        pagination: { $ref: "#/components/schemas/Pagination" }
+
+    TranslationComment:
+      type: object
+      required: [id, translation_value_id, author_name, comment, created_at]
+      properties:
+        id: { type: integer, minimum: 1 }
+        translation_value_id: { type: integer, minimum: 1 }
+        author_id: { type: integer, minimum: 1, nullable: true }
+        author_name: { type: string }
+        comment: { type: string }
+        resolved_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    TranslationCommentInput:
+      type: object
+      required: [comment]
+      properties:
+        comment: { type: string, minLength: 1, maxLength: 4000 }
+
+    TranslationCommentListResponse:
+      type: object
+      required: [comments]
+      properties:
+        comments:
+          type: array
+          items: { $ref: "#/components/schemas/TranslationComment" }
+
+    TranslationRelease:
+      type: object
+      required: [id, name, status, notes, snapshot_hash, created_at, updated_at]
+      properties:
+        id: { type: integer, minimum: 1 }
+        name: { type: string }
+        status: { type: string, enum: [draft, active, superseded] }
+        notes: { type: string }
+        snapshot_hash: { type: string }
+        published_at: { type: string, format: date-time, nullable: true }
+        published_by: { type: integer, minimum: 1, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    TranslationReleaseQualityMissing:
+      type: object
+      required: [locale, namespace, key]
+      properties:
+        locale: { type: string }
+        namespace: { type: string, enum: [checkout, errors, communications] }
+        key: { type: string }
+
+    TranslationReleaseQuality:
+      type: object
+      required: [release_id, ready, required_locales, critical_namespaces, missing_count, missing]
+      properties:
+        release_id: { type: integer, minimum: 1 }
+        ready: { type: boolean }
+        required_locales:
+          type: array
+          items: { type: string }
+        critical_namespaces:
+          type: array
+          items: { type: string, enum: [checkout, errors, communications] }
+        missing_count: { type: integer, minimum: 0 }
+        missing:
+          type: array
+          items: { $ref: "#/components/schemas/TranslationReleaseQualityMissing" }
+
+    TranslationReleaseInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 128 }
+        notes: { type: string }
+
+    TranslationReleaseListResponse:
+      type: object
+      required: [releases]
+      properties:
+        releases:
+          type: array
+          items: { $ref: "#/components/schemas/TranslationRelease" }
+
+    TranslationDocumentFormat:
+      type: string
+      enum: [json, csv, xliff]
+
+    TranslationExportInput:
+      type: object
+      required: [locale, format]
+      properties:
+        locale: { type: string }
+        namespace: { type: string }
+        format: { $ref: "#/components/schemas/TranslationDocumentFormat" }
+
+    TranslationExportDocument:
+      type: object
+      required: [locale, format, filename, content]
+      properties:
+        locale: { type: string }
+        namespace: { type: string }
+        format: { $ref: "#/components/schemas/TranslationDocumentFormat" }
+        filename: { type: string }
+        content: { type: string }
+
+    TranslationImportInput:
+      type: object
+      required: [locale, format, content, dry_run]
+      properties:
+        locale: { type: string }
+        namespace: { type: string }
+        format: { $ref: "#/components/schemas/TranslationDocumentFormat" }
+        content: { type: string }
+        dry_run: { type: boolean }
+
+    TranslationImportEntry:
+      type: object
+      required: [key, status, detail]
+      properties:
+        key: { type: string }
+        status: { type: string, enum: [created, unchanged, conflict, invalid] }
+        detail: { type: string }
+
+    TranslationImportReport:
+      type: object
+      required: [dry_run, created, unchanged, conflicts, invalid, entries]
+      properties:
+        dry_run: { type: boolean }
+        created: { type: integer, minimum: 0 }
+        unchanged: { type: integer, minimum: 0 }
+        conflicts: { type: integer, minimum: 0 }
+        invalid: { type: integer, minimum: 0 }
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/TranslationImportEntry" }
+
+    LocalizationGlossaryTerm:
+      type: object
+      required: [id, locale, source_term, translated_term, description, is_locked, created_at, updated_at]
+      properties:
+        id: { type: integer, minimum: 1 }
+        locale: { type: string }
+        source_term: { type: string }
+        translated_term: { type: string }
+        description: { type: string }
+        is_locked: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    LocalizationGlossaryInput:
+      type: object
+      required: [locale, source_term, translated_term, is_locked]
+      properties:
+        locale: { type: string }
+        source_term: { type: string, minLength: 1 }
+        translated_term: { type: string, minLength: 1 }
+        description: { type: string }
+        is_locked: { type: boolean }
+
+    LocalizationGlossaryListResponse:
+      type: object
+      required: [terms]
+      properties:
+        terms:
+          type: array
+          items: { $ref: "#/components/schemas/LocalizationGlossaryTerm" }
+
+    LocalizationRoleAssignment:
+      type: object
+      required: [id, subject, role, created_at, updated_at]
+      properties:
+        id: { type: integer, minimum: 1 }
+        subject: { type: string }
+        role: { type: string, enum: [translator, editor, publisher] }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    LocalizationRoleInput:
+      type: object
+      required: [subject, role]
+      properties:
+        subject: { type: string, minLength: 1 }
+        role: { type: string, enum: [translator, editor, publisher] }
+
+    LocalizationRoleListResponse:
+      type: object
+      required: [assignments]
+      properties:
+        assignments:
+          type: array
+          items: { $ref: "#/components/schemas/LocalizationRoleAssignment" }
+
+    LocalizationAssignee:
+      type: object
+      required: [id, name, email, localization_role]
+      properties:
+        id: { type: integer, minimum: 1 }
+        name: { type: string }
+        email: { type: string, format: email }
+        localization_role: { type: string, enum: [translator, editor, publisher] }
+
+    LocalizationAssigneeListResponse:
+      type: object
+      required: [assignees]
+      properties:
+        assignees:
+          type: array
+          items: { $ref: "#/components/schemas/LocalizationAssignee" }
+
+    LocalizationRolloutDomain:
+      type: string
+      enum: [storefront, checkout, account, admin, communications, errors]
+
+    LocalizationRollout:
+      type: object
+      required: [locale, domain, is_enabled, percentage, updated_at]
+      properties:
+        locale: { type: string }
+        domain: { $ref: "#/components/schemas/LocalizationRolloutDomain" }
+        is_enabled: { type: boolean }
+        percentage: { type: integer, minimum: 0, maximum: 100 }
+        updated_at: { type: string, format: date-time }
+
+    LocalizationRolloutInput:
+      type: object
+      required: [locale, domain, is_enabled, percentage]
+      properties:
+        locale: { type: string }
+        domain: { $ref: "#/components/schemas/LocalizationRolloutDomain" }
+        is_enabled: { type: boolean }
+        percentage: { type: integer, minimum: 0, maximum: 100 }
+
+    LocalizationRolloutSettingsInput:
+      type: object
+      required: [rollouts]
+      properties:
+        rollouts:
+          type: array
+          items: { $ref: "#/components/schemas/LocalizationRolloutInput" }
+
+    LocalizationRolloutListResponse:
+      type: object
+      required: [rollouts]
+      properties:
+        rollouts:
+          type: array
+          items: { $ref: "#/components/schemas/LocalizationRollout" }
+
+    LocalizationMetricType:
+      type: string
+      enum: [missing_key, fallback_hit, rollout_fallback, publish_latency, rollback]
+
+    LocalizationMetricHotspot:
+      type: object
+      required: [metric_type, locale, domain, key, count, average_value, maximum_value, last_seen_at]
+      properties:
+        metric_type: { $ref: "#/components/schemas/LocalizationMetricType" }
+        locale: { type: string }
+        domain: { type: string }
+        key: { type: string }
+        count: { type: integer, minimum: 0 }
+        average_value: { type: number, minimum: 0 }
+        maximum_value: { type: integer, minimum: 0 }
+        last_seen_at: { type: string, format: date-time }
+
+    LocalizationLocaleMetricRate:
+      type: object
+      required: [locale, lookup_count, missing_key_count, fallback_hit_count, missing_key_rate, fallback_hit_rate]
+      properties:
+        locale: { type: string }
+        lookup_count: { type: integer, minimum: 0 }
+        missing_key_count: { type: integer, minimum: 0 }
+        fallback_hit_count: { type: integer, minimum: 0 }
+        missing_key_rate: { type: number, minimum: 0, maximum: 1 }
+        fallback_hit_rate: { type: number, minimum: 0, maximum: 1 }
+
+    LocalizationMetricsResponse:
+      type: object
+      required: [lookup_count, missing_key_count, missing_key_rate, fallback_hit_count, fallback_hit_rate, rollout_fallback_count, publish_count, average_publish_latency_ms, maximum_publish_latency_ms, rollback_count, locale_rates, hotspots, generated_at]
+      properties:
+        lookup_count: { type: integer, minimum: 0 }
+        missing_key_count: { type: integer, minimum: 0 }
+        missing_key_rate: { type: number, minimum: 0, maximum: 1 }
+        fallback_hit_count: { type: integer, minimum: 0 }
+        fallback_hit_rate: { type: number, minimum: 0, maximum: 1 }
+        rollout_fallback_count: { type: integer, minimum: 0 }
+        publish_count: { type: integer, minimum: 0 }
+        average_publish_latency_ms: { type: number, minimum: 0 }
+        maximum_publish_latency_ms: { type: integer, minimum: 0 }
+        rollback_count: { type: integer, minimum: 0 }
+        locale_rates:
+          type: array
+          items: { $ref: "#/components/schemas/LocalizationLocaleMetricRate" }
+        hotspots:
+          type: array
+          items: { $ref: "#/components/schemas/LocalizationMetricHotspot" }
+        generated_at: { type: string, format: date-time }
+
+    LocalizedEntityType:
+      type: string
+      enum: [product, product_variant, product_option, product_option_value, brand, category, website_settings, seo_metadata]
+
+    LocalizedFieldSet:
+      type: object
+      required: [locale, fields]
+      properties:
+        locale: { type: string }
+        fields:
+          type: object
+          additionalProperties: { type: string }
+
+    EntityLocalizationInput:
+      type: object
+      required: [locale, fields]
+      properties:
+        locale: { type: string }
+        fields:
+          type: object
+          additionalProperties: { type: string }
+        change_summary: { type: string }
+
+    EntityLocalizationResolution:
+      type: object
+      required: [requested_locale, resolved_locale, fallback_chain, fields, source_locales, used_fallback]
+      properties:
+        requested_locale: { type: string }
+        resolved_locale: { type: string }
+        fallback_chain:
+          type: array
+          items: { type: string }
+        fields:
+          type: object
+          additionalProperties: { type: string }
+        source_locales:
+          type: object
+          additionalProperties: { type: string }
+        used_fallback: { type: boolean }
+
+    EntityLocalizationResponse:
+      type: object
+      required: [entity_type, entity_id, localizations, resolved]
+      properties:
+        entity_type: { $ref: "#/components/schemas/LocalizedEntityType" }
+        entity_id: { type: integer, minimum: 1 }
+        localizations:
+          type: array
+          items: { $ref: "#/components/schemas/LocalizedFieldSet" }
+        resolved: { $ref: "#/components/schemas/EntityLocalizationResolution" }
+
     ValidationIssue:
       type: object
       description: A machine-readable issue associated with a request value.
@@ -6161,7 +7419,7 @@ components:
     Problem:
       type: object
       description: RFC 9457 problem details with stable application extensions.
-      required: [type, title, status, detail, code, correlation_id]
+      required: [type, title, status, detail, error_code, correlation_id]
       properties:
         type:
           type: string
@@ -6187,10 +7445,22 @@ components:
           type: string
           description: URI reference identifying this problem occurrence or related operation.
           example: /api/v1/provider-operations/01J2EXAMPLE
-        code:
+        error_code:
           type: string
           description: Stable machine-readable application error code.
           example: validation_failed
+        message_key:
+          type: string
+          description: Optional localization key for rendering the problem detail.
+          pattern: "^errors\\.[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)*$"
+        message_params:
+          type: object
+          description: Structured string, number, or boolean values interpolated into the localized message.
+          additionalProperties:
+            oneOf:
+              - type: string
+              - type: number
+              - type: boolean
         correlation_id:
           type: string
           description: Identifier used to correlate the response with logs and traces.
@@ -6934,57 +8204,6 @@ components:
           type: string
           enum: [columns, centered, minimal]
 
-    CmsLocale:
-      type: object
-      required: [code, name, enabled, is_default]
-      properties:
-        code:
-          type: string
-        name:
-          type: string
-        enabled:
-          type: boolean
-        is_default:
-          type: boolean
-        fallback_locale:
-          type: string
-          nullable: true
-
-    CmsLocaleInput:
-      type: object
-      required: [code, name, enabled, is_default]
-      properties:
-        code:
-          type: string
-        name:
-          type: string
-        enabled:
-          type: boolean
-        is_default:
-          type: boolean
-        fallback_locale:
-          type: string
-          nullable: true
-
-    CmsLocaleSettings:
-      type: object
-      required: [locales]
-      properties:
-        locales:
-          type: array
-          items:
-            $ref: "#/components/schemas/CmsLocale"
-
-    CmsLocaleSettingsInput:
-      type: object
-      required: [locales]
-      properties:
-        locales:
-          type: array
-          minItems: 1
-          items:
-            $ref: "#/components/schemas/CmsLocaleInput"
-
     CmsPageVariant:
       type: object
       required:
@@ -7249,17 +8468,13 @@ components:
 
     CmsContentExport:
       type: object
-      required: [schema_version, exported_at, locales, pages, navigation, global_regions, variants]
+      required: [schema_version, exported_at, pages, navigation, global_regions, variants]
       properties:
         schema_version:
           type: integer
         exported_at:
           type: string
           format: date-time
-        locales:
-          type: array
-          items:
-            $ref: "#/components/schemas/CmsLocale"
         pages:
           type: array
           items:
@@ -7799,6 +9014,7 @@ components:
         - profile_photo_url
         - role
         - currency
+        - locale
         - created_at
         - updated_at
       properties:
@@ -7822,6 +9038,9 @@ components:
           enum: [admin, customer]
         currency:
           type: string
+        locale:
+          type: string
+          description: Persisted account locale preference as a canonical BCP 47 tag.
         created_at:
           type: string
           format: date-time
@@ -7884,6 +9103,9 @@ components:
           type: string
           minLength: 3
           maxLength: 3
+        locale:
+          type: string
+          description: Enabled platform locale to persist as the account preference.
         profile_photo_url:
           type: string
 
@@ -7910,6 +9132,8 @@ components:
           nullable: true
         is_active:
           type: boolean
+        localization:
+          $ref: "#/components/schemas/EntityLocalizationResolution"
 
     BrandListResponse:
       type: object
@@ -7976,6 +9200,8 @@ components:
         depth:
           type: integer
           minimum: 0
+        localization:
+          $ref: "#/components/schemas/EntityLocalizationResolution"
 
     CategoryListResponse:
       type: object
@@ -9160,6 +10386,8 @@ components:
           type: string
           format: date-time
           nullable: true
+        localization:
+          $ref: "#/components/schemas/EntityLocalizationResolution"
 
     RelatedProduct:
       type: object
@@ -11673,6 +12901,8 @@ components:
           description: Set true on update to remove the stored OIDC client secret.
         oidc_redirect_uri:
           type: string
+        localization:
+          $ref: "#/components/schemas/EntityLocalizationResolution"
 
     WebsiteSettingsRequest:
       type: object

@@ -11,8 +11,11 @@
 	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 	import type { PageData } from "./$types";
+	import { getLocalizedApiErrorMessage } from "$lib/api/errors";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 
 	let api: API = getContext("api");
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 
 	interface Props {
 		data: PageData;
@@ -28,7 +31,10 @@
 	let oidcEnabled = $derived(data.authConfig.oidc_enabled);
 	let reauthMessage = $derived(
 		page.url.searchParams.get("reason") === "reauth"
-			? "Your session expired. Please sign in again."
+			? $localization.translate(
+					"storefront.account.session_expired",
+					"Your session expired. Please sign in again."
+				)
 			: ""
 	);
 
@@ -53,8 +59,14 @@
 				password: password,
 			});
 		} catch (err) {
-			const error = err as { body?: { error?: string } };
-			errorMessage = error.body?.error ?? "Invalid email or password.";
+			errorMessage = getLocalizedApiErrorMessage(
+				err,
+				localization.translate.bind(localization),
+				$localization.translate(
+					"storefront.account.invalid_credentials",
+					"Invalid email or password."
+				)
+			);
 			console.error(err);
 			return;
 		}
@@ -83,19 +95,37 @@
 {/snippet}
 
 <AuthFormShell
-	title="Log In"
+	title={$localization.translate("storefront.account.log_in", "Log In")}
 	{oidcEnabled}
-	oidcDescription="Use your identity provider to sign in without a local password."
+	oidcDescription={$localization.translate(
+		"storefront.account.provider_sign_in",
+		"Use your identity provider to sign in without a local password."
+	)}
 	showUnavailable={!localSignInEnabled && !oidcEnabled}
-	unavailableMessage="Sign-in is currently unavailable."
+	unavailableMessage={$localization.translate(
+		"storefront.account.sign_in_unavailable",
+		"Sign-in is currently unavailable."
+	)}
 	onOidc={continueWithOIDC}
 	alerts={authAlerts}
 >
 	{#if localSignInEnabled}
 		<form class="contents" onsubmit={submit}>
-			<TextInput bind:value={email} type="email" name="email" placeholder="Email" required />
-			<Password bind:value={password} name="password" placeholder="Password" />
-			<Button variant="primary" size="large" type="submit">Log In</Button>
+			<TextInput
+				bind:value={email}
+				type="email"
+				name="email"
+				placeholder={$localization.translate("storefront.account.email", "Email")}
+				required
+			/>
+			<Password
+				bind:value={password}
+				name="password"
+				placeholder={$localization.translate("storefront.account.password", "Password")}
+			/>
+			<Button variant="primary" size="large" type="submit"
+				>{$localization.translate("storefront.account.log_in", "Log In")}</Button
+			>
 		</form>
 	{/if}
 	{#if errorMessage}

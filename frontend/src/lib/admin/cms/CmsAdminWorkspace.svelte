@@ -67,7 +67,7 @@
 	type CmsTab = "pages" | "navigation" | "global" | "redirects" | "operations";
 	type CmsRedirectRule = components["schemas"]["CmsRedirectRule"];
 	type CmsSEOResponse = components["schemas"]["CmsSEOResponse"];
-	type CmsLocale = components["schemas"]["CmsLocale"];
+	type LocalizationLocale = components["schemas"]["LocalizationLocale"];
 	type CmsPageVariant = components["schemas"]["CmsPageVariant"];
 	type CmsAuditEvent = components["schemas"]["CmsAuditEvent"];
 	type CmsContentExport = components["schemas"]["CmsContentExport"];
@@ -225,7 +225,7 @@
 	>("");
 	let seoJSONLDName = $state("");
 	let seoIssues = $state<string[]>([]);
-	let cmsLocales = $state<CmsLocale[]>([]);
+	let localizationLocales = $state<LocalizationLocale[]>([]);
 	let localeSaving = $state(false);
 	let pageVariants = $state<CmsPageVariant[]>([]);
 	let selectedVariantId = $state<number | null>(null);
@@ -516,7 +516,7 @@
 			variantSlug,
 			variantTitle,
 			variantBlocks,
-			cmsLocales,
+			localizationLocales,
 		});
 	}
 
@@ -791,7 +791,8 @@
 
 	function newPageVariant() {
 		selectedVariantId = null;
-		variantLocale = cmsLocales.find((locale) => locale.enabled && !locale.is_default)?.code ?? "";
+		variantLocale =
+			localizationLocales.find((locale) => locale.is_enabled && !locale.is_default)?.code ?? "";
 		variantMarket = "";
 		variantPath = pagePath;
 		variantSlug = pageSlug;
@@ -878,16 +879,17 @@
 	async function saveLocales() {
 		localeSaving = true;
 		try {
-			const response = await api.updateAdminCmsLocales({
-				locales: cmsLocales.map((locale) => ({
+			const response = await api.replaceAdminLocalizationLocales({
+				locales: localizationLocales.map((locale) => ({
 					code: locale.code,
 					name: locale.name,
-					enabled: locale.enabled,
+					is_enabled: locale.is_enabled,
 					is_default: locale.is_default,
 					fallback_locale: locale.fallback_locale || null,
+					default_for_markets: locale.default_for_markets,
 				})),
 			});
-			cmsLocales = response.locales;
+			localizationLocales = response.locales;
 			markSaved();
 			notices.setSuccess("Locale settings saved.");
 		} catch (error) {
@@ -899,9 +901,16 @@
 	}
 
 	function addLocale() {
-		cmsLocales = [
-			...cmsLocales,
-			{ code: "", name: "", enabled: true, is_default: false, fallback_locale: null },
+		localizationLocales = [
+			...localizationLocales,
+			{
+				code: "",
+				name: "",
+				is_enabled: true,
+				is_default: false,
+				fallback_locale: null,
+				default_for_markets: [],
+			},
 		];
 	}
 
@@ -922,8 +931,7 @@
 		try {
 			const parsed = JSON.parse(await file.text()) as Partial<CmsContentExport>;
 			if (
-				parsed.schema_version !== 1 ||
-				!Array.isArray(parsed.locales) ||
+				parsed.schema_version !== 2 ||
 				!Array.isArray(parsed.pages) ||
 				!Array.isArray(parsed.navigation) ||
 				!Array.isArray(parsed.global_regions) ||
@@ -1406,7 +1414,7 @@
 					api.listAdminCmsNavigation(),
 					api.listAdminCmsGlobalRegions(),
 					api.listAdminCmsRedirects(),
-					api.getAdminCmsLocales(),
+					api.listAdminLocalizationLocales(),
 					api.getAdminCmsGovernance(),
 					api.getAdminCmsOperations(),
 				]);
@@ -1414,7 +1422,7 @@
 			navigationMenus = navList.data;
 			globalRegions = globalList.data;
 			redirects = redirectList;
-			cmsLocales = localeSettings.locales;
+			localizationLocales = localeSettings.locales;
 			governance = governanceSettings;
 			operations = ops;
 			syncNavigationRows();
@@ -3052,7 +3060,7 @@
 	{#if activeTab === "pages"}
 		<CmsLocalizationPanel
 			selectedPageId={selected.id}
-			bind:cmsLocales
+			bind:localizationLocales
 			{localeSaving}
 			{pageVariants}
 			{selectedVariantId}

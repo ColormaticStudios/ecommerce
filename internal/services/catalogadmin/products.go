@@ -10,6 +10,7 @@ import (
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/apperror"
 	"ecommerce/internal/media"
+	localizationservice "ecommerce/internal/services/localization"
 	"ecommerce/models"
 
 	"gorm.io/gorm"
@@ -254,6 +255,13 @@ func (s *Service) PublishProduct(ctx context.Context, id uint) (models.Product, 
 		if err := tx.Select("*").Save(&product).Error; err != nil {
 			return err
 		}
+		productFields := map[string]string{"name": product.Name, "description": product.Description}
+		if product.Subtitle != nil {
+			productFields["subtitle"] = *product.Subtitle
+		}
+		if err := localizationservice.SyncDefaultEntityLocalization(tx, localizationservice.EntityTypeProduct, product.ID, productFields, nil); err != nil {
+			return err
+		}
 		var liveVariants []models.ProductVariant
 		if err := tx.Where("product_id = ?", id).Find(&liveVariants).Error; err != nil {
 			return err
@@ -280,6 +288,9 @@ func (s *Service) PublishProduct(ctx context.Context, id uint) (models.Product, 
 				}
 				delete(liveVariantsBySKU, item.SKU)
 			} else if err := tx.Select("*").Create(value).Error; err != nil {
+				return err
+			}
+			if err := localizationservice.SyncDefaultEntityLocalization(tx, localizationservice.EntityTypeProductVariant, value.ID, map[string]string{"title": value.Title}, nil); err != nil {
 				return err
 			}
 			if draft.DefaultVariantSKU == item.SKU || (defaultVariantID == nil && draft.DefaultVariantSKU == "") {

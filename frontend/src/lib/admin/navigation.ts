@@ -8,6 +8,7 @@ export type AdminSectionId =
 	| "purchase-orders"
 	| "users"
 	| "providers"
+	| "localization"
 	| "cms"
 	| "website";
 
@@ -21,12 +22,14 @@ type AdminRouteHref =
 	| "/admin/purchase-orders"
 	| "/admin/users"
 	| "/admin/providers"
+	| "/admin/localization"
 	| "/admin/cms"
 	| "/admin/website";
 
 export interface AdminNavItem {
 	id: AdminSectionId;
 	label: string;
+	messageKey: string;
 	href: AdminRouteHref;
 	icon: string;
 	matchPrefixes: string[];
@@ -36,6 +39,7 @@ export const adminNavItems: AdminNavItem[] = [
 	{
 		id: "products",
 		label: "Products",
+		messageKey: "admin.navigation.products",
 		href: "/admin/products",
 		icon: "bi-box-seam",
 		matchPrefixes: ["/admin/products", "/admin/product"],
@@ -43,6 +47,7 @@ export const adminNavItems: AdminNavItem[] = [
 	{
 		id: "brands",
 		label: "Brands",
+		messageKey: "admin.navigation.brands",
 		href: "/admin/brands",
 		icon: "bi-tags",
 		matchPrefixes: ["/admin/brands"],
@@ -50,6 +55,7 @@ export const adminNavItems: AdminNavItem[] = [
 	{
 		id: "categories",
 		label: "Categories",
+		messageKey: "admin.navigation.categories",
 		href: "/admin/categories",
 		icon: "bi-diagram-2",
 		matchPrefixes: ["/admin/categories"],
@@ -57,6 +63,7 @@ export const adminNavItems: AdminNavItem[] = [
 	{
 		id: "orders",
 		label: "Orders",
+		messageKey: "admin.navigation.orders",
 		href: "/admin/orders",
 		icon: "bi-receipt-cutoff",
 		matchPrefixes: ["/admin/orders"],
@@ -64,6 +71,7 @@ export const adminNavItems: AdminNavItem[] = [
 	{
 		id: "discounts",
 		label: "Discounts",
+		messageKey: "admin.navigation.discounts",
 		href: "/admin/discounts",
 		icon: "bi-percent",
 		matchPrefixes: ["/admin/discounts"],
@@ -71,6 +79,7 @@ export const adminNavItems: AdminNavItem[] = [
 	{
 		id: "inventory",
 		label: "Inventory",
+		messageKey: "admin.navigation.inventory",
 		href: "/admin/inventory",
 		icon: "bi-boxes",
 		matchPrefixes: ["/admin/inventory"],
@@ -78,6 +87,7 @@ export const adminNavItems: AdminNavItem[] = [
 	{
 		id: "purchase-orders",
 		label: "Purchase Orders",
+		messageKey: "admin.navigation.purchase_orders",
 		href: "/admin/purchase-orders",
 		icon: "bi-clipboard-check",
 		matchPrefixes: ["/admin/purchase-orders"],
@@ -85,6 +95,7 @@ export const adminNavItems: AdminNavItem[] = [
 	{
 		id: "users",
 		label: "Users",
+		messageKey: "admin.navigation.users",
 		href: "/admin/users",
 		icon: "bi-people",
 		matchPrefixes: ["/admin/users"],
@@ -92,13 +103,23 @@ export const adminNavItems: AdminNavItem[] = [
 	{
 		id: "providers",
 		label: "Providers",
+		messageKey: "admin.navigation.providers",
 		href: "/admin/providers",
 		icon: "bi-diagram-3",
 		matchPrefixes: ["/admin/providers"],
 	},
 	{
+		id: "localization",
+		label: "Translations",
+		messageKey: "admin.navigation.translations",
+		href: "/admin/localization",
+		icon: "bi-translate",
+		matchPrefixes: ["/admin/localization"],
+	},
+	{
 		id: "cms",
 		label: "CMS",
+		messageKey: "admin.navigation.cms",
 		href: "/admin/cms",
 		icon: "bi-layout-text-window-reverse",
 		matchPrefixes: ["/admin/cms"],
@@ -106,6 +127,7 @@ export const adminNavItems: AdminNavItem[] = [
 	{
 		id: "website",
 		label: "Website",
+		messageKey: "admin.navigation.website",
 		href: "/admin/website",
 		icon: "bi-sliders",
 		matchPrefixes: ["/admin/website"],

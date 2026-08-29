@@ -26,13 +26,13 @@ func TestAdaptContractLegacyError(t *testing.T) {
 
 func TestAdaptContractFutureGeneratedProblemShape(t *testing.T) {
 	type generatedProblem struct {
-		Type   string `json:"type"`
-		Title  string `json:"title"`
-		Status int    `json:"status"`
-		Code   string `json:"code"`
+		Type      string `json:"type"`
+		Title     string `json:"title"`
+		Status    int    `json:"status"`
+		ErrorCode string `json:"error_code"`
 	}
 	problem, err := httpapi.AdaptContract(generatedProblem{
-		Type: "urn:problem:teapot", Title: "Teapot", Status: http.StatusTeapot, Code: "teapot",
+		Type: "urn:problem:teapot", Title: "Teapot", Status: http.StatusTeapot, ErrorCode: "teapot",
 	}, http.StatusInternalServerError)
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusTeapot, problem.Status)
@@ -53,6 +53,7 @@ func TestRendererAdaptsAndWritesLegacyContractError(t *testing.T) {
 	var problem httpapi.Problem
 	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &problem))
 	assert.Equal(t, "email_taken", problem.Code)
+	assert.Equal(t, "errors.email_taken", problem.MessageKey)
 }
 
 func TestRendererDoesNotLeakInternalError(t *testing.T) {

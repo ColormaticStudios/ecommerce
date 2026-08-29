@@ -3,8 +3,10 @@ package account
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
+	localizationservice "ecommerce/internal/services/localization"
 	"ecommerce/internal/services/providerops"
 	"ecommerce/models"
 
@@ -20,18 +22,21 @@ const (
 var (
 	ErrUserNotFound                  = errors.New("user not found")
 	ErrInvalidCurrency               = errors.New("invalid currency code")
+	ErrInvalidLocale                 = errors.New("invalid locale preference")
 	ErrInvalidRole                   = errors.New("invalid user role")
 	ErrCredentialServiceUnconfigured = errors.New("provider credential encryption is not configured")
 )
 
 type Service struct {
-	db          *gorm.DB
-	credentials *providerops.CredentialService
+	db           *gorm.DB
+	credentials  *providerops.CredentialService
+	localization *localizationservice.Service
 }
 
 type UpdateProfileInput struct {
 	Name            *string
 	Currency        *string
+	Locale          *string
 	ProfilePhotoURL *string
 }
 
@@ -61,7 +66,7 @@ type WebsiteSettingsInput struct {
 }
 
 func NewService(db *gorm.DB, credentials *providerops.CredentialService) *Service {
-	return &Service{db: db, credentials: credentials}
+	return &Service{db: db, credentials: credentials, localization: localizationservice.NewService(db)}
 }
 
 func (s *Service) UserBySubject(ctx context.Context, subject string) (models.User, error) {
@@ -92,6 +97,13 @@ func (s *Service) UpdateProfile(ctx context.Context, subject string, input Updat
 		if currency != "" {
 			user.Currency = currency
 		}
+	}
+	if input.Locale != nil {
+		locale, err := s.localization.RequireEnabledLocale(ctx, *input.Locale)
+		if err != nil {
+			return models.User{}, fmt.Errorf("%w: %v", ErrInvalidLocale, err)
+		}
+		user.Locale = locale.Code
 	}
 	if input.Name != nil && strings.TrimSpace(*input.Name) != "" {
 		user.Name = strings.TrimSpace(*input.Name)

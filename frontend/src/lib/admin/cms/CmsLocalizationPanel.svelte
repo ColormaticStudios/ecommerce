@@ -12,11 +12,11 @@
 	import IconButton from "$lib/components/IconButton.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
 
-	type CmsLocale = components["schemas"]["CmsLocale"];
+	type LocalizationLocale = components["schemas"]["LocalizationLocale"];
 	type CmsPageVariant = components["schemas"]["CmsPageVariant"];
 	interface Props {
 		selectedPageId: number | null;
-		cmsLocales: CmsLocale[];
+		localizationLocales: LocalizationLocale[];
 		localeSaving?: boolean;
 		pageVariants: CmsPageVariant[];
 		selectedVariantId: number | null;
@@ -46,7 +46,7 @@
 
 	let {
 		selectedPageId,
-		cmsLocales = $bindable(),
+		localizationLocales = $bindable(),
 		localeSaving = false,
 		pageVariants,
 		selectedVariantId,
@@ -71,6 +71,13 @@
 		transitionPageVariant,
 		removePageVariant,
 	}: Props = $props();
+
+	function updateDefaultMarkets(locale: LocalizationLocale, value: string) {
+		locale.default_for_markets = value
+			.split(",")
+			.map((market) => market.trim().toUpperCase())
+			.filter(Boolean);
+	}
 </script>
 
 <AdminPanel title="Languages and markets" class="mt-6">
@@ -85,11 +92,20 @@
 	<div
 		class="mt-4 divide-y divide-stone-200 border-y border-stone-200 dark:divide-stone-800 dark:border-stone-800"
 	>
-		{#each cmsLocales as locale, index (index)}
-			<div class="grid gap-3 py-4 md:grid-cols-[9rem_1fr_11rem_auto] md:items-end">
+		{#each localizationLocales as locale, index (index)}
+			<div class="grid gap-3 py-4 md:grid-cols-[9rem_1fr_11rem_11rem_auto] md:items-end">
 				<label class="block text-sm">
 					<span class="mb-1 block font-medium">Locale</span>
 					<TextInput tone="admin" bind:value={locale.code} placeholder="fr-CA" />
+				</label>
+				<label class="block text-sm">
+					<span class="mb-1 block font-medium">Default markets</span>
+					<TextInput
+						tone="admin"
+						value={locale.default_for_markets.join(", ")}
+						placeholder="CA, FR"
+						oninput={(event) => updateDefaultMarkets(locale, event.currentTarget.value)}
+					/>
 				</label>
 				<label class="block text-sm">
 					<span class="mb-1 block font-medium">Display name</span>
@@ -99,7 +115,7 @@
 					<span class="mb-1 block font-medium">Fallback</span>
 					<Dropdown tone="admin" bind:value={locale.fallback_locale}>
 						<option value={null}>No fallback</option>
-						{#each cmsLocales.filter((candidate) => candidate !== locale && candidate.code) as candidate (candidate.code)}
+						{#each localizationLocales.filter((candidate) => candidate !== locale && candidate.code) as candidate (candidate.code)}
 							<option value={candidate.code}>{candidate.code}</option>
 						{/each}
 					</Dropdown>
@@ -109,7 +125,7 @@
 						<input
 							class="size-4 accent-stone-900 dark:accent-stone-100"
 							type="checkbox"
-							bind:checked={locale.enabled}
+							bind:checked={locale.is_enabled}
 						/>
 						Enabled
 					</label>
@@ -120,7 +136,7 @@
 							name="default-cms-locale"
 							checked={locale.is_default}
 							onchange={() =>
-								(cmsLocales = cmsLocales.map((item) => ({
+								(localizationLocales = localizationLocales.map((item) => ({
 									...item,
 									is_default: item === locale,
 								})))}
@@ -135,7 +151,10 @@
 						aria-label={`Remove ${locale.name || "language"}`}
 						title="Remove language"
 						disabled={locale.is_default}
-						onclick={() => (cmsLocales = cmsLocales.filter((_, itemIndex) => itemIndex !== index))}
+						onclick={() =>
+							(localizationLocales = localizationLocales.filter(
+								(_, itemIndex) => itemIndex !== index
+							))}
 					>
 						<i class="bi bi-trash"></i>
 					</IconButton>
@@ -198,7 +217,7 @@
 							tone="admin"
 							bind:value={variantLocale}
 							><option value="">Choose language</option
-							>{#each cmsLocales.filter((locale) => locale.enabled && !locale.is_default) as locale (locale.code)}<option
+							>{#each localizationLocales.filter((locale) => locale.is_enabled && !locale.is_default) as locale (locale.code)}<option
 									value={locale.code}>{locale.name}</option
 								>{/each}</Dropdown
 						></label

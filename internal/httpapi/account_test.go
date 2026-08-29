@@ -199,5 +199,5 @@ func TestAccountEndpointsReturnTypedProblemWithoutPrincipal(t *testing.T) {
 	require.True(t, ok)
 	problem := apicontract.Problem(problemResponse.AuthenticationRequiredProblemApplicationProblemPlusJSONResponse)
 	assert.Equal(t, int32(401), problem.Status)
-	assert.Equal(t, "authentication_required", problem.Code)
+	assert.Equal(t, "authentication_required", problem.ErrorCode)
 }

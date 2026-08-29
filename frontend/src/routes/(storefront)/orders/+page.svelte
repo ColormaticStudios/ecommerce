@@ -11,7 +11,8 @@
 	import Toast from "$lib/components/Toast.svelte";
 	import Button from "$lib/components/Button.svelte";
 	import Dropdown from "$lib/components/Dropdown.svelte";
-	import { formatOrderStatusLabel, getOrderStatusTone } from "$lib/components/order-status";
+	import { getOrderStatusTone, localizeOrderStatus } from "$lib/components/order-status";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 	import { formatPrice } from "$lib/utils";
 	import { userStore } from "$lib/user";
 	import { getContext } from "svelte";
@@ -23,6 +24,7 @@
 	import type { PageData } from "./$types";
 
 	const api: API = getContext("api");
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 
 	interface Props {
 		data: PageData;
@@ -146,7 +148,10 @@
 		}
 		if (typeof window !== "undefined") {
 			const confirmed = window.confirm(
-				"Cancel this order? This cannot be undone and eligible items will be restocked."
+				$localization.translate(
+					"storefront.order.cancel_confirmation",
+					"Cancel this order? This cannot be undone and eligible items will be restocked."
+				)
 			);
 			if (!confirmed) {
 				return;
@@ -157,11 +162,15 @@
 		try {
 			const updated = await api.cancelOrder(orderId);
 			orders = orders.map((order) => (order.id === updated.id ? updated : order));
-			showToast("Order cancelled.");
+			showToast(
+				$localization.translate("storefront.order.cancelled_confirmation", "Order cancelled.")
+			);
 		} catch (err) {
 			console.error(err);
 			const error = err as { body?: { error?: string } };
-			errorMessage = error.body?.error ?? "Unable to cancel order.";
+			errorMessage =
+				error.body?.error ??
+				$localization.translate("storefront.order.cancel_error", "Unable to cancel order.");
 		} finally {
 			cancellingOrderId = null;
 		}
@@ -182,7 +191,12 @@
 			const flag = window.sessionStorage.getItem("orders_toast");
 			if (flag === "order_placed") {
 				window.sessionStorage.removeItem("orders_toast");
-				showToast("Order placed successfully.");
+				showToast(
+					$localization.translate(
+						"storefront.order.placed_confirmation",
+						"Order placed successfully."
+					)
+				);
 			}
 		}
 	});
@@ -342,7 +356,7 @@
 						</div>
 						<div class="flex flex-col items-end gap-1 justify-self-end text-right">
 							<Badge tone={getOrderStatusTone(order.status)} class="w-min">
-								{formatOrderStatusLabel(order.status)}
+								{localizeOrderStatus($localization, order.status)}
 							</Badge>
 							<p class="text-sm text-gray-600 dark:text-gray-400">
 								{formatDate(order.created_at)}

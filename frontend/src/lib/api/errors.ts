@@ -4,6 +4,13 @@ export interface ApiProblem {
 	body: unknown;
 }
 
+export interface LocalizedProblemBody {
+	error_code: string;
+	message_key?: string;
+	message_params?: Record<string, string | number | boolean>;
+	detail?: string;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -38,6 +45,9 @@ export class ApiProblemError extends Error implements ApiProblem {
 	readonly status: number;
 	readonly statusText: string;
 	readonly body: unknown;
+	readonly errorCode: string;
+	readonly messageKey: string;
+	readonly messageParams: Record<string, string | number | boolean>;
 
 	constructor(status: number, statusText: string, body: unknown) {
 		super(extractMessage(body) || statusText || `API request failed with status ${status}`);
@@ -45,7 +55,33 @@ export class ApiProblemError extends Error implements ApiProblem {
 		this.status = status;
 		this.statusText = statusText;
 		this.body = body;
+		this.errorCode = isRecord(body) && typeof body.error_code === "string" ? body.error_code : "";
+		this.messageKey =
+			isRecord(body) && typeof body.message_key === "string" ? body.message_key : "";
+		this.messageParams = {};
+		if (isRecord(body) && isRecord(body.message_params)) {
+			for (const [key, value] of Object.entries(body.message_params)) {
+				if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+					this.messageParams[key] = value;
+				}
+			}
+		}
 	}
+}
+
+export function getLocalizedApiErrorMessage(
+	error: unknown,
+	translate: (
+		key: string,
+		source: string,
+		parameters?: Record<string, string | number | boolean>
+	) => string,
+	fallback = ""
+): string {
+	if (error instanceof ApiProblemError && error.messageKey) {
+		return translate(error.messageKey, getApiErrorMessage(error, fallback), error.messageParams);
+	}
+	return getApiErrorMessage(error, fallback);
 }
 
 export function isApiProblemError(value: unknown): value is ApiProblemError {

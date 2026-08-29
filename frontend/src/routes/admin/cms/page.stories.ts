@@ -245,31 +245,36 @@ function createCmsApi(
 		listAdminCmsPages: async () => ({ data: pageResponses, pagination }),
 		listAdminCmsNavigation: async () => ({ data: [navigationResponse], pagination }),
 		listAdminCmsGlobalRegions: async () => ({ data: [globalRegionResponse], pagination }),
-		getAdminCmsLocales: async () => ({
+		listAdminLocalizationLocales: async () => ({
+			default_locale: "en-US",
 			locales: [
 				{
 					code: "en-US",
 					name: "English (United States)",
-					enabled: true,
+					is_enabled: true,
 					is_default: true,
 					fallback_locale: null,
+					default_for_markets: ["US"],
 				},
 				{
 					code: "fr-CA",
 					name: "French (Canada)",
-					enabled: true,
+					is_enabled: true,
 					is_default: false,
 					fallback_locale: "en-US",
+					default_for_markets: ["CA"],
 				},
 			],
 		}),
-		updateAdminCmsLocales: async (input) => input,
+		replaceAdminLocalizationLocales: async (input) => ({
+			default_locale: input.locales.find((locale) => locale.is_default)?.code ?? "",
+			locales: input.locales,
+		}),
 		listAdminCmsPageVariants: async () => variants,
 		listAdminCmsAuditEvents: async () => auditEvents,
 		exportAdminCmsContent: async () => ({
-			schema_version: 1,
+			schema_version: 2,
 			exported_at: new Date().toISOString(),
-			locales: [],
 			pages: [],
 			navigation: [],
 			global_regions: [],
@@ -385,7 +390,7 @@ export const Loading: Story = {
 				listAdminCmsPages: async () => pendingPromise(),
 				listAdminCmsNavigation: async () => pendingPromise(),
 				listAdminCmsGlobalRegions: async () => pendingPromise(),
-				getAdminCmsLocales: async () => pendingPromise(),
+				listAdminLocalizationLocales: async () => pendingPromise(),
 				listAdminCmsRedirects: async () => pendingPromise(),
 				getAdminCmsGovernance: async () => pendingPromise(),
 				getAdminCmsOperations: async () => pendingPromise(),
@@ -557,9 +562,8 @@ export const BackupRestoreConfirmation: Story = {
 		);
 		if (!input) throw new Error("CMS restore file input was not rendered");
 		const backup = {
-			schema_version: 1,
+			schema_version: 2,
 			exported_at: timestamp,
-			locales: [],
 			pages: [],
 			navigation: [],
 			global_regions: [],

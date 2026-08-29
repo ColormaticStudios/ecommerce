@@ -22,6 +22,19 @@ describe("ApiProblemError", () => {
 		expect(isApiProblemError(legacy)).toBe(false);
 		expect(getApiErrorMessage(legacy, "fallback")).toBe("sign in required");
 	});
+
+	it("exposes stable localized problem metadata", () => {
+		const error = new ApiProblemError(400, "Bad Request", {
+			error_code: "invalid_request",
+			message_key: "errors.invalid_request",
+			message_params: { field: "email", count: 2, retry: true },
+			detail: "Invalid request",
+		});
+
+		expect(error.errorCode).toBe("invalid_request");
+		expect(error.messageKey).toBe("errors.invalid_request");
+		expect(error.messageParams).toEqual({ field: "email", count: 2, retry: true });
+	});
 });
 
 describe("getApiErrorMessage", () => {

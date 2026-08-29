@@ -18,9 +18,11 @@ import (
 	"ecommerce/internal/httpapi"
 	"ecommerce/internal/httpcors"
 	"ecommerce/internal/migrations"
+	"ecommerce/internal/requestctx"
 	accountservice "ecommerce/internal/services/account"
 	"ecommerce/internal/services/accountdata"
 	authservice "ecommerce/internal/services/auth"
+	localizationservice "ecommerce/internal/services/localization"
 	providerops "ecommerce/internal/services/providerops"
 	webhookservice "ecommerce/internal/services/webhooks"
 	"ecommerce/models"
@@ -307,7 +309,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to initialize e2e checkout/provider endpoints: %v", err)
 	}
-	apiServer, err := httpapi.NewServer(accountEndpoints, catalogEndpoints, cmsMediaEndpoints, checkoutProviderEndpoints)
+	localizationEndpoints, err := httpapi.NewLocalizationEndpoints(db)
+	if err != nil {
+		log.Fatalf("failed to initialize e2e localization endpoints: %v", err)
+	}
+	apiServer, err := httpapi.NewServer(accountEndpoints, catalogEndpoints, cmsMediaEndpoints, checkoutProviderEndpoints, localizationEndpoints)
 	if err != nil {
 		log.Fatalf("failed to compose e2e strict API server: %v", err)
 	}
@@ -317,6 +323,16 @@ func main() {
 	}
 	if err := httpapi.RegisterStrict(r, apiServer, httpapi.RegisterStrictOptions{
 		Strict: httpapi.StrictOptions{Policies: policies}, Renderer: renderer,
+		Localization: &httpapi.LocalizationNegotiationOptions{
+			Service: localizationservice.NewService(db),
+			ResolveAccountPreference: func(resolveCtx context.Context, principal requestctx.Principal) (string, error) {
+				user, resolveErr := accountService.UserBySubject(resolveCtx, principal.Subject)
+				if errors.Is(resolveErr, accountservice.ErrUserNotFound) {
+					return "", nil
+				}
+				return user.Locale, resolveErr
+			},
+		},
 		Security: httpapi.SecurityOptions{PreviewSecret: e2eJWTSecret, Authenticator: httpapi.JWTAuthenticator{
 			Secret: []byte(e2eJWTSecret), ResolveAccountID: func(resolveCtx context.Context, subject string) (uint, error) {
 				user, resolveErr := accountService.UserBySubject(resolveCtx, subject)

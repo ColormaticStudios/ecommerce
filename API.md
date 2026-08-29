@@ -83,6 +83,12 @@ fetch('http://localhost:3000/api/v1/auth/register',
 |409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
 
+### Response Headers
+
+|Status|Header|Type|Format|Description|
+|---|---|---|---|---|
+|201|Set-Cookie|array||Session and CSRF cookies.|
+
 <aside class="success">
 This operation does not require authentication
 </aside>
@@ -143,6 +149,12 @@ fetch('http://localhost:3000/api/v1/auth/login',
 |401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
 
+### Response Headers
+
+|Status|Header|Type|Format|Description|
+|---|---|---|---|---|
+|200|Set-Cookie|array||Session and CSRF cookies.|
+
 <aside class="success">
 This operation does not require authentication
 </aside>
@@ -182,6 +194,12 @@ fetch('http://localhost:3000/api/v1/auth/logout',
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Logged out|MessageResponse|
 |400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+### Response Headers
+
+|Status|Header|Type|Format|Description|
+|---|---|---|---|---|
+|200|Set-Cookie|array||Expired session and CSRF cookies.|
 
 <aside class="success">
 This operation does not require authentication
@@ -331,6 +349,13 @@ fetch('http://localhost:3000/api/v1/auth/oidc/callback',
 |400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
 |401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+### Response Headers
+
+|Status|Header|Type|Format|Description|
+|---|---|---|---|---|
+|200|Set-Cookie|array||Session and CSRF cookies.|
+|302|Set-Cookie|array||Session and CSRF cookies.|
 
 <aside class="success">
 This operation does not require authentication
@@ -586,6 +611,7 @@ cookieAuth, bearerAuth
 const inputBody = '{
   "name": "string",
   "currency": "str",
+  "locale": "string",
   "profile_photo_url": "string"
 }';
 const headers = {
@@ -615,6 +641,7 @@ fetch('http://localhost:3000/api/v1/me/',
 {
   "name": "string",
   "currency": "str",
+  "locale": "string",
   "profile_photo_url": "string"
 }
 ```
@@ -2470,6 +2497,1785 @@ cookieAuth, bearerAuth
 </aside>
 
 <h1 id="ecommerce-api-admin">admin</h1>
+
+## listAdminLocalizationLocales
+
+<a id="opIdlistAdminLocalizationLocales"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/locales',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/localization/locales`
+
+<h3 id="listadminlocalizationlocales-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Complete platform locale registry|LocalizationLocaleList|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## replaceAdminLocalizationLocales
+
+<a id="opIdreplaceAdminLocalizationLocales"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "locales": [
+    {
+      "code": "string",
+      "name": "string",
+      "is_enabled": true,
+      "is_default": true,
+      "fallback_locale": "string",
+      "default_for_markets": [
+        "string"
+      ]
+    }
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/locales',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/localization/locales`
+
+> Body parameter
+
+```json
+{
+  "locales": [
+    {
+      "code": "string",
+      "name": "string",
+      "is_enabled": true,
+      "is_default": true,
+      "fallback_locale": "string",
+      "default_for_markets": [
+        "string"
+      ]
+    }
+  ]
+}
+```
+
+<h3 id="replaceadminlocalizationlocales-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|LocalizationLocaleSettingsInput|true|none|
+
+<h3 id="replaceadminlocalizationlocales-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Replaced platform locale registry|LocalizationLocaleList|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminLocalizationKeys
+
+<a id="opIdlistAdminLocalizationKeys"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/keys',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/localization/keys`
+
+<h3 id="listadminlocalizationkeys-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|locale|query|string|false|none|
+|namespace|query|string|false|none|
+|state|query|string|false|none|
+|assignee_id|query|integer|false|none|
+|missing|query|boolean|false|none|
+|stale|query|boolean|false|none|
+|q|query|string|false|none|
+|page|query|integer|false|none|
+|limit|query|integer|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|state|draft|
+|state|review|
+|state|published|
+
+<h3 id="listadminlocalizationkeys-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Filtered translation work queue|TranslationQueueResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminLocalizationKey
+
+<a id="opIdcreateAdminLocalizationKey"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "namespace": "storefront",
+  "key": "string",
+  "source_text": "string",
+  "description": "string",
+  "owner_domain": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/keys',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/localization/keys`
+
+> Body parameter
+
+```json
+{
+  "namespace": "storefront",
+  "key": "string",
+  "source_text": "string",
+  "description": "string",
+  "owner_domain": "string"
+}
+```
+
+<h3 id="createadminlocalizationkey-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|TranslationKeyInput|true|none|
+
+<h3 id="createadminlocalizationkey-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created translation key|TranslationKey|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminLocalizationValues
+
+<a id="opIdlistAdminLocalizationValues"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/keys/{id}/values',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/localization/keys/{id}/values`
+
+<h3 id="listadminlocalizationvalues-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="listadminlocalizationvalues-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Version history for a translation key|TranslationValueListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminLocalizationKeyUsages
+
+<a id="opIdlistAdminLocalizationKeyUsages"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/keys/{id}/usages',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/localization/keys/{id}/usages`
+
+<h3 id="listadminlocalizationkeyusages-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="listadminlocalizationkeyusages-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Translation key usage context and screenshots|TranslationKeyUsageListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## replaceAdminLocalizationKeyUsages
+
+<a id="opIdreplaceAdminLocalizationKeyUsages"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "usages": [
+    {
+      "route": "string",
+      "component": "string",
+      "description": "string",
+      "position": 0,
+      "screenshot_media_id": "string"
+    }
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/keys/{id}/usages',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/localization/keys/{id}/usages`
+
+> Body parameter
+
+```json
+{
+  "usages": [
+    {
+      "route": "string",
+      "component": "string",
+      "description": "string",
+      "position": 0,
+      "screenshot_media_id": "string"
+    }
+  ]
+}
+```
+
+<h3 id="replaceadminlocalizationkeyusages-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|TranslationKeyUsageListInput|true|none|
+
+<h3 id="replaceadminlocalizationkeyusages-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Replaced translation key usage context|TranslationKeyUsageListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## putAdminLocalizationValue
+
+<a id="opIdputAdminLocalizationValue"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "value": "string",
+  "assignee_id": 1,
+  "expected_version": 0,
+  "change_summary": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/keys/{id}/values/{locale}',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/localization/keys/{id}/values/{locale}`
+
+> Body parameter
+
+```json
+{
+  "value": "string",
+  "assignee_id": 1,
+  "expected_version": 0,
+  "change_summary": "string"
+}
+```
+
+<h3 id="putadminlocalizationvalue-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|locale|path|string|true|none|
+|body|body|TranslationValueInput|true|none|
+
+<h3 id="putadminlocalizationvalue-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Created draft translation version|TranslationValue|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## submitAdminLocalizationValueReview
+
+<a id="opIdsubmitAdminLocalizationValueReview"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "change_summary": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/values/{id}/submit-review',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/localization/values/{id}/submit-review`
+
+> Body parameter
+
+```json
+{
+  "change_summary": "string"
+}
+```
+
+<h3 id="submitadminlocalizationvaluereview-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|TranslationTransitionInput|false|none|
+
+<h3 id="submitadminlocalizationvaluereview-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Translation submitted for review|TranslationValue|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## publishAdminLocalizationValue
+
+<a id="opIdpublishAdminLocalizationValue"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "change_summary": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/values/{id}/publish',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/localization/values/{id}/publish`
+
+> Body parameter
+
+```json
+{
+  "change_summary": "string"
+}
+```
+
+<h3 id="publishadminlocalizationvalue-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|TranslationTransitionInput|false|none|
+
+<h3 id="publishadminlocalizationvalue-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Published translation value|TranslationValue|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminLocalizationComments
+
+<a id="opIdlistAdminLocalizationComments"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/values/{id}/comments',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/localization/values/{id}/comments`
+
+<h3 id="listadminlocalizationcomments-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="listadminlocalizationcomments-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Review comments for a translation value|TranslationCommentListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminLocalizationComment
+
+<a id="opIdcreateAdminLocalizationComment"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "comment": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/values/{id}/comments',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/localization/values/{id}/comments`
+
+> Body parameter
+
+```json
+{
+  "comment": "string"
+}
+```
+
+<h3 id="createadminlocalizationcomment-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|TranslationCommentInput|true|none|
+
+<h3 id="createadminlocalizationcomment-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Added review comment|TranslationComment|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminLocalizationReleases
+
+<a id="opIdlistAdminLocalizationReleases"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/releases',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/localization/releases`
+
+<h3 id="listadminlocalizationreleases-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Translation release history|TranslationReleaseListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## createAdminLocalizationRelease
+
+<a id="opIdcreateAdminLocalizationRelease"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "notes": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/releases',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/localization/releases`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "notes": "string"
+}
+```
+
+<h3 id="createadminlocalizationrelease-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|TranslationReleaseInput|true|none|
+
+<h3 id="createadminlocalizationrelease-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created immutable draft release|TranslationRelease|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## activateAdminLocalizationRelease
+
+<a id="opIdactivateAdminLocalizationRelease"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/releases/{id}/activate',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/localization/releases/{id}/activate`
+
+<h3 id="activateadminlocalizationrelease-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="activateadminlocalizationrelease-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Activated translation release|TranslationRelease|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminLocalizationReleaseQuality
+
+<a id="opIdgetAdminLocalizationReleaseQuality"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/releases/{id}/quality',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/localization/releases/{id}/quality`
+
+<h3 id="getadminlocalizationreleasequality-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="getadminlocalizationreleasequality-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Critical-namespace locale coverage for an immutable release|TranslationReleaseQuality|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## rollbackAdminLocalizationRelease
+
+<a id="opIdrollbackAdminLocalizationRelease"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/releases/{id}/rollback',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/localization/releases/{id}/rollback`
+
+<h3 id="rollbackadminlocalizationrelease-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="rollbackadminlocalizationrelease-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created and activated an immutable copy of the selected prior release|TranslationRelease|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## importAdminLocalization
+
+<a id="opIdimportAdminLocalization"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "locale": "string",
+  "namespace": "string",
+  "format": "json",
+  "content": "string",
+  "dry_run": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/import',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/localization/import`
+
+> Body parameter
+
+```json
+{
+  "locale": "string",
+  "namespace": "string",
+  "format": "json",
+  "content": "string",
+  "dry_run": true
+}
+```
+
+<h3 id="importadminlocalization-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|TranslationImportInput|true|none|
+
+<h3 id="importadminlocalization-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Validated import report|TranslationImportReport|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## exportAdminLocalization
+
+<a id="opIdexportAdminLocalization"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "locale": "string",
+  "namespace": "string",
+  "format": "json"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/export',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/localization/export`
+
+> Body parameter
+
+```json
+{
+  "locale": "string",
+  "namespace": "string",
+  "format": "json"
+}
+```
+
+<h3 id="exportadminlocalization-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|TranslationExportInput|true|none|
+
+<h3 id="exportadminlocalization-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Translation export document|TranslationExportDocument|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminLocalizationGlossary
+
+<a id="opIdlistAdminLocalizationGlossary"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/glossary',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/localization/glossary`
+
+<h3 id="listadminlocalizationglossary-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|locale|query|string|false|none|
+
+<h3 id="listadminlocalizationglossary-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Localization glossary terms|LocalizationGlossaryListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## putAdminLocalizationGlossaryTerm
+
+<a id="opIdputAdminLocalizationGlossaryTerm"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "locale": "string",
+  "source_term": "string",
+  "translated_term": "string",
+  "description": "string",
+  "is_locked": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/glossary',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/localization/glossary`
+
+> Body parameter
+
+```json
+{
+  "locale": "string",
+  "source_term": "string",
+  "translated_term": "string",
+  "description": "string",
+  "is_locked": true
+}
+```
+
+<h3 id="putadminlocalizationglossaryterm-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|LocalizationGlossaryInput|true|none|
+
+<h3 id="putadminlocalizationglossaryterm-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Created or updated glossary term|LocalizationGlossaryTerm|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## deleteAdminLocalizationGlossaryTerm
+
+<a id="opIddeleteAdminLocalizationGlossaryTerm"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/problem+json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/glossary/{id}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`DELETE /api/v1/admin/localization/glossary/{id}`
+
+<h3 id="deleteadminlocalizationglossaryterm-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="deleteadminlocalizationglossaryterm-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|Glossary term deleted|None|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminLocalizationRoles
+
+<a id="opIdlistAdminLocalizationRoles"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/roles',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/localization/roles`
+
+<h3 id="listadminlocalizationroles-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Localization role assignments|LocalizationRoleListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## putAdminLocalizationRole
+
+<a id="opIdputAdminLocalizationRole"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "subject": "string",
+  "role": "translator"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/roles',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/localization/roles`
+
+> Body parameter
+
+```json
+{
+  "subject": "string",
+  "role": "translator"
+}
+```
+
+<h3 id="putadminlocalizationrole-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|LocalizationRoleInput|true|none|
+
+<h3 id="putadminlocalizationrole-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Created or updated localization role assignment|LocalizationRoleAssignment|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminLocalizationAssignees
+
+<a id="opIdlistAdminLocalizationAssignees"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/assignees',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/localization/assignees`
+
+<h3 id="listadminlocalizationassignees-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|q|query|string|false|none|
+|limit|query|integer|false|none|
+
+<h3 id="listadminlocalizationassignees-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Searchable users with access to localization controls|LocalizationAssigneeListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminLocalizationRollouts
+
+<a id="opIdlistAdminLocalizationRollouts"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/rollouts',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/localization/rollouts`
+
+<h3 id="listadminlocalizationrollouts-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Per-locale rollout controls for each localization domain|LocalizationRolloutListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## replaceAdminLocalizationRollouts
+
+<a id="opIdreplaceAdminLocalizationRollouts"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "rollouts": [
+    {
+      "locale": "string",
+      "domain": "storefront",
+      "is_enabled": true,
+      "percentage": 100
+    }
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/rollouts',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/localization/rollouts`
+
+> Body parameter
+
+```json
+{
+  "rollouts": [
+    {
+      "locale": "string",
+      "domain": "storefront",
+      "is_enabled": true,
+      "percentage": 100
+    }
+  ]
+}
+```
+
+<h3 id="replaceadminlocalizationrollouts-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|LocalizationRolloutSettingsInput|true|none|
+
+<h3 id="replaceadminlocalizationrollouts-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Replaced per-locale localization rollout controls|LocalizationRolloutListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminLocalizationMetrics
+
+<a id="opIdgetAdminLocalizationMetrics"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/metrics',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/localization/metrics`
+
+<h3 id="getadminlocalizationmetrics-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Localization fallback, missing-key, rollout, and publishing health|LocalizationMetricsResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## getAdminEntityLocalization
+
+<a id="opIdgetAdminEntityLocalization"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/entities/{entity_type}/{entity_id}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/localization/entities/{entity_type}/{entity_id}`
+
+<h3 id="getadminentitylocalization-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|entity_type|path|LocalizedEntityType|true|none|
+|entity_id|path|integer|true|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|entity_type|product|
+|entity_type|product_variant|
+|entity_type|product_option|
+|entity_type|product_option_value|
+|entity_type|brand|
+|entity_type|category|
+|entity_type|website_settings|
+|entity_type|seo_metadata|
+
+<h3 id="getadminentitylocalization-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Localized fields for one entity|EntityLocalizationResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## putAdminEntityLocalization
+
+<a id="opIdputAdminEntityLocalization"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "locale": "string",
+  "fields": {
+    "property1": "string",
+    "property2": "string"
+  },
+  "change_summary": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/localization/entities/{entity_type}/{entity_id}',
+{
+  method: 'PUT',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PUT /api/v1/admin/localization/entities/{entity_type}/{entity_id}`
+
+> Body parameter
+
+```json
+{
+  "locale": "string",
+  "fields": {
+    "property1": "string",
+    "property2": "string"
+  },
+  "change_summary": "string"
+}
+```
+
+<h3 id="putadminentitylocalization-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|entity_type|path|LocalizedEntityType|true|none|
+|entity_id|path|integer|true|none|
+|body|body|EntityLocalizationInput|true|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|entity_type|product|
+|entity_type|product_variant|
+|entity_type|product_option|
+|entity_type|product_option_value|
+|entity_type|brand|
+|entity_type|category|
+|entity_type|website_settings|
+|entity_type|seo_metadata|
+
+<h3 id="putadminentitylocalization-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Replaced localized fields for one locale|EntityLocalizationResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
 
 ## listAdminProducts
 
@@ -8668,125 +10474,6 @@ To perform this operation, you must be authenticated by means of one of the foll
 cookieAuth, bearerAuth
 </aside>
 
-## getAdminCmsLocales
-
-<a id="opIdgetAdminCmsLocales"></a>
-
-> Code samples
-
-```javascript
-
-const headers = {
-  'Accept':'application/json'
-};
-
-fetch('http://localhost:3000/api/v1/admin/cms/locales',
-{
-  method: 'GET',
-
-  headers: headers
-})
-.then(function(res) {
-    return res.json();
-}).then(function(body) {
-    console.log(body);
-});
-
-```
-
-`GET /api/v1/admin/cms/locales`
-
-<h3 id="getadmincmslocales-responses">Responses</h3>
-
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|CMS locale registry and fallback configuration|CmsLocaleSettings|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
-|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
-|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
-
-<aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-cookieAuth, bearerAuth
-</aside>
-
-## updateAdminCmsLocales
-
-<a id="opIdupdateAdminCmsLocales"></a>
-
-> Code samples
-
-```javascript
-const inputBody = '{
-  "locales": [
-    {
-      "code": "string",
-      "name": "string",
-      "enabled": true,
-      "is_default": true,
-      "fallback_locale": "string"
-    }
-  ]
-}';
-const headers = {
-  'Content-Type':'application/json',
-  'Accept':'application/json'
-};
-
-fetch('http://localhost:3000/api/v1/admin/cms/locales',
-{
-  method: 'PUT',
-  body: inputBody,
-  headers: headers
-})
-.then(function(res) {
-    return res.json();
-}).then(function(body) {
-    console.log(body);
-});
-
-```
-
-`PUT /api/v1/admin/cms/locales`
-
-> Body parameter
-
-```json
-{
-  "locales": [
-    {
-      "code": "string",
-      "name": "string",
-      "enabled": true,
-      "is_default": true,
-      "fallback_locale": "string"
-    }
-  ]
-}
-```
-
-<h3 id="updateadmincmslocales-parameters">Parameters</h3>
-
-|Name|In|Type|Required|Description|
-|---|---|---|---|---|
-|body|body|CmsLocaleSettingsInput|true|none|
-
-<h3 id="updateadmincmslocales-responses">Responses</h3>
-
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated CMS locale registry|CmsLocaleSettings|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
-|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
-|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
-|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
-
-<aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-cookieAuth, bearerAuth
-</aside>
-
 ## listAdminCmsPageVariants
 
 <a id="opIdlistAdminCmsPageVariants"></a>
@@ -10265,15 +11952,6 @@ cookieAuth, bearerAuth
 const inputBody = '{
   "schema_version": 0,
   "exported_at": "2019-08-24T14:15:22Z",
-  "locales": [
-    {
-      "code": "string",
-      "name": "string",
-      "enabled": true,
-      "is_default": true,
-      "fallback_locale": "string"
-    }
-  ],
   "pages": [
     {
       "page": {
@@ -10624,15 +12302,6 @@ fetch('http://localhost:3000/api/v1/admin/cms/restore/preview',
 {
   "schema_version": 0,
   "exported_at": "2019-08-24T14:15:22Z",
-  "locales": [
-    {
-      "code": "string",
-      "name": "string",
-      "enabled": true,
-      "is_default": true,
-      "fallback_locale": "string"
-    }
-  ],
   "pages": [
     {
       "page": {
@@ -11032,15 +12701,6 @@ cookieAuth, bearerAuth
 const inputBody = '{
   "schema_version": 0,
   "exported_at": "2019-08-24T14:15:22Z",
-  "locales": [
-    {
-      "code": "string",
-      "name": "string",
-      "enabled": true,
-      "is_default": true,
-      "fallback_locale": "string"
-    }
-  ],
   "pages": [
     {
       "page": {
@@ -11391,15 +13051,6 @@ fetch('http://localhost:3000/api/v1/admin/cms/export',
 {
   "schema_version": 0,
   "exported_at": "2019-08-24T14:15:22Z",
-  "locales": [
-    {
-      "code": "string",
-      "name": "string",
-      "enabled": true,
-      "is_default": true,
-      "fallback_locale": "string"
-    }
-  ],
   "pages": [
     {
       "page": {
@@ -13498,7 +15149,23 @@ const inputBody = '{
     "oidc_client_secret": "string",
     "oidc_client_secret_configured": true,
     "clear_oidc_client_secret": true,
-    "oidc_redirect_uri": "string"
+    "oidc_redirect_uri": "string",
+    "localization": {
+      "requested_locale": "string",
+      "resolved_locale": "string",
+      "fallback_chain": [
+        "string"
+      ],
+      "fields": {
+        "property1": "string",
+        "property2": "string"
+      },
+      "source_locales": {
+        "property1": "string",
+        "property2": "string"
+      },
+      "used_fallback": true
+    }
   }
 }';
 const headers = {
@@ -13535,7 +15202,23 @@ fetch('http://localhost:3000/api/v1/admin/website',
     "oidc_client_secret": "string",
     "oidc_client_secret_configured": true,
     "clear_oidc_client_secret": true,
-    "oidc_redirect_uri": "string"
+    "oidc_redirect_uri": "string",
+    "localization": {
+      "requested_locale": "string",
+      "resolved_locale": "string",
+      "fallback_chain": [
+        "string"
+      ],
+      "fields": {
+        "property1": "string",
+        "property2": "string"
+      },
+      "source_locales": {
+        "property1": "string",
+        "property2": "string"
+      },
+      "used_fallback": true
+    }
   }
 }
 ```
@@ -13599,6 +15282,12 @@ fetch('http://localhost:3000/api/v1/admin/preview',
 |403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
 
+### Response Headers
+
+|Status|Header|Type|Format|Description|
+|---|---|---|---|---|
+|200|Set-Cookie|string||Clears an invalid preview cookie when necessary.|
+
 <aside class="warning">
 To perform this operation, you must be authenticated by means of one of the following methods:
 cookieAuth, bearerAuth
@@ -13642,6 +15331,12 @@ fetch('http://localhost:3000/api/v1/admin/preview/start',
 |403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
 
+### Response Headers
+
+|Status|Header|Type|Format|Description|
+|---|---|---|---|---|
+|200|Set-Cookie|string||Signed draft preview session cookie.|
+
 <aside class="warning">
 To perform this operation, you must be authenticated by means of one of the following methods:
 cookieAuth, bearerAuth
@@ -13684,6 +15379,12 @@ fetch('http://localhost:3000/api/v1/admin/preview/stop',
 |401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
 |403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+### Response Headers
+
+|Status|Header|Type|Format|Description|
+|---|---|---|---|---|
+|200|Set-Cookie|string||Expired draft preview session cookie.|
 
 <aside class="warning">
 To perform this operation, you must be authenticated by means of one of the following methods:
@@ -13809,7 +15510,7 @@ const inputBody = 'string';
 const headers = {
   'Content-Type':'application/offset+octet-stream',
   'Accept':'application/problem+json',
-  'Tus-Resumable':'string',
+  'Tus-Resumable':'1.0.0',
   'Upload-Length':'524288000',
   'Upload-Metadata':'string'
 };
@@ -13836,10 +15537,16 @@ fetch('http://localhost:3000/api/v1/media/uploads',
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
-|Tus-Resumable|header|string|false|none|
+|Tus-Resumable|header|string|true|none|
 |Upload-Length|header|integer|false|none|
 |Upload-Metadata|header|string|false|none|
 |body|body|string(binary)|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|Tus-Resumable|1.0.0|
 
 <h3 id="createmediaupload-responses">Responses</h3>
 
@@ -13856,6 +15563,8 @@ fetch('http://localhost:3000/api/v1/media/uploads',
 |Status|Header|Type|Format|Description|
 |---|---|---|---|---|
 |201|Location|string||none|
+|201|Tus-Resumable|string||none|
+|201|Upload-Offset|integer|int64|none|
 
 <aside class="warning">
 To perform this operation, you must be authenticated by means of one of the following methods:
@@ -13872,7 +15581,9 @@ cookieAuth, bearerAuth
 const inputBody = 'string';
 const headers = {
   'Content-Type':'application/offset+octet-stream',
-  'Accept':'application/problem+json'
+  'Accept':'application/problem+json',
+  'Tus-Resumable':'1.0.0',
+  'Upload-Offset':'0'
 };
 
 fetch('http://localhost:3000/api/v1/media/uploads/{path}',
@@ -13898,7 +15609,15 @@ fetch('http://localhost:3000/api/v1/media/uploads/{path}',
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
 |path|path|string|true|none|
+|Tus-Resumable|header|string|true|none|
+|Upload-Offset|header|integer(int64)|true|none|
 |body|body|string(binary)|true|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|Tus-Resumable|1.0.0|
 
 <h3 id="patchmediaupload-responses">Responses</h3>
 
@@ -13909,6 +15628,13 @@ fetch('http://localhost:3000/api/v1/media/uploads/{path}',
 |401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
 |403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+### Response Headers
+
+|Status|Header|Type|Format|Description|
+|---|---|---|---|---|
+|204|Tus-Resumable|string||none|
+|204|Upload-Offset|integer|int64|none|
 
 <aside class="warning">
 To perform this operation, you must be authenticated by means of one of the following methods:
@@ -13924,7 +15650,8 @@ cookieAuth, bearerAuth
 ```javascript
 
 const headers = {
-  'Accept':'application/problem+json'
+  'Accept':'application/problem+json',
+  'Tus-Resumable':'1.0.0'
 };
 
 fetch('http://localhost:3000/api/v1/media/uploads/{path}',
@@ -13948,6 +15675,13 @@ fetch('http://localhost:3000/api/v1/media/uploads/{path}',
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
 |path|path|string|true|none|
+|Tus-Resumable|header|string|true|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|Tus-Resumable|1.0.0|
 
 <h3 id="headmediaupload-responses">Responses</h3>
 
@@ -13958,6 +15692,14 @@ fetch('http://localhost:3000/api/v1/media/uploads/{path}',
 |401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
 |403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+### Response Headers
+
+|Status|Header|Type|Format|Description|
+|---|---|---|---|---|
+|200|Tus-Resumable|string||none|
+|200|Upload-Offset|integer|int64|none|
+|200|Upload-Length|integer|int64|none|
 
 <aside class="warning">
 To perform this operation, you must be authenticated by means of one of the following methods:
@@ -14328,6 +16070,196 @@ fetch('http://localhost:3000/api/v1/content/global/{region}',
 |400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+<h1 id="ecommerce-api-localization">localization</h1>
+
+## listLocalizationLocales
+
+<a id="opIdlistLocalizationLocales"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/localization/locales',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/localization/locales`
+
+<h3 id="listlocalizationlocales-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Enabled platform locales and the global default|LocalizationLocaleList|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## getLocalizationBundle
+
+<a id="opIdgetLocalizationBundle"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json',
+  'If-None-Match':'string'
+};
+
+fetch('http://localhost:3000/api/v1/localization/bundles/{locale}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/localization/bundles/{locale}`
+
+<h3 id="getlocalizationbundle-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|locale|path|string|true|none|
+|namespace|query|string|false|none|
+|domain|query|LocalizationRolloutDomain|false|none|
+|If-None-Match|header|string|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|namespace|storefront|
+|namespace|checkout|
+|namespace|admin|
+|namespace|errors|
+|namespace|communications|
+|domain|storefront|
+|domain|checkout|
+|domain|account|
+|domain|admin|
+|domain|communications|
+|domain|errors|
+
+<h3 id="getlocalizationbundle-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Deterministic bundle from the active translation release|LocalizationBundle|
+|304|[Not Modified](https://tools.ietf.org/html/rfc7232#section-4.1)|The requested bundle version is already cached by the client|None|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+|503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|A required service or capability is temporarily unavailable.|Problem|
+
+### Response Headers
+
+|Status|Header|Type|Format|Description|
+|---|---|---|---|---|
+|200|ETag|string||none|
+|200|Cache-Control|string||none|
+|304|ETag|string||none|
+|304|Cache-Control|string||none|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## getLocalizationBundleMeta
+
+<a id="opIdgetLocalizationBundleMeta"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json',
+  'If-None-Match':'string'
+};
+
+fetch('http://localhost:3000/api/v1/localization/bundles/{locale}/meta',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/localization/bundles/{locale}/meta`
+
+<h3 id="getlocalizationbundlemeta-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|locale|path|string|true|none|
+|domain|query|LocalizationRolloutDomain|false|none|
+|If-None-Match|header|string|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|domain|storefront|
+|domain|checkout|
+|domain|account|
+|domain|admin|
+|domain|communications|
+|domain|errors|
+
+<h3 id="getlocalizationbundlemeta-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Locale fallback and active-release metadata|LocalizationBundleMeta|
+|304|[Not Modified](https://tools.ietf.org/html/rfc7232#section-4.1)|The requested bundle metadata version is already cached by the client|None|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+|503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|A required service or capability is temporarily unavailable.|Problem|
+
+### Response Headers
+
+|Status|Header|Type|Format|Description|
+|---|---|---|---|---|
+|200|ETag|string||none|
+|200|Cache-Control|string||none|
+|304|ETag|string||none|
+|304|Cache-Control|string||none|
 
 <aside class="success">
 This operation does not require authentication

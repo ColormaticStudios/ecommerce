@@ -15,7 +15,9 @@
 	import Dropdown from "$lib/components/Dropdown.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
-	import { formatPrice, hasDiscount } from "$lib/utils";
+	import { hasDiscount } from "$lib/utils";
+	import { getLocalizedApiErrorMessage } from "$lib/api/errors";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 	import { userStore } from "$lib/user";
 	import {
 		initDataForProvider,
@@ -33,6 +35,7 @@
 	import type { PageData } from "./$types";
 
 	const api: API = getContext("api");
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 
 	type CheckoutProvider = components["schemas"]["CheckoutPlugin"];
 	type CheckoutQuoteResponse = components["schemas"]["CheckoutQuoteResponse"];
@@ -226,21 +229,42 @@
 	function getQuoteSetupMessage(action: "estimate" | "shipping"): string | null {
 		if (!selectedPaymentProviderId && !selectedShippingProviderId) {
 			return action === "shipping"
-				? "Choose a payment method and a shipping method to see delivery options."
-				: "Choose a payment method and a shipping method to update your total.";
+				? $localization.translate(
+						"checkout.choose_payment_and_shipping_delivery",
+						"Choose a payment method and a shipping method to see delivery options."
+					)
+				: $localization.translate(
+						"checkout.choose_payment_and_shipping_total",
+						"Choose a payment method and a shipping method to update your total."
+					);
 		}
 		if (!selectedPaymentProviderId) {
 			return action === "shipping"
-				? "Choose a payment method before loading delivery options."
-				: "Choose a payment method to update your total.";
+				? $localization.translate(
+						"checkout.choose_payment_delivery",
+						"Choose a payment method before loading delivery options."
+					)
+				: $localization.translate(
+						"checkout.choose_payment_total",
+						"Choose a payment method to update your total."
+					);
 		}
 		if (!selectedShippingProviderId) {
 			return action === "shipping"
-				? "Choose a shipping method to see delivery options."
-				: "Choose a shipping method to update your total.";
+				? $localization.translate(
+						"checkout.choose_shipping_delivery",
+						"Choose a shipping method to see delivery options."
+					)
+				: $localization.translate(
+						"checkout.choose_shipping_total",
+						"Choose a shipping method to update your total."
+					);
 		}
 		if (!autoTaxProviderId) {
-			return "Checkout is still getting ready. Try again in a moment.";
+			return $localization.translate(
+				"checkout.getting_ready",
+				"Checkout is still getting ready. Try again in a moment."
+			);
 		}
 		return null;
 	}
@@ -399,13 +423,19 @@
 			quote = nextQuote;
 			syncSnapshotBoundState(nextQuote.snapshot_id ?? null);
 			if (!nextQuote.valid) {
-				errorMessage = "Some checkout details are invalid. Review the messages below.";
+				errorMessage = $localization.translate(
+					"checkout.invalid_details",
+					"Some checkout details are invalid. Review the messages below."
+				);
 				return null;
 			}
 			return nextQuote;
 		} catch (err) {
-			const error = err as { body?: { error?: string } };
-			errorMessage = error.body?.error ?? "Unable to calculate quote.";
+			errorMessage = getLocalizedApiErrorMessage(
+				err,
+				localization.translate.bind(localization),
+				$localization.translate("checkout.quote_error", "Unable to calculate quote.")
+			);
 			return null;
 		} finally {
 			quoting = false;
@@ -433,8 +463,14 @@
 			shippingRateSelectionPendingId = null;
 			return response.rates;
 		} catch (err) {
-			const error = err as { body?: { error?: string } };
-			errorMessage = error.body?.error ?? "Unable to load shipping options.";
+			errorMessage = getLocalizedApiErrorMessage(
+				err,
+				localization.translate.bind(localization),
+				$localization.translate(
+					"checkout.shipping_options_error",
+					"Unable to load shipping options."
+				)
+			);
 			return null;
 		} finally {
 			loadingShippingRates = false;
@@ -451,7 +487,10 @@
 
 		const currentQuote = await refreshQuote();
 		if (!currentQuote?.snapshot_id) {
-			errorMessage = "We couldn't load delivery options right now. Please try again.";
+			errorMessage = $localization.translate(
+				"checkout.delivery_options_unavailable",
+				"We couldn't load delivery options right now. Please try again."
+			);
 			return false;
 		}
 
@@ -472,7 +511,11 @@
 		shippingData[shippingSelectionFieldKey] = rate.service_code;
 		const loaded = await loadShippingOptions();
 		if (loaded) {
-			statusMessage = `${rate.service_name} selected for shipping.`;
+			statusMessage = $localization.translate(
+				"checkout.shipping_selected",
+				"{service} selected for shipping.",
+				{ service: rate.service_name }
+			);
 		}
 	}
 
@@ -490,8 +533,11 @@
 			taxFinalization = await api.finalizeOrderTax(orderID, { snapshot_id: snapshotID });
 			return true;
 		} catch (err) {
-			const error = err as { body?: { error?: string } };
-			errorMessage = error.body?.error ?? "Unable to finalize taxes.";
+			errorMessage = getLocalizedApiErrorMessage(
+				err,
+				localization.translate.bind(localization),
+				$localization.translate("checkout.tax_error", "Unable to finalize taxes.")
+			);
 			return false;
 		} finally {
 			finalizingTax = false;
@@ -503,7 +549,10 @@
 			return;
 		}
 		if (!isAuthenticated && guestEmail.trim().length === 0) {
-			errorMessage = "Enter your email to place a guest order.";
+			errorMessage = $localization.translate(
+				"checkout.guest_email_required",
+				"Enter your email to place a guest order."
+			);
 			return;
 		}
 
@@ -518,7 +567,10 @@
 				return;
 			}
 			if (!currentQuote.snapshot_id) {
-				errorMessage = "We couldn't prepare your checkout right now. Please try again.";
+				errorMessage = $localization.translate(
+					"checkout.prepare_error",
+					"We couldn't prepare your checkout right now. Please try again."
+				);
 				return;
 			}
 
@@ -545,9 +597,14 @@
 
 			statusMessage = isAuthenticated
 				? order?.status
-					? `Payment status: ${order.status}`
-					: "Payment processed."
-				: "Order submitted. Keep your confirmation details for reference.";
+					? $localization.translate("checkout.payment_status", "Payment status: {status}", {
+							status: order.status,
+						})
+					: $localization.translate("checkout.payment_processed", "Payment processed.")
+				: $localization.translate(
+						"checkout.order_submitted",
+						"Order submitted. Keep your confirmation details for reference."
+					);
 			orderPlaced = true;
 			paymentIdempotencyKey = "";
 			window.dispatchEvent(new CustomEvent("cart:updated"));
@@ -558,11 +615,15 @@
 				await goto(resolve("/orders"));
 			}
 		} catch (err) {
-			const error = err as { status?: number; body?: { error?: string; code?: string } };
+			const error = err as { status?: number };
 			if (error.status !== undefined && error.status < 500) {
 				paymentIdempotencyKey = "";
 			}
-			errorMessage = error.body?.error ?? "Unable to place your order.";
+			errorMessage = getLocalizedApiErrorMessage(
+				err,
+				localization.translate.bind(localization),
+				$localization.translate("checkout.place_order_error", "Unable to place your order.")
+			);
 		} finally {
 			processing = false;
 		}
@@ -621,11 +682,15 @@
 <section class="mx-auto max-w-6xl px-4 py-10">
 	<div class="flex flex-wrap items-end justify-between gap-4">
 		<div>
-			<h1 class="text-3xl font-semibold text-gray-900 dark:text-gray-100">Checkout</h1>
+			<h1 class="text-3xl font-semibold text-gray-900 dark:text-gray-100">
+				{$localization.translate("checkout.title", "Checkout")}
+			</h1>
 		</div>
 		{#if cart && cart.items.length}
 			<p class="text-sm text-gray-600 dark:text-gray-300">
-				Subtotal {formatPrice(subtotal, $userStore?.currency ?? "USD")}
+				{$localization.translate("checkout.subtotal_with_value", "Subtotal {value}", {
+					value: $localization.formatCurrency(subtotal, $userStore?.currency ?? "USD"),
+				})}
 			</p>
 		{/if}
 	</div>
@@ -634,9 +699,11 @@
 		<CheckoutSignInRequiredBanner />
 	{:else if !cart || cart.items.length === 0}
 		<p class="mt-4 text-gray-600 dark:text-gray-300">
-			Your cart is empty. Visit the
-			<a href={resolve("/")} class="text-blue-600 hover:underline dark:text-blue-400">store</a>
-			to add items.
+			{$localization.translate("checkout.empty_cart_prefix", "Your cart is empty. Visit the")}
+			<a href={resolve("/")} class="text-blue-600 hover:underline dark:text-blue-400">
+				{$localization.translate("checkout.store", "store")}
+			</a>
+			{$localization.translate("checkout.empty_cart_suffix", "to add items.")}
 		</p>
 	{:else}
 		<div class="mt-6 space-y-6">
@@ -644,15 +711,20 @@
 				<Card tone="sky" radius="3xl" padding="lg">
 					<div class="grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
 						<div>
-							<h2 class="text-xl font-semibold text-sky-950 dark:text-sky-50">Guest contact</h2>
+							<h2 class="text-xl font-semibold text-sky-950 dark:text-sky-50">
+								{$localization.translate("checkout.guest_contact", "Guest contact")}
+							</h2>
 							<p class="mt-2 text-sm text-sky-900/80 dark:text-sky-100/80">
-								We will use your email for order confirmation and any follow-up about delivery.
+								{$localization.translate(
+									"checkout.guest_email_description",
+									"We will use your email for order confirmation and any follow-up about delivery."
+								)}
 							</p>
 							<label
 								class="mt-4 block text-sm font-medium text-sky-950 dark:text-sky-50"
 								for="guest-email"
 							>
-								Email address
+								{$localization.translate("checkout.email_address", "Email address")}
 							</label>
 							<TextInput
 								id="guest-email"
@@ -668,27 +740,48 @@
 							padding="sm"
 							class="text-sm text-sky-950 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-50"
 						>
-							<p class="font-medium">Already have an account?</p>
+							<p class="font-medium">
+								{$localization.translate(
+									"checkout.already_have_account",
+									"Already have an account?"
+								)}
+							</p>
 							<p class="mt-2 text-sky-900/80 dark:text-sky-100/80">
-								Sign in to use your saved cards, addresses, and order history after checkout.
+								{$localization.translate(
+									"checkout.sign_in_benefits",
+									"Sign in to use your saved cards, addresses, and order history after checkout."
+								)}
 							</p>
 							<div class="mt-4 flex flex-wrap gap-3">
 								<ButtonLink href={resolve("/login")} variant="regular" size="large"
-									>Log in</ButtonLink
+									>{$localization.translate("checkout.log_in", "Log in")}</ButtonLink
 								>
 								<ButtonLink href={resolve("/signup/")} variant="regular" size="large"
-									>Create account</ButtonLink
+									>{$localization.translate(
+										"checkout.create_account",
+										"Create account"
+									)}</ButtonLink
 								>
 							</div>
 							<div class="mt-5 border-t border-sky-200/70 pt-4 dark:border-sky-900/60">
-								<p class="font-medium">Need to claim an older guest order?</p>
+								<p class="font-medium">
+									{$localization.translate(
+										"checkout.claim_older_order",
+										"Need to claim an older guest order?"
+									)}
+								</p>
 								<p class="mt-2 text-sky-900/80 dark:text-sky-100/80">
-									Sign in first, then continue to your account to claim a past guest order with your
-									confirmation token.
+									{$localization.translate(
+										"checkout.claim_order_description",
+										"Sign in first, then continue to your account to claim a past guest order with your confirmation token."
+									)}
 								</p>
 								<div class="mt-4">
 									<ButtonLink href={claimGuestOrderHref} variant="primary" size="large"
-										>Claim past guest order</ButtonLink
+										>{$localization.translate(
+											"checkout.claim_past_order",
+											"Claim past guest order"
+										)}</ButtonLink
 									>
 								</div>
 							</div>
@@ -699,16 +792,23 @@
 			<Card padding="lg">
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<div>
-						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Checkout options</h3>
+						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+							{$localization.translate("checkout.options", "Checkout options")}
+						</h3>
 						<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-							Choose your payment and shipping providers.
+							{$localization.translate(
+								"checkout.choose_providers",
+								"Choose your payment and shipping providers."
+							)}
 						</p>
 					</div>
 				</div>
 
 				<div class="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)] lg:gap-8">
 					<div class="space-y-3">
-						<h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Payment provider</h4>
+						<h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+							{$localization.translate("checkout.payment_provider", "Payment provider")}
+						</h4>
 						{#if paymentMode === "select"}
 							<div class="grid gap-3 sm:grid-cols-2">
 								{#each paymentProviders as provider (provider.id)}
@@ -738,7 +838,8 @@
 											variant="regular"
 											size="small"
 											type="button"
-											onclick={() => (paymentMode = "select")}>Back</Button
+											onclick={() => (paymentMode = "select")}
+											>{$localization.translate("checkout.back", "Back")}</Button
 										>
 									{/if}
 								</div>
@@ -748,7 +849,7 @@
 										class="block text-sm text-gray-700 dark:text-gray-200"
 										for="saved-payment-method"
 									>
-										Use a saved card
+										{$localization.translate("checkout.use_saved_card", "Use a saved card")}
 									</label>
 									<Dropdown
 										id="saved-payment-method"
@@ -756,7 +857,12 @@
 										bind:value={selectedSavedPaymentMethodId}
 										onchange={(event) => applySavedPaymentMethod(event.currentTarget.value)}
 									>
-										<option value="">Enter card manually</option>
+										<option value="">
+											{$localization.translate(
+												"checkout.enter_card_manually",
+												"Enter card manually"
+											)}
+										</option>
 										{#each savedPaymentMethods as method (method.id)}
 											<option value={String(method.id)}>
 												{method.nickname || `${method.brand} •••• ${method.last4}`}
@@ -825,7 +931,12 @@
 										class="mt-1 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"
 									>
 										<input type="checkbox" bind:checked={savePaymentMethodToProfile} />
-										<span>Save this card to my profile</span>
+										<span
+											>{$localization.translate(
+												"checkout.save_card",
+												"Save this card to my profile"
+											)}</span
+										>
 									</label>
 								{/if}
 							</div>
@@ -836,7 +947,7 @@
 
 					<div class="space-y-3">
 						<h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">
-							Shipping provider
+							{$localization.translate("checkout.shipping_provider", "Shipping provider")}
 						</h4>
 						{#if shippingMode === "select"}
 							<div class="grid gap-3 sm:grid-cols-2">
@@ -869,14 +980,15 @@
 											variant="regular"
 											size="small"
 											type="button"
-											onclick={() => (shippingMode = "select")}>Back</Button
+											onclick={() => (shippingMode = "select")}
+											>{$localization.translate("checkout.back", "Back")}</Button
 										>
 									{/if}
 								</div>
 
 								{#if shippingUsesAddress && savedAddresses.length > 0}
 									<label class="block text-sm text-gray-700 dark:text-gray-200" for="saved-address">
-										Use a saved address
+										{$localization.translate("checkout.use_saved_address", "Use a saved address")}
 									</label>
 									<Dropdown
 										id="saved-address"
@@ -884,7 +996,12 @@
 										bind:value={selectedSavedAddressId}
 										onchange={(event) => applySavedAddress(event.currentTarget.value)}
 									>
-										<option value="">Enter address manually</option>
+										<option value="">
+											{$localization.translate(
+												"checkout.enter_address_manually",
+												"Enter address manually"
+											)}
+										</option>
 										{#each savedAddresses as address (address.id)}
 											<option value={String(address.id)}>
 												{address.label || `${address.full_name} - ${address.line1}`}
@@ -945,7 +1062,12 @@
 										class="mt-1 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"
 									>
 										<input type="checkbox" bind:checked={saveAddressToProfile} />
-										<span>Save this address to my profile</span>
+										<span
+											>{$localization.translate(
+												"checkout.save_address",
+												"Save this address to my profile"
+											)}</span
+										>
 									</label>
 								{/if}
 							</div>
@@ -964,10 +1086,10 @@
 								<p class="font-medium text-gray-900 dark:text-gray-100">{item.product.name}</p>
 								<p class="text-gray-600 dark:text-gray-400">
 									Qty {item.quantity} ·
-									{formatPrice(item.final_price, $userStore?.currency ?? "USD")}
+									{$localization.formatCurrency(item.final_price, $userStore?.currency ?? "USD")}
 									{#if hasDiscount(item)}
 										<span class="ml-1 line-through">
-											{formatPrice(item.base_price, $userStore?.currency ?? "USD")}
+											{$localization.formatCurrency(item.base_price, $userStore?.currency ?? "USD")}
 										</span>
 									{/if}
 								</p>
@@ -978,7 +1100,10 @@
 								{/if}
 							</div>
 							<p class="text-right font-medium text-gray-900 dark:text-gray-100">
-								{formatPrice(item.final_price * item.quantity, $userStore?.currency ?? "USD")}
+								{$localization.formatCurrency(
+									item.final_price * item.quantity,
+									$userStore?.currency ?? "USD"
+								)}
 							</p>
 						</div>
 					{/each}
@@ -987,7 +1112,7 @@
 				<Card padding="lg">
 					<div class="flex flex-col gap-3 sm:flex-row sm:items-center">
 						<h3 class="flex-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
-							Order summary
+							{$localization.translate("checkout.order_summary", "Order summary")}
 						</h3>
 						<div class="flex flex-2 flex-wrap gap-2 sm:ml-auto sm:justify-end">
 							<Button
@@ -997,7 +1122,9 @@
 								disabled={quoting || loadingShippingRates || processing}
 								onclick={refreshQuote}
 							>
-								{quoting ? "Updating quote..." : "Refresh"}
+								{quoting
+									? $localization.translate("checkout.updating_quote", "Updating quote...")
+									: $localization.translate("checkout.refresh", "Refresh")}
 							</Button>
 							<Button
 								variant="regular"
@@ -1007,46 +1134,51 @@
 								onclick={loadShippingOptions}
 							>
 								{loadingShippingRates
-									? "Loading options..."
+									? $localization.translate("checkout.loading_options", "Loading options...")
 									: shippingRatesLoadedForCurrentQuote
-										? "Refresh shipping"
-										: "Load shipping"}
+										? $localization.translate("checkout.refresh_shipping", "Refresh shipping")
+										: $localization.translate("checkout.load_shipping", "Load shipping")}
 							</Button>
 						</div>
 					</div>
 					<div class="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-300">
 						<div class="flex items-center justify-between">
-							<span>Subtotal</span>
+							<span>{$localization.translate("checkout.subtotal", "Subtotal")}</span>
 							<span class="font-medium text-gray-900 dark:text-gray-100">
-								{formatPrice(quote?.subtotal ?? subtotal, displayCurrency)}
+								{$localization.formatCurrency(quote?.subtotal ?? subtotal, displayCurrency)}
 							</span>
 						</div>
 						{#if (quote?.discount_total ?? cartDiscountTotal) > 0}
 							<div class="flex items-center justify-between text-emerald-700 dark:text-emerald-300">
-								<span>Discounts</span>
+								<span>{$localization.translate("checkout.discounts", "Discounts")}</span>
 								<span
-									>-{formatPrice(quote?.discount_total ?? cartDiscountTotal, displayCurrency)}</span
+									>-{$localization.formatCurrency(
+										quote?.discount_total ?? cartDiscountTotal,
+										displayCurrency
+									)}</span
 								>
 							</div>
 						{/if}
 						<div class="flex items-center justify-between">
-							<span>Shipping</span>
+							<span>{$localization.translate("checkout.shipping", "Shipping")}</span>
 							<span class="font-medium text-gray-900 dark:text-gray-100">
-								{formatPrice(quote?.shipping ?? 0, displayCurrency)}
+								{$localization.formatCurrency(quote?.shipping ?? 0, displayCurrency)}
 							</span>
 						</div>
 						<div class="flex items-center justify-between">
-							<span>Tax</span>
+							<span>{$localization.translate("checkout.tax", "Tax")}</span>
 							<span class="font-medium text-gray-900 dark:text-gray-100">
-								{formatPrice(quote?.tax ?? 0, displayCurrency)}
+								{$localization.formatCurrency(quote?.tax ?? 0, displayCurrency)}
 							</span>
 						</div>
 						<div
 							class="mt-2 flex items-center justify-between border-t border-gray-200 pt-2 dark:border-gray-700"
 						>
-							<span class="font-semibold text-gray-900 dark:text-gray-100">Estimated total</span>
+							<span class="font-semibold text-gray-900 dark:text-gray-100"
+								>{$localization.translate("checkout.estimated_total", "Estimated total")}</span
+							>
 							<span class="font-semibold text-gray-900 dark:text-gray-100">
-								{formatPrice(quote?.total ?? subtotal, displayCurrency)}
+								{$localization.formatCurrency(quote?.total ?? subtotal, displayCurrency)}
 							</span>
 						</div>
 					</div>
@@ -1055,14 +1187,22 @@
 						<div class="flex items-start justify-between gap-3">
 							<div>
 								<h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-									Shipping options
+									{$localization.translate("checkout.shipping_options", "Shipping options")}
 								</h4>
 								<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-									See available delivery methods and pick the one that works best for you.
+									{$localization.translate(
+										"checkout.shipping_options_description",
+										"See available delivery methods and pick the one that works best for you."
+									)}
 								</p>
 							</div>
 							{#if shippingRatesLoadedForCurrentQuote}
-								<Badge>{shippingRates.length} option{shippingRates.length === 1 ? "" : "s"}</Badge>
+								<Badge>
+									{$localization.plural("checkout.shipping_option_count", shippingRates.length, {
+										one: "{count} option",
+										other: "{count} options",
+									})}
+								</Badge>
 							{/if}
 						</div>
 
@@ -1090,22 +1230,34 @@
 												</p>
 												{#if rate.expires_at}
 													<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-														Price available until {new Date(rate.expires_at).toLocaleString()}
+														{$localization.translate(
+															"checkout.shipping_price_available_until",
+															"Price available until {date}",
+															{
+																date: $localization.formatDate(rate.expires_at, {
+																	dateStyle: "medium",
+																	timeStyle: "short",
+																}),
+															}
+														)}
 													</p>
 												{/if}
 											</div>
 											<div class="text-right">
 												<p class="font-semibold text-gray-900 dark:text-gray-100">
-													{formatPrice(rate.amount, rate.currency || displayCurrency)}
+													{$localization.formatCurrency(
+														rate.amount,
+														rate.currency || displayCurrency
+													)}
 												</p>
 												<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
 													{shippingRateSelectionPendingId === rate.id
-														? "Updating..."
+														? $localization.translate("checkout.updating", "Updating...")
 														: rate.selected
-															? "Selected"
+															? $localization.translate("checkout.selected", "Selected")
 															: shippingSelectionSupported
-																? "Select"
-																: "Available"}
+																? $localization.translate("checkout.select", "Select")
+																: $localization.translate("checkout.available", "Available")}
 												</p>
 											</div>
 										</div>
@@ -1114,13 +1266,18 @@
 							</div>
 							{#if !shippingSelectionSupported && shippingRates.length > 1}
 								<p class="mt-3 text-xs text-amber-700 dark:text-amber-300">
-									The shipping method will be chosen for you automatically after the rates load.
+									{$localization.translate(
+										"checkout.shipping_auto_selected",
+										"The shipping method will be chosen for you automatically after the rates load."
+									)}
 								</p>
 							{/if}
 						{:else}
 							<p class="mt-3 text-sm text-gray-600 dark:text-gray-300">
-								Choose your shipping method and enter your delivery details to compare available
-								options.
+								{$localization.translate(
+									"checkout.shipping_options_prompt",
+									"Choose your shipping method and enter your delivery details to compare available options."
+								)}
 							</p>
 						{/if}
 					</Card>
@@ -1147,7 +1304,9 @@
 						<Card tone="muted" padding="sm" class="mt-4">
 							<div class="flex items-start justify-between gap-3">
 								<div>
-									<h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Tax status</h4>
+									<h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+										{$localization.translate("checkout.tax_status", "Tax status")}
+									</h4>
 									<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
 										{#if taxFinalization}
 											Your tax total has been confirmed and is ready for checkout.
@@ -1158,9 +1317,11 @@
 									</p>
 								</div>
 								{#if taxFinalization}
-									<Badge tone="success">Ready</Badge>
+									<Badge tone="success">{$localization.translate("checkout.ready", "Ready")}</Badge>
 								{:else if finalizingTax}
-									<Badge tone="info">Updating...</Badge>
+									<Badge tone="info"
+										>{$localization.translate("checkout.updating", "Updating...")}</Badge
+									>
 								{/if}
 							</div>
 
@@ -1168,9 +1329,12 @@
 								<div
 									class="mt-3 flex items-center justify-between text-sm text-gray-600 dark:text-gray-300"
 								>
-									<span>Sales tax</span>
+									<span>{$localization.translate("checkout.sales_tax", "Sales tax")}</span>
 									<span class="font-semibold text-gray-900 dark:text-gray-100">
-										{formatPrice(taxFinalization.total_tax, taxFinalization.currency)}
+										{$localization.formatCurrency(
+											taxFinalization.total_tax,
+											taxFinalization.currency
+										)}
 									</span>
 								</div>
 							{/if}
@@ -1190,7 +1354,11 @@
 								orderPlaced}
 							onclick={placeOrder}
 						>
-							{processing ? "Processing..." : orderPlaced ? "Order placed" : "Place order"}
+							{processing
+								? $localization.translate("checkout.processing", "Processing...")
+								: orderPlaced
+									? $localization.translate("checkout.order_placed", "Order placed")
+									: $localization.translate("checkout.place_order", "Place order")}
 						</Button>
 					</div>
 
@@ -1224,16 +1392,25 @@
 							<div
 								class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-50"
 							>
-								<p class="font-medium">Guest confirmation token</p>
+								<p class="font-medium">
+									{$localization.translate(
+										"checkout.guest_confirmation_token",
+										"Guest confirmation token"
+									)}
+								</p>
 								<p class="mt-2 font-mono text-xs tracking-[0.18em] break-all uppercase">
 									{order.confirmation_token}
 								</p>
 								<p class="mt-2 text-emerald-900/80 dark:text-emerald-100/80">
-									Order confirmation was sent to {order.guest_email ?? guestEmail.trim()}.
+									{$localization.translate(
+										"checkout.order_confirmation_sent",
+										"Order confirmation was sent to {email}.",
+										{ email: order.guest_email ?? guestEmail.trim() }
+									)}
 								</p>
 								<div class="mt-4">
 									<ButtonLink href={claimGuestOrderHref} variant="primary">
-										Claim This Order
+										{$localization.translate("checkout.claim_order", "Claim This Order")}
 									</ButtonLink>
 								</div>
 							</div>

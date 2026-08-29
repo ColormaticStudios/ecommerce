@@ -93,6 +93,19 @@ export const LoadedWithSavedData: Story = {
 	},
 };
 
+export const FrenchLocalePreference: Story = {
+	render: () => {
+		const localizedProfile = makeUser({ ...profile, locale: "fr" });
+		const data = createData({ profile: localizedProfile });
+		return renderRouteStory({
+			component: ProfilePage,
+			componentProps: { data },
+			user: localizedProfile,
+			api: createProfileApi(data),
+		});
+	},
+};
+
 export const LoadError: Story = {
 	render: () =>
 		renderRouteStory({

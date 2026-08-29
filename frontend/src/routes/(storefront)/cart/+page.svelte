@@ -9,13 +9,16 @@
 	import IconButton from "$lib/components/IconButton.svelte";
 	import MediaThumbnail from "$lib/components/MediaThumbnail.svelte";
 	import QuantitySelector from "$lib/components/QuantitySelector.svelte";
-	import { formatPrice, hasDiscount } from "$lib/utils";
+	import { hasDiscount } from "$lib/utils";
+	import { getLocalizedApiErrorMessage } from "$lib/api/errors";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 	import { userStore } from "$lib/user";
 	import { getContext } from "svelte";
 	import { resolve } from "$app/paths";
 	import type { PageData } from "./$types";
 
 	const api: API = getContext("api");
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 	interface Props {
 		data: PageData;
 	}
@@ -46,7 +49,11 @@
 			window.dispatchEvent(new CustomEvent("cart:updated"));
 		} catch (err) {
 			console.error(err);
-			errorMessage = "Unable to update that item.";
+			errorMessage = getLocalizedApiErrorMessage(
+				err,
+				localization.translate.bind(localization),
+				$localization.translate("storefront.cart.update_error", "Unable to update that item.")
+			);
 		} finally {
 			updatingItemId = null;
 		}
@@ -60,7 +67,11 @@
 			window.dispatchEvent(new CustomEvent("cart:updated"));
 		} catch (err) {
 			console.error(err);
-			errorMessage = "Unable to remove that item.";
+			errorMessage = getLocalizedApiErrorMessage(
+				err,
+				localization.translate.bind(localization),
+				$localization.translate("storefront.cart.remove_error", "Unable to remove that item.")
+			);
 		} finally {
 			updatingItemId = null;
 		}
@@ -88,11 +99,16 @@
 <section class="mx-auto max-w-6xl px-4 py-10">
 	<div class="flex flex-wrap items-end justify-between gap-4">
 		<div>
-			<h1 class="text-3xl font-semibold text-gray-900 dark:text-gray-100">Your Cart</h1>
+			<h1 class="text-3xl font-semibold text-gray-900 dark:text-gray-100">
+				{$localization.translate("storefront.cart.title", "Your Cart")}
+			</h1>
 		</div>
 		{#if cart && cart.items.length}
 			<p class="text-sm text-gray-600 dark:text-gray-300">
-				{cart.items.length} item{cart.items.length === 1 ? "" : "s"}
+				{$localization.plural("storefront.cart.item_count", cart.items.length, {
+					one: "{count} item",
+					other: "{count} items",
+				})}
 			</p>
 		{/if}
 	</div>
@@ -109,14 +125,24 @@
 			/>
 		</div>
 	{:else if !cart || cart.items.length === 0}
-		<EmptyStateCard title="Your cart is empty." class="mt-6">
+		<EmptyStateCard
+			title={$localization.translate("storefront.cart.empty", "Your cart is empty.")}
+			class="mt-6"
+		>
 			{#if !isAuthenticated}
 				<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-					Your selections are saved to this browser until you check out or clear them.
+					{$localization.translate(
+						"storefront.cart.guest_saved",
+						"Your selections are saved to this browser until you check out or clear them."
+					)}
 				</p>
 			{/if}
 			<div class="mt-6">
-				<ButtonLink href={resolve("/")} variant="primary" size="large">Continue shopping</ButtonLink
+				<ButtonLink href={resolve("/")} variant="primary" size="large"
+					>{$localization.translate(
+						"storefront.cart.continue_shopping",
+						"Continue shopping"
+					)}</ButtonLink
 				>
 			</div>
 		</EmptyStateCard>
@@ -125,7 +151,10 @@
 			<div class="space-y-4">
 				{#if !isAuthenticated}
 					<Card tone="sky" padding="sm" class="text-sm text-sky-900 dark:text-sky-100">
-						Your cart is attached to this browser session. You can still check out as a guest.
+						{$localization.translate(
+							"storefront.cart.guest_checkout",
+							"Your cart is attached to this browser session. You can still check out as a guest."
+						)}
 					</Card>
 				{/if}
 				<div
@@ -142,10 +171,15 @@
 								<p
 									class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
 								>
-									<span>{formatPrice(item.final_price, $userStore?.currency ?? "USD")}</span>
+									<span
+										>{$localization.formatCurrency(
+											item.final_price,
+											$userStore?.currency ?? "USD"
+										)}</span
+									>
 									{#if hasDiscount(item)}
 										<span class="line-through">
-											{formatPrice(item.base_price, $userStore?.currency ?? "USD")}
+											{$localization.formatCurrency(item.base_price, $userStore?.currency ?? "USD")}
 										</span>
 									{/if}
 								</p>
@@ -172,8 +206,8 @@
 									type="button"
 									disabled={updatingItemId === item.id}
 									onclick={() => removeItem(item.id)}
-									aria-label="Remove item"
-									title="Remove item"
+									aria-label={$localization.translate("storefront.cart.remove_item", "Remove item")}
+									title={$localization.translate("storefront.cart.remove_item", "Remove item")}
 								>
 									<i class="bi bi-dash-lg"></i>
 								</IconButton>
@@ -184,24 +218,36 @@
 			</div>
 
 			<Card padding="lg">
-				<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Order summary</h3>
+				<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+					{$localization.translate("storefront.cart.order_summary", "Order summary")}
+				</h3>
 				<div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-1">
 					<div class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
 						<div class="flex items-center justify-between">
-							<span>Subtotal</span>
+							<span>{$localization.translate("storefront.cart.subtotal", "Subtotal")}</span>
 							<span class="font-medium text-gray-900 dark:text-gray-100">
-								{formatPrice(total, $userStore?.currency ?? "USD")}
+								{$localization.formatCurrency(total, $userStore?.currency ?? "USD")}
 							</span>
 						</div>
 						{#if discountTotal > 0}
 							<div class="flex items-center justify-between text-emerald-700 dark:text-emerald-300">
-								<span>Discounts</span>
-								<span>-{formatPrice(discountTotal, $userStore?.currency ?? "USD")}</span>
+								<span>{$localization.translate("storefront.cart.discounts", "Discounts")}</span>
+								<span
+									>-{$localization.formatCurrency(
+										discountTotal,
+										$userStore?.currency ?? "USD"
+									)}</span
+								>
 							</div>
 						{/if}
 						<div class="flex items-center justify-between">
-							<span>Shipping</span>
-							<span>Calculated at checkout</span>
+							<span>{$localization.translate("storefront.cart.shipping", "Shipping")}</span>
+							<span
+								>{$localization.translate(
+									"storefront.cart.calculated_at_checkout",
+									"Calculated at checkout"
+								)}</span
+							>
 						</div>
 					</div>
 					<div class="border-l border-gray-200 pl-4 sm:border-l-0 sm:pl-0 dark:border-gray-800">
@@ -211,14 +257,14 @@
 							size="large"
 							class="block w-full text-center"
 						>
-							Go to checkout
+							{$localization.translate("storefront.cart.go_to_checkout", "Go to checkout")}
 							<i class="bi bi-arrow-right"></i>
 						</ButtonLink>
 						<a
 							href={resolve("/")}
 							class="mt-3 block text-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
 						>
-							Continue shopping
+							{$localization.translate("storefront.cart.continue_shopping", "Continue shopping")}
 						</a>
 					</div>
 				</div>

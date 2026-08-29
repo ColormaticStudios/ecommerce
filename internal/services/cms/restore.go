@@ -29,14 +29,7 @@ type restoreVersion struct {
 
 type restoreBundle struct {
 	SchemaVersion int `json:"schema_version"`
-	Locales       []struct {
-		Code           string  `json:"code"`
-		Name           string  `json:"name"`
-		Enabled        bool    `json:"enabled"`
-		IsDefault      bool    `json:"is_default"`
-		FallbackLocale *string `json:"fallback_locale"`
-	} `json:"locales"`
-	Pages []struct {
+	Pages         []struct {
 		Page              models.CMSPage         `json:"page"`
 		Entry             models.CMSEntry        `json:"entry"`
 		CurrentVersion    *restoreVersion        `json:"current_version"`
@@ -84,21 +77,16 @@ func (s *Service) RestoreExport(ctx context.Context, raw []byte, actor string) e
 	if err := json.Unmarshal(raw, &bundle); err != nil {
 		return fmt.Errorf("%w: malformed JSON", ErrInvalidExport)
 	}
-	if bundle.SchemaVersion != 1 {
+	if bundle.SchemaVersion != 2 {
 		return fmt.Errorf("%w: unsupported schema version %d", ErrInvalidExport, bundle.SchemaVersion)
-	}
-	localeInputs := make([]LocaleInput, 0, len(bundle.Locales))
-	for _, locale := range bundle.Locales {
-		localeInputs = append(localeInputs, LocaleInput{
-			Code: locale.Code, Name: locale.Name, Enabled: locale.Enabled, IsDefault: locale.IsDefault,
-			FallbackLocale: stringValue(locale.FallbackLocale),
-		})
-	}
-	if err := validateLocales(localeInputs); err != nil {
-		return fmt.Errorf("%w: %v", ErrInvalidExport, err)
 	}
 	if err := validateRestoreBundle(bundle); err != nil {
 		return err
+	}
+	for _, variant := range bundle.Variants {
+		if _, err := s.localization.RequireEnabledLocale(ctx, variant.Locale); err != nil {
+			return fmt.Errorf("%w: variant %d references unavailable locale %q", ErrInvalidExport, variant.ID, variant.Locale)
+		}
 	}
 
 	return db.Transaction(func(tx *gorm.DB) error {
@@ -116,19 +104,8 @@ func (s *Service) RestoreExport(ctx context.Context, raw []byte, actor string) e
 			{&models.CMSPublication{}, "1 = 1", nil},
 			{&models.CMSEntryVersion{}, "1 = 1", nil},
 			{&models.CMSEntry{}, "1 = 1", nil},
-			{&models.CMSLocale{}, "1 = 1", nil},
 		} {
 			if err := tx.Unscoped().Where(deletion.query, deletion.args...).Delete(deletion.model).Error; err != nil {
-				return err
-			}
-		}
-
-		for _, locale := range localeInputs {
-			row := models.CMSLocale{
-				Code: normalizeLocale(locale.Code), Name: strings.TrimSpace(locale.Name), Enabled: locale.Enabled,
-				IsDefault: locale.IsDefault, FallbackLocale: normalizeLocale(locale.FallbackLocale),
-			}
-			if err := tx.Select("*").Create(&row).Error; err != nil {
 				return err
 			}
 		}

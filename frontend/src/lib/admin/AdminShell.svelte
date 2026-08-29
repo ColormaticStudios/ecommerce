@@ -12,6 +12,10 @@
 	import AdminSidebar from "$lib/admin/AdminSidebar.svelte";
 	import { getActiveAdminSection } from "$lib/admin/navigation";
 	import IconButton from "$lib/components/IconButton.svelte";
+	import { getContext } from "svelte";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
+
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 
 	interface Props {
 		children?: import("svelte").Snippet;
@@ -21,6 +25,7 @@
 
 	const collapsedSidebarStorageKey = "admin-sidebar-collapsed";
 	let drawerOpen = $state(false);
+	let navigationReady = $state(false);
 	let sidebarCollapsed = $state(false);
 	const activeSection = $derived(getActiveAdminSection(page.url.pathname));
 	const dirtyNavigation = createAdminDirtyNavigationController((message) =>
@@ -55,6 +60,7 @@
 	});
 
 	onMount(() => {
+		navigationReady = true;
 		const saved = window.localStorage.getItem(collapsedSidebarStorageKey);
 		if (saved === "true") {
 			sidebarCollapsed = true;
@@ -75,21 +81,15 @@
 	});
 
 	$effect(() => {
-		const pathname = page.url.pathname;
-		if (pathname) {
-			drawerOpen = false;
-		}
-	});
-
-	$effect(() => {
 		window.localStorage.setItem(collapsedSidebarStorageKey, sidebarCollapsed ? "true" : "false");
 	});
 </script>
 
 <section class="min-h-screen lg:h-screen lg:overflow-hidden">
 	<IconButton
-		aria-label="Open admin sections"
-		title="Open admin sections"
+		aria-label={$localization.translate("admin.shell.open_sections", "Open admin sections")}
+		title={$localization.translate("admin.shell.open_sections", "Open admin sections")}
+		disabled={!navigationReady}
 		class="m-4 text-gray-800 shadow-sm lg:hidden dark:text-gray-100"
 		onclick={() => (drawerOpen = true)}
 	>
@@ -120,7 +120,7 @@
 {#if drawerOpen}
 	<div
 		class="fixed inset-0 z-40 lg:hidden"
-		aria-label="Admin section drawer"
+		aria-label={$localization.translate("admin.shell.section_drawer", "Admin section drawer")}
 		role="dialog"
 		aria-modal="true"
 	>
@@ -128,7 +128,7 @@
 			type="button"
 			class="absolute inset-0 backdrop-blur-[2px]"
 			style="background-color: rgb(3 7 18 / 0.45);"
-			aria-label="Close admin drawer"
+			aria-label={$localization.translate("admin.shell.close_drawer", "Close admin drawer")}
 			onclick={() => (drawerOpen = false)}
 			transition:fade={{ duration: 180 }}
 		></button>

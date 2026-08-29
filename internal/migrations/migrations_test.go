@@ -1,6 +1,7 @@
 package migrations
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -566,7 +567,7 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, providerOperationBackfillVersion, status.LatestAppliedVersion)
+	require.Equal(t, localizationUsageContextVersion, status.LatestAppliedVersion)
 	require.Equal(t, 3, status.PendingCount)
 }
 
@@ -585,6 +586,133 @@ func TestRunAppliesAllOrderedMigrationsAndReplayIsIdempotent(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, LatestVersion(), status.LatestAppliedVersion)
 	require.Equal(t, 0, status.PendingCount)
+}
+
+func TestLocalizationP0BackfillsLegacyCMSLocalesAndBootstrapRelease(t *testing.T) {
+	db := newTestDB(t)
+	migrationIndex := slices.IndexFunc(orderedMigrations, func(migration Migration) bool {
+		return migration.Version == localizationPlatformP0Version
+	})
+	require.Greater(t, migrationIndex, 0)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex]))
+	require.NoError(t, db.Exec(`UPDATE cms_locales SET is_default = FALSE WHERE code = 'en-US'`).Error)
+	require.NoError(t, db.Exec(`INSERT INTO cms_locales (created_at, updated_at, code, name, enabled, is_default, fallback_locale) VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'fr', 'French', TRUE, TRUE, 'en-US')`).Error)
+
+	require.NoError(t, runWithMigrations(db, orderedMigrations))
+
+	var french models.Locale
+	require.NoError(t, db.Preload("FallbackLocale").Where("code = ?", "fr").First(&french).Error)
+	require.True(t, french.IsDefault)
+	require.True(t, french.IsEnabled)
+	require.NotNil(t, french.FallbackLocale)
+	require.Equal(t, "en-US", french.FallbackLocale.Code)
+
+	var release models.TranslationRelease
+	require.NoError(t, db.Where("status = ?", models.TranslationReleaseStatusActive).First(&release).Error)
+	require.Equal(t, "bootstrap", release.Name)
+	require.NotNil(t, release.PublishedAt)
+}
+
+func TestLocalizationP1BackfillsAccountPreferencesMarketsAndBaselineKeys(t *testing.T) {
+	db := newTestDB(t)
+	migrationIndex := slices.IndexFunc(orderedMigrations, func(migration Migration) bool {
+		return migration.Version == localizationPlatformP1Version
+	})
+	require.Greater(t, migrationIndex, 0)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex]))
+	require.False(t, db.Migrator().HasColumn("users", "locale"))
+
+	require.NoError(t, db.Exec(`INSERT INTO users (created_at, updated_at, subject, username, email, password_hash, role, currency) VALUES (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'legacy-subject', 'legacy', 'legacy@example.com', '', 'customer', 'USD')`).Error)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex+1]))
+
+	require.True(t, db.Migrator().HasColumn("users", "locale"))
+	require.True(t, db.Migrator().HasTable(&localizationP1MarketDefaultSchema{}))
+	var locale string
+	require.NoError(t, db.Table("users").Select("locale").Where("subject = ?", "legacy-subject").Scan(&locale).Error)
+	require.Equal(t, "en-US", locale)
+	var keyCount int64
+	require.NoError(t, db.Table("translation_keys").Where("description = ?", "P1 runtime baseline").Count(&keyCount).Error)
+	require.Equal(t, int64(len(localizationP1BaselineKeys)), keyCount)
+}
+
+func TestLocalizationP1BaselineContainsExtractedSourceCatalog(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("..", "..", "defaults", "localization.en-US.json"))
+	require.NoError(t, err)
+	var catalog struct {
+		Messages []struct {
+			Namespace   string `json:"namespace"`
+			Key         string `json:"key"`
+			SourceText  string `json:"source_text"`
+			OwnerDomain string `json:"owner_domain"`
+		} `json:"messages"`
+	}
+	require.NoError(t, json.Unmarshal(data, &catalog))
+	seeded := make(map[string]localizationP1BaselineKey, len(localizationP1BaselineKeys)+len(localizationP3CatalogKeys)+len(localizationP4CatalogKeys)+len(localizationP5ErrorCatalogKeys))
+	for _, key := range localizationP1BaselineKeys {
+		seeded[key.Namespace+"."+key.Key] = key
+	}
+	for _, key := range localizationP3CatalogKeys {
+		seeded[key.Namespace+"."+key.Key] = key
+	}
+	for _, key := range localizationP4CatalogKeys {
+		seeded[key.Namespace+"."+key.Key] = key
+	}
+	for _, key := range localizationP5ErrorCatalogKeys {
+		seeded[key.Namespace+"."+key.Key] = key
+	}
+	for _, message := range catalog.Messages {
+		name := message.Namespace + "." + message.Key
+		key, exists := seeded[name]
+		require.Truef(t, exists, "extracted localization key %s is not seeded", name)
+		require.Equal(t, message.SourceText, key.SourceText, name)
+		require.Equal(t, message.OwnerDomain, key.OwnerDomain, name)
+	}
+}
+
+func TestLocalizationOperationsP4MigrationCreatesRolloutsMetricsAndTemplates(t *testing.T) {
+	db := newTestDB(t)
+	migrationIndex := slices.IndexFunc(orderedMigrations, func(migration Migration) bool {
+		return migration.Version == localizationOperationsP4Version
+	})
+	require.Greater(t, migrationIndex, 0)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex+1]))
+	require.True(t, db.Migrator().HasTable(&localizationP4RolloutSchema{}))
+	require.True(t, db.Migrator().HasTable(&localizationP4MetricSchema{}))
+
+	var templateCount int64
+	require.NoError(t, db.Model(&models.TranslationKey{}).Where("namespace = ? AND owner_domain = ?", "communications", "communications").Count(&templateCount).Error)
+	expectedTemplateCount := int64(0)
+	for _, key := range localizationP4CatalogKeys {
+		if key.Namespace == "communications" {
+			expectedTemplateCount++
+		}
+	}
+	require.Equal(t, expectedTemplateCount, templateCount)
+	require.NoError(t, localizationOperationsP4Ready(db))
+}
+
+func TestLocalizationDefaultSourceCatalogMigrationPublishesActiveRelease(t *testing.T) {
+	db := newTestDB(t)
+	migrationIndex := slices.IndexFunc(orderedMigrations, func(migration Migration) bool {
+		return migration.Version == localizationDefaultSourceReleaseVersion
+	})
+	require.Greater(t, migrationIndex, 0)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex+1]))
+
+	var keyCount int64
+	require.NoError(t, db.Model(&models.TranslationKey{}).
+		Where("is_deprecated = ?", false).Count(&keyCount).Error)
+	var release models.TranslationRelease
+	require.NoError(t, db.Where("status = ?", models.TranslationReleaseStatusActive).First(&release).Error)
+	require.NotEqual(t, fmt.Sprintf("%x", sha256.Sum256([]byte("[]"))), release.SnapshotHash)
+
+	var publishedCount int64
+	require.NoError(t, db.Table("translation_release_entries AS re").
+		Joins("JOIN translation_values AS tv ON tv.id = re.translation_value_id AND tv.deleted_at IS NULL").
+		Joins("JOIN locales AS l ON l.id = tv.locale_id AND l.deleted_at IS NULL").
+		Where("re.release_id = ? AND re.deleted_at IS NULL AND tv.state = ? AND l.is_default = ?", release.ID, models.TranslationStatePublished, true).
+		Distinct("tv.translation_key_id").Count(&publishedCount).Error)
+	require.Equal(t, keyCount, publishedCount)
 }
 
 func TestProviderOperationLedgerMigrationCreatesTablesAndIndexes(t *testing.T) {

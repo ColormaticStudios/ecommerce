@@ -10,15 +10,19 @@
 	import Button from "$lib/components/Button.svelte";
 	import ButtonInput from "$lib/components/ButtonInput.svelte";
 	import Card from "$lib/components/Card.svelte";
+	import Dropdown from "$lib/components/Dropdown.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import TextInput from "$lib/components/TextInput.svelte";
 	import NumberInput from "$lib/components/NumberInput.svelte";
 	import { uploadMediaFiles } from "$lib/media";
+	import { getLocalizedApiErrorMessage } from "$lib/api/errors";
 	import { getContext, onDestroy } from "svelte";
 	import { resolve } from "$app/paths";
 	import type { PageData } from "./$types";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 
 	const api: API = getContext("api");
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 	interface Props {
 		data: PageData;
 	}
@@ -35,6 +39,7 @@
 	let addressStatus = $state("");
 	let name = $state("");
 	let currency = $state("USD");
+	let locale = $state("en-US");
 	let email = $state("");
 	let username = $state("");
 	let profilePhotoUrl = $state<string | null>(null);
@@ -90,6 +95,7 @@
 		if (!profile) {
 			name = "";
 			currency = "USD";
+			locale = localization.locale;
 			email = "";
 			username = "";
 			profilePhotoUrl = null;
@@ -98,6 +104,7 @@
 
 		name = profile.name ?? "";
 		currency = profile.currency ?? "USD";
+		locale = profile.locale ?? localization.locale;
 		email = profile.email;
 		username = profile.username;
 		profilePhotoUrl = profile.profile_photo_url;
@@ -127,7 +134,10 @@
 				return;
 			}
 			console.error(err);
-			pageError = "Unable to load your profile. Please try again.";
+			pageError = $localization.translate(
+				"storefront.account.profile_load_error",
+				"Unable to load your profile. Please try again."
+			);
 		}
 	}
 
@@ -137,15 +147,29 @@
 		accountError = "";
 
 		try {
-			await api.updateProfile({
+			const profile = await api.updateProfile({
 				name: name.trim() || undefined,
 				currency: currency.trim() || undefined,
+				locale,
 			});
+			if (profile.locale !== localization.locale) {
+				await localization.setLocale(profile.locale);
+			}
 			await refreshProfileData();
-			accountStatus = "Profile updated.";
+			accountStatus = $localization.translate(
+				"storefront.account.profile_updated",
+				"Profile updated."
+			);
 		} catch (err) {
 			console.error(err);
-			accountError = "Could not update profile. Please try again.";
+			accountError = getLocalizedApiErrorMessage(
+				err,
+				(key, source, parameters) => $localization.translate(key, source, parameters),
+				$localization.translate(
+					"storefront.account.profile_update_error",
+					"Could not update profile. Please try again."
+				)
+			);
 		}
 	}
 
@@ -165,17 +189,28 @@
 			}
 			await api.attachProfilePhoto(mediaId);
 			await refreshProfileData();
-			photoStatus = "Profile photo updated.";
+			photoStatus = $localization.translate(
+				"storefront.account.photo_updated",
+				"Profile photo updated."
+			);
 			clearPreview();
 		} catch (err) {
 			console.error(err);
-			const error = err as { status?: number; body?: { error?: string } };
-			if (error.status === 409 && error.body?.error === "Media is still processing") {
-				photoError = "Photo is still processing. Please try again in a moment.";
-			} else if (error.status === 422 && error.body?.error) {
-				photoError = error.body.error;
+			const error = err as { status?: number };
+			if (error.status === 409) {
+				photoError = $localization.translate(
+					"storefront.account.photo_processing",
+					"Photo is still processing. Please try again in a moment."
+				);
 			} else {
-				photoError = error.body?.error ?? "Could not upload the photo. Please try again.";
+				photoError = getLocalizedApiErrorMessage(
+					err,
+					(key, source, parameters) => $localization.translate(key, source, parameters),
+					$localization.translate(
+						"storefront.account.photo_upload_error",
+						"Could not upload the photo. Please try again."
+					)
+				);
 			}
 		} finally {
 			uploading = false;
@@ -194,10 +229,16 @@
 		try {
 			await api.removeProfilePhoto();
 			await refreshProfileData();
-			photoStatus = "Profile photo removed.";
+			photoStatus = $localization.translate(
+				"storefront.account.photo_removed",
+				"Profile photo removed."
+			);
 		} catch (err) {
 			console.error(err);
-			photoError = "Could not remove the photo.";
+			photoError = $localization.translate(
+				"storefront.account.photo_remove_error",
+				"Could not remove the photo."
+			);
 		} finally {
 			removing = false;
 		}
@@ -224,11 +265,20 @@
 			paymentNickname = "";
 			setPaymentDefault = false;
 			paymentMethods = await api.listSavedPaymentMethods();
-			paymentStatus = "Payment method saved.";
+			paymentStatus = $localization.translate(
+				"storefront.account.payment_saved",
+				"Payment method saved."
+			);
 		} catch (err) {
 			console.error(err);
-			const error = err as { body?: { error?: string } };
-			paymentError = error.body?.error ?? "Could not save payment method.";
+			paymentError = getLocalizedApiErrorMessage(
+				err,
+				(key, source, parameters) => $localization.translate(key, source, parameters),
+				$localization.translate(
+					"storefront.account.payment_save_error",
+					"Could not save payment method."
+				)
+			);
 		} finally {
 			busyAction = false;
 		}
@@ -241,10 +291,16 @@
 		try {
 			await api.deleteSavedPaymentMethod(id);
 			paymentMethods = await api.listSavedPaymentMethods();
-			paymentStatus = "Payment method removed.";
+			paymentStatus = $localization.translate(
+				"storefront.account.payment_removed",
+				"Payment method removed."
+			);
 		} catch (err) {
 			console.error(err);
-			paymentError = "Could not remove payment method.";
+			paymentError = $localization.translate(
+				"storefront.account.payment_remove_error",
+				"Could not remove payment method."
+			);
 		} finally {
 			busyAction = false;
 		}
@@ -257,10 +313,16 @@
 		try {
 			await api.setDefaultPaymentMethod(id);
 			paymentMethods = await api.listSavedPaymentMethods();
-			paymentStatus = "Default payment method updated.";
+			paymentStatus = $localization.translate(
+				"storefront.account.payment_default_updated",
+				"Default payment method updated."
+			);
 		} catch (err) {
 			console.error(err);
-			paymentError = "Could not set default payment method.";
+			paymentError = $localization.translate(
+				"storefront.account.payment_default_error",
+				"Could not set default payment method."
+			);
 		} finally {
 			busyAction = false;
 		}
@@ -295,11 +357,14 @@
 			phone = "";
 			setAddressDefault = false;
 			addresses = await api.listSavedAddresses();
-			addressStatus = "Address saved.";
+			addressStatus = $localization.translate("storefront.account.address_saved", "Address saved.");
 		} catch (err) {
 			console.error(err);
-			const error = err as { body?: { error?: string } };
-			addressError = error.body?.error ?? "Could not save address.";
+			addressError = getLocalizedApiErrorMessage(
+				err,
+				(key, source, parameters) => $localization.translate(key, source, parameters),
+				$localization.translate("storefront.account.address_save_error", "Could not save address.")
+			);
 		} finally {
 			busyAction = false;
 		}
@@ -312,10 +377,16 @@
 		try {
 			await api.deleteSavedAddress(id);
 			addresses = await api.listSavedAddresses();
-			addressStatus = "Address removed.";
+			addressStatus = $localization.translate(
+				"storefront.account.address_removed",
+				"Address removed."
+			);
 		} catch (err) {
 			console.error(err);
-			addressError = "Could not remove address.";
+			addressError = $localization.translate(
+				"storefront.account.address_remove_error",
+				"Could not remove address."
+			);
 		} finally {
 			busyAction = false;
 		}
@@ -328,10 +399,16 @@
 		try {
 			await api.setDefaultAddress(id);
 			addresses = await api.listSavedAddresses();
-			addressStatus = "Default address updated.";
+			addressStatus = $localization.translate(
+				"storefront.account.address_default_updated",
+				"Default address updated."
+			);
 		} catch (err) {
 			console.error(err);
-			addressError = "Could not set default address.";
+			addressError = $localization.translate(
+				"storefront.account.address_default_error",
+				"Could not set default address."
+			);
 		} finally {
 			busyAction = false;
 		}
@@ -350,15 +427,17 @@
 
 <section>
 	<div class="mx-auto max-w-5xl px-4 py-10">
-		<h1 class="text-3xl font-semibold text-gray-900 dark:text-gray-100">Profile</h1>
+		<h1 class="text-3xl font-semibold text-gray-900 dark:text-gray-100">
+			{$localization.translate("storefront.account.profile", "Profile")}
+		</h1>
 
 		{#if !isAuthenticated}
 			<p class="mt-4 text-gray-600 dark:text-gray-300">
-				Please
+				{$localization.translate("storefront.account.please", "Please")}
 				<a href={resolve("/login")} class="text-blue-600 hover:underline dark:text-blue-400">
-					log in
+					{$localization.translate("storefront.account.log_in_lower", "log in")}
 				</a>
-				to view your profile.
+				{$localization.translate("storefront.account.view_profile_suffix", "to view your profile.")}
 			</p>
 		{:else}
 			<div class="mt-8 grid items-start gap-6 md:grid-cols-[280px_1fr]">
@@ -368,9 +447,20 @@
 							class="h-28 w-28 overflow-hidden rounded-full border border-gray-200 bg-gray-100 shadow-sm dark:border-gray-700 dark:bg-gray-800"
 						>
 							{#if previewUrl}
-								<img src={previewUrl} alt="Profile preview" class="h-full w-full object-cover" />
+								<img
+									src={previewUrl}
+									alt={$localization.translate(
+										"storefront.account.profile_preview",
+										"Profile preview"
+									)}
+									class="h-full w-full object-cover"
+								/>
 							{:else if profilePhotoUrl}
-								<img src={profilePhotoUrl} alt="Profile" class="h-full w-full object-cover" />
+								<img
+									src={profilePhotoUrl}
+									alt={$localization.translate("storefront.account.profile_photo", "Profile photo")}
+									class="h-full w-full object-cover"
+								/>
 							{:else}
 								<div
 									class="flex h-full w-full items-center justify-center text-2xl font-semibold text-gray-500 dark:text-gray-300"
@@ -395,7 +485,7 @@
 							variant="regular"
 						>
 							<i class="bi bi-folder-fill mr-2"></i>
-							Choose photo
+							{$localization.translate("storefront.account.choose_photo", "Choose photo")}
 						</ButtonInput>
 						<Button
 							type="button"
@@ -405,7 +495,9 @@
 							onclick={uploadPhoto}
 						>
 							<i class="bi bi-upload mr-2"></i>
-							{uploading ? "Uploading..." : "Upload photo"}
+							{uploading
+								? $localization.translate("storefront.account.uploading", "Uploading...")
+								: $localization.translate("storefront.account.upload_photo", "Upload photo")}
 						</Button>
 						<Button
 							type="button"
@@ -415,7 +507,9 @@
 							onclick={removePhoto}
 						>
 							<i class="bi bi-trash-fill mr-2"></i>
-							{removing ? "Removing..." : "Remove photo"}
+							{removing
+								? $localization.translate("storefront.account.removing", "Removing...")
+								: $localization.translate("storefront.account.remove_photo", "Remove photo")}
 						</Button>
 						{#if photoError}
 							<Alert
@@ -446,7 +540,9 @@
 						/>
 					{/if}
 					<Card padding="lg">
-						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Account details</h3>
+						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+							{$localization.translate("storefront.account.details", "Account details")}
+						</h3>
 						<form class="mt-6 space-y-4" onsubmit={submit}>
 							<div class="grid gap-4 md:grid-cols-2">
 								<div>
@@ -454,29 +550,43 @@
 										for="username"
 										class="text-sm font-medium text-gray-600 dark:text-gray-300"
 									>
-										Username
+										{$localization.translate("storefront.account.username", "Username")}
 									</label>
 									<TextInput id="username" class="mt-1" type="text" value={username} readonly />
 								</div>
 								<div>
 									<label for="email" class="text-sm font-medium text-gray-600 dark:text-gray-300">
-										Email
+										{$localization.translate("storefront.account.email", "Email")}
 									</label>
 									<TextInput id="email" class="mt-1" type="email" value={email} readonly />
 								</div>
 							</div>
 
+							<div>
+								<label for="locale" class="text-sm font-medium text-gray-600 dark:text-gray-300">
+									{$localization.translate("storefront.account.locale", "Language")}
+								</label>
+								<Dropdown id="locale" class="mt-1" bind:value={locale}>
+									{#each localization.locales.filter((candidate) => candidate.is_enabled) as candidate (candidate.code)}
+										<option value={candidate.code}>{candidate.name}</option>
+									{/each}
+								</Dropdown>
+							</div>
+
 							<div class="grid gap-4 md:grid-cols-2">
 								<div>
 									<label for="name" class="text-sm font-medium text-gray-600 dark:text-gray-300">
-										Name
+										{$localization.translate("storefront.account.name", "Name")}
 									</label>
 									<TextInput
 										id="name"
 										class="mt-1"
 										type="text"
 										bind:value={name}
-										placeholder="Your name"
+										placeholder={$localization.translate(
+											"storefront.account.your_name",
+											"Your name"
+										)}
 									/>
 								</div>
 								<div>
@@ -484,7 +594,10 @@
 										for="currency"
 										class="text-sm font-medium text-gray-600 dark:text-gray-300"
 									>
-										Preferred currency
+										{$localization.translate(
+											"storefront.account.preferred_currency",
+											"Preferred currency"
+										)}
 									</label>
 									<TextInput
 										id="currency"
@@ -499,7 +612,7 @@
 							<div class="flex justify-end">
 								<Button variant="primary" size="large" type="submit">
 									<i class="bi bi-floppy-fill mr-1"></i>
-									Save changes
+									{$localization.translate("storefront.account.save", "Save changes")}
 								</Button>
 							</div>
 							{#if accountError}
@@ -525,24 +638,58 @@
 						<Card padding="lg">
 							<div class="flex items-center justify-between">
 								<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-									Saved payment methods
+									{$localization.translate(
+										"storefront.account.saved_payment_methods",
+										"Saved payment methods"
+									)}
 								</h3>
 							</div>
 							<form class="mt-4 grid gap-3" onsubmit={addPaymentMethod}>
-								<TextInput bind:value={cardholderName} placeholder="Cardholder name" />
-								<TextInput bind:value={cardNumber} placeholder="Card number" />
+								<TextInput
+									bind:value={cardholderName}
+									placeholder={$localization.translate(
+										"storefront.account.cardholder_name",
+										"Cardholder name"
+									)}
+								/>
+								<TextInput
+									bind:value={cardNumber}
+									placeholder={$localization.translate(
+										"storefront.account.card_number",
+										"Card number"
+									)}
+								/>
 								<div class="grid grid-cols-2 gap-3">
-									<NumberInput bind:value={expMonth} placeholder="Exp month" min={1} max={12} />
-									<NumberInput bind:value={expYear} placeholder="Exp year" min={2024} max={2200} />
+									<NumberInput
+										bind:value={expMonth}
+										placeholder={$localization.translate(
+											"storefront.account.expiration_month",
+											"Exp month"
+										)}
+										min={1}
+										max={12}
+									/>
+									<NumberInput
+										bind:value={expYear}
+										placeholder={$localization.translate(
+											"storefront.account.expiration_year",
+											"Exp year"
+										)}
+										min={2024}
+										max={2200}
+									/>
 								</div>
 								<TextInput bind:value={paymentNickname} placeholder="Nickname (optional)" />
 								<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
 									<input type="checkbox" bind:checked={setPaymentDefault} />
-									Set as default
+									{$localization.translate("storefront.account.set_as_default", "Set as default")}
 								</label>
 								<Button type="submit" variant="primary" disabled={busyAction}>
 									<i class="bi bi-plus-lg mr-1"></i>
-									Save payment method
+									{$localization.translate(
+										"storefront.account.save_payment_method",
+										"Save payment method"
+									)}
 								</Button>
 								{#if paymentError}
 									<Alert
@@ -564,7 +711,12 @@
 
 							<div class="mt-4 space-y-2">
 								{#if paymentMethods.length === 0}
-									<p class="text-sm text-gray-500 dark:text-gray-400">No saved payment methods.</p>
+									<p class="text-sm text-gray-500 dark:text-gray-400">
+										{$localization.translate(
+											"storefront.account.no_payment_methods",
+											"No saved payment methods."
+										)}
+									</p>
 								{:else}
 									{#each paymentMethods as method (method.id)}
 										<Card radius="xl" padding="sm" shadow="none" class="dark:bg-transparent">
@@ -576,7 +728,7 @@
 														</p>
 														{#if method.is_default}
 															<Badge tone="success" size="xs" class="tracking-wide uppercase">
-																Default
+																{$localization.translate("storefront.account.default", "Default")}
 															</Badge>
 														{/if}
 													</div>
@@ -590,8 +742,14 @@
 															size="sm"
 															disabled={busyAction}
 															onclick={() => setDefaultPaymentMethod(method.id)}
-															title="Set as default"
-															aria-label="Set as default payment method"
+															title={$localization.translate(
+																"storefront.account.set_as_default",
+																"Set as default"
+															)}
+															aria-label={$localization.translate(
+																"storefront.account.set_default_payment_method",
+																"Set as default payment method"
+															)}
 															variant="primary"
 														>
 															<i class="bi bi-check-circle-fill"></i>
@@ -602,8 +760,14 @@
 														size="sm"
 														disabled={busyAction}
 														onclick={() => deletePaymentMethod(method.id)}
-														title="Delete payment method"
-														aria-label="Delete payment method"
+														title={$localization.translate(
+															"storefront.account.delete_payment_method",
+															"Delete payment method"
+														)}
+														aria-label={$localization.translate(
+															"storefront.account.delete_payment_method",
+															"Delete payment method"
+														)}
 													>
 														<i class="bi bi-trash-fill"></i>
 													</IconButton>
@@ -617,7 +781,7 @@
 
 						<Card padding="lg">
 							<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-								Saved addresses
+								{$localization.translate("storefront.account.saved_addresses", "Saved addresses")}
 							</h3>
 							<form class="mt-4 grid gap-3" onsubmit={addAddress}>
 								<TextInput bind:value={addressLabel} placeholder="Label (optional, e.g. Home)" />
@@ -635,11 +799,11 @@
 								<TextInput bind:value={phone} placeholder="Phone (optional)" />
 								<label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
 									<input type="checkbox" bind:checked={setAddressDefault} />
-									Set as default
+									{$localization.translate("storefront.account.set_as_default", "Set as default")}
 								</label>
 								<Button type="submit" variant="primary" disabled={busyAction}>
 									<i class="bi bi-plus-lg mr-1"></i>
-									Save address
+									{$localization.translate("storefront.account.save_address", "Save address")}
 								</Button>
 								{#if addressError}
 									<Alert
@@ -661,7 +825,12 @@
 
 							<div class="mt-4 space-y-2">
 								{#if addresses.length === 0}
-									<p class="text-sm text-gray-500 dark:text-gray-400">No saved addresses.</p>
+									<p class="text-sm text-gray-500 dark:text-gray-400">
+										{$localization.translate(
+											"storefront.account.no_addresses",
+											"No saved addresses."
+										)}
+									</p>
 								{:else}
 									{#each addresses as address (address.id)}
 										<Card radius="xl" padding="sm" shadow="none" class="dark:bg-transparent">
@@ -673,7 +842,7 @@
 														</p>
 														{#if address.is_default}
 															<Badge tone="success" size="xs" class="tracking-wide uppercase">
-																Default
+																{$localization.translate("storefront.account.default", "Default")}
 															</Badge>
 														{/if}
 													</div>
@@ -689,8 +858,14 @@
 															size="sm"
 															disabled={busyAction}
 															onclick={() => setDefaultAddress(address.id)}
-															title="Set as default"
-															aria-label="Set as default address"
+															title={$localization.translate(
+																"storefront.account.set_as_default",
+																"Set as default"
+															)}
+															aria-label={$localization.translate(
+																"storefront.account.set_default_address",
+																"Set as default address"
+															)}
 															variant="primary"
 														>
 															<i class="bi bi-check-circle-fill"></i>
@@ -701,8 +876,14 @@
 														size="sm"
 														disabled={busyAction}
 														onclick={() => deleteAddress(address.id)}
-														title="Delete address"
-														aria-label="Delete address"
+														title={$localization.translate(
+															"storefront.account.delete_address",
+															"Delete address"
+														)}
+														aria-label={$localization.translate(
+															"storefront.account.delete_address",
+															"Delete address"
+														)}
 													>
 														<i class="bi bi-trash-fill"></i>
 													</IconButton>

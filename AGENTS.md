@@ -16,6 +16,8 @@ Whenever you add a new meaningful UI state to a frontend route or major view, ad
 
 Keep handlers thin where possible; shared logic should move to reusable helpers/services.
 
+Always write out `localization` in full. Do not use shortened forms such as the common numeronym abbreviations in code, paths, identifiers, documentation, or user-facing copy.
+
 This project is still very early, we will take a **breaking-change first** policy to get the project in the right shape.
 
 If a task takes more work to complete than it should (like a simple change touching many files), report this to the user. Bad patterns throughout the codebase should be caught and not repeated. Abide by an "if you see something, say something" policy.

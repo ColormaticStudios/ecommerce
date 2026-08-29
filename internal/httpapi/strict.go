@@ -89,6 +89,7 @@ type RegisterStrictOptions struct {
 	Security            SecurityOptions
 	BaseURL             string
 	GeneratedMiddleware []apicontract.MiddlewareFunc
+	Localization        *LocalizationNegotiationOptions
 }
 
 // RegisterStrict installs request metadata, recovery/error rendering, generated
@@ -120,7 +121,17 @@ func RegisterStrict(router *gin.Engine, server apicontract.StrictServerInterface
 	}); ok {
 		generatedMiddleware = append(generatedMiddleware, providerServer.ProviderBindingMiddleware())
 	}
-	router.Use(RequestContextMiddleware(options.RequestContext), Boundary(options.Renderer), security)
+	middleware := []gin.HandlerFunc{RequestContextMiddleware(options.RequestContext), Boundary(options.Renderer), security}
+	if options.Localization != nil {
+		localizationOptions := *options.Localization
+		localizationOptions.Renderer = options.Renderer
+		localizationMiddleware, err := LocalizationNegotiationMiddleware(localizationOptions)
+		if err != nil {
+			return fmt.Errorf("initialize localization negotiation: %w", err)
+		}
+		middleware = append(middleware, localizationMiddleware)
+	}
+	router.Use(middleware...)
 	apicontract.RegisterHandlersWithOptions(router, composed, apicontract.GinServerOptions{
 		BaseURL:      options.BaseURL,
 		Middlewares:  generatedMiddleware,

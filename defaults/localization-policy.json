@@ -1,0 +1,20 @@
+{
+  "required_locales": [
+    {
+      "code": "en-US",
+      "catalog": "defaults/localization.en-US.json"
+    }
+  ],
+  "critical_namespaces": ["checkout", "errors", "communications"],
+  "covered_frontend_files": [
+    "frontend/src/routes/(storefront)/checkout/+page.svelte",
+    "frontend/src/lib/components/CheckoutSignInRequiredBanner.svelte",
+    "frontend/src/lib/components/order-status.ts"
+  ],
+  "covered_backend_files": [
+    "internal/httpapi/checkout.go",
+    "internal/httpapi/checkout_order_payment.go",
+    "internal/httpapi/checkout_session.go"
+  ],
+  "allowed_frontend_literals": ["you@example.com"]
+}

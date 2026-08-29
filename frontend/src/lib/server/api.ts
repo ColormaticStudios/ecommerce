@@ -52,7 +52,14 @@ export async function serverRequest<T>(
 	if (cookie) {
 		headers.set("cookie", cookie);
 	}
-	for (const name of ["user-agent", "referer", "x-correlation-id"]) {
+	for (const name of [
+		"user-agent",
+		"referer",
+		"x-correlation-id",
+		"accept-language",
+		"x-locale",
+		"x-market",
+	]) {
 		const value = event.request.headers.get(name);
 		if (value) headers.set(name, value);
 	}

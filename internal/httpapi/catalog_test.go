@@ -8,6 +8,7 @@ import (
 
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/httpapi"
+	"ecommerce/internal/requestctx"
 	"ecommerce/models"
 
 	"github.com/stretchr/testify/assert"
@@ -21,8 +22,37 @@ func catalogTestDB(t *testing.T) *gorm.DB {
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	require.NoError(t, err)
-	require.NoError(t, db.AutoMigrate(&models.Brand{}, &models.Category{}, &models.ProductAttribute{}))
+	require.NoError(t, db.AutoMigrate(&models.Brand{}, &models.Category{}, &models.ProductAttribute{}, &models.Locale{}, &models.LocaleMarketDefault{}, &models.LocalizedEntityValue{}))
+	require.NoError(t, db.Select("*").Create(&models.Locale{Code: "en-US", Name: "English (United States)", IsDefault: true, IsEnabled: true}).Error)
 	return db
+}
+
+func TestCatalogEndpointsLocalizesPublicMetadataAndReportsFieldSources(t *testing.T) {
+	db := catalogTestDB(t)
+	var english models.Locale
+	require.NoError(t, db.Where("code = ?", "en-US").First(&english).Error)
+	french := models.Locale{Code: "fr", Name: "French", IsEnabled: true, FallbackLocaleID: &english.ID}
+	require.NoError(t, db.Select("*").Create(&french).Error)
+	description := "Everyday bags"
+	brand := models.Brand{Name: "Northstar", Slug: "northstar", Description: &description, IsActive: true}
+	require.NoError(t, db.Select("*").Create(&brand).Error)
+	require.NoError(t, db.Select("*").Create(&models.LocalizedEntityValue{EntityType: "brand", EntityID: brand.ID, LocaleID: english.ID, Field: "name", Value: brand.Name}).Error)
+	require.NoError(t, db.Select("*").Create(&models.LocalizedEntityValue{EntityType: "brand", EntityID: brand.ID, LocaleID: english.ID, Field: "description", Value: description}).Error)
+	require.NoError(t, db.Select("*").Create(&models.LocalizedEntityValue{EntityType: "brand", EntityID: brand.ID, LocaleID: french.ID, Field: "name", Value: "Étoile du Nord"}).Error)
+
+	ctx := requestctx.WithLocaleResolution(context.Background(), requestctx.LocaleResolution{RequestedLocale: "fr", ResolvedLocale: "fr", Source: "explicit", FallbackChain: []string{"fr", "en-US"}})
+	endpoints, err := httpapi.NewCatalogEndpoints(db, nil)
+	require.NoError(t, err)
+	response, err := endpoints.ListBrands(ctx, apicontract.ListBrandsRequestObject{})
+	require.NoError(t, err)
+	brands := apicontract.BrandListResponse(response.(apicontract.ListBrands200JSONResponse))
+	require.Len(t, brands.Data, 1)
+	require.Equal(t, "Étoile du Nord", brands.Data[0].Name)
+	require.Equal(t, description, *brands.Data[0].Description)
+	require.NotNil(t, brands.Data[0].Localization)
+	require.Equal(t, "fr", brands.Data[0].Localization.SourceLocales["name"])
+	require.Equal(t, "en-US", brands.Data[0].Localization.SourceLocales["description"])
+	require.True(t, brands.Data[0].Localization.UsedFallback)
 }
 
 func TestNewCatalogEndpointsRequiresDatabase(t *testing.T) {

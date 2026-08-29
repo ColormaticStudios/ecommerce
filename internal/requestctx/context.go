@@ -50,8 +50,20 @@ type Metadata struct {
 	DraftPreview  bool
 }
 
+// LocaleResolution is the transport-neutral locale decision attached by the
+// HTTP localization middleware before endpoint dispatch.
+type LocaleResolution struct {
+	RequestedLocale string
+	ResolvedLocale  string
+	Source          string
+	FallbackChain   []string
+	UsedFallback    bool
+	Market          string
+}
+
 type principalKey struct{}
 type metadataKey struct{}
+type localeResolutionKey struct{}
 
 func WithPrincipal(ctx context.Context, principal Principal) context.Context {
 	return context.WithValue(ctx, principalKey{}, principal.clone())
@@ -94,4 +106,15 @@ func WithOperation(ctx context.Context, operationID string) context.Context {
 	metadata, _ := MetadataFrom(ctx)
 	metadata.OperationID = operationID
 	return WithMetadata(ctx, metadata)
+}
+
+func WithLocaleResolution(ctx context.Context, resolution LocaleResolution) context.Context {
+	resolution.FallbackChain = slices.Clone(resolution.FallbackChain)
+	return context.WithValue(ctx, localeResolutionKey{}, resolution)
+}
+
+func LocaleResolutionFrom(ctx context.Context) (LocaleResolution, bool) {
+	resolution, ok := ctx.Value(localeResolutionKey{}).(LocaleResolution)
+	resolution.FallbackChain = slices.Clone(resolution.FallbackChain)
+	return resolution, ok
 }

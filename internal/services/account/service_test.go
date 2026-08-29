@@ -23,7 +23,9 @@ func newAccountTestDB(t *testing.T, values ...any) *gorm.DB {
 }
 
 func TestProfileAndAdminUserOperations(t *testing.T) {
-	db := newAccountTestDB(t, &models.User{})
+	db := newAccountTestDB(t, &models.User{}, &models.Locale{}, &models.LocaleMarketDefault{})
+	require.NoError(t, db.Select("*").Create(&models.Locale{Code: "en-US", Name: "English", IsEnabled: true, IsDefault: true}).Error)
+	require.NoError(t, db.Select("*").Create(&models.Locale{Code: "fr", Name: "French", IsEnabled: true}).Error)
 	user := models.User{Subject: "subject-1", Username: "ada", Email: "ada@example.com", Role: "customer", Currency: "USD"}
 	require.NoError(t, db.Create(&user).Error)
 	service := NewService(db, nil)
@@ -34,6 +36,13 @@ func TestProfileAndAdminUserOperations(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, name, updated.Name)
 	assert.Equal(t, currency, updated.Currency)
+	locale := "fr"
+	updated, err = service.UpdateProfile(context.Background(), user.Subject, UpdateProfileInput{Locale: &locale})
+	require.NoError(t, err)
+	assert.Equal(t, locale, updated.Locale)
+	invalidLocale := "de-DE"
+	_, err = service.UpdateProfile(context.Background(), user.Subject, UpdateProfileInput{Locale: &invalidLocale})
+	require.ErrorIs(t, err, ErrInvalidLocale)
 
 	invalidCurrency := "ZZZ"
 	_, err = service.UpdateProfile(context.Background(), user.Subject, UpdateProfileInput{Currency: &invalidCurrency})

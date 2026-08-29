@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { seedAndLoginUser, seedTestBrand } from "./admin-helpers";
+import { seedAndLoginUser, seedTestBrand, seedTestUser } from "./admin-helpers";
 
 test("guest and customer users are denied admin console access", async ({ page, request }) => {
 	await page.goto("/admin/products");
@@ -19,6 +19,93 @@ test("guest and customer users are denied admin console access", async ({ page, 
 	await page.goto("/admin/products");
 	await expect(page.getByText("Access denied.")).toBeVisible();
 	await expect(page.getByText("Contact an administrator if you need access.")).toBeVisible();
+});
+
+test("admin can navigate between sections from the mobile drawer without localization diagnostics", async ({
+	page,
+	request,
+}) => {
+	const consoleDiagnostics: string[] = [];
+	page.on("console", (message) => {
+		if (message.type() === "warning" || message.type() === "error") {
+			consoleDiagnostics.push(message.text());
+		}
+	});
+
+	const now = Date.now();
+	await page.setViewportSize({ width: 755, height: 800 });
+	await seedAndLoginUser(page, request, {
+		email: `admin-navigation-${now}@example.com`,
+		username: `admin-navigation-${now}`,
+		name: "Navigation Admin",
+		role: "admin",
+	});
+	await seedTestUser(request, {
+		email: `localization-customer-${now}@example.com`,
+		username: `localization-customer-${now}`,
+		name: "Localization Customer",
+		role: "customer",
+	});
+
+	await page.goto("/admin/products");
+	await expect(page.getByRole("heading", { level: 1, name: "Products" })).toBeVisible();
+	const openDrawerButton = page.getByRole("button", { name: "Open admin sections" });
+	await expect(openDrawerButton).toBeEnabled();
+	await openDrawerButton.click();
+	const drawer = page.getByRole("dialog", { name: "Admin section drawer" });
+	await expect(drawer, `Browser console: ${consoleDiagnostics.join(" | ")}`).toBeVisible();
+	await drawer
+		.getByRole("link", {
+			name: "Brands",
+		})
+		.click();
+	await expect(page).toHaveURL(/\/admin\/brands$/);
+	await expect(page.getByRole("heading", { level: 1, name: "Brands" })).toBeVisible();
+
+	await page.getByRole("button", { name: "Open admin sections" }).click();
+	await page
+		.getByRole("dialog", { name: "Admin section drawer" })
+		.getByRole("link", {
+			name: "Categories",
+		})
+		.click();
+	await expect(page).toHaveURL(/\/admin\/categories$/);
+	await expect(page.getByRole("heading", { level: 1, name: "Categories" })).toBeVisible();
+
+	await page.getByRole("button", { name: "Open admin sections" }).click();
+	await page
+		.getByRole("dialog", { name: "Admin section drawer" })
+		.getByRole("link", { name: "Translations" })
+		.click();
+	await expect(page).toHaveURL(/\/admin\/localization$/);
+	await expect(page.getByRole("heading", { level: 1, name: "Translations" })).toBeVisible();
+	await expect(page.getByRole("heading", { level: 2, name: "Translation queue" })).toBeVisible();
+	const assigneePicker = page.getByRole("combobox", { name: "Filter by assignee" });
+	await assigneePicker.fill("Navigation Admin");
+	await expect(page.getByRole("option", { name: /Navigation Admin/ })).toBeVisible();
+	await page.getByRole("option", { name: /Navigation Admin/ }).click();
+	await expect(assigneePicker).toHaveValue("Navigation Admin");
+	await assigneePicker.fill("Localization Customer");
+	await expect(page.getByText("No eligible people found.")).toBeVisible();
+
+	await expect(page.getByText(/Page 1 of \d+ \(\d+ total\)/)).toBeVisible();
+	await page.getByRole("button", { name: "Next" }).click();
+	await expect(page.getByText(/Page 2 of \d+ \(\d+ total\)/)).toBeVisible();
+	const translationSearch = page.getByRole("textbox", { name: "Search translation keys" });
+	await translationSearch.fill("checkout.empty_cart_prefix");
+	await translationSearch.press("Enter");
+	await expect(page.getByText("empty_cart_prefix", { exact: true })).toBeVisible();
+	await expect(page.getByText("Page 1 of 1 (1 total)", { exact: true })).toBeVisible();
+
+	await page.getByRole("tab", { name: "Rollout & health" }).click();
+	await expect(
+		page.getByRole("heading", { level: 2, name: "Locale rollout controls" })
+	).toBeVisible();
+	await expect(page.getByRole("heading", { level: 2, name: "Localization health" })).toBeVisible();
+	await expect(page.getByRole("button", { name: "Save rollout controls" })).toBeVisible();
+
+	await expect(page.locator("body")).not.toContainText(/⟦[^⟧]+⟧/);
+	expect(consoleDiagnostics).toEqual([]);
 });
 
 test("admin can search and reopen a seeded brand after reload", async ({ page, request }) => {

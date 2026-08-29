@@ -36,18 +36,20 @@ type FieldError struct {
 // the documented target contract so AdaptContract can consume a future
 // apicontract.Problem without a source change here.
 type Problem struct {
-	Type             string       `json:"type"`
-	Title            string       `json:"title"`
-	Status           int          `json:"status"`
-	Detail           string       `json:"detail,omitempty"`
-	Instance         string       `json:"instance,omitempty"`
-	Code             string       `json:"code"`
-	CorrelationID    string       `json:"correlation_id,omitempty"`
-	Errors           []FieldError `json:"errors,omitempty"`
-	LegacyError      string       `json:"error,omitempty"`
-	ProductVariantID uint         `json:"product_variant_id,omitempty"`
-	Requested        int          `json:"requested,omitempty"`
-	Available        int          `json:"available,omitempty"`
+	Type             string         `json:"type"`
+	Title            string         `json:"title"`
+	Status           int            `json:"status"`
+	Detail           string         `json:"detail,omitempty"`
+	Instance         string         `json:"instance,omitempty"`
+	Code             string         `json:"error_code"`
+	MessageKey       string         `json:"message_key,omitempty"`
+	MessageParams    map[string]any `json:"message_params,omitempty"`
+	CorrelationID    string         `json:"correlation_id,omitempty"`
+	Errors           []FieldError   `json:"errors,omitempty"`
+	LegacyError      string         `json:"error,omitempty"`
+	ProductVariantID uint           `json:"product_variant_id,omitempty"`
+	Requested        int            `json:"requested,omitempty"`
+	Available        int            `json:"available,omitempty"`
 }
 
 func (p Problem) Error() string {
@@ -122,6 +124,7 @@ func adaptLegacyError(legacy apicontract.Error, status int) Problem {
 	problem.Detail = legacy.Error
 	if legacy.Code != nil && *legacy.Code != "" {
 		problem.Code = *legacy.Code
+		problem.MessageKey = "errors." + problem.Code
 	}
 	return problem
 }
@@ -140,6 +143,9 @@ func normalizeProblem(problem Problem, fallbackStatus int) Problem {
 	}
 	if problem.Code == "" {
 		problem.Code = statusDefaults.Code
+	}
+	if problem.MessageKey == "" && problem.Code != "" {
+		problem.MessageKey = "errors." + problem.Code
 	}
 	return problem
 }
@@ -165,6 +171,7 @@ func defaultProblem(status int) Problem {
 	default:
 		problem.Type, problem.Code = TypeInternal, "internal_error"
 	}
+	problem.MessageKey = "errors." + problem.Code
 	return problem
 }
 

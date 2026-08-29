@@ -109,6 +109,15 @@ const brandLogoMediaReferencesVersion = "2026071001_brand_logo_media_references"
 const brandLogoMediaContractVersion = "2026071002_remove_brand_logo_media_id"
 const providerOperationLedgerVersion = "2026073101_provider_operation_ledger"
 const providerOperationBackfillVersion = "2026073102_backfill_provider_operations"
+const localizationPlatformP0Version = "2026081101_localization_platform_p0"
+const localizationPlatformP1Version = "2026081102_localization_runtime_p1"
+const localizationDefaultSourceReleaseVersion = "2026081103_localization_default_source_release"
+const localizationEntityFieldsP2Version = "2026081201_localization_entity_fields_p2"
+const localizationWorkflowP3Version = "2026081202_localization_workflow_p3"
+const localizationWorkflowCatalogP3Version = "2026081203_localization_workflow_catalog_p3"
+const localizationOperationsP4Version = "2026081301_localization_operations_p4"
+const localizationHardeningP5Version = "2026081302_localization_hardening_p5"
+const localizationUsageContextVersion = "2026082701_localization_usage_context"
 const migrationStepAlertThresholdEnvVar = "MIGRATIONS_STEP_ALERT_THRESHOLD_MS"
 
 var versionPattern = regexp.MustCompile(`^\d{10}_[a-z0-9_]+$`)
@@ -120,6 +129,11 @@ var migrationChecksumCompatibilityBackfills = map[string][]string{
 	// once so those databases can backfill to the fixed definition.
 	productCatalogDepthP2Version: {
 		"5a483908a1331a23cfcfa2ab5b4992a5f63fd50e7cef4f732013328f23ca4329",
+	},
+	ecommerceCMSP6Version: {
+		// Accepted once after replacing the historical migration's dependency
+		// on the live CMSLocale model with a frozen legacy schema struct.
+		"387ea6dc823eaa0cfc7aa9d1fa1ed07a90725e1f8e283b5612388f4cc8c0baae",
 	},
 }
 
@@ -1511,13 +1525,13 @@ var orderedMigrations = []Migration{
 		PostChecks: []PostCheck{{
 			Name: "cms_p6_tables_and_default_locale_exist",
 			Check: func(tx *gorm.DB) error {
-				for _, model := range []any{&models.CMSLocale{}, &models.CMSPageVariant{}, &models.CMSAuditEvent{}, &models.CMSChangeComment{}, &models.CMSRoleAssignment{}, &models.CMSInvalidationEvent{}} {
+				for _, model := range []any{&legacyCMSLocaleSchema{}, &models.CMSPageVariant{}, &models.CMSAuditEvent{}, &models.CMSChangeComment{}, &models.CMSRoleAssignment{}, &models.CMSInvalidationEvent{}} {
 					if !tx.Migrator().HasTable(model) {
 						return fmt.Errorf("missing migrated table for %T", model)
 					}
 				}
 				var count int64
-				if err := tx.Model(&models.CMSLocale{}).Where("is_default = ?", true).Count(&count).Error; err != nil {
+				if err := tx.Model(&legacyCMSLocaleSchema{}).Where("is_default = ?", true).Count(&count).Error; err != nil {
 					return err
 				}
 				if count != 1 {
@@ -1527,7 +1541,7 @@ var orderedMigrations = []Migration{
 			},
 		}},
 		Up: func(tx *gorm.DB) error {
-			for _, model := range []any{&models.CMSLocale{}, &models.CMSPageVariant{}, &models.CMSAuditEvent{}, &models.CMSChangeComment{}, &models.CMSRoleAssignment{}, &models.CMSInvalidationEvent{}} {
+			for _, model := range []any{&legacyCMSLocaleSchema{}, &models.CMSPageVariant{}, &models.CMSAuditEvent{}, &models.CMSChangeComment{}, &models.CMSRoleAssignment{}, &models.CMSInvalidationEvent{}} {
 				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
 					return err
 				}
@@ -1543,7 +1557,7 @@ var orderedMigrations = []Migration{
 					return err
 				}
 			}
-			locale := models.CMSLocale{Code: "en-US", Name: "English (United States)", Enabled: true, IsDefault: true}
+			locale := legacyCMSLocaleSchema{Code: "en-US", Name: "English (United States)", Enabled: true, IsDefault: true}
 			return tx.Where("code = ?", locale.Code).FirstOrCreate(&locale).Error
 		},
 	},
@@ -1749,6 +1763,1101 @@ var orderedMigrations = []Migration{
 		}},
 		Up: backfillProviderOperations,
 	},
+	{
+		Version:         localizationPlatformP0Version,
+		Name:            "add localization platform foundation",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "backfill", "localization"},
+		PostChecks: []PostCheck{{
+			Name: "localization_registry_and_active_release_exist",
+			Check: func(tx *gorm.DB) error {
+				for _, model := range []any{
+					&models.Locale{},
+					&models.TranslationKey{},
+					&models.TranslationValue{},
+					&models.TranslationRelease{},
+					&models.TranslationReleaseEntry{},
+				} {
+					if !tx.Migrator().HasTable(model) {
+						return fmt.Errorf("missing localization table for %T", model)
+					}
+				}
+				var defaultCount int64
+				if err := tx.Session(&gorm.Session{NewDB: true}).Model(&models.Locale{}).Where("is_default = ? AND is_enabled = ?", true, true).Count(&defaultCount).Error; err != nil {
+					return err
+				}
+				if defaultCount != 1 {
+					return fmt.Errorf("expected exactly one enabled default locale, found %d", defaultCount)
+				}
+				var activeCount int64
+				if err := tx.Session(&gorm.Session{NewDB: true}).Model(&models.TranslationRelease{}).Where("status = ?", models.TranslationReleaseStatusActive).Count(&activeCount).Error; err != nil {
+					return err
+				}
+				if activeCount != 1 {
+					return fmt.Errorf("expected exactly one active translation release, found %d", activeCount)
+				}
+				return nil
+			},
+		}},
+		Up: migrateLocalizationPlatformP0,
+	},
+	{
+		Version:         localizationPlatformP1Version,
+		Name:            "add localization runtime preferences and baseline keys",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "backfill", "localization", "accounts"},
+		PostChecks: []PostCheck{{
+			Name: "localization_runtime_preferences_ready",
+			Check: func(tx *gorm.DB) error {
+				if !tx.Migrator().HasColumn("users", "locale") {
+					return errors.New("users.locale is missing")
+				}
+				if !tx.Migrator().HasTable(&localizationP1MarketDefaultSchema{}) {
+					return errors.New("locale_market_defaults is missing")
+				}
+				var blankPreferences int64
+				if err := tx.Session(&gorm.Session{NewDB: true}).Table("users").Where("locale IS NULL OR locale = ''").Count(&blankPreferences).Error; err != nil {
+					return err
+				}
+				if blankPreferences != 0 {
+					return fmt.Errorf("found %d users without locale preferences", blankPreferences)
+				}
+				var keyCount int64
+				if err := tx.Session(&gorm.Session{NewDB: true}).Table("translation_keys").Where("owner_domain IN ?", []string{"storefront", "checkout", "account", "admin", "http"}).Count(&keyCount).Error; err != nil {
+					return err
+				}
+				if keyCount < int64(len(localizationP1BaselineKeys)) {
+					return fmt.Errorf("expected at least %d baseline keys, found %d", len(localizationP1BaselineKeys), keyCount)
+				}
+				return nil
+			},
+		}},
+		Up: migrateLocalizationPlatformP1,
+	},
+	{
+		Version:         localizationDefaultSourceReleaseVersion,
+		Name:            "publish default localization source catalog",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"backfill", "localization", "runtime"},
+		PostChecks: []PostCheck{{
+			Name:  "default_localization_source_catalog_published",
+			Check: localizationDefaultSourceCatalogPublished,
+		}},
+		Up: publishLocalizationDefaultSourceCatalog,
+	},
+	{
+		Version:         localizationEntityFieldsP2Version,
+		Name:            "add localized entity fields and default locale backfill",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "backfill", "localization", "catalog", "storefront"},
+		PostChecks: []PostCheck{{
+			Name:  "localized_entity_fields_backfilled",
+			Check: localizedEntityFieldsBackfilled,
+		}},
+		Up: migrateLocalizationEntityFieldsP2,
+	},
+	{
+		Version:         localizationWorkflowP3Version,
+		Name:            "add localization translation operations workflow",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "backfill", "localization", "workflow", "audit"},
+		PostChecks: []PostCheck{{
+			Name:  "localization_workflow_tables_ready",
+			Check: localizationWorkflowTablesReady,
+		}},
+		Up: migrateLocalizationWorkflowP3,
+	},
+	{
+		Version:         localizationWorkflowCatalogP3Version,
+		Name:            "publish localization workflow navigation catalog",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"backfill", "localization", "workflow", "catalog"},
+		PostChecks: []PostCheck{{
+			Name:  "localization_workflow_catalog_published",
+			Check: localizationDefaultSourceCatalogPublished,
+		}},
+		Up: migrateLocalizationWorkflowCatalogP3,
+	},
+	{
+		Version:         localizationOperationsP4Version,
+		Name:            "add localization rollout observability and communications templates",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "backfill", "localization", "communications", "observability"},
+		PostChecks: []PostCheck{{
+			Name:  "localization_operations_ready",
+			Check: localizationOperationsP4Ready,
+		}},
+		Up: migrateLocalizationOperationsP4,
+	},
+	{
+		Version:         localizationHardeningP5Version,
+		Name:            "publish complete localized problem catalog",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"backfill", "localization", "quality"},
+		PostChecks: []PostCheck{{
+			Name:  "localization_hardening_catalog_ready",
+			Check: localizationHardeningP5Ready,
+		}},
+		Up: migrateLocalizationHardeningP5,
+	},
+	{
+		Version:         localizationUsageContextVersion,
+		Name:            "add localization usage context",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "localization", "media", "workflow"},
+		PostChecks: []PostCheck{{
+			Name: "localization_usage_context_ready",
+			Check: func(tx *gorm.DB) error {
+				if !tx.Migrator().HasTable(&models.TranslationKeyUsage{}) {
+					return errors.New("translation_key_usages is missing")
+				}
+				return nil
+			},
+		}},
+		Up: func(tx *gorm.DB) error { return ops.CreateTableIfNotExists(tx, &models.TranslationKeyUsage{}) },
+	},
+}
+
+type legacyCMSLocaleBackfill struct {
+	ID             uint
+	Code           string
+	Name           string
+	Enabled        bool
+	IsDefault      bool
+	FallbackLocale string
+}
+
+// legacyCMSLocaleSchema freezes the table shape created by the historical CMS
+// localization migration. Runtime code must use models.Locale instead.
+type legacyCMSLocaleSchema struct {
+	ID             uint `gorm:"primaryKey"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	DeletedAt      gorm.DeletedAt `gorm:"index"`
+	Code           string         `gorm:"size:35;not null;uniqueIndex"`
+	Name           string         `gorm:"size:128;not null"`
+	Enabled        bool           `gorm:"not null;default:true;index"`
+	IsDefault      bool           `gorm:"not null;default:false;index"`
+	FallbackLocale string         `gorm:"size:35;not null;default:''"`
+}
+
+func (legacyCMSLocaleSchema) TableName() string { return "cms_locales" }
+
+type localizationP0TranslationValueSchema struct {
+	ID               uint `gorm:"primaryKey"`
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	DeletedAt        gorm.DeletedAt `gorm:"index"`
+	TranslationKeyID uint           `gorm:"not null;index;uniqueIndex:idx_translation_value_version,priority:1"`
+	LocaleID         uint           `gorm:"not null;index;uniqueIndex:idx_translation_value_version,priority:2"`
+	Value            string         `gorm:"type:text;not null"`
+	State            string         `gorm:"size:16;not null;index"`
+	Version          uint           `gorm:"not null;uniqueIndex:idx_translation_value_version,priority:3"`
+	UpdatedBy        *uint          `gorm:"index"`
+	ReviewedBy       *uint          `gorm:"index"`
+}
+
+func (localizationP0TranslationValueSchema) TableName() string { return "translation_values" }
+
+func migrateLocalizationPlatformP0(tx *gorm.DB) error {
+	for _, model := range []any{
+		&models.Locale{},
+		&models.TranslationKey{},
+		&localizationP0TranslationValueSchema{},
+		&models.TranslationRelease{},
+		&models.TranslationReleaseEntry{},
+	} {
+		if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+			return err
+		}
+	}
+	for _, statement := range []string{
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_locales_default ON locales (is_default) WHERE is_default = TRUE AND deleted_at IS NULL`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_translation_releases_active ON translation_releases (status) WHERE status = 'active' AND deleted_at IS NULL`,
+	} {
+		if err := tx.Exec(statement).Error; err != nil {
+			return err
+		}
+	}
+
+	var legacy []legacyCMSLocaleBackfill
+	if tx.Migrator().HasTable("cms_locales") {
+		if err := tx.Session(&gorm.Session{NewDB: true}).Table("cms_locales").Where("deleted_at IS NULL").Order("is_default DESC, code ASC").Find(&legacy).Error; err != nil {
+			return err
+		}
+	}
+	if len(legacy) == 0 {
+		legacy = []legacyCMSLocaleBackfill{{Code: "en-US", Name: "English (United States)", Enabled: true, IsDefault: true}}
+	}
+	byCode := make(map[string]models.Locale, len(legacy))
+	for _, source := range legacy {
+		row := models.Locale{
+			Code: source.Code, Name: source.Name, IsEnabled: source.Enabled, IsDefault: source.IsDefault,
+		}
+		if err := tx.Session(&gorm.Session{NewDB: true}).Where("code = ?", source.Code).FirstOrCreate(&row).Error; err != nil {
+			return err
+		}
+		byCode[source.Code] = row
+	}
+	for _, source := range legacy {
+		if strings.TrimSpace(source.FallbackLocale) == "" {
+			continue
+		}
+		locale := byCode[source.Code]
+		fallback, exists := byCode[source.FallbackLocale]
+		if !exists {
+			return fmt.Errorf("legacy CMS locale %s references unknown fallback %s", source.Code, source.FallbackLocale)
+		}
+		if err := tx.Session(&gorm.Session{NewDB: true}).Model(&models.Locale{}).Where("id = ?", locale.ID).Update("fallback_locale_id", fallback.ID).Error; err != nil {
+			return err
+		}
+	}
+
+	var activeCount int64
+	if err := tx.Session(&gorm.Session{NewDB: true}).Model(&models.TranslationRelease{}).Where("status = ?", models.TranslationReleaseStatusActive).Count(&activeCount).Error; err != nil {
+		return err
+	}
+	if activeCount == 0 {
+		now := time.Now().UTC()
+		emptyHash := sha256.Sum256([]byte("[]"))
+		release := models.TranslationRelease{
+			Name: "bootstrap", Status: models.TranslationReleaseStatusActive,
+			PublishedAt: &now, Notes: "Initial empty localization release", SnapshotHash: fmt.Sprintf("%x", emptyHash),
+		}
+		if err := tx.Session(&gorm.Session{NewDB: true}).Select("*").Create(&release).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type localizationP1UserSchema struct {
+	Locale string `gorm:"size:35;not null;default:en-US;index"`
+}
+
+func (localizationP1UserSchema) TableName() string { return "users" }
+
+type localizationP1MarketDefaultSchema struct {
+	ID        uint `gorm:"primaryKey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+	Market    string         `gorm:"size:3;not null;uniqueIndex"`
+	LocaleID  uint           `gorm:"not null;index"`
+}
+
+func (localizationP1MarketDefaultSchema) TableName() string { return "locale_market_defaults" }
+
+type localizationP1BaselineKey struct {
+	Namespace   string
+	Key         string
+	SourceText  string
+	OwnerDomain string
+}
+
+var localizationP1BaselineKeys = []localizationP1BaselineKey{
+	{Namespace: "admin", Key: "shell.close_drawer", SourceText: "Close admin drawer", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "shell.open_sections", SourceText: "Open admin sections", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "shell.operations_console", SourceText: "Operations console", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "shell.section_drawer", SourceText: "Admin section drawer", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "shell.storefront", SourceText: "Back to storefront", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "shell.title", SourceText: "Admin", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.products", SourceText: "Products", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.brands", SourceText: "Brands", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.categories", SourceText: "Categories", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.orders", SourceText: "Orders", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.discounts", SourceText: "Discounts", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.inventory", SourceText: "Inventory", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.purchase_orders", SourceText: "Purchase Orders", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.users", SourceText: "Users", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.providers", SourceText: "Providers", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.cms", SourceText: "CMS", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.website", SourceText: "Website", OwnerDomain: "admin"},
+	{Namespace: "checkout", Key: "choose_payment_and_shipping_delivery", SourceText: "Choose a payment method and a shipping method to see delivery options.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "already_have_account", SourceText: "Already have an account?", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "available", SourceText: "Available", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "back", SourceText: "Back", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "choose_providers", SourceText: "Choose your payment and shipping providers.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "claim_older_order", SourceText: "Need to claim an older guest order?", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "claim_order_description", SourceText: "Sign in first, then continue to your account to claim a past guest order with your confirmation token.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "claim_past_order", SourceText: "Claim past guest order", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "create_account", SourceText: "Create account", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "email_address", SourceText: "Email address", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "empty_cart_prefix", SourceText: "Your cart is empty. Visit the", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "empty_cart_suffix", SourceText: "to add items.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "enter_address_manually", SourceText: "Enter address manually", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "enter_card_manually", SourceText: "Enter card manually", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "guest_confirmation_token", SourceText: "Guest confirmation token", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "guest_contact", SourceText: "Guest contact", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "guest_email_description", SourceText: "We will use your email for order confirmation and any follow-up about delivery.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "load_shipping", SourceText: "Load shipping", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "loading_options", SourceText: "Loading options...", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "log_in", SourceText: "Log in", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "order_summary", SourceText: "Order summary", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "payment_provider", SourceText: "Payment provider", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "ready", SourceText: "Ready", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "refresh_shipping", SourceText: "Refresh shipping", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "sales_tax", SourceText: "Sales tax", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "save_address", SourceText: "Save this address to my profile", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "save_card", SourceText: "Save this card to my profile", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "select", SourceText: "Select", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "selected", SourceText: "Selected", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "shipping_auto_selected", SourceText: "The shipping method will be chosen for you automatically after the rates load.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "shipping_option_count.one", SourceText: "{count} option", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "shipping_option_count.other", SourceText: "{count} options", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "shipping_options", SourceText: "Shipping options", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "shipping_options_description", SourceText: "See available delivery methods and pick the one that works best for you.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "shipping_options_prompt", SourceText: "Choose your shipping method and enter your delivery details to compare available options.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "shipping_price_available_until", SourceText: "Price available until {date}", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "sign_in_benefits", SourceText: "Sign in to use your saved cards, addresses, and order history after checkout.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "sign_in_required", SourceText: "You need to sign in to check out.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "sign_in_required_description", SourceText: "Sign in or create an account to continue with this order.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "store", SourceText: "store", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "tax_status", SourceText: "Tax status", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "updating", SourceText: "Updating...", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "use_saved_address", SourceText: "Use a saved address", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "use_saved_card", SourceText: "Use a saved card", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "choose_payment_and_shipping_total", SourceText: "Choose a payment method and a shipping method to update your total.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "choose_payment_delivery", SourceText: "Choose a payment method before loading delivery options.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "choose_payment_total", SourceText: "Choose a payment method to update your total.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "choose_shipping_delivery", SourceText: "Choose a shipping method to see delivery options.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "choose_shipping_total", SourceText: "Choose a shipping method to update your total.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "delivery_options_unavailable", SourceText: "We couldn't load delivery options right now. Please try again.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "discounts", SourceText: "Discounts", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "estimated_total", SourceText: "Estimated total", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "getting_ready", SourceText: "Checkout is still getting ready. Try again in a moment.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "guest_email_required", SourceText: "Enter your email to place a guest order.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "invalid_details", SourceText: "Some checkout details are invalid. Review the messages below.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "options", SourceText: "Checkout options", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "order_placed", SourceText: "Order placed", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "order_submitted", SourceText: "Order submitted. Keep your confirmation details for reference.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "payment_processed", SourceText: "Payment processed.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "payment_status", SourceText: "Payment status: {status}", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "place_order", SourceText: "Place order", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "place_order_error", SourceText: "Unable to place your order.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "prepare_error", SourceText: "We couldn't prepare your checkout right now. Please try again.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "processing", SourceText: "Processing...", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "quote_error", SourceText: "Unable to calculate quote.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "refresh", SourceText: "Refresh", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "shipping", SourceText: "Shipping", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "shipping_options_error", SourceText: "Unable to load shipping options.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "shipping_selected", SourceText: "{service} selected for shipping.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "subtotal", SourceText: "Subtotal", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "subtotal_with_value", SourceText: "Subtotal {value}", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "tax", SourceText: "Tax", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "tax_error", SourceText: "Unable to finalize taxes.", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "title", SourceText: "Checkout", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "updating_quote", SourceText: "Updating quote...", OwnerDomain: "checkout"},
+	{Namespace: "storefront", Key: "account.confirm_password", SourceText: "Confirm Password", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.address_default_error", SourceText: "Could not set default address.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.address_default_updated", SourceText: "Default address updated.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.address_remove_error", SourceText: "Could not remove address.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.address_removed", SourceText: "Address removed.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.address_save_error", SourceText: "Could not save address.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.address_saved", SourceText: "Address saved.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.card_number", SourceText: "Card number", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.cardholder_name", SourceText: "Cardholder name", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.choose_photo", SourceText: "Choose photo", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.default", SourceText: "Default", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.delete_address", SourceText: "Delete address", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.delete_payment_method", SourceText: "Delete payment method", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.details", SourceText: "Account details", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.expiration_month", SourceText: "Exp month", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.expiration_year", SourceText: "Exp year", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.log_in_lower", SourceText: "log in", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.name", SourceText: "Name", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.no_addresses", SourceText: "No saved addresses.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.no_payment_methods", SourceText: "No saved payment methods.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.payment_default_error", SourceText: "Could not set default payment method.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.payment_default_updated", SourceText: "Default payment method updated.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.payment_remove_error", SourceText: "Could not remove payment method.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.payment_removed", SourceText: "Payment method removed.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.payment_save_error", SourceText: "Could not save payment method.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.payment_saved", SourceText: "Payment method saved.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.photo_processing", SourceText: "Photo is still processing. Please try again in a moment.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.photo_remove_error", SourceText: "Could not remove the photo.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.photo_removed", SourceText: "Profile photo removed.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.photo_updated", SourceText: "Profile photo updated.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.photo_upload_error", SourceText: "Could not upload the photo. Please try again.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.please", SourceText: "Please", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.preferred_currency", SourceText: "Preferred currency", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.profile", SourceText: "Profile", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.profile_load_error", SourceText: "Unable to load your profile. Please try again.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.profile_photo", SourceText: "Profile photo", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.profile_preview", SourceText: "Profile preview", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.profile_update_error", SourceText: "Could not update profile. Please try again.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.profile_updated", SourceText: "Profile updated.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.remove_photo", SourceText: "Remove photo", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.removing", SourceText: "Removing...", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.save_address", SourceText: "Save address", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.save_payment_method", SourceText: "Save payment method", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.saved_addresses", SourceText: "Saved addresses", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.saved_payment_methods", SourceText: "Saved payment methods", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.set_as_default", SourceText: "Set as default", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.set_default_address", SourceText: "Set as default address", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.set_default_payment_method", SourceText: "Set as default payment method", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.upload_photo", SourceText: "Upload photo", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.uploading", SourceText: "Uploading...", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.view_profile_suffix", SourceText: "to view your profile.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.your_name", SourceText: "Your name", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.continue_with_provider", SourceText: "Continue with OpenID Connect", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.create_account", SourceText: "Create Account", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.create_error", SourceText: "Unable to create account. Please check your details.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.creation_unavailable", SourceText: "Account creation is currently unavailable.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.email", SourceText: "Email", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.invalid_credentials", SourceText: "Invalid email or password.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.locale", SourceText: "Language", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.log_in", SourceText: "Log In", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.name_optional", SourceText: "Name (optional)", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.or", SourceText: "Or", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.password", SourceText: "Password", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.passwords_mismatch", SourceText: "Passwords do not match.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.provider_create", SourceText: "Your account will be created automatically the first time your provider signs you in.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.provider_sign_in", SourceText: "Use your identity provider to sign in without a local password.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.save", SourceText: "Save changes", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.session_expired", SourceText: "Your session expired. Please sign in again.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.sign_in_unavailable", SourceText: "Sign-in is currently unavailable.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.sign_up", SourceText: "Sign Up", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.username", SourceText: "Username", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "cart.calculated_at_checkout", SourceText: "Calculated at checkout", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "cart.continue_shopping", SourceText: "Continue shopping", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "cart.discounts", SourceText: "Discounts", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "cart.empty", SourceText: "Your cart is empty.", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "cart.go_to_checkout", SourceText: "Go to checkout", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "cart.guest_checkout", SourceText: "Your cart is attached to this browser session. You can still check out as a guest.", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "cart.guest_saved", SourceText: "Your selections are saved to this browser until you check out or clear them.", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "cart.item_count.one", SourceText: "{count} item", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "cart.item_count.other", SourceText: "{count} items", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "cart.order_summary", SourceText: "Order summary", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "cart.remove_error", SourceText: "Unable to remove that item.", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "cart.remove_item", SourceText: "Remove item", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "cart.shipping", SourceText: "Shipping", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "cart.subtotal", SourceText: "Subtotal", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "cart.title", SourceText: "Your Cart", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "cart.update_error", SourceText: "Unable to update that item.", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shell.admin", SourceText: "Admin", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shell.edit_profile", SourceText: "Edit profile", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shell.exit", SourceText: "Exit", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shell.exit_preview_error", SourceText: "Could not exit draft view.", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shell.exiting", SourceText: "Exiting...", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shell.loading", SourceText: "Loading...", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shell.orders", SourceText: "Orders", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shell.page_loading", SourceText: "Page loading", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shell.search", SourceText: "Search", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shell.sign_in", SourceText: "Log In", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shell.sign_out", SourceText: "Sign out", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shell.sign_up", SourceText: "Sign Up", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shell.until_time", SourceText: "until {time}", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shell.view_cart", SourceText: "View cart", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shell.viewing_draft_preview", SourceText: "Viewing draft preview", OwnerDomain: "storefront"},
+	{Namespace: "errors", Key: "invalid_request", SourceText: "The request is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "authentication_required", SourceText: "Authentication is required.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "forbidden", SourceText: "You are not allowed to perform this action.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "not_found", SourceText: "The requested resource was not found.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "state_conflict", SourceText: "The request conflicts with the current state.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "internal_error", SourceText: "An unexpected error occurred.", OwnerDomain: "http"},
+}
+
+func migrateLocalizationPlatformP1(tx *gorm.DB) error {
+	if !tx.Migrator().HasColumn(&localizationP1UserSchema{}, "Locale") {
+		if err := tx.Migrator().AddColumn(&localizationP1UserSchema{}, "Locale"); err != nil {
+			return err
+		}
+	}
+	if err := ops.CreateTableIfNotExists(tx, &localizationP1MarketDefaultSchema{}); err != nil {
+		return err
+	}
+	var defaultLocale string
+	if err := tx.Session(&gorm.Session{NewDB: true}).Table("locales").Select("code").Where("is_default = ? AND is_enabled = ? AND deleted_at IS NULL", true, true).Scan(&defaultLocale).Error; err != nil {
+		return err
+	}
+	if strings.TrimSpace(defaultLocale) == "" {
+		return errors.New("cannot backfill account locale without an enabled default locale")
+	}
+	if err := tx.Session(&gorm.Session{NewDB: true}).Table("users").Where("locale IS NULL OR locale = ''").Update("locale", defaultLocale).Error; err != nil {
+		return err
+	}
+	for _, key := range localizationP1BaselineKeys {
+		row := map[string]any{
+			"namespace": key.Namespace, "key": key.Key, "source_text": key.SourceText,
+			"description": "P1 runtime baseline", "owner_domain": key.OwnerDomain,
+			"is_deprecated": false, "created_at": time.Now().UTC(), "updated_at": time.Now().UTC(),
+		}
+		if err := tx.Session(&gorm.Session{NewDB: true}).Table("translation_keys").Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "namespace"}, {Name: "key"}}, DoNothing: true,
+		}).Create(&row).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type localizationDefaultReleaseValue struct {
+	ID               uint
+	TranslationKeyID uint
+	LocaleID         uint
+	Value            string
+	Version          uint
+	Namespace        string
+	Key              string
+	LocaleCode       string
+}
+
+type localizationDefaultReleaseValueSchema struct {
+	ID               uint `gorm:"primaryKey"`
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	DeletedAt        gorm.DeletedAt `gorm:"index"`
+	TranslationKeyID uint           `gorm:"not null;index;uniqueIndex:idx_translation_value_version,priority:1"`
+	LocaleID         uint           `gorm:"not null;index;uniqueIndex:idx_translation_value_version,priority:2"`
+	Value            string         `gorm:"type:text;not null"`
+	State            string         `gorm:"size:16;not null;index"`
+	Version          uint           `gorm:"not null;uniqueIndex:idx_translation_value_version,priority:3"`
+	UpdatedBy        *uint          `gorm:"index"`
+	ReviewedBy       *uint          `gorm:"index"`
+}
+
+func (localizationDefaultReleaseValueSchema) TableName() string { return "translation_values" }
+
+func publishLocalizationDefaultSourceCatalog(tx *gorm.DB) error {
+	var defaultLocale models.Locale
+	if err := tx.Session(&gorm.Session{NewDB: true}).
+		Where("is_default = ? AND is_enabled = ? AND deleted_at IS NULL", true, true).
+		First(&defaultLocale).Error; err != nil {
+		return err
+	}
+	var activeRelease models.TranslationRelease
+	if err := tx.Session(&gorm.Session{NewDB: true}).
+		Where("status = ? AND deleted_at IS NULL", models.TranslationReleaseStatusActive).
+		First(&activeRelease).Error; err != nil {
+		return err
+	}
+	var keys []models.TranslationKey
+	if err := tx.Session(&gorm.Session{NewDB: true}).
+		Where("is_deprecated = ? AND deleted_at IS NULL", false).
+		Order("namespace ASC, key ASC").Find(&keys).Error; err != nil {
+		return err
+	}
+	var releasedKeyIDs []uint
+	if err := tx.Session(&gorm.Session{NewDB: true}).Table("translation_release_entries AS re").
+		Select("tv.translation_key_id").
+		Joins("JOIN translation_values AS tv ON tv.id = re.translation_value_id AND tv.deleted_at IS NULL").
+		Where("re.release_id = ? AND re.deleted_at IS NULL AND tv.locale_id = ?", activeRelease.ID, defaultLocale.ID).
+		Pluck("tv.translation_key_id", &releasedKeyIDs).Error; err != nil {
+		return err
+	}
+	released := make(map[uint]bool, len(releasedKeyIDs))
+	for _, keyID := range releasedKeyIDs {
+		released[keyID] = true
+	}
+	for _, key := range keys {
+		if released[key.ID] {
+			continue
+		}
+		var value localizationDefaultReleaseValueSchema
+		err := tx.Session(&gorm.Session{NewDB: true}).
+			Select("id", "created_at", "updated_at", "deleted_at", "translation_key_id", "locale_id", "value", "state", "version", "updated_by", "reviewed_by").
+			Where("translation_key_id = ? AND locale_id = ? AND state = ? AND deleted_at IS NULL", key.ID, defaultLocale.ID, models.TranslationStatePublished).
+			Order("version DESC").First(&value).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			var maxVersion uint
+			if err := tx.Session(&gorm.Session{NewDB: true}).Model(&models.TranslationValue{}).
+				Where("translation_key_id = ? AND locale_id = ?", key.ID, defaultLocale.ID).
+				Select("COALESCE(MAX(version), 0)").Scan(&maxVersion).Error; err != nil {
+				return err
+			}
+			value = localizationDefaultReleaseValueSchema{
+				TranslationKeyID: key.ID,
+				LocaleID:         defaultLocale.ID,
+				Value:            key.SourceText,
+				State:            string(models.TranslationStatePublished),
+				Version:          maxVersion + 1,
+			}
+			if err := tx.Session(&gorm.Session{NewDB: true}).Select("*").Create(&value).Error; err != nil {
+				return err
+			}
+		} else if err != nil {
+			return err
+		}
+		entry := models.TranslationReleaseEntry{ReleaseID: activeRelease.ID, TranslationValueID: value.ID}
+		if err := tx.Session(&gorm.Session{NewDB: true}).Where("release_id = ? AND translation_value_id = ?", activeRelease.ID, value.ID).FirstOrCreate(&entry).Error; err != nil {
+			return err
+		}
+	}
+	rows, err := localizationActiveReleaseValues(tx, activeRelease.ID)
+	if err != nil {
+		return err
+	}
+	hash, err := localizationReleaseSnapshotHash(rows)
+	if err != nil {
+		return err
+	}
+	return tx.Session(&gorm.Session{NewDB: true}).Model(&models.TranslationRelease{}).
+		Where("id = ?", activeRelease.ID).
+		Updates(map[string]any{
+			"notes":         "Default localization source catalog",
+			"snapshot_hash": hash,
+		}).Error
+}
+
+func localizationDefaultSourceCatalogPublished(tx *gorm.DB) error {
+	var expected int64
+	if err := tx.Session(&gorm.Session{NewDB: true}).Model(&models.TranslationKey{}).
+		Where("is_deprecated = ? AND deleted_at IS NULL", false).Count(&expected).Error; err != nil {
+		return err
+	}
+	var published int64
+	if err := tx.Session(&gorm.Session{NewDB: true}).Table("translation_release_entries AS re").
+		Joins("JOIN translation_releases AS tr ON tr.id = re.release_id AND tr.deleted_at IS NULL").
+		Joins("JOIN translation_values AS tv ON tv.id = re.translation_value_id AND tv.deleted_at IS NULL").
+		Joins("JOIN locales AS l ON l.id = tv.locale_id AND l.deleted_at IS NULL").
+		Where("re.deleted_at IS NULL AND tr.status = ? AND tv.state = ? AND l.is_default = ? AND l.is_enabled = ?", models.TranslationReleaseStatusActive, models.TranslationStatePublished, true, true).
+		Distinct("tv.translation_key_id").Count(&published).Error; err != nil {
+		return err
+	}
+	if expected == 0 || published != expected {
+		return fmt.Errorf("expected %d default source messages in the active release, found %d", expected, published)
+	}
+	return nil
+}
+
+type localizationEntityBackfillRow struct {
+	ID                 uint
+	Name               string
+	Title              string
+	Value              string
+	Subtitle           *string
+	Description        *string
+	SiteTitle          string
+	OGTitle            *string
+	OGDescription      *string
+	TwitterTitle       *string
+	TwitterDescription *string
+}
+
+func migrateLocalizationEntityFieldsP2(tx *gorm.DB) error {
+	if err := ops.CreateTableIfNotExists(tx, &models.LocalizedEntityValue{}); err != nil {
+		return err
+	}
+	var defaultLocale models.Locale
+	if err := tx.Session(&gorm.Session{NewDB: true}).Where("is_default = ? AND is_enabled = ? AND deleted_at IS NULL", true, true).First(&defaultLocale).Error; err != nil {
+		return err
+	}
+	backfill := func(entityType string, entityID uint, fields map[string]string) error {
+		for field, value := range fields {
+			if strings.TrimSpace(value) == "" {
+				continue
+			}
+			row := models.LocalizedEntityValue{EntityType: entityType, EntityID: entityID, LocaleID: defaultLocale.ID, Field: field, Value: value}
+			if err := tx.Session(&gorm.Session{NewDB: true}).Where("entity_type = ? AND entity_id = ? AND locale_id = ? AND field = ?", entityType, entityID, defaultLocale.ID, field).FirstOrCreate(&row).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	tables := []struct {
+		name       string
+		entityType string
+		fields     func(localizationEntityBackfillRow) map[string]string
+	}{
+		{"products", "product", func(row localizationEntityBackfillRow) map[string]string {
+			return map[string]string{"name": row.Name, "subtitle": pointerString(row.Subtitle), "description": pointerString(row.Description)}
+		}},
+		{"product_variants", "product_variant", func(row localizationEntityBackfillRow) map[string]string {
+			return map[string]string{"title": row.Title}
+		}},
+		{"product_options", "product_option", func(row localizationEntityBackfillRow) map[string]string { return map[string]string{"name": row.Name} }},
+		{"product_option_values", "product_option_value", func(row localizationEntityBackfillRow) map[string]string {
+			return map[string]string{"value": row.Value}
+		}},
+		{"brands", "brand", func(row localizationEntityBackfillRow) map[string]string {
+			return map[string]string{"name": row.Name, "description": pointerString(row.Description)}
+		}},
+		{"categories", "category", func(row localizationEntityBackfillRow) map[string]string {
+			return map[string]string{"name": row.Name, "description": pointerString(row.Description)}
+		}},
+		{"website_settings", "website_settings", func(row localizationEntityBackfillRow) map[string]string {
+			return map[string]string{"site_title": row.SiteTitle}
+		}},
+		{"seo_metadata", "seo_metadata", func(row localizationEntityBackfillRow) map[string]string {
+			return map[string]string{"title": pointerString(row.TitlePtr()), "description": pointerString(row.Description), "og_title": pointerString(row.OGTitle), "og_description": pointerString(row.OGDescription), "twitter_title": pointerString(row.TwitterTitle), "twitter_description": pointerString(row.TwitterDescription)}
+		}},
+	}
+	for _, table := range tables {
+		if !tx.Migrator().HasTable(table.name) {
+			continue
+		}
+		var rows []localizationEntityBackfillRow
+		query := tx.Session(&gorm.Session{NewDB: true}).Table(table.name).Where("deleted_at IS NULL")
+		if table.name == "website_settings" {
+			query = tx.Session(&gorm.Session{NewDB: true}).Table(table.name)
+		}
+		if err := query.Find(&rows).Error; err != nil {
+			return err
+		}
+		for _, row := range rows {
+			if err := backfill(table.entityType, row.ID, table.fields(row)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (row localizationEntityBackfillRow) TitlePtr() *string {
+	if strings.TrimSpace(row.Title) == "" {
+		return nil
+	}
+	return &row.Title
+}
+
+func pointerString(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
+}
+
+func localizedEntityFieldsBackfilled(tx *gorm.DB) error {
+	if !tx.Migrator().HasTable(&models.LocalizedEntityValue{}) {
+		return errors.New("localized_entity_values is missing")
+	}
+	var defaultLocale models.Locale
+	if err := tx.Session(&gorm.Session{NewDB: true}).Where("is_default = ? AND is_enabled = ? AND deleted_at IS NULL", true, true).First(&defaultLocale).Error; err != nil {
+		return err
+	}
+	var productCount int64
+	if tx.Migrator().HasTable("products") {
+		if err := tx.Session(&gorm.Session{NewDB: true}).Table("products").Where("deleted_at IS NULL AND name <> ''").Count(&productCount).Error; err != nil {
+			return err
+		}
+	}
+	var localizedCount int64
+	if err := tx.Session(&gorm.Session{NewDB: true}).Model(&models.LocalizedEntityValue{}).Where("entity_type = ? AND locale_id = ? AND field = ?", "product", defaultLocale.ID, "name").Count(&localizedCount).Error; err != nil {
+		return err
+	}
+	if localizedCount != productCount {
+		return fmt.Errorf("expected %d default-locale product names, found %d", productCount, localizedCount)
+	}
+	return nil
+}
+
+func migrateLocalizationWorkflowP3(tx *gorm.DB) error {
+	for _, field := range []string{"AssigneeID", "SourceHash", "ChangeSummary"} {
+		if !tx.Migrator().HasColumn(&models.TranslationValue{}, field) {
+			if err := tx.Migrator().AddColumn(&models.TranslationValue{}, field); err != nil {
+				return err
+			}
+		}
+	}
+	for _, model := range []any{&models.TranslationComment{}, &models.TranslationAuditEvent{}, &models.LocalizationGlossaryTerm{}, &models.LocalizationRoleAssignment{}} {
+		if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+			return err
+		}
+	}
+	var values []models.TranslationValue
+	if err := tx.Session(&gorm.Session{NewDB: true}).Where("source_hash = '' OR source_hash IS NULL").Find(&values).Error; err != nil {
+		return err
+	}
+	keyHashes := map[uint]string{}
+	for _, value := range values {
+		hash, ok := keyHashes[value.TranslationKeyID]
+		if !ok {
+			var key models.TranslationKey
+			if err := tx.Session(&gorm.Session{NewDB: true}).First(&key, value.TranslationKeyID).Error; err != nil {
+				return err
+			}
+			sum := sha256.Sum256([]byte(key.SourceText))
+			hash = fmt.Sprintf("%x", sum[:])
+			keyHashes[value.TranslationKeyID] = hash
+		}
+		if err := tx.Session(&gorm.Session{NewDB: true}).Model(&models.TranslationValue{}).Where("id = ?", value.ID).Update("source_hash", hash).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func localizationWorkflowTablesReady(tx *gorm.DB) error {
+	for _, model := range []any{&models.TranslationComment{}, &models.TranslationAuditEvent{}, &models.LocalizationGlossaryTerm{}, &models.LocalizationRoleAssignment{}} {
+		if !tx.Migrator().HasTable(model) {
+			return fmt.Errorf("missing localization workflow table for %T", model)
+		}
+	}
+	for _, field := range []string{"AssigneeID", "SourceHash", "ChangeSummary"} {
+		if !tx.Migrator().HasColumn(&models.TranslationValue{}, field) {
+			return fmt.Errorf("translation_values.%s is missing", field)
+		}
+	}
+	return nil
+}
+
+var localizationP3CatalogKeys = []localizationP1BaselineKey{
+	{Namespace: "admin", Key: "navigation.translations", SourceText: "Translations", OwnerDomain: "admin"},
+}
+
+func migrateLocalizationWorkflowCatalogP3(tx *gorm.DB) error {
+	for _, key := range localizationP3CatalogKeys {
+		now := time.Now().UTC()
+		row := map[string]any{
+			"namespace": key.Namespace, "key": key.Key, "source_text": key.SourceText,
+			"description": "P3 translation workspace", "owner_domain": key.OwnerDomain,
+			"is_deprecated": false, "created_at": now, "updated_at": now,
+		}
+		if err := tx.Session(&gorm.Session{NewDB: true}).Table("translation_keys").Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "namespace"}, {Name: "key"}}, DoNothing: true,
+		}).Create(&row).Error; err != nil {
+			return err
+		}
+	}
+	return publishLocalizationDefaultSourceCatalog(tx)
+}
+
+type localizationP4RolloutSchema struct {
+	ID         uint `gorm:"primaryKey"`
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	DeletedAt  gorm.DeletedAt `gorm:"index"`
+	LocaleID   uint           `gorm:"not null;index;uniqueIndex:idx_localization_rollout,priority:1"`
+	Domain     string         `gorm:"size:32;not null;index;uniqueIndex:idx_localization_rollout,priority:2"`
+	IsEnabled  bool           `gorm:"not null;default:true;index"`
+	Percentage int            `gorm:"not null;default:100"`
+	UpdatedBy  *uint          `gorm:"index"`
+}
+
+func (localizationP4RolloutSchema) TableName() string { return "localization_rollouts" }
+
+type localizationP4MetricSchema struct {
+	ID           uint      `gorm:"primaryKey"`
+	MetricType   string    `gorm:"size:32;not null;uniqueIndex:idx_localization_metric,priority:1"`
+	Locale       string    `gorm:"size:35;not null;default:'';uniqueIndex:idx_localization_metric,priority:2;index"`
+	Domain       string    `gorm:"size:32;not null;default:'';uniqueIndex:idx_localization_metric,priority:3;index"`
+	Key          string    `gorm:"size:255;not null;default:'';uniqueIndex:idx_localization_metric,priority:4"`
+	Count        int64     `gorm:"not null;default:0"`
+	TotalValue   int64     `gorm:"not null;default:0"`
+	MaximumValue int64     `gorm:"not null;default:0"`
+	LastSeenAt   time.Time `gorm:"not null;index"`
+	CreatedAt    time.Time `gorm:"not null"`
+	UpdatedAt    time.Time `gorm:"not null"`
+}
+
+func (localizationP4MetricSchema) TableName() string { return "localization_metrics" }
+
+var localizationP4CatalogKeys = []localizationP1BaselineKey{
+	{Namespace: "admin", Key: "localization.operations.load_error", SourceText: "Unable to load the translation workspace.", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "localization.operations.metrics_error", SourceText: "Unable to refresh localization health metrics.", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "localization.operations.save_confirmation", SourceText: "Localization rollout controls saved.", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "localization.operations.save_error", SourceText: "Unable to save localization rollout controls.", OwnerDomain: "admin"},
+	{Namespace: "checkout", Key: "claim_order", SourceText: "Claim This Order", OwnerDomain: "checkout"},
+	{Namespace: "checkout", Key: "order_confirmation_sent", SourceText: "Order confirmation was sent to {email}.", OwnerDomain: "checkout"},
+	{Namespace: "communications", Key: "order_placed.email.subject", SourceText: "Order {order_number} confirmed", OwnerDomain: "communications"},
+	{Namespace: "communications", Key: "order_placed.email.body", SourceText: "We received order {order_number}. Total: {total}. We will send another update when it ships.", OwnerDomain: "communications"},
+	{Namespace: "communications", Key: "order_placed.text_message.body", SourceText: "Order {order_number} is confirmed. Total: {total}.", OwnerDomain: "communications"},
+	{Namespace: "communications", Key: "payment_failed.email.subject", SourceText: "Payment issue for order {order_number}", OwnerDomain: "communications"},
+	{Namespace: "communications", Key: "payment_failed.email.body", SourceText: "We could not complete payment for order {order_number}. Please update your payment method.", OwnerDomain: "communications"},
+	{Namespace: "communications", Key: "payment_failed.text_message.body", SourceText: "Payment for order {order_number} needs attention. Please update your payment method.", OwnerDomain: "communications"},
+	{Namespace: "communications", Key: "shipment_updated.email.subject", SourceText: "Shipping update for order {order_number}", OwnerDomain: "communications"},
+	{Namespace: "communications", Key: "shipment_updated.email.body", SourceText: "Order {order_number} is now {status}. Track it here: {tracking_url}", OwnerDomain: "communications"},
+	{Namespace: "communications", Key: "shipment_updated.text_message.body", SourceText: "Order {order_number} is {status}. Track: {tracking_url}", OwnerDomain: "communications"},
+	{Namespace: "communications", Key: "return_approved.email.subject", SourceText: "Return approved for order {order_number}", OwnerDomain: "communications"},
+	{Namespace: "communications", Key: "return_approved.email.body", SourceText: "Your return for order {order_number} was approved. Follow these instructions: {instructions}", OwnerDomain: "communications"},
+	{Namespace: "communications", Key: "return_approved.text_message.body", SourceText: "Your return for order {order_number} was approved. Check your email for instructions.", OwnerDomain: "communications"},
+	{Namespace: "storefront", Key: "order.cancel_confirmation", SourceText: "Cancel this order? This cannot be undone and eligible items will be restocked.", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "order.cancel_error", SourceText: "Unable to cancel order.", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "order.cancelled_confirmation", SourceText: "Order cancelled.", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "order.claim.already_claimed", SourceText: "This guest order has already been claimed.", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "order.claim.confirmation", SourceText: "Order claimed.", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "order.claim.error", SourceText: "Unable to claim this guest order.", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "order.claim.not_found", SourceText: "No guest order matched that email and confirmation token.", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "order.claim.validation", SourceText: "Enter the email and confirmation token from the guest order.", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "order.placed_confirmation", SourceText: "Order placed successfully.", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "order.status.cancelled", SourceText: "Cancelled", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "order.status.delivered", SourceText: "Delivered", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "order.status.failed", SourceText: "Failed", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "order.status.paid", SourceText: "Paid", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "order.status.pending", SourceText: "Pending", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "order.status.refunded", SourceText: "Refunded", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "order.status.shipped", SourceText: "Shipped", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shipment.status.delivered", SourceText: "Delivered", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shipment.status.exception", SourceText: "Exception", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shipment.status.in_transit", SourceText: "In transit", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shipment.status.label_purchased", SourceText: "Label purchased", OwnerDomain: "storefront"},
+	{Namespace: "storefront", Key: "shipment.status.quoted", SourceText: "Quoted", OwnerDomain: "storefront"},
+}
+
+var localizationP4RolloutDomains = []string{"account", "admin", "checkout", "communications", "errors", "storefront"}
+
+var localizationP5ErrorCatalogKeys = []localizationP1BaselineKey{
+	{Namespace: "checkout", Key: "shipping_provider", SourceText: "Shipping provider", OwnerDomain: "checkout"},
+	{Namespace: "errors", Key: "account_conflict", SourceText: "The account conflicts with the current state.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "address_not_found", SourceText: "The requested address was not found.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "checkout_rate_limited", SourceText: "Too many checkout attempts were made. Please wait and try again.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "checkout_session_required", SourceText: "A checkout session is required.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "checkout_snapshot_conflict", SourceText: "The checkout snapshot conflicts with the current order.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "checkout_state_conflict", SourceText: "The checkout state changed. Refresh and try again.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "credential_encryption_unavailable", SourceText: "Secure credential storage is unavailable.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "guest_checkout_disabled", SourceText: "Guest checkout is disabled.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "guest_email_required", SourceText: "An email address is required for guest checkout.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "idempotency_in_progress", SourceText: "An identical request is still in progress.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "idempotency_key_conflict", SourceText: "The request key was already used for different data.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_address", SourceText: "The address is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_address_id", SourceText: "The address identifier is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_checkout_snapshot", SourceText: "The checkout snapshot is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_credentials", SourceText: "The supplied credentials are invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_currency", SourceText: "The selected currency is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_date_range", SourceText: "The selected date range is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_end_date", SourceText: "The end date is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_guest_email", SourceText: "The guest email address is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_locale", SourceText: "The selected locale is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_media", SourceText: "The selected media is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_oidc_callback", SourceText: "The sign-in callback is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_oidc_secret_update", SourceText: "The sign-in secret update is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_claim", SourceText: "The guest order claim is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_order", SourceText: "The order is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_pagination", SourceText: "The requested page is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_payment_method", SourceText: "The payment method is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_payment_method_id", SourceText: "The payment method identifier is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_quantity", SourceText: "The quantity is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_start_date", SourceText: "The start date is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "invalid_user_role", SourceText: "The selected user role is invalid.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "localization_quality_failed", SourceText: "The translation release is missing required content.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "localization_unavailable", SourceText: "Localized content is temporarily unavailable.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "media_processing", SourceText: "The media is still processing.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "media_processing_failed", SourceText: "The media could not be processed.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "order_cannot_be_cancelled", SourceText: "The order cannot be cancelled.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "order_already_claimed", SourceText: "This order was already claimed by another account.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "payload_too_large", SourceText: "The uploaded content is too large.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "payment_already_submitted", SourceText: "Payment was already submitted.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "payment_method_not_found", SourceText: "The requested payment method was not found.", OwnerDomain: "http"},
+	{Namespace: "errors", Key: "variant_not_found", SourceText: "The requested product option was not found.", OwnerDomain: "http"},
+}
+
+func migrateLocalizationHardeningP5(tx *gorm.DB) error {
+	for _, key := range localizationP5ErrorCatalogKeys {
+		now := time.Now().UTC()
+		row := map[string]any{
+			"namespace": key.Namespace, "key": key.Key, "source_text": key.SourceText,
+			"description": "P5 localized problem catalog", "owner_domain": key.OwnerDomain,
+			"is_deprecated": false, "created_at": now, "updated_at": now,
+		}
+		if err := tx.Session(&gorm.Session{NewDB: true}).Table("translation_keys").Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "namespace"}, {Name: "key"}}, DoNothing: true,
+		}).Create(&row).Error; err != nil {
+			return err
+		}
+	}
+	return publishLocalizationDefaultSourceCatalog(tx)
+}
+
+func localizationHardeningP5Ready(tx *gorm.DB) error {
+	for _, key := range localizationP5ErrorCatalogKeys {
+		var count int64
+		if err := tx.Session(&gorm.Session{NewDB: true}).Model(&models.TranslationKey{}).
+			Where("namespace = ? AND key = ? AND deleted_at IS NULL", key.Namespace, key.Key).Count(&count).Error; err != nil {
+			return err
+		}
+		if count != 1 {
+			return fmt.Errorf("P5 localization key %s.%s is missing", key.Namespace, key.Key)
+		}
+	}
+	return localizationDefaultSourceCatalogPublished(tx)
+}
+
+func migrateLocalizationOperationsP4(tx *gorm.DB) error {
+	for _, model := range []any{&localizationP4RolloutSchema{}, &localizationP4MetricSchema{}} {
+		if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+			return err
+		}
+	}
+	var locales []models.Locale
+	if err := tx.Session(&gorm.Session{NewDB: true}).Where("deleted_at IS NULL").Find(&locales).Error; err != nil {
+		return err
+	}
+	for _, locale := range locales {
+		for _, domain := range localizationP4RolloutDomains {
+			row := localizationP4RolloutSchema{LocaleID: locale.ID, Domain: domain, IsEnabled: true, Percentage: 100}
+			if err := tx.Session(&gorm.Session{NewDB: true}).Clauses(clause.OnConflict{DoNothing: true}).Select("*").Create(&row).Error; err != nil {
+				return err
+			}
+		}
+	}
+	for _, key := range localizationP4CatalogKeys {
+		now := time.Now().UTC()
+		row := map[string]any{
+			"namespace": key.Namespace, "key": key.Key, "source_text": key.SourceText,
+			"description": "P4 communications baseline", "owner_domain": key.OwnerDomain,
+			"is_deprecated": false, "created_at": now, "updated_at": now,
+		}
+		if err := tx.Session(&gorm.Session{NewDB: true}).Table("translation_keys").Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "namespace"}, {Name: "key"}}, DoNothing: true,
+		}).Create(&row).Error; err != nil {
+			return err
+		}
+	}
+	return publishLocalizationDefaultSourceCatalog(tx)
+}
+
+func localizationOperationsP4Ready(tx *gorm.DB) error {
+	for _, model := range []any{&localizationP4RolloutSchema{}, &localizationP4MetricSchema{}} {
+		if !tx.Migrator().HasTable(model) {
+			return fmt.Errorf("missing localization operations table for %T", model)
+		}
+	}
+	var localeCount int64
+	if err := tx.Session(&gorm.Session{NewDB: true}).Table("locales").Where("deleted_at IS NULL").Count(&localeCount).Error; err != nil {
+		return err
+	}
+	var rolloutCount int64
+	if err := tx.Session(&gorm.Session{NewDB: true}).Table("localization_rollouts").Where("deleted_at IS NULL").Count(&rolloutCount).Error; err != nil {
+		return err
+	}
+	expected := localeCount * int64(len(localizationP4RolloutDomains))
+	if rolloutCount != expected {
+		return fmt.Errorf("expected %d localization rollout settings, found %d", expected, rolloutCount)
+	}
+	return localizationDefaultSourceCatalogPublished(tx)
+}
+
+func localizationActiveReleaseValues(tx *gorm.DB, releaseID uint) ([]localizationDefaultReleaseValue, error) {
+	var rows []localizationDefaultReleaseValue
+	err := tx.Session(&gorm.Session{NewDB: true}).Table("translation_release_entries AS re").
+		Select("tv.id, tv.translation_key_id, tv.locale_id, tv.value, tv.version, tk.namespace, tk.key, l.code AS locale_code").
+		Joins("JOIN translation_values AS tv ON tv.id = re.translation_value_id AND tv.deleted_at IS NULL").
+		Joins("JOIN translation_keys AS tk ON tk.id = tv.translation_key_id AND tk.deleted_at IS NULL").
+		Joins("JOIN locales AS l ON l.id = tv.locale_id AND l.deleted_at IS NULL").
+		Where("re.release_id = ? AND re.deleted_at IS NULL", releaseID).
+		Scan(&rows).Error
+	return rows, err
+}
+
+func localizationReleaseSnapshotHash(rows []localizationDefaultReleaseValue) (string, error) {
+	sort.Slice(rows, func(i, j int) bool {
+		left := rows[i].Namespace + "." + rows[i].Key + "\x00" + rows[i].LocaleCode
+		right := rows[j].Namespace + "." + rows[j].Key + "\x00" + rows[j].LocaleCode
+		return left < right
+	})
+	payload := make([]struct {
+		Key     string `json:"key"`
+		Locale  string `json:"locale"`
+		Value   string `json:"value"`
+		Version uint   `json:"version"`
+	}, 0, len(rows))
+	for _, row := range rows {
+		payload = append(payload, struct {
+			Key     string `json:"key"`
+			Locale  string `json:"locale"`
+			Value   string `json:"value"`
+			Version uint   `json:"version"`
+		}{
+			Key: row.Namespace + "." + row.Key, Locale: row.LocaleCode,
+			Value: row.Value, Version: row.Version,
+		})
+	}
+	raw, err := json.Marshal(payload)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", sha256.Sum256(raw)), nil
 }
 
 type legacyProviderPaymentTransaction struct {

@@ -1,0 +1,2262 @@
+{
+  "locale": "en-US",
+  "generated_by": "scripts/extract-localization.mjs",
+  "messages": [
+    {
+      "namespace": "admin",
+      "key": "localization.operations.load_error",
+      "source_text": "Unable to load the translation workspace.",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2647
+    },
+    {
+      "namespace": "admin",
+      "key": "localization.operations.metrics_error",
+      "source_text": "Unable to refresh localization health metrics.",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2648
+    },
+    {
+      "namespace": "admin",
+      "key": "localization.operations.save_confirmation",
+      "source_text": "Localization rollout controls saved.",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2649
+    },
+    {
+      "namespace": "admin",
+      "key": "localization.operations.save_error",
+      "source_text": "Unable to save localization rollout controls.",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2650
+    },
+    {
+      "namespace": "admin",
+      "key": "navigation.brands",
+      "source_text": "Brands",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2066
+    },
+    {
+      "namespace": "admin",
+      "key": "navigation.categories",
+      "source_text": "Categories",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2067
+    },
+    {
+      "namespace": "admin",
+      "key": "navigation.cms",
+      "source_text": "CMS",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2074
+    },
+    {
+      "namespace": "admin",
+      "key": "navigation.discounts",
+      "source_text": "Discounts",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2069
+    },
+    {
+      "namespace": "admin",
+      "key": "navigation.inventory",
+      "source_text": "Inventory",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2070
+    },
+    {
+      "namespace": "admin",
+      "key": "navigation.orders",
+      "source_text": "Orders",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2068
+    },
+    {
+      "namespace": "admin",
+      "key": "navigation.products",
+      "source_text": "Products",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2065
+    },
+    {
+      "namespace": "admin",
+      "key": "navigation.providers",
+      "source_text": "Providers",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2073
+    },
+    {
+      "namespace": "admin",
+      "key": "navigation.purchase_orders",
+      "source_text": "Purchase Orders",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2071
+    },
+    {
+      "namespace": "admin",
+      "key": "navigation.translations",
+      "source_text": "Translations",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2596
+    },
+    {
+      "namespace": "admin",
+      "key": "navigation.users",
+      "source_text": "Users",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2072
+    },
+    {
+      "namespace": "admin",
+      "key": "navigation.website",
+      "source_text": "Website",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2075
+    },
+    {
+      "namespace": "admin",
+      "key": "shell.close_drawer",
+      "source_text": "Close admin drawer",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2059
+    },
+    {
+      "namespace": "admin",
+      "key": "shell.open_sections",
+      "source_text": "Open admin sections",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2060
+    },
+    {
+      "namespace": "admin",
+      "key": "shell.operations_console",
+      "source_text": "Operations console",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2061
+    },
+    {
+      "namespace": "admin",
+      "key": "shell.section_drawer",
+      "source_text": "Admin section drawer",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2062
+    },
+    {
+      "namespace": "admin",
+      "key": "shell.storefront",
+      "source_text": "Back to storefront",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2063
+    },
+    {
+      "namespace": "admin",
+      "key": "shell.title",
+      "source_text": "Admin",
+      "owner_domain": "admin",
+      "file": "internal/migrations/migrations.go",
+      "line": 2064
+    },
+    {
+      "namespace": "checkout",
+      "key": "already_have_account",
+      "source_text": "Already have an account?",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2077
+    },
+    {
+      "namespace": "checkout",
+      "key": "available",
+      "source_text": "Available",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2078
+    },
+    {
+      "namespace": "checkout",
+      "key": "back",
+      "source_text": "Back",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2079
+    },
+    {
+      "namespace": "checkout",
+      "key": "choose_payment_and_shipping_delivery",
+      "source_text": "Choose a payment method and a shipping method to see delivery options.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2076
+    },
+    {
+      "namespace": "checkout",
+      "key": "choose_payment_and_shipping_total",
+      "source_text": "Choose a payment method and a shipping method to update your total.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2120
+    },
+    {
+      "namespace": "checkout",
+      "key": "choose_payment_delivery",
+      "source_text": "Choose a payment method before loading delivery options.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2121
+    },
+    {
+      "namespace": "checkout",
+      "key": "choose_payment_total",
+      "source_text": "Choose a payment method to update your total.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2122
+    },
+    {
+      "namespace": "checkout",
+      "key": "choose_providers",
+      "source_text": "Choose your payment and shipping providers.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2080
+    },
+    {
+      "namespace": "checkout",
+      "key": "choose_shipping_delivery",
+      "source_text": "Choose a shipping method to see delivery options.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2123
+    },
+    {
+      "namespace": "checkout",
+      "key": "choose_shipping_total",
+      "source_text": "Choose a shipping method to update your total.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2124
+    },
+    {
+      "namespace": "checkout",
+      "key": "claim_older_order",
+      "source_text": "Need to claim an older guest order?",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2081
+    },
+    {
+      "namespace": "checkout",
+      "key": "claim_order",
+      "source_text": "Claim This Order",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2651
+    },
+    {
+      "namespace": "checkout",
+      "key": "claim_order_description",
+      "source_text": "Sign in first, then continue to your account to claim a past guest order with your confirmation token.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2082
+    },
+    {
+      "namespace": "checkout",
+      "key": "claim_past_order",
+      "source_text": "Claim past guest order",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2083
+    },
+    {
+      "namespace": "checkout",
+      "key": "create_account",
+      "source_text": "Create account",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2084
+    },
+    {
+      "namespace": "checkout",
+      "key": "delivery_options_unavailable",
+      "source_text": "We couldn't load delivery options right now. Please try again.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2125
+    },
+    {
+      "namespace": "checkout",
+      "key": "discounts",
+      "source_text": "Discounts",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2126
+    },
+    {
+      "namespace": "checkout",
+      "key": "email_address",
+      "source_text": "Email address",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2085
+    },
+    {
+      "namespace": "checkout",
+      "key": "empty_cart_prefix",
+      "source_text": "Your cart is empty. Visit the",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2086
+    },
+    {
+      "namespace": "checkout",
+      "key": "empty_cart_suffix",
+      "source_text": "to add items.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2087
+    },
+    {
+      "namespace": "checkout",
+      "key": "enter_address_manually",
+      "source_text": "Enter address manually",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2088
+    },
+    {
+      "namespace": "checkout",
+      "key": "enter_card_manually",
+      "source_text": "Enter card manually",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2089
+    },
+    {
+      "namespace": "checkout",
+      "key": "estimated_total",
+      "source_text": "Estimated total",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2127
+    },
+    {
+      "namespace": "checkout",
+      "key": "getting_ready",
+      "source_text": "Checkout is still getting ready. Try again in a moment.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2128
+    },
+    {
+      "namespace": "checkout",
+      "key": "guest_confirmation_token",
+      "source_text": "Guest confirmation token",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2090
+    },
+    {
+      "namespace": "checkout",
+      "key": "guest_contact",
+      "source_text": "Guest contact",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2091
+    },
+    {
+      "namespace": "checkout",
+      "key": "guest_email_description",
+      "source_text": "We will use your email for order confirmation and any follow-up about delivery.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2092
+    },
+    {
+      "namespace": "checkout",
+      "key": "guest_email_required",
+      "source_text": "Enter your email to place a guest order.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2129
+    },
+    {
+      "namespace": "checkout",
+      "key": "invalid_details",
+      "source_text": "Some checkout details are invalid. Review the messages below.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2130
+    },
+    {
+      "namespace": "checkout",
+      "key": "load_shipping",
+      "source_text": "Load shipping",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2093
+    },
+    {
+      "namespace": "checkout",
+      "key": "loading_options",
+      "source_text": "Loading options...",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2094
+    },
+    {
+      "namespace": "checkout",
+      "key": "log_in",
+      "source_text": "Log in",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2095
+    },
+    {
+      "namespace": "checkout",
+      "key": "options",
+      "source_text": "Checkout options",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2131
+    },
+    {
+      "namespace": "checkout",
+      "key": "order_confirmation_sent",
+      "source_text": "Order confirmation was sent to {email}.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2652
+    },
+    {
+      "namespace": "checkout",
+      "key": "order_placed",
+      "source_text": "Order placed",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2132
+    },
+    {
+      "namespace": "checkout",
+      "key": "order_submitted",
+      "source_text": "Order submitted. Keep your confirmation details for reference.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2133
+    },
+    {
+      "namespace": "checkout",
+      "key": "order_summary",
+      "source_text": "Order summary",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2096
+    },
+    {
+      "namespace": "checkout",
+      "key": "payment_processed",
+      "source_text": "Payment processed.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2134
+    },
+    {
+      "namespace": "checkout",
+      "key": "payment_provider",
+      "source_text": "Payment provider",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2097
+    },
+    {
+      "namespace": "checkout",
+      "key": "payment_status",
+      "source_text": "Payment status: {status}",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2135
+    },
+    {
+      "namespace": "checkout",
+      "key": "place_order",
+      "source_text": "Place order",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2136
+    },
+    {
+      "namespace": "checkout",
+      "key": "place_order_error",
+      "source_text": "Unable to place your order.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2137
+    },
+    {
+      "namespace": "checkout",
+      "key": "prepare_error",
+      "source_text": "We couldn't prepare your checkout right now. Please try again.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2138
+    },
+    {
+      "namespace": "checkout",
+      "key": "processing",
+      "source_text": "Processing...",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2139
+    },
+    {
+      "namespace": "checkout",
+      "key": "quote_error",
+      "source_text": "Unable to calculate quote.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2140
+    },
+    {
+      "namespace": "checkout",
+      "key": "ready",
+      "source_text": "Ready",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2098
+    },
+    {
+      "namespace": "checkout",
+      "key": "refresh",
+      "source_text": "Refresh",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2141
+    },
+    {
+      "namespace": "checkout",
+      "key": "refresh_shipping",
+      "source_text": "Refresh shipping",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2099
+    },
+    {
+      "namespace": "checkout",
+      "key": "sales_tax",
+      "source_text": "Sales tax",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2100
+    },
+    {
+      "namespace": "checkout",
+      "key": "save_address",
+      "source_text": "Save this address to my profile",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2101
+    },
+    {
+      "namespace": "checkout",
+      "key": "save_card",
+      "source_text": "Save this card to my profile",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2102
+    },
+    {
+      "namespace": "checkout",
+      "key": "select",
+      "source_text": "Select",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2103
+    },
+    {
+      "namespace": "checkout",
+      "key": "selected",
+      "source_text": "Selected",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2104
+    },
+    {
+      "namespace": "checkout",
+      "key": "shipping",
+      "source_text": "Shipping",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2142
+    },
+    {
+      "namespace": "checkout",
+      "key": "shipping_auto_selected",
+      "source_text": "The shipping method will be chosen for you automatically after the rates load.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2105
+    },
+    {
+      "namespace": "checkout",
+      "key": "shipping_option_count.one",
+      "source_text": "{count} option",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2106
+    },
+    {
+      "namespace": "checkout",
+      "key": "shipping_option_count.other",
+      "source_text": "{count} options",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2107
+    },
+    {
+      "namespace": "checkout",
+      "key": "shipping_options",
+      "source_text": "Shipping options",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2108
+    },
+    {
+      "namespace": "checkout",
+      "key": "shipping_options_description",
+      "source_text": "See available delivery methods and pick the one that works best for you.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2109
+    },
+    {
+      "namespace": "checkout",
+      "key": "shipping_options_error",
+      "source_text": "Unable to load shipping options.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2143
+    },
+    {
+      "namespace": "checkout",
+      "key": "shipping_options_prompt",
+      "source_text": "Choose your shipping method and enter your delivery details to compare available options.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2110
+    },
+    {
+      "namespace": "checkout",
+      "key": "shipping_price_available_until",
+      "source_text": "Price available until {date}",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2111
+    },
+    {
+      "namespace": "checkout",
+      "key": "shipping_provider",
+      "source_text": "Shipping provider",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2691
+    },
+    {
+      "namespace": "checkout",
+      "key": "shipping_selected",
+      "source_text": "{service} selected for shipping.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2144
+    },
+    {
+      "namespace": "checkout",
+      "key": "sign_in_benefits",
+      "source_text": "Sign in to use your saved cards, addresses, and order history after checkout.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2112
+    },
+    {
+      "namespace": "checkout",
+      "key": "sign_in_required",
+      "source_text": "You need to sign in to check out.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2113
+    },
+    {
+      "namespace": "checkout",
+      "key": "sign_in_required_description",
+      "source_text": "Sign in or create an account to continue with this order.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2114
+    },
+    {
+      "namespace": "checkout",
+      "key": "store",
+      "source_text": "store",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2115
+    },
+    {
+      "namespace": "checkout",
+      "key": "subtotal",
+      "source_text": "Subtotal",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2145
+    },
+    {
+      "namespace": "checkout",
+      "key": "subtotal_with_value",
+      "source_text": "Subtotal {value}",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2146
+    },
+    {
+      "namespace": "checkout",
+      "key": "tax",
+      "source_text": "Tax",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2147
+    },
+    {
+      "namespace": "checkout",
+      "key": "tax_error",
+      "source_text": "Unable to finalize taxes.",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2148
+    },
+    {
+      "namespace": "checkout",
+      "key": "tax_status",
+      "source_text": "Tax status",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2116
+    },
+    {
+      "namespace": "checkout",
+      "key": "title",
+      "source_text": "Checkout",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2149
+    },
+    {
+      "namespace": "checkout",
+      "key": "updating",
+      "source_text": "Updating...",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2117
+    },
+    {
+      "namespace": "checkout",
+      "key": "updating_quote",
+      "source_text": "Updating quote...",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2150
+    },
+    {
+      "namespace": "checkout",
+      "key": "use_saved_address",
+      "source_text": "Use a saved address",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2118
+    },
+    {
+      "namespace": "checkout",
+      "key": "use_saved_card",
+      "source_text": "Use a saved card",
+      "owner_domain": "checkout",
+      "file": "internal/migrations/migrations.go",
+      "line": 2119
+    },
+    {
+      "namespace": "communications",
+      "key": "order_placed.email.body",
+      "source_text": "We received order {order_number}. Total: {total}. We will send another update when it ships.",
+      "owner_domain": "communications",
+      "file": "internal/migrations/migrations.go",
+      "line": 2654
+    },
+    {
+      "namespace": "communications",
+      "key": "order_placed.email.subject",
+      "source_text": "Order {order_number} confirmed",
+      "owner_domain": "communications",
+      "file": "internal/migrations/migrations.go",
+      "line": 2653
+    },
+    {
+      "namespace": "communications",
+      "key": "order_placed.text_message.body",
+      "source_text": "Order {order_number} is confirmed. Total: {total}.",
+      "owner_domain": "communications",
+      "file": "internal/migrations/migrations.go",
+      "line": 2655
+    },
+    {
+      "namespace": "communications",
+      "key": "payment_failed.email.body",
+      "source_text": "We could not complete payment for order {order_number}. Please update your payment method.",
+      "owner_domain": "communications",
+      "file": "internal/migrations/migrations.go",
+      "line": 2657
+    },
+    {
+      "namespace": "communications",
+      "key": "payment_failed.email.subject",
+      "source_text": "Payment issue for order {order_number}",
+      "owner_domain": "communications",
+      "file": "internal/migrations/migrations.go",
+      "line": 2656
+    },
+    {
+      "namespace": "communications",
+      "key": "payment_failed.text_message.body",
+      "source_text": "Payment for order {order_number} needs attention. Please update your payment method.",
+      "owner_domain": "communications",
+      "file": "internal/migrations/migrations.go",
+      "line": 2658
+    },
+    {
+      "namespace": "communications",
+      "key": "return_approved.email.body",
+      "source_text": "Your return for order {order_number} was approved. Follow these instructions: {instructions}",
+      "owner_domain": "communications",
+      "file": "internal/migrations/migrations.go",
+      "line": 2663
+    },
+    {
+      "namespace": "communications",
+      "key": "return_approved.email.subject",
+      "source_text": "Return approved for order {order_number}",
+      "owner_domain": "communications",
+      "file": "internal/migrations/migrations.go",
+      "line": 2662
+    },
+    {
+      "namespace": "communications",
+      "key": "return_approved.text_message.body",
+      "source_text": "Your return for order {order_number} was approved. Check your email for instructions.",
+      "owner_domain": "communications",
+      "file": "internal/migrations/migrations.go",
+      "line": 2664
+    },
+    {
+      "namespace": "communications",
+      "key": "shipment_updated.email.body",
+      "source_text": "Order {order_number} is now {status}. Track it here: {tracking_url}",
+      "owner_domain": "communications",
+      "file": "internal/migrations/migrations.go",
+      "line": 2660
+    },
+    {
+      "namespace": "communications",
+      "key": "shipment_updated.email.subject",
+      "source_text": "Shipping update for order {order_number}",
+      "owner_domain": "communications",
+      "file": "internal/migrations/migrations.go",
+      "line": 2659
+    },
+    {
+      "namespace": "communications",
+      "key": "shipment_updated.text_message.body",
+      "source_text": "Order {order_number} is {status}. Track: {tracking_url}",
+      "owner_domain": "communications",
+      "file": "internal/migrations/migrations.go",
+      "line": 2661
+    },
+    {
+      "namespace": "errors",
+      "key": "account_conflict",
+      "source_text": "The account conflicts with the current state.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2692
+    },
+    {
+      "namespace": "errors",
+      "key": "address_not_found",
+      "source_text": "The requested address was not found.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2693
+    },
+    {
+      "namespace": "errors",
+      "key": "authentication_required",
+      "source_text": "Authentication is required.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2254
+    },
+    {
+      "namespace": "errors",
+      "key": "checkout_rate_limited",
+      "source_text": "Too many checkout attempts were made. Please wait and try again.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2694
+    },
+    {
+      "namespace": "errors",
+      "key": "checkout_session_required",
+      "source_text": "A checkout session is required.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2695
+    },
+    {
+      "namespace": "errors",
+      "key": "checkout_snapshot_conflict",
+      "source_text": "The checkout snapshot conflicts with the current order.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2696
+    },
+    {
+      "namespace": "errors",
+      "key": "checkout_state_conflict",
+      "source_text": "The checkout state changed. Refresh and try again.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2697
+    },
+    {
+      "namespace": "errors",
+      "key": "credential_encryption_unavailable",
+      "source_text": "Secure credential storage is unavailable.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2698
+    },
+    {
+      "namespace": "errors",
+      "key": "forbidden",
+      "source_text": "You are not allowed to perform this action.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2255
+    },
+    {
+      "namespace": "errors",
+      "key": "guest_checkout_disabled",
+      "source_text": "Guest checkout is disabled.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2699
+    },
+    {
+      "namespace": "errors",
+      "key": "guest_email_required",
+      "source_text": "An email address is required for guest checkout.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2700
+    },
+    {
+      "namespace": "errors",
+      "key": "idempotency_in_progress",
+      "source_text": "An identical request is still in progress.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2701
+    },
+    {
+      "namespace": "errors",
+      "key": "idempotency_key_conflict",
+      "source_text": "The request key was already used for different data.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2702
+    },
+    {
+      "namespace": "errors",
+      "key": "internal_error",
+      "source_text": "An unexpected error occurred.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2258
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_address",
+      "source_text": "The address is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2703
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_address_id",
+      "source_text": "The address identifier is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2704
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_checkout_snapshot",
+      "source_text": "The checkout snapshot is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2705
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_claim",
+      "source_text": "The guest order claim is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2715
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_credentials",
+      "source_text": "The supplied credentials are invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2706
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_currency",
+      "source_text": "The selected currency is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2707
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_date_range",
+      "source_text": "The selected date range is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2708
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_end_date",
+      "source_text": "The end date is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2709
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_guest_email",
+      "source_text": "The guest email address is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2710
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_locale",
+      "source_text": "The selected locale is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2711
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_media",
+      "source_text": "The selected media is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2712
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_oidc_callback",
+      "source_text": "The sign-in callback is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2713
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_oidc_secret_update",
+      "source_text": "The sign-in secret update is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2714
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_order",
+      "source_text": "The order is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2716
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_pagination",
+      "source_text": "The requested page is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2717
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_payment_method",
+      "source_text": "The payment method is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2718
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_payment_method_id",
+      "source_text": "The payment method identifier is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2719
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_quantity",
+      "source_text": "The quantity is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2720
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_request",
+      "source_text": "The request is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2253
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_start_date",
+      "source_text": "The start date is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2721
+    },
+    {
+      "namespace": "errors",
+      "key": "invalid_user_role",
+      "source_text": "The selected user role is invalid.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2722
+    },
+    {
+      "namespace": "errors",
+      "key": "localization_quality_failed",
+      "source_text": "The translation release is missing required content.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2723
+    },
+    {
+      "namespace": "errors",
+      "key": "localization_unavailable",
+      "source_text": "Localized content is temporarily unavailable.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2724
+    },
+    {
+      "namespace": "errors",
+      "key": "media_processing",
+      "source_text": "The media is still processing.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2725
+    },
+    {
+      "namespace": "errors",
+      "key": "media_processing_failed",
+      "source_text": "The media could not be processed.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2726
+    },
+    {
+      "namespace": "errors",
+      "key": "not_found",
+      "source_text": "The requested resource was not found.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2256
+    },
+    {
+      "namespace": "errors",
+      "key": "order_already_claimed",
+      "source_text": "This order was already claimed by another account.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2728
+    },
+    {
+      "namespace": "errors",
+      "key": "order_cannot_be_cancelled",
+      "source_text": "The order cannot be cancelled.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2727
+    },
+    {
+      "namespace": "errors",
+      "key": "payload_too_large",
+      "source_text": "The uploaded content is too large.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2729
+    },
+    {
+      "namespace": "errors",
+      "key": "payment_already_submitted",
+      "source_text": "Payment was already submitted.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2730
+    },
+    {
+      "namespace": "errors",
+      "key": "payment_method_not_found",
+      "source_text": "The requested payment method was not found.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2731
+    },
+    {
+      "namespace": "errors",
+      "key": "state_conflict",
+      "source_text": "The request conflicts with the current state.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2257
+    },
+    {
+      "namespace": "errors",
+      "key": "variant_not_found",
+      "source_text": "The requested product option was not found.",
+      "owner_domain": "http",
+      "file": "internal/migrations/migrations.go",
+      "line": 2732
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.address_default_error",
+      "source_text": "Could not set default address.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2152
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.address_default_updated",
+      "source_text": "Default address updated.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2153
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.address_remove_error",
+      "source_text": "Could not remove address.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2154
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.address_removed",
+      "source_text": "Address removed.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2155
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.address_save_error",
+      "source_text": "Could not save address.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2156
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.address_saved",
+      "source_text": "Address saved.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2157
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.card_number",
+      "source_text": "Card number",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2158
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.cardholder_name",
+      "source_text": "Cardholder name",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2159
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.choose_photo",
+      "source_text": "Choose photo",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2160
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.confirm_password",
+      "source_text": "Confirm Password",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2151
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.continue_with_provider",
+      "source_text": "Continue with OpenID Connect",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2203
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.create_account",
+      "source_text": "Create Account",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2204
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.create_error",
+      "source_text": "Unable to create account. Please check your details.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2205
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.creation_unavailable",
+      "source_text": "Account creation is currently unavailable.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2206
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.default",
+      "source_text": "Default",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2161
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.delete_address",
+      "source_text": "Delete address",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2162
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.delete_payment_method",
+      "source_text": "Delete payment method",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2163
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.details",
+      "source_text": "Account details",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2164
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.email",
+      "source_text": "Email",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2207
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.expiration_month",
+      "source_text": "Exp month",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2165
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.expiration_year",
+      "source_text": "Exp year",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2166
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.invalid_credentials",
+      "source_text": "Invalid email or password.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2208
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.locale",
+      "source_text": "Language",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2209
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.log_in",
+      "source_text": "Log In",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2210
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.log_in_lower",
+      "source_text": "log in",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2167
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.name",
+      "source_text": "Name",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2168
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.name_optional",
+      "source_text": "Name (optional)",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2211
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.no_addresses",
+      "source_text": "No saved addresses.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2169
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.no_payment_methods",
+      "source_text": "No saved payment methods.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2170
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.or",
+      "source_text": "Or",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2212
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.password",
+      "source_text": "Password",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2213
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.passwords_mismatch",
+      "source_text": "Passwords do not match.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2214
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.payment_default_error",
+      "source_text": "Could not set default payment method.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2171
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.payment_default_updated",
+      "source_text": "Default payment method updated.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2172
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.payment_remove_error",
+      "source_text": "Could not remove payment method.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2173
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.payment_removed",
+      "source_text": "Payment method removed.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2174
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.payment_save_error",
+      "source_text": "Could not save payment method.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2175
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.payment_saved",
+      "source_text": "Payment method saved.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2176
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.photo_processing",
+      "source_text": "Photo is still processing. Please try again in a moment.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2177
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.photo_remove_error",
+      "source_text": "Could not remove the photo.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2178
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.photo_removed",
+      "source_text": "Profile photo removed.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2179
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.photo_updated",
+      "source_text": "Profile photo updated.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2180
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.photo_upload_error",
+      "source_text": "Could not upload the photo. Please try again.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2181
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.please",
+      "source_text": "Please",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2182
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.preferred_currency",
+      "source_text": "Preferred currency",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2183
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.profile",
+      "source_text": "Profile",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2184
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.profile_load_error",
+      "source_text": "Unable to load your profile. Please try again.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2185
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.profile_photo",
+      "source_text": "Profile photo",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2186
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.profile_preview",
+      "source_text": "Profile preview",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2187
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.profile_update_error",
+      "source_text": "Could not update profile. Please try again.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2188
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.profile_updated",
+      "source_text": "Profile updated.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2189
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.provider_create",
+      "source_text": "Your account will be created automatically the first time your provider signs you in.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2215
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.provider_sign_in",
+      "source_text": "Use your identity provider to sign in without a local password.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2216
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.remove_photo",
+      "source_text": "Remove photo",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2190
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.removing",
+      "source_text": "Removing...",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2191
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.save",
+      "source_text": "Save changes",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2217
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.save_address",
+      "source_text": "Save address",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2192
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.save_payment_method",
+      "source_text": "Save payment method",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2193
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.saved_addresses",
+      "source_text": "Saved addresses",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2194
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.saved_payment_methods",
+      "source_text": "Saved payment methods",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2195
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.session_expired",
+      "source_text": "Your session expired. Please sign in again.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2218
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.set_as_default",
+      "source_text": "Set as default",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2196
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.set_default_address",
+      "source_text": "Set as default address",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2197
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.set_default_payment_method",
+      "source_text": "Set as default payment method",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2198
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.sign_in_unavailable",
+      "source_text": "Sign-in is currently unavailable.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2219
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.sign_up",
+      "source_text": "Sign Up",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2220
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.upload_photo",
+      "source_text": "Upload photo",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2199
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.uploading",
+      "source_text": "Uploading...",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2200
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.username",
+      "source_text": "Username",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2221
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.view_profile_suffix",
+      "source_text": "to view your profile.",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2201
+    },
+    {
+      "namespace": "storefront",
+      "key": "account.your_name",
+      "source_text": "Your name",
+      "owner_domain": "account",
+      "file": "internal/migrations/migrations.go",
+      "line": 2202
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.calculated_at_checkout",
+      "source_text": "Calculated at checkout",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2222
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.continue_shopping",
+      "source_text": "Continue shopping",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2223
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.discounts",
+      "source_text": "Discounts",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2224
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.empty",
+      "source_text": "Your cart is empty.",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2225
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.go_to_checkout",
+      "source_text": "Go to checkout",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2226
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.guest_checkout",
+      "source_text": "Your cart is attached to this browser session. You can still check out as a guest.",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2227
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.guest_saved",
+      "source_text": "Your selections are saved to this browser until you check out or clear them.",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2228
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.item_count.one",
+      "source_text": "{count} item",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2229
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.item_count.other",
+      "source_text": "{count} items",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2230
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.order_summary",
+      "source_text": "Order summary",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2231
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.remove_error",
+      "source_text": "Unable to remove that item.",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2232
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.remove_item",
+      "source_text": "Remove item",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2233
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.shipping",
+      "source_text": "Shipping",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2234
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.subtotal",
+      "source_text": "Subtotal",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2235
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.title",
+      "source_text": "Your Cart",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2236
+    },
+    {
+      "namespace": "storefront",
+      "key": "cart.update_error",
+      "source_text": "Unable to update that item.",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2237
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.cancel_confirmation",
+      "source_text": "Cancel this order? This cannot be undone and eligible items will be restocked.",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2665
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.cancel_error",
+      "source_text": "Unable to cancel order.",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2666
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.cancelled_confirmation",
+      "source_text": "Order cancelled.",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2667
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.claim.already_claimed",
+      "source_text": "This guest order has already been claimed.",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2668
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.claim.confirmation",
+      "source_text": "Order claimed.",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2669
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.claim.error",
+      "source_text": "Unable to claim this guest order.",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2670
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.claim.not_found",
+      "source_text": "No guest order matched that email and confirmation token.",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2671
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.claim.validation",
+      "source_text": "Enter the email and confirmation token from the guest order.",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2672
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.placed_confirmation",
+      "source_text": "Order placed successfully.",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2673
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.status.cancelled",
+      "source_text": "Cancelled",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2674
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.status.delivered",
+      "source_text": "Delivered",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2675
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.status.failed",
+      "source_text": "Failed",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2676
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.status.paid",
+      "source_text": "Paid",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2677
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.status.pending",
+      "source_text": "Pending",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2678
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.status.refunded",
+      "source_text": "Refunded",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2679
+    },
+    {
+      "namespace": "storefront",
+      "key": "order.status.shipped",
+      "source_text": "Shipped",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2680
+    },
+    {
+      "namespace": "storefront",
+      "key": "shell.admin",
+      "source_text": "Admin",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2238
+    },
+    {
+      "namespace": "storefront",
+      "key": "shell.edit_profile",
+      "source_text": "Edit profile",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2239
+    },
+    {
+      "namespace": "storefront",
+      "key": "shell.exit",
+      "source_text": "Exit",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2240
+    },
+    {
+      "namespace": "storefront",
+      "key": "shell.exit_preview_error",
+      "source_text": "Could not exit draft view.",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2241
+    },
+    {
+      "namespace": "storefront",
+      "key": "shell.exiting",
+      "source_text": "Exiting...",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2242
+    },
+    {
+      "namespace": "storefront",
+      "key": "shell.loading",
+      "source_text": "Loading...",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2243
+    },
+    {
+      "namespace": "storefront",
+      "key": "shell.orders",
+      "source_text": "Orders",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2244
+    },
+    {
+      "namespace": "storefront",
+      "key": "shell.page_loading",
+      "source_text": "Page loading",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2245
+    },
+    {
+      "namespace": "storefront",
+      "key": "shell.search",
+      "source_text": "Search",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2246
+    },
+    {
+      "namespace": "storefront",
+      "key": "shell.sign_in",
+      "source_text": "Log In",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2247
+    },
+    {
+      "namespace": "storefront",
+      "key": "shell.sign_out",
+      "source_text": "Sign out",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2248
+    },
+    {
+      "namespace": "storefront",
+      "key": "shell.sign_up",
+      "source_text": "Sign Up",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2249
+    },
+    {
+      "namespace": "storefront",
+      "key": "shell.until_time",
+      "source_text": "until {time}",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2250
+    },
+    {
+      "namespace": "storefront",
+      "key": "shell.view_cart",
+      "source_text": "View cart",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2251
+    },
+    {
+      "namespace": "storefront",
+      "key": "shell.viewing_draft_preview",
+      "source_text": "Viewing draft preview",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2252
+    },
+    {
+      "namespace": "storefront",
+      "key": "shipment.status.delivered",
+      "source_text": "Delivered",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2681
+    },
+    {
+      "namespace": "storefront",
+      "key": "shipment.status.exception",
+      "source_text": "Exception",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2682
+    },
+    {
+      "namespace": "storefront",
+      "key": "shipment.status.in_transit",
+      "source_text": "In transit",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2683
+    },
+    {
+      "namespace": "storefront",
+      "key": "shipment.status.label_purchased",
+      "source_text": "Label purchased",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2684
+    },
+    {
+      "namespace": "storefront",
+      "key": "shipment.status.quoted",
+      "source_text": "Quoted",
+      "owner_domain": "storefront",
+      "file": "internal/migrations/migrations.go",
+      "line": 2685
+    }
+  ]
+}

@@ -12,8 +12,11 @@
 	import { SvelteURLSearchParams } from "svelte/reactivity";
 	import type { PageData } from "./$types";
 	import type { OrderModel } from "$lib/models";
+	import { getLocalizedApiErrorMessage, isApiProblemError } from "$lib/api/errors";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 
 	const api: API = getContext("api");
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 
 	interface Props {
 		data: PageData;
@@ -70,7 +73,10 @@
 		const trimmedEmail = email.trim();
 		const trimmedToken = token.trim();
 		if (!trimmedEmail || !trimmedToken) {
-			errorMessage = "Enter the email and confirmation token from the guest order.";
+			errorMessage = $localization.translate(
+				"storefront.order.claim.validation",
+				"Enter the email and confirmation token from the guest order."
+			);
 			return;
 		}
 
@@ -81,15 +87,32 @@
 				confirmation_token: trimmedToken,
 			});
 			claimedOrder = result.order;
-			successMessage = result.message || "Order claimed.";
+			successMessage =
+				result.message ||
+				$localization.translate("storefront.order.claim.confirmation", "Order claimed.");
 		} catch (err) {
-			const error = err as { status?: number; body?: { error?: string; code?: string } };
-			if (error.status === 409 || error.body?.code === "order_already_claimed") {
-				errorMessage = "This guest order has already been claimed.";
-			} else if (error.status === 404) {
-				errorMessage = "No guest order matched that email and confirmation token.";
+			if (
+				isApiProblemError(err) &&
+				(err.status === 409 || err.errorCode === "order_already_claimed")
+			) {
+				errorMessage = $localization.translate(
+					"storefront.order.claim.already_claimed",
+					"This guest order has already been claimed."
+				);
+			} else if (isApiProblemError(err) && err.status === 404) {
+				errorMessage = $localization.translate(
+					"storefront.order.claim.not_found",
+					"No guest order matched that email and confirmation token."
+				);
 			} else {
-				errorMessage = error.body?.error ?? "Unable to claim this guest order.";
+				errorMessage = getLocalizedApiErrorMessage(
+					err,
+					localization.translate.bind(localization),
+					$localization.translate(
+						"storefront.order.claim.error",
+						"Unable to claim this guest order."
+					)
+				);
 			}
 			console.error(err);
 		} finally {

@@ -6,7 +6,7 @@ import (
 	"ecommerce/internal/apicontract"
 )
 
-// Server is the concrete generated strict server. Its four embedded endpoint
+// Server is the concrete generated strict server. Its embedded endpoint
 // families are disjoint; the compile-time assertion fails whenever the OpenAPI
 // contract gains an operation that has not been assigned to a family.
 type Server struct {
@@ -14,11 +14,12 @@ type Server struct {
 	*CatalogEndpoints
 	*CmsMediaEndpoints
 	*CheckoutProviderEndpoints
+	*LocalizationEndpoints
 }
 
 var _ apicontract.StrictServerInterface = (*Server)(nil)
 
-func NewServer(account *AccountEndpoints, catalog *CatalogEndpoints, cmsMedia *CmsMediaEndpoints, checkoutProvider *CheckoutProviderEndpoints) (*Server, error) {
+func NewServer(account *AccountEndpoints, catalog *CatalogEndpoints, cmsMedia *CmsMediaEndpoints, checkoutProvider *CheckoutProviderEndpoints, localization *LocalizationEndpoints) (*Server, error) {
 	if account == nil {
 		return nil, errors.New("account endpoints are required")
 	}
@@ -31,5 +32,8 @@ func NewServer(account *AccountEndpoints, catalog *CatalogEndpoints, cmsMedia *C
 	if checkoutProvider == nil {
 		return nil, errors.New("checkout/provider endpoints are required")
 	}
-	return &Server{AccountEndpoints: account, CatalogEndpoints: catalog, CmsMediaEndpoints: cmsMedia, CheckoutProviderEndpoints: checkoutProvider}, nil
+	if localization == nil {
+		return nil, errors.New("localization endpoints are required")
+	}
+	return &Server{AccountEndpoints: account, CatalogEndpoints: catalog, CmsMediaEndpoints: cmsMedia, CheckoutProviderEndpoints: checkoutProvider, LocalizationEndpoints: localization}, nil
 }

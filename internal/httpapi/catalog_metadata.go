@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"ecommerce/internal/apicontract"
+	localizationservice "ecommerce/internal/services/localization"
 	"ecommerce/models"
 )
 
@@ -13,7 +14,11 @@ func (e *CatalogEndpoints) ListBrands(ctx context.Context, _ apicontract.ListBra
 	if err != nil {
 		return nil, err
 	}
-	return apicontract.ListBrands200JSONResponse{Data: e.brandsContract(values)}, nil
+	valuesContract, err := e.brandsContract(ctx, values, true)
+	if err != nil {
+		return nil, err
+	}
+	return apicontract.ListBrands200JSONResponse{Data: valuesContract}, nil
 }
 
 func (e *CatalogEndpoints) ListAdminBrands(ctx context.Context, request apicontract.ListAdminBrandsRequestObject) (apicontract.ListAdminBrandsResponseObject, error) {
@@ -25,7 +30,11 @@ func (e *CatalogEndpoints) ListAdminBrands(ctx context.Context, request apicontr
 	if err != nil {
 		return nil, err
 	}
-	return apicontract.ListAdminBrands200JSONResponse{Data: e.brandsContract(values)}, nil
+	valuesContract, err := e.brandsContract(ctx, values, false)
+	if err != nil {
+		return nil, err
+	}
+	return apicontract.ListAdminBrands200JSONResponse{Data: valuesContract}, nil
 }
 
 func (e *CatalogEndpoints) CreateAdminBrand(ctx context.Context, request apicontract.CreateAdminBrandRequestObject) (apicontract.CreateAdminBrandResponseObject, error) {
@@ -36,7 +45,11 @@ func (e *CatalogEndpoints) CreateAdminBrand(ctx context.Context, request apicont
 	if err != nil {
 		return nil, err
 	}
-	return apicontract.CreateAdminBrand201JSONResponse(e.brandContract(value)), nil
+	contract, err := e.brandContract(ctx, value, false)
+	if err != nil {
+		return nil, err
+	}
+	return apicontract.CreateAdminBrand201JSONResponse(contract), nil
 }
 
 func (e *CatalogEndpoints) UpdateAdminBrand(ctx context.Context, request apicontract.UpdateAdminBrandRequestObject) (apicontract.UpdateAdminBrandResponseObject, error) {
@@ -47,7 +60,11 @@ func (e *CatalogEndpoints) UpdateAdminBrand(ctx context.Context, request apicont
 	if err != nil {
 		return nil, err
 	}
-	return apicontract.UpdateAdminBrand200JSONResponse(e.brandContract(value)), nil
+	contract, err := e.brandContract(ctx, value, false)
+	if err != nil {
+		return nil, err
+	}
+	return apicontract.UpdateAdminBrand200JSONResponse(contract), nil
 }
 
 func (e *CatalogEndpoints) DeleteAdminBrand(ctx context.Context, request apicontract.DeleteAdminBrandRequestObject) (apicontract.DeleteAdminBrandResponseObject, error) {
@@ -60,22 +77,40 @@ func (e *CatalogEndpoints) DeleteAdminBrand(ctx context.Context, request apicont
 	return apicontract.DeleteAdminBrand200JSONResponse{Message: "Brand deleted"}, nil
 }
 
-func (e *CatalogEndpoints) brandsContract(values []models.Brand) []apicontract.Brand {
+func (e *CatalogEndpoints) brandsContract(ctx context.Context, values []models.Brand, localized bool) ([]apicontract.Brand, error) {
 	result := make([]apicontract.Brand, 0, len(values))
 	for _, value := range values {
-		result = append(result, e.brandContract(value))
+		contract, err := e.brandContract(ctx, value, localized)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, contract)
 	}
-	return result
+	return result, nil
 }
 
-func (e *CatalogEndpoints) brandContract(value models.Brand) apicontract.Brand {
+func (e *CatalogEndpoints) brandContract(ctx context.Context, value models.Brand, localized bool) (apicontract.Brand, error) {
 	result := apicontract.Brand{Id: int(value.ID), Name: value.Name, Slug: value.Slug, Description: value.Description, IsActive: value.IsActive}
 	if e.media != nil {
 		if url, err := e.media.BrandLogoURL(value.ID); err == nil && url != "" {
 			result.LogoUrl = &url
 		}
 	}
-	return result
+	if localized {
+		resolution, err := e.resolveEntityLocalization(ctx, localizationservice.EntityTypeBrand, value.ID)
+		if err != nil {
+			return apicontract.Brand{}, err
+		}
+		result.Name = resolution.Fields["name"]
+		if description, ok := resolution.Fields["description"]; ok {
+			result.Description = &description
+		} else {
+			result.Description = nil
+		}
+		contract := contractEntityResolution(resolution)
+		result.Localization = &contract
+	}
+	return result, nil
 }
 
 func (e *CatalogEndpoints) ListCategories(ctx context.Context, _ apicontract.ListCategoriesRequestObject) (apicontract.ListCategoriesResponseObject, error) {
@@ -83,7 +118,11 @@ func (e *CatalogEndpoints) ListCategories(ctx context.Context, _ apicontract.Lis
 	if err != nil {
 		return nil, err
 	}
-	return apicontract.ListCategories200JSONResponse{Data: categoriesContract(values)}, nil
+	valuesContract, err := e.categoriesContract(ctx, values, true)
+	if err != nil {
+		return nil, err
+	}
+	return apicontract.ListCategories200JSONResponse{Data: valuesContract}, nil
 }
 
 func (e *CatalogEndpoints) ListAdminCategories(ctx context.Context, request apicontract.ListAdminCategoriesRequestObject) (apicontract.ListAdminCategoriesResponseObject, error) {
@@ -98,7 +137,11 @@ func (e *CatalogEndpoints) ListAdminCategories(ctx context.Context, request apic
 	if err != nil {
 		return nil, err
 	}
-	return apicontract.ListAdminCategories200JSONResponse{Data: categoriesContract(values)}, nil
+	valuesContract, err := e.categoriesContract(ctx, values, false)
+	if err != nil {
+		return nil, err
+	}
+	return apicontract.ListAdminCategories200JSONResponse{Data: valuesContract}, nil
 }
 
 func (e *CatalogEndpoints) CreateAdminCategory(ctx context.Context, request apicontract.CreateAdminCategoryRequestObject) (apicontract.CreateAdminCategoryResponseObject, error) {
@@ -109,7 +152,11 @@ func (e *CatalogEndpoints) CreateAdminCategory(ctx context.Context, request apic
 	if err != nil {
 		return nil, catalogEndpointError(err)
 	}
-	return apicontract.CreateAdminCategory201JSONResponse(categoryContract(value)), nil
+	contract, err := e.categoryContract(ctx, value, false)
+	if err != nil {
+		return nil, err
+	}
+	return apicontract.CreateAdminCategory201JSONResponse(contract), nil
 }
 
 func (e *CatalogEndpoints) UpdateAdminCategory(ctx context.Context, request apicontract.UpdateAdminCategoryRequestObject) (apicontract.UpdateAdminCategoryResponseObject, error) {
@@ -120,7 +167,11 @@ func (e *CatalogEndpoints) UpdateAdminCategory(ctx context.Context, request apic
 	if err != nil {
 		return nil, catalogEndpointError(err)
 	}
-	return apicontract.UpdateAdminCategory200JSONResponse(categoryContract(value)), nil
+	contract, err := e.categoryContract(ctx, value, false)
+	if err != nil {
+		return nil, err
+	}
+	return apicontract.UpdateAdminCategory200JSONResponse(contract), nil
 }
 
 func (e *CatalogEndpoints) DeleteAdminCategory(ctx context.Context, request apicontract.DeleteAdminCategoryRequestObject) (apicontract.DeleteAdminCategoryResponseObject, error) {
@@ -133,21 +184,40 @@ func (e *CatalogEndpoints) DeleteAdminCategory(ctx context.Context, request apic
 	return apicontract.DeleteAdminCategory200JSONResponse{Message: "Category deleted"}, nil
 }
 
-func categoriesContract(values []models.Category) []apicontract.Category {
+func (e *CatalogEndpoints) categoriesContract(ctx context.Context, values []models.Category, localized bool) ([]apicontract.Category, error) {
 	result := make([]apicontract.Category, 0, len(values))
 	for _, value := range values {
-		result = append(result, categoryContract(value))
+		contract, err := e.categoryContract(ctx, value, localized)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, contract)
 	}
-	return result
+	return result, nil
 }
 
-func categoryContract(value models.Category) apicontract.Category {
+func (e *CatalogEndpoints) categoryContract(ctx context.Context, value models.Category, localized bool) (apicontract.Category, error) {
 	var parent *int
 	if value.ParentID != nil {
 		converted := int(*value.ParentID)
 		parent = &converted
 	}
-	return apicontract.Category{Id: int(value.ID), Name: value.Name, Slug: value.Slug, Description: value.Description, IsActive: value.IsActive, SortOrder: value.SortOrder, ParentId: parent, Path: value.Path, Depth: value.Depth}
+	result := apicontract.Category{Id: int(value.ID), Name: value.Name, Slug: value.Slug, Description: value.Description, IsActive: value.IsActive, SortOrder: value.SortOrder, ParentId: parent, Path: value.Path, Depth: value.Depth}
+	if localized {
+		resolution, err := e.resolveEntityLocalization(ctx, localizationservice.EntityTypeCategory, value.ID)
+		if err != nil {
+			return apicontract.Category{}, err
+		}
+		result.Name = resolution.Fields["name"]
+		if description, ok := resolution.Fields["description"]; ok {
+			result.Description = &description
+		} else {
+			result.Description = nil
+		}
+		contract := contractEntityResolution(resolution)
+		result.Localization = &contract
+	}
+	return result, nil
 }
 
 func (e *CatalogEndpoints) ListProductAttributes(ctx context.Context, _ apicontract.ListProductAttributesRequestObject) (apicontract.ListProductAttributesResponseObject, error) {

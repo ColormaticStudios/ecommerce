@@ -31,8 +31,6 @@ type CmsMediaStrictServer interface {
 	UnpublishAdminCmsGlobalRegion(context.Context, apicontract.UnpublishAdminCmsGlobalRegionRequestObject) (apicontract.UnpublishAdminCmsGlobalRegionResponseObject, error)
 	GetAdminCmsGovernance(context.Context, apicontract.GetAdminCmsGovernanceRequestObject) (apicontract.GetAdminCmsGovernanceResponseObject, error)
 	UpdateAdminCmsGovernance(context.Context, apicontract.UpdateAdminCmsGovernanceRequestObject) (apicontract.UpdateAdminCmsGovernanceResponseObject, error)
-	GetAdminCmsLocales(context.Context, apicontract.GetAdminCmsLocalesRequestObject) (apicontract.GetAdminCmsLocalesResponseObject, error)
-	UpdateAdminCmsLocales(context.Context, apicontract.UpdateAdminCmsLocalesRequestObject) (apicontract.UpdateAdminCmsLocalesResponseObject, error)
 	ListAdminCmsNavigation(context.Context, apicontract.ListAdminCmsNavigationRequestObject) (apicontract.ListAdminCmsNavigationResponseObject, error)
 	CreateAdminCmsNavigation(context.Context, apicontract.CreateAdminCmsNavigationRequestObject) (apicontract.CreateAdminCmsNavigationResponseObject, error)
 	DeleteAdminCmsNavigation(context.Context, apicontract.DeleteAdminCmsNavigationRequestObject) (apicontract.DeleteAdminCmsNavigationResponseObject, error)
