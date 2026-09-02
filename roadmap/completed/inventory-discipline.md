@@ -1,8 +1,11 @@
 # Inventory Discipline Roadmap
 
 ## Implementation Status
-- Overall status: Complete.
+- Overall status: Partially complete. The inventory ledger, reservations, expiry worker, alerts, purchase orders, adjustments, reconciliation, and Postgres contention verification are implemented, but the legacy product-level stock contract remains open.
 - Implemented in release commit `b928ef1 (2026-04-24): Implement the inventory discipline roadmap`.
+- Remaining work:
+  - remove the required top-level product `stock` response and persisted product stock mirror after all consumers use variant availability.
+- The reservation-to-allocation/shipment integration remains intentionally deferred to `roadmap/order-fulfillment-ops.md`, which is not yet implemented.
 
 ## Current Baseline
 - Inventory is represented as a single integer field `models.Product.Stock` in `models/product.go`.
@@ -49,7 +52,7 @@
 
 ## P0: Quantity Model and Ledger Foundation
 
-Status: Complete.
+Status: Partially complete. Variant inventory is canonical for mutations, but `models.Product.Stock` and the required top-level OpenAPI `Product.stock` field remain as a legacy compatibility surface.
 ### Scope
 - Introduce canonical inventory quantity buckets and immutable movement ledger.
 - Replace product-level stock ownership with variant-level inventory as the canonical model.
@@ -74,7 +77,7 @@ Status: Complete.
 
 ## P1: Reservations and Oversell Prevention
 
-Status: Complete.
+Status: Complete. Locking, idempotency, rollback behavior, automatic expiry, and Postgres-backed simultaneous reservation coverage prove that competing checkouts cannot oversell.
 ### Scope
 - Add reservation lifecycle for cart/checkout/order placement.
 - Ensure concurrent purchase attempts cannot oversell.

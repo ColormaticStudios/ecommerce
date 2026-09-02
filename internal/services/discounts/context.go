@@ -2,12 +2,15 @@ package discounts
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"ecommerce/models"
 
 	"gorm.io/gorm"
 )
+
+var ErrCampaignUnavailable = errors.New("discount campaign is not active")
 
 // Service provides context-first discount and promotion APIs.
 type Service struct{ db *gorm.DB }
@@ -16,6 +19,19 @@ func NewService(db *gorm.DB) *Service { return &Service{db: db} }
 
 func (s *Service) ListCampaigns(ctx context.Context, status string) ([]models.DiscountCampaign, error) {
 	return ListDiscountCampaigns(s.db.WithContext(ctx), status)
+}
+func (s *Service) GetActiveCampaign(ctx context.Context, id uint, now time.Time) (models.DiscountCampaign, error) {
+	if id == 0 {
+		return models.DiscountCampaign{}, ErrCampaignUnavailable
+	}
+	var campaign models.DiscountCampaign
+	err := s.db.WithContext(ctx).
+		Where("id = ? AND status = ? AND is_archived = ? AND starts_at <= ? AND (ends_at IS NULL OR ends_at > ?)", id, models.DiscountCampaignStatusActive, false, now.UTC(), now.UTC()).
+		First(&campaign).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return models.DiscountCampaign{}, ErrCampaignUnavailable
+	}
+	return campaign, err
 }
 func (s *Service) CreateProductDiscount(ctx context.Context, input ProductDiscountInput) (models.DiscountCampaign, error) {
 	return CreateProductDiscount(s.db.WithContext(ctx), input)

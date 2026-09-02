@@ -42,7 +42,7 @@
 - Providers:
   - Use explicit payment lifecycle endpoints from the start (`/payments/authorize` plus admin capture/void/refund).
 - Discounts/promotions:
-  - `/api/v1/checkout/quote` must include discount/promotion adjustments from `roadmap/discounts-promotions.md`.
+  - `/api/v1/checkout/quote` must include discount/promotion adjustments from `roadmap/completed/discounts-promotions.md`.
 
 ## P0: Checkout Session Core
 

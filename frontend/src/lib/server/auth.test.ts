@@ -7,17 +7,28 @@ afterEach(() => {
 
 test("loadAuthConfig returns backend auth config when request succeeds", async () => {
 	vi.spyOn(globalThis, "fetch").mockResolvedValue(
-		new Response(JSON.stringify({ local_sign_in_enabled: false, oidc_enabled: true }), {
-			status: 200,
-			headers: { "Content-Type": "application/json" },
-		})
+		new Response(
+			JSON.stringify({
+				local_sign_in_enabled: false,
+				oidc_enabled: true,
+				allow_guest_checkout: false,
+			}),
+			{
+				status: 200,
+				headers: { "Content-Type": "application/json" },
+			}
+		)
 	);
 
 	const result = await loadAuthConfig({
 		request: new Request("http://127.0.0.1:4173/login"),
 	});
 
-	expect(result).toEqual({ local_sign_in_enabled: false, oidc_enabled: true });
+	expect(result).toEqual({
+		local_sign_in_enabled: false,
+		oidc_enabled: true,
+		allow_guest_checkout: false,
+	});
 });
 
 test("loadAuthConfig falls back to local-only auth when the backend request fails", async () => {
@@ -33,6 +44,10 @@ test("loadAuthConfig falls back to local-only auth when the backend request fail
 		request: new Request("http://127.0.0.1:4173/login"),
 	});
 
-	expect(result).toEqual({ local_sign_in_enabled: true, oidc_enabled: false });
+	expect(result).toEqual({
+		local_sign_in_enabled: true,
+		oidc_enabled: false,
+		allow_guest_checkout: true,
+	});
 	expect(errorSpy).toHaveBeenCalled();
 });

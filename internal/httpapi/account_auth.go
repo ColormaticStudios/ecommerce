@@ -31,7 +31,12 @@ func (s *AccountEndpoints) GetAuthConfig(ctx context.Context, _ apicontract.GetA
 		problem := s.contractProblem(ctx, http.StatusInternalServerError, err)
 		return apicontract.GetAuthConfig500ApplicationProblemPlusJSONResponse{InternalServerErrorProblemApplicationProblemPlusJSONResponse: apicontract.InternalServerErrorProblemApplicationProblemPlusJSONResponse(problem)}, nil
 	}
-	return apicontract.GetAuthConfig200JSONResponse{LocalSignInEnabled: config.LocalSignInEnabled, OidcEnabled: config.OIDCEnabled}, nil
+	settings, err := s.accounts.GetWebsiteSettings(ctx)
+	if err != nil {
+		problem := s.contractProblem(ctx, http.StatusInternalServerError, err)
+		return apicontract.GetAuthConfig500ApplicationProblemPlusJSONResponse{InternalServerErrorProblemApplicationProblemPlusJSONResponse: apicontract.InternalServerErrorProblemApplicationProblemPlusJSONResponse(problem)}, nil
+	}
+	return apicontract.GetAuthConfig200JSONResponse{LocalSignInEnabled: config.LocalSignInEnabled, OidcEnabled: config.OIDCEnabled, AllowGuestCheckout: settings.AllowGuestCheckout}, nil
 }
 
 func (s *AccountEndpoints) Register(ctx context.Context, request apicontract.RegisterRequestObject) (apicontract.RegisterResponseObject, error) {

@@ -11,6 +11,30 @@ import (
 	"ecommerce/models"
 )
 
+func (e *CatalogEndpoints) GetActiveDiscountCampaign(ctx context.Context, request apicontract.GetActiveDiscountCampaignRequestObject) (apicontract.GetActiveDiscountCampaignResponseObject, error) {
+	if request.Id < 1 {
+		return nil, problemError(400, "invalid_request", "Discount campaign ID must be positive.", nil)
+	}
+	value, err := e.discounts.GetActiveCampaign(ctx, uint(request.Id), time.Now().UTC())
+	if errors.Is(err, discountservice.ErrCampaignUnavailable) {
+		return nil, problemError(404, "discount_campaign_not_found", "The active discount campaign was not found.", err)
+	}
+	if err != nil {
+		return nil, err
+	}
+	result := apicontract.ActiveDiscountCampaign{
+		Id: int(value.ID), Name: value.Name, Type: apicontract.ActiveDiscountCampaignType(value.Type),
+		CouponCode: value.CouponCode, StartsAt: value.StartsAt, EndsAt: value.EndsAt,
+	}
+	if value.DiscountMode != "" {
+		mode := apicontract.ActiveDiscountCampaignDiscountMode(value.DiscountMode)
+		result.DiscountMode = &mode
+		amount := value.DiscountValue.Float64()
+		result.DiscountValue = &amount
+	}
+	return apicontract.GetActiveDiscountCampaign200JSONResponse(result), nil
+}
+
 func (e *CatalogEndpoints) ListAdminDiscountCampaigns(ctx context.Context, request apicontract.ListAdminDiscountCampaignsRequestObject) (apicontract.ListAdminDiscountCampaignsResponseObject, error) {
 	status := ""
 	if request.Params.Status != nil {

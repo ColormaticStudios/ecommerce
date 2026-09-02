@@ -1,8 +1,9 @@
 # Discounts and Promotions Roadmap
 
 ## Implementation Status
-- Overall status: Complete.
+- Overall status: Complete. Core evaluation, checkout/provider integration, administration, schedules, templates, usage caps, automatic lifecycle execution, audit history, metrics, reconciliation, contention coverage, operational runbooks, and a repeatable performance gate are implemented.
 - Implemented in release commit `b708562 (2026-05-20): Implement discount-promotions roadmap`.
+- Completion audit closed on 2026-08-29 after adding the lifecycle worker, Postgres usage-cap contention coverage, the 500-campaign/25-line-cart p95 gate, and operator runbooks.
 
 ## Current Baseline
 - The catalog and checkout flows do not yet have a first-class discount or promotion engine.
@@ -104,7 +105,7 @@ Status: Complete.
 
 ## P2: Scheduling, Recurrence, and Expiration Archival
 
-Status: Complete.
+Status: Complete. Schedule persistence, recurrence calculation, lifecycle transitions, archive views, the manual admin operation, and an in-process one-minute lifecycle worker are implemented.
 ### Scope
 - Add campaign schedules (one-time and repeating).
 - Add activation/deactivation workers for scheduled transitions.
@@ -133,7 +134,7 @@ Status: Complete.
 
 ## P3: Reusable Templates and Rich Customizability
 
-Status: Complete.
+Status: Complete. Templates and advanced controls are implemented, with Postgres-backed simultaneous transaction coverage proving usage-cap serialization.
 ### Scope
 - Support reusable promotion templates and cloning.
 - Add richer constraints and metadata for business control.
@@ -157,7 +158,7 @@ Status: Complete.
 
 ## P4: Hardening and Operational Quality
 
-Status: Complete.
+Status: Complete. Audit history, metrics, reconciliation, scheduler-failure/stale-state runbooks, and a repeatable p95 below 50 ms gate for 500 active campaigns and a 25-line cart are implemented.
 ### Scope
 - Improve reliability, auditing, and monitoring.
 - Add performance protections for high-cardinality promotion sets.

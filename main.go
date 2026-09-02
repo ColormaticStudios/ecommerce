@@ -26,6 +26,7 @@ import (
 	authservice "ecommerce/internal/services/auth"
 	checkoutservice "ecommerce/internal/services/checkout"
 	cmsservice "ecommerce/internal/services/cms"
+	discountservice "ecommerce/internal/services/discounts"
 	inventoryservice "ecommerce/internal/services/inventory"
 	localizationservice "ecommerce/internal/services/localization"
 	paymentservice "ecommerce/internal/services/payments"
@@ -250,6 +251,20 @@ func run(parentCtx context.Context) error {
 			}
 		})
 	}
+	discountLifecycleWorker := func() {
+		runPeriodic(ctx, time.Minute, true, func(workerCtx context.Context) {
+			result, lifecycleErr := discountservice.RunLifecycle(db.WithContext(workerCtx), time.Now().UTC())
+			if lifecycleErr != nil {
+				if !errors.Is(lifecycleErr, context.Canceled) {
+					log.Printf("[ERROR] Discount lifecycle failed: %v", lifecycleErr)
+				}
+				return
+			}
+			if result.Activated > 0 || result.Deactivated > 0 || result.Archived > 0 {
+				log.Printf("[INFO] Discount lifecycle completed activated=%d deactivated=%d archived=%d", result.Activated, result.Deactivated, result.Archived)
+			}
+		})
+	}
 
 	keyring, err := providerops.ParseKeyringConfig(cfg.ProviderCredentialsKeys)
 	if err != nil {
@@ -366,6 +381,7 @@ func run(parentCtx context.Context) error {
 	mediaService.StartProcessor()
 	startWorker(func() { webhookService.Run(ctx) })
 	startWorker(checkoutCleanupWorker)
+	startWorker(discountLifecycleWorker)
 	startWorker(func() { providerRuntime.Recovery.Run(ctx) })
 	if reconciliationWorker != nil {
 		startWorker(reconciliationWorker)

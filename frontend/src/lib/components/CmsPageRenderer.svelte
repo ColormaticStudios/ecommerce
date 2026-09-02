@@ -2,15 +2,25 @@
 	import type { CmsContentBlock, CmsPageModel } from "$lib/cms";
 	import CmsBlockRenderer from "$lib/cms/render/CmsBlockRenderer.svelte";
 	import type { CategoryModel, ProductModel } from "$lib/models";
+	import type { components } from "$lib/api/generated/openapi";
+
+	type ActiveDiscountCampaign = components["schemas"]["ActiveDiscountCampaign"];
 
 	interface Props {
 		page: CmsPageModel;
 		productRails?: Record<string, ProductModel[]>;
 		categoryTiles?: Record<string, CategoryModel[]>;
 		inventoryProducts?: Record<string, ProductModel | null>;
+		promotionCampaigns?: Record<string, ActiveDiscountCampaign | null>;
 	}
 
-	let { page, productRails = {}, categoryTiles = {}, inventoryProducts = {} }: Props = $props();
+	let {
+		page,
+		productRails = {},
+		categoryTiles = {},
+		inventoryProducts = {},
+		promotionCampaigns = {},
+	}: Props = $props();
 
 	function blockKey(block: CmsContentBlock, index: number): string {
 		return `${block.type}-${index}`;
@@ -26,7 +36,14 @@
 		</header>
 	{:else}
 		{#each page.blocks as block, index (blockKey(block, index))}
-			<CmsBlockRenderer {block} {index} {productRails} {categoryTiles} {inventoryProducts} />
+			<CmsBlockRenderer
+				{block}
+				{index}
+				{productRails}
+				{categoryTiles}
+				{inventoryProducts}
+				{promotionCampaigns}
+			/>
 		{/each}
 	{/if}
 </article>

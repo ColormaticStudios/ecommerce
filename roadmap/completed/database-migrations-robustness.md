@@ -1,8 +1,12 @@
 # Database Migrations Robustness Roadmap
 
 ## Implementation Status
-- Overall status: Complete.
+- Overall status: Partially complete. The migration framework and local/CI gate tooling are implemented, but repository-owned CI/CD enforcement is not wired and the original contract-blocker done criterion does not match the current explicit-guard policy.
 - Implemented in release commit `304a23b (2026-03-05): Add AUTO_APPLY_MIGRATIONS config and CLI commands`.
+- Remaining work:
+  - invoke `make migrate-ci-gate` and the Postgres migration-sensitive E2E path from a checked-in required CI/deployment workflow;
+  - decide whether the original automatic contract-readiness requirement is retired or add a release workflow that always runs `go run ./cmd/migrate guard` before ordinary migration application; and
+  - verify the required pipeline blocks releases on replay, drift, pending-version, guard, and forward-compatibility failures.
 
 ## Current Baseline
 - Migrations are defined in `internal/migrations/migrations.go` as ordered Go functions with `Version`, `Name`, and `Up`.
@@ -60,7 +64,7 @@ Status: Complete.
 
 ## P1: Authoring Standards and Safety Controls
 
-Status: Complete.
+Status: Complete for the framework and authoring controls. Its CI lint-enforcement criterion remains dependent on the incomplete P3 pipeline wiring.
 ### Scope
 - Define clear migration authoring conventions and guardrails for future changes.
 
@@ -87,7 +91,7 @@ Status: Complete.
 
 ## P2: Operational Rollout Model (Expand/Contract without Long-Lived Compatibility Windows)
 
-Status: Complete.
+Status: Partially complete. The policy, annotations, and explicit guard command exist. Under the current repository policy, ordinary `migrations.Run()` intentionally does not execute the guard, so the original statement that a contract migration cannot run unless readiness checks pass is not true outside workflows that explicitly invoke `guard`.
 ### Scope
 - Introduce a required rollout pattern for breaking schema or API-adjacent changes.
 
@@ -107,7 +111,7 @@ Status: Complete.
 
 ## P3: CI/CD Enforcement and Drift Detection
 
-Status: Complete.
+Status: Partially complete. The gate script, Make targets, Postgres replay coverage, drift snapshot, and forward-compatibility smoke tooling exist, but no checked-in CI/CD workflow invokes them as a required release gate.
 ### Scope
 - Make migration safety enforceable in automation, not only by convention.
 
@@ -133,7 +137,7 @@ Status: Complete.
 
 ## P4: Test Harness Convergence and Legacy Cleanup
 
-Status: Complete.
+Status: Partially complete. Versioned bootstrap helpers, driver selection, generated stubs, and the Postgres test path exist. The criterion that migration-sensitive checks run on Postgres in CI remains dependent on the incomplete P3 workflow wiring.
 ### Scope
 - Align test setup and local tooling with production-like migration paths.
 

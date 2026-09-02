@@ -1,6 +1,7 @@
 package discounts
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -8,6 +9,7 @@ import (
 
 	"ecommerce/models"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -450,6 +452,38 @@ func TestRunLifecycleIsIdempotentForSameState(t *testing.T) {
 	history, err := ListHistory(db, &campaign.ID)
 	require.NoError(t, err)
 	require.Len(t, history, 1)
+}
+
+func TestGetActiveCampaignReturnsOnlyCurrentlyEligibleCampaign(t *testing.T) {
+	db := newDiscountTestDB(t)
+	service := NewService(db)
+	now := time.Date(2026, 8, 29, 12, 0, 0, 0, time.UTC)
+	active, err := CreateProductDiscount(db, ProductDiscountInput{
+		Name: "CMS campaign", ProductIDs: []uint{1}, DiscountMode: models.DiscountModePercent,
+		DiscountValue: models.MoneyFromFloat(15), StartsAt: now.Add(-time.Hour), EndsAt: timePtr(now.Add(time.Hour)),
+	})
+	require.NoError(t, err)
+
+	resolved, err := service.GetActiveCampaign(context.Background(), active.ID, now)
+	require.NoError(t, err)
+	assert.Equal(t, active.ID, resolved.ID)
+
+	for name, mutate := range map[string]func(*models.DiscountCampaign){
+		"future":   func(value *models.DiscountCampaign) { value.StartsAt = now.Add(time.Hour) },
+		"expired":  func(value *models.DiscountCampaign) { value.EndsAt = timePtr(now) },
+		"disabled": func(value *models.DiscountCampaign) { value.Status = models.DiscountCampaignStatusDisabled },
+		"archived": func(value *models.DiscountCampaign) { value.IsArchived = true },
+	} {
+		t.Run(name, func(t *testing.T) {
+			candidate := active
+			candidate.ID = 0
+			candidate.Name = name
+			mutate(&candidate)
+			require.NoError(t, db.Create(&candidate).Error)
+			_, err := service.GetActiveCampaign(context.Background(), candidate.ID, now)
+			assert.ErrorIs(t, err, ErrCampaignUnavailable)
+		})
+	}
 }
 
 func TestPromotionTemplateInstantiateCreatesCampaignWithOverrides(t *testing.T) {

@@ -8,6 +8,7 @@ export function makeLocalizationBootstrap(): LocalizationBootstrap {
 export function makeRouteLayoutData(
 	overrides: Partial<{
 		isAuthenticated: boolean;
+		allowGuestCheckout: boolean;
 		draftPreview: { active: boolean; expires_at?: string | null };
 		cmsNavigation: CmsNavigationModel | null;
 		cmsGlobalRegions: Record<string, CmsGlobalRegionModel>;
@@ -16,6 +17,7 @@ export function makeRouteLayoutData(
 ) {
 	return {
 		isAuthenticated: false,
+		allowGuestCheckout: true,
 		draftPreview: { active: false, expires_at: null },
 		cmsNavigation: null,
 		cmsGlobalRegions: {},

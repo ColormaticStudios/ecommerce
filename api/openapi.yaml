@@ -812,6 +812,31 @@ paths:
           $ref: "#/components/responses/BadRequestProblem"
         "500":
           $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/discounts/campaigns/{id}:
+    get:
+      tags: [discounts]
+      operationId: getActiveDiscountCampaign
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Active public discount campaign projection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActiveDiscountCampaign"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/auth/oidc/login:
     get:
       tags: [auth]
@@ -9087,12 +9112,45 @@ components:
 
     AuthConfigResponse:
       type: object
-      required: [local_sign_in_enabled, oidc_enabled]
+      required: [local_sign_in_enabled, oidc_enabled, allow_guest_checkout]
       properties:
         local_sign_in_enabled:
           type: boolean
         oidc_enabled:
           type: boolean
+        allow_guest_checkout:
+          type: boolean
+
+    ActiveDiscountCampaign:
+      type: object
+      required: [id, name, type, starts_at]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        type:
+          type: string
+          enum: [product_discount, promotion]
+        coupon_code:
+          type: string
+          nullable: true
+        discount_mode:
+          type: string
+          enum: [fixed, percent]
+          nullable: true
+        discount_value:
+          type: number
+          format: double
+          nullable: true
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+          nullable: true
 
     UpdateProfileRequest:
       type: object

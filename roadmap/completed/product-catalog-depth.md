@@ -1,8 +1,10 @@
 # Product Catalog Depth Roadmap
 
 ## Implementation Status
-- Overall status: Complete.
+- Overall status: Partially complete. The normalized draft/live catalog, variant-only purchasing, attributes, brands, SEO, discovery integrations, and repeatable performance acceptance gate are implemented; legacy product-level price/stock compatibility remains open.
 - Implemented in release commit `85fbf9b (2026-03-07): implement product catalog depth`.
+- Remaining work:
+  - remove persisted product-level purchasable `price`/`stock` mirrors and the required top-level OpenAPI response fields once all consumers use variant summaries/availability.
 
 ## Current Baseline
 - `models.Product` is a flat model (`sku`, `name`, `description`, `price`, `stock`, `images`, `related`) with no first-class variants/options/attributes/brand/SEO fields.
@@ -34,9 +36,9 @@
 
 ## Cross-Roadmap Alignment
 - Product categories:
-  - `roadmap/product-categories.md` category model/join table is the canonical category source for product-level categorization.
+  - `roadmap/completed/product-categories.md` category model/join table is the canonical category source for product-level categorization.
 - Guest checkout:
-  - Checkout/cart/order mutation routes are `/api/v1/checkout/*` from `roadmap/guest-checkout.md`; this roadmap supplies the `product_variant_id` contract those routes consume.
+  - Checkout/cart/order mutation routes are `/api/v1/checkout/*` from `roadmap/completed/guest-checkout.md`; this roadmap supplies the `product_variant_id` contract those routes consume.
 - Discounts/promotions:
   - Discount evaluation applies to variant-backed line items while campaign targets remain product/category/brand entities.
 - Providers:
@@ -74,7 +76,7 @@ Status: Complete.
 
 ## P1: Variant and Option Contract + Admin Editing
 
-Status: Complete.
+Status: Partially complete. The nested variant-first contract and editor are implemented, but the public `Product` response still requires legacy top-level `price` and `stock` summary fields.
 ### Scope
 - Replace flat product contract with variant-first contract.
 - Update admin product editing workflows to manage options and variant matrix.
@@ -168,7 +170,7 @@ Status: Complete.
 
 ## P4: Hardening and Operational Quality
 
-Status: Complete.
+Status: Partially complete. Draft-blob writes are removed, generated contracts are synchronized, and a repeatable 10,000-product variant/attribute query p95 below 100 ms gate is enforced, but legacy product-level purchasable fields remain.
 ### Scope
 - Ensure data integrity, performance, and regression safety for deeper catalog model.
 - Finalize removal of legacy flat/draft fields.
@@ -185,7 +187,7 @@ Status: Complete.
   - Remove compatibility code paths in frontend parsers.
 - Documentation and test expansion:
   - API docs refreshed through generated `API.md`.
-  - Roadmaps cross-linked (`roadmap/product-categories.md`, `roadmap/discounts-promotions.md`).
+  - Roadmaps cross-linked (`roadmap/completed/product-categories.md`, `roadmap/completed/discounts-promotions.md`).
 
 ### Done Criteria
 - No remaining writes depend on `products.draft_data`.

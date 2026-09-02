@@ -80,6 +80,7 @@ function createData(overrides: Partial<CmsPageData> = {}): CmsPageData {
 				},
 				{
 					type: "promotion_highlight",
+					campaign_id: 77,
 					title: "Launch week offer",
 					body: "Use the active campaign code at checkout while the collection is featured.",
 					badge: "Limited campaign",
@@ -127,6 +128,18 @@ function createData(overrides: Partial<CmsPageData> = {}): CmsPageData {
 				name: "Canvas Tote",
 				stock: 3,
 			}),
+		},
+		promotionCampaigns: {
+			"promotion_highlight:6": {
+				id: 77,
+				name: "Launch week: 20% off",
+				type: "promotion",
+				coupon_code: "LAUNCH20",
+				discount_mode: "percent",
+				discount_value: 20,
+				starts_at: "2026-08-01T00:00:00Z",
+				ends_at: "2026-09-01T00:00:00Z",
+			},
 		},
 		...overrides,
 	};
@@ -176,6 +189,7 @@ const allBlockFamilies = [
 	},
 	{
 		type: "promotion_highlight",
+		campaign_id: 88,
 		title: "Member pricing",
 		badge: "Member offer",
 		promotion_code: "MEMBER15",
@@ -253,6 +267,18 @@ export const AllBlockFamilies: Story = {
 							stock: 3,
 						}),
 					},
+					promotionCampaigns: {
+						"promotion_highlight:10": {
+							id: 88,
+							name: "Member pricing",
+							type: "promotion",
+							coupon_code: "MEMBER15",
+							discount_mode: "percent",
+							discount_value: 15,
+							starts_at: "2026-08-01T00:00:00Z",
+							ends_at: null,
+						},
+					},
 				}),
 			},
 		}),
@@ -290,6 +316,18 @@ export const EmptyPage: Story = {
 						seo: null,
 						blocks: [],
 					},
+				}),
+			},
+		}),
+};
+
+export const UnavailablePromotion: Story = {
+	render: () =>
+		renderRouteStory({
+			component: CmsPageRoute,
+			componentProps: {
+				data: createData({
+					promotionCampaigns: { "promotion_highlight:6": null },
 				}),
 			},
 		}),

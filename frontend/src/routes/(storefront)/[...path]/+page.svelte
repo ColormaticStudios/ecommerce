@@ -69,4 +69,5 @@
 	productRails={data.productRails}
 	categoryTiles={data.categoryTiles}
 	inventoryProducts={data.inventoryProducts}
+	promotionCampaigns={data.promotionCampaigns}
 />

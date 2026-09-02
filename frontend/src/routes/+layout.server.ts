@@ -3,6 +3,8 @@ import { serverRequest, type ServerAPIError } from "$lib/server/api";
 import type { components } from "$lib/api/generated/openapi";
 import { parseAcceptedLanguages, selectInitialLocale } from "$lib/localization/server";
 import { localizationDomainForPath } from "$lib/localization/domain";
+import { loadAuthConfig } from "$lib/server/auth";
+import { applyCmsCheckoutPolicy } from "$lib/cms/checkout-policy";
 import {
 	parseCmsGlobalRegion,
 	parseCmsNavigation,
@@ -33,6 +35,7 @@ async function optionalServerRequest<T>(
 }
 
 export const load: LayoutServerLoad = async (event) => {
+	const authConfig = await loadAuthConfig(event);
 	let draftPreview: DraftPreviewSessionPayload = { active: false };
 	let isAuthenticated = false;
 	let cmsNavigation: CmsNavigationModel | null = null;
@@ -107,7 +110,14 @@ export const load: LayoutServerLoad = async (event) => {
 				`/content/global/${region}`
 			);
 			if (response) {
-				cmsGlobalRegions[region] = parseCmsGlobalRegion(response, Boolean(draftPreview.active));
+				const parsedRegion = parseCmsGlobalRegion(response, Boolean(draftPreview.active));
+				cmsGlobalRegions[region] = {
+					...parsedRegion,
+					blocks: applyCmsCheckoutPolicy(
+						parsedRegion.blocks,
+						Boolean(isAuthenticated || authConfig.allow_guest_checkout)
+					),
+				};
 			}
 		} catch (err) {
 			console.error(`Failed to load CMS global region ${region}`, err);
@@ -117,6 +127,7 @@ export const load: LayoutServerLoad = async (event) => {
 	return {
 		draftPreview,
 		isAuthenticated,
+		allowGuestCheckout: authConfig.allow_guest_checkout,
 		cmsNavigation,
 		cmsGlobalRegions,
 		localization: {

@@ -9,3 +9,7 @@ export function categoryTilesKey(index: number): string {
 export function inventoryMessageKey(index: number): string {
 	return `inventory_message:${index}`;
 }
+
+export function promotionHighlightKey(index: number): string {
+	return `promotion_highlight:${index}`;
+}

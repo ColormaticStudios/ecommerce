@@ -5,11 +5,13 @@ import { parseCategory, parseProduct, type CategoryModel, type ProductModel } fr
 import { serverRequest, type ServerAPIError } from "$lib/server/api";
 import { setPublicPageCacheHeaders } from "$lib/server/cache";
 import type { components } from "$lib/api/generated/openapi";
+import { applyCmsCheckoutPolicy } from "$lib/cms/checkout-policy";
 
 type ProductPagePayload = components["schemas"]["ProductPage"];
 type ProductPayload = components["schemas"]["Product"];
 type CategoryListPayload = components["schemas"]["CategoryListResponse"];
 type RedirectResolution = components["schemas"]["CmsRedirectResolution"];
+type ActiveDiscountCampaign = components["schemas"]["ActiveDiscountCampaign"];
 
 async function loadManualProducts(
 	event: Parameters<PageServerLoad>[0],
@@ -107,9 +109,35 @@ async function loadInventoryProducts(
 	return products;
 }
 
+async function loadPromotionCampaigns(
+	event: Parameters<PageServerLoad>[0],
+	blocks: CmsContentBlock[]
+): Promise<Record<string, ActiveDiscountCampaign | null>> {
+	const campaigns: Record<string, ActiveDiscountCampaign | null> = {};
+	await Promise.all(
+		blocks.map(async (block, index) => {
+			if (block.type !== "promotion_highlight" || !block.campaign_id) return;
+			const key = `promotion_highlight:${index}`;
+			try {
+				campaigns[key] = await serverRequest<ActiveDiscountCampaign>(
+					event,
+					`/discounts/campaigns/${block.campaign_id}`
+				);
+			} catch (err) {
+				const campaignError = err as ServerAPIError;
+				if (campaignError.status !== 404) {
+					console.error("Failed to load CMS promotion campaign", err);
+				}
+				campaigns[key] = null;
+			}
+		})
+	);
+	return campaigns;
+}
+
 export const load: PageServerLoad = async (event) => {
 	const { params, parent, cookies, url } = event;
-	const { draftPreview } = await parent();
+	const { draftPreview, isAuthenticated, allowGuestCheckout } = await parent();
 	// SvelteKit concrete routes in this group keep precedence over this catch-all
 	// route, so /cart, /checkout, /product/[id], and /search resolve before CMS pages.
 	const routePath = params.path ?? "";
@@ -158,15 +186,23 @@ export const load: PageServerLoad = async (event) => {
 			segment: url.searchParams.get("segment") || undefined,
 			utm_source: url.searchParams.get("utm_source") || undefined,
 		});
-		const page = parseCmsPage(response, Boolean(draftPreview?.active));
+		const parsedPage = parseCmsPage(response, Boolean(draftPreview?.active));
+		const page = {
+			...parsedPage,
+			blocks: applyCmsCheckoutPolicy(
+				parsedPage.blocks,
+				Boolean(isAuthenticated || allowGuestCheckout)
+			),
+		};
 		if (draftPreview?.active) event.setHeaders({ "X-Robots-Tag": "noindex" });
-		const [productRails, categoryTiles, inventoryProducts] = await Promise.all([
+		const [productRails, categoryTiles, inventoryProducts, promotionCampaigns] = await Promise.all([
 			loadProductRails(event, page.blocks),
 			loadCategoryTiles(event, page.blocks).catch((err) => {
 				console.error("Failed to load CMS category tiles", err);
 				return {};
 			}),
 			loadInventoryProducts(event, page.blocks),
+			loadPromotionCampaigns(event, page.blocks),
 		]);
 		setPublicPageCacheHeaders(event, true);
 		return {
@@ -174,6 +210,7 @@ export const load: PageServerLoad = async (event) => {
 			productRails,
 			categoryTiles,
 			inventoryProducts,
+			promotionCampaigns,
 			draftPreviewActive: Boolean(draftPreview?.active),
 		};
 	} catch (err) {

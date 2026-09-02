@@ -23,6 +23,7 @@ function createData(overrides: Partial<SignupPageData> = {}): SignupPageData {
 		authConfig: {
 			local_sign_in_enabled: true,
 			oidc_enabled: true,
+			allow_guest_checkout: true,
 		},
 		...overrides,
 	};
@@ -55,6 +56,7 @@ export const OIDCOnly: Story = {
 					authConfig: {
 						local_sign_in_enabled: false,
 						oidc_enabled: true,
+						allow_guest_checkout: true,
 					},
 				}),
 			},
@@ -71,6 +73,7 @@ export const LocalOnly: Story = {
 					authConfig: {
 						local_sign_in_enabled: true,
 						oidc_enabled: false,
+						allow_guest_checkout: true,
 					},
 				}),
 			},
@@ -90,6 +93,7 @@ export const AuthUnavailable: Story = {
 					authConfig: {
 						local_sign_in_enabled: false,
 						oidc_enabled: false,
+						allow_guest_checkout: true,
 					},
 				}),
 			},

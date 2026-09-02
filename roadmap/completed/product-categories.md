@@ -35,7 +35,7 @@
   - Product catalog depth is already the repo baseline; product write contract aligns with the nested `ProductUpsertInput`, not legacy flat `ProductInput`.
   - Categories attach at product level and apply to all product variants.
 - Discounts/promotions:
-  - `roadmap/discounts-promotions.md` category-targeted campaigns reuse this `categories` + `product_categories` data.
+  - `roadmap/completed/discounts-promotions.md` category-targeted campaigns reuse this `categories` + `product_categories` data.
 - Guest checkout/providers:
   - Checkout and payment roadmaps consume product/category metadata read-side only; category writes remain admin-only.
 

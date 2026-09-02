@@ -7,6 +7,7 @@ export type AuthConfigModel = components["schemas"]["AuthConfigResponse"];
 const FALLBACK_AUTH_CONFIG: AuthConfigModel = {
 	local_sign_in_enabled: true,
 	oidc_enabled: false,
+	allow_guest_checkout: true,
 };
 
 export async function loadAuthConfig(

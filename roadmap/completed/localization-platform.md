@@ -1,5 +1,14 @@
 # Localization and Translation Management Roadmap
 
+## Implementation Status
+- Overall status: Partially complete in commit `1843d5e (2026-08-28): Implement the localization-platform roadmap`.
+- P0, P2, and P3 are complete. P1 and P5 remain partial, and P4 provides localization rendering and rollout controls but not the outbound delivery required by its original done criteria.
+- Remaining work:
+  - migrate and enforce localization keys across the remaining storefront/admin user-facing copy;
+  - implement the communications outbox/provider roadmap and send rendered communications through it;
+  - expand required CI localization coverage to every release-critical user-facing surface; and
+  - validate the documented regional bundle-fetch p95 in a deployed environment.
+
 ## Terminology
 - Always use the full word `localization` in code, paths, identifiers, documentation, and user-facing copy.
 - Numeronym abbreviations for localization and internationalization are prohibited throughout every phase of this roadmap.

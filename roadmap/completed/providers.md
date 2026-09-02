@@ -35,7 +35,7 @@
 - Catalog depth:
   - Product catalog depth is already the repo baseline; snapshot and payment amounts are based on variant-backed order items (`product_variant_id`).
 - Discounts/promotions:
-  - Snapshot totals include applied campaign/level adjustments from `roadmap/discounts-promotions.md`.
+  - Snapshot totals include applied campaign/level adjustments from `roadmap/completed/discounts-promotions.md`.
 
 ## P0: Payment Correctness Foundation
 

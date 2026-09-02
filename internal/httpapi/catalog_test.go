@@ -72,7 +72,7 @@ func TestCatalogEndpointsCoversStrictCatalogFamily(t *testing.T) {
 		"RunAdminInventoryReconciliation", "ListAdminInventoryReservations", "ListAdminInventoryThresholds", "UpsertAdminInventoryThreshold",
 		"DeleteAdminInventoryThreshold", "GetAdminInventoryTimeline", "ListAdminPurchaseOrders", "CreateAdminPurchaseOrder",
 		"CancelAdminPurchaseOrder", "IssueAdminPurchaseOrder", "ReceiveAdminPurchaseOrder",
-		"ListAdminDiscountAudit", "ListAdminDiscountCampaigns", "CreateAdminDiscountCampaign", "UpdateAdminDiscountCampaign",
+		"GetActiveDiscountCampaign", "ListAdminDiscountAudit", "ListAdminDiscountCampaigns", "CreateAdminDiscountCampaign", "UpdateAdminDiscountCampaign",
 		"ArchiveAdminDiscountCampaign", "DisableAdminDiscountCampaign", "ScheduleAdminDiscountCampaign", "ListAdminDiscountHistory",
 		"RunAdminDiscountLifecycle", "GetAdminDiscountMetrics", "CreateAdminPromotionCampaign", "PreviewAdminPromotion",
 		"RunAdminDiscountReconciliation", "ListAdminPromotionTemplates", "CreateAdminPromotionTemplate", "InstantiateAdminPromotionTemplate",

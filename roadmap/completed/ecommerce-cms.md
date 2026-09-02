@@ -1,8 +1,10 @@
 # Ecommerce CMS Roadmap
 
 ## Implementation Status
-- Overall status: Complete.
+- Overall status: Complete. The CMS lifecycle, rendering, scheduling, targeting, experiments, SEO, redirects, localization integration, governance, recovery paths, live promotion projection, and guest-checkout presentation policy are implemented.
 - Implemented in release commit `7075ec9 (2026-06-25): Implement Ecommerce CMS roadmap`.
+- Re-audited after localization commit `1843d5e (2026-08-28): Implement the localization-platform roadmap`.
+- Completion audit closed on 2026-08-29 after wiring promotion highlights to the active campaign projection and filtering checkout-oriented CMS links for unauthenticated visitors when guest checkout is disabled.
 
 ## Current Baseline
 - Content management is currently limited to `StorefrontSettings` JSON (`models/storefront.go`) with draft/publish fields (`config_json`, `draft_config_json`).
@@ -132,7 +134,7 @@ Status: Complete.
 
 ## P3: Commerce-Aware Components and Campaign Landing Workflows
 
-Status: Complete.
+Status: Complete. Product, category, inventory, testimonial, allowlisted social, and live promotion blocks are implemented. Invalid or inactive promotion references hide safely, and checkout-oriented content consumes the guest-checkout enablement policy.
 ### Scope
 - Add ecommerce-specific blocks needed by merchants for merchandising and conversion.
 - Provide campaign page tooling tied to catalog/categories/promotions.

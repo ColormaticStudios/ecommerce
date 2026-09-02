@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { CmsContentBlock } from "$lib/cms";
 	import type { CategoryModel, ProductModel } from "$lib/models";
+	import type { components } from "$lib/api/generated/openapi";
 	import CategoryTilesBlock from "./CategoryTilesBlock.svelte";
 	import CtaBlock from "./CtaBlock.svelte";
 	import CustomHtmlBlock from "./CustomHtmlBlock.svelte";
@@ -10,7 +11,12 @@
 	import HeroBlock from "./HeroBlock.svelte";
 	import ImageBlock from "./ImageBlock.svelte";
 	import InventoryMessageBlock from "./InventoryMessageBlock.svelte";
-	import { categoryTilesKey, inventoryMessageKey, productRailKey } from "./keys";
+	import {
+		categoryTilesKey,
+		inventoryMessageKey,
+		productRailKey,
+		promotionHighlightKey,
+	} from "./keys";
 	import ProductRailBlock from "./ProductRailBlock.svelte";
 	import PromoBannerBlock from "./PromoBannerBlock.svelte";
 	import PromotionHighlightBlock from "./PromotionHighlightBlock.svelte";
@@ -25,6 +31,7 @@
 		productRails?: Record<string, ProductModel[]>;
 		categoryTiles?: Record<string, CategoryModel[]>;
 		inventoryProducts?: Record<string, ProductModel | null>;
+		promotionCampaigns?: Record<string, components["schemas"]["ActiveDiscountCampaign"] | null>;
 	}
 
 	let {
@@ -33,6 +40,7 @@
 		productRails = {},
 		categoryTiles = {},
 		inventoryProducts = {},
+		promotionCampaigns = {},
 	}: Props = $props();
 
 	const blockKey = $derived(`${block.type}-${index}`);
@@ -63,7 +71,7 @@
 {:else if block.type === "category_tiles"}
 	<CategoryTilesBlock {block} categories={categoryTiles[categoryTilesKey(index)] ?? []} />
 {:else if block.type === "promotion_highlight"}
-	<PromotionHighlightBlock {block} />
+	<PromotionHighlightBlock {block} campaign={promotionCampaigns[promotionHighlightKey(index)]} />
 {:else if block.type === "inventory_message"}
 	<InventoryMessageBlock {block} product={inventoryProducts[inventoryMessageKey(index)]} />
 {:else if block.type === "testimonial"}

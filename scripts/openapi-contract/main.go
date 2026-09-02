@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const expectedOperationCount = 235
+const expectedOperationCount = 236
 
 var methods = []string{"get", "post", "put", "patch", "delete", "head", "options"}
 

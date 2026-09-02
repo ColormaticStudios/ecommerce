@@ -452,6 +452,22 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/discounts/campaigns/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["getActiveDiscountCampaign"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/auth/oidc/login": {
 		parameters: {
 			query?: never;
@@ -4176,6 +4192,22 @@ export interface components {
 		AuthConfigResponse: {
 			local_sign_in_enabled: boolean;
 			oidc_enabled: boolean;
+			allow_guest_checkout: boolean;
+		};
+		ActiveDiscountCampaign: {
+			id: number;
+			name: string;
+			/** @enum {string} */
+			type: "product_discount" | "promotion";
+			coupon_code?: string | null;
+			/** @enum {string|null} */
+			discount_mode?: "fixed" | "percent" | null;
+			/** Format: double */
+			discount_value?: number | null;
+			/** Format: date-time */
+			starts_at: string;
+			/** Format: date-time */
+			ends_at?: string | null;
 		};
 		UpdateProfileRequest: {
 			name?: string;
@@ -6940,6 +6972,31 @@ export interface operations {
 				};
 			};
 			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getActiveDiscountCampaign: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Active public discount campaign projection */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ActiveDiscountCampaign"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			404: components["responses"]["NotFoundProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
