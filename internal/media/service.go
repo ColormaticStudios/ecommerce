@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 
+	"ecommerce/internal/jobs"
 	"gorm.io/gorm"
 )
 
@@ -40,22 +41,14 @@ type Service struct {
 	MediaRoot string
 	PublicURL string
 	Logger    *log.Logger
-	Queue     chan Job
+	Jobs      *jobs.Runtime
 }
 
 const (
 	DefaultProfilePhotoMaxBytes = 5 * 1024 * 1024
 )
 
-type Job struct {
-	ID        string
-	Source    string
-	Filename  string
-	SizeBytes int64
-	Metadata  map[string]string
-}
-
-func NewService(db *gorm.DB, mediaRoot string, publicURL string, logger *log.Logger) *Service {
+func NewService(db *gorm.DB, mediaRoot string, publicURL string, logger *log.Logger, jobRuntime *jobs.Runtime) *Service {
 	if mediaRoot == "" {
 		mediaRoot = DefaultMediaRoot
 	}
@@ -71,7 +64,7 @@ func NewService(db *gorm.DB, mediaRoot string, publicURL string, logger *log.Log
 		MediaRoot: mediaRoot,
 		PublicURL: publicURL,
 		Logger:    logger,
-		Queue:     make(chan Job, 100),
+		Jobs:      jobRuntime,
 	}
 }
 

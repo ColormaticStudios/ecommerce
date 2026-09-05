@@ -78,6 +78,61 @@ func TestRequestContextBridgesLegacyPrincipal(t *testing.T) {
 	assert.Equal(t, "req-1", recorder.Header().Get(httpapi.CorrelationIDHeader))
 }
 
+func TestRequestContextTrustsValidExternalIDsWhenEnabled(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.Use(httpapi.RequestContextMiddleware(httpapi.RequestContextOptions{
+		NewID: func() string { return "generated" }, TrustRequestIDs: true,
+	}))
+	router.GET("/context", func(ctx *gin.Context) {
+		metadata, ok := requestctx.MetadataFrom(ctx.Request.Context())
+		require.True(t, ok)
+		assert.Equal(t, "external-request", metadata.RequestID)
+		assert.Equal(t, "external-correlation", metadata.CorrelationID)
+		ctx.Status(http.StatusNoContent)
+	})
+
+	request := httptest.NewRequest(http.MethodGet, "/context", nil)
+	request.Header.Set(httpapi.RequestIDHeader, "external-request")
+	request.Header.Set(httpapi.CorrelationIDHeader, "external-correlation")
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, request)
+	assert.Equal(t, "external-request", recorder.Header().Get(httpapi.RequestIDHeader))
+	assert.Equal(t, "external-correlation", recorder.Header().Get(httpapi.CorrelationIDHeader))
+}
+
+func TestRequestContextDoesNotTrustExternalIDsByDefault(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.Use(httpapi.RequestContextMiddleware(httpapi.RequestContextOptions{NewID: func() string { return "generated" }}))
+	router.GET("/context", func(ctx *gin.Context) { ctx.Status(http.StatusNoContent) })
+
+	request := httptest.NewRequest(http.MethodGet, "/context", nil)
+	request.Header.Set(httpapi.RequestIDHeader, "external-request")
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, request)
+	assert.Equal(t, "generated", recorder.Header().Get(httpapi.RequestIDHeader))
+	assert.Equal(t, "generated", recorder.Header().Get(httpapi.CorrelationIDHeader))
+}
+
+func TestRequestContextMiddlewareIsIdempotent(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	calls := 0
+	newID := func() string {
+		calls++
+		return "request-1"
+	}
+	router := gin.New()
+	router.Use(httpapi.RequestContextMiddleware(httpapi.RequestContextOptions{NewID: newID}))
+	router.Use(httpapi.RequestContextMiddleware(httpapi.RequestContextOptions{NewID: newID}))
+	router.GET("/context", func(ctx *gin.Context) { ctx.Status(http.StatusNoContent) })
+
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/context", nil))
+	assert.Equal(t, 1, calls)
+	assert.Equal(t, "request-1", recorder.Header().Get(httpapi.RequestIDHeader))
+}
+
 func TestGeneratedBindingErrorHandlerUsesProblemMediaType(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()

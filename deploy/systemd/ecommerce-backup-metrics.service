@@ -1,0 +1,20 @@
+[Unit]
+Description=Ecommerce backup manifest metrics
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ecommerce-backup
+Group=ecommerce-backup
+EnvironmentFile=/etc/ecommerce/backup-common.env
+EnvironmentFile=/etc/ecommerce/backup-metrics-credentials.env
+ExecStart=/usr/local/bin/ecommerce-ops serve-metrics
+Restart=on-failure
+RestartSec=5s
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

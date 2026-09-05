@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the ecommerce database backup daily
+
+[Timer]
+OnCalendar=*-*-* 02:00:00 UTC
+Persistent=true
+AccuracySec=1m
+Unit=ecommerce-backup.service
+
+[Install]
+WantedBy=timers.target

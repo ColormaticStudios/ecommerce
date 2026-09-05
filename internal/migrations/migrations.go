@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	_ "embed"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -118,6 +119,13 @@ const localizationWorkflowCatalogP3Version = "2026081203_localization_workflow_c
 const localizationOperationsP4Version = "2026081301_localization_operations_p4"
 const localizationHardeningP5Version = "2026081302_localization_hardening_p5"
 const localizationUsageContextVersion = "2026082701_localization_usage_context"
+const platformJobsP1Version = "2026090301_platform_jobs_p1"
+
+const (
+	platformJobsP1MediaJobType    = "media.process"
+	platformJobsP1MediaProcessing = "processing"
+	platformJobsP1Pending         = "pending"
+)
 const migrationStepAlertThresholdEnvVar = "MIGRATIONS_STEP_ALERT_THRESHOLD_MS"
 
 var versionPattern = regexp.MustCompile(`^\d{10}_[a-z0-9_]+$`)
@@ -1916,6 +1924,169 @@ var orderedMigrations = []Migration{
 		}},
 		Up: func(tx *gorm.DB) error { return ops.CreateTableIfNotExists(tx, &models.TranslationKeyUsage{}) },
 	},
+	{
+		Version:         platformJobsP1Version,
+		Name:            "add durable platform job runtime",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "backfill", "jobs", "media", "reliability"},
+		PostChecks: []PostCheck{{
+			Name: "platform_job_runtime_ready",
+			Check: func(tx *gorm.DB) error {
+				for _, model := range []any{&platformJobsP1QueueSchema{}, &platformJobsP1AttemptSchema{}, &platformJobsP1DeadLetterSchema{}} {
+					if !tx.Migrator().HasTable(model) {
+						return fmt.Errorf("missing platform job table for %T", model)
+					}
+				}
+				for _, name := range []string{"idx_job_queue_status_run_at", "idx_job_queue_type_status", "idx_job_queue_type_idempotency"} {
+					if !tx.Migrator().HasIndex("job_queue", name) {
+						return fmt.Errorf("missing platform job index %s", name)
+					}
+				}
+				var missing int64
+				if err := tx.Raw(`SELECT COUNT(*) FROM media_objects AS media
+					LEFT JOIN job_queue AS job ON job.job_type = ? AND job.idempotency_key = media.id
+					WHERE media.status = ? AND job.id IS NULL`, platformJobsP1MediaJobType, platformJobsP1MediaProcessing).Scan(&missing).Error; err != nil {
+					return err
+				}
+				if missing != 0 {
+					return fmt.Errorf("found %d processing media rows without durable jobs", missing)
+				}
+				return nil
+			},
+		}},
+		Up: migratePlatformJobsP1,
+	},
+}
+
+// These schemas freeze the tables introduced by the P1 migration. Runtime
+// models can gain fields without changing historical migration replay.
+type platformJobsP1QueueSchema struct {
+	ID                 string     `gorm:"primaryKey;size:36"`
+	CreatedAt          time.Time  `gorm:"not null"`
+	UpdatedAt          time.Time  `gorm:"not null"`
+	JobType            string     `gorm:"not null;size:128;index:idx_job_queue_type_status,priority:1;index:idx_job_queue_type_idempotency,unique,priority:1"`
+	PayloadJSON        string     `gorm:"type:text;not null"`
+	PayloadFingerprint string     `gorm:"not null;size:64"`
+	Status             string     `gorm:"not null;size:32;index:idx_job_queue_status_run_at,priority:1;index:idx_job_queue_type_status,priority:2"`
+	RunAt              time.Time  `gorm:"not null;index:idx_job_queue_status_run_at,priority:2"`
+	IdempotencyKey     *string    `gorm:"size:255;index:idx_job_queue_type_idempotency,unique,priority:2"`
+	CorrelationID      string     `gorm:"not null;size:128;default:'';index"`
+	AttemptCount       int        `gorm:"not null;default:0"`
+	MaxAttempts        int        `gorm:"not null"`
+	LeaseOwner         string     `gorm:"not null;size:128;default:'';index"`
+	LeaseExpiresAt     *time.Time `gorm:"index"`
+	AttemptStartedAt   *time.Time
+	LastError          string     `gorm:"type:text;not null;default:''"`
+	CompletedAt        *time.Time `gorm:"index"`
+}
+
+func (platformJobsP1QueueSchema) TableName() string { return "job_queue" }
+
+type platformJobsP1AttemptSchema struct {
+	ID            uint      `gorm:"primaryKey"`
+	CreatedAt     time.Time `gorm:"not null"`
+	JobID         string    `gorm:"not null;size:36;index;index:idx_job_attempts_job_number,unique,priority:1"`
+	JobType       string    `gorm:"not null;size:128;index"`
+	AttemptNumber int       `gorm:"not null;index:idx_job_attempts_job_number,unique,priority:2"`
+	WorkerID      string    `gorm:"not null;size:128"`
+	Outcome       string    `gorm:"not null;size:32;index"`
+	ErrorClass    string    `gorm:"not null;size:32;default:'';index"`
+	ErrorMessage  string    `gorm:"type:text;not null;default:''"`
+	StartedAt     time.Time `gorm:"not null"`
+	FinishedAt    time.Time `gorm:"not null"`
+	LatencyMs     int64     `gorm:"not null"`
+}
+
+func (platformJobsP1AttemptSchema) TableName() string { return "job_attempts" }
+
+type platformJobsP1DeadLetterSchema struct {
+	ID             uint       `gorm:"primaryKey"`
+	CreatedAt      time.Time  `gorm:"not null"`
+	JobID          string     `gorm:"not null;size:36;uniqueIndex"`
+	JobType        string     `gorm:"not null;size:128;index"`
+	PayloadJSON    string     `gorm:"type:text;not null"`
+	CorrelationID  string     `gorm:"not null;size:128;default:'';index"`
+	AttemptCount   int        `gorm:"not null"`
+	ErrorClass     string     `gorm:"not null;size:32;index"`
+	FailureReason  string     `gorm:"type:text;not null"`
+	FailedAt       time.Time  `gorm:"not null;index"`
+	ReplayCount    int        `gorm:"not null;default:0"`
+	LastReplayedAt *time.Time `gorm:"index"`
+	ReplayJobID    *string    `gorm:"size:36;index"`
+}
+
+func (platformJobsP1DeadLetterSchema) TableName() string { return "job_dead_letters" }
+
+type platformJobsP1MediaRow struct {
+	ID        string
+	SizeBytes int64
+}
+
+type platformJobsP1MediaPayload struct {
+	Version   int    `json:"version"`
+	MediaID   string `json:"media_id"`
+	SizeBytes int64  `json:"size_bytes"`
+}
+
+func migratePlatformJobsP1(tx *gorm.DB) error {
+	db := tx.Session(&gorm.Session{NewDB: true})
+	for _, model := range []any{&platformJobsP1QueueSchema{}, &platformJobsP1AttemptSchema{}, &platformJobsP1DeadLetterSchema{}} {
+		if err := ops.CreateTableIfNotExists(db, model); err != nil {
+			return err
+		}
+	}
+	for _, statement := range []string{
+		`CREATE INDEX IF NOT EXISTS "idx_job_queue_status_run_at" ON "job_queue" ("status", "run_at")`,
+		`CREATE INDEX IF NOT EXISTS "idx_job_queue_type_status" ON "job_queue" ("job_type", "status")`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS "idx_job_queue_type_idempotency" ON "job_queue" ("job_type", "idempotency_key")`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS "idx_job_attempts_job_number" ON "job_attempts" ("job_id", "attempt_number")`,
+	} {
+		if err := db.Exec(statement).Error; err != nil {
+			return err
+		}
+		ops.AddRowsTouched(tx, 1)
+	}
+
+	var processing []platformJobsP1MediaRow
+	if err := db.Table("media_objects").Select("id", "size_bytes").Where("status = ?", platformJobsP1MediaProcessing).Find(&processing).Error; err != nil {
+		return err
+	}
+	now := time.Now().UTC()
+	for _, object := range processing {
+		payload, err := json.Marshal(platformJobsP1MediaPayload{
+			Version: 1, MediaID: object.ID, SizeBytes: object.SizeBytes,
+		})
+		if err != nil {
+			return err
+		}
+		fingerprint := sha256.Sum256(payload)
+		idempotencyKey := object.ID
+		job := platformJobsP1QueueSchema{
+			ID: uuid.NewString(), JobType: platformJobsP1MediaJobType, PayloadJSON: string(payload),
+			PayloadFingerprint: hex.EncodeToString(fingerprint[:]), Status: platformJobsP1Pending,
+			RunAt: now, IdempotencyKey: &idempotencyKey, MaxAttempts: 5,
+		}
+		result := db.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "job_type"}, {Name: "idempotency_key"}},
+			DoNothing: true,
+		}).Create(&job)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			var existing platformJobsP1QueueSchema
+			if err := db.Where("job_type = ? AND idempotency_key = ?", platformJobsP1MediaJobType, object.ID).First(&existing).Error; err != nil {
+				return err
+			}
+			if existing.PayloadFingerprint != job.PayloadFingerprint {
+				return fmt.Errorf("existing media processing job payload differs for %s", object.ID)
+			}
+		}
+		if result.RowsAffected == 1 {
+			ops.AddRowsTouched(tx, 1)
+		}
+	}
+	return nil
 }
 
 type legacyCMSLocaleBackfill struct {

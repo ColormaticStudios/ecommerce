@@ -49,7 +49,7 @@ Every roadmap must explicitly map changes to this codebase:
 - Backend wiring: identify affected strict endpoints in `internal/httpapi/`, domain services in `internal/`, and migration updates in `internal/migrations` (including model registration/backfills inside migration steps).
 - Data model: use existing model conventions (`models.BaseModel`, `models.Money` where relevant).
 - Frontend impact: call out existing fields consumed by `frontend/` and whether changes are additive or breaking.
-- Runtime model: if background work is needed, state where worker lifecycle lives in this repo.
+- Runtime model: if background work is needed, state where worker lifecycle lives in this repo and follow the [Reliability and Operability checklist](../wiki/Reliability-and-Operability.md).
 
 ## Cross-Roadmap Compatibility Checklist
 Every roadmap should explicitly list dependencies/assumptions against other roadmap docs:
@@ -65,6 +65,10 @@ Each phase must include:
 - Observable outputs (code, schema, endpoints, jobs, docs).
 - Measurable done criteria (pass/fail checks).
 - Dependencies on previous phases.
+
+## Reliability Review
+
+Every phase that changes a critical journey, dependency, background job, migration, provider interaction, deployment contract, or recovery path must complete the [Reliability Review Checklist](../wiki/Reliability-Review-Checklist.md). Its roadmap section must identify SLO impact, bounded telemetry and runbook changes, deployment/rollback criteria, failure-drill coverage, and backup/restore implications. Deployment-only acceptance checks must remain explicitly open until exercised in the target environment.
 
 ## Repository-Specific Rules
 - If request/response shapes change, update `api/openapi.yaml` first.

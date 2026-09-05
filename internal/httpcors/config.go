@@ -14,12 +14,16 @@ var allowHeaders = []string{
 	"Upload-Length",
 	"Upload-Metadata",
 	"Upload-Offset",
+	"X-Request-ID",
+	"X-Correlation-ID",
 }
 
 var exposeHeaders = []string{
 	"Content-Length",
 	"Location",
 	"Upload-Offset",
+	"X-Request-ID",
+	"X-Correlation-ID",
 }
 
 func AllowMethods() []string {

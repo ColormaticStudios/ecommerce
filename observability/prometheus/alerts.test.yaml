@@ -1,0 +1,139 @@
+rule_files:
+  - alerts.yaml
+
+evaluation_interval: 1m
+
+tests:
+  - interval: 1m
+    input_series:
+      - series: 'up{job="ecommerce-api",instance="api-1",service="ecommerce-api",deployment_environment="test",owner="test-on-call"}'
+        values: '0x10'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: EcommerceAPITargetDown
+        exp_alerts:
+          - exp_labels:
+              job: ecommerce-api
+              instance: api-1
+              service: ecommerce-api
+              deployment_environment: test
+              severity: sev1
+              owner: test-on-call
+            exp_annotations:
+              summary: Ecommerce API metrics target is down
+              runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommerceapitargetdown
+
+  - interval: 1m
+    input_series:
+      - series: 'up{job="ecommerce-api",instance="api-1",service="ecommerce-api",deployment_environment="test",owner="test-on-call"}'
+        values: '1x10'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: EcommerceAPITargetDown
+        exp_alerts: []
+
+  - interval: 1m
+    input_series:
+      - series: 'ecommerce_jobs_workers{service="ecommerce-api",deployment_environment="test",owner="test-on-call"}'
+        values: '0x15'
+      - series: 'ecommerce_jobs_queue_depth{service="ecommerce-api",deployment_environment="test",owner="test-on-call",job_type="media.process",status="pending"}'
+        values: '3x15'
+    alert_rule_test:
+      - eval_time: 11m
+        alertname: EcommerceJobWorkersDown
+        exp_alerts:
+          - exp_labels:
+              service: ecommerce-api
+              deployment_environment: test
+              severity: sev2
+              owner: test-on-call
+            exp_annotations:
+              summary: Durable work is queued but no job workers are running
+              runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommercejobworkersdown
+
+  - interval: 1m
+    input_series:
+      - series: 'ecommerce_jobs_workers{service="ecommerce-api",deployment_environment="test",owner="test-on-call"}'
+        values: '1x15'
+      - series: 'ecommerce_jobs_queue_depth{service="ecommerce-api",deployment_environment="test",owner="test-on-call",job_type="media.process",status="pending"}'
+        values: '3x15'
+    alert_rule_test:
+      - eval_time: 11m
+        alertname: EcommerceJobWorkersDown
+        exp_alerts: []
+
+  - interval: 1m
+    input_series:
+      - series: 'ecommerce_jobs_workers{service="ecommerce-api",deployment_environment="test",owner="test-on-call"}'
+        values: '0x15'
+      - series: 'ecommerce_jobs_queue_depth{service="ecommerce-api",deployment_environment="test",owner="test-on-call",job_type="media.process",status="expired_running"}'
+        values: '1x15'
+    alert_rule_test:
+      - eval_time: 11m
+        alertname: EcommerceJobWorkersDown
+        exp_alerts:
+          - exp_labels:
+              service: ecommerce-api
+              deployment_environment: test
+              severity: sev2
+              owner: test-on-call
+            exp_annotations:
+              summary: Durable work is queued but no job workers are running
+              runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommercejobworkersdown
+
+  - interval: 1m
+    input_series:
+      - series: 'ecommerce_jobs_oldest_runnable_age_seconds{service="ecommerce-api",deployment_environment="test",owner="test-on-call",job_type="media.process"}'
+        values: '1000x15'
+    alert_rule_test:
+      - eval_time: 11m
+        alertname: EcommerceJobBacklogCritical
+        exp_alerts:
+          - exp_labels:
+              service: ecommerce-api
+              deployment_environment: test
+              severity: sev2
+              owner: test-on-call
+            exp_annotations:
+              summary: Oldest runnable job has waited more than fifteen minutes
+              runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommercejobbacklogcritical
+
+  - interval: 1m
+    input_series:
+      - series: 'ecommerce_jobs_oldest_runnable_age_seconds{service="ecommerce-api",deployment_environment="test",owner="test-on-call",job_type="media.process"}'
+        values: '30x15'
+    alert_rule_test:
+      - eval_time: 11m
+        alertname: EcommerceJobBacklogCritical
+        exp_alerts: []
+
+  - interval: 1m
+    input_series:
+      - series: 'ecommerce_provider_calls_total{service="ecommerce-api",deployment_environment="test",owner="test-on-call",provider_type="payment",operation="authorize",outcome="failed"}'
+        values: '0+60x12'
+      - series: 'ecommerce_provider_calls_total{service="ecommerce-api",deployment_environment="test",owner="test-on-call",provider_type="payment",operation="authorize",outcome="succeeded"}'
+        values: '0+10x12'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: EcommerceProviderFailureStorm
+        exp_alerts:
+          - exp_labels:
+              service: ecommerce-api
+              deployment_environment: test
+              severity: sev2
+              owner: test-on-call
+              provider_type: payment
+            exp_annotations:
+              summary: Ecommerce provider calls are failing at a sustained high rate
+              runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommerceproviderfailurestorm
+
+  - interval: 1m
+    input_series:
+      - series: 'ecommerce_provider_calls_total{service="ecommerce-api",deployment_environment="test",owner="test-on-call",provider_type="payment",operation="authorize",outcome="failed"}'
+        values: '0+1x12'
+      - series: 'ecommerce_provider_calls_total{service="ecommerce-api",deployment_environment="test",owner="test-on-call",provider_type="payment",operation="authorize",outcome="succeeded"}'
+        values: '0+60x12'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: EcommerceProviderFailureStorm
+        exp_alerts: []

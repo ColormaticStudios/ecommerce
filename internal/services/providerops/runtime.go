@@ -26,6 +26,7 @@ type RuntimeConfig struct {
 	QueryTimeout        time.Duration
 	CompensationTimeout time.Duration
 	LeaseDuration       time.Duration
+	Observer            Observer
 }
 
 type Runtime struct {
@@ -39,6 +40,7 @@ type Runtime struct {
 	ShippingProviders shippingservice.ProviderRegistry
 	TaxProviders      taxservice.ProviderRegistry
 	Reconciliation    *ReconciliationService
+	Observer          Observer
 }
 
 func NewRuntime(db *gorm.DB, cfg RuntimeConfig) *Runtime {
@@ -51,7 +53,7 @@ func NewRuntime(db *gorm.DB, cfg RuntimeConfig) *Runtime {
 	if credentials == nil {
 		credentials = &CredentialService{}
 	}
-	audit := NewAuditService(db)
+	audit := NewAuditService(db, cfg.Observer)
 
 	basePayment := cfg.PaymentProviders
 	if basePayment == nil {
@@ -76,6 +78,7 @@ func NewRuntime(db *gorm.DB, cfg RuntimeConfig) *Runtime {
 		Environment: environment,
 		Credentials: credentials,
 		Audit:       audit,
+		Observer:    cfg.Observer,
 		Operations:  executor.Store(),
 		Executor:    executor,
 	}
@@ -124,7 +127,7 @@ func (r *Runtime) BindDatabase(db *gorm.DB) {
 	if r.Executor != nil {
 		config = r.Executor.config
 	}
-	audit := NewAuditService(db)
+	audit := NewAuditService(db, r.Observer)
 	if registry, ok := r.PaymentProviders.(paymentRegistryWrapper); ok {
 		registry.audit = audit
 		r.PaymentProviders = registry
@@ -216,11 +219,13 @@ func (w paymentProviderWrapper) Refund(ctx context.Context, req paymentservice.R
 }
 
 func (w paymentProviderWrapper) GetOutcomeByOperationKey(ctx context.Context, operationKey string) (paymentservice.ProviderOperationOutcome, error) {
-	callCtx, err := w.prepareContext(ctx, w.providerID, "")
-	if err != nil {
-		return paymentservice.ProviderOperationOutcome{}, err
-	}
-	return w.PaymentProvider.GetOutcomeByOperationKey(callCtx, operationKey)
+	return recordProviderOutcomeCall(ctx, w.audit, models.ProviderTypePayment, w.providerID, w.environment, "get_operation_outcome", "", "", map[string]string{"operation_key": operationKey}, func() (paymentservice.ProviderOperationOutcome, error) {
+		callCtx, err := w.prepareContext(ctx, w.providerID, "")
+		if err != nil {
+			return paymentservice.ProviderOperationOutcome{}, err
+		}
+		return w.PaymentProvider.GetOutcomeByOperationKey(callCtx, operationKey)
+	})
 }
 
 func (w paymentProviderWrapper) GetTransaction(ctx context.Context, providerTxnID string) (paymentservice.ProviderTransaction, error) {
@@ -445,19 +450,23 @@ func (w shippingProviderWrapper) BuyLabel(ctx context.Context, req shippingservi
 }
 
 func (w shippingProviderWrapper) CancelLabel(ctx context.Context, req shippingservice.CancelLabelRequest) (shippingservice.ProviderOperationOutcome, error) {
-	callCtx, err := w.prepareContext(ctx, "")
-	if err != nil {
-		return shippingservice.ProviderOperationOutcome{}, err
-	}
-	return w.ShippingProvider.CancelLabel(callCtx, req)
+	return recordProviderOutcomeCall(ctx, w.audit, models.ProviderTypeShipping, w.providerID, w.environment, "cancel_label", req.CorrelationID, req.IdempotencyKey, req, func() (shippingservice.ProviderOperationOutcome, error) {
+		callCtx, err := w.prepareContext(ctx, "")
+		if err != nil {
+			return shippingservice.ProviderOperationOutcome{}, err
+		}
+		return w.ShippingProvider.CancelLabel(callCtx, req)
+	})
 }
 
 func (w shippingProviderWrapper) GetOutcomeByOperationKey(ctx context.Context, operationKey string) (shippingservice.ProviderOperationOutcome, error) {
-	callCtx, err := w.prepareContext(ctx, "")
-	if err != nil {
-		return shippingservice.ProviderOperationOutcome{}, err
-	}
-	return w.ShippingProvider.GetOutcomeByOperationKey(callCtx, operationKey)
+	return recordProviderOutcomeCall(ctx, w.audit, models.ProviderTypeShipping, w.providerID, w.environment, "get_operation_outcome", "", "", map[string]string{"operation_key": operationKey}, func() (shippingservice.ProviderOperationOutcome, error) {
+		callCtx, err := w.prepareContext(ctx, "")
+		if err != nil {
+			return shippingservice.ProviderOperationOutcome{}, err
+		}
+		return w.ShippingProvider.GetOutcomeByOperationKey(callCtx, operationKey)
+	})
 }
 
 func (w shippingProviderWrapper) GetShipment(ctx context.Context, providerShipmentID string) (shippingservice.ProviderShipmentState, error) {
@@ -625,19 +634,23 @@ func (w taxProviderWrapper) FinalizeTax(ctx context.Context, req taxservice.Fina
 }
 
 func (w taxProviderWrapper) CancelFinalization(ctx context.Context, req taxservice.CancelFinalizationRequest) (taxservice.ProviderOperationOutcome, error) {
-	callCtx, err := w.prepareContext(ctx, "")
-	if err != nil {
-		return taxservice.ProviderOperationOutcome{}, err
-	}
-	return w.TaxProvider.CancelFinalization(callCtx, req)
+	return recordProviderOutcomeCall(ctx, w.audit, models.ProviderTypeTax, w.providerID, w.environment, "cancel_finalization", req.CorrelationID, req.IdempotencyKey, req, func() (taxservice.ProviderOperationOutcome, error) {
+		callCtx, err := w.prepareContext(ctx, "")
+		if err != nil {
+			return taxservice.ProviderOperationOutcome{}, err
+		}
+		return w.TaxProvider.CancelFinalization(callCtx, req)
+	})
 }
 
 func (w taxProviderWrapper) GetOutcomeByOperationKey(ctx context.Context, operationKey string) (taxservice.ProviderOperationOutcome, error) {
-	callCtx, err := w.prepareContext(ctx, "")
-	if err != nil {
-		return taxservice.ProviderOperationOutcome{}, err
-	}
-	return w.TaxProvider.GetOutcomeByOperationKey(callCtx, operationKey)
+	return recordProviderOutcomeCall(ctx, w.audit, models.ProviderTypeTax, w.providerID, w.environment, "get_operation_outcome", "", "", map[string]string{"operation_key": operationKey}, func() (taxservice.ProviderOperationOutcome, error) {
+		callCtx, err := w.prepareContext(ctx, "")
+		if err != nil {
+			return taxservice.ProviderOperationOutcome{}, err
+		}
+		return w.TaxProvider.GetOutcomeByOperationKey(callCtx, operationKey)
+	})
 }
 
 func (w taxProviderWrapper) ExportReport(ctx context.Context, req taxservice.ExportReportRequest) (io.ReadCloser, error) {
@@ -713,6 +726,40 @@ func errorMessage(err error) string {
 		return ""
 	}
 	return err.Error()
+}
+
+func recordProviderOutcomeCall[T any](
+	ctx context.Context,
+	audit *AuditService,
+	providerType string,
+	providerID string,
+	environment string,
+	operation string,
+	correlationID string,
+	idempotencyKey string,
+	request any,
+	call func() (T, error),
+) (T, error) {
+	start := time.Now()
+	response, err := call()
+	status := models.ProviderCallStatusSucceeded
+	if err != nil {
+		status = models.ProviderCallStatusFailed
+	}
+	_ = audit.Record(ctx, AuditRecord{
+		ProviderType:    providerType,
+		ProviderID:      providerID,
+		Environment:     environment,
+		Operation:       operation,
+		CorrelationID:   correlationID,
+		IdempotencyKey:  idempotencyKey,
+		Status:          status,
+		RequestPayload:  request,
+		ResponsePayload: response,
+		ErrorMessage:    errorMessage(err),
+		Latency:         time.Since(start),
+	})
+	return response, err
 }
 
 func defaultIfEmpty(value string, fallback string) string {

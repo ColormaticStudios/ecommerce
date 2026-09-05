@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"ecommerce/internal/media"
+	"ecommerce/internal/schemacontract"
 	"ecommerce/models"
 
 	"github.com/stretchr/testify/assert"
@@ -567,7 +569,7 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, localizationUsageContextVersion, status.LatestAppliedVersion)
+	require.Equal(t, platformJobsP1Version, status.LatestAppliedVersion)
 	require.Equal(t, 3, status.PendingCount)
 }
 
@@ -586,6 +588,10 @@ func TestRunAppliesAllOrderedMigrationsAndReplayIsIdempotent(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, LatestVersion(), status.LatestAppliedVersion)
 	require.Equal(t, 0, status.PendingCount)
+}
+
+func TestLatestVersionMatchesImportLightSchemaContract(t *testing.T) {
+	require.Equal(t, schemacontract.LatestMigrationVersion, LatestVersion())
 }
 
 func TestLocalizationP0BackfillsLegacyCMSLocalesAndBootstrapRelease(t *testing.T) {
@@ -760,6 +766,39 @@ func TestProviderOperationLedgerMigrationCreatesTablesAndIndexes(t *testing.T) {
 	require.Equal(t, TransactionModeRequired, migration.TransactionMode)
 	require.Contains(t, migration.Tags, "expand")
 	require.NotEmpty(t, migration.PostChecks)
+}
+
+func TestPlatformJobsMigrationCreatesRuntimeAndBackfillsProcessingMedia(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
+
+	migrationIndex := slices.IndexFunc(orderedMigrations, func(migration Migration) bool {
+		return migration.Version == platformJobsP1Version
+	})
+	require.Greater(t, migrationIndex, 0)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex]))
+	require.NoError(t, db.Create(&models.MediaObject{ID: "legacy-processing", SizeBytes: 17, Status: media.StatusProcessing}).Error)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex+1]))
+
+	for _, model := range []any{&models.JobQueue{}, &models.JobAttempt{}, &models.JobDeadLetter{}} {
+		require.Truef(t, db.Migrator().HasTable(model), "missing table for %T", model)
+	}
+	for _, name := range []string{"idx_job_queue_status_run_at", "idx_job_queue_type_status", "idx_job_queue_type_idempotency"} {
+		require.True(t, db.Migrator().HasIndex("job_queue", name), name)
+	}
+	var job models.JobQueue
+	require.NoError(t, db.Where("job_type = ? AND idempotency_key = ?", media.JobTypeProcess, "legacy-processing").First(&job).Error)
+	assert.Equal(t, models.JobStatusPending, job.Status)
+	assert.Equal(t, 5, job.MaxAttempts)
+	var payload media.ProcessPayload
+	require.NoError(t, json.Unmarshal([]byte(job.PayloadJSON), &payload))
+	assert.Equal(t, media.ProcessPayloadVersion, payload.Version)
+	assert.Equal(t, "legacy-processing", payload.MediaID)
+
+	require.NoError(t, db.Transaction(migratePlatformJobsP1))
+	var jobCount int64
+	require.NoError(t, db.Model(&models.JobQueue{}).Where("job_type = ? AND idempotency_key = ?", media.JobTypeProcess, "legacy-processing").Count(&jobCount).Error)
+	assert.EqualValues(t, 1, jobCount)
 }
 
 func TestProductAttributeEnumsMigrationBackfillsExistingValues(t *testing.T) {

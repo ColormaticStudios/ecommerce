@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -17,9 +17,11 @@ import (
 	"ecommerce/internal/checkoutplugins"
 	"ecommerce/internal/httpapi"
 	"ecommerce/internal/httpcors"
+	"ecommerce/internal/jobs"
 	"ecommerce/internal/media"
 	"ecommerce/internal/migrations"
 	"ecommerce/internal/providerplugins"
+	"ecommerce/internal/reliability"
 	"ecommerce/internal/requestctx"
 	accountservice "ecommerce/internal/services/account"
 	"ecommerce/internal/services/accountdata"
@@ -34,6 +36,8 @@ import (
 	shippingservice "ecommerce/internal/services/shipping"
 	taxservice "ecommerce/internal/services/tax"
 	webhookservice "ecommerce/internal/services/webhooks"
+	"ecommerce/internal/telemetry"
+	"ecommerce/middleware"
 
 	"github.com/didip/tollbooth/v7"
 	"github.com/didip/tollbooth_gin"
@@ -45,14 +49,13 @@ import (
 )
 
 func main() {
-	log.SetOutput(os.Stdout)
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 
 	rootCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	if err := run(rootCtx); err != nil {
-		log.Printf("[ERROR] %v", err)
+		slog.Error("Ecommerce API stopped", "error", err)
 		os.Exit(1)
 	}
 }
@@ -61,13 +64,43 @@ func run(parentCtx context.Context) error {
 	ctx, cancel := context.WithCancel(parentCtx)
 	defer cancel()
 
-	log.Println("[INFO] Starting ecommerce API server...")
+	slog.Info("Starting ecommerce API server")
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	log.Println("[INFO] Configuration loaded successfully")
+	loggerAttributes := []any{
+		"service", cfg.AlertService,
+		"deployment_environment", cfg.DeploymentEnvironment,
+		"release_id", cfg.ReleaseID,
+		"telemetry_enabled", cfg.TelemetryEnabled,
+	}
+	if cfg.AlertOwner != "" {
+		loggerAttributes = append(loggerAttributes, "alert_owner", cfg.AlertOwner)
+	}
+	applicationLogger := slog.Default().With(loggerAttributes...)
+	slog.SetDefault(applicationLogger)
+	legacyLogger := slog.NewLogLogger(applicationLogger.Handler(), slog.LevelInfo)
+	applicationLogger.Info("Configuration loaded successfully")
+	traceShutdown, err := telemetry.ConfigureTracing(ctx, telemetry.TracingConfig{
+		Enabled: cfg.TracingEnabled, Endpoint: cfg.OTLPTraceEndpoint, SampleRatio: cfg.TraceSampleRatio,
+		Service: cfg.AlertService, Environment: cfg.DeploymentEnvironment,
+	})
+	if err != nil {
+		return fmt.Errorf("configure tracing: %w", err)
+	}
+	defer func() {
+		shutdownContext, shutdownCancel := context.WithTimeout(context.Background(), cfg.HTTPShutdownTimeout)
+		defer shutdownCancel()
+		if shutdownErr := traceShutdown(shutdownContext); shutdownErr != nil {
+			applicationLogger.Error("Trace exporter shutdown failed", "error", shutdownErr)
+		}
+	}()
+	var metrics *telemetry.Metrics
+	if cfg.TelemetryEnabled {
+		metrics = telemetry.NewMetrics(cfg.AlertService, cfg.DeploymentEnvironment, cfg.AlertOwner)
+	}
 
 	if err := media.CheckDependencies(); err != nil {
 		return fmt.Errorf("dependency check failed: %w", err)
@@ -75,7 +108,7 @@ func run(parentCtx context.Context) error {
 
 	// Connect to database
 	gormLogger := logger.New(
-		log.New(os.Stdout, "", log.LstdFlags),
+		legacyLogger,
 		logger.Config{
 			SlowThreshold:             200 * time.Millisecond,
 			LogLevel:                  logger.Warn,
@@ -83,12 +116,12 @@ func run(parentCtx context.Context) error {
 		},
 	)
 	db, err := gorm.Open(postgres.Open(cfg.DBURL), &gorm.Config{
-		Logger: gormLogger,
+		Logger: telemetry.NewGORMLogger(gormLogger, metrics),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
-	log.Println("[INFO] Database connection established")
+	applicationLogger.Info("Database connection established")
 
 	sqlDB, err := db.DB()
 	if err != nil {
@@ -96,17 +129,22 @@ func run(parentCtx context.Context) error {
 	}
 	defer func() {
 		if closeErr := sqlDB.Close(); closeErr != nil {
-			log.Printf("[ERROR] Failed to close database connection: %v", closeErr)
+			applicationLogger.Error("Failed to close database connection", "error", closeErr)
 		}
 	}()
+	if metrics != nil {
+		if err := metrics.RegisterDatabase(db, sqlDB); err != nil {
+			return fmt.Errorf("register database metrics: %w", err)
+		}
+	}
 
 	if err := migrations.EnsureReady(db, cfg.AutoApplyMigrations); err != nil {
 		return fmt.Errorf("database migration readiness check failed: %w", err)
 	}
 	if cfg.AutoApplyMigrations {
-		log.Printf("[INFO] Database migration completed (latest=%s)", migrations.LatestVersion())
+		applicationLogger.Info("Database migration completed", "latest_version", migrations.LatestVersion())
 	} else {
-		log.Printf("[INFO] Database migration check completed (latest=%s)", migrations.LatestVersion())
+		applicationLogger.Info("Database migration check completed", "latest_version", migrations.LatestVersion())
 	}
 
 	// Setup Gin router
@@ -114,29 +152,24 @@ func run(parentCtx context.Context) error {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	r := gin.New()
+	r.Use(
+		httpapi.RequestContextMiddleware(httpapi.RequestContextOptions{TrustRequestIDs: cfg.TrustRequestIDs}),
+		telemetry.HTTPMiddleware(metrics, cfg.AlertService),
+		middleware.AccessLogger(applicationLogger),
+		gin.CustomRecovery(func(c *gin.Context, recovered any) {
+			correlation := reliability.FromContext(c.Request.Context())
+			applicationLogger.ErrorContext(c.Request.Context(), "Panic recovered",
+				"request_id", correlation.RequestID,
+				"correlation_id", correlation.CorrelationID,
+				"panic_type", fmt.Sprintf("%T", recovered),
+			)
+			c.JSON(500, gin.H{"error": "Internal server error"})
+		}),
+	)
 
 	if cfg.ServeMedia {
 		r.Static("/media", cfg.MediaRoot)
 	}
-
-	// Request logging middleware (custom format)
-	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-		return fmt.Sprintf("[%s] %s %s %d %s \"%s\" %s\n",
-			param.TimeStamp.Format(time.RFC3339),
-			param.ClientIP,
-			param.Method,
-			param.StatusCode,
-			param.Latency,
-			param.Path,
-			param.ErrorMessage,
-		)
-	}))
-
-	// Error recovery middleware
-	r.Use(gin.CustomRecovery(func(c *gin.Context, recovered any) {
-		log.Printf("[ERROR] Panic recovered: %v", recovered)
-		c.JSON(500, gin.H{"error": "Internal server error"})
-	}))
 
 	r.SetTrustedProxies(nil)
 
@@ -182,9 +215,26 @@ func run(parentCtx context.Context) error {
 		SameSite: cookieSameSite,
 	}
 
-	mediaService := media.NewService(db, cfg.MediaRoot, cfg.MediaPublicURL, log.Default())
+	var jobObserver jobs.Observer
+	if metrics != nil {
+		jobObserver = metrics
+	}
+	jobRuntime := jobs.NewRuntime(db, jobs.Config{
+		WorkerConcurrency: cfg.JobWorkerConcurrency,
+		PollInterval:      cfg.JobPollInterval,
+		LeaseDuration:     cfg.JobLeaseDuration,
+		MaxAttempts:       cfg.JobMaxAttempts,
+		RetryBaseDelay:    cfg.JobRetryBaseDelay,
+		RetryMaxDelay:     cfg.JobRetryMaxDelay,
+		Logger:            applicationLogger,
+		Observer:          jobObserver,
+	})
+	mediaService := media.NewService(db, cfg.MediaRoot, cfg.MediaPublicURL, legacyLogger, jobRuntime)
 	if err := mediaService.EnsureDirs(); err != nil {
 		return fmt.Errorf("failed to initialize media directories: %w", err)
+	}
+	if err := mediaService.RegisterJobHandlers(); err != nil {
+		return fmt.Errorf("register media job handlers: %w", err)
 	}
 
 	var workers sync.WaitGroup
@@ -202,7 +252,7 @@ func run(parentCtx context.Context) error {
 		if loadErr != nil {
 			return fmt.Errorf("failed to load checkout plugins: %w", loadErr)
 		}
-		log.Printf("[INFO] Loaded %d external checkout plugins from %s", loaded, cfg.CheckoutPluginManifestsDir)
+		applicationLogger.Info("Loaded external checkout plugins", "count", loaded, "directory", cfg.CheckoutPluginManifestsDir)
 	}
 
 	var paymentProviders paymentservice.ProviderRegistry = paymentservice.NewDefaultProviderRegistry()
@@ -215,7 +265,7 @@ func run(parentCtx context.Context) error {
 			if loadErr != nil {
 				return fmt.Errorf("failed to load provider-backed checkout plugins: %w", loadErr)
 			}
-			log.Printf("[INFO] Loaded %d provider-backed checkout plugins from %s", loaded, cfg.ProviderPluginManifestsDir)
+			applicationLogger.Info("Loaded provider-backed checkout plugins", "count", loaded, "directory", cfg.ProviderPluginManifestsDir)
 		}
 
 		loadedProviders, loadErr := providerplugins.LoadRegistriesFromDir(
@@ -230,7 +280,7 @@ func run(parentCtx context.Context) error {
 		paymentProviders = loadedProviders.PaymentProviders
 		shippingProviders = loadedProviders.ShippingProviders
 		taxProviders = loadedProviders.TaxProviders
-		log.Printf("[INFO] Loaded %d external provider plugins from %s", loadedProviders.LoadedCount, cfg.ProviderPluginManifestsDir)
+		applicationLogger.Info("Loaded external provider plugins", "count", loadedProviders.LoadedCount, "directory", cfg.ProviderPluginManifestsDir)
 	}
 
 	checkoutCleanupWorker := func() {
@@ -238,15 +288,14 @@ func run(parentCtx context.Context) error {
 			summary, cleanupErr := checkoutservice.CleanupExpiredState(db.WithContext(workerCtx), time.Now().UTC())
 			if cleanupErr != nil {
 				if !errors.Is(cleanupErr, context.Canceled) {
-					log.Printf("[ERROR] Checkout cleanup failed: %v", cleanupErr)
+					applicationLogger.ErrorContext(workerCtx, "Checkout cleanup failed", "error", cleanupErr)
 				}
 				return
 			}
 			if summary.ExpiredSessions > 0 || summary.DeletedIdempotencyKeys > 0 {
-				log.Printf(
-					"[INFO] Checkout cleanup expired_sessions=%d deleted_idempotency_keys=%d",
-					summary.ExpiredSessions,
-					summary.DeletedIdempotencyKeys,
+				applicationLogger.InfoContext(workerCtx, "Checkout cleanup completed",
+					"expired_sessions", summary.ExpiredSessions,
+					"deleted_idempotency_keys", summary.DeletedIdempotencyKeys,
 				)
 			}
 		})
@@ -256,12 +305,12 @@ func run(parentCtx context.Context) error {
 			result, lifecycleErr := discountservice.RunLifecycle(db.WithContext(workerCtx), time.Now().UTC())
 			if lifecycleErr != nil {
 				if !errors.Is(lifecycleErr, context.Canceled) {
-					log.Printf("[ERROR] Discount lifecycle failed: %v", lifecycleErr)
+					applicationLogger.ErrorContext(workerCtx, "Discount lifecycle failed", "error", lifecycleErr)
 				}
 				return
 			}
 			if result.Activated > 0 || result.Deactivated > 0 || result.Archived > 0 {
-				log.Printf("[INFO] Discount lifecycle completed activated=%d deactivated=%d archived=%d", result.Activated, result.Deactivated, result.Archived)
+				applicationLogger.InfoContext(workerCtx, "Discount lifecycle completed", "activated", result.Activated, "deactivated", result.Deactivated, "archived", result.Archived)
 			}
 		})
 	}
@@ -284,6 +333,7 @@ func run(parentCtx context.Context) error {
 		QueryTimeout:        cfg.ProviderQueryTimeout,
 		CompensationTimeout: cfg.ProviderCompensationTimeout,
 		LeaseDuration:       cfg.ProviderLeaseDuration,
+		Observer:            metrics,
 	})
 
 	var reconciliationWorker func()
@@ -298,12 +348,12 @@ func run(parentCtx context.Context) error {
 					summary, runErr := providerRuntime.Reconciliation.RunScheduled(workerCtx)
 					if runErr != nil {
 						if !errors.Is(runErr, context.Canceled) {
-							log.Printf("[ERROR] Provider reconciliation failed: %v", runErr)
+							applicationLogger.ErrorContext(workerCtx, "Provider reconciliation failed", "error", runErr)
 						}
 						return
 					}
 					if summary.RunCount > 0 {
-						log.Printf("[INFO] Provider reconciliation completed runs=%d", summary.RunCount)
+						applicationLogger.InfoContext(workerCtx, "Provider reconciliation completed", "runs", summary.RunCount)
 					}
 				})
 			}
@@ -314,11 +364,16 @@ func run(parentCtx context.Context) error {
 	if err := providerCatalog.SyncSettings(ctx); err != nil {
 		return fmt.Errorf("sync checkout provider settings: %w", err)
 	}
-	webhookService := webhookservice.NewService(db, paymentProviders, shippingProviders, log.Default())
+	webhookService := webhookservice.NewService(db, paymentProviders, shippingProviders, legacyLogger)
 	accountService := accountservice.NewService(db, credentialService)
 	authService := authservice.NewService(db, jwtSecret, cfg.DisableLocalSignIn, accountService)
-	renderer := httpapi.Renderer{Report: func(_ context.Context, err error, problem httpapi.Problem) {
-		log.Printf("[ERROR] HTTP problem code=%s status=%d: %v", problem.Code, problem.Status, err)
+	renderer := httpapi.Renderer{Report: func(reportContext context.Context, err error, problem httpapi.Problem) {
+		correlation := reliability.FromContext(reportContext)
+		attributes := []any{"error_type", fmt.Sprintf("%T", err), "error_code", problem.Code, "status_code", problem.Status, "request_id", correlation.RequestID, "correlation_id", correlation.CorrelationID}
+		if class, ok := reliability.ErrorClassOf(err); ok {
+			attributes = append(attributes, "error_class", class)
+		}
+		applicationLogger.ErrorContext(reportContext, "HTTP problem", attributes...)
 	}}
 	accountEndpoints, err := httpapi.NewAccountEndpoints(httpapi.AccountEndpointsOptions{
 		Auth: authService, Accounts: accountService, AccountData: accountdata.NewService(db),
@@ -378,7 +433,7 @@ func run(parentCtx context.Context) error {
 		return fmt.Errorf("register strict API server: %w", err)
 	}
 
-	mediaService.StartProcessor()
+	startWorker(func() { jobRuntime.Run(ctx) })
 	startWorker(func() { webhookService.Run(ctx) })
 	startWorker(checkoutCleanupWorker)
 	startWorker(discountLifecycleWorker)
@@ -386,9 +441,9 @@ func run(parentCtx context.Context) error {
 	if reconciliationWorker != nil {
 		startWorker(reconciliationWorker)
 	}
-	inventoryservice.StartReservationExpiryWorker(ctx, db.WithContext(ctx), time.Minute, log.Default())
-	cmsservice.StartDeliveryWorker(ctx, db.WithContext(ctx), time.Minute, log.Default(), mediaService)
-	cmsservice.StartInvalidationWorker(ctx, db.WithContext(ctx), cfg.CMSInvalidationWebhookURL, time.Minute, log.Default())
+	inventoryservice.StartReservationExpiryWorker(ctx, db.WithContext(ctx), time.Minute, legacyLogger)
+	cmsservice.StartDeliveryWorker(ctx, db.WithContext(ctx), time.Minute, legacyLogger, mediaService)
+	cmsservice.StartInvalidationWorker(ctx, db.WithContext(ctx), cfg.CMSInvalidationWebhookURL, time.Minute, legacyLogger)
 
 	requestRootCtx := context.WithoutCancel(ctx)
 	server := &http.Server{
@@ -407,12 +462,40 @@ func run(parentCtx context.Context) error {
 		serverErr <- server.ListenAndServe()
 	}()
 
-	log.Printf("[INFO] Server starting on port %s", cfg.Port)
+	var telemetryServer *telemetry.Server
+	var telemetryErr <-chan error
+	if metrics != nil {
+		telemetryServer = telemetry.NewServer(cfg.TelemetryBindAddress, cfg.MetricsPath, metrics.Handler(), telemetry.ReadinessChecks{
+			Pool: sqlDB, Database: db, MigrationCheck: migrations.Check, WorkersRunning: jobRuntime.Running,
+		})
+		telemetryServer.SetReleaseID(cfg.ReleaseID)
+		telemetryErr, err = telemetryServer.Start()
+		if err != nil {
+			cancel()
+			_ = server.Close()
+			startErr := fmt.Errorf("start telemetry server on %s: %w", cfg.TelemetryBindAddress, err)
+			shutdownContext, shutdownCancel := context.WithTimeout(context.Background(), cfg.HTTPShutdownTimeout)
+			defer shutdownCancel()
+			if workerErr := waitForWorkers(shutdownContext, &workers); workerErr != nil {
+				return errors.Join(startErr, workerErr)
+			}
+			return startErr
+		}
+		applicationLogger.Info("Telemetry server started", "bind_address", cfg.TelemetryBindAddress, "metrics_path", cfg.MetricsPath)
+	}
+
+	applicationLogger.Info("Server starting", "port", cfg.Port)
 	select {
 	case err := <-serverErr:
+		if telemetryServer != nil {
+			telemetryServer.SetReady(false)
+		}
 		cancel()
 		workerCtx, workerCancel := context.WithTimeout(context.Background(), cfg.HTTPShutdownTimeout)
 		defer workerCancel()
+		if telemetryServer != nil {
+			_ = telemetryServer.Shutdown(workerCtx)
+		}
 		if workerErr := waitForWorkers(workerCtx, &workers); workerErr != nil {
 			return workerErr
 		}
@@ -420,8 +503,24 @@ func run(parentCtx context.Context) error {
 			return fmt.Errorf("server failed: %w", err)
 		}
 		return nil
+	case err := <-telemetryErr:
+		telemetryServer.SetReady(false)
+		cancel()
+		shutdownContext, shutdownCancel := context.WithTimeout(context.Background(), cfg.HTTPShutdownTimeout)
+		defer shutdownCancel()
+		_ = server.Shutdown(shutdownContext)
+		if workerErr := waitForWorkers(shutdownContext, &workers); workerErr != nil {
+			return workerErr
+		}
+		if err != nil && !telemetry.IsServerClosed(err) {
+			return fmt.Errorf("telemetry server failed: %w", err)
+		}
+		return nil
 	case <-ctx.Done():
-		log.Println("[INFO] Shutdown signal received; draining HTTP server")
+		if telemetryServer != nil {
+			telemetryServer.SetReady(false)
+		}
+		applicationLogger.Info("Shutdown signal received; draining HTTP server")
 	}
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), cfg.HTTPShutdownTimeout)
@@ -430,6 +529,10 @@ func run(parentCtx context.Context) error {
 	if shutdownErr != nil {
 		_ = server.Close()
 	}
+	var telemetryShutdownErr error
+	if telemetryServer != nil {
+		telemetryShutdownErr = telemetryServer.Shutdown(shutdownCtx)
+	}
 	workerErr := waitForWorkers(shutdownCtx, &workers)
 	if shutdownErr != nil {
 		return fmt.Errorf("graceful server shutdown: %w", shutdownErr)
@@ -437,7 +540,10 @@ func run(parentCtx context.Context) error {
 	if workerErr != nil {
 		return workerErr
 	}
-	log.Println("[INFO] Server shutdown complete")
+	if telemetryShutdownErr != nil {
+		return fmt.Errorf("graceful telemetry server shutdown: %w", telemetryShutdownErr)
+	}
+	applicationLogger.Info("Server shutdown complete")
 	return nil
 }
 

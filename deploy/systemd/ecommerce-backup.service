@@ -1,0 +1,18 @@
+[Unit]
+Description=Ecommerce encrypted logical database backup
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ecommerce-backup
+Group=ecommerce-backup
+EnvironmentFile=/etc/ecommerce/backup-common.env
+EnvironmentFile=/etc/ecommerce/backup.env
+EnvironmentFile=/etc/ecommerce/backup-credentials.env
+ExecStart=/usr/local/bin/ecommerce-ops backup
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+UMask=0077

@@ -23,7 +23,7 @@ func TestServiceMethodsApplyContextToDatabaseOperations(t *testing.T) {
 
 func TestSaveEntryVariantReconcilesReadyMediaReferences(t *testing.T) {
 	db := newServiceTestDB(t)
-	mediaService := media.NewService(db, t.TempDir(), "/media", log.New(io.Discard, "", 0))
+	mediaService := media.NewService(db, t.TempDir(), "/media", log.New(io.Discard, "", 0), nil)
 	service := NewPageService(db, mediaService)
 	page, err := service.CreateDraft(context.Background(), PageDraftInput{Path: "/variant-owner", Title: "Variant owner", Payload: PagePayload{}})
 	require.NoError(t, err)

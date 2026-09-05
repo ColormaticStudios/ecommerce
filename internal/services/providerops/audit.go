@@ -13,7 +13,12 @@ import (
 )
 
 type AuditService struct {
-	db *gorm.DB
+	db       *gorm.DB
+	observer Observer
+}
+
+type Observer interface {
+	ProviderCallCompleted(providerType, operation, outcome string, duration time.Duration)
 }
 
 type AuditRecord struct {
@@ -30,13 +35,25 @@ type AuditRecord struct {
 	Latency         time.Duration
 }
 
-func NewAuditService(db *gorm.DB) *AuditService {
-	return &AuditService{db: db}
+func NewAuditService(db *gorm.DB, observers ...Observer) *AuditService {
+	service := &AuditService{db: db}
+	if len(observers) > 0 {
+		service.observer = observers[0]
+	}
+	return service
 }
 
 func (s *AuditService) Record(ctx context.Context, record AuditRecord) error {
 	if s == nil {
 		return nil
+	}
+	// Provider-call telemetry intentionally precedes persistence: it describes
+	// the completed external call and must remain observable if the audit write
+	// itself fails.
+	if s.observer != nil {
+		s.observer.ProviderCallCompleted(
+			strings.TrimSpace(record.ProviderType), strings.TrimSpace(record.Operation), strings.ToLower(strings.TrimSpace(record.Status)), record.Latency,
+		)
 	}
 
 	db := s.db

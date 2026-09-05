@@ -5,16 +5,16 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"unicode"
 
+	"ecommerce/internal/reliability"
 	"ecommerce/internal/requestctx"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 const (
-	RequestIDHeader     = "X-Request-ID"
-	CorrelationIDHeader = "X-Correlation-ID"
+	RequestIDHeader     = reliability.RequestIDHeader
+	CorrelationIDHeader = reliability.CorrelationIDHeader
 )
 
 // PrincipalResolver adapts transport authentication state to requestctx.
@@ -32,44 +32,47 @@ func RequestContextMiddleware(options RequestContextOptions) gin.HandlerFunc {
 		newID = func() string { return uuid.NewString() }
 	}
 	return func(ctx *gin.Context) {
-		requestID := ""
-		correlationID := ""
-		if options.TrustRequestIDs {
-			requestID = validExternalID(ctx.GetHeader(RequestIDHeader))
-			correlationID = validExternalID(ctx.GetHeader(CorrelationIDHeader))
-		}
-		if requestID == "" {
-			requestID = newID()
-		}
-		if correlationID == "" {
-			correlationID = requestID
-		}
+		requestContext := ctx.Request.Context()
+		metadata, exists := requestctx.MetadataFrom(requestContext)
+		if !exists || metadata.RequestID == "" {
+			correlation := reliability.Correlation{}
+			if options.TrustRequestIDs {
+				correlation = reliability.ExtractHTTP(ctx.Request.Header)
+			}
+			if correlation.RequestID == "" {
+				correlation.RequestID = newID()
+			}
+			if correlation.CorrelationID == "" {
+				correlation.CorrelationID = correlation.RequestID
+			}
 
-		cookies := make(map[string]string)
-		for _, cookie := range ctx.Request.Cookies() {
-			cookies[cookie.Name] = cookie.Value
+			cookies := make(map[string]string)
+			for _, cookie := range ctx.Request.Cookies() {
+				cookies[cookie.Name] = cookie.Value
+			}
+			headers := make(map[string]string, len(ctx.Request.Header))
+			for name := range ctx.Request.Header {
+				headers[name] = ctx.Request.Header.Get(name)
+			}
+			metadata = requestctx.Metadata{
+				RequestID:     correlation.RequestID,
+				CorrelationID: correlation.CorrelationID,
+				Method:        ctx.Request.Method,
+				Path:          ctx.Request.URL.Path,
+				StartedAt:     time.Now().UTC(),
+				Cookies:       cookies,
+				Headers:       headers,
+			}
+			requestContext = requestctx.WithMetadata(requestContext, metadata)
 		}
-		headers := make(map[string]string, len(ctx.Request.Header))
-		for name := range ctx.Request.Header {
-			headers[name] = ctx.Request.Header.Get(name)
-		}
-		requestContext := requestctx.WithMetadata(ctx.Request.Context(), requestctx.Metadata{
-			RequestID:     requestID,
-			CorrelationID: correlationID,
-			Method:        ctx.Request.Method,
-			Path:          ctx.Request.URL.Path,
-			StartedAt:     time.Now().UTC(),
-			Cookies:       cookies,
-			Headers:       headers,
-		})
 		if options.ResolvePrincipal != nil {
 			if principal, ok := options.ResolvePrincipal(ctx); ok {
 				requestContext = requestctx.WithPrincipal(requestContext, principal)
 			}
 		}
 		ctx.Request = ctx.Request.WithContext(requestContext)
-		ctx.Header(RequestIDHeader, requestID)
-		ctx.Header(CorrelationIDHeader, correlationID)
+		ctx.Header(RequestIDHeader, metadata.RequestID)
+		ctx.Header(CorrelationIDHeader, metadata.CorrelationID)
 		ctx.Next()
 	}
 }
@@ -132,17 +135,4 @@ func GeneratedBindingErrorHandler(renderer Renderer) func(*gin.Context, error, i
 		renderer.Render(ctx.Writer, ctx.Request.Context(), status, err)
 		ctx.Abort()
 	}
-}
-
-func validExternalID(value string) string {
-	value = strings.TrimSpace(value)
-	if value == "" || len(value) > 128 {
-		return ""
-	}
-	for _, r := range value {
-		if unicode.IsControl(r) || unicode.IsSpace(r) {
-			return ""
-		}
-	}
-	return value
 }

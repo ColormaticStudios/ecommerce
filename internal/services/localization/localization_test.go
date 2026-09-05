@@ -48,7 +48,7 @@ func newLocalizationTestService(t testing.TB) (*Service, *gorm.DB) {
 
 func TestTranslationKeyUsagesAttachMediaManagedScreenshots(t *testing.T) {
 	service, db := newLocalizationTestService(t)
-	mediaService := media.NewService(db, t.TempDir(), "/media", nil)
+	mediaService := media.NewService(db, t.TempDir(), "/media", nil, nil)
 	key, err := service.CreateKey(context.Background(), KeyInput{Namespace: "storefront", Key: "usage.test", SourceText: "Usage", OwnerDomain: "storefront"})
 	require.NoError(t, err)
 	require.NoError(t, db.Create(&models.MediaObject{ID: "shot", OriginalPath: "shot.webp", MimeType: "image/webp", Status: media.StatusReady}).Error)

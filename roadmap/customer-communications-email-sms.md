@@ -59,6 +59,8 @@
 - Communication event creation path is covered by tests for enabled and disabled channels.
 
 ## P1: Outbox + Retry Worker
+Follow the [Reliability and Operability checklist](../wiki/Reliability-and-Operability.md) for correlation propagation, failure classification, metrics, alerts, retry safety, and worker shutdown.
+
 ### Scope
 - Introduce DB-backed outbox for communication jobs.
 - Add worker loop to claim pending rows and execute sends with retry/backoff.

@@ -135,6 +135,8 @@
 - Regression tests cover access control and status visibility.
 
 ## P4: Hardening and Policy Controls
+Reconciliation workers must follow the [Reliability and Operability checklist](../wiki/Reliability-and-Operability.md) for correlation propagation, failure classification, bounded retries, metrics, alerts, and shutdown.
+
 ### Scope
 - Reliability, abuse controls, and operational visibility.
 - Return policy and fraud guardrails.

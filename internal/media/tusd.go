@@ -1,6 +1,7 @@
 package media
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -25,7 +26,7 @@ func (s *Service) NewTusUploadHandler() (*handler.Handler, error) {
 	})
 }
 
-func (s *Service) HandleTusdComplete(info handler.FileInfo) error {
+func (s *Service) HandleTusdComplete(ctx context.Context, info handler.FileInfo) error {
 	if info.ID == "" {
 		return errors.New("missing upload id")
 	}
@@ -41,19 +42,14 @@ func (s *Service) HandleTusdComplete(info handler.FileInfo) error {
 		return err
 	}
 
-	_ = os.Remove(filepath.Join(s.TusDir(), info.ID+".info"))
-
-	if err := s.persistProcessingUpload(info.ID, info.Size); err != nil {
+	payload := ProcessPayload{
+		Version: ProcessPayloadVersion, MediaID: info.ID, Filename: info.MetaData["filename"],
+		SizeBytes: info.Size, Metadata: info.MetaData,
+	}
+	if _, err := s.enqueueProcessing(ctx, payload); err != nil {
+		_ = os.Rename(incomingPath, sourcePath)
 		return err
 	}
-
-	s.Queue <- Job{
-		ID:        info.ID,
-		Source:    incomingPath,
-		Filename:  info.MetaData["filename"],
-		SizeBytes: info.Size,
-		Metadata:  info.MetaData,
-	}
-
+	_ = os.Remove(filepath.Join(s.TusDir(), info.ID+".info"))
 	return nil
 }

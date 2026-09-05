@@ -1,0 +1,13 @@
+**
+!go.mod
+!go.sum
+!cmd/
+!cmd/ecommerce-ops/
+!cmd/ecommerce-ops/**
+!internal/
+!internal/backups/
+!internal/backups/**
+!internal/operability/
+!internal/operability/**
+!internal/schemacontract/
+!internal/schemacontract/**

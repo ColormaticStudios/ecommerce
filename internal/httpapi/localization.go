@@ -23,7 +23,7 @@ func NewLocalizationEndpoints(db *gorm.DB) (*LocalizationEndpoints, error) {
 	if db == nil {
 		return nil, errors.New("localization database is required")
 	}
-	return NewLocalizationEndpointsWithMedia(db, media.NewService(db, "", "", nil))
+	return NewLocalizationEndpointsWithMedia(db, media.NewService(db, "", "", nil, nil))
 }
 
 func NewLocalizationEndpointsWithMedia(db *gorm.DB, mediaService *media.Service) (*LocalizationEndpoints, error) {

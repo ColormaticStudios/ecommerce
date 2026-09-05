@@ -748,9 +748,12 @@ func newUploadProductMediaCmd() *cobra.Command {
 				log.Fatalf("Media upload dependencies unavailable: %v", err)
 			}
 
-			mediaService := media.NewService(db, cfg.MediaRoot, cfg.MediaPublicURL, log.Default())
+			mediaService := media.NewService(db, cfg.MediaRoot, cfg.MediaPublicURL, log.Default(), newJobRuntime(db, cfg))
 			if err := mediaService.EnsureDirs(); err != nil {
 				log.Fatalf("Failed to initialize media directories: %v", err)
+			}
+			if err := mediaService.RegisterJobHandlers(); err != nil {
+				log.Fatalf("Failed to register media jobs: %v", err)
 			}
 
 			mediaObj, err := mediaService.ImportFile(cmd.Context(), filePath)

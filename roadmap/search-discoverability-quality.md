@@ -40,6 +40,8 @@
 - Query -> click -> add-to-cart -> order attribution should feed analytics facts and relevance dashboards.
 
 ## P0: Search Foundation and Index Projection
+Indexing jobs must follow the [Reliability and Operability checklist](../wiki/Reliability-and-Operability.md) for correlation propagation, retry/idempotency behavior, freshness measurement, alerts, and shutdown.
+
 ### Scope
 - Define search service boundary and index document model.
 - Add index lifecycle jobs (backfill + incremental updates).

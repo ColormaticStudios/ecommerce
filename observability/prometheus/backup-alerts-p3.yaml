@@ -1,0 +1,59 @@
+groups:
+  - name: ecommerce-backups-p3
+    interval: 5m
+    rules:
+      - alert: EcommerceBackupFailed
+        expr: ecommerce_backup_last_run_timestamp_seconds{outcome="failed"} > 0
+        for: 1m
+        labels:
+          severity: sev2
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: An ecommerce backup failed
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Backup-and-Restore#ecommercebackupfailed
+      - alert: EcommerceBackupMissed
+        expr: time() - ecommerce_backup_last_success_timestamp_seconds > 93600
+        for: 30m
+        labels:
+          severity: sev2
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: No successful ecommerce backup has completed within 26 hours
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Backup-and-Restore#ecommercebackupmissed
+      - alert: EcommerceBackupManifestCollectionFailed
+        expr: ecommerce_backup_manifest_collection_success == 0
+        for: 10m
+        labels:
+          severity: sev3
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: Backup status manifests cannot be read from object storage
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Backup-and-Restore#ecommercebackupmanifestcollectionfailed
+      - alert: EcommerceRestoreDrillFailed
+        expr: ecommerce_restore_drill_last_run_timestamp_seconds{outcome="failed"} > 0
+        for: 5m
+        labels:
+          severity: sev3
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: The latest isolated restore drill failed
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Backup-and-Restore#ecommercerestoredrillfailed
+      - alert: EcommerceRestoreDrillMissed
+        expr: time() - ecommerce_restore_drill_last_success_timestamp_seconds > 3024000
+        for: 1h
+        labels:
+          severity: sev3
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: No successful isolated restore drill has completed within 35 days
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Backup-and-Restore#ecommercerestoredrillmissed

@@ -1,7 +1,7 @@
-.PHONY: all api cli run test test-services test-handlers test-integration check localization-check localization-performance domain-performance clean release openapi-gen openapi-check openapi-check-ci openapi-docs migrate migrate-plan migrate-check migrate-status migrate-lint migrate-guard migrate-snapshot migrate-drift-check migrate-ci-gate migrate-forward-compat test-migrations test-e2e-postgres test-e2e-sqlite
+.PHONY: all api cli ops run test test-services test-handlers test-integration check localization-check localization-performance domain-performance observability-check operability-check deploy-precheck deploy-postcheck incident-validate incident-summary backup restore-drill backup-image clean release openapi-gen openapi-check openapi-check-ci openapi-docs migrate migrate-plan migrate-check migrate-status migrate-lint migrate-guard migrate-snapshot migrate-drift-check migrate-ci-gate migrate-forward-compat test-migrations test-e2e-postgres test-e2e-sqlite
 
 # Build the API server and the CLI tool
-all: api cli
+all: api cli ops
 
 # Build the API server
 api:
@@ -12,6 +12,11 @@ api:
 cli:
 	@echo "Building CLI tool..."
 	@go build -o bin/ecommerce-cli ./cmd/cli
+
+# Build the separately deployed backup/restore operations workload
+ops:
+	@echo "Building operations workload..."
+	@go build -o bin/ecommerce-ops ./cmd/ecommerce-ops
 
 # Run the API server
 run: api
@@ -30,7 +35,7 @@ test-handlers:
 test-integration:
 	go test ./internal/httpapi -run Integration
 
-check: openapi-check localization-check localization-performance domain-performance
+check: openapi-check localization-check localization-performance domain-performance observability-check operability-check
 	go test ./internal/services/...
 	go test ./internal/httpapi
 
@@ -39,11 +44,47 @@ localization-check:
 	@cd frontend && bun run localization:quality
 
 localization-performance:
-	@go test ./internal/services/localization ./internal/httpapi -run 'PerformanceBudget' -count=1
+	@go test -p 1 -tags=performance ./internal/services/localization ./internal/httpapi -run 'PerformanceBudget' -count=1
 	@cd frontend && bun run localization:performance
 
 domain-performance:
-	@go test ./internal/repositories/catalog ./internal/services/discounts -run 'PerformanceBudget' -count=1
+	@go test -p 1 -tags=performance ./internal/repositories/catalog ./internal/services/discounts -run 'PerformanceBudget' -count=1
+
+observability-check:
+	@go test ./internal/telemetry -run TestObservabilityArtifactsAreParseableAndCoverFailureSimulations -count=1
+	@if command -v promtool >/dev/null 2>&1; then \
+		promtool check rules observability/prometheus/alerts.yaml observability/prometheus/backup-alerts-p3.yaml && \
+		promtool test rules observability/prometheus/alerts.test.yaml observability/prometheus/backup-alerts.test.yaml; \
+	else \
+		echo "promtool not installed; Go artifact tests still validate dashboards and alert structure"; \
+	fi
+
+operability-check: ops
+	@go test ./internal/operability ./internal/telemetry ./internal/services/providerops -count=1
+	@./bin/ecommerce-ops incident validate incidents/templates/incident.yaml incidents/templates/drill.yaml >/dev/null
+
+deploy-precheck: ops
+	@./bin/ecommerce-ops deploy-check pre-deploy
+
+deploy-postcheck: ops
+	@./bin/ecommerce-ops deploy-check post-deploy
+
+incident-validate: ops
+	@test -n "$(INCIDENT_FILES)" || (echo "Set INCIDENT_FILES to one or more incident YAML files" && exit 1)
+	@./bin/ecommerce-ops incident validate $(INCIDENT_FILES)
+
+incident-summary: ops
+	@test -n "$(INCIDENT_FILES)" || (echo "Set INCIDENT_FILES to one or more incident YAML files" && exit 1)
+	@./bin/ecommerce-ops incident summary $(INCIDENT_FILES)
+
+backup: ops
+	@./bin/ecommerce-ops backup
+
+restore-drill: ops
+	@./bin/ecommerce-ops restore-drill
+
+backup-image:
+	@docker build -f deploy/backup/Dockerfile -t ecommerce-ops:local .
 
 # Apply database migrations
 migrate:

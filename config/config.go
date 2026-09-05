@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"net"
+	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -37,6 +40,23 @@ type Config struct {
 	ProviderQueryTimeout           time.Duration `mapstructure:"PROVIDER_QUERY_TIMEOUT"`
 	ProviderCompensationTimeout    time.Duration `mapstructure:"PROVIDER_COMPENSATION_TIMEOUT"`
 	ProviderLeaseDuration          time.Duration `mapstructure:"PROVIDER_LEASE_DURATION"`
+	TelemetryEnabled               bool          `mapstructure:"TELEMETRY_ENABLED"`
+	TelemetryBindAddress           string        `mapstructure:"TELEMETRY_BIND_ADDRESS"`
+	MetricsPath                    string        `mapstructure:"METRICS_PATH"`
+	TracingEnabled                 bool          `mapstructure:"TRACING_ENABLED"`
+	OTLPTraceEndpoint              string        `mapstructure:"OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"`
+	TraceSampleRatio               float64       `mapstructure:"TRACE_SAMPLE_RATIO"`
+	TrustRequestIDs                bool          `mapstructure:"TRUST_REQUEST_IDS"`
+	AlertOwner                     string        `mapstructure:"ALERT_OWNER"`
+	AlertService                   string        `mapstructure:"ALERT_SERVICE"`
+	DeploymentEnvironment          string        `mapstructure:"DEPLOYMENT_ENVIRONMENT"`
+	ReleaseID                      string        `mapstructure:"RELEASE_ID"`
+	JobWorkerConcurrency           int           `mapstructure:"JOB_WORKER_CONCURRENCY"`
+	JobPollInterval                time.Duration `mapstructure:"JOB_POLL_INTERVAL"`
+	JobLeaseDuration               time.Duration `mapstructure:"JOB_LEASE_DURATION"`
+	JobMaxAttempts                 int           `mapstructure:"JOB_MAX_ATTEMPTS"`
+	JobRetryBaseDelay              time.Duration `mapstructure:"JOB_RETRY_BASE_DELAY"`
+	JobRetryMaxDelay               time.Duration `mapstructure:"JOB_RETRY_MAX_DELAY"`
 }
 
 var configKeys = []string{
@@ -66,6 +86,23 @@ var configKeys = []string{
 	"PROVIDER_QUERY_TIMEOUT",
 	"PROVIDER_COMPENSATION_TIMEOUT",
 	"PROVIDER_LEASE_DURATION",
+	"TELEMETRY_ENABLED",
+	"TELEMETRY_BIND_ADDRESS",
+	"METRICS_PATH",
+	"TRACING_ENABLED",
+	"OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+	"TRACE_SAMPLE_RATIO",
+	"TRUST_REQUEST_IDS",
+	"ALERT_OWNER",
+	"ALERT_SERVICE",
+	"DEPLOYMENT_ENVIRONMENT",
+	"RELEASE_ID",
+	"JOB_WORKER_CONCURRENCY",
+	"JOB_POLL_INTERVAL",
+	"JOB_LEASE_DURATION",
+	"JOB_MAX_ATTEMPTS",
+	"JOB_RETRY_BASE_DELAY",
+	"JOB_RETRY_MAX_DELAY",
 }
 
 func LoadConfig() (config Config, err error) {
@@ -109,6 +146,22 @@ func LoadConfig() (config Config, err error) {
 	v.SetDefault("PROVIDER_QUERY_TIMEOUT", "15s")
 	v.SetDefault("PROVIDER_COMPENSATION_TIMEOUT", "1m")
 	v.SetDefault("PROVIDER_LEASE_DURATION", "2m")
+	v.SetDefault("TELEMETRY_ENABLED", true)
+	v.SetDefault("TELEMETRY_BIND_ADDRESS", "127.0.0.1:9090")
+	v.SetDefault("METRICS_PATH", "/metrics")
+	v.SetDefault("TRACING_ENABLED", false)
+	v.SetDefault("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", "http://127.0.0.1:4318/v1/traces")
+	v.SetDefault("TRACE_SAMPLE_RATIO", 0.1)
+	v.SetDefault("TRUST_REQUEST_IDS", false)
+	v.SetDefault("ALERT_SERVICE", "ecommerce-api")
+	v.SetDefault("DEPLOYMENT_ENVIRONMENT", "development")
+	v.SetDefault("RELEASE_ID", "development")
+	v.SetDefault("JOB_WORKER_CONCURRENCY", 4)
+	v.SetDefault("JOB_POLL_INTERVAL", "1s")
+	v.SetDefault("JOB_LEASE_DURATION", "2m")
+	v.SetDefault("JOB_MAX_ATTEMPTS", 5)
+	v.SetDefault("JOB_RETRY_BASE_DELAY", "5s")
+	v.SetDefault("JOB_RETRY_MAX_DELAY", "15m")
 	v.AutomaticEnv()
 	for _, key := range configKeys {
 		if bindErr := v.BindEnv(key); bindErr != nil {
@@ -126,6 +179,54 @@ func LoadConfig() (config Config, err error) {
 }
 
 func (c Config) validate() error {
+	if c.MetricsPath == "" || c.MetricsPath[0] != '/' || len(c.MetricsPath) > 255 || strings.TrimSpace(c.MetricsPath) != c.MetricsPath {
+		return errors.New("METRICS_PATH must be an absolute path no longer than 255 characters")
+	}
+	metricsURL, metricsURLErr := url.ParseRequestURI(c.MetricsPath)
+	if metricsURLErr != nil || metricsURL.Path != c.MetricsPath || metricsURL.RawQuery != "" || strings.ContainsAny(c.MetricsPath, "{}") {
+		return errors.New("METRICS_PATH must be a literal URL path without a query or wildcard")
+	}
+	if c.MetricsPath == "/healthz" || c.MetricsPath == "/readyz" {
+		return errors.New("METRICS_PATH must not conflict with /healthz or /readyz")
+	}
+	if c.TelemetryEnabled {
+		if strings.TrimSpace(c.TelemetryBindAddress) != c.TelemetryBindAddress || c.TelemetryBindAddress == "" {
+			return errors.New("TELEMETRY_BIND_ADDRESS must be a non-empty host:port")
+		}
+		if _, _, err := net.SplitHostPort(c.TelemetryBindAddress); err != nil {
+			return fmt.Errorf("TELEMETRY_BIND_ADDRESS must be a valid host:port: %w", err)
+		}
+	}
+	if c.TracingEnabled && !c.TelemetryEnabled {
+		return errors.New("TRACING_ENABLED requires TELEMETRY_ENABLED=true")
+	}
+	if c.TraceSampleRatio < 0 || c.TraceSampleRatio > 1 {
+		return errors.New("TRACE_SAMPLE_RATIO must be between 0 and 1")
+	}
+	if c.TracingEnabled {
+		endpoint, err := url.Parse(c.OTLPTraceEndpoint)
+		if err != nil || endpoint.Host == "" || (endpoint.Scheme != "http" && endpoint.Scheme != "https") {
+			return errors.New("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT must be an absolute HTTP(S) URL")
+		}
+	}
+	if strings.TrimSpace(c.AlertService) == "" {
+		return errors.New("ALERT_SERVICE must not be empty")
+	}
+	if strings.TrimSpace(c.DeploymentEnvironment) == "" {
+		return errors.New("DEPLOYMENT_ENVIRONMENT must not be empty")
+	}
+	if strings.TrimSpace(c.ReleaseID) == "" || len(c.ReleaseID) > 128 || strings.ContainsAny(c.ReleaseID, "\r\n") {
+		return errors.New("RELEASE_ID must be non-empty, no longer than 128 characters, and contain no line breaks")
+	}
+	if c.JobWorkerConcurrency < 1 || c.JobWorkerConcurrency > 128 {
+		return errors.New("JOB_WORKER_CONCURRENCY must be between 1 and 128")
+	}
+	if c.JobMaxAttempts < 1 || c.JobMaxAttempts > 100 {
+		return errors.New("JOB_MAX_ATTEMPTS must be between 1 and 100")
+	}
+	if c.JobRetryMaxDelay < c.JobRetryBaseDelay {
+		return errors.New("JOB_RETRY_MAX_DELAY must be greater than or equal to JOB_RETRY_BASE_DELAY")
+	}
 	durations := []struct {
 		name  string
 		value time.Duration
@@ -139,6 +240,10 @@ func (c Config) validate() error {
 		{"PROVIDER_QUERY_TIMEOUT", c.ProviderQueryTimeout},
 		{"PROVIDER_COMPENSATION_TIMEOUT", c.ProviderCompensationTimeout},
 		{"PROVIDER_LEASE_DURATION", c.ProviderLeaseDuration},
+		{"JOB_POLL_INTERVAL", c.JobPollInterval},
+		{"JOB_LEASE_DURATION", c.JobLeaseDuration},
+		{"JOB_RETRY_BASE_DELAY", c.JobRetryBaseDelay},
+		{"JOB_RETRY_MAX_DELAY", c.JobRetryMaxDelay},
 	}
 	for _, duration := range durations {
 		if duration.value <= 0 {

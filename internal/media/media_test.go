@@ -2,6 +2,8 @@ package media
 
 import (
 	"context"
+	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -9,8 +11,11 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 
+	"ecommerce/internal/jobs"
+	"ecommerce/internal/reliability"
 	"ecommerce/models"
 
 	"github.com/stretchr/testify/assert"
@@ -27,10 +32,12 @@ func setupMediaService(t *testing.T) (*Service, *gorm.DB, string) {
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", dbName)
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	require.NoError(t, err)
-	require.NoError(t, db.AutoMigrate(&models.MediaObject{}, &models.MediaVariant{}, &models.MediaReference{}))
+	require.NoError(t, db.AutoMigrate(&models.MediaObject{}, &models.MediaVariant{}, &models.MediaReference{}, &models.JobQueue{}, &models.JobAttempt{}, &models.JobDeadLetter{}))
 
 	mediaRoot := t.TempDir()
-	service := NewService(db, mediaRoot, "http://localhost:3000/media", nil)
+	runtime := jobs.NewRuntime(db, jobs.Config{})
+	service := NewService(db, mediaRoot, "http://localhost:3000/media", nil, runtime)
+	require.NoError(t, service.RegisterJobHandlers())
 	require.NoError(t, service.EnsureDirs())
 
 	return service, db, mediaRoot
@@ -144,7 +151,7 @@ func TestHandleTusdCompleteQueuesJobAndPersistsProcessingRecord(t *testing.T) {
 	require.NoError(t, os.WriteFile(sourcePath, []byte("hello"), 0o644))
 	require.NoError(t, os.WriteFile(sourcePath+".info", []byte("meta"), 0o644))
 
-	err := service.HandleTusdComplete(tusdhandler.FileInfo{
+	err := service.HandleTusdComplete(context.Background(), tusdhandler.FileInfo{
 		ID:   uploadID,
 		Size: 5,
 		MetaData: map[string]string{
@@ -161,16 +168,18 @@ func TestHandleTusdCompleteQueuesJobAndPersistsProcessingRecord(t *testing.T) {
 	require.NoError(t, db.Table("media_objects").Where("id = ?", uploadID).Count(&objCount).Error)
 	assert.EqualValues(t, 1, objCount)
 
-	job := <-service.Queue
-	assert.Equal(t, uploadID, job.ID)
-	assert.Equal(t, incomingPath, job.Source)
-	assert.Equal(t, "photo.jpg", job.Filename)
-	assert.EqualValues(t, 5, job.SizeBytes)
+	var job models.JobQueue
+	require.NoError(t, db.Where("job_type = ? AND idempotency_key = ?", JobTypeProcess, uploadID).First(&job).Error)
+	var payload ProcessPayload
+	require.NoError(t, json.Unmarshal([]byte(job.PayloadJSON), &payload))
+	assert.Equal(t, uploadID, payload.MediaID)
+	assert.Equal(t, "photo.jpg", payload.Filename)
+	assert.EqualValues(t, 5, payload.SizeBytes)
 }
 
 func TestHandleTusdCompleteRequiresUploadID(t *testing.T) {
 	service, _, _ := setupMediaService(t)
-	err := service.HandleTusdComplete(tusdhandler.FileInfo{})
+	err := service.HandleTusdComplete(context.Background(), tusdhandler.FileInfo{})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "missing upload id")
 }
@@ -191,6 +200,12 @@ func TestImportFilePersistsAndProcessesLocalUpload(t *testing.T) {
 	var stored models.MediaObject
 	require.NoError(t, db.First(&stored, "id = ?", mediaObj.ID).Error)
 	assert.Equal(t, StatusReady, stored.Status)
+	var job models.JobQueue
+	require.NoError(t, db.Where("job_type = ? AND idempotency_key = ?", JobTypeProcess, mediaObj.ID).First(&job).Error)
+	assert.Equal(t, models.JobStatusSucceeded, job.Status)
+	var attempt models.JobAttempt
+	require.NoError(t, db.First(&attempt, "job_id = ?", job.ID).Error)
+	assert.Equal(t, models.JobAttemptOutcomeSucceeded, attempt.Outcome)
 
 	outputPath := filepath.Join(mediaRoot, stored.OriginalPath)
 	content, readErr := os.ReadFile(outputPath)
@@ -200,4 +215,96 @@ func TestImportFilePersistsAndProcessesLocalUpload(t *testing.T) {
 	originalContent, readErr := os.ReadFile(sourcePath)
 	require.NoError(t, readErr)
 	assert.Equal(t, "hello from cli", string(originalContent))
+}
+
+func TestDurableMediaJobProcessesAfterRuntimeRestart(t *testing.T) {
+	service, db, mediaRoot := setupMediaService(t)
+	info, err := service.CreateUpload(context.Background(), 5, map[string]string{"filename": "asset.txt"}, strings.NewReader("hello"))
+	require.NoError(t, err)
+
+	var queued models.JobQueue
+	require.NoError(t, db.Where("job_type = ? AND idempotency_key = ?", JobTypeProcess, info.ID).First(&queued).Error)
+	restartedRuntime := jobs.NewRuntime(db, jobs.Config{})
+	restartedService := NewService(db, mediaRoot, service.PublicURL, nil, restartedRuntime)
+	require.NoError(t, restartedService.RegisterJobHandlers())
+	require.NoError(t, restartedRuntime.Execute(context.Background(), queued.ID, "restarted-worker"))
+
+	object, err := restartedService.WaitUntilReady(context.Background(), info.ID, 0)
+	require.NoError(t, err)
+	assert.Equal(t, "text/plain; charset=utf-8", object.MimeType)
+	assert.FileExists(t, filepath.Join(mediaRoot, object.OriginalPath))
+}
+
+func TestDeadLetterMarksMediaFailed(t *testing.T) {
+	service, db, _ := setupMediaService(t)
+	object := models.MediaObject{ID: "missing-input", SizeBytes: 5, Status: StatusProcessing}
+	require.NoError(t, db.Create(&object).Error)
+	job, err := service.Jobs.Enqueue(context.Background(), jobs.EnqueueInput{
+		JobType: JobTypeProcess, IdempotencyKey: object.ID, MaxAttempts: 1,
+		Payload: ProcessPayload{Version: ProcessPayloadVersion, MediaID: object.ID, SizeBytes: object.SizeBytes},
+	})
+	require.NoError(t, err)
+	require.Error(t, service.Jobs.Execute(context.Background(), job.ID, "worker-1"))
+
+	require.NoError(t, db.First(&object, "id = ?", object.ID).Error)
+	assert.Equal(t, StatusFailed, object.Status)
+	var deadLetter models.JobDeadLetter
+	require.NoError(t, db.First(&deadLetter, "job_id = ?", job.ID).Error)
+	assert.Equal(t, string(reliability.ClassTerminal), deadLetter.ErrorClass)
+}
+
+func TestIncompleteMediaPayloadIsTerminal(t *testing.T) {
+	service, db, _ := setupMediaService(t)
+	job, err := service.Jobs.Enqueue(context.Background(), jobs.EnqueueInput{
+		JobType: JobTypeProcess, MaxAttempts: 5, Payload: map[string]any{"version": ProcessPayloadVersion},
+	})
+	require.NoError(t, err)
+	require.Error(t, service.Jobs.Execute(context.Background(), job.ID, "worker-1"))
+
+	require.NoError(t, db.First(&job, "id = ?", job.ID).Error)
+	assert.Equal(t, models.JobStatusDeadLetter, job.Status)
+	assert.Equal(t, 1, job.AttemptCount)
+}
+
+func TestMissingMediaDatabaseRowIsTerminal(t *testing.T) {
+	service, db, _ := setupMediaService(t)
+	job, err := service.Jobs.Enqueue(context.Background(), jobs.EnqueueInput{
+		JobType: JobTypeProcess, MaxAttempts: 5,
+		Payload: ProcessPayload{Version: ProcessPayloadVersion, MediaID: "missing-row"},
+	})
+	require.NoError(t, err)
+	require.Error(t, service.Jobs.Execute(context.Background(), job.ID, "worker-1"))
+
+	require.NoError(t, db.First(&job, "id = ?", job.ID).Error)
+	assert.Equal(t, models.JobStatusDeadLetter, job.Status)
+	assert.Equal(t, 1, job.AttemptCount)
+}
+
+func TestCorruptImageIsTerminal(t *testing.T) {
+	service, db, _ := setupMediaService(t)
+	mediaID := "corrupt-image"
+	require.NoError(t, db.Create(&models.MediaObject{ID: mediaID, Status: StatusProcessing}).Error)
+	require.NoError(t, os.WriteFile(filepath.Join(service.IncomingDir(), mediaID), []byte{0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10}, 0o600))
+	job, err := service.Jobs.Enqueue(context.Background(), jobs.EnqueueInput{
+		JobType: JobTypeProcess, MaxAttempts: 5,
+		Payload: ProcessPayload{Version: ProcessPayloadVersion, MediaID: mediaID, Filename: "broken.jpg"},
+	})
+	require.NoError(t, err)
+	require.Error(t, service.Jobs.Execute(context.Background(), job.ID, "worker-1"))
+
+	require.NoError(t, db.First(&job, "id = ?", job.ID).Error)
+	assert.Equal(t, models.JobStatusDeadLetter, job.Status)
+	assert.Equal(t, 1, job.AttemptCount)
+}
+
+func TestTransientMediaIOErrorRemainsRetryable(t *testing.T) {
+	classified := classifyMediaProcessError(&os.PathError{Op: "write", Path: "output", Err: syscall.ENOSPC})
+	errorClass, ok := reliability.ErrorClassOf(classified)
+	require.True(t, ok)
+	assert.Equal(t, reliability.ClassRetryable, errorClass)
+
+	classified = classifyMediaProcessError(driver.ErrBadConn)
+	errorClass, ok = reliability.ErrorClassOf(classified)
+	require.True(t, ok)
+	assert.Equal(t, reliability.ClassRetryable, errorClass)
 }

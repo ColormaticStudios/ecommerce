@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"ecommerce/internal/jobs"
 	"ecommerce/models"
 
 	"github.com/google/uuid"
@@ -22,9 +23,9 @@ var (
 	ErrMediaStillProcessing  = errors.New("media is still processing")
 )
 
-func (s *Service) persistProcessingUpload(id string, sizeBytes int64) error {
+func (s *Service) persistProcessingUploadTx(tx *gorm.DB, id string, sizeBytes int64) error {
 	var mediaObj models.MediaObject
-	if err := s.DB.Where("id = ?", id).First(&mediaObj).Error; err != nil {
+	if err := tx.Where("id = ?", id).First(&mediaObj).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
 		}
@@ -33,21 +34,12 @@ func (s *Service) persistProcessingUpload(id string, sizeBytes int64) error {
 			SizeBytes: sizeBytes,
 			Status:    StatusProcessing,
 		}
-		if err := s.DB.Create(&mediaObj).Error; err != nil {
+		if err := tx.Create(&mediaObj).Error; err != nil {
 			return err
 		}
 	}
 
 	return nil
-}
-
-func (s *Service) markJobFailed(jobID string) {
-	if jobID == "" {
-		return
-	}
-	s.DB.Model(&models.MediaObject{}).Where("id = ?", jobID).Updates(map[string]any{
-		"status": StatusFailed,
-	})
 }
 
 func (s *Service) WaitUntilReady(ctx context.Context, mediaID string, timeout time.Duration) (models.MediaObject, error) {
@@ -108,25 +100,44 @@ func (s *Service) ImportFile(ctx context.Context, filePath string) (models.Media
 		return models.MediaObject{}, err
 	}
 
-	job := Job{
-		ID:        mediaID,
-		Source:    incomingPath,
+	payload := ProcessPayload{
+		Version:   ProcessPayloadVersion,
+		MediaID:   mediaID,
 		Filename:  filepath.Base(filePath),
 		SizeBytes: info.Size(),
 		Metadata: map[string]string{
 			"filename": filepath.Base(filePath),
 		},
 	}
-	if err := s.persistProcessingUpload(job.ID, job.SizeBytes); err != nil {
+	job, err := s.enqueueProcessing(ctx, payload)
+	if err != nil {
 		_ = os.Remove(incomingPath)
 		return models.MediaObject{}, err
 	}
-	if err := s.processJob(job); err != nil {
-		s.markJobFailed(job.ID)
+	if err := s.Jobs.Execute(ctx, job.ID, "media-import"); err != nil {
 		return models.MediaObject{}, err
 	}
+	// Execute is deliberately synchronous here, so a zero-timeout readiness
+	// check observes the final state without polling.
+	return s.WaitUntilReady(ctx, mediaID, 0)
+}
 
-	return s.WaitUntilReady(ctx, job.ID, 0)
+func (s *Service) enqueueProcessing(ctx context.Context, payload ProcessPayload) (models.JobQueue, error) {
+	if s.Jobs == nil {
+		return models.JobQueue{}, errors.New("media processing requires the shared job runtime")
+	}
+	var job models.JobQueue
+	err := s.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := s.persistProcessingUploadTx(tx, payload.MediaID, payload.SizeBytes); err != nil {
+			return err
+		}
+		var err error
+		job, err = s.Jobs.EnqueueTx(ctx, tx, jobs.EnqueueInput{
+			JobType: JobTypeProcess, Payload: payload, IdempotencyKey: payload.MediaID,
+		})
+		return err
+	})
+	return job, err
 }
 
 func copyFile(src string, dest string) error {

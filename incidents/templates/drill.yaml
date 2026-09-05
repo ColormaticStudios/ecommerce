@@ -1,0 +1,35 @@
+schema_version: 1
+id: drill-2026-q3-db
+kind: drill
+scenario: db_unavailable
+title: Quarterly database outage drill
+severity: sev2
+status: closed
+environment: staging
+services:
+  - ecommerce-api
+incident_commander: commerce-on-call
+started_at: 2026-09-05T01:00:00Z
+detected_at: 2026-09-05T01:02:00Z
+recovered_at: 2026-09-05T01:12:00Z
+closed_at: 2026-09-05T02:00:00Z
+detection_source: EcommerceDatabaseErrors
+customer_impact: Synthetic checkout canaries failed in the isolated environment.
+root_cause: Controlled database proxy outage.
+contributing_factors:
+  - Drill-injected dependency loss.
+lessons:
+  - Replace with what the exercise demonstrated.
+timeline:
+  - at: 2026-09-05T01:00:00Z
+    event: Fault injection began.
+  - at: 2026-09-05T01:02:00Z
+    event: On-call acknowledged the simulated incident.
+  - at: 2026-09-05T01:12:00Z
+    event: Dependency and application readiness recovered.
+actions:
+  - id: action-1
+    description: Replace with a corrective drill action.
+    owner: platform-owner
+    due_date: 2026-09-30
+    status: open

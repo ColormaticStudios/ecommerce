@@ -1,0 +1,61 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [{ "title": "Database runbooks", "type": "link", "url": "https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks" }],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "targets": [{ "expr": "histogram_quantile(0.95, sum by (le, outcome) (rate(ecommerce_db_query_duration_seconds_bucket{deployment_environment=\"$environment\"}[5m])))", "legendFormat": "{{outcome}}", "refId": "A" }],
+      "title": "Database query p95",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "targets": [{ "expr": "sum by (outcome) (rate(ecommerce_db_queries_total{deployment_environment=\"$environment\"}[5m]))", "legendFormat": "{{outcome}}", "refId": "A" }],
+      "title": "Database query rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 3,
+      "targets": [
+        { "expr": "ecommerce_db_pool_in_use_connections{deployment_environment=\"$environment\"}", "legendFormat": "in use", "refId": "A" },
+        { "expr": "ecommerce_db_pool_idle_connections{deployment_environment=\"$environment\"}", "legendFormat": "idle", "refId": "B" },
+        { "expr": "ecommerce_db_pool_max_open_connections{deployment_environment=\"$environment\"}", "legendFormat": "maximum", "refId": "C" }
+      ],
+      "title": "Connection pool",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 4,
+      "targets": [{ "expr": "rate(ecommerce_db_pool_wait_total{deployment_environment=\"$environment\"}[5m])", "legendFormat": "waits/s", "refId": "A" }],
+      "title": "Connection waits",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["ecommerce", "reliability", "database"],
+  "templating": { "list": [
+    { "current": {}, "hide": 0, "label": "Prometheus", "name": "datasource", "query": "prometheus", "type": "datasource" },
+    { "current": {}, "datasource": { "type": "prometheus", "uid": "${datasource}" }, "definition": "label_values(ecommerce_db_queries_total, deployment_environment)", "includeAll": false, "label": "Environment", "name": "environment", "query": { "query": "label_values(ecommerce_db_queries_total, deployment_environment)", "refId": "PrometheusVariableQueryEditor-VariableQuery" }, "refresh": 1, "type": "query" }
+  ] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timezone": "browser",
+  "title": "Ecommerce Database Health",
+  "uid": "ecommerce-database-health",
+  "version": 1
+}

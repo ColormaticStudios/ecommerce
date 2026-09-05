@@ -1,0 +1,60 @@
+services:
+  backup-scheduler:
+    build:
+      context: ../..
+      dockerfile: deploy/backup/Dockerfile
+    command: schedule
+    env_file:
+      - common.env
+      - backup.env
+    environment:
+      AWS_SHARED_CREDENTIALS_FILE: /run/secrets/backup-aws-credentials
+    secrets:
+      - backup-aws-credentials
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=2G,mode=0700,uid=65532,gid=65532
+
+  backup-metrics:
+    build:
+      context: ../..
+      dockerfile: deploy/backup/Dockerfile
+    command: serve-metrics
+    env_file:
+      - common.env
+    environment:
+      AWS_SHARED_CREDENTIALS_FILE: /run/secrets/metrics-aws-credentials
+    secrets:
+      - metrics-aws-credentials
+    restart: unless-stopped
+    read_only: true
+    ports:
+      - "127.0.0.1:9091:9091"
+
+  restore-drill:
+    profiles: ["restore-drill"]
+    build:
+      context: ../..
+      dockerfile: deploy/backup/Dockerfile
+    command: restore-drill
+    env_file:
+      - common.env
+      - restore-drill.env
+    environment:
+      AWS_SHARED_CREDENTIALS_FILE: /run/secrets/restore-aws-credentials
+    secrets:
+      - restore-aws-credentials
+    read_only: true
+    tmpfs:
+      - /tmp:size=2G,mode=0700,uid=65532,gid=65532
+    volumes:
+      - ./secrets/backup-age-identity.txt:/run/secrets/backup-age-identity.txt:ro
+
+secrets:
+  backup-aws-credentials:
+    file: ./secrets/backup-aws-credentials
+  metrics-aws-credentials:
+    file: ./secrets/metrics-aws-credentials
+  restore-aws-credentials:
+    file: ./secrets/restore-aws-credentials

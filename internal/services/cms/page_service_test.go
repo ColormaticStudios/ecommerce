@@ -306,7 +306,7 @@ func TestPageServiceValidatesCommerceCampaignBlocks(t *testing.T) {
 
 func TestPageServiceTracksDraftAndLiveMediaReferences(t *testing.T) {
 	db := newServiceTestDB(t)
-	mediaService := media.NewService(db, t.TempDir(), "/media", nil)
+	mediaService := media.NewService(db, t.TempDir(), "/media", nil, nil)
 	for _, id := range []string{"cms-old", "cms-new"} {
 		require.NoError(t, db.Create(&models.MediaObject{
 			ID: id, OriginalPath: id + "/original.webp", MimeType: "image/webp", Status: media.StatusReady,
@@ -351,7 +351,7 @@ func TestPageServiceRejectsMediaThatIsNotReadyForAttachment(t *testing.T) {
 		require.NoError(t, db.Create(&object).Error)
 	}
 
-	service := NewPageService(db, media.NewService(db, t.TempDir(), "/media", nil))
+	service := NewPageService(db, media.NewService(db, t.TempDir(), "/media", nil, nil))
 	for _, mediaID := range []string{"processing-image", "failed-image", "missing-source"} {
 		t.Run(mediaID, func(t *testing.T) {
 			_, err := service.CreateDraft(context.Background(), PageDraftInput{

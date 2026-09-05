@@ -1,0 +1,66 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [{ "title": "Job runbooks", "type": "link", "url": "https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks" }],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "targets": [{ "expr": "sum(ecommerce_jobs_workers{deployment_environment=\"$environment\"})", "legendFormat": "workers", "refId": "A" }],
+      "title": "Running workers",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 18, "x": 6, "y": 0 },
+      "id": 2,
+      "targets": [{ "expr": "sum by (job_type, status) (ecommerce_jobs_queue_depth{deployment_environment=\"$environment\"})", "legendFormat": "{{job_type}} / {{status}}", "refId": "A" }],
+      "title": "Queue depth",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 7 },
+      "id": 3,
+      "targets": [{ "expr": "max by (job_type) (ecommerce_jobs_oldest_runnable_age_seconds{deployment_environment=\"$environment\"})", "legendFormat": "{{job_type}}", "refId": "A" }],
+      "title": "Oldest runnable job age",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 7 },
+      "id": 4,
+      "targets": [{ "expr": "sum by (job_type, outcome) (rate(ecommerce_jobs_attempts_total{deployment_environment=\"$environment\"}[5m]))", "legendFormat": "{{job_type}} / {{outcome}}", "refId": "A" }],
+      "title": "Attempt outcomes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 16 },
+      "id": 5,
+      "targets": [{ "expr": "sum by (job_type) (ecommerce_jobs_dead_letters{deployment_environment=\"$environment\"})", "legendFormat": "{{job_type}}", "refId": "A" }],
+      "title": "Dead letters",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["ecommerce", "reliability", "jobs"],
+  "templating": { "list": [
+    { "current": {}, "hide": 0, "label": "Prometheus", "name": "datasource", "query": "prometheus", "type": "datasource" },
+    { "current": {}, "datasource": { "type": "prometheus", "uid": "${datasource}" }, "definition": "label_values(ecommerce_jobs_workers, deployment_environment)", "includeAll": false, "label": "Environment", "name": "environment", "query": { "query": "label_values(ecommerce_jobs_workers, deployment_environment)", "refId": "PrometheusVariableQueryEditor-VariableQuery" }, "refresh": 1, "type": "query" }
+  ] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timezone": "browser",
+  "title": "Ecommerce Background Jobs",
+  "uid": "ecommerce-background-jobs",
+  "version": 1
+}

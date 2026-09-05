@@ -11,6 +11,8 @@ import (
 	"os"
 	"strings"
 
+	"ecommerce/config"
+	"ecommerce/internal/jobs"
 	"ecommerce/internal/media"
 	"ecommerce/models"
 
@@ -67,11 +69,26 @@ func printJSON(value any) {
 
 func newMediaService() *media.Service {
 	cfg := getConfig()
-	svc := media.NewService(getDBWithConfig(cfg), cfg.MediaRoot, cfg.MediaPublicURL, log.Default())
+	db := getDBWithConfig(cfg)
+	svc := media.NewService(db, cfg.MediaRoot, cfg.MediaPublicURL, log.Default(), newJobRuntime(db, cfg))
 	if err := svc.EnsureDirs(); err != nil {
 		log.Fatalf("Failed to initialize media directories: %v", err)
 	}
+	if err := svc.RegisterJobHandlers(); err != nil {
+		log.Fatalf("Failed to register media jobs: %v", err)
+	}
 	return svc
+}
+
+func newJobRuntime(db *gorm.DB, cfg config.Config) *jobs.Runtime {
+	return jobs.NewRuntime(db, jobs.Config{
+		WorkerConcurrency: cfg.JobWorkerConcurrency,
+		PollInterval:      cfg.JobPollInterval,
+		LeaseDuration:     cfg.JobLeaseDuration,
+		MaxAttempts:       cfg.JobMaxAttempts,
+		RetryBaseDelay:    cfg.JobRetryBaseDelay,
+		RetryMaxDelay:     cfg.JobRetryMaxDelay,
+	})
 }
 
 func closeMediaService(svc *media.Service) {

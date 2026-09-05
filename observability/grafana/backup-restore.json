@@ -1,0 +1,73 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    { "title": "Backup and restore runbook", "type": "link", "url": "https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Backup-and-Restore" }
+  ],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "id": 1,
+      "targets": [{ "expr": "time() - ecommerce_backup_last_success_timestamp_seconds{deployment_environment=\"$environment\"}", "legendFormat": "backup age", "refId": "A" }],
+      "title": "Time since successful backup",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "id": 2,
+      "targets": [{ "expr": "ecommerce_backup_last_run_timestamp_seconds{deployment_environment=\"$environment\"}", "legendFormat": "{{outcome}} / {{failure_stage}}", "refId": "A" }],
+      "title": "Latest backup outcome",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "id": 3,
+      "targets": [
+        { "expr": "ecommerce_restore_drill_rpo_seconds{deployment_environment=\"$environment\"}", "legendFormat": "RPO", "refId": "A" },
+        { "expr": "ecommerce_restore_drill_rto_seconds{deployment_environment=\"$environment\"}", "legendFormat": "RTO", "refId": "B" }
+      ],
+      "title": "Latest measured RPO/RTO",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 8 },
+      "id": 4,
+      "targets": [{ "expr": "time() - ecommerce_restore_drill_last_success_timestamp_seconds{deployment_environment=\"$environment\"}", "legendFormat": "drill age", "refId": "A" }],
+      "title": "Time since successful restore drill",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "min": 0, "max": 1, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 8 },
+      "id": 5,
+      "targets": [{ "expr": "ecommerce_backup_manifest_collection_success{deployment_environment=\"$environment\"}", "legendFormat": "manifest collection", "refId": "A" }],
+      "title": "Backup monitoring health",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "tags": ["ecommerce", "reliability", "backup", "restore"],
+  "templating": {
+    "list": [
+      { "current": {}, "hide": 0, "label": "Prometheus", "name": "datasource", "query": "prometheus", "type": "datasource" },
+      { "current": {}, "datasource": { "type": "prometheus", "uid": "${datasource}" }, "definition": "label_values(ecommerce_backup_last_success_timestamp_seconds, deployment_environment)", "includeAll": false, "label": "Environment", "name": "environment", "query": { "query": "label_values(ecommerce_backup_last_success_timestamp_seconds, deployment_environment)", "refId": "PrometheusVariableQueryEditor-VariableQuery" }, "refresh": 1, "type": "query" }
+    ]
+  },
+  "time": { "from": "now-45d", "to": "now" },
+  "timezone": "browser",
+  "title": "Ecommerce Backup and Restore",
+  "uid": "ecommerce-backup-restore",
+  "version": 1
+}

@@ -1,0 +1,20 @@
+services:
+  pre-deploy:
+    profiles: ["pre-deploy"]
+    build:
+      context: ../..
+      dockerfile: deploy/backup/Dockerfile
+    command: ["deploy-check", "pre-deploy"]
+    env_file:
+      - pre-deploy.env
+    read_only: true
+
+  post-deploy:
+    profiles: ["post-deploy"]
+    build:
+      context: ../..
+      dockerfile: deploy/backup/Dockerfile
+    command: ["deploy-check", "post-deploy"]
+    env_file:
+      - post-deploy.env
+    read_only: true

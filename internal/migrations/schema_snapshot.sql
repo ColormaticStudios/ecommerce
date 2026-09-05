@@ -725,6 +725,70 @@ TABLE inventory_thresholds
   COLUMN updated_at
   INDEX idx_inventory_thresholds_deleted_at columns=deleted_at unique=false option=
   INDEX idx_inventory_thresholds_product_variant_id columns=product_variant_id unique=true option=
+TABLE job_attempts
+  COLUMN attempt_number
+  COLUMN created_at
+  COLUMN error_class
+  COLUMN error_message
+  COLUMN finished_at
+  COLUMN id
+  COLUMN job_id
+  COLUMN job_type
+  COLUMN latency_ms
+  COLUMN outcome
+  COLUMN started_at
+  COLUMN worker_id
+  INDEX idx_job_attempts_error_class columns=error_class unique=false option=
+  INDEX idx_job_attempts_job_id columns=job_id unique=false option=
+  INDEX idx_job_attempts_job_number columns=job_id,attempt_number unique=true option=
+  INDEX idx_job_attempts_job_type columns=job_type unique=false option=
+  INDEX idx_job_attempts_outcome columns=outcome unique=false option=
+TABLE job_dead_letters
+  COLUMN attempt_count
+  COLUMN correlation_id
+  COLUMN created_at
+  COLUMN error_class
+  COLUMN failed_at
+  COLUMN failure_reason
+  COLUMN id
+  COLUMN job_id
+  COLUMN job_type
+  COLUMN last_replayed_at
+  COLUMN payload_json
+  COLUMN replay_count
+  COLUMN replay_job_id
+  INDEX idx_job_dead_letters_correlation_id columns=correlation_id unique=false option=
+  INDEX idx_job_dead_letters_error_class columns=error_class unique=false option=
+  INDEX idx_job_dead_letters_failed_at columns=failed_at unique=false option=
+  INDEX idx_job_dead_letters_job_id columns=job_id unique=true option=
+  INDEX idx_job_dead_letters_job_type columns=job_type unique=false option=
+  INDEX idx_job_dead_letters_last_replayed_at columns=last_replayed_at unique=false option=
+  INDEX idx_job_dead_letters_replay_job_id columns=replay_job_id unique=false option=
+TABLE job_queue
+  COLUMN attempt_count
+  COLUMN attempt_started_at
+  COLUMN completed_at
+  COLUMN correlation_id
+  COLUMN created_at
+  COLUMN id
+  COLUMN idempotency_key
+  COLUMN job_type
+  COLUMN last_error
+  COLUMN lease_expires_at
+  COLUMN lease_owner
+  COLUMN max_attempts
+  COLUMN payload_fingerprint
+  COLUMN payload_json
+  COLUMN run_at
+  COLUMN status
+  COLUMN updated_at
+  INDEX idx_job_queue_completed_at columns=completed_at unique=false option=
+  INDEX idx_job_queue_correlation_id columns=correlation_id unique=false option=
+  INDEX idx_job_queue_lease_expires_at columns=lease_expires_at unique=false option=
+  INDEX idx_job_queue_lease_owner columns=lease_owner unique=false option=
+  INDEX idx_job_queue_status_run_at columns=status,run_at unique=false option=
+  INDEX idx_job_queue_type_idempotency columns=job_type,idempotency_key unique=true option=
+  INDEX idx_job_queue_type_status columns=job_type,status unique=false option=
 TABLE locale_market_defaults
   COLUMN created_at
   COLUMN deleted_at

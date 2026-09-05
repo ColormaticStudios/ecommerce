@@ -150,20 +150,20 @@ func (s *Service) PatchUpload(ctx context.Context, id string, expectedOffset int
 
 func (s *Service) completeUploadContext(ctx context.Context, info UploadInfo) error {
 	incomingPath := filepath.Join(s.IncomingDir(), info.ID)
-	if err := os.Rename(filepath.Join(s.TusDir(), info.ID), incomingPath); err != nil {
+	tusPath := filepath.Join(s.TusDir(), info.ID)
+	if err := os.Rename(tusPath, incomingPath); err != nil {
+		return err
+	}
+	payload := ProcessPayload{
+		Version: ProcessPayloadVersion, MediaID: info.ID, Filename: info.Metadata["filename"],
+		SizeBytes: info.Size, Metadata: info.Metadata,
+	}
+	if _, err := s.enqueueProcessing(ctx, payload); err != nil {
+		_ = os.Rename(incomingPath, tusPath)
 		return err
 	}
 	_ = os.Remove(uploadInfoPath(s.TusDir(), info.ID))
-	if err := s.persistProcessingUpload(info.ID, info.Size); err != nil {
-		return err
-	}
-	job := Job{ID: info.ID, Source: incomingPath, Filename: info.Metadata["filename"], SizeBytes: info.Size, Metadata: info.Metadata}
-	select {
-	case s.Queue <- job:
-		return nil
-	case <-ctx.Done():
-		return ctx.Err()
-	}
+	return nil
 }
 
 func readUploadInfo(dir, id string) (UploadInfo, error) {

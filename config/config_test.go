@@ -84,11 +84,145 @@ func TestLoadConfigDurationDefaults(t *testing.T) {
 		"PROVIDER_QUERY_TIMEOUT":        {cfg.ProviderQueryTimeout, 15 * time.Second},
 		"PROVIDER_COMPENSATION_TIMEOUT": {cfg.ProviderCompensationTimeout, time.Minute},
 		"PROVIDER_LEASE_DURATION":       {cfg.ProviderLeaseDuration, 2 * time.Minute},
+		"JOB_POLL_INTERVAL":             {cfg.JobPollInterval, time.Second},
+		"JOB_LEASE_DURATION":            {cfg.JobLeaseDuration, 2 * time.Minute},
+		"JOB_RETRY_BASE_DELAY":          {cfg.JobRetryBaseDelay, 5 * time.Second},
+		"JOB_RETRY_MAX_DELAY":           {cfg.JobRetryMaxDelay, 15 * time.Minute},
 	}
 	for name, duration := range expected {
 		if duration.got != duration.want {
 			t.Errorf("%s = %s, want %s", name, duration.got, duration.want)
 		}
+	}
+}
+
+func TestLoadConfigReliabilityDefaults(t *testing.T) {
+	useEmptyConfigDir(t)
+	unsetEnvironment(t, configKeys...)
+
+	cfg, err := LoadConfig()
+	if err != nil {
+		t.Fatalf("LoadConfig: %v", err)
+	}
+	if !cfg.TelemetryEnabled {
+		t.Error("TelemetryEnabled = false, want true")
+	}
+	if cfg.MetricsPath != "/metrics" {
+		t.Errorf("MetricsPath = %q, want /metrics", cfg.MetricsPath)
+	}
+	if cfg.TelemetryBindAddress != "127.0.0.1:9090" {
+		t.Errorf("TelemetryBindAddress = %q, want 127.0.0.1:9090", cfg.TelemetryBindAddress)
+	}
+	if cfg.TracingEnabled {
+		t.Error("TracingEnabled = true, want false")
+	}
+	if cfg.OTLPTraceEndpoint != "http://127.0.0.1:4318/v1/traces" || cfg.TraceSampleRatio != 0.1 {
+		t.Errorf("unexpected tracing defaults: endpoint=%q ratio=%v", cfg.OTLPTraceEndpoint, cfg.TraceSampleRatio)
+	}
+	if cfg.TrustRequestIDs {
+		t.Error("TrustRequestIDs = true, want safe default false")
+	}
+	if cfg.AlertService != "ecommerce-api" {
+		t.Errorf("AlertService = %q, want ecommerce-api", cfg.AlertService)
+	}
+	if cfg.DeploymentEnvironment != "development" {
+		t.Errorf("DeploymentEnvironment = %q, want development", cfg.DeploymentEnvironment)
+	}
+	if cfg.ReleaseID != "development" {
+		t.Errorf("ReleaseID = %q, want development", cfg.ReleaseID)
+	}
+	if cfg.JobWorkerConcurrency != 4 || cfg.JobMaxAttempts != 5 {
+		t.Errorf("job integer defaults = concurrency %d, max attempts %d", cfg.JobWorkerConcurrency, cfg.JobMaxAttempts)
+	}
+}
+
+func TestLoadConfigReliabilityOverrides(t *testing.T) {
+	useEmptyConfigDir(t)
+	unsetEnvironment(t, configKeys...)
+	t.Setenv("TELEMETRY_ENABLED", "false")
+	t.Setenv("METRICS_PATH", "/internal/metrics")
+	t.Setenv("TELEMETRY_BIND_ADDRESS", "0.0.0.0:9191")
+	t.Setenv("TRACING_ENABLED", "false")
+	t.Setenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", "https://collector.example.com/v1/traces")
+	t.Setenv("TRACE_SAMPLE_RATIO", "0.25")
+	t.Setenv("TRUST_REQUEST_IDS", "true")
+	t.Setenv("ALERT_OWNER", "commerce-on-call")
+	t.Setenv("ALERT_SERVICE", "store-api")
+	t.Setenv("DEPLOYMENT_ENVIRONMENT", "staging")
+	t.Setenv("RELEASE_ID", "git-abc123")
+	t.Setenv("JOB_WORKER_CONCURRENCY", "8")
+	t.Setenv("JOB_POLL_INTERVAL", "250ms")
+	t.Setenv("JOB_LEASE_DURATION", "3m")
+	t.Setenv("JOB_MAX_ATTEMPTS", "7")
+	t.Setenv("JOB_RETRY_BASE_DELAY", "10s")
+	t.Setenv("JOB_RETRY_MAX_DELAY", "20m")
+
+	cfg, err := LoadConfig()
+	if err != nil {
+		t.Fatalf("LoadConfig: %v", err)
+	}
+	if cfg.TelemetryEnabled {
+		t.Error("TelemetryEnabled = true, want false")
+	}
+	if cfg.MetricsPath != "/internal/metrics" || !cfg.TrustRequestIDs || cfg.AlertOwner != "commerce-on-call" || cfg.AlertService != "store-api" || cfg.DeploymentEnvironment != "staging" || cfg.ReleaseID != "git-abc123" {
+		t.Fatalf("unexpected reliability config: %+v", cfg)
+	}
+	if cfg.TelemetryBindAddress != "0.0.0.0:9191" || cfg.TracingEnabled || cfg.OTLPTraceEndpoint != "https://collector.example.com/v1/traces" || cfg.TraceSampleRatio != 0.25 {
+		t.Fatalf("unexpected telemetry config: %+v", cfg)
+	}
+	if cfg.JobWorkerConcurrency != 8 || cfg.JobPollInterval != 250*time.Millisecond || cfg.JobLeaseDuration != 3*time.Minute || cfg.JobMaxAttempts != 7 || cfg.JobRetryBaseDelay != 10*time.Second || cfg.JobRetryMaxDelay != 20*time.Minute {
+		t.Fatalf("unexpected job runtime config: %+v", cfg)
+	}
+}
+
+func TestLoadConfigRejectsInvalidReliabilityMetadata(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		key   string
+		value string
+	}{
+		{name: "relative metrics path", key: "METRICS_PATH", value: "metrics"},
+		{name: "metrics path conflict", key: "METRICS_PATH", value: "/readyz"},
+		{name: "metrics path query", key: "METRICS_PATH", value: "/metrics?format=openmetrics"},
+		{name: "metrics path wildcard", key: "METRICS_PATH", value: "/metrics/{tenant}"},
+		{name: "invalid telemetry bind", key: "TELEMETRY_BIND_ADDRESS", value: "127.0.0.1"},
+		{name: "invalid trace ratio", key: "TRACE_SAMPLE_RATIO", value: "1.1"},
+		{name: "empty alert service", key: "ALERT_SERVICE", value: " "},
+		{name: "empty deployment environment", key: "DEPLOYMENT_ENVIRONMENT", value: " "},
+		{name: "invalid release ID", key: "RELEASE_ID", value: " "},
+		{name: "zero worker concurrency", key: "JOB_WORKER_CONCURRENCY", value: "0"},
+		{name: "too many attempts", key: "JOB_MAX_ATTEMPTS", value: "101"},
+		{name: "retry range reversed", key: "JOB_RETRY_BASE_DELAY", value: "20m"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			useEmptyConfigDir(t)
+			unsetEnvironment(t, configKeys...)
+			t.Setenv(test.key, test.value)
+			_, err := LoadConfig()
+			if err == nil || !strings.Contains(err.Error(), test.key) {
+				t.Fatalf("LoadConfig error = %v, want error identifying %s", err, test.key)
+			}
+		})
+	}
+}
+
+func TestLoadConfigValidatesEnabledTracing(t *testing.T) {
+	useEmptyConfigDir(t)
+	unsetEnvironment(t, configKeys...)
+	t.Setenv("TRACING_ENABLED", "true")
+	t.Setenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", "collector-without-scheme")
+	if _, err := LoadConfig(); err == nil || !strings.Contains(err.Error(), "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT") {
+		t.Fatalf("LoadConfig error = %v, want invalid tracing endpoint", err)
+	}
+}
+
+func TestLoadConfigRejectsTracingWhenTelemetryDisabled(t *testing.T) {
+	useEmptyConfigDir(t)
+	unsetEnvironment(t, configKeys...)
+	t.Setenv("TELEMETRY_ENABLED", "false")
+	t.Setenv("TRACING_ENABLED", "true")
+	if _, err := LoadConfig(); err == nil || !strings.Contains(err.Error(), "TRACING_ENABLED") {
+		t.Fatalf("LoadConfig error = %v, want tracing dependency error", err)
 	}
 }
 

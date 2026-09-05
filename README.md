@@ -89,7 +89,12 @@ make all
 # or
 make api
 make cli
+make ops             # separately deployed backup/restore workload
 ```
+
+Production logical backup and restore-drill deployment is documented in [Backup and Restore](wiki/Backup-and-Restore.md). The operations binary and its Docker/systemd deployment assets are separate from the API runtime.
+
+The same operations binary provides provider-neutral pre/post deployment gates and incident-record validation. See [Deployment Safety](wiki/Deployment-Safety.md) and [Incident Response](wiki/Incident-Response.md).
 
 Run backend tests:
 

@@ -1,0 +1,19 @@
+[Unit]
+Description=Ecommerce isolated restore drill (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ecommerce-backup
+Group=ecommerce-backup
+EnvironmentFile=/etc/ecommerce/backup-common.env
+EnvironmentFile=/etc/ecommerce/restore-drill-%i.env
+EnvironmentFile=/etc/ecommerce/restore-credentials.env
+ExecStart=/usr/local/bin/ecommerce-ops restore-drill
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/etc/ecommerce/backup-age-identity.txt
+UMask=0077

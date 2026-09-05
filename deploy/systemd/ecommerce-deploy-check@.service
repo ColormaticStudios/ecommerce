@@ -1,0 +1,21 @@
+[Unit]
+Description=Ecommerce deployment safety gate (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ecommerce-deploy-check
+Group=ecommerce-deploy-check
+EnvironmentFile=/etc/ecommerce/deploy-check-%i.env
+ExecStart=/usr/local/bin/ecommerce-ops deploy-check %i
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true

@@ -1,0 +1,169 @@
+groups:
+  - name: ecommerce-api
+    interval: 1m
+    rules:
+      - record: ecommerce:http_requests:rate5m
+        expr: sum by (service, deployment_environment, owner) (rate(ecommerce_http_requests_total[5m]))
+      - record: ecommerce:http_5xx:ratio5m
+        expr: sum by (service, deployment_environment, owner) (rate(ecommerce_http_requests_total{status_class="5xx"}[5m])) / clamp_min(ecommerce:http_requests:rate5m, 0.001)
+      - record: ecommerce:http_5xx:ratio1h
+        expr: sum by (service, deployment_environment, owner) (rate(ecommerce_http_requests_total{status_class="5xx"}[1h])) / clamp_min(sum by (service, deployment_environment, owner) (rate(ecommerce_http_requests_total[1h])), 0.001)
+      - record: ecommerce:http_5xx:ratio6h
+        expr: sum by (service, deployment_environment, owner) (rate(ecommerce_http_requests_total{status_class="5xx"}[6h])) / clamp_min(sum by (service, deployment_environment, owner) (rate(ecommerce_http_requests_total[6h])), 0.001)
+      - record: ecommerce:http_5xx:ratio30m
+        expr: sum by (service, deployment_environment, owner) (rate(ecommerce_http_requests_total{status_class="5xx"}[30m])) / clamp_min(sum by (service, deployment_environment, owner) (rate(ecommerce_http_requests_total[30m])), 0.001)
+      - alert: EcommerceAPITargetDown
+        expr: up{job="ecommerce-api"} == 0
+        for: 5m
+        labels:
+          severity: sev1
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: Ecommerce API metrics target is down
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommerceapitargetdown
+      - alert: EcommerceAPIAvailabilityFastBurn
+        expr: (ecommerce:http_5xx:ratio1h > (14.4 * 0.001)) and (ecommerce:http_5xx:ratio5m > (14.4 * 0.001)) and ecommerce:http_requests:rate5m > 0.1
+        for: 2m
+        labels:
+          severity: sev2
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: Ecommerce API is rapidly consuming its availability error budget
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommerceapiavailabilityfastburn
+      - alert: EcommerceAPIAvailabilitySlowBurn
+        expr: (ecommerce:http_5xx:ratio6h > (6 * 0.001)) and (ecommerce:http_5xx:ratio30m > (6 * 0.001)) and ecommerce:http_requests:rate5m > 0.1
+        for: 15m
+        labels:
+          severity: sev3
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: Ecommerce API is steadily consuming its availability error budget
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommerceapiavailabilityslowburn
+      - alert: EcommerceAPICriticalLatency
+        expr: histogram_quantile(0.95, sum by (le, service, deployment_environment, owner) (rate(ecommerce_http_request_duration_seconds_bucket[10m]))) > 1
+        for: 10m
+        labels:
+          severity: sev2
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: Ecommerce API p95 latency exceeds one second
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommerceapicriticallatency
+
+  - name: ecommerce-database
+    interval: 1m
+    rules:
+      - alert: EcommerceDatabaseErrors
+        expr: sum by (service, deployment_environment, owner) (rate(ecommerce_db_queries_total{outcome="error"}[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: sev2
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: Ecommerce database queries are failing
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommercedatabaseerrors
+      - alert: EcommerceDatabaseLatency
+        expr: histogram_quantile(0.95, sum by (le, service, deployment_environment, owner) (rate(ecommerce_db_query_duration_seconds_bucket[10m]))) > 0.25
+        for: 10m
+        labels:
+          severity: sev3
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: Ecommerce database query p95 exceeds 250 ms
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommercedatabaselatency
+      - alert: EcommerceDatabasePoolSaturation
+        expr: ecommerce_db_pool_max_open_connections > 0 and (ecommerce_db_pool_in_use_connections / ecommerce_db_pool_max_open_connections) > 0.9
+        for: 10m
+        labels:
+          severity: sev3
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: Ecommerce database connection pool is saturated
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommercedatabasepoolsaturation
+
+  - name: ecommerce-providers
+    interval: 1m
+    rules:
+      - alert: EcommerceProviderFailureStorm
+        expr: (sum by (service, deployment_environment, owner, provider_type) (rate(ecommerce_provider_calls_total{outcome="failed"}[5m])) / clamp_min(sum by (service, deployment_environment, owner, provider_type) (rate(ecommerce_provider_calls_total[5m])), 0.001)) > 0.5 and sum by (service, deployment_environment, owner, provider_type) (rate(ecommerce_provider_calls_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: sev2
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: Ecommerce provider calls are failing at a sustained high rate
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommerceproviderfailurestorm
+
+  - name: ecommerce-jobs
+    interval: 1m
+    rules:
+      - alert: EcommerceJobWorkersDown
+        expr: sum by (service, deployment_environment, owner) (ecommerce_jobs_workers) == 0 and sum by (service, deployment_environment, owner) (ecommerce_jobs_queue_depth{status=~"pending|retry_scheduled|expired_running"}) > 0
+        for: 10m
+        labels:
+          severity: sev2
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: Durable work is queued but no job workers are running
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommercejobworkersdown
+      - alert: EcommerceJobBacklogWarning
+        expr: max by (service, deployment_environment, owner) (ecommerce_jobs_oldest_runnable_age_seconds) > 300
+        for: 15m
+        labels:
+          severity: sev3
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: Oldest runnable job has waited more than five minutes
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommercejobbacklogwarning
+      - alert: EcommerceJobBacklogCritical
+        expr: max by (service, deployment_environment, owner) (ecommerce_jobs_oldest_runnable_age_seconds) > 900
+        for: 10m
+        labels:
+          severity: sev2
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: Oldest runnable job has waited more than fifteen minutes
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommercejobbacklogcritical
+      - alert: EcommerceJobDeadLetterGrowth
+        expr: sum by (service, deployment_environment, owner) (delta(ecommerce_jobs_dead_letters[15m])) > 0
+        for: 1m
+        labels:
+          severity: sev3
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: New durable-job dead letters were recorded
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommercejobdeadlettergrowth
+      - alert: EcommerceJobMetricsCollectionFailed
+        expr: ecommerce_jobs_collector_success == 0
+        for: 5m
+        labels:
+          severity: sev3
+          service: '{{ $labels.service }}'
+          deployment_environment: '{{ $labels.deployment_environment }}'
+          owner: '{{ $labels.owner }}'
+        annotations:
+          summary: Durable-job metrics cannot query their database state
+          runbook: https://git.colormatic.org/ColormaticStudios/ecommerce/wiki/Observability-Runbooks#ecommercejobmetricscollectionfailed

@@ -168,6 +168,8 @@
 - Concurrency tests verify no double-reservation under parallel allocations.
 
 ## P4: Hardening and Ops
+Reconciliation workers must follow the [Reliability and Operability checklist](../wiki/Reliability-and-Operability.md) for correlation propagation, failure classification, bounded retries, metrics, alerts, and shutdown.
+
 ### Scope
 - Reliability, observability, and operational controls for fulfillment at scale.
 - Reconciliation jobs for order vs fulfillment vs inventory consistency.

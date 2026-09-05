@@ -3,3 +3,6 @@ bin/
 /media/
 .cache/
 wiki/
+deploy/backup/*.env
+deploy/backup/secrets/*
+!deploy/backup/secrets/*.example

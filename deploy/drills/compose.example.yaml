@@ -1,0 +1,48 @@
+services:
+  fault-proxy:
+    image: ghcr.io/shopify/toxiproxy:2.12.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:15432:15432"
+      - "127.0.0.1:18080:18080"
+    networks:
+      - drill
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "/toxiproxy-cli", "-host", "127.0.0.1:8474", "list"]
+      interval: 1s
+      timeout: 1s
+      retries: 20
+
+  configure-postgres:
+    image: ghcr.io/shopify/toxiproxy:2.12.0
+    depends_on:
+      fault-proxy:
+        condition: service_healthy
+    entrypoint: /toxiproxy-cli
+    command: ["-host", "fault-proxy:8474", "create", "-l", "0.0.0.0:15432", "-u", "${DRILL_DATABASE_UPSTREAM:?set host:port reachable from the fault proxy}", "ecommerce-postgres"]
+    networks:
+      - drill
+
+  configure-provider:
+    image: ghcr.io/shopify/toxiproxy:2.12.0
+    depends_on:
+      fault-proxy:
+        condition: service_healthy
+    entrypoint: /toxiproxy-cli
+    command: ["-host", "fault-proxy:8474", "create", "-l", "0.0.0.0:18080", "-u", "${DRILL_PROVIDER_UPSTREAM:?set host:port reachable from the fault proxy}", "ecommerce-provider"]
+    networks:
+      - drill
+
+  control:
+    profiles: ["control"]
+    image: ghcr.io/shopify/toxiproxy:2.12.0
+    entrypoint: /toxiproxy-cli
+    command: ["-host", "fault-proxy:8474", "list"]
+    networks:
+      - drill
+
+networks:
+  drill:
+    name: ${DRILL_NETWORK:-ecommerce-reliability-drill}
