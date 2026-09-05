@@ -879,6 +879,11 @@ paths:
           schema:
             type: string
             enum: [json]
+        - in: query
+          name: error
+          description: OAuth error code returned by the identity provider.
+          schema:
+            type: string
       responses:
         "200":
           description: Callback as JSON
@@ -9112,12 +9117,16 @@ components:
 
     AuthConfigResponse:
       type: object
-      required: [local_sign_in_enabled, oidc_enabled, allow_guest_checkout]
+      required: [local_sign_in_enabled, oidc_enabled, oidc_display_name, allow_guest_checkout]
       properties:
         local_sign_in_enabled:
           type: boolean
         oidc_enabled:
           type: boolean
+        oidc_display_name:
+          type: string
+          maxLength: 80
+          description: User-facing identity provider name. Empty when OIDC is disabled.
         allow_guest_checkout:
           type: boolean
 
@@ -12931,6 +12940,7 @@ components:
         - allow_guest_checkout
         - coupon_codes_enabled
         - oidc_provider
+        - oidc_display_name
         - oidc_client_id
         - oidc_client_secret
         - oidc_client_secret_configured
@@ -12946,6 +12956,10 @@ components:
           description: Controls whether coupon-code-gated campaigns can be applied.
         oidc_provider:
           type: string
+        oidc_display_name:
+          type: string
+          maxLength: 80
+          description: User-facing identity provider name shown on sign-in and account-creation screens.
         oidc_client_id:
           type: string
         oidc_client_secret:

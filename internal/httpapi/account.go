@@ -189,5 +189,5 @@ func modelPaymentMethod(method models.SavedPaymentMethod) apicontract.SavedPayme
 }
 
 func modelWebsiteSettings(settings models.WebsiteSettings) apicontract.WebsiteSettingsResponse {
-	return apicontract.WebsiteSettingsResponse{Settings: apicontract.WebsiteSettings{SiteTitle: settings.SiteTitle, AllowGuestCheckout: settings.AllowGuestCheckout, CouponCodesEnabled: settings.CouponCodesEnabled, OidcProvider: settings.OIDCProvider, OidcClientId: settings.OIDCClientID, OidcClientSecret: "", OidcClientSecretConfigured: strings.TrimSpace(settings.OIDCClientSecretEnvelopeJSON) != "", ClearOidcClientSecret: false, OidcRedirectUri: settings.OIDCRedirectURI}, UpdatedAt: settings.UpdatedAt}
+	return apicontract.WebsiteSettingsResponse{Settings: apicontract.WebsiteSettings{SiteTitle: settings.SiteTitle, AllowGuestCheckout: settings.AllowGuestCheckout, CouponCodesEnabled: settings.CouponCodesEnabled, OidcProvider: settings.OIDCProvider, OidcDisplayName: settings.OIDCDisplayName, OidcClientId: settings.OIDCClientID, OidcClientSecret: "", OidcClientSecretConfigured: strings.TrimSpace(settings.OIDCClientSecretEnvelopeJSON) != "", ClearOidcClientSecret: false, OidcRedirectUri: settings.OIDCRedirectURI}, UpdatedAt: settings.UpdatedAt}
 }

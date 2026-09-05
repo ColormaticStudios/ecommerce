@@ -23,6 +23,7 @@
 		allow_guest_checkout: true,
 		coupon_codes_enabled: true,
 		oidc_provider: "",
+		oidc_display_name: "",
 		oidc_client_id: "",
 		oidc_client_secret: "",
 		oidc_client_secret_configured: false,
@@ -40,6 +41,7 @@
 	const hasUnsavedChanges = $derived(!loading && currentSnapshot !== savedSnapshot);
 	const oidcEnabled = $derived(
 		draft.oidc_provider.trim() !== "" &&
+			draft.oidc_display_name.trim() !== "" &&
 			draft.oidc_client_id.trim() !== "" &&
 			draft.oidc_redirect_uri.trim() !== ""
 	);
@@ -50,6 +52,7 @@
 			allow_guest_checkout: settings.allow_guest_checkout,
 			coupon_codes_enabled: settings.coupon_codes_enabled,
 			oidc_provider: settings.oidc_provider.trim(),
+			oidc_display_name: settings.oidc_display_name.trim(),
 			oidc_client_id: settings.oidc_client_id.trim(),
 			oidc_client_secret: settings.oidc_client_secret.trim(),
 			oidc_client_secret_configured: settings.oidc_client_secret_configured,
@@ -190,6 +193,18 @@
 					</span>
 				</div>
 				<div class="mt-4 grid gap-4 md:grid-cols-2">
+					<label class="block text-sm text-stone-700 md:col-span-2 dark:text-stone-200">
+						<span class="mb-1 block font-medium">Provider display name</span>
+						<TextInput
+							tone="admin"
+							bind:value={draft.oidc_display_name}
+							placeholder="Colormatic SSO"
+							maxlength={80}
+						/>
+						<span class="mt-1 block text-xs text-stone-500 dark:text-stone-400">
+							Shown to customers in “Continue to …”. Required when OpenID Connect is enabled.
+						</span>
+					</label>
 					<label class="block text-sm text-stone-700 dark:text-stone-200">
 						<span class="mb-1 block font-medium">Provider URL</span>
 						<TextInput

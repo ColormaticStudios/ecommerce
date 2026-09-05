@@ -1830,6 +1830,7 @@ TABLE website_settings
   COLUMN oidc_client_id
   COLUMN oidc_client_secret_envelope_json
   COLUMN oidc_client_secret_key_version
+  COLUMN oidc_display_name
   COLUMN oidc_provider
   COLUMN oidc_redirect_uri
   COLUMN site_title

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/sveltekit";
 import type { ComponentProps } from "svelte";
+import { expect, userEvent, within } from "storybook/test";
 import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
 import { createApiStub } from "$lib/storybook/api";
 import { makeAuthResponse, makeUser } from "$lib/storybook/factories";
@@ -23,6 +24,7 @@ function createData(overrides: Partial<SignupPageData> = {}): SignupPageData {
 		authConfig: {
 			local_sign_in_enabled: true,
 			oidc_enabled: true,
+			oidc_display_name: "Colormatic SSO",
 			allow_guest_checkout: true,
 		},
 		...overrides,
@@ -47,6 +49,22 @@ export const OpenIDConnectOption: Story = {
 	render: Default.render,
 };
 
+export const RedirectingToProvider: Story = {
+	render: () =>
+		renderRouteStory({
+			component: SignupPage,
+			componentProps: { data: createData() },
+			api: createApiStub({ buildOIDCLoginURL: () => "#redirecting" }),
+		}),
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		await userEvent.click(canvas.getByRole("button", { name: "Continue to Colormatic SSO" }));
+		await expect(
+			canvas.getByRole("button", { name: "Redirecting to Colormatic SSO..." })
+		).toBeDisabled();
+	},
+};
+
 export const OIDCOnly: Story = {
 	render: () =>
 		renderRouteStory({
@@ -56,6 +74,7 @@ export const OIDCOnly: Story = {
 					authConfig: {
 						local_sign_in_enabled: false,
 						oidc_enabled: true,
+						oidc_display_name: "Colormatic SSO",
 						allow_guest_checkout: true,
 					},
 				}),
@@ -73,6 +92,7 @@ export const LocalOnly: Story = {
 					authConfig: {
 						local_sign_in_enabled: true,
 						oidc_enabled: false,
+						oidc_display_name: "",
 						allow_guest_checkout: true,
 					},
 				}),
@@ -93,6 +113,7 @@ export const AuthUnavailable: Story = {
 					authConfig: {
 						local_sign_in_enabled: false,
 						oidc_enabled: false,
+						oidc_display_name: "",
 						allow_guest_checkout: true,
 					},
 				}),

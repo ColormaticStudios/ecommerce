@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"sort"
@@ -23,11 +24,15 @@ type embeddedAccountEndpoints struct{ *AccountEndpoints }
 var _ AccountStrictServer = (*embeddedAccountEndpoints)(nil)
 
 type stubAccountAuth struct {
-	registerInput authservice.RegisterInput
+	registerInput  authservice.RegisterInput
+	config         authservice.Config
+	callbackInput  authservice.OIDCCallbackInput
+	callbackResult authservice.OIDCCallbackResult
+	callbackErr    error
 }
 
 func (s *stubAccountAuth) Config(context.Context) (authservice.Config, error) {
-	return authservice.Config{LocalSignInEnabled: true}, nil
+	return s.config, nil
 }
 func (s *stubAccountAuth) Register(_ context.Context, input authservice.RegisterInput) (authservice.Session, error) {
 	s.registerInput = input
@@ -40,12 +45,14 @@ func (s *stubAccountAuth) Logout(context.Context) error { return nil }
 func (s *stubAccountAuth) OIDCLogin(context.Context, authservice.OIDCLoginInput) (authservice.OIDCLoginResult, error) {
 	return authservice.OIDCLoginResult{AuthorizationURL: "https://issuer.example/authorize"}, nil
 }
-func (s *stubAccountAuth) OIDCCallback(context.Context, authservice.OIDCCallbackInput) (authservice.OIDCCallbackResult, error) {
-	return authservice.OIDCCallbackResult{}, nil
+func (s *stubAccountAuth) OIDCCallback(_ context.Context, input authservice.OIDCCallbackInput) (authservice.OIDCCallbackResult, error) {
+	s.callbackInput = input
+	return s.callbackResult, s.callbackErr
 }
 
 type stubAccounts struct {
 	listInput accountservice.ListUsersInput
+	settings  models.WebsiteSettings
 }
 
 func (s *stubAccounts) GetProfile(_ context.Context, subject string) (models.User, error) {
@@ -62,7 +69,7 @@ func (s *stubAccounts) UpdateUserRole(context.Context, uint, string) (models.Use
 	return models.User{}, nil
 }
 func (s *stubAccounts) GetWebsiteSettings(context.Context) (models.WebsiteSettings, error) {
-	return models.WebsiteSettings{ID: models.WebsiteSettingsSingletonID, SiteTitle: "Shop"}, nil
+	return s.settings, nil
 }
 func (s *stubAccounts) UpdateWebsiteSettings(context.Context, accountservice.WebsiteSettingsInput) (models.WebsiteSettings, error) {
 	return models.WebsiteSettings{}, nil
@@ -99,8 +106,8 @@ func (s *stubAccountData) SetDefaultPaymentMethod(context.Context, uint, uint) (
 
 func newStubAccountEndpoints(t *testing.T) (*AccountEndpoints, *stubAccountAuth, *stubAccounts, *stubAccountData) {
 	t.Helper()
-	auth := &stubAccountAuth{}
-	accounts := &stubAccounts{}
+	auth := &stubAccountAuth{config: authservice.Config{LocalSignInEnabled: true}}
+	accounts := &stubAccounts{settings: models.WebsiteSettings{ID: models.WebsiteSettingsSingletonID, SiteTitle: "Shop"}}
 	data := &stubAccountData{}
 	endpoints, err := NewAccountEndpoints(AccountEndpointsOptions{Auth: auth, Accounts: accounts, AccountData: data})
 	require.NoError(t, err)
@@ -189,6 +196,36 @@ func TestAccountEndpointsOIDCLoginPreservesRedirectLocation(t *testing.T) {
 	require.NoError(t, response.VisitOidcLoginResponse(recorder))
 	assert.Equal(t, 302, recorder.Code)
 	assert.Equal(t, "https://issuer.example/authorize", recorder.Header().Get("Location"))
+}
+
+func TestAccountEndpointsAuthConfigIncludesOIDCDisplayName(t *testing.T) {
+	endpoints, auth, accounts, _ := newStubAccountEndpoints(t)
+	auth.config = authservice.Config{LocalSignInEnabled: true, OIDCEnabled: true, OIDCDisplayName: "Colormatic SSO"}
+	accounts.settings.AllowGuestCheckout = true
+
+	response, err := endpoints.GetAuthConfig(context.Background(), apicontract.GetAuthConfigRequestObject{})
+	require.NoError(t, err)
+	body, ok := response.(apicontract.GetAuthConfig200JSONResponse)
+	require.True(t, ok)
+	assert.True(t, body.OidcEnabled)
+	assert.Equal(t, "Colormatic SSO", body.OidcDisplayName)
+}
+
+func TestAccountEndpointsOIDCCancellationRedirectsBrowserAndPreservesDestination(t *testing.T) {
+	endpoints, auth, _, _ := newStubAccountEndpoints(t)
+	auth.config = authservice.Config{LocalSignInEnabled: true, OIDCEnabled: true, OIDCDisplayName: "Colormatic SSO"}
+	auth.callbackResult = authservice.OIDCCallbackResult{RedirectPath: "/checkout?step=payment"}
+	auth.callbackErr = authservice.ErrOIDCCancelled
+	providerError := "access_denied"
+	state := "state-1"
+
+	response, err := endpoints.OidcCallback(context.Background(), apicontract.OidcCallbackRequestObject{Params: apicontract.OidcCallbackParams{Error: &providerError, State: &state}})
+	require.NoError(t, err)
+	recorder := httptest.NewRecorder()
+	require.NoError(t, response.VisitOidcCallbackResponse(recorder))
+	assert.Equal(t, http.StatusFound, recorder.Code)
+	assert.Equal(t, "/login?reason=oidc_cancelled&redirect=%2Fcheckout%3Fstep%3Dpayment", recorder.Header().Get("Location"))
+	assert.Equal(t, providerError, auth.callbackInput.ProviderError)
 }
 
 func TestAccountEndpointsReturnTypedProblemWithoutPrincipal(t *testing.T) {

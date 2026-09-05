@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	accountservice "ecommerce/internal/services/account"
 	"ecommerce/models"
@@ -53,6 +54,40 @@ func TestLocalAuthenticationCanBeDisabled(t *testing.T) {
 	require.ErrorIs(t, err, ErrLocalSignInDisabled)
 	_, err = service.Login(context.Background(), LoginInput{Email: "ada@example.com", Password: "secret12"})
 	require.ErrorIs(t, err, ErrLocalSignInDisabled)
+}
+
+func TestOIDCConfigRequiresAndReturnsDisplayName(t *testing.T) {
+	service, db := newAuthTestService(t, false)
+	settings := models.WebsiteSettings{
+		ID:              models.WebsiteSettingsSingletonID,
+		OIDCProvider:    "https://issuer.example",
+		OIDCClientID:    "storefront",
+		OIDCRedirectURI: "https://shop.example/api/v1/auth/oidc/callback",
+	}
+	require.NoError(t, db.Select("*").Save(&settings).Error)
+
+	config, err := service.Config(context.Background())
+	require.NoError(t, err)
+	assert.False(t, config.OIDCEnabled)
+
+	settings.OIDCDisplayName = "Colormatic SSO"
+	require.NoError(t, db.Select("*").Save(&settings).Error)
+	config, err = service.Config(context.Background())
+	require.NoError(t, err)
+	assert.True(t, config.OIDCEnabled)
+	assert.Equal(t, "Colormatic SSO", config.OIDCDisplayName)
+}
+
+func TestOIDCCallbackCancellationConsumesStateAndPreservesRedirect(t *testing.T) {
+	service, _ := newAuthTestService(t, false)
+	service.states["state-1"] = oidcState{RedirectPath: "/checkout?step=payment", ExpiresAt: service.now().Add(time.Minute)}
+
+	result, err := service.OIDCCallback(context.Background(), OIDCCallbackInput{State: "state-1", ProviderError: "access_denied"})
+	require.ErrorIs(t, err, ErrOIDCCancelled)
+	assert.Equal(t, "/checkout?step=payment", result.RedirectPath)
+
+	_, err = service.OIDCCallback(context.Background(), OIDCCallbackInput{State: "state-1", ProviderError: "access_denied"})
+	require.ErrorIs(t, err, ErrInvalidOIDCState)
 }
 
 func TestAuthServiceUsesCallerContext(t *testing.T) {

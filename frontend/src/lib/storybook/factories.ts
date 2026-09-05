@@ -581,6 +581,7 @@ export function makeWebsiteSettings(overrides: Partial<WebsiteSettings> = {}): W
 			allow_guest_checkout: true,
 			coupon_codes_enabled: true,
 			oidc_provider: "https://issuer.example",
+			oidc_display_name: "Colormatic SSO",
 			oidc_client_id: "storefront-admin",
 			oidc_client_secret: "",
 			oidc_client_secret_configured: true,

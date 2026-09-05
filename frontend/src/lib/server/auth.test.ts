@@ -11,6 +11,7 @@ test("loadAuthConfig returns backend auth config when request succeeds", async (
 			JSON.stringify({
 				local_sign_in_enabled: false,
 				oidc_enabled: true,
+				oidc_display_name: "Colormatic SSO",
 				allow_guest_checkout: false,
 			}),
 			{
@@ -27,6 +28,7 @@ test("loadAuthConfig returns backend auth config when request succeeds", async (
 	expect(result).toEqual({
 		local_sign_in_enabled: false,
 		oidc_enabled: true,
+		oidc_display_name: "Colormatic SSO",
 		allow_guest_checkout: false,
 	});
 });
@@ -47,6 +49,7 @@ test("loadAuthConfig falls back to local-only auth when the backend request fail
 	expect(result).toEqual({
 		local_sign_in_enabled: true,
 		oidc_enabled: false,
+		oidc_display_name: "",
 		allow_guest_checkout: true,
 	});
 	expect(errorSpy).toHaveBeenCalled();

@@ -120,6 +120,7 @@ const localizationOperationsP4Version = "2026081301_localization_operations_p4"
 const localizationHardeningP5Version = "2026081302_localization_hardening_p5"
 const localizationUsageContextVersion = "2026082701_localization_usage_context"
 const platformJobsP1Version = "2026090301_platform_jobs_p1"
+const oidcLoginUIVersion = "2026090501_oidc_login_ui"
 
 const (
 	platformJobsP1MediaJobType    = "media.process"
@@ -1955,6 +1956,17 @@ var orderedMigrations = []Migration{
 			},
 		}},
 		Up: migratePlatformJobsP1,
+	},
+	{
+		Version:         oidcLoginUIVersion,
+		Name:            "add OIDC display name and sign-in localization",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "authentication", "localization", "storefront"},
+		PostChecks: []PostCheck{{
+			Name:  "oidc_login_ui_ready",
+			Check: oidcLoginUIReady,
+		}},
+		Up: migrateOIDCLoginUI,
 	},
 }
 
@@ -5310,6 +5322,61 @@ func DefaultSchemaSnapshotPath() string {
 
 func allowContractMigrations() bool {
 	return strings.EqualFold(strings.TrimSpace(os.Getenv(contractGuardEnvVar)), "true")
+}
+
+var oidcLoginUICatalogKeys = []localizationP1BaselineKey{
+	{Namespace: "storefront", Key: "account.already_have_account", SourceText: "Already have an account?", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.continue_to_provider", SourceText: "Continue to {provider}", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.create_account_link", SourceText: "Create an account", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.create_account_title", SourceText: "Create your account", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.new_here", SourceText: "New here?", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.oidc_cancelled", SourceText: "Sign-in was cancelled. You can try again.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.oidc_failed", SourceText: "We couldn't complete sign-in. Please try again.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.or_create_with_email", SourceText: "or create an account with email", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.or_sign_in_with_email", SourceText: "or sign in with email", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.provider_create_reassurance", SourceText: "New to the store? Your account will be created after you sign in.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.redirect_to_provider", SourceText: "You'll be redirected to {provider} to sign in.", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.redirecting_to_provider", SourceText: "Redirecting to {provider}...", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.sign_in", SourceText: "Sign in", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.sign_in_link", SourceText: "Sign in", OwnerDomain: "account"},
+	{Namespace: "storefront", Key: "account.welcome_back", SourceText: "Welcome back", OwnerDomain: "account"},
+	{Namespace: "errors", Key: "invalid_oidc_display_name", SourceText: "The sign-in provider display name is invalid.", OwnerDomain: "http"},
+}
+
+func migrateOIDCLoginUI(tx *gorm.DB) error {
+	if err := ops.AddColumnIfNotExists(tx, "website_settings", "oidc_display_name", "VARCHAR(80) NOT NULL DEFAULT ''"); err != nil {
+		return err
+	}
+	for _, key := range oidcLoginUICatalogKeys {
+		now := time.Now().UTC()
+		row := map[string]any{
+			"namespace": key.Namespace, "key": key.Key, "source_text": key.SourceText,
+			"description": "OIDC sign-in experience", "owner_domain": key.OwnerDomain,
+			"is_deprecated": false, "created_at": now, "updated_at": now,
+		}
+		if err := tx.Session(&gorm.Session{NewDB: true}).Table("translation_keys").Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "namespace"}, {Name: "key"}}, DoNothing: true,
+		}).Create(&row).Error; err != nil {
+			return err
+		}
+	}
+	return publishLocalizationDefaultSourceCatalog(tx)
+}
+
+func oidcLoginUIReady(tx *gorm.DB) error {
+	if !tx.Migrator().HasColumn(&models.WebsiteSettings{}, "OIDCDisplayName") {
+		return errors.New("website OIDC display name is missing")
+	}
+	for _, key := range oidcLoginUICatalogKeys {
+		var count int64
+		if err := tx.Session(&gorm.Session{NewDB: true}).Table("translation_keys").Where("namespace = ? AND key = ? AND deleted_at IS NULL", key.Namespace, key.Key).Count(&count).Error; err != nil {
+			return err
+		}
+		if count != 1 {
+			return fmt.Errorf("OIDC sign-in localization key %s.%s is missing", key.Namespace, key.Key)
+		}
+	}
+	return localizationDefaultSourceCatalogPublished(tx)
 }
 
 func migrationStepAlertThresholdMs() int64 {

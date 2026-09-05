@@ -4192,6 +4192,8 @@ export interface components {
 		AuthConfigResponse: {
 			local_sign_in_enabled: boolean;
 			oidc_enabled: boolean;
+			/** @description User-facing identity provider name. Empty when OIDC is disabled. */
+			oidc_display_name: string;
 			allow_guest_checkout: boolean;
 		};
 		ActiveDiscountCampaign: {
@@ -5770,6 +5772,8 @@ export interface components {
 			/** @description Controls whether coupon-code-gated campaigns can be applied. */
 			coupon_codes_enabled: boolean;
 			oidc_provider: string;
+			/** @description User-facing identity provider name shown on sign-in and account-creation screens. */
+			oidc_display_name: string;
 			oidc_client_id: string;
 			/** @description Write-only client secret. Responses always return an empty string. */
 			oidc_client_secret: string;
@@ -7029,6 +7033,8 @@ export interface operations {
 				code?: string;
 				state?: string;
 				format?: "json";
+				/** @description OAuth error code returned by the identity provider. */
+				error?: string;
 			};
 			header?: never;
 			path?: never;

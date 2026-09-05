@@ -28,6 +28,8 @@ var (
 	ErrOIDCNotConfigured   = errors.New("OIDC is not configured")
 	ErrInvalidOIDCState    = errors.New("invalid OIDC state")
 	ErrMissingOIDCCode     = errors.New("missing code in callback")
+	ErrOIDCCancelled       = errors.New("OIDC sign-in was cancelled")
+	ErrOIDCProvider        = errors.New("OIDC provider returned an error")
 )
 
 type WebsiteService interface {
@@ -66,6 +68,7 @@ type Session struct {
 type Config struct {
 	LocalSignInEnabled bool
 	OIDCEnabled        bool
+	OIDCDisplayName    string
 }
 
 type OIDCLoginInput struct {
@@ -79,9 +82,10 @@ type OIDCLoginResult struct {
 }
 
 type OIDCCallbackInput struct {
-	Code         string
-	State        string
-	JSONResponse bool
+	Code          string
+	State         string
+	ProviderError string
+	JSONResponse  bool
 }
 
 type OIDCCallbackResult struct {
@@ -115,7 +119,16 @@ func (s *Service) Config(ctx context.Context) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-	return Config{LocalSignInEnabled: !s.disableLocalSignIn, OIDCEnabled: oidcConfigured(settings)}, nil
+	enabled := oidcConfigured(settings)
+	displayName := ""
+	if enabled {
+		displayName = strings.TrimSpace(settings.OIDCDisplayName)
+	}
+	return Config{
+		LocalSignInEnabled: !s.disableLocalSignIn,
+		OIDCEnabled:        enabled,
+		OIDCDisplayName:    displayName,
+	}, nil
 }
 
 func (s *Service) Register(ctx context.Context, input RegisterInput) (Session, error) {
@@ -197,54 +210,62 @@ func (s *Service) OIDCLogin(ctx context.Context, input OIDCLoginInput) (OIDCLogi
 }
 
 func (s *Service) OIDCCallback(ctx context.Context, input OIDCCallbackInput) (OIDCCallbackResult, error) {
-	if strings.TrimSpace(input.Code) == "" {
-		return OIDCCallbackResult{}, ErrMissingOIDCCode
-	}
 	state, ok := s.takeState(strings.TrimSpace(input.State))
 	if !ok {
 		return OIDCCallbackResult{}, ErrInvalidOIDCState
 	}
+	result := OIDCCallbackResult{RedirectPath: state.RedirectPath, JSONResponse: input.JSONResponse || state.JSONResponse}
+	if providerError := strings.TrimSpace(input.ProviderError); providerError != "" {
+		if providerError == "access_denied" {
+			return result, ErrOIDCCancelled
+		}
+		return result, ErrOIDCProvider
+	}
+	if strings.TrimSpace(input.Code) == "" {
+		return result, ErrMissingOIDCCode
+	}
 	settings, err := s.website.GetWebsiteSettings(ctx)
 	if err != nil {
-		return OIDCCallbackResult{}, err
+		return result, err
 	}
 	if !oidcConfigured(settings) {
-		return OIDCCallbackResult{}, ErrOIDCNotConfigured
+		return result, ErrOIDCNotConfigured
 	}
 	secret, err := s.website.OIDCClientSecret(ctx, settings)
 	if err != nil {
-		return OIDCCallbackResult{}, err
+		return result, err
 	}
 	provider, err := s.newProvider(ctx, settings.OIDCProvider)
 	if err != nil {
-		return OIDCCallbackResult{}, err
+		return result, err
 	}
 	config := oauth2.Config{ClientID: settings.OIDCClientID, ClientSecret: secret, RedirectURL: settings.OIDCRedirectURI, Endpoint: provider.Endpoint(), Scopes: []string{oidc.ScopeOpenID, "profile", "email"}}
 	token, err := config.Exchange(ctx, input.Code)
 	if err != nil {
-		return OIDCCallbackResult{}, err
+		return result, err
 	}
 	rawIDToken, ok := token.Extra("id_token").(string)
 	if !ok {
-		return OIDCCallbackResult{}, errors.New("OIDC token response did not contain an id_token")
+		return result, errors.New("OIDC token response did not contain an id_token")
 	}
 	idToken, err := provider.Verifier(&oidc.Config{ClientID: settings.OIDCClientID}).Verify(ctx, rawIDToken)
 	if err != nil {
-		return OIDCCallbackResult{}, ErrInvalidCredentials
+		return result, ErrInvalidCredentials
 	}
 	var claims oidcUserClaims
 	if err := idToken.Claims(&claims); err != nil {
-		return OIDCCallbackResult{}, err
+		return result, err
 	}
 	user, err := s.upsertOIDCUser(ctx, claims)
 	if err != nil {
-		return OIDCCallbackResult{}, err
+		return result, err
 	}
 	session, err := s.session(user)
 	if err != nil {
-		return OIDCCallbackResult{}, err
+		return result, err
 	}
-	return OIDCCallbackResult{Session: session, RedirectPath: state.RedirectPath, JSONResponse: input.JSONResponse || state.JSONResponse}, nil
+	result.Session = session
+	return result, nil
 }
 
 func (s *Service) takeState(value string) (oidcState, bool) {
@@ -300,7 +321,7 @@ func (s *Service) session(user models.User) (Session, error) {
 }
 
 func oidcConfigured(settings models.WebsiteSettings) bool {
-	return strings.TrimSpace(settings.OIDCProvider) != "" && strings.TrimSpace(settings.OIDCClientID) != "" && strings.TrimSpace(settings.OIDCRedirectURI) != ""
+	return strings.TrimSpace(settings.OIDCProvider) != "" && strings.TrimSpace(settings.OIDCDisplayName) != "" && strings.TrimSpace(settings.OIDCClientID) != "" && strings.TrimSpace(settings.OIDCRedirectURI) != ""
 }
 
 func sanitizeRedirectPath(path string) string {

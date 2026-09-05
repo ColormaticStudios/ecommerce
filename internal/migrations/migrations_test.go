@@ -569,7 +569,7 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, platformJobsP1Version, status.LatestAppliedVersion)
+	require.Equal(t, oidcLoginUIVersion, status.LatestAppliedVersion)
 	require.Equal(t, 3, status.PendingCount)
 }
 
@@ -592,6 +592,27 @@ func TestRunAppliesAllOrderedMigrationsAndReplayIsIdempotent(t *testing.T) {
 
 func TestLatestVersionMatchesImportLightSchemaContract(t *testing.T) {
 	require.Equal(t, schemacontract.LatestMigrationVersion, LatestVersion())
+}
+
+func TestOIDCLoginUIMigrationAddsDisplayNameAndCatalog(t *testing.T) {
+	db := newTestDB(t)
+	migrationIndex := slices.IndexFunc(orderedMigrations, func(migration Migration) bool {
+		return migration.Version == oidcLoginUIVersion
+	})
+	require.Greater(t, migrationIndex, 0)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex]))
+	require.False(t, db.Migrator().HasColumn(&models.WebsiteSettings{}, "OIDCDisplayName"))
+
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex+1]))
+	require.True(t, db.Migrator().HasColumn(&models.WebsiteSettings{}, "OIDCDisplayName"))
+	var settings models.WebsiteSettings
+	require.NoError(t, db.First(&settings, models.WebsiteSettingsSingletonID).Error)
+	assert.Empty(t, settings.OIDCDisplayName)
+	for _, key := range oidcLoginUICatalogKeys {
+		var count int64
+		require.NoError(t, db.Table("translation_keys").Where("namespace = ? AND key = ?", key.Namespace, key.Key).Count(&count).Error)
+		assert.EqualValues(t, 1, count, "%s.%s", key.Namespace, key.Key)
+	}
 }
 
 func TestLocalizationP0BackfillsLegacyCMSLocalesAndBootstrapRelease(t *testing.T) {
@@ -653,7 +674,7 @@ func TestLocalizationP1BaselineContainsExtractedSourceCatalog(t *testing.T) {
 		} `json:"messages"`
 	}
 	require.NoError(t, json.Unmarshal(data, &catalog))
-	seeded := make(map[string]localizationP1BaselineKey, len(localizationP1BaselineKeys)+len(localizationP3CatalogKeys)+len(localizationP4CatalogKeys)+len(localizationP5ErrorCatalogKeys))
+	seeded := make(map[string]localizationP1BaselineKey, len(localizationP1BaselineKeys)+len(localizationP3CatalogKeys)+len(localizationP4CatalogKeys)+len(localizationP5ErrorCatalogKeys)+len(oidcLoginUICatalogKeys))
 	for _, key := range localizationP1BaselineKeys {
 		seeded[key.Namespace+"."+key.Key] = key
 	}
@@ -664,6 +685,9 @@ func TestLocalizationP1BaselineContainsExtractedSourceCatalog(t *testing.T) {
 		seeded[key.Namespace+"."+key.Key] = key
 	}
 	for _, key := range localizationP5ErrorCatalogKeys {
+		seeded[key.Namespace+"."+key.Key] = key
+	}
+	for _, key := range oidcLoginUICatalogKeys {
 		seeded[key.Namespace+"."+key.Key] = key
 	}
 	for _, message := range catalog.Messages {

@@ -31,11 +31,18 @@
 	let passwordMatcher = $state("");
 	let doPasswordsMatch = $state(true);
 	let errorMessage = $state("");
+	let oidcRedirecting = $state(false);
 	let postSignupRedirect = $derived(
 		sanitizeAuthRedirectPath(page.url.searchParams.get("redirect"))
 	);
 	let localSignInEnabled = $derived(data.authConfig.local_sign_in_enabled);
 	let oidcEnabled = $derived(data.authConfig.oidc_enabled);
+	let oidcDisplayName = $derived(data.authConfig.oidc_display_name);
+	let loginHref = $derived(
+		postSignupRedirect === "/"
+			? resolve("/login")
+			: `${resolve("/login")}?redirect=${encodeURIComponent(postSignupRedirect)}`
+	);
 
 	function resolveRedirectHref(path: string): string {
 		const url = new URL(path, "https://storefront.local");
@@ -45,6 +52,8 @@
 	}
 
 	function continueWithOIDC() {
+		if (oidcRedirecting) return;
+		oidcRedirecting = true;
 		window.location.assign(api.buildOIDCLoginURL(postSignupRedirect));
 	}
 
@@ -88,11 +97,18 @@
 </script>
 
 <AuthFormShell
-	title={$localization.translate("storefront.account.sign_up", "Sign Up")}
+	title={$localization.translate("storefront.account.create_account_title", "Create your account")}
 	{oidcEnabled}
+	{oidcDisplayName}
+	oidcLoading={oidcRedirecting}
+	{localSignInEnabled}
+	dividerLabel={$localization.translate(
+		"storefront.account.or_create_with_email",
+		"or create an account with email"
+	)}
 	oidcDescription={$localization.translate(
-		"storefront.account.provider_create",
-		"Your account will be created automatically the first time your provider signs you in."
+		"storefront.account.provider_create_reassurance",
+		"New to the store? Your account will be created after you sign in."
 	)}
 	showUnavailable={!localSignInEnabled && !oidcEnabled}
 	unavailableMessage={$localization.translate(
@@ -102,44 +118,89 @@
 	onOidc={continueWithOIDC}
 >
 	{#if localSignInEnabled}
-		<form class="contents" onsubmit={submit}>
-			<TextInput
-				bind:value={username}
-				type="text"
-				name="username"
-				placeholder={$localization.translate("storefront.account.username", "Username")}
-				required
-			/>
-			<TextInput
-				bind:value={email}
-				type="email"
-				name="email"
-				placeholder={$localization.translate("storefront.account.email", "Email")}
-				required
-			/>
-			<TextInput
-				bind:value={name}
-				type="text"
-				name="name"
-				placeholder={$localization.translate("storefront.account.name_optional", "Name (optional)")}
-			/>
-			<Password
-				bind:value={password}
-				name="password"
-				placeholder={$localization.translate("storefront.account.password", "Password")}
-			/>
-			<Password
-				bind:value={passwordMatcher}
-				name="confirm_password"
-				placeholder={$localization.translate(
-					"storefront.account.confirm_password",
-					"Confirm Password"
-				)}
-			/>
-			<Button variant="primary" size="large" type="submit"
+		<form class="flex w-full flex-col gap-4" onsubmit={submit}>
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="username">
+				<span>{$localization.translate("storefront.account.username", "Username")}</span>
+				<TextInput
+					bind:value={username}
+					id="username"
+					type="text"
+					name="username"
+					autocomplete="username"
+					class="mt-1"
+					required
+				/>
+			</label>
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="signup-email">
+				<span>{$localization.translate("storefront.account.email", "Email")}</span>
+				<TextInput
+					bind:value={email}
+					id="signup-email"
+					type="email"
+					name="email"
+					autocomplete="email"
+					class="mt-1"
+					required
+				/>
+			</label>
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-200" for="name">
+				<span>{$localization.translate("storefront.account.name_optional", "Name (optional)")}</span
+				>
+				<TextInput
+					bind:value={name}
+					id="name"
+					type="text"
+					name="name"
+					autocomplete="name"
+					class="mt-1"
+				/>
+			</label>
+			<div>
+				<label
+					class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+					for="new-password"
+				>
+					{$localization.translate("storefront.account.password", "Password")}
+				</label>
+				<Password
+					bind:value={password}
+					id="new-password"
+					name="password"
+					autocomplete="new-password"
+					class="mt-1"
+					required
+				/>
+			</div>
+			<div>
+				<label
+					class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+					for="confirm-password"
+				>
+					{$localization.translate("storefront.account.confirm_password", "Confirm Password")}
+				</label>
+				<Password
+					bind:value={passwordMatcher}
+					id="confirm-password"
+					name="confirm_password"
+					autocomplete="new-password"
+					class="mt-1"
+					required
+				/>
+			</div>
+			<Button variant="primary" size="large" type="submit" class="mt-1 w-full text-base"
 				>{$localization.translate("storefront.account.create_account", "Create Account")}</Button
 			>
 		</form>
+		<p class="text-center text-sm text-gray-600 dark:text-gray-300">
+			{$localization.translate(
+				"storefront.account.already_have_account",
+				"Already have an account?"
+			)}
+			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+			<a class="ml-1 font-medium text-blue-600 hover:underline dark:text-blue-400" href={loginHref}
+				>{$localization.translate("storefront.account.sign_in_link", "Sign in")}</a
+			>
+		</p>
 	{/if}
 	{#if !doPasswordsMatch}
 		<div class="w-full">

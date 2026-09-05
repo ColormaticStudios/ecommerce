@@ -24,6 +24,7 @@ var (
 	ErrInvalidCurrency               = errors.New("invalid currency code")
 	ErrInvalidLocale                 = errors.New("invalid locale preference")
 	ErrInvalidRole                   = errors.New("invalid user role")
+	ErrInvalidOIDCDisplayName        = errors.New("OIDC display name is required and must be 80 characters or fewer")
 	ErrCredentialServiceUnconfigured = errors.New("provider credential encryption is not configured")
 )
 
@@ -59,6 +60,7 @@ type WebsiteSettingsInput struct {
 	AllowGuestCheckout    bool
 	CouponCodesEnabled    bool
 	OIDCProvider          string
+	OIDCDisplayName       string
 	OIDCClientID          string
 	OIDCClientSecret      string
 	ClearOIDCClientSecret bool
@@ -182,8 +184,12 @@ func (s *Service) UpdateWebsiteSettings(ctx context.Context, input WebsiteSettin
 		current.AllowGuestCheckout = input.AllowGuestCheckout
 		current.CouponCodesEnabled = input.CouponCodesEnabled
 		current.OIDCProvider = strings.TrimSpace(input.OIDCProvider)
+		current.OIDCDisplayName = strings.TrimSpace(input.OIDCDisplayName)
 		current.OIDCClientID = strings.TrimSpace(input.OIDCClientID)
 		current.OIDCRedirectURI = strings.TrimSpace(input.OIDCRedirectURI)
+		if current.OIDCProvider != "" && current.OIDCClientID != "" && current.OIDCRedirectURI != "" && (current.OIDCDisplayName == "" || len([]rune(current.OIDCDisplayName)) > 80) {
+			return ErrInvalidOIDCDisplayName
+		}
 		if input.ClearOIDCClientSecret {
 			current.OIDCClientSecretEnvelopeJSON = ""
 			current.OIDCClientSecretKeyVersion = ""

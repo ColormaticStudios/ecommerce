@@ -119,8 +119,12 @@ func (s *AccountEndpoints) UpdateWebsiteSettings(ctx context.Context, request ap
 		problem := s.contractProblem(ctx, http.StatusBadRequest, problemError(http.StatusBadRequest, "invalid_oidc_secret_update", "OIDC client secret cannot be set and cleared in the same request.", nil))
 		return apicontract.UpdateWebsiteSettings400ApplicationProblemPlusJSONResponse{BadRequestProblemApplicationProblemPlusJSONResponse: apicontract.BadRequestProblemApplicationProblemPlusJSONResponse(problem)}, nil
 	}
-	settings, err := s.accounts.UpdateWebsiteSettings(ctx, accountservice.WebsiteSettingsInput{SiteTitle: input.SiteTitle, AllowGuestCheckout: input.AllowGuestCheckout, CouponCodesEnabled: input.CouponCodesEnabled, OIDCProvider: input.OidcProvider, OIDCClientID: input.OidcClientId, OIDCClientSecret: input.OidcClientSecret, ClearOIDCClientSecret: input.ClearOidcClientSecret, OIDCRedirectURI: input.OidcRedirectUri})
+	settings, err := s.accounts.UpdateWebsiteSettings(ctx, accountservice.WebsiteSettingsInput{SiteTitle: input.SiteTitle, AllowGuestCheckout: input.AllowGuestCheckout, CouponCodesEnabled: input.CouponCodesEnabled, OIDCProvider: input.OidcProvider, OIDCDisplayName: input.OidcDisplayName, OIDCClientID: input.OidcClientId, OIDCClientSecret: input.OidcClientSecret, ClearOIDCClientSecret: input.ClearOidcClientSecret, OIDCRedirectURI: input.OidcRedirectUri})
 	if err != nil {
+		if errors.Is(err, accountservice.ErrInvalidOIDCDisplayName) {
+			problem := s.contractProblem(ctx, http.StatusBadRequest, problemError(http.StatusBadRequest, "invalid_oidc_display_name", err.Error(), err))
+			return apicontract.UpdateWebsiteSettings400ApplicationProblemPlusJSONResponse{BadRequestProblemApplicationProblemPlusJSONResponse: apicontract.BadRequestProblemApplicationProblemPlusJSONResponse(problem)}, nil
+		}
 		if errors.Is(err, accountservice.ErrCredentialServiceUnconfigured) {
 			problem := s.contractProblem(ctx, http.StatusBadRequest, problemError(http.StatusBadRequest, "credential_encryption_unavailable", err.Error(), err))
 			return apicontract.UpdateWebsiteSettings400ApplicationProblemPlusJSONResponse{BadRequestProblemApplicationProblemPlusJSONResponse: apicontract.BadRequestProblemApplicationProblemPlusJSONResponse(problem)}, nil

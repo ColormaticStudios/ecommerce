@@ -9,8 +9,13 @@
 
 	interface Props {
 		title: string;
+		subtitle?: string;
 		oidcEnabled?: boolean;
+		oidcDisplayName?: string;
 		oidcDescription?: string;
+		oidcLoading?: boolean;
+		localSignInEnabled?: boolean;
+		dividerLabel?: string;
 		unavailableMessage?: string;
 		showUnavailable?: boolean;
 		onOidc?: () => void;
@@ -20,8 +25,13 @@
 
 	let {
 		title,
+		subtitle = "",
 		oidcEnabled = false,
+		oidcDisplayName = "",
 		oidcDescription = "",
+		oidcLoading = false,
+		localSignInEnabled = true,
+		dividerLabel = "",
 		unavailableMessage = "",
 		showUnavailable = false,
 		onOidc,
@@ -30,28 +40,41 @@
 	}: Props = $props();
 </script>
 
-<div class="mt-[10%] flex flex-col items-center justify-center">
-	<h1 class="text-4xl font-bold">{title}</h1>
+<section class="mx-auto flex w-full max-w-md flex-col px-4 py-10 sm:py-16">
+	<header class="text-center">
+		<h1 class="text-3xl font-bold tracking-tight text-gray-950 dark:text-white">{title}</h1>
+		{#if subtitle}
+			<p class="mt-2 text-base text-gray-600 dark:text-gray-300">{subtitle}</p>
+		{/if}
+	</header>
 	{@render alerts?.()}
-	<Card
-		radius="lg"
-		padding="sm"
-		class="m-4 flex w-sm flex-col items-center justify-center gap-2 bg-gray-100 dark:bg-gray-900"
-	>
+	<Card radius="2xl" padding="lg" shadow="md" class="mt-8 flex w-full min-w-0 flex-col gap-5">
 		{#if oidcEnabled}
 			<Button
-				variant="regular"
+				variant={localSignInEnabled ? "regular" : "primary"}
 				size="large"
 				type="button"
-				class="flex w-full items-center justify-center gap-2"
+				class="flex min-h-12 w-full items-center justify-center gap-2 text-base"
 				onclick={onOidc}
+				disabled={oidcLoading}
+				aria-busy={oidcLoading}
 			>
-				<i class="bi bi-shield-lock" aria-hidden="true"></i>
+				<i
+					class={oidcLoading ? "bi bi-arrow-repeat animate-spin" : "bi bi-arrow-right"}
+					aria-hidden="true"
+				></i>
 				<span
-					>{$localization.translate(
-						"storefront.account.continue_with_provider",
-						"Continue with OpenID Connect"
-					)}</span
+					>{oidcLoading
+						? $localization.translate(
+								"storefront.account.redirecting_to_provider",
+								"Redirecting to {provider}...",
+								{ provider: oidcDisplayName }
+							)
+						: $localization.translate(
+								"storefront.account.continue_to_provider",
+								"Continue to {provider}",
+								{ provider: oidcDisplayName }
+							)}</span
 				>
 			</Button>
 			{#if oidcDescription}
@@ -59,13 +82,13 @@
 					{oidcDescription}
 				</p>
 			{/if}
-			<div
-				class="flex w-full items-center gap-3 py-1 text-xs tracking-[0.3em] text-gray-500 uppercase"
-			>
-				<div class="h-px flex-1 bg-gray-300 dark:bg-gray-700"></div>
-				<span>{$localization.translate("storefront.account.or", "Or")}</span>
-				<div class="h-px flex-1 bg-gray-300 dark:bg-gray-700"></div>
-			</div>
+			{#if localSignInEnabled}
+				<div class="flex w-full items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+					<div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+					<span>{dividerLabel}</span>
+					<div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+				</div>
+			{/if}
 		{/if}
 
 		{#if showUnavailable}
@@ -81,4 +104,4 @@
 			{@render children?.()}
 		{/if}
 	</Card>
-</div>
+</section>

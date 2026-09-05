@@ -2,4 +2,4 @@
 // by lightweight operational binaries that must not import migration bodies.
 package schemacontract
 
-const LatestMigrationVersion = "2026090301_platform_jobs_p1"
+const LatestMigrationVersion = "2026090501_oidc_login_ui"

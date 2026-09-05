@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"ecommerce/internal/apicontract"
 	authservice "ecommerce/internal/services/auth"
@@ -36,7 +38,7 @@ func (s *AccountEndpoints) GetAuthConfig(ctx context.Context, _ apicontract.GetA
 		problem := s.contractProblem(ctx, http.StatusInternalServerError, err)
 		return apicontract.GetAuthConfig500ApplicationProblemPlusJSONResponse{InternalServerErrorProblemApplicationProblemPlusJSONResponse: apicontract.InternalServerErrorProblemApplicationProblemPlusJSONResponse(problem)}, nil
 	}
-	return apicontract.GetAuthConfig200JSONResponse{LocalSignInEnabled: config.LocalSignInEnabled, OidcEnabled: config.OIDCEnabled, AllowGuestCheckout: settings.AllowGuestCheckout}, nil
+	return apicontract.GetAuthConfig200JSONResponse{LocalSignInEnabled: config.LocalSignInEnabled, OidcEnabled: config.OIDCEnabled, OidcDisplayName: config.OIDCDisplayName, AllowGuestCheckout: settings.AllowGuestCheckout}, nil
 }
 
 func (s *AccountEndpoints) Register(ctx context.Context, request apicontract.RegisterRequestObject) (apicontract.RegisterResponseObject, error) {
@@ -119,13 +121,19 @@ func (s *AccountEndpoints) OidcCallback(ctx context.Context, request apicontract
 	if !config.OIDCEnabled {
 		return nil, authRouteNotFound(authservice.ErrOIDCNotConfigured)
 	}
-	result, err := s.auth.OIDCCallback(ctx, authservice.OIDCCallbackInput{Code: stringValue(request.Params.Code), State: stringValue(request.Params.State), JSONResponse: request.Params.Format != nil})
+	result, err := s.auth.OIDCCallback(ctx, authservice.OIDCCallbackInput{Code: stringValue(request.Params.Code), State: stringValue(request.Params.State), ProviderError: stringValue(request.Params.Error), JSONResponse: request.Params.Format != nil})
 	if err != nil {
+		if !result.JSONResponse && request.Params.Format == nil {
+			return oidcCallbackRedirectResponse{location: oidcFailureLocation(result.RedirectPath, err)}, nil
+		}
 		switch {
 		case errors.Is(err, authservice.ErrOIDCNotConfigured):
 			return nil, authRouteNotFound(err)
 		case errors.Is(err, authservice.ErrMissingOIDCCode):
 			problem := s.contractProblem(ctx, http.StatusBadRequest, problemError(http.StatusBadRequest, "invalid_oidc_callback", err.Error(), err))
+			return apicontract.OidcCallback400ApplicationProblemPlusJSONResponse{BadRequestProblemApplicationProblemPlusJSONResponse: apicontract.BadRequestProblemApplicationProblemPlusJSONResponse(problem)}, nil
+		case errors.Is(err, authservice.ErrOIDCCancelled), errors.Is(err, authservice.ErrOIDCProvider):
+			problem := s.contractProblem(ctx, http.StatusBadRequest, problemError(http.StatusBadRequest, "invalid_oidc_callback", "The identity provider did not complete sign-in.", err))
 			return apicontract.OidcCallback400ApplicationProblemPlusJSONResponse{BadRequestProblemApplicationProblemPlusJSONResponse: apicontract.BadRequestProblemApplicationProblemPlusJSONResponse(problem)}, nil
 		case errors.Is(err, authservice.ErrInvalidOIDCState), errors.Is(err, authservice.ErrInvalidCredentials):
 			problem := s.contractProblem(ctx, http.StatusUnauthorized, problemError(http.StatusUnauthorized, "invalid_oidc_callback", "The OIDC callback could not be authenticated.", err))
@@ -141,6 +149,18 @@ func (s *AccountEndpoints) OidcCallback(ctx context.Context, request apicontract
 		return oidcCallbackJSONSessionResponse{body: body, cookies: s.sessionCookies(token)}, nil
 	}
 	return oidcCallbackRedirectSessionResponse{location: result.RedirectPath, cookies: s.sessionCookies(result.Session.Token)}, nil
+}
+
+func oidcFailureLocation(redirectPath string, err error) string {
+	reason := "oidc_failed"
+	if errors.Is(err, authservice.ErrOIDCCancelled) {
+		reason = "oidc_cancelled"
+	}
+	query := url.Values{"reason": []string{reason}}
+	if redirect := strings.TrimSpace(redirectPath); redirect != "" && redirect != "/" {
+		query.Set("redirect", redirect)
+	}
+	return "/login?" + query.Encode()
 }
 
 func authRouteNotFound(cause error) error {

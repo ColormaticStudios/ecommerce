@@ -3,17 +3,35 @@
 	import TextInput from "$lib/components/TextInput.svelte";
 
 	interface Props {
-		value: string;
+		value?: string;
 		name: string;
-		placeholder: string;
+		id?: string;
+		autocomplete?: "current-password" | "new-password";
+		required?: boolean;
+		class?: string;
 	}
-	let { value = $bindable(), name, placeholder }: Props = $props();
+	let {
+		value = $bindable(),
+		name,
+		id,
+		autocomplete,
+		required = false,
+		class: className = "",
+	}: Props = $props();
 
 	let hidden = $state(true);
 </script>
 
 <div class="flex w-full">
-	<TextInput bind:value type={hidden ? "password" : "text"} {name} {placeholder} required />
+	<TextInput
+		bind:value
+		type={hidden ? "password" : "text"}
+		{name}
+		{id}
+		{autocomplete}
+		{required}
+		class={className}
+	/>
 	<Button
 		variant="regular"
 		class="ml-2 px-3!"

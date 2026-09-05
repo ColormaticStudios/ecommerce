@@ -3,6 +3,7 @@ package account
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"ecommerce/models"
@@ -78,4 +79,27 @@ func TestWebsiteSettingsDefaultsAndRejectsUnconfiguredSecretEncryption(t *testin
 
 	_, err = service.UpdateWebsiteSettings(context.Background(), WebsiteSettingsInput{SiteTitle: "Shop", OIDCClientSecret: "secret"})
 	require.ErrorIs(t, err, ErrCredentialServiceUnconfigured)
+}
+
+func TestWebsiteSettingsRequiresBoundedOIDCDisplayNameWhenConfigured(t *testing.T) {
+	db := newAccountTestDB(t, &models.WebsiteSettings{})
+	service := NewService(db, nil)
+	input := WebsiteSettingsInput{
+		SiteTitle:       "Shop",
+		OIDCProvider:    "https://issuer.example",
+		OIDCClientID:    "storefront",
+		OIDCRedirectURI: "https://shop.example/api/v1/auth/oidc/callback",
+	}
+
+	_, err := service.UpdateWebsiteSettings(context.Background(), input)
+	require.ErrorIs(t, err, ErrInvalidOIDCDisplayName)
+
+	input.OIDCDisplayName = strings.Repeat("x", 81)
+	_, err = service.UpdateWebsiteSettings(context.Background(), input)
+	require.ErrorIs(t, err, ErrInvalidOIDCDisplayName)
+
+	input.OIDCDisplayName = "  Colormatic SSO  "
+	settings, err := service.UpdateWebsiteSettings(context.Background(), input)
+	require.NoError(t, err)
+	assert.Equal(t, "Colormatic SSO", settings.OIDCDisplayName)
 }
