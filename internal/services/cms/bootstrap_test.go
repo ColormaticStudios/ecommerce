@@ -27,7 +27,7 @@ func TestBootstrapStarterSiteCreatesPublishedEditableContent(t *testing.T) {
 	}
 	home, err := pages.ResolvePublished(context.Background(), "/")
 	require.NoError(t, err)
-	require.Equal(t, "Find your next favorite", home.Page.Title)
+	require.Equal(t, "Home", home.Page.Title)
 	homeBlocks, ok := home.PublishedVersionPayload()["blocks"].([]any)
 	require.True(t, ok)
 	require.Len(t, homeBlocks, 4)
@@ -69,7 +69,7 @@ func TestBootstrapStarterSiteUpgradesGeneratedLegacyHomepage(t *testing.T) {
 
 	home, err := pages.ResolvePublished(context.Background(), "/")
 	require.NoError(t, err)
-	require.Equal(t, "Find your next favorite", home.Page.Title)
+	require.Equal(t, "Home", home.Page.Title)
 	homeBlocks, ok := home.PublishedVersionPayload()["blocks"].([]any)
 	require.True(t, ok)
 	require.Equal(t, "Good things, thoughtfully chosen.", homeBlocks[0].(map[string]any)["title"])

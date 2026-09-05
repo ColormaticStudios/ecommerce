@@ -121,7 +121,7 @@ func isGeneratedLegacyHomepage(ctx context.Context, service *Service, pageID uin
 func starterPages() []PageDraftInput {
 	return []PageDraftInput{
 		{
-			Path: "/", Slug: "home", Title: "Find your next favorite", Visibility: string(models.CMSPageVisibilityPublic), IsHomepage: true,
+			Path: "/", Slug: "home", Title: "Home", Visibility: string(models.CMSPageVisibilityPublic), IsHomepage: true,
 			Payload: PagePayload{"blocks": []any{
 				map[string]any{
 					"type": "hero", "title": "Good things, thoughtfully chosen.",
