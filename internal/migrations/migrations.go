@@ -4487,6 +4487,13 @@ func resolveVariantBackfillTarget(tx *gorm.DB, productID uint) (uint, string, st
 		if err := queryDB.Create(&createdVariant).Error; err != nil {
 			return 0, "", "", fmt.Errorf("create fallback variant for product %d: %w", productID, err)
 		}
+		// GORM's default:true must not publish an unpublished legacy product's variant.
+		if !product.IsPublished {
+			if err := queryDB.Model(&createdVariant).Update("is_published", false).Error; err != nil {
+				return 0, "", "", fmt.Errorf("preserve fallback variant publication for product %d: %w", productID, err)
+			}
+			createdVariant.IsPublished = false
+		}
 		if err := queryDB.Table("products").
 			Where("id = ?", productID).
 			Update("default_variant_id", createdVariant.ID).Error; err != nil {

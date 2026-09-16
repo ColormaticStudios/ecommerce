@@ -209,8 +209,18 @@ func replaceTargetingRules(tx *gorm.DB, entry models.CMSEntry, inputs []Targetin
 			EntryID: entry.ID, VersionID: *entry.CurrentVersionID, RuleJSON: string(raw),
 			Priority: input.Priority, IsEnabled: input.IsEnabled,
 		}
+		wantEnabled := model.IsEnabled
 		if err := tx.Select("*").Create(&model).Error; err != nil {
 			return err
+		}
+		// GORM applies the model's default:true tag to a false bool during
+		// Create, even when the field is explicitly selected, and it mutates
+		// the in-memory struct back to true too. Persist and restore the
+		// requested false value explicitly using the value captured before Create.
+		if !wantEnabled {
+			if err := tx.Model(&model).Update("is_enabled", false).Error; err != nil {
+				return err
+			}
 		}
 	}
 	return nil

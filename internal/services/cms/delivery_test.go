@@ -86,6 +86,23 @@ func TestDeliveryTargetingUsesDeterministicRuleMatching(t *testing.T) {
 	require.False(t, eligible)
 }
 
+func TestDeliveryTargetingRulePersistsExplicitlyDisabledState(t *testing.T) {
+	db := newServiceTestDB(t)
+	service := NewPageService(db)
+	_, draft := createDeliveryTestPage(t, service)
+	_, err := service.UpdateDelivery(context.Background(), draft.Page.ID, DeliveryInput{
+		TargetingRules: []TargetingRuleInput{{
+			TargetingRule: TargetingRule{Markets: []string{"US"}},
+			IsEnabled:     false,
+		}},
+	})
+	require.NoError(t, err)
+
+	var rule models.CMSTargetingRule
+	require.NoError(t, db.Where("entry_id = ?", draft.Entry.ID).First(&rule).Error)
+	require.False(t, rule.IsEnabled, "explicitly disabled targeting rule must persist as disabled")
+}
+
 func TestDeliveryExperimentAllocationIsStickyAndWithinTolerance(t *testing.T) {
 	service := NewPageService(newServiceTestDB(t))
 	published, draft := createDeliveryTestPage(t, service)

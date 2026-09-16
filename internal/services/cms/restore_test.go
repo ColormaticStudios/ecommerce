@@ -72,3 +72,31 @@ func TestRestoreExportRejectsInvalidBundleWithoutChangingContent(t *testing.T) {
 	_, err = service.Get(context.Background(), page.Page.ID)
 	require.NoError(t, err)
 }
+
+func TestRestoreExportPreservesNavigationEnabledStates(t *testing.T) {
+	db := newServiceTestDB(t)
+	navigation, err := NewNavigationService(db).CreateDraft(context.Background(), NavigationDraftInput{
+		Key: "restore-menu", Title: "Restore menu", Location: "header",
+		Items: []NavigationItemInput{
+			{Label: "Enabled", ItemType: "internal", TargetRef: "/search", URL: "/search", IsEnabled: true},
+			{Label: "Disabled", ItemType: "internal", TargetRef: "/cart", URL: "/cart", IsEnabled: false},
+		},
+	})
+	require.NoError(t, err)
+	raw, err := json.Marshal(map[string]any{
+		"schema_version": 2,
+		"navigation": []any{map[string]any{
+			"menu": navigation.Menu, "entry": navigation.Entry, "items": navigation.Items,
+			"current_version": exportVersionForTest(navigation.CurrentVersion),
+		}},
+	})
+	require.NoError(t, err)
+	require.NoError(t, NewPageService(db).RestoreExport(context.Background(), raw, "publisher-1"))
+	var items []models.CMSNavigationItem
+	require.NoError(t, db.Where("menu_id = ?", navigation.Menu.ID).Order("id ASC").Find(&items).Error)
+	require.Len(t, items, 2)
+	require.Equal(t, navigation.Items[0].ID, items[0].ID)
+	require.Equal(t, navigation.Items[1].ID, items[1].ID)
+	require.True(t, items[0].IsEnabled)
+	require.False(t, items[1].IsEnabled)
+}

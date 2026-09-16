@@ -129,8 +129,17 @@ func (s *Service) RestoreExport(ctx context.Context, raw []byte, actor string) e
 				return err
 			}
 			for index := range navigation.Items {
-				if err := tx.Select("*").Create(&navigation.Items[index]).Error; err != nil {
+				item := &navigation.Items[index]
+				wantEnabled := item.IsEnabled
+				if err := tx.Select("*").Create(item).Error; err != nil {
 					return err
+				}
+				// Restore explicit false values overridden by GORM's default:true.
+				if !wantEnabled {
+					if err := tx.Model(item).Update("is_enabled", false).Error; err != nil {
+						return err
+					}
+					item.IsEnabled = false
 				}
 			}
 		}

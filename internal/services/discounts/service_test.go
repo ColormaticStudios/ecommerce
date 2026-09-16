@@ -515,6 +515,30 @@ func TestPromotionTemplateInstantiateCreatesCampaignWithOverrides(t *testing.T) 
 	require.Len(t, campaign.Rules, 1)
 }
 
+func TestCreateTemplatePersistsExplicitlyInactiveState(t *testing.T) {
+	db := newDiscountTestDB(t)
+	now := time.Date(2026, 5, 19, 12, 0, 0, 0, time.UTC)
+	inactive := false
+	template, err := CreateTemplate(db, TemplateInput{
+		Name:     "Inactive template",
+		IsActive: &inactive,
+		Template: CreatePromotionInput{
+			Name:     "Template base",
+			StartsAt: now,
+			Rules: []PromotionRuleInput{{
+				Condition: RuleCondition{CategoryIDs: []uint{9}, MinQuantity: 1},
+				Action:    RuleAction{Mode: ActionModePercent, Value: models.MoneyFromFloat(10), TargetType: models.DiscountTargetTypeCategory, TargetIDs: []uint{9}},
+			}},
+		},
+	})
+	require.NoError(t, err)
+	require.False(t, template.IsActive, "explicitly inactive template must persist as inactive")
+
+	var reloaded models.PromotionTemplate
+	require.NoError(t, db.First(&reloaded, template.ID).Error)
+	require.False(t, reloaded.IsActive, "explicitly inactive template must be persisted as inactive in the database")
+}
+
 func TestValidatePromotionRejectsInvalidMaxApplicationsPerOrder(t *testing.T) {
 	now := time.Date(2026, 5, 19, 12, 0, 0, 0, time.UTC)
 	zero := 0
@@ -716,4 +740,21 @@ func timePtr(value time.Time) *time.Time {
 
 func stringPtr(value string) *string {
 	return &value
+}
+
+func TestCreateTemplateRollsBackWhenDisablingFails(t *testing.T) {
+	db := newDiscountTestDB(t)
+	require.NoError(t, db.Exec(`CREATE TRIGGER fail_template_disable BEFORE UPDATE OF is_active ON promotion_templates BEGIN SELECT RAISE(ABORT, 'disable failed'); END`).Error)
+	inactive := false
+	_, err := CreateTemplate(db, TemplateInput{
+		Name: "Failed inactive template", IsActive: &inactive,
+		Template: CreatePromotionInput{
+			Name: "Template base", StartsAt: time.Date(2026, 5, 19, 12, 0, 0, 0, time.UTC),
+			Rules: []PromotionRuleInput{{Condition: RuleCondition{CategoryIDs: []uint{9}, MinQuantity: 1}, Action: RuleAction{Mode: ActionModePercent, Value: models.MoneyFromFloat(10), TargetType: models.DiscountTargetTypeCategory, TargetIDs: []uint{9}}}},
+		},
+	})
+	require.ErrorContains(t, err, "disable failed")
+	var count int64
+	require.NoError(t, db.Model(&models.PromotionTemplate{}).Count(&count).Error)
+	require.Zero(t, count, "failed creation must not leave an active template")
 }

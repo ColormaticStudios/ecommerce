@@ -45,7 +45,20 @@ func (s *RedirectService) Create(ctx context.Context, input RedirectInput) (*mod
 	if err := s.validateRules(db, 0, rule); err != nil {
 		return nil, err
 	}
-	if err := db.Select("*").Create(&rule).Error; err != nil {
+	wantEnabled := rule.IsEnabled
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Select("*").Create(&rule).Error; err != nil {
+			return err
+		}
+		// Keep the default:true correction in the insert transaction.
+		if !wantEnabled {
+			if err := tx.Model(&rule).Update("is_enabled", false).Error; err != nil {
+				return err
+			}
+			rule.IsEnabled = false
+		}
+		return nil
+	}); err != nil {
 		if isUniqueConstraint(err) {
 			return nil, fmt.Errorf("%w: redirect source already exists", ErrInvalidPage)
 		}

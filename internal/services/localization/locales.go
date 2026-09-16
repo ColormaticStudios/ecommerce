@@ -148,8 +148,19 @@ func (s *Service) ReplaceLocales(ctx context.Context, inputs []LocaleInput) ([]L
 			locale.IsDefault = input.IsDefault
 			locale.FallbackLocaleID = nil
 			if locale.ID == 0 {
+				wantEnabled := locale.IsEnabled
 				if err := tx.Select("*").Create(&locale).Error; err != nil {
 					return err
+				}
+				// GORM applies the model's default:true tag to a false bool during
+				// Create, even when the field is explicitly selected, and it mutates
+				// the in-memory struct back to true too. Persist and restore the
+				// requested false value explicitly using the value captured before Create.
+				if !wantEnabled {
+					if err := tx.Model(&locale).Update("is_enabled", false).Error; err != nil {
+						return err
+					}
+					locale.IsEnabled = false
 				}
 			} else if err := tx.Select("*").Save(&locale).Error; err != nil {
 				return err

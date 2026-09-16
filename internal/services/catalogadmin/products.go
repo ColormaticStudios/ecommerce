@@ -200,6 +200,15 @@ func replaceDraft(tx *gorm.DB, product models.Product, input apicontract.Product
 		if err := tx.Select("*").Create(&value).Error; err != nil {
 			return err
 		}
+		// GORM applies the model's default:true tag to a false bool during Create,
+		// even when the field is explicitly selected. Persist and restore the
+		// requested false value explicitly.
+		if !published {
+			if err := tx.Model(&value).Update("is_published", false).Error; err != nil {
+				return err
+			}
+			value.IsPublished = false
+		}
 	}
 	for index, id := range input.CategoryIds {
 		if id > 0 {
@@ -287,8 +296,21 @@ func (s *Service) PublishProduct(ctx context.Context, id uint) (models.Product, 
 					return err
 				}
 				delete(liveVariantsBySKU, item.SKU)
-			} else if err := tx.Select("*").Create(value).Error; err != nil {
-				return err
+			} else {
+				wantPublished := value.IsPublished
+				if err := tx.Select("*").Create(value).Error; err != nil {
+					return err
+				}
+				// GORM applies the model's default:true tag to a false bool during
+				// Create, even when the field is explicitly selected, and it mutates
+				// the in-memory struct back to true too. Persist and restore the
+				// requested false value explicitly using the value captured before Create.
+				if !wantPublished {
+					if err := tx.Model(value).Update("is_published", false).Error; err != nil {
+						return err
+					}
+					value.IsPublished = false
+				}
 			}
 			if err := localizationservice.SyncDefaultEntityLocalization(tx, localizationservice.EntityTypeProductVariant, value.ID, map[string]string{"title": value.Title}, nil); err != nil {
 				return err

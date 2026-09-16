@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"ecommerce/internal/checkoutplugins"
 	"ecommerce/models"
@@ -47,12 +48,25 @@ func (s *CatalogService) SyncSettings(ctx context.Context) error {
 	}
 	s.manager.ReplaceSettings(settings)
 	for _, setting := range s.manager.ListSettings() {
-		record := models.CheckoutProviderSetting{ProviderType: string(setting.Type), ProviderID: setting.ID, Enabled: setting.Enabled}
-		if err := s.db.WithContext(ctx).Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "provider_type"}, {Name: "provider_id"}}, DoUpdates: clause.Assignments(map[string]any{"enabled": setting.Enabled})}).Create(&record).Error; err != nil {
+		if err := upsertCheckoutProviderSetting(ctx, s.db, setting); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// upsertCheckoutProviderSetting uses a map so explicit false values bypass
+// GORM's struct defaults and both insert and conflict paths use one statement.
+func upsertCheckoutProviderSetting(ctx context.Context, db *gorm.DB, setting checkoutplugins.ProviderSetting) error {
+	now := time.Now().UTC()
+	return db.WithContext(ctx).Model(&models.CheckoutProviderSetting{}).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "provider_type"}, {Name: "provider_id"}},
+			DoUpdates: clause.Assignments(map[string]any{"enabled": setting.Enabled}),
+		}).Create(map[string]any{
+		"provider_type": string(setting.Type), "provider_id": setting.ID,
+		"enabled": setting.Enabled, "created_at": now, "updated_at": now,
+	}).Error
 }
 
 func (s *CatalogService) List(_ context.Context, admin bool) (payment, shipping, tax []checkoutplugins.Definition, err error) {
@@ -77,8 +91,7 @@ func (s *CatalogService) SetEnabled(ctx context.Context, providerType checkoutpl
 		return nil
 	}
 	for _, setting := range s.manager.ListSettings() {
-		record := models.CheckoutProviderSetting{ProviderType: string(setting.Type), ProviderID: setting.ID, Enabled: setting.Enabled}
-		if err := s.db.WithContext(ctx).Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "provider_type"}, {Name: "provider_id"}}, DoUpdates: clause.Assignments(map[string]any{"enabled": setting.Enabled})}).Create(&record).Error; err != nil {
+		if err := upsertCheckoutProviderSetting(ctx, s.db, setting); err != nil {
 			return err
 		}
 	}

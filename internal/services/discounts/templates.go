@@ -56,7 +56,20 @@ func CreateTemplate(db *gorm.DB, input TemplateInput) (models.PromotionTemplate,
 		TemplateJSON: string(raw),
 		IsActive:     active,
 	}
-	return template, db.Create(&template).Error
+	err = db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Select("*").Create(&template).Error; err != nil {
+			return err
+		}
+		// Keep the default:true correction in the insert transaction.
+		if !active {
+			if err := tx.Model(&template).Update("is_active", false).Error; err != nil {
+				return err
+			}
+			template.IsActive = false
+		}
+		return nil
+	})
+	return template, err
 }
 
 func InstantiateTemplate(db *gorm.DB, id uint, input InstantiateTemplateInput) (models.DiscountCampaign, error) {

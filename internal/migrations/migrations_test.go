@@ -950,33 +950,46 @@ func TestCatalogDepthP0MigrationCreatesCatalogTables(t *testing.T) {
 }
 
 func TestCatalogDepthP2BackfillsDefaultVariantForLegacyProducts(t *testing.T) {
-	db := newTestDB(t)
-	t.Setenv(contractGuardEnvVar, "true")
-	require.NoError(t, runWithMigrations(db, orderedMigrations[:2]))
-
-	legacy := legacyProduct{
-		SKU:         "legacy-no-variant",
-		Name:        "Legacy Product",
-		Description: "Flat product only",
-		Price:       models.MoneyFromFloat(19.99),
-		Stock:       7,
-		IsPublished: true,
+	for _, published := range []bool{true, false} {
+		t.Run(fmt.Sprintf("published_%t", published), func(t *testing.T) {
+			db := newTestDB(t)
+			require.NoError(t, runWithMigrations(db, orderedMigrations[:2]))
+			legacy := legacyProduct{SKU: "legacy-no-variant", Name: "Legacy Product", Description: "Flat product only", Price: models.MoneyFromFloat(19.99), Stock: 7, IsPublished: published}
+			require.NoError(t, db.Create(&legacy).Error)
+			require.NoError(t, db.Model(&legacy).Update("is_published", published).Error)
+			var replay []Migration
+			for _, migration := range orderedMigrations {
+				replay = append(replay, migration)
+				if migration.Version == productCatalogDepthP2ProductBackfillVersion {
+					break
+				}
+			}
+			require.NoError(t, runWithMigrations(db, replay))
+			// Frozen projections of the schema at this migration, independent of current models.
+			var product struct {
+				ID               uint
+				DefaultVariantID *uint
+			}
+			require.NoError(t, db.Table("products").Select("id", "default_variant_id").Where("id = ?", legacy.ID).Take(&product).Error)
+			require.NotNil(t, product.DefaultVariantID)
+			var variant struct {
+				ID          uint
+				ProductID   uint
+				SKU         string
+				Title       string
+				Price       models.Money
+				Stock       int
+				IsPublished bool
+			}
+			require.NoError(t, db.Table("product_variants").Select("id", "product_id", "sku", "title", "price", "stock", "is_published").Where("id = ?", *product.DefaultVariantID).Take(&variant).Error)
+			assert.Equal(t, legacy.ID, variant.ProductID)
+			assert.Equal(t, legacy.SKU, variant.SKU)
+			assert.Equal(t, legacy.Name, variant.Title)
+			assert.Equal(t, legacy.Price, variant.Price)
+			assert.Equal(t, legacy.Stock, variant.Stock)
+			assert.Equal(t, published, variant.IsPublished)
+		})
 	}
-	require.NoError(t, db.Create(&legacy).Error)
-
-	require.NoError(t, runWithMigrations(db, orderedMigrations))
-
-	var product models.Product
-	require.NoError(t, db.Where("id = ?", legacy.ID).First(&product).Error)
-	require.NotNil(t, product.DefaultVariantID)
-
-	var variant models.ProductVariant
-	require.NoError(t, db.First(&variant, *product.DefaultVariantID).Error)
-	assert.Equal(t, product.ID, variant.ProductID)
-	assert.Equal(t, product.SKU, variant.SKU)
-	assert.Equal(t, product.Name, variant.Title)
-	assert.Equal(t, product.Price, variant.Price)
-	assert.Equal(t, product.Stock, variant.Stock)
 }
 
 func TestCatalogDepthP4BackfillsLegacyDraftBlobAndDropsColumn(t *testing.T) {

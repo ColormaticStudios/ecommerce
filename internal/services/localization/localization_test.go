@@ -111,6 +111,31 @@ func TestReplaceLocalesValidatesDefaultFallbacksAndCanonicalCodes(t *testing.T) 
 	require.ErrorIs(t, err, ErrInvalidLocale)
 }
 
+func TestReplaceLocalesPersistsExplicitlyDisabledNewLocale(t *testing.T) {
+	service, db := newLocalizationTestService(t)
+
+	_, err := service.ReplaceLocales(context.Background(), []LocaleInput{
+		{Code: "en-US", Name: "English", IsEnabled: true, IsDefault: true},
+		{Code: "de-DE", Name: "German", IsEnabled: false},
+	})
+	require.NoError(t, err)
+
+	var locale models.Locale
+	require.NoError(t, db.Where("code = ?", "de-DE").First(&locale).Error)
+	require.False(t, locale.IsEnabled, "a locale explicitly created as disabled must persist as disabled")
+
+	locales, err := service.ListLocales(context.Background(), false)
+	require.NoError(t, err)
+	var found bool
+	for _, item := range locales {
+		if item.Code == "de-DE" {
+			found = true
+			require.False(t, item.IsEnabled)
+		}
+	}
+	require.True(t, found)
+}
+
 func TestResolveLocaleUsesDocumentedPrecedenceForAnonymousAndAccounts(t *testing.T) {
 	service, _ := newLocalizationTestService(t)
 	configureTestLocales(t, service)

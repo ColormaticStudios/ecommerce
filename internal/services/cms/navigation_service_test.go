@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"ecommerce/models"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,6 +24,28 @@ func TestNavigationPublishBlocksMissingInternalPageTarget(t *testing.T) {
 
 	_, err = service.Publish(context.Background(), created.Menu.ID, PublishInput{})
 	require.ErrorIs(t, err, ErrInvalidPage)
+}
+
+func TestNavigationItemPersistsExplicitlyDisabledState(t *testing.T) {
+	db := newServiceTestDB(t)
+	service := NewNavigationService(db)
+
+	created, err := service.CreateDraft(context.Background(), NavigationDraftInput{
+		Key:      "main",
+		Title:    "Main",
+		Location: "header",
+		Items: []NavigationItemInput{
+			{Label: "Enabled", ItemType: "internal", TargetRef: "/search", URL: "/search", IsEnabled: true},
+			{Label: "Disabled", ItemType: "internal", TargetRef: "/search", URL: "/search", IsEnabled: false},
+		},
+	})
+	require.NoError(t, err)
+
+	var items []models.CMSNavigationItem
+	require.NoError(t, db.Where("menu_id = ?", created.Menu.ID).Order("sort_order asc, id asc").Find(&items).Error)
+	require.Len(t, items, 2)
+	require.True(t, items[0].IsEnabled)
+	require.False(t, items[1].IsEnabled, "explicitly disabled navigation item must persist as disabled")
 }
 
 func TestNavigationPublishesAndResolvesSnapshot(t *testing.T) {

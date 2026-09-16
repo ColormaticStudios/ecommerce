@@ -454,8 +454,24 @@ func replaceNavigationItems(tx *gorm.DB, menuID uint, input []NavigationItemInpu
 		})
 	}
 	if len(items) > 0 {
-		if err := tx.Create(&items).Error; err != nil {
+		wantEnabled := make([]bool, len(items))
+		for i := range items {
+			wantEnabled[i] = items[i].IsEnabled
+		}
+		if err := tx.Select("*").Create(&items).Error; err != nil {
 			return nil, err
+		}
+		// GORM applies the model's default:true tag to a false bool during
+		// Create, even when the field is explicitly selected, and it mutates
+		// the in-memory struct back to true too. Persist and restore any
+		// requested false values explicitly using the values captured before Create.
+		for i := range items {
+			if !wantEnabled[i] {
+				if err := tx.Model(&items[i]).Update("is_enabled", false).Error; err != nil {
+					return nil, err
+				}
+				items[i].IsEnabled = false
+			}
 		}
 	}
 	return items, nil

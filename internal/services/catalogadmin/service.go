@@ -60,9 +60,20 @@ func (s *Service) CreateBrand(ctx context.Context, input apicontract.BrandInput)
 	if err != nil {
 		return models.Brand{}, err
 	}
+	wantActive := brand.IsActive
 	err = db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Select("*").Create(&brand).Error; err != nil {
 			return err
+		}
+		// GORM applies the model's default:true tag to a false bool during
+		// Create, even when the field is explicitly selected, and it mutates
+		// the in-memory struct back to true too. Persist and restore the
+		// requested false value explicitly using the value captured before Create.
+		if !wantActive {
+			if err := tx.Model(&brand).Update("is_active", false).Error; err != nil {
+				return err
+			}
+			brand.IsActive = false
 		}
 		if err := replaceBrandLogo(tx, brand.ID, logoID); err != nil {
 			return err
@@ -250,9 +261,20 @@ func (s *Service) CreateCategory(ctx context.Context, input apicontract.Category
 	if err != nil {
 		return models.Category{}, err
 	}
+	wantActive := category.IsActive
 	err = db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Select("*").Create(&category).Error; err != nil {
 			return err
+		}
+		// GORM applies the model's default:true tag to a false bool during
+		// Create, even when the field is explicitly selected, and it mutates
+		// the in-memory struct back to true too. Persist and restore the
+		// requested false value explicitly using the value captured before Create.
+		if !wantActive {
+			if err := tx.Model(&category).Update("is_active", false).Error; err != nil {
+				return err
+			}
+			category.IsActive = false
 		}
 		return localizationservice.SyncDefaultEntityLocalization(tx, localizationservice.EntityTypeCategory, category.ID, map[string]string{
 			"name": category.Name, "description": optionalString(category.Description),
