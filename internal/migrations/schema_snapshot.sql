@@ -57,7 +57,7 @@ TABLE checkout_provider_settings
   COLUMN provider_type
   COLUMN updated_at
   INDEX idx_checkout_provider_settings_deleted_at columns=deleted_at unique=false option=
-  INDEX idx_checkout_provider_settings_type_id columns=provider_id,provider_type unique=true option=
+  INDEX idx_checkout_provider_settings_type_id columns=provider_type,provider_id unique=true option=
 TABLE checkout_sessions
   COLUMN created_at
   COLUMN deleted_at
@@ -80,7 +80,7 @@ TABLE cms_audit_events
   COLUMN id
   COLUMN variant_id
   COLUMN version_id
-  INDEX idx_cms_audit_entry_created columns=created_at,entry_id,id unique=false option=
+  INDEX idx_cms_audit_entry_created columns=entry_id,created_at,id unique=false option=
   INDEX idx_cms_audit_events_action columns=action unique=false option=
   INDEX idx_cms_audit_events_created_at columns=created_at unique=false option=
   INDEX idx_cms_audit_events_entry_id columns=entry_id unique=false option=
@@ -157,7 +157,7 @@ TABLE cms_entry_workflows
   COLUMN submitted_by
   COLUMN updated_at
   COLUMN version_id
-  INDEX idx_cms_entry_workflow_status columns=id,status,updated_at unique=false option=
+  INDEX idx_cms_entry_workflow_status columns=status,updated_at,id unique=false option=
   INDEX idx_cms_entry_workflows_deleted_at columns=deleted_at unique=false option=
   INDEX idx_cms_entry_workflows_entry_id columns=entry_id unique=true option=
   INDEX idx_cms_entry_workflows_status columns=status unique=false option=
@@ -185,7 +185,7 @@ TABLE cms_experiments
   INDEX idx_cms_experiments_deleted_at columns=deleted_at unique=false option=
   INDEX idx_cms_experiments_ends_at columns=ends_at unique=false option=
   INDEX idx_cms_experiments_entry_id columns=entry_id unique=false option=
-  INDEX idx_cms_experiments_runtime columns=ends_at,entry_id,starts_at,status unique=false option=
+  INDEX idx_cms_experiments_runtime columns=entry_id,status,starts_at,ends_at unique=false option=
   INDEX idx_cms_experiments_starts_at columns=starts_at unique=false option=
   INDEX idx_cms_experiments_status columns=status unique=false option=
 TABLE cms_exposure_events
@@ -198,7 +198,7 @@ TABLE cms_exposure_events
   COLUMN experiment_id
   COLUMN experiment_variant_id
   COLUMN id
-  INDEX idx_cms_exposure_event_dedupe columns=content_version_id,correlation_id,event_type unique=true option=
+  INDEX idx_cms_exposure_event_dedupe columns=correlation_id,event_type,content_version_id unique=true option=
   INDEX idx_cms_exposure_events_content_version_id columns=content_version_id unique=false option=
   INDEX idx_cms_exposure_events_correlation_id columns=correlation_id unique=false option=
   INDEX idx_cms_exposure_events_created_at columns=created_at unique=false option=
@@ -234,7 +234,7 @@ TABLE cms_invalidation_events
   INDEX idx_cms_invalidation_events_entry_id columns=entry_id unique=false option=
   INDEX idx_cms_invalidation_events_status columns=status unique=false option=
   INDEX idx_cms_invalidation_events_variant_id columns=variant_id unique=false option=
-  INDEX idx_cms_invalidation_pending columns=created_at,id,status unique=false option=
+  INDEX idx_cms_invalidation_pending columns=status,created_at,id unique=false option=
 TABLE cms_locales
   COLUMN code
   COLUMN created_at
@@ -266,7 +266,7 @@ TABLE cms_navigation_items
   INDEX idx_cms_navigation_items_deleted_at columns=deleted_at unique=false option=
   INDEX idx_cms_navigation_items_is_enabled columns=is_enabled unique=false option=
   INDEX idx_cms_navigation_items_menu_id columns=menu_id unique=false option=
-  INDEX idx_cms_navigation_items_menu_order columns=id,menu_id,parent_id,sort_order unique=false option=
+  INDEX idx_cms_navigation_items_menu_order columns=menu_id,parent_id,sort_order,id unique=false option=
   INDEX idx_cms_navigation_items_parent_id columns=parent_id unique=false option=
   INDEX idx_cms_navigation_items_sort_order columns=sort_order unique=false option=
 TABLE cms_navigation_menus
@@ -302,9 +302,9 @@ TABLE cms_page_variants
   COLUMN submitted_by
   COLUMN title
   COLUMN updated_at
-  INDEX idx_cms_page_variant_path_live columns=locale,market,path unique=true option=
-  INDEX idx_cms_page_variant_scope columns=locale,market,page_id unique=false option=
-  INDEX idx_cms_page_variant_scope_live columns=locale,market,page_id unique=true option=
+  INDEX idx_cms_page_variant_path_live columns=path,locale,market unique=true option=
+  INDEX idx_cms_page_variant_scope columns=page_id,locale,market unique=false option=
+  INDEX idx_cms_page_variant_scope_live columns=page_id,locale,market unique=true option=
   INDEX idx_cms_page_variants_deleted_at columns=deleted_at unique=false option=
   INDEX idx_cms_page_variants_entry_id columns=entry_id unique=false option=
   INDEX idx_cms_page_variants_path columns=path unique=false option=
@@ -341,7 +341,7 @@ TABLE cms_publications
   COLUMN rollback_from_publication_id
   COLUMN version_id
   INDEX idx_cms_publications_entry_id columns=entry_id unique=false option=
-  INDEX idx_cms_publications_entry_published columns=entry_id,id,published_at unique=false option=
+  INDEX idx_cms_publications_entry_published columns=entry_id,published_at,id unique=false option=
   INDEX idx_cms_publications_published_at columns=published_at unique=false option=
   INDEX idx_cms_publications_published_by columns=published_by unique=false option=
   INDEX idx_cms_publications_rollback_from_publication_id columns=rollback_from_publication_id unique=false option=
@@ -359,10 +359,10 @@ TABLE cms_redirect_rules
   COLUMN updated_at
   INDEX idx_cms_redirect_rules_deleted_at columns=deleted_at unique=false option=
   INDEX idx_cms_redirect_rules_is_enabled columns=is_enabled unique=false option=
-  INDEX idx_cms_redirect_rules_match columns=id,is_enabled,match_type,priority unique=false option=
+  INDEX idx_cms_redirect_rules_match columns=is_enabled,match_type,priority,id unique=false option=
   INDEX idx_cms_redirect_rules_match_type columns=match_type unique=false option=
   INDEX idx_cms_redirect_rules_priority columns=priority unique=false option=
-  INDEX idx_cms_redirect_rules_source_live columns=match_type,source_pattern unique=true option=
+  INDEX idx_cms_redirect_rules_source_live columns=source_pattern,match_type unique=true option=
   INDEX idx_cms_redirect_rules_source_pattern columns=source_pattern unique=false option=
 TABLE cms_role_assignments
   COLUMN created_at
@@ -387,7 +387,7 @@ TABLE cms_schedules
   COLUMN updated_at
   COLUMN version_id
   INDEX idx_cms_schedules_deleted_at columns=deleted_at unique=false option=
-  INDEX idx_cms_schedules_due columns=publish_at,status,unpublish_at unique=false option=
+  INDEX idx_cms_schedules_due columns=status,publish_at,unpublish_at unique=false option=
   INDEX idx_cms_schedules_entry_id columns=entry_id unique=true option=
   INDEX idx_cms_schedules_publish_at columns=publish_at unique=false option=
   INDEX idx_cms_schedules_status columns=status unique=false option=
@@ -410,7 +410,7 @@ TABLE cms_targeting_rules
   COLUMN version_id
   INDEX idx_cms_targeting_rules_deleted_at columns=deleted_at unique=false option=
   INDEX idx_cms_targeting_rules_entry_id columns=entry_id unique=false option=
-  INDEX idx_cms_targeting_rules_entry_priority columns=entry_id,id,is_enabled,priority unique=false option=
+  INDEX idx_cms_targeting_rules_entry_priority columns=entry_id,is_enabled,priority,id unique=false option=
   INDEX idx_cms_targeting_rules_is_enabled columns=is_enabled unique=false option=
   INDEX idx_cms_targeting_rules_priority columns=priority unique=false option=
   INDEX idx_cms_targeting_rules_version_id columns=version_id unique=false option=
@@ -456,14 +456,14 @@ TABLE discount_campaigns
   COLUMN type
   COLUMN updated_at
   COLUMN updated_by
-  INDEX idx_discount_campaigns_active_window columns=ends_at,is_archived,starts_at,status,type unique=false option=
+  INDEX idx_discount_campaigns_active_window columns=type,status,is_archived,starts_at,ends_at unique=false option=
   INDEX idx_discount_campaigns_coupon_code columns=coupon_code unique=true option=
   INDEX idx_discount_campaigns_created_by columns=created_by unique=false option=
   INDEX idx_discount_campaigns_deleted_at columns=deleted_at unique=false option=
   INDEX idx_discount_campaigns_ends_at columns=ends_at unique=false option=
   INDEX idx_discount_campaigns_is_archived columns=is_archived unique=false option=
   INDEX idx_discount_campaigns_priority columns=priority unique=false option=
-  INDEX idx_discount_campaigns_runtime_lookup columns=ends_at,id,is_archived,priority,starts_at,status unique=false option=
+  INDEX idx_discount_campaigns_runtime_lookup columns=status,is_archived,starts_at,ends_at,priority,id unique=false option=
   INDEX idx_discount_campaigns_starts_at columns=starts_at unique=false option=
   INDEX idx_discount_campaigns_status columns=status unique=false option=
   INDEX idx_discount_campaigns_type columns=type unique=false option=
@@ -558,12 +558,12 @@ TABLE discount_targets
   COLUMN target_id
   COLUMN target_type
   COLUMN updated_at
-  INDEX idx_discount_target columns=campaign_id,level_id,target_id,target_type unique=true option=
-  INDEX idx_discount_targets_category_lookup columns=campaign_id,level_id,target_id,target_type unique=false option=
+  INDEX idx_discount_target columns=campaign_id,level_id,target_type,target_id unique=true option=
+  INDEX idx_discount_targets_category_lookup columns=target_type,target_id,campaign_id,level_id unique=false option=
   INDEX idx_discount_targets_deleted_at columns=deleted_at unique=false option=
   INDEX idx_discount_targets_level_id columns=level_id unique=false option=
-  INDEX idx_discount_targets_level_lookup columns=level_id,target_id,target_type unique=false option=
-  INDEX idx_discount_targets_product_lookup columns=campaign_id,target_id,target_type unique=false option=
+  INDEX idx_discount_targets_level_lookup columns=level_id,target_type,target_id unique=false option=
+  INDEX idx_discount_targets_product_lookup columns=target_type,target_id,campaign_id unique=false option=
 TABLE idempotency_keys
   COLUMN checkout_session_id
   COLUMN correlation_id
@@ -581,7 +581,7 @@ TABLE idempotency_keys
   INDEX idx_idempotency_keys_correlation_id columns=correlation_id unique=false option=
   INDEX idx_idempotency_keys_expires_at columns=expires_at unique=false option=
   INDEX idx_idempotency_keys_payment_intent_id columns=payment_intent_id unique=false option=
-  INDEX idx_idempotency_scope_session_key columns=checkout_session_id,key,scope unique=true option=
+  INDEX idx_idempotency_scope_session_key columns=scope,key,checkout_session_id unique=true option=
 TABLE inventory_adjustments
   COLUMN actor_id
   COLUMN actor_type
@@ -841,7 +841,7 @@ TABLE localization_metrics
   COLUMN metric_type
   COLUMN total_value
   COLUMN updated_at
-  INDEX idx_localization_metric columns=domain,key,locale,metric_type unique=true option=
+  INDEX idx_localization_metric columns=metric_type,locale,domain,key unique=true option=
   INDEX idx_localization_metrics_domain columns=domain unique=false option=
   INDEX idx_localization_metrics_last_seen_at columns=last_seen_at unique=false option=
   INDEX idx_localization_metrics_locale columns=locale unique=false option=
@@ -865,7 +865,7 @@ TABLE localization_rollouts
   COLUMN percentage
   COLUMN updated_at
   COLUMN updated_by
-  INDEX idx_localization_rollout columns=domain,locale_id unique=true option=
+  INDEX idx_localization_rollout columns=locale_id,domain unique=true option=
   INDEX idx_localization_rollouts_deleted_at columns=deleted_at unique=false option=
   INDEX idx_localization_rollouts_domain columns=domain unique=false option=
   INDEX idx_localization_rollouts_is_enabled columns=is_enabled unique=false option=
@@ -882,7 +882,7 @@ TABLE localized_entity_values
   COLUMN updated_at
   COLUMN updated_by
   COLUMN value
-  INDEX idx_localized_entity_field columns=entity_id,entity_type,field,locale_id unique=true option=
+  INDEX idx_localized_entity_field columns=entity_type,entity_id,locale_id,field unique=true option=
   INDEX idx_localized_entity_values_deleted_at columns=deleted_at unique=false option=
   INDEX idx_localized_entity_values_entity_id columns=entity_id unique=false option=
   INDEX idx_localized_entity_values_locale_id columns=locale_id unique=false option=
@@ -1048,7 +1048,7 @@ TABLE payment_transactions
   COLUMN updated_at
   INDEX idx_payment_transactions_provider_txn_id columns=provider_txn_id unique=false option=
   INDEX idx_payment_transactions_status columns=status unique=false option=
-  INDEX idx_payment_txn_intent_operation_key columns=idempotency_key,operation,payment_intent_id unique=true option=
+  INDEX idx_payment_txn_intent_operation_key columns=payment_intent_id,operation,idempotency_key unique=true option=
 TABLE product_attribute_value_drafts
   COLUMN boolean_value
   COLUMN created_at
@@ -1077,14 +1077,14 @@ TABLE product_attribute_values
   COLUMN product_id
   COLUMN text_value
   COLUMN updated_at
-  INDEX idx_product_attribute_values_boolean_lookup columns=boolean_value,product_attribute_id,product_id unique=false option=
+  INDEX idx_product_attribute_values_boolean_lookup columns=product_attribute_id,boolean_value,product_id unique=false option=
   INDEX idx_product_attribute_values_deleted_at columns=deleted_at unique=false option=
-  INDEX idx_product_attribute_values_enum_lookup columns=enum_value,product_attribute_id,product_id unique=false option=
-  INDEX idx_product_attribute_values_number_lookup columns=number_value,product_attribute_id,product_id unique=false option=
+  INDEX idx_product_attribute_values_enum_lookup columns=product_attribute_id,enum_value,product_id unique=false option=
+  INDEX idx_product_attribute_values_number_lookup columns=product_attribute_id,number_value,product_id unique=false option=
   INDEX idx_product_attribute_values_product_attribute_id columns=product_attribute_id unique=false option=
-  INDEX idx_product_attribute_values_product_attribute_unique columns=product_attribute_id,product_id unique=true option=
+  INDEX idx_product_attribute_values_product_attribute_unique columns=product_id,product_attribute_id unique=true option=
   INDEX idx_product_attribute_values_product_id columns=product_id unique=false option=
-  INDEX idx_product_attribute_values_text_lookup columns=product_attribute_id,product_id,text_value unique=false option=
+  INDEX idx_product_attribute_values_text_lookup columns=product_attribute_id,text_value,product_id unique=false option=
 TABLE product_attributes
   COLUMN created_at
   COLUMN deleted_at
@@ -1105,7 +1105,7 @@ TABLE product_categories
   COLUMN category_id
   COLUMN product_id
   INDEX idx_product_categories_category_product columns=category_id,product_id unique=false option=
-  INDEX idx_product_categories_product_category columns=category_id,product_id unique=true option=
+  INDEX idx_product_categories_product_category columns=product_id,category_id unique=true option=
 TABLE product_category_drafts
   COLUMN category_id
   COLUMN created_at
@@ -1190,7 +1190,7 @@ TABLE product_options
   COLUMN updated_at
   INDEX idx_product_options_deleted_at columns=deleted_at unique=false option=
   INDEX idx_product_options_product_id columns=product_id unique=false option=
-  INDEX idx_product_options_product_name_unique columns=name,product_id unique=true option=
+  INDEX idx_product_options_product_name_unique columns=product_id,name unique=true option=
 TABLE product_related
   COLUMN product_id
   COLUMN related_id
@@ -1239,9 +1239,9 @@ TABLE product_variant_option_value_drafts
   COLUMN source_product_option_value_id
   COLUMN updated_at
   INDEX idx_product_variant_option_value_drafts_deleted_at columns=deleted_at unique=false option=
-  INDEX idx_product_variant_option_value_drafts_product_option_0bd648a0 columns=product_option_value_draft_id unique=false option=
-  INDEX idx_product_variant_option_value_drafts_product_varianta2ba91fe columns=product_variant_draft_id unique=false option=
-  INDEX idx_product_variant_option_value_drafts_source_product_54f6a8e3 columns=source_product_option_value_id unique=false option=
+  INDEX idx_product_variant_option_value_drafts_product_option_v0bd648a0 columns=product_option_value_draft_id unique=false option=
+  INDEX idx_product_variant_option_value_drafts_product_variant_draft_id columns=product_variant_draft_id unique=false option=
+  INDEX idx_product_variant_option_value_drafts_source_product_o54f6a8e3 columns=source_product_option_value_id unique=false option=
 TABLE product_variant_option_values
   COLUMN created_at
   COLUMN deleted_at
@@ -1252,7 +1252,7 @@ TABLE product_variant_option_values
   INDEX idx_product_variant_option_values_deleted_at columns=deleted_at unique=false option=
   INDEX idx_product_variant_option_values_product_option_value_id columns=product_option_value_id unique=false option=
   INDEX idx_product_variant_option_values_product_variant_id columns=product_variant_id unique=false option=
-  INDEX idx_product_variant_option_values_variant_value_unique columns=product_option_value_id,product_variant_id unique=true option=
+  INDEX idx_product_variant_option_values_variant_value_unique columns=product_variant_id,product_option_value_id unique=true option=
 TABLE product_variants
   COLUMN compare_at_price
   COLUMN created_at
@@ -1273,8 +1273,8 @@ TABLE product_variants
   INDEX idx_product_variants_deleted_at columns=deleted_at unique=false option=
   INDEX idx_product_variants_is_published columns=is_published unique=false option=
   INDEX idx_product_variants_product_id columns=product_id unique=false option=
-  INDEX idx_product_variants_product_published_price columns=is_published,price,product_id unique=false option=
-  INDEX idx_product_variants_product_published_stock columns=is_published,product_id,stock unique=false option=
+  INDEX idx_product_variants_product_published_price columns=product_id,is_published,price unique=false option=
+  INDEX idx_product_variants_product_published_stock columns=product_id,is_published,stock unique=false option=
   INDEX idx_product_variants_sku columns=sku unique=false option=
   INDEX idx_product_variants_sku_unique columns=sku unique=true option=
 TABLE products
@@ -1294,7 +1294,7 @@ TABLE products
   COLUMN subtitle
   COLUMN updated_at
   INDEX idx_products_brand_id columns=brand_id unique=false option=
-  INDEX idx_products_brand_published_created_at columns=brand_id,created_at,is_published unique=false option=
+  INDEX idx_products_brand_published_created_at columns=brand_id,is_published,created_at unique=false option=
   INDEX idx_products_default_variant_id columns=default_variant_id unique=false option=
   INDEX idx_products_deleted_at columns=deleted_at unique=false option=
   INDEX idx_products_is_published columns=is_published unique=false option=
@@ -1345,7 +1345,7 @@ TABLE provider_credentials
   COLUMN updated_at
   INDEX idx_provider_credentials_key_version columns=key_version unique=false option=
   INDEX idx_provider_credentials_last_rotated_at columns=last_rotated_at unique=false option=
-  INDEX idx_provider_credentials_scope columns=environment,provider_id,provider_type unique=true option=
+  INDEX idx_provider_credentials_scope columns=provider_type,provider_id,environment unique=true option=
 TABLE provider_operation_attempts
   COLUMN attempt_number
   COLUMN created_at
@@ -1364,7 +1364,7 @@ TABLE provider_operation_attempts
   COLUMN retryable
   COLUMN started_at
   COLUMN updated_at
-  INDEX idx_provider_operation_attempt_number columns=attempt_number,provider_operation_id unique=true option=
+  INDEX idx_provider_operation_attempt_number columns=provider_operation_id,attempt_number unique=true option=
   INDEX idx_provider_operation_attempts_operation_key columns=operation_key unique=false option=
   INDEX idx_provider_operation_attempts_outcome columns=outcome unique=false option=
   INDEX idx_provider_operation_attempts_phase columns=phase unique=false option=
@@ -1400,8 +1400,8 @@ TABLE provider_operations
   COLUMN version
   INDEX idx_provider_operations_completed_at columns=completed_at unique=false option=
   INDEX idx_provider_operations_correlation_id columns=correlation_id unique=false option=
-  INDEX idx_provider_operations_entity columns=entity_id,entity_type unique=false option=
-  INDEX idx_provider_operations_idempotency columns=environment,idempotency_key,operation,provider_id,provider_type unique=true option=
+  INDEX idx_provider_operations_entity columns=entity_type,entity_id unique=false option=
+  INDEX idx_provider_operations_idempotency columns=provider_type,provider_id,environment,operation,idempotency_key unique=true option=
   INDEX idx_provider_operations_lease_expires_at columns=lease_expires_at unique=false option=
   INDEX idx_provider_operations_lease_owner columns=lease_owner unique=false option=
   INDEX idx_provider_operations_next_attempt_at columns=next_attempt_at unique=false option=
@@ -1409,7 +1409,7 @@ TABLE provider_operations
   INDEX idx_provider_operations_parent_operation_id columns=parent_operation_id unique=false option=
   INDEX idx_provider_operations_provider_outcome columns=provider_outcome unique=false option=
   INDEX idx_provider_operations_provider_reference columns=provider_reference unique=false option=
-  INDEX idx_provider_operations_scope_status columns=environment,operation,provider_id,provider_type,status unique=false option=
+  INDEX idx_provider_operations_scope_status columns=provider_type,provider_id,environment,operation,status unique=false option=
   INDEX idx_provider_operations_status columns=status unique=false option=
 TABLE provider_reconciliation_cases
   COLUMN attempt_id
@@ -1432,7 +1432,7 @@ TABLE provider_reconciliation_cases
   INDEX idx_provider_reconciliation_cases_attempt_id columns=attempt_id unique=false option=
   INDEX idx_provider_reconciliation_cases_case_type columns=case_type unique=false option=
   INDEX idx_provider_reconciliation_cases_next_attempt_at columns=next_attempt_at unique=false option=
-  INDEX idx_provider_reconciliation_cases_open columns=open_key,provider_operation_id unique=true option=
+  INDEX idx_provider_reconciliation_cases_open columns=provider_operation_id,open_key unique=true option=
   INDEX idx_provider_reconciliation_cases_operation_key columns=operation_key unique=false option=
   INDEX idx_provider_reconciliation_cases_outcome columns=outcome unique=false option=
   INDEX idx_provider_reconciliation_cases_provider_operation_id columns=provider_operation_id unique=false option=
@@ -1546,6 +1546,119 @@ TABLE schema_migrations
   COLUMN execution_meta
   COLUMN name
   COLUMN version
+TABLE search_click_events
+  COLUMN clicked_at
+  COLUMN id
+  COLUMN position
+  COLUMN product_variant_id
+  COLUMN query_event_id
+  INDEX idx_search_click_events_clicked_at columns=clicked_at unique=false option=
+  INDEX idx_search_click_events_product_variant_id columns=product_variant_id unique=false option=
+  INDEX idx_search_click_events_query_event_id columns=query_event_id unique=false option=
+TABLE search_documents
+  COLUMN active
+  COLUMN attribute_tokens
+  COLUMN available
+  COLUMN brand_slug
+  COLUMN category_tokens
+  COLUMN created_at
+  COLUMN entity_id
+  COLUMN entity_type
+  COLUMN id
+  COLUMN indexed_at
+  COLUMN max_price
+  COLUMN min_price
+  COLUMN normalized_name
+  COLUMN payload_json
+  COLUMN searchable_text
+  COLUMN source_created_at
+  COLUMN source_updated_at
+  COLUMN updated_at
+  COLUMN version
+  INDEX idx_search_documents_active columns=active unique=false option=
+  INDEX idx_search_documents_available columns=available unique=false option=
+  INDEX idx_search_documents_brand_slug columns=brand_slug unique=false option=
+  INDEX idx_search_documents_entity columns=entity_type,entity_id unique=true option=
+  INDEX idx_search_documents_entity_id columns=entity_id unique=false option=
+  INDEX idx_search_documents_entity_type columns=entity_type unique=false option=
+  INDEX idx_search_documents_indexed_at columns=indexed_at unique=false option=
+  INDEX idx_search_documents_max_price columns=max_price unique=false option=
+  INDEX idx_search_documents_min_price columns=min_price unique=false option=
+  INDEX idx_search_documents_normalized_name columns=normalized_name unique=false option=
+  INDEX idx_search_documents_source_created_at columns=source_created_at unique=false option=
+  INDEX idx_search_documents_source_updated_at columns=source_updated_at unique=false option=
+TABLE search_index_states
+  COLUMN created_at
+  COLUMN document_count
+  COLUMN last_full_reindex_at
+  COLUMN last_full_reindex_started
+  COLUMN last_indexed_at
+  COLUMN name
+  COLUMN updated_at
+  INDEX idx_search_index_states_last_full_reindex_at columns=last_full_reindex_at unique=false option=
+  INDEX idx_search_index_states_last_indexed_at columns=last_indexed_at unique=false option=
+TABLE search_merchandising_rules
+  COLUMN action_json
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN ends_at
+  COLUMN id
+  COLUMN is_active
+  COLUMN name
+  COLUMN predicate_json
+  COLUMN priority
+  COLUMN rule_type
+  COLUMN starts_at
+  COLUMN updated_at
+  COLUMN updated_by
+  INDEX idx_search_merchandising_rules_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_search_merchandising_rules_ends_at columns=ends_at unique=false option=
+  INDEX idx_search_merchandising_rules_is_active columns=is_active unique=false option=
+  INDEX idx_search_merchandising_rules_priority columns=priority unique=false option=
+  INDEX idx_search_merchandising_rules_rule_type columns=rule_type unique=false option=
+  INDEX idx_search_merchandising_rules_starts_at columns=starts_at unique=false option=
+  INDEX idx_search_merchandising_rules_updated_by columns=updated_by unique=false option=
+TABLE search_query_events
+  COLUMN created_at
+  COLUMN filters_json
+  COLUMN id
+  COLUMN latency_ms
+  COLUMN normalized_query
+  COLUMN query
+  COLUMN result_count
+  COLUMN session_id
+  COLUMN user_id
+  INDEX idx_search_query_events_created_at columns=created_at unique=false option=
+  INDEX idx_search_query_events_normalized_query columns=normalized_query unique=false option=
+  INDEX idx_search_query_events_session_id columns=session_id unique=false option=
+  INDEX idx_search_query_events_user_id columns=user_id unique=false option=
+TABLE search_ranking_profiles
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN is_default
+  COLUMN name
+  COLUMN updated_at
+  COLUMN updated_by
+  COLUMN weights_json
+  INDEX idx_search_ranking_profiles_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_search_ranking_profiles_is_default columns=is_default unique=false option=
+  INDEX idx_search_ranking_profiles_name columns=name unique=true option=
+  INDEX idx_search_ranking_profiles_updated_by columns=updated_by unique=false option=
+TABLE search_synonym_sets
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN direction
+  COLUMN id
+  COLUMN is_active
+  COLUMN name
+  COLUMN terms_json
+  COLUMN updated_at
+  COLUMN updated_by
+  INDEX idx_search_synonym_sets_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_search_synonym_sets_is_active columns=is_active unique=false option=
+  INDEX idx_search_synonym_sets_name columns=name unique=true option=
+  INDEX idx_search_synonym_sets_updated_by columns=updated_by unique=false option=
 TABLE seo_metadata
   COLUMN canonical_path
   COLUMN created_at
@@ -1566,7 +1679,7 @@ TABLE seo_metadata
   COLUMN twitter_image_media_id
   COLUMN twitter_title
   COLUMN updated_at
-  INDEX idx_seo_entity columns=entity_id,entity_type unique=true option=
+  INDEX idx_seo_entity columns=entity_type,entity_id unique=true option=
   INDEX idx_seo_metadata_canonical_path columns=canonical_path unique=true option=
   INDEX idx_seo_metadata_deleted_at columns=deleted_at unique=false option=
 TABLE shipment_packages
@@ -1598,7 +1711,7 @@ TABLE shipment_rates
   INDEX idx_shipment_rates_order_id columns=order_id unique=false option=
   INDEX idx_shipment_rates_selected columns=selected unique=false option=
   INDEX idx_shipment_rates_shipment_id columns=shipment_id unique=false option=
-  INDEX idx_shipment_rates_snapshot_provider_rate columns=provider,provider_rate_id,snapshot_id unique=true option=
+  INDEX idx_shipment_rates_snapshot_provider_rate columns=snapshot_id,provider,provider_rate_id unique=true option=
 TABLE shipments
   COLUMN amount
   COLUMN created_at
@@ -1659,7 +1772,7 @@ TABLE tax_nexus_configs
   COLUMN provider
   COLUMN state
   COLUMN updated_at
-  INDEX idx_tax_nexus_provider_region columns=country,provider,state unique=true option=
+  INDEX idx_tax_nexus_provider_region columns=provider,country,state unique=true option=
 TABLE tracking_events
   COLUMN created_at
   COLUMN description
@@ -1674,7 +1787,7 @@ TABLE tracking_events
   COLUMN tracking_number
   COLUMN updated_at
   INDEX idx_tracking_events_occurred_at columns=occurred_at unique=false option=
-  INDEX idx_tracking_events_shipment_provider_event columns=provider,provider_event_id,shipment_id unique=true option=
+  INDEX idx_tracking_events_shipment_provider_event columns=shipment_id,provider,provider_event_id unique=true option=
   INDEX idx_tracking_events_status columns=status unique=false option=
 TABLE translation_audit_events
   COLUMN action
@@ -1734,7 +1847,7 @@ TABLE translation_keys
   COLUMN owner_domain
   COLUMN source_text
   COLUMN updated_at
-  INDEX idx_translation_key_name columns=key,namespace unique=true option=
+  INDEX idx_translation_key_name columns=namespace,key unique=true option=
   INDEX idx_translation_keys_deleted_at columns=deleted_at unique=false option=
   INDEX idx_translation_keys_is_deprecated columns=is_deprecated unique=false option=
 TABLE translation_release_entries
@@ -1780,7 +1893,7 @@ TABLE translation_values
   COLUMN updated_by
   COLUMN value
   COLUMN version
-  INDEX idx_translation_value_version columns=locale_id,translation_key_id,version unique=true option=
+  INDEX idx_translation_value_version columns=translation_key_id,locale_id,version unique=true option=
   INDEX idx_translation_values_deleted_at columns=deleted_at unique=false option=
   INDEX idx_translation_values_locale_id columns=locale_id unique=false option=
   INDEX idx_translation_values_reviewed_by columns=reviewed_by unique=false option=

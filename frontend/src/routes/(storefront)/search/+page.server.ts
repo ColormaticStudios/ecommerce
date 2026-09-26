@@ -11,7 +11,7 @@ import { setPublicPageCacheHeaders } from "$lib/server/cache";
 import { serverRequest } from "$lib/server/api";
 import type { components } from "$lib/api/generated/openapi";
 
-type ProductPagePayload = components["schemas"]["ProductPage"];
+type ProductSearchPayload = components["schemas"]["ProductSearchResponse"];
 type BrandListPayload = components["schemas"]["BrandListResponse"];
 type ProductAttributeDefinitionListPayload =
 	components["schemas"]["ProductAttributeDefinitionListResponse"];
@@ -70,7 +70,7 @@ export const load: PageServerLoad = async (event) => {
 
 	try {
 		const [response, brandsPayload, attributesPayload] = await Promise.all([
-			serverRequest<ProductPagePayload>(event, "/products", {
+			serverRequest<ProductSearchPayload>(event, "/search/products", {
 				q: searchQuery.trim() || undefined,
 				brand_slug: brandSlug || undefined,
 				has_variant_stock: hasVariantStock ? true : undefined,
@@ -83,7 +83,7 @@ export const load: PageServerLoad = async (event) => {
 			serverRequest<BrandListPayload>(event, "/brands"),
 			serverRequest<ProductAttributeDefinitionListPayload>(event, "/product-attributes"),
 		]);
-		results = response.data.map(parseProduct);
+		results = response.items.map(parseProduct);
 		brands = brandsPayload.data.map(parseBrand);
 		attributes = attributesPayload.data.map(parseProductAttributeDefinition);
 		totalPages = Math.max(1, response.pagination.total_pages);

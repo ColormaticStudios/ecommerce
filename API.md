@@ -333,6 +333,7 @@ fetch('http://localhost:3000/api/v1/auth/oidc/callback',
 |code|query|string|false|none|
 |state|query|string|false|none|
 |format|query|string|false|none|
+|error|query|string|false|OAuth error code returned by the identity provider.|
 
 #### Enumerated Values
 
@@ -395,7 +396,6 @@ fetch('http://localhost:3000/api/v1/products',
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
-|q|query|string|false|none|
 |min_price|query|number(double)|false|none|
 |max_price|query|number(double)|false|none|
 |brand_slug|query|string|false|none|
@@ -551,6 +551,124 @@ fetch('http://localhost:3000/api/v1/products/{id}',
 |400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+<h1 id="ecommerce-api-search">search</h1>
+
+## Search published products
+
+<a id="opIdsearchProducts"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/search/products',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/search/products`
+
+<h3 id="search-published-products-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|q|query|string|false|none|
+|min_price|query|number(double)|false|none|
+|max_price|query|number(double)|false|none|
+|brand_slug|query|string|false|none|
+|category_slug|query|array[string]|false|none|
+|has_variant_stock|query|boolean|false|none|
+|attribute|query|object|false|none|
+|sort|query|string|false|none|
+|order|query|string|false|none|
+|page|query|integer|false|none|
+|limit|query|integer|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|sort|relevance|
+|sort|price|
+|sort|name|
+|sort|created_at|
+|order|asc|
+|order|desc|
+
+<h3 id="search-published-products-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search results, facets, and index metadata|ProductSearchResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+|503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|A required service or capability is temporarily unavailable.|Problem|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## Suggest product search queries
+
+<a id="opIdgetSearchSuggestions"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/search/suggestions?q=string',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/search/suggestions`
+
+<h3 id="suggest-product-search-queries-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|q|query|string|true|none|
+|limit|query|integer|false|none|
+
+<h3 id="suggest-product-search-queries-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Prefix suggestions and optional discovery hints|SearchSuggestionsResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+|503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|A required service or capability is temporarily unavailable.|Problem|
 
 <aside class="success">
 This operation does not require authentication
@@ -4021,7 +4139,7 @@ const inputBody = '{
       "locale": "string",
       "domain": "storefront",
       "is_enabled": true,
-      "percentage": 100
+      "percentage": 0
     }
   ]
 }';
@@ -4055,7 +4173,7 @@ fetch('http://localhost:3000/api/v1/admin/localization/rollouts',
       "locale": "string",
       "domain": "storefront",
       "is_enabled": true,
-      "percentage": 100
+      "percentage": 0
     }
   ]
 }
@@ -4270,6 +4388,93 @@ fetch('http://localhost:3000/api/v1/admin/localization/entities/{entity_type}/{e
 |403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
 |422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Get search index freshness
+
+<a id="opIdgetAdminSearchFreshness"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/freshness',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/freshness`
+
+<h3 id="get-search-index-freshness-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search index freshness and backlog status|SearchFreshness|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Queue a full search reindex
+
+<a id="opIdcreateAdminSearchReindex"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/reindex',
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/search/reindex`
+
+<h3 id="queue-a-full-search-reindex-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|202|[Accepted](https://tools.ietf.org/html/rfc7231#section-6.3.3)|Full search reindex accepted|SearchReindexAccepted|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
 
 <aside class="warning">
@@ -4736,7 +4941,7 @@ const inputBody = '{
       },
       "action": {
         "mode": "percent",
-        "value": 0.1,
+        "value": 0,
         "target_type": "cart",
         "target_ids": [
           1
@@ -4765,7 +4970,7 @@ const inputBody = '{
       "priority": 0,
       "action": {
         "mode": "percent",
-        "value": 0.1,
+        "value": 0,
         "target_type": "cart",
         "target_ids": [
           1
@@ -4854,7 +5059,7 @@ fetch('http://localhost:3000/api/v1/admin/discounts/promotions',
       },
       "action": {
         "mode": "percent",
-        "value": 0.1,
+        "value": 0,
         "target_type": "cart",
         "target_ids": [
           1
@@ -4883,7 +5088,7 @@ fetch('http://localhost:3000/api/v1/admin/discounts/promotions',
       "priority": 0,
       "action": {
         "mode": "percent",
-        "value": 0.1,
+        "value": 0,
         "target_type": "cart",
         "target_ids": [
           1
@@ -4957,7 +5162,7 @@ const inputBody = '{
       ],
       "sku": "string",
       "quantity": 1,
-      "unit_price": 0.1
+      "unit_price": 0
     }
   ]
 }';
@@ -4999,7 +5204,7 @@ fetch('http://localhost:3000/api/v1/admin/discounts/promotions/preview',
       ],
       "sku": "string",
       "quantity": 1,
-      "unit_price": 0.1
+      "unit_price": 0
     }
   ]
 }
@@ -5120,7 +5325,7 @@ const inputBody = '{
         },
         "action": {
           "mode": "percent",
-          "value": 0.1,
+          "value": 0,
           "target_type": "cart",
           "target_ids": [
             1
@@ -5149,7 +5354,7 @@ const inputBody = '{
         "priority": 0,
         "action": {
           "mode": "percent",
-          "value": 0.1,
+          "value": 0,
           "target_type": "cart",
           "target_ids": [
             1
@@ -5243,7 +5448,7 @@ fetch('http://localhost:3000/api/v1/admin/discounts/templates',
         },
         "action": {
           "mode": "percent",
-          "value": 0.1,
+          "value": 0,
           "target_type": "cart",
           "target_ids": [
             1
@@ -5272,7 +5477,7 @@ fetch('http://localhost:3000/api/v1/admin/discounts/templates',
         "priority": 0,
         "action": {
           "mode": "percent",
-          "value": 0.1,
+          "value": 0,
           "target_type": "cart",
           "target_ids": [
             1
@@ -15145,6 +15350,7 @@ const inputBody = '{
     "allow_guest_checkout": true,
     "coupon_codes_enabled": true,
     "oidc_provider": "string",
+    "oidc_display_name": "string",
     "oidc_client_id": "string",
     "oidc_client_secret": "string",
     "oidc_client_secret_configured": true,
@@ -15198,6 +15404,7 @@ fetch('http://localhost:3000/api/v1/admin/website',
     "allow_guest_checkout": true,
     "coupon_codes_enabled": true,
     "oidc_provider": "string",
+    "oidc_display_name": "string",
     "oidc_client_id": "string",
     "oidc_client_secret": "string",
     "oidc_client_secret_configured": true,
@@ -15511,7 +15718,7 @@ const headers = {
   'Content-Type':'application/offset+octet-stream',
   'Accept':'application/problem+json',
   'Tus-Resumable':'1.0.0',
-  'Upload-Length':'524288000',
+  'Upload-Length':'0',
   'Upload-Metadata':'string'
 };
 
@@ -16260,6 +16467,55 @@ fetch('http://localhost:3000/api/v1/localization/bundles/{locale}/meta',
 |200|Cache-Control|string||none|
 |304|ETag|string||none|
 |304|Cache-Control|string||none|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+<h1 id="ecommerce-api-discounts">discounts</h1>
+
+## getActiveDiscountCampaign
+
+<a id="opIdgetActiveDiscountCampaign"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/discounts/campaigns/{id}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/discounts/campaigns/{id}`
+
+<h3 id="getactivediscountcampaign-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="getactivediscountcampaign-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Active public discount campaign projection|ActiveDiscountCampaign|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
 
 <aside class="success">
 This operation does not require authentication

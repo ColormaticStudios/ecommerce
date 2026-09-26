@@ -8,6 +8,7 @@ import type { components } from "$lib/api/generated/openapi";
 import { applyCmsCheckoutPolicy } from "$lib/cms/checkout-policy";
 
 type ProductPagePayload = components["schemas"]["ProductPage"];
+type ProductSearchPayload = components["schemas"]["ProductSearchResponse"];
 type ProductPayload = components["schemas"]["Product"];
 type CategoryListPayload = components["schemas"]["CategoryListResponse"];
 type RedirectResolution = components["schemas"]["CmsRedirectResolution"];
@@ -38,8 +39,17 @@ async function loadProductRail(
 	if (block.source === "manual") {
 		return loadManualProducts(event, block.product_ids ?? [], limit);
 	}
+	if (block.source === "search") {
+		const page = await serverRequest<ProductSearchPayload>(event, "/search/products", {
+			q: block.query?.trim() || undefined,
+			sort: block.sort ?? "created_at",
+			order: block.order ?? "desc",
+			page: 1,
+			limit,
+		});
+		return page.items.map(parseProduct);
+	}
 	const page = await serverRequest<ProductPagePayload>(event, "/products", {
-		q: block.source === "search" ? block.query?.trim() || undefined : undefined,
 		category_slug:
 			block.source === "category" && block.category_slug?.trim()
 				? [block.category_slug.trim()]

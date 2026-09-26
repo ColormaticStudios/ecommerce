@@ -569,7 +569,7 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, oidcLoginUIVersion, status.LatestAppliedVersion)
+	require.Equal(t, searchFoundationP0Version, status.LatestAppliedVersion)
 	require.Equal(t, 3, status.PendingCount)
 }
 
@@ -592,6 +592,19 @@ func TestRunAppliesAllOrderedMigrationsAndReplayIsIdempotent(t *testing.T) {
 
 func TestLatestVersionMatchesImportLightSchemaContract(t *testing.T) {
 	require.Equal(t, schemacontract.LatestMigrationVersion, LatestVersion())
+}
+
+func TestSearchFoundationP0MigrationCreatesProjectionAndConfigurationTables(t *testing.T) {
+	db := newTestDB(t)
+	migrationIndex := slices.IndexFunc(orderedMigrations, func(migration Migration) bool {
+		return migration.Version == searchFoundationP0Version
+	})
+	require.Greater(t, migrationIndex, 0)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex+1]))
+	for _, table := range []string{"search_documents", "search_index_states", "search_synonym_sets", "search_ranking_profiles", "search_merchandising_rules", "search_query_events", "search_click_events"} {
+		require.Truef(t, db.Migrator().HasTable(table), "expected %s", table)
+	}
+	require.True(t, db.Migrator().HasIndex("search_documents", "idx_search_documents_entity"))
 }
 
 func TestOIDCLoginUIMigrationAddsDisplayNameAndCatalog(t *testing.T) {

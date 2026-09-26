@@ -500,6 +500,40 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/search/products": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Search published products */
+		get: operations["searchProducts"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/search/suggestions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Suggest product search queries */
+		get: operations["getSearchSuggestions"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/products": {
 		parameters: {
 			query?: never;
@@ -1123,6 +1157,40 @@ export interface paths {
 		get?: never;
 		put?: never;
 		post: operations["cancelUserOrder"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/freshness": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Get search index freshness */
+		get: operations["getAdminSearchFreshness"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/reindex": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Queue a full search reindex */
+		post: operations["createAdminSearchReindex"];
 		delete?: never;
 		options?: never;
 		head?: never;
@@ -4797,6 +4865,55 @@ export interface components {
 			data: components["schemas"]["Product"][];
 			pagination: components["schemas"]["Pagination"];
 		};
+		SearchFacetValue: {
+			value: string;
+			label?: string;
+			count: number;
+			selected: boolean;
+			disabled: boolean;
+		};
+		SearchFacet: {
+			name: string;
+			label?: string;
+			/** @enum {string} */
+			type: "terms" | "range" | "boolean" | "attribute";
+			values: components["schemas"]["SearchFacetValue"][];
+		};
+		ProductSearchMetadata: {
+			normalized_query: string;
+			/** Format: date-time */
+			indexed_at: string | null;
+		};
+		ProductSearchResponse: {
+			items: components["schemas"]["Product"][];
+			facets: components["schemas"]["SearchFacet"][];
+			metadata: components["schemas"]["ProductSearchMetadata"];
+			pagination: components["schemas"]["Pagination"];
+		};
+		SearchSuggestionsResponse: {
+			suggestions: string[];
+			corrections: string[];
+			popular: string[];
+		};
+		SearchFreshness: {
+			/** @enum {string} */
+			status: "healthy" | "degraded" | "stale";
+			/** Format: int64 */
+			lag_seconds: number;
+			/** Format: int64 */
+			pending_jobs: number;
+			/** Format: int64 */
+			document_count: number;
+			/** Format: date-time */
+			last_indexed_at: string | null;
+			/** Format: date-time */
+			last_full_reindex_at: string | null;
+		};
+		SearchReindexAccepted: {
+			job_id: string;
+			/** @enum {string} */
+			status: "queued";
+		};
 		CartItem: {
 			id: number;
 			cart_id: number;
@@ -7067,10 +7184,72 @@ export interface operations {
 			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
-	listProducts: {
+	searchProducts: {
 		parameters: {
 			query?: {
 				q?: string;
+				min_price?: number;
+				max_price?: number;
+				brand_slug?: string;
+				category_slug?: string[];
+				has_variant_stock?: boolean;
+				attribute?: {
+					[key: string]: string;
+				};
+				sort?: "relevance" | "price" | "name" | "created_at";
+				order?: "asc" | "desc";
+				page?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search results, facets, and index metadata */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProductSearchResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
+		};
+	};
+	getSearchSuggestions: {
+		parameters: {
+			query: {
+				q: string;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Prefix suggestions and optional discovery hints */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchSuggestionsResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
+		};
+	};
+	listProducts: {
+		parameters: {
+			query?: {
 				min_price?: number;
 				max_price?: number;
 				brand_slug?: string;
@@ -8351,6 +8530,55 @@ export interface operations {
 			401: components["responses"]["AuthenticationRequiredProblem"];
 			403: components["responses"]["ForbiddenProblem"];
 			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminSearchFreshness: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search index freshness and backlog status */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchFreshness"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createAdminSearchReindex: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Full search reindex accepted */
+			202: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchReindexAccepted"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};

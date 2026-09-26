@@ -12,8 +12,10 @@ import (
 
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/apperror"
+	"ecommerce/internal/jobs"
 	"ecommerce/internal/media"
 	"ecommerce/internal/requestctx"
+	searchservice "ecommerce/internal/search"
 	catalogservice "ecommerce/internal/services/catalog"
 	catalogadminservice "ecommerce/internal/services/catalogadmin"
 	discountservice "ecommerce/internal/services/discounts"
@@ -36,21 +38,40 @@ type CatalogEndpoints struct {
 	inventory    *inventoryservice.Service
 	discounts    *discountservice.Service
 	localization *localizationservice.Service
+	search       *searchservice.Service
 }
 
-func NewCatalogEndpoints(db *gorm.DB, mediaService *media.Service) (*CatalogEndpoints, error) {
+func NewCatalogEndpoints(db *gorm.DB, mediaService *media.Service, runtimes ...*jobs.Runtime) (*CatalogEndpoints, error) {
 	if db == nil {
 		return nil, errors.New("catalog database is required")
+	}
+	var runtime *jobs.Runtime
+	if len(runtimes) != 0 {
+		runtime = runtimes[0]
 	}
 	return &CatalogEndpoints{
 		db:           db,
 		media:        mediaService,
 		catalog:      catalogservice.NewService(db, mediaService),
-		catalogAdmin: catalogadminservice.NewService(db, mediaService),
+		catalogAdmin: catalogadminservice.NewService(db, mediaService, runtime),
 		inventory:    inventoryservice.NewService(db),
 		discounts:    discountservice.NewService(db),
 		localization: localizationservice.NewService(db),
+		search:       searchservice.NewService(db, nil, runtime),
 	}, nil
+}
+
+func (e *CatalogEndpoints) RegisterSearchJobHandlers() error {
+	return e.search.RegisterJobHandlers()
+}
+
+func (e *CatalogEndpoints) EnsureInitialSearchReindex(ctx context.Context) error {
+	_, _, err := e.search.EnsureInitialReindex(ctx)
+	return err
+}
+
+func (e *CatalogEndpoints) ReindexSearchNow(ctx context.Context) error {
+	return e.search.Reindex(ctx)
 }
 
 func (e *CatalogEndpoints) ListProducts(ctx context.Context, request apicontract.ListProductsRequestObject) (apicontract.ListProductsResponseObject, error) {
@@ -134,9 +155,6 @@ func publicProductPayload(product apicontract.Product) (map[string]any, error) {
 
 func publicListInput(params apicontract.ListProductsParams) catalogservice.ListProductsInput {
 	input := catalogservice.ListProductsInput{Page: 1, Limit: 10, SortField: "created_at", SortOrder: "desc"}
-	if params.Q != nil {
-		input.SearchTerm = strings.TrimSpace(*params.Q)
-	}
 	input.MinPrice, input.MaxPrice = params.MinPrice, params.MaxPrice
 	if params.BrandSlug != nil {
 		input.BrandSlug = strings.TrimSpace(*params.BrandSlug)

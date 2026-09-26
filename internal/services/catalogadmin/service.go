@@ -7,6 +7,7 @@ import (
 
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/apperror"
+	"ecommerce/internal/jobs"
 	"ecommerce/internal/media"
 	"ecommerce/internal/services/categories"
 	localizationservice "ecommerce/internal/services/localization"
@@ -31,10 +32,15 @@ func optionalString(value *string) string {
 type Service struct {
 	db    *gorm.DB
 	media *media.Service
+	jobs  *jobs.Runtime
 }
 
-func NewService(db *gorm.DB, mediaService *media.Service) *Service {
-	return &Service{db: db, media: mediaService}
+func NewService(db *gorm.DB, mediaService *media.Service, runtimes ...*jobs.Runtime) *Service {
+	var runtime *jobs.Runtime
+	if len(runtimes) != 0 {
+		runtime = runtimes[0]
+	}
+	return &Service{db: db, media: mediaService, jobs: runtime}
 }
 
 func (s *Service) ListBrands(ctx context.Context, activeOnly bool, query string) ([]models.Brand, error) {

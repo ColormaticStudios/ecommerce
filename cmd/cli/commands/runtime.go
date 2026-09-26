@@ -72,6 +72,7 @@ func newRootCmd() *cobra.Command {
 	rootCmd.AddCommand(NewWebsiteCmd())
 	rootCmd.AddCommand(NewCMSCmd())
 	rootCmd.AddCommand(NewLocalizationCmd())
+	rootCmd.AddCommand(NewSearchCmd())
 	rootCmd.AddCommand(NewMigrateCmd())
 	rootCmd.AddCommand(newSetupCmd())
 	rootCmd.AddCommand(newConfigCmd())

@@ -20,7 +20,14 @@ import {
 	parseProfile,
 } from "$lib/models";
 import { API_BASE_URL } from "$lib/config";
-import { fetchProduct, fetchProducts, type ListProductsQuery } from "$lib/api/openapi-client";
+import {
+	fetchProduct,
+	fetchProducts,
+	fetchSearchProducts,
+	type ListProductsQuery,
+	type SearchProductsQuery,
+	type SearchProductsSuccess,
+} from "$lib/api/openapi-client";
 import { buildOIDCLoginUrl } from "$lib/auth";
 import { ApiProblemError, isApiProblem } from "$lib/api/errors";
 import { appendQueryParams } from "$lib/api/http";
@@ -227,6 +234,10 @@ export interface DraftPreviewSessionModel {
 export interface RequestOptions {
 	headers?: Record<string, string>;
 }
+
+export type ProductSearchModel = Omit<SearchProductsSuccess, "items"> & {
+	items: ProductModel[];
+};
 
 function parseDraftPreviewSession(response: DraftPreviewSessionResponse): DraftPreviewSessionModel {
 	return {
@@ -486,6 +497,26 @@ export class API {
 		};
 
 		return page;
+	}
+
+	public async searchProducts(params?: SearchProductsQuery): Promise<ProductSearchModel> {
+		const {
+			data: response,
+			error,
+			response: rawResponse,
+		} = await fetchSearchProducts(this.baseUrl, params);
+
+		if (error || !response) {
+			throw new ApiProblemError(rawResponse.status, rawResponse.statusText, error);
+		}
+
+		return {
+			...response,
+			items: response.items.map(parseProduct).map((product) => ({
+				...product,
+				cover_image: product.cover_image ?? product.images[0] ?? null,
+			})),
+		};
 	}
 
 	public async getProduct(id: number): Promise<ProductModel> {

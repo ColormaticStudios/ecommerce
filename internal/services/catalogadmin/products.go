@@ -10,6 +10,7 @@ import (
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/apperror"
 	"ecommerce/internal/media"
+	searchservice "ecommerce/internal/search"
 	localizationservice "ecommerce/internal/services/localization"
 	"ecommerce/models"
 
@@ -359,7 +360,11 @@ func (s *Service) PublishProduct(ctx context.Context, id uint) (models.Product, 
 			return err
 		}
 		removedMediaIDs = removedReferenceIDs(oldLiveRefs, draftRefs)
-		return deleteDraft(tx, draft.ID)
+		if err := deleteDraft(tx, draft.ID); err != nil {
+			return err
+		}
+		_, err := searchservice.EnqueueProductSyncTx(ctx, s.jobs, tx, product.ID, product.UpdatedAt)
+		return err
 	})
 	if err != nil {
 		return product, err
@@ -383,12 +388,25 @@ func (s *Service) UnpublishProduct(ctx context.Context, id uint) (models.Product
 			if err := replaceDraft(tx, product, input); err != nil {
 				return err
 			}
-			return copyProductMediaRole(tx, id, media.RoleProductImage, media.RoleProductDraftImage)
+			if err := copyProductMediaRole(tx, id, media.RoleProductImage, media.RoleProductDraftImage); err != nil {
+				return err
+			}
+			_, err := searchservice.EnqueueProductSyncTx(ctx, s.jobs, tx, id, now)
+			return err
 		}); err != nil {
 			return product, err
 		}
-	} else if err := db.Model(&product).Update("is_published", false).Error; err != nil {
-		return product, err
+	} else {
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			now := time.Now().UTC()
+			if err := tx.Model(&product).Updates(map[string]any{"is_published": false, "updated_at": now}).Error; err != nil {
+				return err
+			}
+			_, err := searchservice.EnqueueProductSyncTx(ctx, s.jobs, tx, id, now)
+			return err
+		}); err != nil {
+			return product, err
+		}
 	}
 	return s.GetProduct(ctx, id, true)
 }
@@ -440,7 +458,11 @@ func (s *Service) DeleteProduct(ctx context.Context, id uint) ([]string, error) 
 		if err := tx.Where("owner_type = ? AND owner_id = ?", media.OwnerTypeProduct, id).Delete(&models.MediaReference{}).Error; err != nil {
 			return err
 		}
-		return tx.Delete(&product).Error
+		if err := tx.Delete(&product).Error; err != nil {
+			return err
+		}
+		_, err := searchservice.EnqueueProductSyncTx(ctx, s.jobs, tx, id, time.Now().UTC())
+		return err
 	})
 	ids := make([]string, 0, len(refs))
 	for _, ref := range refs {

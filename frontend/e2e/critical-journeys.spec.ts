@@ -294,3 +294,14 @@ test("guest homepage does not probe profile endpoint", async ({ page }) => {
 	await expect(page.getByRole("link", { name: "Sign Up", exact: true })).toBeVisible();
 	expect(profileRequests).toHaveLength(0);
 });
+
+test("storefront product search uses the indexed search endpoint", async ({ page, request }) => {
+	const response = await request.get(`${apiBaseURL}/api/v1/search/products?q=Running`);
+	expect(response.ok()).toBeTruthy();
+	const search = (await response.json()) as { items: Array<{ name: string }> };
+	expect(search.items.map((item) => item.name)).toContain("E2E Running Shoes");
+
+	await page.goto("/search?q=Running");
+	await expect(page.getByText('1 result for "Running"')).toBeVisible();
+	await expect(page.getByText("E2E Running Shoes", { exact: true })).toBeVisible();
+});

@@ -29,6 +29,13 @@ func TestSchemaSnapshotAndDriftCheck(t *testing.T) {
 	require.ErrorContains(t, DriftCheck(db, path), "schema drift detected")
 }
 
+func TestCommittedSchemaSnapshotMatchesLatestMigrations(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
+	require.NoError(t, Run(db))
+	require.NoError(t, DriftCheck(db, "schema_snapshot.sql"))
+}
+
 func TestWriteCurrentSchemaSnapshotRequiresLatestMigration(t *testing.T) {
 	db := newTestDB(t)
 	require.NoError(t, RunWithoutContract(db))

@@ -25,6 +25,7 @@ x-operation-policy:
 tags:
   - name: auth
   - name: products
+  - name: search
   - name: profile
   - name: cart
   - name: checkout
@@ -911,6 +912,117 @@ paths:
           $ref: "#/components/responses/AuthenticationRequiredProblem"
         "500":
           $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/search/products:
+    get:
+      tags: [search]
+      operationId: searchProducts
+      security: []
+      summary: Search published products
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: min_price
+          schema:
+            type: number
+            format: double
+        - in: query
+          name: max_price
+          schema:
+            type: number
+            format: double
+        - in: query
+          name: brand_slug
+          schema:
+            type: string
+        - in: query
+          name: category_slug
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: has_variant_stock
+          schema:
+            type: boolean
+        - in: query
+          name: attribute
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [relevance, price, name, created_at]
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: Search results, facets, and index metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductSearchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableProblem"
+  /api/v1/search/suggestions:
+    get:
+      tags: [search]
+      operationId: getSearchSuggestions
+      security: []
+      summary: Suggest product search queries
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+      responses:
+        "200":
+          description: Prefix suggestions and optional discovery hints
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchSuggestionsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableProblem"
   /api/v1/products:
     get:
       tags: [products]
@@ -918,10 +1030,6 @@ paths:
       security: []
       summary: List products
       parameters:
-        - in: query
-          name: q
-          schema:
-            type: string
         - in: query
           name: min_price
           schema:
@@ -2219,6 +2327,48 @@ paths:
           $ref: "#/components/responses/AuthenticationRequiredProblem"
         "403":
           $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/search/freshness:
+    get:
+      tags: [admin, search]
+      operationId: getAdminSearchFreshness
+      summary: Get search index freshness
+      responses:
+        "200":
+          description: Search index freshness and backlog status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchFreshness"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/search/reindex:
+    post:
+      tags: [admin, search]
+      operationId: createAdminSearchReindex
+      summary: Queue a full search reindex
+      responses:
+        "202":
+          description: Full search reindex accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchReindexAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
         "500":
           $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/products:
@@ -10685,6 +10835,127 @@ components:
             $ref: "#/components/schemas/Product"
         pagination:
           $ref: "#/components/schemas/Pagination"
+
+    SearchFacetValue:
+      type: object
+      required: [value, count, selected, disabled]
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+        count:
+          type: integer
+          minimum: 0
+        selected:
+          type: boolean
+        disabled:
+          type: boolean
+
+    SearchFacet:
+      type: object
+      required: [name, type, values]
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          enum: [terms, range, boolean, attribute]
+        values:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchFacetValue"
+
+    ProductSearchMetadata:
+      type: object
+      required: [normalized_query, indexed_at]
+      properties:
+        normalized_query:
+          type: string
+        indexed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ProductSearchResponse:
+      type: object
+      required: [items, facets, metadata, pagination]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        facets:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchFacet"
+        metadata:
+          $ref: "#/components/schemas/ProductSearchMetadata"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    SearchSuggestionsResponse:
+      type: object
+      required: [suggestions, corrections, popular]
+      properties:
+        suggestions:
+          type: array
+          items:
+            type: string
+        corrections:
+          type: array
+          items:
+            type: string
+        popular:
+          type: array
+          items:
+            type: string
+
+    SearchFreshness:
+      type: object
+      required:
+        - status
+        - lag_seconds
+        - pending_jobs
+        - document_count
+        - last_indexed_at
+        - last_full_reindex_at
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, stale]
+        lag_seconds:
+          type: integer
+          format: int64
+          minimum: 0
+        pending_jobs:
+          type: integer
+          format: int64
+          minimum: 0
+        document_count:
+          type: integer
+          format: int64
+          minimum: 0
+        last_indexed_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_full_reindex_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    SearchReindexAccepted:
+      type: object
+      required: [job_id, status]
+      properties:
+        job_id:
+          type: string
+        status:
+          type: string
+          enum: [queued]
 
     CartItem:
       type: object

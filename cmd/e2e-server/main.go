@@ -17,6 +17,7 @@ import (
 	"ecommerce/internal/checkoutplugins"
 	"ecommerce/internal/httpapi"
 	"ecommerce/internal/httpcors"
+	"ecommerce/internal/jobs"
 	"ecommerce/internal/migrations"
 	"ecommerce/internal/requestctx"
 	accountservice "ecommerce/internal/services/account"
@@ -107,11 +108,18 @@ func ensureSeedData(db *gorm.DB) error {
 	var existing models.Product
 	if err := db.Where("sku = ?", product.SKU).First(&existing).Error; err == nil {
 		if existing.DefaultVariantID != nil {
-			return nil
+			var variant models.ProductVariant
+			if err := db.First(&variant, *existing.DefaultVariantID).Error; err != nil {
+				return err
+			}
+			return ensureSeedProductLocalization(db, existing, variant)
 		}
 		var variant models.ProductVariant
 		if err := db.Where("product_id = ?", existing.ID).Order("id asc").First(&variant).Error; err == nil {
-			return db.Model(&existing).Update("default_variant_id", variant.ID).Error
+			if err := db.Model(&existing).Update("default_variant_id", variant.ID).Error; err != nil {
+				return err
+			}
+			return ensureSeedProductLocalization(db, existing, variant)
 		}
 		return nil
 	}
@@ -133,7 +141,18 @@ func ensureSeedData(db *gorm.DB) error {
 	if err := db.Model(&product).Update("default_variant_id", variant.ID).Error; err != nil {
 		return err
 	}
-	return nil
+	return ensureSeedProductLocalization(db, product, variant)
+}
+
+func ensureSeedProductLocalization(db *gorm.DB, product models.Product, variant models.ProductVariant) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := localizationservice.SyncDefaultEntityLocalization(tx, localizationservice.EntityTypeProduct, product.ID, map[string]string{
+			"name": product.Name, "description": product.Description,
+		}, nil); err != nil {
+			return err
+		}
+		return localizationservice.SyncDefaultEntityLocalization(tx, localizationservice.EntityTypeProductVariant, variant.ID, map[string]string{"title": variant.Title}, nil)
+	})
 }
 
 func buildSummary(db *gorm.DB, email string) (summaryResponse, error) {
@@ -281,6 +300,7 @@ func main() {
 	testRoutes := r.Group(testRoutePrefix)
 
 	pluginManager := checkoutplugins.NewDefaultManager()
+	jobRuntime := jobs.NewRuntime(db, jobs.Config{})
 	providerRuntime := providerops.NewRuntime(db, providerops.RuntimeConfig{})
 	webhookService := webhookservice.NewService(db, providerRuntime.PaymentProviders, providerRuntime.ShippingProviders, log.Default())
 	accountService := accountservice.NewService(db, nil)
@@ -295,9 +315,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to initialize e2e account endpoints: %v", err)
 	}
-	catalogEndpoints, err := httpapi.NewCatalogEndpoints(db, nil)
+	catalogEndpoints, err := httpapi.NewCatalogEndpoints(db, nil, jobRuntime)
 	if err != nil {
 		log.Fatalf("failed to initialize e2e catalog endpoints: %v", err)
+	}
+	if err := catalogEndpoints.RegisterSearchJobHandlers(); err != nil {
+		log.Fatalf("failed to register e2e search jobs: %v", err)
+	}
+	if err := catalogEndpoints.ReindexSearchNow(rootCtx); err != nil {
+		log.Fatalf("failed to build e2e search index: %v", err)
 	}
 	cmsMediaEndpoints, err := httpapi.NewCmsMediaEndpoints(db, nil)
 	if err != nil {
@@ -346,6 +372,11 @@ func main() {
 		log.Fatalf("failed to register e2e strict API server: %v", err)
 	}
 	webhookStopped := make(chan struct{})
+	jobStopped := make(chan struct{})
+	go func() {
+		defer close(jobStopped)
+		jobRuntime.Run(rootCtx)
+	}()
 	go func() {
 		defer close(webhookStopped)
 		webhookService.Run(rootCtx)
@@ -745,6 +776,11 @@ func main() {
 	case <-webhookStopped:
 	case <-shutdownCtx.Done():
 		fmt.Fprintln(os.Stderr, "timed out waiting for e2e webhook worker shutdown")
+	}
+	select {
+	case <-jobStopped:
+	case <-shutdownCtx.Done():
+		fmt.Fprintln(os.Stderr, "timed out waiting for e2e job worker shutdown")
 	}
 	if sqlDB, err := db.DB(); err == nil {
 		_ = sqlDB.Close()

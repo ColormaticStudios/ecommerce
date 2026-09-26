@@ -382,9 +382,15 @@ func run(parentCtx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("initialize account endpoints: %w", err)
 	}
-	catalogEndpoints, err := httpapi.NewCatalogEndpoints(db, mediaService)
+	catalogEndpoints, err := httpapi.NewCatalogEndpoints(db, mediaService, jobRuntime)
 	if err != nil {
 		return fmt.Errorf("initialize catalog endpoints: %w", err)
+	}
+	if err := catalogEndpoints.RegisterSearchJobHandlers(); err != nil {
+		return fmt.Errorf("register search job handlers: %w", err)
+	}
+	if err := catalogEndpoints.EnsureInitialSearchReindex(ctx); err != nil {
+		return fmt.Errorf("schedule initial search reindex: %w", err)
 	}
 	cmsMediaEndpoints, err := httpapi.NewCmsMediaEndpoints(db, mediaService)
 	if err != nil {
