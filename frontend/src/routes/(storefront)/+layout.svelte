@@ -272,7 +272,9 @@
 			{/each}
 		</div>
 	{/if}
-	<nav class="flex items-center justify-between bg-gray-100 px-3 py-2 dark:bg-gray-900">
+	<nav
+		class="flex flex-wrap items-center justify-between gap-2 bg-gray-100 px-3 py-2 dark:bg-gray-900"
+	>
 		<div class="flex items-center gap-2">
 			<a href={resolve("/")} class="navlink text-2xl">Ecommerce</a>
 			{#if headerNavigation?.items?.length}
@@ -345,6 +347,7 @@
 				<div class="relative" bind:this={menuRef}>
 					<button
 						type="button"
+						aria-label={$userStore.name || $userStore.username}
 						class="flex cursor-pointer items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-gray-900 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:border-gray-600 dark:hover:bg-gray-700"
 						onclick={(event) => {
 							event.stopPropagation();
@@ -364,7 +367,7 @@
 								{($userStore.name || $userStore.username || "?").slice(0, 1).toUpperCase()}
 							</span>
 						{/if}
-						<span class="max-w-35 truncate">
+						<span class="hidden max-w-35 truncate sm:inline">
 							{$userStore.name || $userStore.username}
 						</span>
 						<i class="bi bi-chevron-down text-xs"></i>

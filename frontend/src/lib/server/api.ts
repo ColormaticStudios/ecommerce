@@ -10,19 +10,19 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function appendParam(url: URL, key: string, value: unknown): void {
+function appendParam(url: URL, key: string, value: unknown, nested = false): void {
 	if (value === undefined || value === null || value === "") {
 		return;
 	}
 	if (Array.isArray(value)) {
-		for (const entry of value) {
-			appendParam(url, key, entry);
+		for (const [index, entry] of value.entries()) {
+			appendParam(url, nested ? `${key}[${index}]` : key, entry, nested);
 		}
 		return;
 	}
 	if (isPlainObject(value)) {
 		for (const [nestedKey, nestedValue] of Object.entries(value)) {
-			appendParam(url, `${key}[${nestedKey}]`, nestedValue);
+			appendParam(url, `${key}[${nestedKey}]`, nestedValue, true);
 		}
 		return;
 	}

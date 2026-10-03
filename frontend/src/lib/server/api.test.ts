@@ -42,3 +42,20 @@ test("serverRequest uses runtime fetch and forwards cookies/query params", async
 	expect(headers.get("content-type")).toBe("application/json");
 	expect(headers.get("cookie")).toBe("session_token=test-session; csrf_token=test-csrf");
 });
+
+test("encodes nested attribute arrays with indices while keeping top-level filters repeated", async () => {
+	const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}"));
+	await serverRequest({ request: new Request("http://localhost/search") }, "/search/products", {
+		attribute: { color: ["red", "blue"], waterproof: ["false"], weight: ["0"] },
+		brand_slug: ["north", "south"],
+		category_slug: ["bags", "shoes"],
+	});
+	const url = new URL(String(fetchMock.mock.calls[0]?.[0]));
+	expect(url.searchParams.get("attribute[color][0]")).toBe("red");
+	expect(url.searchParams.get("attribute[color][1]")).toBe("blue");
+	expect(url.searchParams.get("attribute[waterproof][0]")).toBe("false");
+	expect(url.searchParams.get("attribute[weight][0]")).toBe("0");
+	expect(url.searchParams.has("attribute[color]")).toBe(false);
+	expect(url.searchParams.getAll("brand_slug")).toEqual(["north", "south"]);
+	expect(url.searchParams.getAll("category_slug")).toEqual(["bags", "shoes"]);
+});

@@ -49,3 +49,4 @@ $CLI product media-upload -s "TPASTE-001" -f "assets/demo/products/Fancy Toothpa
 
 $CLI product publish -s "CLPILLO-001"
 $CLI product publish -s "TPASTE-001"
+$CLI product publish -s "SHIRT-001"

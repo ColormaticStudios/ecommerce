@@ -89,81 +89,35 @@ func newCreateProductCmd() *cobra.Command {
 				return
 			}
 
-			db := getDB()
-			defer closeDB(db)
-
+			var input apicontract.ProductUpsertInput
 			if strings.TrimSpace(filePath) != "" {
-				var input apicontract.ProductUpsertInput
 				if err := loadJSONFile(filePath, &input); err != nil {
 					log.Fatalf("Error loading product JSON: %v", err)
 				}
-
-				product, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.Product, error) {
-					response, err := endpoints.CreateProduct(ctx, apicontract.CreateProductRequestObject{Body: &input})
-					if err != nil {
-						return apicontract.Product{}, err
-					}
-					return apicontract.Product(response.(apicontract.CreateProduct201JSONResponse)), nil
-				})
-				if err != nil {
-					log.Fatal(err)
+			} else {
+				if sku == "" || name == "" {
+					log.Fatal("SKU and name are required")
 				}
-
-				fmt.Printf("✓ Product created successfully:\n")
-				fmt.Printf("  ID: %d\n", product.Id)
-				fmt.Printf("  SKU: %s\n", product.Sku)
-				fmt.Printf("  Name: %s\n", product.Name)
-				fmt.Printf("  Variants: %d\n", len(product.Variants))
-				return
+				if price <= 0 {
+					log.Fatal("Price must be greater than 0")
+				}
+				input = buildSimpleProductUpsertInput(sku, name, description, price, stock)
 			}
-
-			if sku == "" || name == "" {
-				log.Fatal("SKU and name are required")
+			product, err := withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.Product, error) {
+				response, err := endpoints.CreateProduct(ctx, apicontract.CreateProductRequestObject{Body: &input})
+				if err != nil {
+					return apicontract.Product{}, err
+				}
+				return apicontract.Product(response.(apicontract.CreateProduct201JSONResponse)), nil
+			})
+			if err != nil {
+				log.Fatal(err)
 			}
-
-			if price <= 0 {
-				log.Fatal("Price must be greater than 0")
-			}
-
-			// Check if SKU already exists
-			var existingProduct models.Product
-			if err := db.Where("sku = ?", sku).First(&existingProduct).Error; err == nil {
-				log.Fatalf("Product with SKU '%s' already exists", sku)
-			}
-
-			product := models.Product{
-				SKU:         sku,
-				Name:        name,
-				Description: description,
-				Price:       models.MoneyFromFloat(price),
-				Stock:       stock,
-			}
-
-			if err := db.Create(&product).Error; err != nil {
-				log.Fatalf("Error creating product: %v", err)
-			}
-			variant := models.ProductVariant{
-				ProductID:   product.ID,
-				SKU:         product.SKU,
-				Title:       product.Name,
-				Price:       product.Price,
-				Stock:       product.Stock,
-				Position:    1,
-				IsPublished: product.IsPublished,
-			}
-			if err := db.Create(&variant).Error; err != nil {
-				log.Fatalf("Error creating default product variant: %v", err)
-			}
-			if err := db.Model(&product).Update("default_variant_id", variant.ID).Error; err != nil {
-				log.Fatalf("Error linking default product variant: %v", err)
-			}
-
-			fmt.Printf("✓ Product created successfully:\n")
-			fmt.Printf("  ID: %d\n", product.ID)
-			fmt.Printf("  SKU: %s\n", product.SKU)
+			fmt.Printf("✓ Product draft created successfully:\n")
+			fmt.Printf("  ID: %d\n", product.Id)
+			fmt.Printf("  SKU: %s\n", product.Sku)
 			fmt.Printf("  Name: %s\n", product.Name)
-			fmt.Printf("  Price: $%.2f\n", product.Price.Float64())
-			fmt.Printf("  Stock: %d\n", product.Stock)
+			fmt.Printf("  Variants: %d\n", len(product.Variants))
 		},
 	}
 
@@ -555,9 +509,10 @@ func newDeleteProductCmd() *cobra.Command {
 				return
 			}
 
-			db := getDB()
-			defer closeDB(db)
-			if err := db.Delete(&product).Error; err != nil {
+			_, err = withCatalogEndpoints(cmd.Context(), func(ctx context.Context, endpoints *httpapi.CatalogEndpoints) (apicontract.DeleteProductResponseObject, error) {
+				return endpoints.DeleteProduct(ctx, apicontract.DeleteProductRequestObject{Id: int(product.ID)})
+			})
+			if err != nil {
 				log.Fatalf("Error deleting product: %v", err)
 			}
 
@@ -890,7 +845,7 @@ func dedupePositiveInts(values []int) []int {
 func buildSimpleProductUpsertInput(sku string, name string, description string, price float64, stock int) apicontract.ProductUpsertInput {
 	defaultVariantSKU := strings.TrimSpace(sku)
 	position := 1
-	isPublished := false
+	isPublished := true
 
 	return apicontract.ProductUpsertInput{
 		CategoryIds:       []int{},

@@ -234,3 +234,13 @@ func TestProductContractToUpsertInputPreservesDraftSections(t *testing.T) {
 func stringPtr(value string) *string {
 	return &value
 }
+
+func TestSimpleProductInputHasPublishableDefaultVariant(t *testing.T) {
+	input := buildSimpleProductUpsertInput(" SIMPLE-1 ", " Simple product ", "Description", 12, 2)
+	if input.Sku != "SIMPLE-1" || input.DefaultVariantSku == nil || *input.DefaultVariantSku != "SIMPLE-1" {
+		t.Fatalf("unexpected default variant SKU: %#v", input)
+	}
+	if len(input.Variants) != 1 || input.Variants[0].IsPublished == nil || !*input.Variants[0].IsPublished {
+		t.Fatal("default variant must become publicly usable when the product draft is published")
+	}
+}

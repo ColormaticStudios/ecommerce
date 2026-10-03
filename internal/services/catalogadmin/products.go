@@ -159,7 +159,7 @@ func productSummary(input apicontract.ProductUpsertInput) (float64, int) {
 }
 func replaceDraft(tx *gorm.DB, product models.Product, input apicontract.ProductUpsertInput) error {
 	var old models.ProductDraft
-	if err := tx.Where("product_id = ?", product.ID).First(&old).Error; err == nil {
+	if err := tx.Unscoped().Where("product_id = ?", product.ID).First(&old).Error; err == nil {
 		if err := deleteDraft(tx, old.ID); err != nil {
 			return err
 		}
@@ -228,12 +228,22 @@ func replaceDraft(tx *gorm.DB, product models.Product, input apicontract.Product
 	return nil
 }
 func deleteDraft(tx *gorm.DB, id uint) error {
+	variantIDs := tx.Unscoped().Model(&models.ProductVariantDraft{}).Select("id").Where("product_draft_id = ?", id)
+	if err := tx.Unscoped().Where("product_variant_draft_id IN (?)", variantIDs).Delete(&models.ProductVariantOptionValueDraft{}).Error; err != nil {
+		return err
+	}
+	optionIDs := tx.Unscoped().Model(&models.ProductOptionDraft{}).Select("id").Where("product_draft_id = ?", id)
+	if err := tx.Unscoped().Where("product_option_draft_id IN (?)", optionIDs).Delete(&models.ProductOptionValueDraft{}).Error; err != nil {
+		return err
+	}
 	for _, value := range []any{&models.ProductVariantDraft{}, &models.ProductRelatedDraft{}, &models.ProductCategoryDraft{}, &models.ProductAttributeValueDraft{}, &models.ProductOptionDraft{}} {
-		if err := tx.Where("product_draft_id = ?", id).Delete(value).Error; err != nil {
+		if err := tx.Unscoped().Where("product_draft_id = ?", id).Delete(value).Error; err != nil {
 			return err
 		}
 	}
-	return tx.Delete(&models.ProductDraft{}, id).Error
+	// Drafts are replaceable working copies, not history. Soft deletion retains
+	// the unique product_id key and prevents future edits or unpublishing.
+	return tx.Unscoped().Delete(&models.ProductDraft{}, id).Error
 }
 
 func (s *Service) PublishProduct(ctx context.Context, id uint) (models.Product, error) {

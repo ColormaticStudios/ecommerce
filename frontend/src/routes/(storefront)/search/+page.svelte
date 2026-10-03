@@ -306,7 +306,18 @@
 			class="sm:px-10"
 		>
 			<div class="mt-4">
-				<Button type="button" variant="primary" onclick={() => updateUrl({ query: "", page: 1 })}>
+				<Button
+					type="button"
+					variant="primary"
+					onclick={() =>
+						updateUrl({
+							query: "",
+							brandSlug: "",
+							hasVariantStock: false,
+							attributeFilters: {},
+							page: 1,
+						})}
+				>
 					Browse all products
 				</Button>
 			</div>

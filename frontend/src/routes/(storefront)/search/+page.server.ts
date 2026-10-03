@@ -74,7 +74,12 @@ export const load: PageServerLoad = async (event) => {
 				q: searchQuery.trim() || undefined,
 				brand_slug: brandSlug || undefined,
 				has_variant_stock: hasVariantStock ? true : undefined,
-				attribute: Object.keys(attributeFilters).length > 0 ? attributeFilters : undefined,
+				attribute:
+					Object.keys(attributeFilters).length > 0
+						? Object.fromEntries(
+								Object.entries(attributeFilters).map(([slug, value]) => [slug, [value]])
+							)
+						: undefined,
 				page: currentPage,
 				limit: pageSize,
 				sort: sortBy,

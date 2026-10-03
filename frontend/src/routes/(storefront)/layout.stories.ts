@@ -3,6 +3,7 @@ import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
 import { makeRouteLayoutData } from "$lib/storybook/layout";
 import { createApiStub } from "$lib/storybook/api";
 import { renderRouteStory } from "$lib/storybook/render";
+import { makeUser } from "$lib/storybook/factories";
 import StorefrontLayout from "./+layout.svelte";
 
 const meta = {
@@ -109,5 +110,16 @@ export const ManagedCmsChrome: Story = {
 					},
 				}),
 			},
+		}),
+};
+
+export const SignedInMobile: Story = {
+	parameters: { viewport: { value: "mobile1" } },
+	render: () =>
+		renderRouteStory({
+			component: StorefrontLayout,
+			user: makeUser({ name: "A customer with a very long display name" }),
+			api: createApiStub({ viewCartSummary: async () => 0 }),
+			componentProps: { data: makeRouteLayoutData({ isAuthenticated: true }) },
 		}),
 };
