@@ -923,40 +923,90 @@ paths:
           name: q
           schema:
             type: string
+            maxLength: 200
         - in: query
           name: min_price
+          deprecated: true
+          description: Legacy inclusive minimum price. Cannot be combined with price_range.
           schema:
             type: number
             format: double
+            minimum: 0
+            maximum: 9999999999.99
         - in: query
           name: max_price
+          deprecated: true
+          description: Legacy inclusive maximum price. Cannot be combined with price_range.
           schema:
             type: number
             format: double
+            minimum: 0
+            maximum: 9999999999.99
         - in: query
           name: brand_slug
+          style: form
+          explode: true
           schema:
-            type: string
+            type: array
+            maxItems: 20
+            items:
+              type: string
+              minLength: 1
+              maxLength: 120
         - in: query
           name: category_slug
           style: form
           explode: true
           schema:
             type: array
+            maxItems: 20
             items:
               type: string
+              minLength: 1
+              maxLength: 120
         - in: query
           name: has_variant_stock
+          description: Repeated values use OR semantics within the stock facet.
+          style: form
+          explode: true
           schema:
-            type: boolean
+            type: array
+            maxItems: 2
+            items:
+              type: boolean
+        - in: query
+          name: price_range
+          description: >-
+            Repeated inclusive price ranges use OR semantics within the price
+            facet. Each value is encoded as min:max; either boundary may be
+            omitted. Overlapping ranges are treated as a union.
+          style: form
+          explode: true
+          schema:
+            type: array
+            maxItems: 10
+            items:
+              type: string
+              pattern: '^(?:[0-9]+(?:\.[0-9]{1,2})?:(?:[0-9]+(?:\.[0-9]{1,2})?)?|:(?:[0-9]+(?:\.[0-9]{1,2})?))$'
         - in: query
           name: attribute
+          description: >-
+            Attribute values use OR within each attribute and AND across
+            attributes. Encode array values with indexed deep-object keys,
+            such as attribute[color][0]=red&attribute[color][1]=blue.
           style: deepObject
           explode: true
           schema:
             type: object
+            maxProperties: 20
             additionalProperties:
-              type: string
+              type: array
+              minItems: 1
+              maxItems: 20
+              items:
+                type: string
+                minLength: 1
+                maxLength: 120
         - in: query
           name: sort
           schema:
@@ -2367,6 +2417,288 @@ paths:
           $ref: "#/components/responses/AuthenticationRequiredProblem"
         "403":
           $ref: "#/components/responses/ForbiddenProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/search/synonyms:
+    get:
+      tags: [admin, search]
+      operationId: listAdminSearchSynonyms
+      summary: List search synonym sets
+      responses:
+        "200":
+          description: Search synonym sets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchSynonymSetListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+    post:
+      tags: [admin, search]
+      operationId: createAdminSearchSynonym
+      summary: Create a search synonym set
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchSynonymSetInput"
+      responses:
+        "201":
+          description: Created search synonym set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchSynonymSet"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
+        "422":
+          $ref: "#/components/responses/ValidationProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/search/synonyms/{id}:
+    get:
+      tags: [admin, search]
+      operationId: getAdminSearchSynonym
+      summary: Get a search synonym set
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Search synonym set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchSynonymSet"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+    patch:
+      tags: [admin, search]
+      operationId: updateAdminSearchSynonym
+      summary: Update a search synonym set
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchSynonymSetPatch"
+      responses:
+        "200":
+          description: Updated search synonym set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchSynonymSet"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
+        "422":
+          $ref: "#/components/responses/ValidationProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+    delete:
+      tags: [admin, search]
+      operationId: deleteAdminSearchSynonym
+      summary: Delete a search synonym set
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "204":
+          description: Search synonym set deleted
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/search/typo-profiles:
+    get:
+      tags: [admin, search]
+      operationId: listAdminSearchTypoProfiles
+      summary: List search typo tolerance profiles
+      responses:
+        "200":
+          description: Search typo tolerance profiles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchTypoToleranceProfileListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+    post:
+      tags: [admin, search]
+      operationId: createAdminSearchTypoProfile
+      summary: Create a named search typo tolerance profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchTypoToleranceProfileInput"
+      responses:
+        "201":
+          description: Created search typo tolerance profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchTypoToleranceProfile"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
+        "422":
+          $ref: "#/components/responses/ValidationProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/search/typo-profiles/{id}:
+    get:
+      tags: [admin, search]
+      operationId: getAdminSearchTypoProfile
+      summary: Get a search typo tolerance profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Search typo tolerance profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchTypoToleranceProfile"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+    patch:
+      tags: [admin, search]
+      operationId: updateAdminSearchTypoProfile
+      summary: Update a search typo tolerance profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchTypoToleranceProfilePatch"
+      responses:
+        "200":
+          description: Updated search typo tolerance profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchTypoToleranceProfile"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
+        "422":
+          $ref: "#/components/responses/ValidationProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+    delete:
+      tags: [admin, search]
+      operationId: deleteAdminSearchTypoProfile
+      summary: Delete a search typo tolerance profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "204":
+          description: Search typo tolerance profile deleted
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
         "409":
           $ref: "#/components/responses/ConflictProblem"
         "500":
@@ -10836,6 +11168,213 @@ components:
         pagination:
           $ref: "#/components/schemas/Pagination"
 
+    SearchSynonymDirection:
+      type: string
+      enum: [uni, bi]
+
+    SearchSynonymSet:
+      type: object
+      required:
+        - id
+        - name
+        - direction
+        - terms
+        - is_active
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        direction:
+          $ref: "#/components/schemas/SearchSynonymDirection"
+        terms:
+          type: array
+          description: >-
+            For uni direction, the first term is the source and the remaining
+            terms are replacements. For bi direction, every term is equivalent.
+          minItems: 2
+          uniqueItems: true
+          items:
+            type: string
+        is_active:
+          type: boolean
+        updated_by:
+          type: integer
+          minimum: 1
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    SearchSynonymSetInput:
+      type: object
+      required: [name, direction, terms]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        direction:
+          $ref: "#/components/schemas/SearchSynonymDirection"
+        terms:
+          type: array
+          description: >-
+            For uni direction, the first term is the source and the remaining
+            terms are replacements. For bi direction, every term is equivalent.
+          minItems: 2
+          maxItems: 50
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 120
+        is_active:
+          type: boolean
+          default: true
+
+    SearchSynonymSetPatch:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        direction:
+          $ref: "#/components/schemas/SearchSynonymDirection"
+        terms:
+          type: array
+          description: >-
+            For uni direction, the first term is the source and the remaining
+            terms are replacements. For bi direction, every term is equivalent.
+          minItems: 2
+          maxItems: 50
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 120
+        is_active:
+          type: boolean
+
+    SearchSynonymSetListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchSynonymSet"
+
+    SearchTypoToleranceProfile:
+      type: object
+      required:
+        - id
+        - name
+        - minimum_token_length
+        - one_edit_minimum_length
+        - two_edit_minimum_length
+        - strict_mode
+        - is_active
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        minimum_token_length:
+          type: integer
+          minimum: 1
+        one_edit_minimum_length:
+          type: integer
+          minimum: 1
+        two_edit_minimum_length:
+          type: integer
+          minimum: 2
+        strict_mode:
+          type: boolean
+        is_active:
+          type: boolean
+          description: True for the single globally active typo tolerance profile.
+        updated_by:
+          type: integer
+          minimum: 1
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    SearchTypoToleranceProfileInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        minimum_token_length:
+          type: integer
+          minimum: 1
+          default: 4
+        one_edit_minimum_length:
+          type: integer
+          minimum: 1
+          default: 4
+        two_edit_minimum_length:
+          type: integer
+          minimum: 2
+          default: 8
+        strict_mode:
+          type: boolean
+          default: false
+        is_active:
+          type: boolean
+          default: false
+          description: Activating a profile atomically deactivates the prior global profile.
+
+    SearchTypoToleranceProfilePatch:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        minimum_token_length:
+          type: integer
+          minimum: 1
+        one_edit_minimum_length:
+          type: integer
+          minimum: 1
+        two_edit_minimum_length:
+          type: integer
+          minimum: 2
+        strict_mode:
+          type: boolean
+        is_active:
+          type: boolean
+          description: Activating a profile atomically deactivates the prior global profile.
+
+    SearchTypoToleranceProfileListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchTypoToleranceProfile"
+
     SearchFacetValue:
       type: object
       required: [value, count, selected, disabled]
@@ -10851,6 +11390,16 @@ components:
           type: boolean
         disabled:
           type: boolean
+        min_price:
+          type: number
+          format: double
+          nullable: true
+          description: Inclusive lower boundary for a dynamically generated range value.
+        max_price:
+          type: number
+          format: double
+          nullable: true
+          description: Inclusive upper boundary for a dynamically generated range value.
 
     SearchFacet:
       type: object
@@ -10870,14 +11419,42 @@ components:
 
     ProductSearchMetadata:
       type: object
-      required: [normalized_query, indexed_at]
+      required:
+        - normalized_query
+        - applied_rewrites
+        - did_you_mean
+        - relaxed
+        - indexed_at
       properties:
         normalized_query:
           type: string
+        applied_rewrites:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchAppliedRewrite"
+        did_you_mean:
+          type: string
+          nullable: true
+          description: Suggested corrected query when the original query has no exact results.
+        relaxed:
+          type: boolean
+          description: True when the response items come from the deterministic relaxed fallback.
         indexed_at:
           type: string
           format: date-time
           nullable: true
+
+    SearchAppliedRewrite:
+      type: object
+      required: [kind, original, replacement]
+      properties:
+        kind:
+          type: string
+          enum: [synonym, typo]
+        original:
+          type: string
+        replacement:
+          type: string
 
     ProductSearchResponse:
       type: object

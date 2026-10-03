@@ -1197,6 +1197,80 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/admin/search/synonyms": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List search synonym sets */
+		get: operations["listAdminSearchSynonyms"];
+		put?: never;
+		/** Create a search synonym set */
+		post: operations["createAdminSearchSynonym"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/synonyms/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Get a search synonym set */
+		get: operations["getAdminSearchSynonym"];
+		put?: never;
+		post?: never;
+		/** Delete a search synonym set */
+		delete: operations["deleteAdminSearchSynonym"];
+		options?: never;
+		head?: never;
+		/** Update a search synonym set */
+		patch: operations["updateAdminSearchSynonym"];
+		trace?: never;
+	};
+	"/api/v1/admin/search/typo-profiles": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List search typo tolerance profiles */
+		get: operations["listAdminSearchTypoProfiles"];
+		put?: never;
+		/** Create a named search typo tolerance profile */
+		post: operations["createAdminSearchTypoProfile"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/typo-profiles/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Get a search typo tolerance profile */
+		get: operations["getAdminSearchTypoProfile"];
+		put?: never;
+		post?: never;
+		/** Delete a search typo tolerance profile */
+		delete: operations["deleteAdminSearchTypoProfile"];
+		options?: never;
+		head?: never;
+		/** Update a search typo tolerance profile */
+		patch: operations["updateAdminSearchTypoProfile"];
+		trace?: never;
+	};
 	"/api/v1/admin/products": {
 		parameters: {
 			query?: never;
@@ -4865,12 +4939,98 @@ export interface components {
 			data: components["schemas"]["Product"][];
 			pagination: components["schemas"]["Pagination"];
 		};
+		/** @enum {string} */
+		SearchSynonymDirection: "uni" | "bi";
+		SearchSynonymSet: {
+			id: number;
+			name: string;
+			direction: components["schemas"]["SearchSynonymDirection"];
+			/** @description For uni direction, the first term is the source and the remaining terms are replacements. For bi direction, every term is equivalent. */
+			terms: string[];
+			is_active: boolean;
+			updated_by?: number | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		SearchSynonymSetInput: {
+			name: string;
+			direction: components["schemas"]["SearchSynonymDirection"];
+			/** @description For uni direction, the first term is the source and the remaining terms are replacements. For bi direction, every term is equivalent. */
+			terms: string[];
+			/** @default true */
+			is_active: boolean;
+		};
+		SearchSynonymSetPatch: {
+			name?: string;
+			direction?: components["schemas"]["SearchSynonymDirection"];
+			/** @description For uni direction, the first term is the source and the remaining terms are replacements. For bi direction, every term is equivalent. */
+			terms?: string[];
+			is_active?: boolean;
+		};
+		SearchSynonymSetListResponse: {
+			data: components["schemas"]["SearchSynonymSet"][];
+		};
+		SearchTypoToleranceProfile: {
+			id: number;
+			name: string;
+			minimum_token_length: number;
+			one_edit_minimum_length: number;
+			two_edit_minimum_length: number;
+			strict_mode: boolean;
+			/** @description True for the single globally active typo tolerance profile. */
+			is_active: boolean;
+			updated_by?: number | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		SearchTypoToleranceProfileInput: {
+			name: string;
+			/** @default 4 */
+			minimum_token_length: number;
+			/** @default 4 */
+			one_edit_minimum_length: number;
+			/** @default 8 */
+			two_edit_minimum_length: number;
+			/** @default false */
+			strict_mode: boolean;
+			/**
+			 * @description Activating a profile atomically deactivates the prior global profile.
+			 * @default false
+			 */
+			is_active: boolean;
+		};
+		SearchTypoToleranceProfilePatch: {
+			name?: string;
+			minimum_token_length?: number;
+			one_edit_minimum_length?: number;
+			two_edit_minimum_length?: number;
+			strict_mode?: boolean;
+			/** @description Activating a profile atomically deactivates the prior global profile. */
+			is_active?: boolean;
+		};
+		SearchTypoToleranceProfileListResponse: {
+			data: components["schemas"]["SearchTypoToleranceProfile"][];
+		};
 		SearchFacetValue: {
 			value: string;
 			label?: string;
 			count: number;
 			selected: boolean;
 			disabled: boolean;
+			/**
+			 * Format: double
+			 * @description Inclusive lower boundary for a dynamically generated range value.
+			 */
+			min_price?: number | null;
+			/**
+			 * Format: double
+			 * @description Inclusive upper boundary for a dynamically generated range value.
+			 */
+			max_price?: number | null;
 		};
 		SearchFacet: {
 			name: string;
@@ -4881,8 +5041,19 @@ export interface components {
 		};
 		ProductSearchMetadata: {
 			normalized_query: string;
+			applied_rewrites: components["schemas"]["SearchAppliedRewrite"][];
+			/** @description Suggested corrected query when the original query has no exact results. */
+			did_you_mean: string | null;
+			/** @description True when the response items come from the deterministic relaxed fallback. */
+			relaxed: boolean;
 			/** Format: date-time */
 			indexed_at: string | null;
+		};
+		SearchAppliedRewrite: {
+			/** @enum {string} */
+			kind: "synonym" | "typo";
+			original: string;
+			replacement: string;
 		};
 		ProductSearchResponse: {
 			items: components["schemas"]["Product"][];
@@ -7188,13 +7359,25 @@ export interface operations {
 		parameters: {
 			query?: {
 				q?: string;
+				/**
+				 * @deprecated
+				 * @description Legacy inclusive minimum price. Cannot be combined with price_range.
+				 */
 				min_price?: number;
+				/**
+				 * @deprecated
+				 * @description Legacy inclusive maximum price. Cannot be combined with price_range.
+				 */
 				max_price?: number;
-				brand_slug?: string;
+				brand_slug?: string[];
 				category_slug?: string[];
-				has_variant_stock?: boolean;
+				/** @description Repeated values use OR semantics within the stock facet. */
+				has_variant_stock?: boolean[];
+				/** @description Repeated inclusive price ranges use OR semantics within the price facet. Each value is encoded as min:max; either boundary may be omitted. Overlapping ranges are treated as a union. */
+				price_range?: string[];
+				/** @description Attribute values use OR within each attribute and AND across attributes. Encode array values with indexed deep-object keys, such as attribute[color][0]=red&attribute[color][1]=blue. */
 				attribute?: {
-					[key: string]: string;
+					[key: string]: string[];
 				};
 				sort?: "relevance" | "price" | "name" | "created_at";
 				order?: "asc" | "desc";
@@ -8579,6 +8762,285 @@ export interface operations {
 			401: components["responses"]["AuthenticationRequiredProblem"];
 			403: components["responses"]["ForbiddenProblem"];
 			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminSearchSynonyms: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search synonym sets */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchSynonymSetListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createAdminSearchSynonym: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchSynonymSetInput"];
+			};
+		};
+		responses: {
+			/** @description Created search synonym set */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchSynonymSet"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminSearchSynonym: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search synonym set */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchSynonymSet"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	deleteAdminSearchSynonym: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search synonym set deleted */
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	updateAdminSearchSynonym: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchSynonymSetPatch"];
+			};
+		};
+		responses: {
+			/** @description Updated search synonym set */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchSynonymSet"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminSearchTypoProfiles: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search typo tolerance profiles */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchTypoToleranceProfileListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createAdminSearchTypoProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchTypoToleranceProfileInput"];
+			};
+		};
+		responses: {
+			/** @description Created search typo tolerance profile */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchTypoToleranceProfile"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminSearchTypoProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search typo tolerance profile */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchTypoToleranceProfile"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	deleteAdminSearchTypoProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search typo tolerance profile deleted */
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	updateAdminSearchTypoProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchTypoToleranceProfilePatch"];
+			};
+		};
+		responses: {
+			/** @description Updated search typo tolerance profile */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchTypoToleranceProfile"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};

@@ -64,6 +64,8 @@ func TestCatalogEndpointsCoversStrictCatalogFamily(t *testing.T) {
 	operations := []string{
 		"ListBrands", "ListCategories", "ListProductAttributes", "ListProducts", "GetProduct", "SearchProducts", "GetSearchSuggestions",
 		"GetAdminSearchFreshness", "CreateAdminSearchReindex",
+		"ListAdminSearchSynonyms", "CreateAdminSearchSynonym", "GetAdminSearchSynonym", "UpdateAdminSearchSynonym", "DeleteAdminSearchSynonym",
+		"ListAdminSearchTypoProfiles", "CreateAdminSearchTypoProfile", "GetAdminSearchTypoProfile", "UpdateAdminSearchTypoProfile", "DeleteAdminSearchTypoProfile",
 		"ListAdminBrands", "CreateAdminBrand", "UpdateAdminBrand", "DeleteAdminBrand",
 		"ListAdminCategories", "CreateAdminCategory", "UpdateAdminCategory", "DeleteAdminCategory",
 		"ListAdminProductAttributes", "CreateAdminProductAttribute", "UpdateAdminProductAttribute", "DeleteAdminProductAttribute",

@@ -46,6 +46,19 @@ type SearchSynonymSet struct {
 	UpdatedBy *uint  `gorm:"index"`
 }
 
+// SearchTypoToleranceProfile is a named query-correction policy. Exactly one
+// non-deleted profile is active globally; internal/search owns that invariant.
+type SearchTypoToleranceProfile struct {
+	BaseModel
+	Name                 string `gorm:"not null;size:120;uniqueIndex"`
+	MinimumTokenLength   int    `gorm:"not null"`
+	OneEditMinimumLength int    `gorm:"not null"`
+	TwoEditMinimumLength int    `gorm:"not null"`
+	StrictMode           bool   `gorm:"not null;default:false"`
+	IsActive             bool   `gorm:"not null;default:false;index"`
+	UpdatedBy            *uint  `gorm:"index"`
+}
+
 type SearchRankingProfile struct {
 	BaseModel
 	Name        string `gorm:"not null;size:120;uniqueIndex"`

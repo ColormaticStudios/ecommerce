@@ -20,8 +20,15 @@ func searchTestDB(t *testing.T) *gorm.DB {
 	require.NoError(t, db.AutoMigrate(
 		&models.Product{}, &models.ProductVariant{}, &models.Brand{}, &models.Category{}, &models.ProductCategory{},
 		&models.ProductAttribute{}, &models.ProductAttributeValue{}, &models.SearchDocument{}, &models.SearchIndexState{},
-		&models.JobQueue{},
+		&models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}, &models.JobQueue{},
 	))
+	require.NoError(t, db.Table("search_typo_tolerance_profiles").Create(map[string]any{
+		"name": "default", "minimum_token_length": DefaultMinimumTokenLength,
+		"one_edit_minimum_length": DefaultOneEditMinimumLength,
+		"two_edit_minimum_length": DefaultTwoEditMinimumLength,
+		"strict_mode":             false, "is_active": true,
+		"created_at": time.Now().UTC(), "updated_at": time.Now().UTC(),
+	}).Error)
 	return db
 }
 

@@ -569,7 +569,7 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, searchFoundationP0Version, status.LatestAppliedVersion)
+	require.Equal(t, searchQueryUnderstandingP1Version, status.LatestAppliedVersion)
 	require.Equal(t, 3, status.PendingCount)
 }
 
@@ -605,6 +605,46 @@ func TestSearchFoundationP0MigrationCreatesProjectionAndConfigurationTables(t *t
 		require.Truef(t, db.Migrator().HasTable(table), "expected %s", table)
 	}
 	require.True(t, db.Migrator().HasIndex("search_documents", "idx_search_documents_entity"))
+}
+
+func TestSearchQueryUnderstandingP1MigrationSeedsOneActiveTypoProfile(t *testing.T) {
+	db := newTestDB(t)
+	migrationIndex := slices.IndexFunc(orderedMigrations, func(migration Migration) bool {
+		return migration.Version == searchQueryUnderstandingP1Version
+	})
+	require.Greater(t, migrationIndex, 0)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex]))
+	require.False(t, db.Migrator().HasTable(&searchP1TypoToleranceProfileSchema{}))
+
+	legacySynonym := searchP0SynonymSetSchema{
+		Name: "apparel", Direction: "bi", TermsJSON: `["shirt","top"]`, IsActive: true,
+	}
+	require.NoError(t, db.Create(&legacySynonym).Error)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex+1]))
+	require.True(t, db.Migrator().HasTable(&searchP1TypoToleranceProfileSchema{}))
+	require.True(t, db.Migrator().HasIndex("search_typo_tolerance_profiles", "idx_search_typo_tolerance_profiles_one_active"))
+
+	var profiles []searchP1TypoToleranceProfileSchema
+	require.NoError(t, db.Find(&profiles).Error)
+	require.Len(t, profiles, 1)
+	assert.Equal(t, "default", profiles[0].Name)
+	assert.Equal(t, 4, profiles[0].MinimumTokenLength)
+	assert.Equal(t, 4, profiles[0].OneEditMinimumLength)
+	assert.Equal(t, 8, profiles[0].TwoEditMinimumLength)
+	assert.False(t, profiles[0].StrictMode)
+	assert.True(t, profiles[0].IsActive)
+
+	var synonymCount int64
+	require.NoError(t, db.Table("search_synonym_sets").Where("name = ?", "apparel").Count(&synonymCount).Error)
+	assert.EqualValues(t, 1, synonymCount, "P1 must preserve P0 synonym configuration")
+
+	duplicateActive := map[string]any{
+		"name": "other", "minimum_token_length": 4, "one_edit_minimum_length": 4,
+		"two_edit_minimum_length": 8, "strict_mode": false, "is_active": true,
+		"created_at": time.Now().UTC(), "updated_at": time.Now().UTC(),
+	}
+	err := db.Table("search_typo_tolerance_profiles").Create(duplicateActive).Error
+	require.Error(t, err, "the database must reject a second active profile")
 }
 
 func TestOIDCLoginUIMigrationAddsDisplayNameAndCatalog(t *testing.T) {

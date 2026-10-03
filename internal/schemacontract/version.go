@@ -2,4 +2,4 @@
 // by lightweight operational binaries that must not import migration bodies.
 package schemacontract
 
-const LatestMigrationVersion = "2026091601_search_foundation_p0"
+const LatestMigrationVersion = "2026092601_search_query_understanding_p1"

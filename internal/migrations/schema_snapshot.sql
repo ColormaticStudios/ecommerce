@@ -1659,6 +1659,23 @@ TABLE search_synonym_sets
   INDEX idx_search_synonym_sets_is_active columns=is_active unique=false option=
   INDEX idx_search_synonym_sets_name columns=name unique=true option=
   INDEX idx_search_synonym_sets_updated_by columns=updated_by unique=false option=
+TABLE search_typo_tolerance_profiles
+  COLUMN created_at
+  COLUMN deleted_at
+  COLUMN id
+  COLUMN is_active
+  COLUMN minimum_token_length
+  COLUMN name
+  COLUMN one_edit_minimum_length
+  COLUMN strict_mode
+  COLUMN two_edit_minimum_length
+  COLUMN updated_at
+  COLUMN updated_by
+  INDEX idx_search_typo_tolerance_profiles_deleted_at columns=deleted_at unique=false option=
+  INDEX idx_search_typo_tolerance_profiles_is_active columns=is_active unique=false option=
+  INDEX idx_search_typo_tolerance_profiles_name columns=name unique=true option=
+  INDEX idx_search_typo_tolerance_profiles_one_active columns=is_active unique=true option=
+  INDEX idx_search_typo_tolerance_profiles_updated_by columns=updated_by unique=false option=
 TABLE seo_metadata
   COLUMN canonical_path
   COLUMN created_at

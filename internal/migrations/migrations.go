@@ -122,6 +122,7 @@ const localizationUsageContextVersion = "2026082701_localization_usage_context"
 const platformJobsP1Version = "2026090301_platform_jobs_p1"
 const oidcLoginUIVersion = "2026090501_oidc_login_ui"
 const searchFoundationP0Version = "2026091601_search_foundation_p0"
+const searchQueryUnderstandingP1Version = "2026092601_search_query_understanding_p1"
 
 const (
 	platformJobsP1MediaJobType    = "media.process"
@@ -1998,6 +1999,32 @@ var orderedMigrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:         searchQueryUnderstandingP1Version,
+		Name:            "add search query understanding configuration",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "backfill", "search"},
+		PostChecks: []PostCheck{{
+			Name: "search_typo_tolerance_profile_ready",
+			Check: func(tx *gorm.DB) error {
+				if !tx.Migrator().HasTable(&searchP1TypoToleranceProfileSchema{}) {
+					return errors.New("search typo tolerance profiles table is missing")
+				}
+				if !tx.Migrator().HasIndex("search_typo_tolerance_profiles", "idx_search_typo_tolerance_profiles_one_active") {
+					return errors.New("search typo tolerance active-profile index is missing")
+				}
+				var activeCount int64
+				if err := tx.Table("search_typo_tolerance_profiles").Where("deleted_at IS NULL AND is_active = ?", true).Count(&activeCount).Error; err != nil {
+					return err
+				}
+				if activeCount != 1 {
+					return fmt.Errorf("expected exactly one active search typo tolerance profile, found %d", activeCount)
+				}
+				return nil
+			},
+		}},
+		Up: migrateSearchQueryUnderstandingP1,
+	},
 }
 
 // These schemas freeze the tables introduced by the search P0 migration.
@@ -2105,6 +2132,52 @@ type searchP0ClickEventSchema struct {
 }
 
 func (searchP0ClickEventSchema) TableName() string { return "search_click_events" }
+
+// searchP1TypoToleranceProfileSchema freezes the table introduced by the
+// search P1 migration so later runtime model changes cannot break replay.
+type searchP1TypoToleranceProfileSchema struct {
+	ID                   uint `gorm:"primaryKey"`
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
+	DeletedAt            gorm.DeletedAt `gorm:"index"`
+	Name                 string         `gorm:"not null;size:120;uniqueIndex"`
+	MinimumTokenLength   int            `gorm:"not null"`
+	OneEditMinimumLength int            `gorm:"not null"`
+	TwoEditMinimumLength int            `gorm:"not null"`
+	StrictMode           bool           `gorm:"not null;default:false"`
+	IsActive             bool           `gorm:"not null;default:false;index"`
+	UpdatedBy            *uint          `gorm:"index"`
+}
+
+func (searchP1TypoToleranceProfileSchema) TableName() string {
+	return "search_typo_tolerance_profiles"
+}
+
+func migrateSearchQueryUnderstandingP1(tx *gorm.DB) error {
+	if err := ops.CreateTableIfNotExists(tx, &searchP1TypoToleranceProfileSchema{}); err != nil {
+		return err
+	}
+	if err := tx.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_search_typo_tolerance_profiles_one_active
+		ON search_typo_tolerance_profiles (is_active)
+		WHERE is_active = TRUE AND deleted_at IS NULL`).Error; err != nil {
+		return err
+	}
+	now := time.Now().UTC()
+	defaultProfile := map[string]any{
+		"name":                    "default",
+		"minimum_token_length":    4,
+		"one_edit_minimum_length": 4,
+		"two_edit_minimum_length": 8,
+		"strict_mode":             false,
+		"is_active":               true,
+		"created_at":              now,
+		"updated_at":              now,
+	}
+	return tx.Table("search_typo_tolerance_profiles").Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "name"}},
+		DoNothing: true,
+	}).Create(defaultProfile).Error
+}
 
 // These schemas freeze the tables introduced by the P1 migration. Runtime
 // models can gain fields without changing historical migration replay.

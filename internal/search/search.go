@@ -45,24 +45,60 @@ type FullReindexPayload struct {
 }
 
 type Filters struct {
-	Query           string
-	MinPrice        *float64
-	MaxPrice        *float64
-	BrandSlug       string
-	CategorySlugs   []string
-	HasVariantStock *bool
-	Attributes      map[string]string
-	SortField       string
-	SortOrder       string
-	Page            int
-	Limit           int
+	Query             string
+	MinPrice          *float64
+	MaxPrice          *float64
+	BrandSlug         string
+	BrandSlugs        []string
+	CategorySlugs     []string
+	HasVariantStock   *bool
+	StockAvailability []bool
+	Attributes        map[string]string
+	AttributeValues   map[string][]string
+	PriceRanges       []PriceRange
+	SortField         string
+	SortOrder         string
+	Page              int
+	Limit             int
+}
+
+type PriceRange struct {
+	Min *float64
+	Max *float64
+}
+
+type FacetValue struct {
+	Value    string
+	Label    string
+	Count    int64
+	Selected bool
+	Disabled bool
+	MinPrice *float64
+	MaxPrice *float64
+}
+
+type Facet struct {
+	Name   string
+	Label  string
+	Type   string
+	Values []FacetValue
+}
+
+type AppliedRewrite struct {
+	Kind        string
+	Original    string
+	Replacement string
 }
 
 type Result struct {
 	Products        []models.Product
+	Facets          []Facet
 	Total           int64
 	TotalPages      int
 	NormalizedQuery string
+	AppliedRewrites []AppliedRewrite
+	DidYouMean      string
+	Relaxed         bool
 	IndexedAt       *time.Time
 }
 
@@ -351,7 +387,9 @@ func projectProduct(product models.Product, indexedAt time.Time) (models.SearchD
 		if slug == "" || raw == "" {
 			continue
 		}
-		attributeTokens += slug + "=" + NormalizeQuery(raw) + "|"
+		if value.ProductAttribute.Filterable {
+			attributeTokens += slug + "=" + NormalizeQuery(raw) + "|"
+		}
 		terms = append(terms, value.ProductAttribute.Key, raw)
 	}
 	payload, err := json.Marshal(product)
@@ -470,83 +508,7 @@ func upsertIndexState(tx *gorm.DB, indexedAt time.Time, fullAt *time.Time, count
 }
 
 func (b *databaseBackend) Search(ctx context.Context, filters Filters) (Result, error) {
-	page, limit := filters.Page, filters.Limit
-	if page < 1 {
-		page = 1
-	}
-	if limit < 1 {
-		limit = 20
-	}
-	if limit > 100 {
-		limit = 100
-	}
-	query := b.db.WithContext(ctx).Model(&models.SearchDocument{}).Where("entity_type = ? AND active = ?", ProductEntityType, true)
-	normalized := NormalizeQuery(filters.Query)
-	for _, token := range strings.Fields(normalized) {
-		query = query.Where("searchable_text LIKE ?", "%"+escapeLike(token)+"%")
-	}
-	if filters.MinPrice != nil {
-		query = query.Where("max_price >= ?", *filters.MinPrice)
-	}
-	if filters.MaxPrice != nil {
-		query = query.Where("min_price <= ?", *filters.MaxPrice)
-	}
-	if brand := NormalizeQuery(filters.BrandSlug); brand != "" {
-		query = query.Where("brand_slug = ?", brand)
-	}
-	for _, category := range filters.CategorySlugs {
-		if value := NormalizeQuery(category); value != "" {
-			query = query.Where("category_tokens LIKE ?", "%|"+escapeLike(value)+"|%")
-		}
-	}
-	if filters.HasVariantStock != nil {
-		query = query.Where("available = ?", *filters.HasVariantStock)
-	}
-	keys := make([]string, 0, len(filters.Attributes))
-	for key := range filters.Attributes {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		slug, value := NormalizeQuery(key), NormalizeQuery(filters.Attributes[key])
-		if slug != "" && value != "" {
-			query = query.Where("attribute_tokens LIKE ?", "%|"+escapeLike(slug)+"="+escapeLike(value)+"|%")
-		}
-	}
-	var total int64
-	if err := query.Count(&total).Error; err != nil {
-		return Result{}, err
-	}
-	field := map[string]string{"price": "min_price", "name": "normalized_name", "created_at": "source_created_at"}[filters.SortField]
-	if field == "" {
-		field = "source_created_at"
-	}
-	direction := "desc"
-	if strings.EqualFold(filters.SortOrder, "asc") {
-		direction = "asc"
-	}
-	var documents []models.SearchDocument
-	if err := query.Order(field + " " + direction).Order("entity_id asc").Offset((page - 1) * limit).Limit(limit).Find(&documents).Error; err != nil {
-		return Result{}, err
-	}
-	products := make([]models.Product, 0, len(documents))
-	var indexedAt *time.Time
-	for _, document := range documents {
-		var product models.Product
-		if err := json.Unmarshal([]byte(document.PayloadJSON), &product); err != nil {
-			return Result{}, fmt.Errorf("decode search document %d: %w", document.ID, err)
-		}
-		products = append(products, product)
-		if indexedAt == nil || document.IndexedAt.After(*indexedAt) {
-			value := document.IndexedAt
-			indexedAt = &value
-		}
-	}
-	totalPages := int(total) / limit
-	if int(total)%limit != 0 {
-		totalPages++
-	}
-	return Result{Products: products, Total: total, TotalPages: totalPages, NormalizedQuery: normalized, IndexedAt: indexedAt}, nil
+	return b.searchProducts(ctx, filters)
 }
 
 func escapeLike(value string) string {
@@ -599,6 +561,26 @@ func (b *databaseBackend) Suggest(ctx context.Context, query string, limit int) 
 		values = values[:limit]
 	}
 	result.Suggestions = values
+	if len(values) == 0 {
+		profile, err := b.loadTypoToleranceProfile(ctx)
+		if err != nil {
+			return result, err
+		}
+		documents, err := b.loadIndexedProducts(ctx, nil)
+		if err != nil {
+			return result, err
+		}
+		corrected, rewrites := correctQuery(normalized, buildVocabulary(documents), profile)
+		if len(rewrites) > 0 {
+			plan := buildQueryPlan(corrected, nil)
+			for _, document := range documents {
+				if matchesQuery(document.document.SearchableText, plan, false) {
+					result.Corrections = []string{corrected}
+					break
+				}
+			}
+		}
+	}
 	return result, nil
 }
 
