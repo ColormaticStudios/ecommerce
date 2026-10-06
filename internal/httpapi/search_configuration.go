@@ -236,9 +236,9 @@ func searchConfigurationEndpointError(err error) error {
 		return problemError(http.StatusUnprocessableEntity, "invalid_search_configuration", err.Error(), err)
 	case errors.Is(err, searchservice.ErrConfigurationNotFound):
 		return problemError(http.StatusNotFound, "search_configuration_not_found", "The requested search configuration was not found.", err)
-	case errors.Is(err, searchservice.ErrConfigurationConflict), errors.Is(err, searchservice.ErrActiveTypoProfileRequired):
+	case errors.Is(err, searchservice.ErrConfigurationConflict), errors.Is(err, searchservice.ErrActiveTypoProfileRequired), errors.Is(err, searchservice.ErrDefaultRankingProfileRequired):
 		return problemError(http.StatusConflict, "search_configuration_conflict", err.Error(), err)
 	default:
-		return err
+		return catalogEndpointError(err)
 	}
 }

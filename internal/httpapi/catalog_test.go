@@ -63,7 +63,8 @@ func TestNewCatalogEndpointsRequiresDatabase(t *testing.T) {
 func TestCatalogEndpointsCoversStrictCatalogFamily(t *testing.T) {
 	operations := []string{
 		"ListBrands", "ListCategories", "ListProductAttributes", "ListProducts", "GetProduct", "SearchProducts", "GetSearchSuggestions",
-		"GetAdminSearchFreshness", "CreateAdminSearchReindex",
+		"GetAdminSearchFreshness", "CreateAdminSearchReindex", "SearchAdminProducts",
+		"ListAdminSearchRankingProfiles", "CreateAdminSearchRankingProfile", "GetAdminSearchRankingProfile", "UpdateAdminSearchRankingProfile", "DeleteAdminSearchRankingProfile",
 		"ListAdminSearchSynonyms", "CreateAdminSearchSynonym", "GetAdminSearchSynonym", "UpdateAdminSearchSynonym", "DeleteAdminSearchSynonym",
 		"ListAdminSearchTypoProfiles", "CreateAdminSearchTypoProfile", "GetAdminSearchTypoProfile", "UpdateAdminSearchTypoProfile", "DeleteAdminSearchTypoProfile",
 		"ListAdminBrands", "CreateAdminBrand", "UpdateAdminBrand", "DeleteAdminBrand",

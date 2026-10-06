@@ -2025,6 +2025,26 @@ var orderedMigrations = []Migration{
 		}},
 		Up: migrateSearchQueryUnderstandingP1,
 	},
+	{
+		Version:         searchRankingP2Version,
+		Name:            "add search ranking profiles and projected sales signals",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "backfill", "search", "jobs"},
+		Up:              migrateSearchRankingP2,
+		PostChecks: []PostCheck{{Name: "search_ranking_ready", Check: func(tx *gorm.DB) error {
+			if !tx.Migrator().HasTable("search_sales_signals") || !tx.Migrator().HasColumn("search_ranking_profiles", "version") {
+				return errors.New("search ranking schema missing")
+			}
+			var count int64
+			if err := tx.Session(&gorm.Session{NewDB: true}).Table("search_ranking_profiles").Where("is_default = ? AND deleted_at IS NULL", true).Count(&count).Error; err != nil {
+				return err
+			}
+			if count != 1 {
+				return fmt.Errorf("expected one default ranking profile, found %d", count)
+			}
+			return nil
+		}}},
+	},
 }
 
 // These schemas freeze the tables introduced by the search P0 migration.

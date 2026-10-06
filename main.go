@@ -23,6 +23,7 @@ import (
 	"ecommerce/internal/providerplugins"
 	"ecommerce/internal/reliability"
 	"ecommerce/internal/requestctx"
+	searchservice "ecommerce/internal/search"
 	accountservice "ecommerce/internal/services/account"
 	"ecommerce/internal/services/accountdata"
 	authservice "ecommerce/internal/services/auth"
@@ -440,6 +441,14 @@ func run(parentCtx context.Context) error {
 	}
 
 	startWorker(func() { jobRuntime.Run(ctx) })
+	startWorker(func() {
+		salesSearch := searchservice.NewService(db, nil, jobRuntime)
+		runPeriodic(ctx, time.Hour, true, func(workerCtx context.Context) {
+			if _, err := salesSearch.EnqueueSalesRefresh(workerCtx); err != nil && !errors.Is(err, context.Canceled) {
+				applicationLogger.ErrorContext(workerCtx, "Search sales refresh enqueue failed", "error", err)
+			}
+		})
+	})
 	startWorker(func() { webhookService.Run(ctx) })
 	startWorker(checkoutCleanupWorker)
 	startWorker(discountLifecycleWorker)

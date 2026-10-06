@@ -1,0 +1,38 @@
+{
+  "now": "2026-10-02T00:00:00Z",
+  "products": [
+    {"id": 1, "name": "Trail Running Shoes", "description": "Lightweight footwear for rocky paths", "brand": "northstar", "category": "shoes", "color": "red", "price": 90, "stock": 8, "age_days": 14, "sales": 25},
+    {"id": 2, "name": "Running Trail Shoes", "description": "Trail running shoes for everyday training", "brand": "south", "category": "shoes", "color": "blue", "price": 70, "stock": 8, "age_days": 14, "sales": 25},
+    {"id": 3, "name": "Trail Footwear Guide", "description": "A printed guide to trail running shoes", "brand": "northstar", "category": "books", "color": "red", "price": 15, "stock": 8, "age_days": 14, "sales": 25},
+    {"id": 4, "name": "Red Sneaker", "description": "Casual city footwear", "brand": "northstar", "category": "shoes", "color": "red", "price": 45, "stock": 8, "age_days": 14, "sales": 25},
+    {"id": 5, "name": "Leather Boots", "description": "Durable winter footwear", "brand": "south", "category": "shoes", "color": "brown", "price": 110, "stock": 8, "age_days": 14, "sales": 25},
+    {"id": 6, "name": "Ceramic Mug", "description": "Glazed coffee cup", "brand": "northstar", "category": "home", "color": "blue", "price": 18, "stock": 8, "age_days": 14, "sales": 25},
+    {"id": 7, "name": "Travel Coffee Cup", "description": "Insulated steel drinkware", "brand": "south", "category": "home", "color": "red", "price": 25, "stock": 8, "age_days": 14, "sales": 25},
+    {"id": 8, "name": "Canvas Bag", "description": "Reusable shopping tote", "brand": "northstar", "category": "bags", "color": "red", "price": 30, "stock": 8, "age_days": 10, "sales": 80},
+    {"id": 9, "name": "Canvas Bag", "description": "Reusable shopping tote", "brand": "northstar", "category": "bags", "color": "blue", "price": 30, "stock": 8, "age_days": 4, "sales": 0},
+    {"id": 10, "name": "Canvas Bag", "description": "Reusable shopping tote", "brand": "northstar", "category": "bags", "color": "brown", "price": 30, "stock": 0, "age_days": 4, "sales": 0},
+    {"id": 11, "name": "Canvas Bag", "description": "Reusable shopping tote", "brand": "northstar", "category": "bags", "color": "white", "price": 30, "stock": 8, "age_days": 180, "sales": 0},
+    {"id": 12, "name": "Canvas Bag", "description": "Reusable shopping tote", "brand": "northstar", "category": "bags", "color": "black", "price": 30, "stock": 8, "age_days": 1, "sales": 0},
+    {"id": 13, "name": "Northstar Sticker", "description": "Brand decal", "brand": "south", "category": "home", "color": "blue", "price": 3, "stock": 8, "age_days": 14, "sales": 25},
+    {"id": 14, "name": "Color Swatch", "description": "Red textile sample", "brand": "south", "category": "home", "color": "blue", "price": 3, "stock": 8, "age_days": 14, "sales": 25}
+  ],
+  "synonyms": [
+    {"Name": "footwear", "Direction": "uni", "Terms": ["sneaker", "running shoes", "boots"], "IsActive": true},
+    {"Name": "drinkware", "Direction": "bi", "Terms": ["mug", "coffee cup"], "IsActive": true}
+  ],
+  "queries": [
+    {"name": "exact phrase versus name tokens and description", "query": "trail running shoes", "judgments": {"1": 3, "2": 2, "3": 1}},
+    {"name": "original sneaker versus synonym footwear", "query": "sneaker", "judgments": {"4": 3, "1": 2, "2": 2, "5": 2, "3": 0}},
+    {"name": "bidirectional mug synonym", "query": "mug", "judgments": {"6": 3, "7": 2}},
+    {"name": "typo correction preserves ranking", "query": "runnng", "judgments": {"1": 3, "2": 3, "3": 1}},
+    {"name": "category excludes guide", "query": "trail running shoes", "category": "shoes", "judgments": {"1": 3, "2": 2, "3": 0}},
+    {"name": "attribute restricts synonym results", "query": "sneaker", "color": "red", "category": "shoes", "judgments": {"4": 3, "1": 2, "2": 0, "3": 0}},
+    {"name": "brand restricts footwear", "query": "sneaker", "brand": "south", "judgments": {"2": 3, "5": 3, "4": 0}},
+    {"name": "price restricts drinkware", "query": "mug", "max_price": 20, "judgments": {"6": 3, "7": 0}},
+    {"name": "sales availability and recency", "query": "canvas bag", "judgments": {"8": 3, "12": 2, "9": 2, "11": 1, "10": 0}},
+    {"name": "new arrivals profile", "query": "canvas bag", "profile": "new_arrivals", "judgments": {"12": 3, "8": 2, "9": 2, "10": 1, "11": 0}},
+    {"name": "availability filter", "query": "canvas bag", "available": true, "judgments": {"8": 3, "12": 2, "9": 2, "11": 1, "10": 0}},
+    {"name": "name versus brand matches", "query": "northstar", "judgments": {"13": 3, "1": 2, "3": 2, "4": 2, "6": 2, "8": 2, "9": 2, "10": 2, "11": 2, "12": 2}},
+    {"name": "attribute versus incidental description", "query": "red", "category": "home", "judgments": {"7": 3, "14": 1}}
+  ]
+}

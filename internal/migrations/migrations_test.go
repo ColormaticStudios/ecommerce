@@ -569,7 +569,7 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, searchQueryUnderstandingP1Version, status.LatestAppliedVersion)
+	require.Equal(t, searchRankingP2Version, status.LatestAppliedVersion)
 	require.Equal(t, 3, status.PendingCount)
 }
 

@@ -1163,6 +1163,60 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/admin/search/products": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Search published products with ranking explanations */
+		get: operations["searchAdminProducts"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/ranking-profiles": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List search ranking profiles */
+		get: operations["listAdminSearchRankingProfiles"];
+		put?: never;
+		/** Create a named search ranking profile */
+		post: operations["createAdminSearchRankingProfile"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/ranking-profiles/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Get a search ranking profile */
+		get: operations["getAdminSearchRankingProfile"];
+		put?: never;
+		post?: never;
+		/** Delete a search ranking profile */
+		delete: operations["deleteAdminSearchRankingProfile"];
+		options?: never;
+		head?: never;
+		/** Update a search ranking profile */
+		patch: operations["updateAdminSearchRankingProfile"];
+		trace?: never;
+	};
 	"/api/v1/admin/search/freshness": {
 		parameters: {
 			query?: never;
@@ -5015,6 +5069,92 @@ export interface components {
 		SearchTypoToleranceProfileListResponse: {
 			data: components["schemas"]["SearchTypoToleranceProfile"][];
 		};
+		SearchRankingWeights: {
+			/** Format: double */
+			token_coverage: number;
+			/** Format: double */
+			exact_phrase: number;
+			/** Format: double */
+			name: number;
+			/** Format: double */
+			brand: number;
+			/** Format: double */
+			attributes: number;
+			/** Format: double */
+			recency: number;
+			/** Format: double */
+			availability: number;
+			/** Format: double */
+			sales: number;
+		};
+		SearchRankingWeightsInput: {
+			/** Format: double */
+			token_coverage: number;
+			/** Format: double */
+			exact_phrase: number;
+			/** Format: double */
+			name: number;
+			/** Format: double */
+			brand: number;
+			/** Format: double */
+			attributes: number;
+			/** Format: double */
+			recency: number;
+			/** Format: double */
+			availability: number;
+			/** Format: double */
+			sales: number;
+		};
+		SearchRankingProfileInput: {
+			name: string;
+			weights: components["schemas"]["SearchRankingWeightsInput"];
+			/** @description Selecting a default atomically deselects the previous default. */
+			is_default?: boolean;
+		};
+		SearchRankingProfilePatch: {
+			name?: string;
+			weights?: components["schemas"]["SearchRankingWeightsInput"];
+			/** @description Selecting a default atomically deselects the previous default. */
+			is_default?: boolean;
+		};
+		SearchRankingProfile: {
+			id: number;
+			name: string;
+			weights: components["schemas"]["SearchRankingWeights"];
+			/** @description Selecting a default atomically deselects the previous default. */
+			is_default: boolean;
+			version: number;
+			updated_by: number | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		SearchRankingProfileListResponse: {
+			data: components["schemas"]["SearchRankingProfile"][];
+		};
+		SearchRankingComponent: {
+			name: string;
+			/** Format: double */
+			value: number;
+			/** Format: double */
+			weight: number;
+			/** Format: double */
+			contribution: number;
+		};
+		SearchRankingExplanation: {
+			product_id: number;
+			/** Format: double */
+			score: number;
+			components: components["schemas"]["SearchRankingComponent"][];
+		};
+		AdminProductSearchResponse: {
+			items: components["schemas"]["Product"][];
+			facets: components["schemas"]["SearchFacet"][];
+			metadata: components["schemas"]["ProductSearchMetadata"];
+			pagination: components["schemas"]["Pagination"];
+			explanations: components["schemas"]["SearchRankingExplanation"][];
+		};
 		SearchFacetValue: {
 			value: string;
 			label?: string;
@@ -5040,6 +5180,8 @@ export interface components {
 			values: components["schemas"]["SearchFacetValue"][];
 		};
 		ProductSearchMetadata: {
+			ranking_profile: string;
+			ranking_profile_version: number;
 			normalized_query: string;
 			applied_rewrites: components["schemas"]["SearchAppliedRewrite"][];
 			/** @description Suggested corrected query when the original query has no exact results. */
@@ -7379,6 +7521,9 @@ export interface operations {
 				attribute?: {
 					[key: string]: string[];
 				};
+				/** @description Named ranking profile; omitted selects the global default. */
+				ranking_profile?: string;
+				/** @description Defaults to relevance for a keyword query and newest for an empty query. */
 				sort?: "relevance" | "price" | "name" | "created_at";
 				order?: "asc" | "desc";
 				page?: number;
@@ -7400,6 +7545,7 @@ export interface operations {
 				};
 			};
 			400: components["responses"]["BadRequestProblem"];
+			404: components["responses"]["NotFoundProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
 			503: components["responses"]["ServiceUnavailableProblem"];
 		};
@@ -8713,6 +8859,201 @@ export interface operations {
 			401: components["responses"]["AuthenticationRequiredProblem"];
 			403: components["responses"]["ForbiddenProblem"];
 			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	searchAdminProducts: {
+		parameters: {
+			query?: {
+				q?: string;
+				/**
+				 * @deprecated
+				 * @description Legacy inclusive minimum price. Cannot be combined with price_range.
+				 */
+				min_price?: number;
+				/**
+				 * @deprecated
+				 * @description Legacy inclusive maximum price. Cannot be combined with price_range.
+				 */
+				max_price?: number;
+				brand_slug?: string[];
+				category_slug?: string[];
+				/** @description Repeated values use OR semantics within the stock facet. */
+				has_variant_stock?: boolean[];
+				/** @description Repeated inclusive price ranges use OR semantics within the price facet. Each value is encoded as min:max; either boundary may be omitted. Overlapping ranges are treated as a union. */
+				price_range?: string[];
+				/** @description Attribute values use OR within each attribute and AND across attributes. Encode array values with indexed deep-object keys, such as attribute[color][0]=red&attribute[color][1]=blue. */
+				attribute?: {
+					[key: string]: string[];
+				};
+				/** @description Named ranking profile; omitted selects the global default. */
+				ranking_profile?: string;
+				/** @description Defaults to relevance for a keyword query and newest for an empty query. */
+				sort?: "relevance" | "price" | "name" | "created_at";
+				order?: "asc" | "desc";
+				page?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search results, facets, and index metadata */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["AdminProductSearchResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
+		};
+	};
+	listAdminSearchRankingProfiles: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search ranking profiles */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchRankingProfileListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createAdminSearchRankingProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchRankingProfileInput"];
+			};
+		};
+		responses: {
+			/** @description Created search ranking profile */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchRankingProfile"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminSearchRankingProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search ranking profile */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchRankingProfile"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	deleteAdminSearchRankingProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search ranking profile deleted */
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	updateAdminSearchRankingProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchRankingProfilePatch"];
+			};
+		};
+		responses: {
+			/** @description Updated search ranking profile */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchRankingProfile"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};

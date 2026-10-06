@@ -1,4 +1,4 @@
-.PHONY: all api cli ops run test test-services test-handlers test-integration check localization-check localization-performance domain-performance observability-check operability-check deploy-precheck deploy-postcheck incident-validate incident-summary backup restore-drill backup-image clean release openapi-gen openapi-check openapi-check-ci openapi-docs migrate migrate-plan migrate-check migrate-status migrate-lint migrate-guard migrate-snapshot migrate-drift-check migrate-ci-gate migrate-forward-compat test-migrations test-e2e-postgres test-e2e-sqlite
+.PHONY: all api cli ops run test test-services test-handlers test-integration check localization-check localization-performance domain-performance observability-check operability-check deploy-precheck deploy-postcheck incident-validate incident-summary backup restore-drill backup-image clean release openapi-gen openapi-check openapi-check-ci openapi-docs migrate migrate-plan migrate-check migrate-status migrate-lint migrate-guard migrate-snapshot migrate-drift-check migrate-ci-gate migrate-forward-compat test-migrations test-e2e-postgres test-e2e-sqlite search-relevance
 
 # Build the API server and the CLI tool
 all: api cli ops
@@ -35,7 +35,10 @@ test-handlers:
 test-integration:
 	go test ./internal/httpapi -run Integration
 
-check: openapi-check localization-check localization-performance domain-performance observability-check operability-check
+search-relevance:
+	@go run ./cmd/search-eval
+
+check: search-relevance openapi-check localization-check localization-performance domain-performance observability-check operability-check
 	go test ./internal/services/...
 	go test ./internal/httpapi
 

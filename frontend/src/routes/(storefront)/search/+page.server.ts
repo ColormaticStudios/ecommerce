@@ -1,4 +1,5 @@
 import type { PageServerLoad } from "./$types";
+import { defaultSearchSort, isSearchSort } from "./search-params";
 import {
 	parseBrand,
 	parseProduct,
@@ -17,13 +18,6 @@ type ProductAttributeDefinitionListPayload =
 	components["schemas"]["ProductAttributeDefinitionListResponse"];
 
 const pageSizeOptions = [8, 12, 24, 36] as const;
-
-function normalizeSort(value: string | null): "created_at" | "price" | "name" {
-	if (value === "price" || value === "name" || value === "created_at") {
-		return value;
-	}
-	return "created_at";
-}
 
 function normalizeOrder(value: string | null): "asc" | "desc" {
 	if (value === "asc" || value === "desc") {
@@ -47,7 +41,10 @@ export const load: PageServerLoad = async (event) => {
 	const hasVariantStock = url.searchParams.get("has_variant_stock") === "true";
 	const currentPage = Math.max(1, Number(url.searchParams.get("page") ?? 1));
 	const pageSize = normalizeLimit(Number(url.searchParams.get("limit") ?? 12));
-	const sortBy = normalizeSort(url.searchParams.get("sort"));
+	const requestedSort = url.searchParams.get("sort");
+	const sortExplicit = isSearchSort(requestedSort);
+	const sortBy = sortExplicit ? requestedSort : defaultSearchSort(searchQuery);
+	const rankingProfile = url.searchParams.get("ranking_profile")?.trim() ?? "";
 	const sortOrder = normalizeOrder(url.searchParams.get("order"));
 	const attributeFilters: Record<string, string> = {};
 	for (const [key, value] of url.searchParams.entries()) {
@@ -83,6 +80,7 @@ export const load: PageServerLoad = async (event) => {
 				page: currentPage,
 				limit: pageSize,
 				sort: sortBy,
+				ranking_profile: rankingProfile || undefined,
 				order: sortOrder,
 			}),
 			serverRequest<BrandListPayload>(event, "/brands"),
@@ -113,6 +111,8 @@ export const load: PageServerLoad = async (event) => {
 		totalPages,
 		totalResults,
 		sortBy,
+		sortExplicit,
+		rankingProfile,
 		sortOrder,
 	};
 };

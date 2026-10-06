@@ -591,13 +591,15 @@ fetch('http://localhost:3000/api/v1/search/products',
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
 |q|query|string|false|none|
-|min_price|query|number(double)|false|none|
-|max_price|query|number(double)|false|none|
-|brand_slug|query|string|false|none|
+|min_price|query|number(double)|false|Legacy inclusive minimum price. Cannot be combined with price_range.|
+|max_price|query|number(double)|false|Legacy inclusive maximum price. Cannot be combined with price_range.|
+|brand_slug|query|array[string]|false|none|
 |category_slug|query|array[string]|false|none|
-|has_variant_stock|query|boolean|false|none|
-|attribute|query|object|false|none|
-|sort|query|string|false|none|
+|has_variant_stock|query|array[boolean]|false|Repeated values use OR semantics within the stock facet.|
+|price_range|query|array[string]|false|Repeated inclusive price ranges use OR semantics within the price facet. Each value is encoded as min:max; either boundary may be omitted. Overlapping ranges are treated as a union.|
+|attribute|query|object|false|Attribute values use OR within each attribute and AND across attributes. Encode array values with indexed deep-object keys, such as attribute[color][0]=red&attribute[color][1]=blue.|
+|ranking_profile|query|string|false|Named ranking profile; omitted selects the global default.|
+|sort|query|string|false|Defaults to relevance for a keyword query and newest for an empty query.|
 |order|query|string|false|none|
 |page|query|integer|false|none|
 |limit|query|integer|false|none|
@@ -619,6 +621,7 @@ fetch('http://localhost:3000/api/v1/search/products',
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search results, facets, and index metadata|ProductSearchResponse|
 |400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
 |503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|A required service or capability is temporarily unavailable.|Problem|
 
@@ -4395,6 +4398,394 @@ To perform this operation, you must be authenticated by means of one of the foll
 cookieAuth, bearerAuth
 </aside>
 
+## Search published products with ranking explanations
+
+<a id="opIdsearchAdminProducts"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/products',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/products`
+
+<h3 id="search-published-products-with-ranking-explanations-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|q|query|string|false|none|
+|min_price|query|number(double)|false|Legacy inclusive minimum price. Cannot be combined with price_range.|
+|max_price|query|number(double)|false|Legacy inclusive maximum price. Cannot be combined with price_range.|
+|brand_slug|query|array[string]|false|none|
+|category_slug|query|array[string]|false|none|
+|has_variant_stock|query|array[boolean]|false|Repeated values use OR semantics within the stock facet.|
+|price_range|query|array[string]|false|Repeated inclusive price ranges use OR semantics within the price facet. Each value is encoded as min:max; either boundary may be omitted. Overlapping ranges are treated as a union.|
+|attribute|query|object|false|Attribute values use OR within each attribute and AND across attributes. Encode array values with indexed deep-object keys, such as attribute[color][0]=red&attribute[color][1]=blue.|
+|ranking_profile|query|string|false|Named ranking profile; omitted selects the global default.|
+|sort|query|string|false|Defaults to relevance for a keyword query and newest for an empty query.|
+|order|query|string|false|none|
+|page|query|integer|false|none|
+|limit|query|integer|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|sort|relevance|
+|sort|price|
+|sort|name|
+|sort|created_at|
+|order|asc|
+|order|desc|
+
+<h3 id="search-published-products-with-ranking-explanations-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search results, facets, and index metadata|AdminProductSearchResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+|503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|A required service or capability is temporarily unavailable.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## List search ranking profiles
+
+<a id="opIdlistAdminSearchRankingProfiles"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/ranking-profiles',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/ranking-profiles`
+
+<h3 id="list-search-ranking-profiles-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search ranking profiles|SearchRankingProfileListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Create a named search ranking profile
+
+<a id="opIdcreateAdminSearchRankingProfile"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "weights": {
+    "token_coverage": 0,
+    "exact_phrase": 0,
+    "name": 0,
+    "brand": 0,
+    "attributes": 0,
+    "recency": 0,
+    "availability": 0,
+    "sales": 0
+  },
+  "is_default": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/ranking-profiles',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/search/ranking-profiles`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "weights": {
+    "token_coverage": 0,
+    "exact_phrase": 0,
+    "name": 0,
+    "brand": 0,
+    "attributes": 0,
+    "recency": 0,
+    "availability": 0,
+    "sales": 0
+  },
+  "is_default": true
+}
+```
+
+<h3 id="create-a-named-search-ranking-profile-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|SearchRankingProfileInput|true|none|
+
+<h3 id="create-a-named-search-ranking-profile-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created search ranking profile|SearchRankingProfile|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Get a search ranking profile
+
+<a id="opIdgetAdminSearchRankingProfile"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/ranking-profiles/{id}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/ranking-profiles/{id}`
+
+<h3 id="get-a-search-ranking-profile-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="get-a-search-ranking-profile-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search ranking profile|SearchRankingProfile|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Update a search ranking profile
+
+<a id="opIdupdateAdminSearchRankingProfile"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "weights": {
+    "token_coverage": 0,
+    "exact_phrase": 0,
+    "name": 0,
+    "brand": 0,
+    "attributes": 0,
+    "recency": 0,
+    "availability": 0,
+    "sales": 0
+  },
+  "is_default": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/ranking-profiles/{id}',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/search/ranking-profiles/{id}`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "weights": {
+    "token_coverage": 0,
+    "exact_phrase": 0,
+    "name": 0,
+    "brand": 0,
+    "attributes": 0,
+    "recency": 0,
+    "availability": 0,
+    "sales": 0
+  },
+  "is_default": true
+}
+```
+
+<h3 id="update-a-search-ranking-profile-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|SearchRankingProfilePatch|true|none|
+
+<h3 id="update-a-search-ranking-profile-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated search ranking profile|SearchRankingProfile|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Delete a search ranking profile
+
+<a id="opIddeleteAdminSearchRankingProfile"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/problem+json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/ranking-profiles/{id}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`DELETE /api/v1/admin/search/ranking-profiles/{id}`
+
+<h3 id="delete-a-search-ranking-profile-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="delete-a-search-ranking-profile-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|Search ranking profile deleted|None|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
 ## Get search index freshness
 
 <a id="opIdgetAdminSearchFreshness"></a>
@@ -4474,6 +4865,589 @@ fetch('http://localhost:3000/api/v1/admin/search/reindex',
 |400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
 |401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
 |403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## List search synonym sets
+
+<a id="opIdlistAdminSearchSynonyms"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/synonyms',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/synonyms`
+
+<h3 id="list-search-synonym-sets-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search synonym sets|SearchSynonymSetListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Create a search synonym set
+
+<a id="opIdcreateAdminSearchSynonym"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "direction": "uni",
+  "terms": [
+    "string",
+    "string"
+  ],
+  "is_active": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/synonyms',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/search/synonyms`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "direction": "uni",
+  "terms": [
+    "string",
+    "string"
+  ],
+  "is_active": true
+}
+```
+
+<h3 id="create-a-search-synonym-set-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|SearchSynonymSetInput|true|none|
+
+<h3 id="create-a-search-synonym-set-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created search synonym set|SearchSynonymSet|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Get a search synonym set
+
+<a id="opIdgetAdminSearchSynonym"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/synonyms/{id}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/synonyms/{id}`
+
+<h3 id="get-a-search-synonym-set-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="get-a-search-synonym-set-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search synonym set|SearchSynonymSet|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Update a search synonym set
+
+<a id="opIdupdateAdminSearchSynonym"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "direction": "uni",
+  "terms": [
+    "string",
+    "string"
+  ],
+  "is_active": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/synonyms/{id}',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/search/synonyms/{id}`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "direction": "uni",
+  "terms": [
+    "string",
+    "string"
+  ],
+  "is_active": true
+}
+```
+
+<h3 id="update-a-search-synonym-set-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|SearchSynonymSetPatch|true|none|
+
+<h3 id="update-a-search-synonym-set-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated search synonym set|SearchSynonymSet|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Delete a search synonym set
+
+<a id="opIddeleteAdminSearchSynonym"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/problem+json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/synonyms/{id}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`DELETE /api/v1/admin/search/synonyms/{id}`
+
+<h3 id="delete-a-search-synonym-set-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="delete-a-search-synonym-set-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|Search synonym set deleted|None|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## List search typo tolerance profiles
+
+<a id="opIdlistAdminSearchTypoProfiles"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/typo-profiles',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/typo-profiles`
+
+<h3 id="list-search-typo-tolerance-profiles-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search typo tolerance profiles|SearchTypoToleranceProfileListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Create a named search typo tolerance profile
+
+<a id="opIdcreateAdminSearchTypoProfile"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "minimum_token_length": 4,
+  "one_edit_minimum_length": 4,
+  "two_edit_minimum_length": 8,
+  "strict_mode": false,
+  "is_active": false
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/typo-profiles',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/search/typo-profiles`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "minimum_token_length": 4,
+  "one_edit_minimum_length": 4,
+  "two_edit_minimum_length": 8,
+  "strict_mode": false,
+  "is_active": false
+}
+```
+
+<h3 id="create-a-named-search-typo-tolerance-profile-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|SearchTypoToleranceProfileInput|true|none|
+
+<h3 id="create-a-named-search-typo-tolerance-profile-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created search typo tolerance profile|SearchTypoToleranceProfile|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Get a search typo tolerance profile
+
+<a id="opIdgetAdminSearchTypoProfile"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/typo-profiles/{id}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/typo-profiles/{id}`
+
+<h3 id="get-a-search-typo-tolerance-profile-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="get-a-search-typo-tolerance-profile-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search typo tolerance profile|SearchTypoToleranceProfile|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Update a search typo tolerance profile
+
+<a id="opIdupdateAdminSearchTypoProfile"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "minimum_token_length": 1,
+  "one_edit_minimum_length": 1,
+  "two_edit_minimum_length": 2,
+  "strict_mode": true,
+  "is_active": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/typo-profiles/{id}',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/search/typo-profiles/{id}`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "minimum_token_length": 1,
+  "one_edit_minimum_length": 1,
+  "two_edit_minimum_length": 2,
+  "strict_mode": true,
+  "is_active": true
+}
+```
+
+<h3 id="update-a-search-typo-tolerance-profile-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|SearchTypoToleranceProfilePatch|true|none|
+
+<h3 id="update-a-search-typo-tolerance-profile-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated search typo tolerance profile|SearchTypoToleranceProfile|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Delete a search typo tolerance profile
+
+<a id="opIddeleteAdminSearchTypoProfile"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/problem+json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/typo-profiles/{id}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`DELETE /api/v1/admin/search/typo-profiles/{id}`
+
+<h3 id="delete-a-search-typo-tolerance-profile-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="delete-a-search-typo-tolerance-profile-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|Search typo tolerance profile deleted|None|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
 |409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
 

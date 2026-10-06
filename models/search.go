@@ -63,6 +63,7 @@ type SearchRankingProfile struct {
 	BaseModel
 	Name        string `gorm:"not null;size:120;uniqueIndex"`
 	WeightsJSON string `gorm:"type:text;not null"`
+	Version     int    `gorm:"not null;default:1"`
 	IsDefault   bool   `gorm:"not null;default:false;index"`
 	UpdatedBy   *uint  `gorm:"index"`
 }
@@ -98,4 +99,12 @@ type SearchClickEvent struct {
 	ProductVariantID uint      `gorm:"not null;index"`
 	Position         int       `gorm:"not null"`
 	ClickedAt        time.Time `gorm:"not null;index"`
+}
+
+// SearchSalesSignal is the daily projection of qualifying sold units.
+type SearchSalesSignal struct {
+	ProductID   uint      `gorm:"primaryKey;autoIncrement:false"`
+	Units30Days int64     `gorm:"not null;default:0"`
+	AsOf        time.Time `gorm:"not null;index"`
+	UpdatedAt   time.Time `gorm:"not null"`
 }

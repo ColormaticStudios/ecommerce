@@ -14,6 +14,7 @@ export type SearchProductsSuccess =
 	paths["/api/v1/search/products"]["get"]["responses"]["200"]["content"]["application/json"];
 export type SearchProductsFailure =
 	| paths["/api/v1/search/products"]["get"]["responses"]["400"]["content"]["application/problem+json"]
+	| paths["/api/v1/search/products"]["get"]["responses"]["404"]["content"]["application/problem+json"]
 	| paths["/api/v1/search/products"]["get"]["responses"]["500"]["content"]["application/problem+json"]
 	| paths["/api/v1/search/products"]["get"]["responses"]["503"]["content"]["application/problem+json"];
 export type GetProductSuccess =

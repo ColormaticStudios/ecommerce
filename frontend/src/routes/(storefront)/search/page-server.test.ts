@@ -27,3 +27,40 @@ test("search route serializes storefront attribute URLs using the search array c
 	expect(search?.searchParams.get("attribute[weight][0]")).toBe("0");
 	expect(search?.searchParams.has("attribute[color]")).toBe(false);
 });
+
+test.each([
+	["?q=jacket", "relevance", "desc", false, ""],
+	["", "created_at", "desc", false, ""],
+	["?q=%20", "created_at", "desc", false, ""],
+	["?q=jacket&sort=created_at", "created_at", "desc", true, ""],
+	["?sort=relevance&ranking_profile=new_arrivals", "relevance", "desc", true, "new_arrivals"],
+	["?q=jacket&sort=price&order=asc", "price", "asc", true, ""],
+	["?q=jacket&sort=name&order=asc", "name", "asc", true, ""],
+	["?q=jacket&sort=invalid", "relevance", "desc", false, ""],
+])(
+	"search route selects ordering for %s",
+	async (query, sortBy, sortOrder, sortExplicit, rankingProfile) => {
+		const urls: URL[] = [];
+		vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+			const url = new URL(String(input));
+			urls.push(url);
+			const body = url.pathname.endsWith("/search/products")
+				? { items: [], pagination: { total: 0, total_pages: 0 } }
+				: { data: [] };
+			return new Response(JSON.stringify(body), { status: 200 });
+		});
+		const url = new URL(`http://localhost/search${query}`);
+		const result = await load({ url, request: new Request(url), setHeaders: vi.fn() } as never);
+		expect(result).toMatchObject({
+			errorMessage: "",
+			sortBy,
+			sortOrder,
+			sortExplicit,
+			rankingProfile,
+		});
+		const search = urls.find((url) => url.pathname.endsWith("/search/products"));
+		expect(search?.searchParams.get("sort")).toBe(sortBy);
+		expect(search?.searchParams.get("order")).toBe(sortOrder);
+		expect(search?.searchParams.get("ranking_profile")).toBe(rankingProfile || null);
+	}
+);

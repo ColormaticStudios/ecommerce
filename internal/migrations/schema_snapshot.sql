@@ -1640,11 +1640,19 @@ TABLE search_ranking_profiles
   COLUMN name
   COLUMN updated_at
   COLUMN updated_by
+  COLUMN version
   COLUMN weights_json
   INDEX idx_search_ranking_profiles_deleted_at columns=deleted_at unique=false option=
   INDEX idx_search_ranking_profiles_is_default columns=is_default unique=false option=
   INDEX idx_search_ranking_profiles_name columns=name unique=true option=
+  INDEX idx_search_ranking_profiles_one_default columns=is_default unique=true option=
   INDEX idx_search_ranking_profiles_updated_by columns=updated_by unique=false option=
+TABLE search_sales_signals
+  COLUMN as_of
+  COLUMN product_id
+  COLUMN units30_days
+  COLUMN updated_at
+  INDEX idx_search_sales_signals_as_of columns=as_of unique=false option=
 TABLE search_synonym_sets
   COLUMN created_at
   COLUMN deleted_at

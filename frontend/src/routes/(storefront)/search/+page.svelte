@@ -15,7 +15,12 @@
 		type ProductModel,
 	} from "$lib/models";
 	import ProductCard from "$lib/components/ProductCard.svelte";
-	import { SvelteURLSearchParams } from "svelte/reactivity";
+	import {
+		buildSearchParams,
+		defaultSearchSort,
+		type SearchSort,
+		type SearchUrlState,
+	} from "./search-params";
 	import type { PageData } from "./$types";
 
 	interface Props {
@@ -36,12 +41,15 @@
 	let pageSize = $state(12);
 	let totalPages = $state(1);
 	let totalResults = $state(0);
-	let sortBy = $state<"created_at" | "price" | "name">("created_at");
+	let sortBy = $state<SearchSort>("created_at");
+	let sortExplicit = $state(false);
+	let rankingProfile = $state("");
 	let sortOrder = $state<"asc" | "desc">("desc");
 	const loading = $derived(Boolean(navigating.to));
 
 	const pageSizeOptions = [8, 12, 24, 36];
-	const sortOptions: Array<{ value: "created_at" | "price" | "name"; label: string }> = [
+	const sortOptions: Array<{ value: SearchSort; label: string }> = [
+		{ value: "relevance", label: "Relevance" },
 		{ value: "created_at", label: "Newest" },
 		{ value: "price", label: "Price" },
 		{ value: "name", label: "Name" },
@@ -53,64 +61,18 @@
 			Object.values(attributeFilters).some((value) => value.trim() !== "")
 	);
 
-	function buildSearchParams(next: {
-		query?: string;
-		brandSlug?: string;
-		hasVariantStock?: boolean;
-		attributeFilters?: Record<string, string>;
-		page?: number;
-		limit?: number;
-		sort?: "created_at" | "price" | "name";
-		order?: "asc" | "desc";
-	}) {
-		const params = new SvelteURLSearchParams();
-		if (next.query) {
-			params.set("q", next.query);
-		}
-		if (next.brandSlug) {
-			params.set("brand_slug", next.brandSlug);
-		}
-		if (next.hasVariantStock) {
-			params.set("has_variant_stock", "true");
-		}
-		for (const [slug, value] of Object.entries(next.attributeFilters ?? {})) {
-			if (value.trim()) {
-				params.set(`attribute[${slug}]`, value.trim());
-			}
-		}
-		if (next.page && next.page > 1) {
-			params.set("page", String(next.page));
-		}
-		if (next.limit && next.limit !== 12) {
-			params.set("limit", String(next.limit));
-		}
-		if (next.sort && next.sort !== "created_at") {
-			params.set("sort", next.sort);
-		}
-		if (next.order && next.order !== "desc") {
-			params.set("order", next.order);
-		}
-		return params;
-	}
-
-	function updateUrl(next: {
-		query?: string;
-		brandSlug?: string;
-		hasVariantStock?: boolean;
-		attributeFilters?: Record<string, string>;
-		page?: number;
-		limit?: number;
-		sort?: "created_at" | "price" | "name";
-		order?: "asc" | "desc";
-	}) {
+	function updateUrl(next: Partial<SearchUrlState>) {
+		const query = next.query ?? searchQuery;
 		const params = buildSearchParams({
-			query: next.query ?? searchQuery,
+			query,
 			brandSlug: next.brandSlug ?? selectedBrandSlug,
 			hasVariantStock: next.hasVariantStock ?? hasVariantStock,
 			attributeFilters: next.attributeFilters ?? attributeFilters,
 			page: next.page ?? currentPage,
 			limit: next.limit ?? pageSize,
-			sort: next.sort ?? sortBy,
+			sort: next.sort ?? (sortExplicit ? sortBy : defaultSearchSort(query)),
+			sortExplicit: next.sort !== undefined || sortExplicit,
+			rankingProfile: next.rankingProfile ?? rankingProfile,
 			order: next.order ?? sortOrder,
 		});
 		const path = resolve("/search");
@@ -135,6 +97,8 @@
 		totalPages = data.totalPages;
 		totalResults = data.totalResults;
 		sortBy = data.sortBy;
+		sortExplicit = data.sortExplicit;
+		rankingProfile = data.rankingProfile;
 		sortOrder = data.sortOrder;
 	});
 
@@ -199,7 +163,12 @@
 								full={false}
 								class="min-w-40"
 								bind:value={sortBy}
-								onchange={() => updateUrl({ page: 1 })}
+								onchange={(event) =>
+									updateUrl({
+										sort: event.currentTarget.value as SearchSort,
+										order: "desc",
+										page: 1,
+									})}
 							>
 								{#each sortOptions as option, i (i)}
 									<option value={option.value}>{option.label}</option>

@@ -61,6 +61,8 @@ function createData(overrides: Partial<SearchPageData> = {}): SearchPageData {
 		totalResults: 0,
 		sortBy: "created_at",
 		sortOrder: "desc",
+		sortExplicit: false,
+		rankingProfile: "",
 		...overrides,
 	};
 }
@@ -85,6 +87,7 @@ export const Results: Story = {
 			componentProps: {
 				data: createData({
 					searchQuery: "jacket",
+					sortBy: "relevance",
 					draftQuery: "jacket",
 					results: [
 						makeProduct({ id: 101, sku: "field-jacket", name: "Field Jacket" }),
@@ -103,6 +106,7 @@ export const NoMatches: Story = {
 			componentProps: {
 				data: createData({
 					searchQuery: "unobtainium",
+					sortBy: "relevance",
 					draftQuery: "unobtainium",
 					brandSlug: "colormatic",
 					totalResults: 0,
@@ -118,6 +122,24 @@ export const LoadError: Story = {
 			componentProps: {
 				data: createData({
 					errorMessage: "Unable to load search results.",
+				}),
+			},
+		}),
+};
+
+export const RankedNewArrivals: Story = {
+	render: () =>
+		renderRouteStory({
+			component: SearchPage,
+			componentProps: {
+				data: createData({
+					searchQuery: "jacket",
+					draftQuery: "jacket",
+					sortBy: "relevance",
+					sortExplicit: true,
+					rankingProfile: "new_arrivals",
+					results: browseResults.slice(0, 2),
+					totalResults: 2,
 				}),
 			},
 		}),

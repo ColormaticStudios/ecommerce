@@ -56,6 +56,8 @@ type Filters struct {
 	Attributes        map[string]string
 	AttributeValues   map[string][]string
 	PriceRanges       []PriceRange
+	RankingProfile    string
+	Explain           bool
 	SortField         string
 	SortOrder         string
 	Page              int
@@ -91,15 +93,18 @@ type AppliedRewrite struct {
 }
 
 type Result struct {
-	Products        []models.Product
-	Facets          []Facet
-	Total           int64
-	TotalPages      int
-	NormalizedQuery string
-	AppliedRewrites []AppliedRewrite
-	DidYouMean      string
-	Relaxed         bool
-	IndexedAt       *time.Time
+	RankingProfile        string
+	RankingProfileVersion int
+	Explanations          []RankingExplanation
+	Products              []models.Product
+	Facets                []Facet
+	Total                 int64
+	TotalPages            int
+	NormalizedQuery       string
+	AppliedRewrites       []AppliedRewrite
+	DidYouMean            string
+	Relaxed               bool
+	IndexedAt             *time.Time
 }
 
 type SuggestionResult struct {
@@ -192,7 +197,10 @@ func (s *Service) RegisterJobHandlers() error {
 	if err := s.jobs.Register(JobTypeProductSync, jobs.Registration{Handle: s.handleProductSync}); err != nil {
 		return err
 	}
-	return s.jobs.Register(JobTypeFullReindex, jobs.Registration{Handle: s.handleFullReindex})
+	if err := s.jobs.Register(JobTypeFullReindex, jobs.Registration{Handle: s.handleFullReindex}); err != nil {
+		return err
+	}
+	return s.jobs.Register(JobTypeSalesRefresh, jobs.Registration{Handle: s.handleSalesRefresh})
 }
 
 func (s *Service) EnqueueFullReindex(ctx context.Context) (models.JobQueue, error) {

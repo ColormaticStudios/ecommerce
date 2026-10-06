@@ -19,25 +19,53 @@ var searchPriceRangePattern = regexp.MustCompile(`^(?:[0-9]+(?:\.[0-9]{1,2})?:(?
 const maxSearchPrice = 9999999999.99
 
 func (e *CatalogEndpoints) SearchProducts(ctx context.Context, request apicontract.SearchProductsRequestObject) (apicontract.SearchProductsResponseObject, error) {
-	params := request.Params
-	if err := validateSearchProductParams(params); err != nil {
-		return nil, problemError(http.StatusBadRequest, "invalid_search_query", err.Error(), err)
+	response, _, err := e.searchProductsResponse(ctx, request.Params, false)
+	if err != nil {
+		return nil, err
 	}
-	input := searchservice.Filters{Page: 1, Limit: 10, SortField: "created_at", SortOrder: "desc"}
+	return apicontract.SearchProducts200JSONResponse(response), nil
+}
+
+func (e *CatalogEndpoints) SearchAdminProducts(ctx context.Context, request apicontract.SearchAdminProductsRequestObject) (apicontract.SearchAdminProductsResponseObject, error) {
+	params := request.Params
+	input := apicontract.SearchProductsParams{Q: params.Q, MinPrice: params.MinPrice, MaxPrice: params.MaxPrice, BrandSlug: params.BrandSlug, CategorySlug: params.CategorySlug, HasVariantStock: params.HasVariantStock, PriceRange: params.PriceRange, Attribute: params.Attribute, RankingProfile: params.RankingProfile, Page: params.Page, Limit: params.Limit}
+	if params.Sort != nil {
+		value := apicontract.SearchProductsParamsSort(*params.Sort)
+		input.Sort = &value
+	}
+	if params.Order != nil {
+		value := apicontract.SearchProductsParamsOrder(*params.Order)
+		input.Order = &value
+	}
+	response, explanations, err := e.searchProductsResponse(ctx, input, true)
+	if err != nil {
+		return nil, err
+	}
+	return apicontract.SearchAdminProducts200JSONResponse{Items: response.Items, Facets: response.Facets, Metadata: response.Metadata, Pagination: response.Pagination, Explanations: explanations}, nil
+}
+
+func (e *CatalogEndpoints) searchProductsResponse(ctx context.Context, params apicontract.SearchProductsParams, explain bool) (apicontract.ProductSearchResponse, []apicontract.SearchRankingExplanation, error) {
+	if err := validateSearchProductParams(params); err != nil {
+		return apicontract.ProductSearchResponse{}, nil, problemError(http.StatusBadRequest, "invalid_search_query", err.Error(), err)
+	}
+	input := searchservice.Filters{Page: 1, Limit: 10, SortOrder: "desc", Explain: explain}
 	if params.Q != nil {
 		input.Query = strings.TrimSpace(*params.Q)
+	}
+	if params.RankingProfile != nil {
+		input.RankingProfile = strings.TrimSpace(*params.RankingProfile)
 	}
 	input.MinPrice, input.MaxPrice = params.MinPrice, params.MaxPrice
 	for _, bound := range []*float64{input.MinPrice, input.MaxPrice} {
 		if bound != nil && (*bound < 0 || *bound > maxSearchPrice || math.IsNaN(*bound) || math.IsInf(*bound, 0)) {
-			return nil, problemError(http.StatusBadRequest, "invalid_price_range", "Price boundaries must be within the supported range.", nil)
+			return apicontract.ProductSearchResponse{}, nil, problemError(http.StatusBadRequest, "invalid_price_range", "Price boundaries must be within the supported range.", nil)
 		}
 	}
 	if input.MinPrice != nil && input.MaxPrice != nil && *input.MinPrice > *input.MaxPrice {
-		return nil, problemError(http.StatusBadRequest, "invalid_price_range", "Minimum price cannot exceed maximum price.", nil)
+		return apicontract.ProductSearchResponse{}, nil, problemError(http.StatusBadRequest, "invalid_price_range", "Minimum price cannot exceed maximum price.", nil)
 	}
 	if params.PriceRange != nil && len(*params.PriceRange) > 0 && (input.MinPrice != nil || input.MaxPrice != nil) {
-		return nil, problemError(http.StatusBadRequest, "invalid_price_range", "Price ranges cannot be combined with minimum or maximum price.", nil)
+		return apicontract.ProductSearchResponse{}, nil, problemError(http.StatusBadRequest, "invalid_price_range", "Price ranges cannot be combined with minimum or maximum price.", nil)
 	}
 	if params.BrandSlug != nil {
 		input.BrandSlugs = append([]string(nil), (*params.BrandSlug)...)
@@ -53,7 +81,7 @@ func (e *CatalogEndpoints) SearchProducts(ctx context.Context, request apicontra
 		for _, raw := range *params.PriceRange {
 			value, err := parseSearchPriceRange(raw)
 			if err != nil {
-				return nil, problemError(http.StatusBadRequest, "invalid_price_range", err.Error(), err)
+				return apicontract.ProductSearchResponse{}, nil, problemError(http.StatusBadRequest, "invalid_price_range", err.Error(), err)
 			}
 			input.PriceRanges = append(input.PriceRanges, value)
 		}
@@ -76,11 +104,11 @@ func (e *CatalogEndpoints) SearchProducts(ctx context.Context, request apicontra
 
 	result, err := e.search.Search(ctx, input)
 	if err != nil {
-		return nil, catalogEndpointError(err)
+		return apicontract.ProductSearchResponse{}, nil, searchConfigurationEndpointError(err)
 	}
 	products, err := e.productsToContract(ctx, result.Products, false)
 	if err != nil {
-		return nil, err
+		return apicontract.ProductSearchResponse{}, nil, err
 	}
 	facets := make([]apicontract.SearchFacet, 0, len(result.Facets))
 	for _, facet := range result.Facets {
@@ -114,15 +142,26 @@ func (e *CatalogEndpoints) SearchProducts(ctx context.Context, request apicontra
 		value := result.DidYouMean
 		didYouMean = &value
 	}
-	return apicontract.SearchProducts200JSONResponse{
+	explanations := make([]apicontract.SearchRankingExplanation, 0, len(result.Explanations))
+	for _, value := range result.Explanations {
+		components := make([]apicontract.SearchRankingComponent, 0, len(value.Components))
+		for _, component := range value.Components {
+			components = append(components, apicontract.SearchRankingComponent{Name: component.Name, Value: component.Value, Weight: component.Weight, Contribution: component.Contribution})
+		}
+		explanations = append(explanations, apicontract.SearchRankingExplanation{ProductId: int(value.ProductID), Score: value.Score, Components: components})
+	}
+	return apicontract.ProductSearchResponse{
 		Items:      products,
 		Facets:     facets,
-		Metadata:   apicontract.ProductSearchMetadata{NormalizedQuery: result.NormalizedQuery, IndexedAt: result.IndexedAt, AppliedRewrites: rewrites, DidYouMean: didYouMean, Relaxed: result.Relaxed},
+		Metadata:   apicontract.ProductSearchMetadata{NormalizedQuery: result.NormalizedQuery, IndexedAt: result.IndexedAt, AppliedRewrites: rewrites, DidYouMean: didYouMean, Relaxed: result.Relaxed, RankingProfile: result.RankingProfile, RankingProfileVersion: result.RankingProfileVersion},
 		Pagination: apicontract.Pagination{Page: input.Page, Limit: input.Limit, Total: int(result.Total), TotalPages: result.TotalPages},
-	}, nil
+	}, explanations, nil
 }
 
 func validateSearchProductParams(params apicontract.SearchProductsParams) error {
+	if params.RankingProfile != nil && (strings.TrimSpace(*params.RankingProfile) == "" || utf8.RuneCountInString(*params.RankingProfile) > 120) {
+		return fmt.Errorf("ranking profile must contain text and be at most 120 characters")
+	}
 	if params.Q != nil {
 		if utf8.RuneCountInString(*params.Q) > 200 || len(strings.Fields(searchservice.NormalizeQuery(*params.Q))) > 20 {
 			return fmt.Errorf("query must be at most 200 characters and 20 terms")
@@ -166,14 +205,13 @@ func validateSearchProductParams(params apicontract.SearchProductsParams) error 
 		return fmt.Errorf("page must be positive and limit must be between 1 and 100")
 	}
 	if params.Sort != nil {
-		switch *params.Sort {
-		case apicontract.SearchProductsParamsSortRelevance, apicontract.SearchProductsParamsSortPrice,
-			apicontract.SearchProductsParamsSortName, apicontract.SearchProductsParamsSortCreatedAt:
+		switch string(*params.Sort) {
+		case "relevance", "price", "name", "created_at":
 		default:
 			return fmt.Errorf("unsupported search sort field")
 		}
 	}
-	if params.Order != nil && *params.Order != apicontract.SearchProductsParamsOrderAsc && *params.Order != apicontract.SearchProductsParamsOrderDesc {
+	if params.Order != nil && string(*params.Order) != "asc" && string(*params.Order) != "desc" {
 		return fmt.Errorf("unsupported search sort order")
 	}
 	return nil

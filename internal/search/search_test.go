@@ -20,7 +20,7 @@ func searchTestDB(t *testing.T) *gorm.DB {
 	require.NoError(t, db.AutoMigrate(
 		&models.Product{}, &models.ProductVariant{}, &models.Brand{}, &models.Category{}, &models.ProductCategory{},
 		&models.ProductAttribute{}, &models.ProductAttributeValue{}, &models.SearchDocument{}, &models.SearchIndexState{},
-		&models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}, &models.JobQueue{},
+		&models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}, &models.SearchRankingProfile{}, &models.SearchSalesSignal{}, &models.JobQueue{},
 	))
 	require.NoError(t, db.Table("search_typo_tolerance_profiles").Create(map[string]any{
 		"name": "default", "minimum_token_length": DefaultMinimumTokenLength,
@@ -29,6 +29,8 @@ func searchTestDB(t *testing.T) *gorm.DB {
 		"strict_mode":             false, "is_active": true,
 		"created_at": time.Now().UTC(), "updated_at": time.Now().UTC(),
 	}).Error)
+	_, err = NewService(db, nil, nil).CreateRankingProfile(context.Background(), RankingProfileInput{Name: "default", Weights: DefaultRankingWeights(), IsDefault: true}, nil)
+	require.NoError(t, err)
 	return db
 }
 

@@ -19,6 +19,7 @@ import (
 const maxAttributeFacets = 10
 
 type indexedProduct struct {
+	ranking        RankingExplanation
 	document       models.SearchDocument
 	product        models.Product
 	categories     map[string]string
@@ -125,7 +126,26 @@ func (b *databaseBackend) searchProducts(ctx context.Context, filters Filters) (
 	}
 
 	facets := buildFacets(documents, resultPlan, relaxed, normalizedFilters)
-	sortIndexedProducts(matched, filters.SortField, filters.SortOrder)
+	rankingProfile, err := b.loadRankingProfile(ctx, filters.RankingProfile)
+	if err != nil {
+		return Result{}, err
+	}
+	field := filters.SortField
+	if field == "" {
+		if normalizedQuery != "" {
+			field = "relevance"
+		} else {
+			field = "created_at"
+		}
+	}
+	if field == "relevance" || filters.Explain {
+		if err := b.rankProducts(ctx, matched, resultPlan, NormalizeQuery(strings.Join(originalQueryTerms(resultPlan), " ")), rankingProfile, filters.SortOrder); err != nil {
+			return Result{}, err
+		}
+	}
+	if field != "relevance" {
+		sortIndexedProducts(matched, field, filters.SortOrder)
+	}
 	total := int64(len(matched))
 	totalPages := len(matched) / limit
 	if len(matched)%limit != 0 {
@@ -141,15 +161,20 @@ func (b *databaseBackend) searchProducts(ctx context.Context, filters Filters) (
 	}
 
 	products := make([]models.Product, 0, end-start)
+	explanations := make([]RankingExplanation, 0, end-start)
 	var indexedAt *time.Time
 	for _, document := range matched[start:end] {
 		products = append(products, document.product)
+		if filters.Explain {
+			explanations = append(explanations, document.ranking)
+		}
 		if indexedAt == nil || document.document.IndexedAt.After(*indexedAt) {
 			value := document.document.IndexedAt
 			indexedAt = &value
 		}
 	}
 	return Result{
+		RankingProfile: rankingProfile.Name, RankingProfileVersion: rankingProfile.Version, Explanations: explanations,
 		Products: products, Facets: facets, Total: total, TotalPages: totalPages,
 		NormalizedQuery: normalizedQuery, AppliedRewrites: rewrites, DidYouMean: didYouMean,
 		Relaxed: relaxed, IndexedAt: indexedAt,
@@ -1027,4 +1052,12 @@ func parseTokenSet(value string) map[string]struct{} {
 		}
 	}
 	return result
+}
+
+func originalQueryTerms(plan queryPlan) []string {
+	terms := make([]string, 0, len(plan.groups))
+	for _, group := range plan.groups {
+		terms = append(terms, group.original)
+	}
+	return terms
 }

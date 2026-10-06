@@ -1008,7 +1008,15 @@ paths:
                 minLength: 1
                 maxLength: 120
         - in: query
+          name: ranking_profile
+          description: Named ranking profile; omitted selects the global default.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 120
+        - in: query
           name: sort
+          description: Defaults to relevance for a keyword query and newest for an empty query.
           schema:
             type: string
             enum: [relevance, price, name, created_at]
@@ -1037,6 +1045,8 @@ paths:
                 $ref: "#/components/schemas/ProductSearchResponse"
         "400":
           $ref: "#/components/responses/BadRequestProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
         "500":
           $ref: "#/components/responses/InternalServerErrorProblem"
         "503":
@@ -2377,6 +2387,290 @@ paths:
           $ref: "#/components/responses/AuthenticationRequiredProblem"
         "403":
           $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/search/products:
+    get:
+      tags: [admin]
+      operationId: searchAdminProducts
+      summary: Search published products with ranking explanations
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+            maxLength: 200
+        - in: query
+          name: min_price
+          deprecated: true
+          description: Legacy inclusive minimum price. Cannot be combined with price_range.
+          schema:
+            type: number
+            format: double
+            minimum: 0
+            maximum: 9999999999.99
+        - in: query
+          name: max_price
+          deprecated: true
+          description: Legacy inclusive maximum price. Cannot be combined with price_range.
+          schema:
+            type: number
+            format: double
+            minimum: 0
+            maximum: 9999999999.99
+        - in: query
+          name: brand_slug
+          style: form
+          explode: true
+          schema:
+            type: array
+            maxItems: 20
+            items:
+              type: string
+              minLength: 1
+              maxLength: 120
+        - in: query
+          name: category_slug
+          style: form
+          explode: true
+          schema:
+            type: array
+            maxItems: 20
+            items:
+              type: string
+              minLength: 1
+              maxLength: 120
+        - in: query
+          name: has_variant_stock
+          description: Repeated values use OR semantics within the stock facet.
+          style: form
+          explode: true
+          schema:
+            type: array
+            maxItems: 2
+            items:
+              type: boolean
+        - in: query
+          name: price_range
+          description: >-
+            Repeated inclusive price ranges use OR semantics within the price
+            facet. Each value is encoded as min:max; either boundary may be
+            omitted. Overlapping ranges are treated as a union.
+          style: form
+          explode: true
+          schema:
+            type: array
+            maxItems: 10
+            items:
+              type: string
+              pattern: '^(?:[0-9]+(?:\.[0-9]{1,2})?:(?:[0-9]+(?:\.[0-9]{1,2})?)?|:(?:[0-9]+(?:\.[0-9]{1,2})?))$'
+        - in: query
+          name: attribute
+          description: >-
+            Attribute values use OR within each attribute and AND across
+            attributes. Encode array values with indexed deep-object keys,
+            such as attribute[color][0]=red&attribute[color][1]=blue.
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            maxProperties: 20
+            additionalProperties:
+              type: array
+              minItems: 1
+              maxItems: 20
+              items:
+                type: string
+                minLength: 1
+                maxLength: 120
+        - in: query
+          name: ranking_profile
+          description: Named ranking profile; omitted selects the global default.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 120
+        - in: query
+          name: sort
+          description: Defaults to relevance for a keyword query and newest for an empty query.
+          schema:
+            type: string
+            enum: [relevance, price, name, created_at]
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: Search results, facets, and index metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProductSearchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableProblem"
+  /api/v1/admin/search/ranking-profiles:
+    get:
+      tags: [admin, search]
+      operationId: listAdminSearchRankingProfiles
+      summary: List search ranking profiles
+      responses:
+        "200":
+          description: Search ranking profiles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchRankingProfileListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+    post:
+      tags: [admin, search]
+      operationId: createAdminSearchRankingProfile
+      summary: Create a named search ranking profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRankingProfileInput"
+      responses:
+        "201":
+          description: Created search ranking profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchRankingProfile"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
+        "422":
+          $ref: "#/components/responses/ValidationProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/search/ranking-profiles/{id}:
+    get:
+      tags: [admin, search]
+      operationId: getAdminSearchRankingProfile
+      summary: Get a search ranking profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Search ranking profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchRankingProfile"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+    patch:
+      tags: [admin, search]
+      operationId: updateAdminSearchRankingProfile
+      summary: Update a search ranking profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRankingProfilePatch"
+      responses:
+        "200":
+          description: Updated search ranking profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchRankingProfile"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
+        "422":
+          $ref: "#/components/responses/ValidationProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+    delete:
+      tags: [admin, search]
+      operationId: deleteAdminSearchRankingProfile
+      summary: Delete a search ranking profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "204":
+          description: Search ranking profile deleted
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
         "500":
           $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/search/freshness:
@@ -11375,6 +11669,257 @@ components:
           items:
             $ref: "#/components/schemas/SearchTypoToleranceProfile"
 
+    SearchRankingWeights:
+      type: object
+      additionalProperties: false
+      required:
+      - token_coverage
+      - exact_phrase
+      - name
+      - brand
+      - attributes
+      - recency
+      - availability
+      - sales
+      properties:
+        token_coverage:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+        exact_phrase:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+        name:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+        brand:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+        attributes:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+        recency:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+        availability:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+        sales:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+    SearchRankingWeightsInput:
+      type: object
+      additionalProperties: false
+      required:
+      - token_coverage
+      - exact_phrase
+      - name
+      - brand
+      - attributes
+      - recency
+      - availability
+      - sales
+      properties:
+        token_coverage:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          x-go-type: '*float64'
+        exact_phrase:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          x-go-type: '*float64'
+        name:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          x-go-type: '*float64'
+        brand:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          x-go-type: '*float64'
+        attributes:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          x-go-type: '*float64'
+        recency:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          x-go-type: '*float64'
+        availability:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          x-go-type: '*float64'
+        sales:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          x-go-type: '*float64'
+    SearchRankingProfileInput:
+      type: object
+      additionalProperties: false
+      required:
+      - name
+      - weights
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        weights:
+          $ref: '#/components/schemas/SearchRankingWeightsInput'
+        is_default:
+          type: boolean
+          description: Selecting a default atomically deselects the previous default.
+    SearchRankingProfilePatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        weights:
+          $ref: '#/components/schemas/SearchRankingWeightsInput'
+        is_default:
+          type: boolean
+          description: Selecting a default atomically deselects the previous default.
+    SearchRankingProfile:
+      type: object
+      required:
+      - id
+      - name
+      - weights
+      - is_default
+      - version
+      - updated_by
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        weights:
+          $ref: '#/components/schemas/SearchRankingWeights'
+        is_default:
+          type: boolean
+          description: Selecting a default atomically deselects the previous default.
+        version:
+          type: integer
+          minimum: 1
+        updated_by:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    SearchRankingProfileListResponse:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchRankingProfile'
+    SearchRankingComponent:
+      type: object
+      required:
+      - name
+      - value
+      - weight
+      - contribution
+      properties:
+        name:
+          type: string
+        value:
+          type: number
+          format: double
+        weight:
+          type: number
+          format: double
+        contribution:
+          type: number
+          format: double
+    SearchRankingExplanation:
+      type: object
+      required:
+      - product_id
+      - score
+      - components
+      properties:
+        product_id:
+          type: integer
+          minimum: 1
+        score:
+          type: number
+          format: double
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchRankingComponent'
+    AdminProductSearchResponse:
+      type: object
+      required:
+      - items
+      - facets
+      - metadata
+      - pagination
+      - explanations
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        facets:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchFacet'
+        metadata:
+          $ref: '#/components/schemas/ProductSearchMetadata'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        explanations:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchRankingExplanation'
+
     SearchFacetValue:
       type: object
       required: [value, count, selected, disabled]
@@ -11425,7 +11970,14 @@ components:
         - did_you_mean
         - relaxed
         - indexed_at
+        - ranking_profile
+        - ranking_profile_version
       properties:
+        ranking_profile:
+          type: string
+        ranking_profile_version:
+          type: integer
+          minimum: 1
         normalized_query:
           type: string
         applied_rewrites:
