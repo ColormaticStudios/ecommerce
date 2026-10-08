@@ -1217,6 +1217,92 @@ export interface paths {
 		patch: operations["updateAdminSearchRankingProfile"];
 		trace?: never;
 	};
+	"/api/v1/admin/search/merchandising-rules": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List search merchandising rules */
+		get: operations["listAdminSearchMerchandisingRules"];
+		put?: never;
+		/** Create a named search merchandising rule */
+		post: operations["createAdminSearchMerchandisingRule"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/merchandising-rules/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Get a search merchandising rule */
+		get: operations["getAdminSearchMerchandisingRule"];
+		put?: never;
+		post?: never;
+		/** Delete a search merchandising rule */
+		delete: operations["deleteAdminSearchMerchandisingRule"];
+		options?: never;
+		head?: never;
+		/** Update a search merchandising rule */
+		patch: operations["updateAdminSearchMerchandisingRule"];
+		trace?: never;
+	};
+	"/api/v1/admin/search/merchandising-rules/{id}/audit": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminSearchMerchandisingRuleAudit"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/merchandising-audit": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List all merchandising audit history, including deleted rules */
+		get: operations["listAdminSearchMerchandisingAudit"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/preview": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["previewAdminSearch"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/admin/search/freshness": {
 		parameters: {
 			query?: never;
@@ -5143,17 +5229,230 @@ export interface components {
 			contribution: number;
 		};
 		SearchRankingExplanation: {
+			/**
+			 * Format: double
+			 * @description Score after the winning boost multiplier, before pin or bury placement.
+			 */
+			adjusted_score: number;
 			product_id: number;
 			/** Format: double */
 			score: number;
 			components: components["schemas"]["SearchRankingComponent"][];
 		};
 		AdminProductSearchResponse: {
+			rule_decisions: components["schemas"]["SearchRuleDecision"][];
 			items: components["schemas"]["Product"][];
 			facets: components["schemas"]["SearchFacet"][];
 			metadata: components["schemas"]["ProductSearchMetadata"];
 			pagination: components["schemas"]["Pagination"];
 			explanations: components["schemas"]["SearchRankingExplanation"][];
+		};
+		SearchMerchandisingQuery: {
+			/** @enum {string} */
+			mode: "exact" | "prefix" | "contains";
+			value: string;
+		};
+		SearchMerchandisingPredicate: {
+			query?: components["schemas"]["SearchMerchandisingQuery"];
+			category_slugs?: string[];
+			/**
+			 * @description Empty applies to all supported channels; P3 supports storefront.
+			 * @enum {string}
+			 */
+			channel?: "" | "storefront";
+		};
+		SearchMerchandisingTargetInput: {
+			product_id: number;
+			position?: number;
+		};
+		SearchMerchandisingTarget: {
+			product_id: number;
+			position?: number;
+			product_name: string;
+		};
+		SearchMerchandisingActionInput: {
+			targets: components["schemas"]["SearchMerchandisingTargetInput"][];
+			/**
+			 * Format: double
+			 * @description Required only for boost actions; never stacks with another boost.
+			 */
+			multiplier?: number;
+		};
+		SearchMerchandisingAction: {
+			targets: components["schemas"]["SearchMerchandisingTarget"][];
+			/**
+			 * Format: double
+			 * @description Required only for boost actions; never stacks with another boost.
+			 */
+			multiplier?: number;
+		};
+		SearchMerchandisingRuleInput: {
+			name: string;
+			/** @enum {string} */
+			rule_type: "pin" | "bury" | "hide" | "boost" | "include";
+			predicate?: components["schemas"]["SearchMerchandisingPredicate"];
+			action: components["schemas"]["SearchMerchandisingActionInput"];
+			/** @default 0 */
+			priority: number;
+			/** Format: date-time */
+			starts_at?: string;
+			/** Format: date-time */
+			ends_at?: string;
+			/** @default true */
+			is_active: boolean;
+		};
+		SearchMerchandisingRulePatch: {
+			name?: string;
+			/** @enum {string} */
+			rule_type?: "pin" | "bury" | "hide" | "boost" | "include";
+			predicate?: components["schemas"]["SearchMerchandisingPredicate"];
+			action?: components["schemas"]["SearchMerchandisingActionInput"];
+			priority?: number;
+			/** Format: date-time */
+			starts_at?: string;
+			/** Format: date-time */
+			ends_at?: string;
+			is_active?: boolean;
+			/** @description Clear the start boundary; cannot be combined with starts_at. */
+			clear_starts_at?: boolean;
+			/** @description Clear the end boundary; cannot be combined with ends_at. */
+			clear_ends_at?: boolean;
+		};
+		SearchMerchandisingPreviewRule: {
+			name: string;
+			/** @enum {string} */
+			rule_type: "pin" | "bury" | "hide" | "boost" | "include";
+			predicate?: components["schemas"]["SearchMerchandisingPredicate"];
+			action: components["schemas"]["SearchMerchandisingActionInput"];
+			/** @default 0 */
+			priority: number;
+			/** Format: date-time */
+			starts_at?: string;
+			/** Format: date-time */
+			ends_at?: string;
+			/** @default true */
+			is_active: boolean;
+			/** @description Optional identity for a persisted rule; zero represents an unsaved rule. */
+			id?: number;
+		};
+		SearchMerchandisingRule: {
+			name: string;
+			/** @enum {string} */
+			rule_type: "pin" | "bury" | "hide" | "boost" | "include";
+			predicate: components["schemas"]["SearchMerchandisingPredicate"];
+			action: components["schemas"]["SearchMerchandisingAction"];
+			/** @default 0 */
+			priority: number;
+			/** Format: date-time */
+			starts_at: string | null;
+			/** Format: date-time */
+			ends_at: string | null;
+			/** @default true */
+			is_active: boolean;
+			id: number;
+			version: number;
+			updated_by: number | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		SearchMerchandisingRuleListResponse: {
+			data: components["schemas"]["SearchMerchandisingRule"][];
+		};
+		SearchRuleDecision: {
+			rule_id: number;
+			rule_name: string;
+			/** @enum {string} */
+			rule_type: "pin" | "bury" | "hide" | "boost" | "include";
+			/** @description Zero denotes a decision about the rule rather than a target. */
+			product_id: number;
+			product_name: string;
+			/** @enum {string} */
+			outcome: "applied" | "skipped" | "conflict";
+			reason: string;
+			position?: number;
+			/** Format: double */
+			multiplier?: number;
+		};
+		SearchMerchandisingAudit: {
+			id: number;
+			rule_id: number;
+			/** @enum {string} */
+			operation: "create" | "update" | "delete";
+			actor_id: number | null;
+			before: components["schemas"]["SearchMerchandisingRule"] | null;
+			after: components["schemas"]["SearchMerchandisingRule"] | null;
+			/** Format: date-time */
+			created_at: string;
+		};
+		SearchMerchandisingAuditListResponse: {
+			data: components["schemas"]["SearchMerchandisingAudit"][];
+		};
+		SearchPreviewFilters: {
+			q?: string;
+			/** Format: double */
+			min_price?: number;
+			/** Format: double */
+			max_price?: number;
+			/** @description Same semantics as the public search query parameter. */
+			brand_slug?: string[];
+			/** @description Same semantics as the public search query parameter. */
+			category_slug?: string[];
+			/** @description Same semantics as the public search query parameter. */
+			has_variant_stock?: boolean[];
+			/** @description Same semantics as the public search query parameter. */
+			price_range?: string[];
+			/** @description Same semantics as the public search query parameter. */
+			attribute?: {
+				[key: string]: string[];
+			};
+			ranking_profile?: string;
+			/** @enum {string} */
+			sort?: "relevance" | "price" | "name" | "created_at";
+			/** @enum {string} */
+			order?: "asc" | "desc";
+			page?: number;
+			limit?: number;
+		};
+		SearchPreviewRequest: {
+			filters: {
+				q?: string;
+				/** Format: double */
+				min_price?: number;
+				/** Format: double */
+				max_price?: number;
+				/** @description Same semantics as the public search query parameter. */
+				brand_slug?: string[];
+				/** @description Same semantics as the public search query parameter. */
+				category_slug?: string[];
+				/** @description Same semantics as the public search query parameter. */
+				has_variant_stock?: boolean[];
+				/** @description Same semantics as the public search query parameter. */
+				price_range?: string[];
+				/** @description Same semantics as the public search query parameter. */
+				attribute?: {
+					[key: string]: string[];
+				};
+				ranking_profile?: string;
+				/** @enum {string} */
+				sort?: "relevance" | "price" | "name" | "created_at";
+				/** @enum {string} */
+				order?: "asc" | "desc";
+				page?: number;
+				limit?: number;
+			};
+			/** @description Complete replacement rule set. Omit to use persisted rules; an empty array disables all rules for the proposed side. Preview never saves changes. */
+			rules?: components["schemas"]["SearchMerchandisingPreviewRule"][];
+			/**
+			 * Format: date-time
+			 * @description Simulated UTC time for campaign windows; ranking signals are unchanged.
+			 */
+			at?: string;
+		};
+		SearchPreviewResponse: {
+			baseline: components["schemas"]["AdminProductSearchResponse"];
+			proposed: components["schemas"]["AdminProductSearchResponse"];
 		};
 		SearchFacetValue: {
 			value: string;
@@ -9055,6 +9354,225 @@ export interface operations {
 			409: components["responses"]["ConflictProblem"];
 			422: components["responses"]["ValidationProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminSearchMerchandisingRules: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search merchandising rules */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchMerchandisingRuleListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createAdminSearchMerchandisingRule: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchMerchandisingRuleInput"];
+			};
+		};
+		responses: {
+			/** @description Created search merchandising rule */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchMerchandisingRule"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminSearchMerchandisingRule: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search merchandising rule */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchMerchandisingRule"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	deleteAdminSearchMerchandisingRule: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search merchandising rule deleted */
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	updateAdminSearchMerchandisingRule: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchMerchandisingRulePatch"];
+			};
+		};
+		responses: {
+			/** @description Updated search merchandising rule */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchMerchandisingRule"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminSearchMerchandisingRuleAudit: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search merchandising result */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchMerchandisingAuditListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminSearchMerchandisingAudit: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search merchandising result */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchMerchandisingAuditListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	previewAdminSearch: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchPreviewRequest"];
+			};
+		};
+		responses: {
+			/** @description Search merchandising result */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchPreviewResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
 		};
 	};
 	getAdminSearchFreshness: {

@@ -54,9 +54,10 @@ type RankingComponent struct {
 	Value, Weight, Contribution float64
 }
 type RankingExplanation struct {
-	ProductID  uint
-	Score      float64
-	Components []RankingComponent
+	ProductID     uint
+	Score         float64
+	AdjustedScore float64
+	Components    []RankingComponent
 }
 
 func DefaultRankingWeights() RankingWeights {
@@ -330,6 +331,7 @@ func explainRanking(document indexedProduct, plan queryPlan, query string, profi
 		component.Contribution = component.Value * component.Weight
 		result.Score += component.Contribution
 	}
+	result.AdjustedScore = result.Score
 	return result
 }
 func (b *databaseBackend) rankProducts(ctx context.Context, documents []indexedProduct, plan queryPlan, query string, profile RankingProfile, order string) error {

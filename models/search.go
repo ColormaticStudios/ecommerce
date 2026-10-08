@@ -70,6 +70,7 @@ type SearchRankingProfile struct {
 
 type SearchMerchandisingRule struct {
 	BaseModel
+	Version       int        `gorm:"not null;default:1"`
 	Name          string     `gorm:"not null;size:120"`
 	RuleType      string     `gorm:"not null;size:32;index"`
 	PredicateJSON string     `gorm:"type:text;not null"`
@@ -79,6 +80,18 @@ type SearchMerchandisingRule struct {
 	EndsAt        *time.Time `gorm:"index"`
 	IsActive      bool       `gorm:"not null;default:true;index"`
 	UpdatedBy     *uint      `gorm:"index"`
+}
+
+// SearchMerchandisingAudit retains immutable configuration snapshots after a
+// rule is physically deleted. IDs are historical references without foreign keys.
+type SearchMerchandisingAudit struct {
+	ID         uint      `gorm:"primaryKey"`
+	RuleID     uint      `gorm:"not null;index"`
+	Operation  string    `gorm:"not null;size:16"`
+	ActorID    *uint     `gorm:"index"`
+	BeforeJSON *string   `gorm:"type:text"`
+	AfterJSON  *string   `gorm:"type:text"`
+	CreatedAt  time.Time `gorm:"not null;index"`
 }
 
 type SearchQueryEvent struct {

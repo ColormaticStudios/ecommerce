@@ -2045,6 +2045,19 @@ var orderedMigrations = []Migration{
 			return nil
 		}}},
 	},
+	{
+		Version:         searchMerchandisingP3Version,
+		Name:            "add versioned search merchandising rules and audit snapshots",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "backfill", "search", "merchandising", "localization"},
+		Up:              migrateSearchMerchandisingP3,
+		PostChecks: []PostCheck{{Name: "search_merchandising_ready", Check: func(tx *gorm.DB) error {
+			if !tx.Session(&gorm.Session{NewDB: true}).Migrator().HasColumn("search_merchandising_rules", "version") || !tx.Session(&gorm.Session{NewDB: true}).Migrator().HasTable(&searchP3MerchandisingAuditSchema{}) {
+				return errors.New("search merchandising schema missing")
+			}
+			return nil
+		}}},
+	},
 }
 
 // These schemas freeze the tables introduced by the search P0 migration.

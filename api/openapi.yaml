@@ -2673,6 +2673,227 @@ paths:
           $ref: "#/components/responses/ConflictProblem"
         "500":
           $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/search/merchandising-rules:
+    get:
+      tags: [admin, search]
+      operationId: listAdminSearchMerchandisingRules
+      summary: List search merchandising rules
+      responses:
+        "200":
+          description: Search merchandising rules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchMerchandisingRuleListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+    post:
+      tags: [admin, search]
+      operationId: createAdminSearchMerchandisingRule
+      summary: Create a named search merchandising rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchMerchandisingRuleInput"
+      responses:
+        "201":
+          description: Created search merchandising rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchMerchandisingRule"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "422":
+          $ref: "#/components/responses/ValidationProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/search/merchandising-rules/{id}:
+    get:
+      tags: [admin, search]
+      operationId: getAdminSearchMerchandisingRule
+      summary: Get a search merchandising rule
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Search merchandising rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchMerchandisingRule"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+    patch:
+      tags: [admin, search]
+      operationId: updateAdminSearchMerchandisingRule
+      summary: Update a search merchandising rule
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchMerchandisingRulePatch"
+      responses:
+        "200":
+          description: Updated search merchandising rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchMerchandisingRule"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "422":
+          $ref: "#/components/responses/ValidationProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+    delete:
+      tags: [admin, search]
+      operationId: deleteAdminSearchMerchandisingRule
+      summary: Delete a search merchandising rule
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "204":
+          description: Search merchandising rule deleted
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "404":
+          $ref: "#/components/responses/NotFoundProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/search/merchandising-rules/{id}/audit:
+    get:
+      tags:
+      - admin
+      - search
+      operationId: listAdminSearchMerchandisingRuleAudit
+      responses:
+        '200':
+          description: Search merchandising result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchMerchandisingAuditListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestProblem'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequiredProblem'
+        '403':
+          $ref: '#/components/responses/ForbiddenProblem'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorProblem'
+        '404':
+          $ref: '#/components/responses/NotFoundProblem'
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+  /api/v1/admin/search/merchandising-audit:
+    get:
+      tags:
+      - admin
+      - search
+      operationId: listAdminSearchMerchandisingAudit
+      responses:
+        '200':
+          description: Search merchandising result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchMerchandisingAuditListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestProblem'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequiredProblem'
+        '403':
+          $ref: '#/components/responses/ForbiddenProblem'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorProblem'
+      summary: List all merchandising audit history, including deleted rules
+  /api/v1/admin/search/preview:
+    post:
+      tags:
+      - admin
+      - search
+      operationId: previewAdminSearch
+      responses:
+        '200':
+          description: Search merchandising result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchPreviewResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestProblem'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequiredProblem'
+        '403':
+          $ref: '#/components/responses/ForbiddenProblem'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorProblem'
+        '404':
+          $ref: '#/components/responses/NotFoundProblem'
+        '422':
+          $ref: '#/components/responses/ValidationProblem'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableProblem'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchPreviewRequest'
   /api/v1/admin/search/freshness:
     get:
       tags: [admin, search]
@@ -11882,8 +12103,13 @@ components:
       required:
       - product_id
       - score
+      - adjusted_score
       - components
       properties:
+        adjusted_score:
+          type: number
+          format: double
+          description: Score after the winning boost multiplier, before pin or bury placement.
         product_id:
           type: integer
           minimum: 1
@@ -11902,7 +12128,12 @@ components:
       - metadata
       - pagination
       - explanations
+      - rule_decisions
       properties:
+        rule_decisions:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchRuleDecision"
         items:
           type: array
           items:
@@ -11919,6 +12150,568 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SearchRankingExplanation'
+
+    SearchMerchandisingQuery:
+      type: object
+      required:
+      - mode
+      - value
+      properties:
+        mode:
+          type: string
+          enum:
+          - exact
+          - prefix
+          - contains
+        value:
+          type: string
+          minLength: 1
+          maxLength: 200
+    SearchMerchandisingPredicate:
+      type: object
+      properties:
+        query:
+          $ref: '#/components/schemas/SearchMerchandisingQuery'
+        category_slugs:
+          type: array
+          maxItems: 20
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 120
+        channel:
+          type: string
+          enum:
+          - ''
+          - storefront
+          description: Empty applies to all supported channels; P3 supports storefront.
+    SearchMerchandisingTargetInput:
+      type: object
+      required:
+      - product_id
+      properties:
+        product_id:
+          type: integer
+          minimum: 1
+          x-go-type: '*int'
+        position:
+          type: integer
+          minimum: 1
+          maximum: 10000
+    SearchMerchandisingTarget:
+      type: object
+      required:
+      - product_id
+      - product_name
+      properties:
+        product_id:
+          type: integer
+          minimum: 1
+        position:
+          type: integer
+          minimum: 1
+          maximum: 10000
+        product_name:
+          type: string
+    SearchMerchandisingActionInput:
+      type: object
+      required:
+      - targets
+      properties:
+        targets:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/SearchMerchandisingTargetInput'
+        multiplier:
+          type: number
+          format: double
+          minimum: 1
+          exclusiveMinimum: true
+          maximum: 100
+          description: Required only for boost actions; never stacks with another boost.
+    SearchMerchandisingAction:
+      type: object
+      required:
+      - targets
+      properties:
+        targets:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/SearchMerchandisingTarget'
+        multiplier:
+          type: number
+          format: double
+          minimum: 1
+          exclusiveMinimum: true
+          maximum: 100
+          description: Required only for boost actions; never stacks with another boost.
+    SearchMerchandisingRuleInput:
+      type: object
+      required:
+      - name
+      - rule_type
+      - action
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        rule_type:
+          type: string
+          enum:
+          - pin
+          - bury
+          - hide
+          - boost
+          - include
+        predicate:
+          $ref: '#/components/schemas/SearchMerchandisingPredicate'
+        action:
+          $ref: '#/components/schemas/SearchMerchandisingActionInput'
+        priority:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          default: 0
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        is_active:
+          type: boolean
+          default: true
+    SearchMerchandisingRulePatch:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        rule_type:
+          type: string
+          enum:
+          - pin
+          - bury
+          - hide
+          - boost
+          - include
+        predicate:
+          $ref: '#/components/schemas/SearchMerchandisingPredicate'
+        action:
+          $ref: '#/components/schemas/SearchMerchandisingActionInput'
+        priority:
+          type: integer
+          minimum: 0
+          maximum: 10000
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        is_active:
+          type: boolean
+        clear_starts_at:
+          type: boolean
+          description: Clear the start boundary; cannot be combined with starts_at.
+        clear_ends_at:
+          type: boolean
+          description: Clear the end boundary; cannot be combined with ends_at.
+    SearchMerchandisingPreviewRule:
+      type: object
+      required:
+      - name
+      - rule_type
+      - action
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        rule_type:
+          type: string
+          enum:
+          - pin
+          - bury
+          - hide
+          - boost
+          - include
+        predicate:
+          $ref: '#/components/schemas/SearchMerchandisingPredicate'
+        action:
+          $ref: '#/components/schemas/SearchMerchandisingActionInput'
+        priority:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          default: 0
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        is_active:
+          type: boolean
+          default: true
+        id:
+          type: integer
+          minimum: 0
+          description: Optional identity for a persisted rule; zero represents an unsaved rule.
+    SearchMerchandisingRule:
+      type: object
+      required:
+      - name
+      - rule_type
+      - predicate
+      - action
+      - priority
+      - starts_at
+      - ends_at
+      - is_active
+      - id
+      - version
+      - updated_by
+      - created_at
+      - updated_at
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        rule_type:
+          type: string
+          enum:
+          - pin
+          - bury
+          - hide
+          - boost
+          - include
+        predicate:
+          $ref: '#/components/schemas/SearchMerchandisingPredicate'
+        action:
+          $ref: '#/components/schemas/SearchMerchandisingAction'
+        priority:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          default: 0
+        starts_at:
+          type: string
+          format: date-time
+          nullable: true
+        ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_active:
+          type: boolean
+          default: true
+        id:
+          type: integer
+          minimum: 1
+        version:
+          type: integer
+          minimum: 1
+        updated_by:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    SearchMerchandisingRuleListResponse:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchMerchandisingRule'
+    SearchRuleDecision:
+      type: object
+      required:
+      - rule_id
+      - rule_name
+      - rule_type
+      - product_id
+      - product_name
+      - outcome
+      - reason
+      properties:
+        rule_id:
+          type: integer
+          minimum: 0
+        rule_name:
+          type: string
+        rule_type:
+          type: string
+          enum:
+          - pin
+          - bury
+          - hide
+          - boost
+          - include
+        product_id:
+          type: integer
+          minimum: 0
+          description: Zero denotes a decision about the rule rather than a target.
+        product_name:
+          type: string
+        outcome:
+          type: string
+          enum:
+          - applied
+          - skipped
+          - conflict
+        reason:
+          type: string
+        position:
+          type: integer
+        multiplier:
+          type: number
+          format: double
+    SearchMerchandisingAudit:
+      type: object
+      required:
+      - id
+      - rule_id
+      - operation
+      - actor_id
+      - before
+      - after
+      - created_at
+      properties:
+        id:
+          type: integer
+        rule_id:
+          type: integer
+        operation:
+          type: string
+          enum:
+          - create
+          - update
+          - delete
+        actor_id:
+          type: integer
+          nullable: true
+        before:
+          allOf:
+          - $ref: '#/components/schemas/SearchMerchandisingRule'
+          nullable: true
+        after:
+          allOf:
+          - $ref: '#/components/schemas/SearchMerchandisingRule'
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    SearchMerchandisingAuditListResponse:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchMerchandisingAudit'
+    SearchPreviewFilters:
+      type: object
+      properties:
+        q:
+          type: string
+          maxLength: 200
+        min_price:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 9999999999.99
+        max_price:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 9999999999.99
+        brand_slug:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 120
+          description: Same semantics as the public search query parameter.
+        category_slug:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 120
+          description: Same semantics as the public search query parameter.
+        has_variant_stock:
+          type: array
+          maxItems: 2
+          items:
+            type: boolean
+          description: Same semantics as the public search query parameter.
+        price_range:
+          type: array
+          maxItems: 10
+          items:
+            type: string
+            pattern: ^(?:[0-9]+(?:\.[0-9]{1,2})?:(?:[0-9]+(?:\.[0-9]{1,2})?)?|:(?:[0-9]+(?:\.[0-9]{1,2})?))$
+          description: Same semantics as the public search query parameter.
+        attribute:
+          type: object
+          maxProperties: 20
+          additionalProperties:
+            type: array
+            minItems: 1
+            maxItems: 20
+            items:
+              type: string
+              minLength: 1
+              maxLength: 120
+          description: Same semantics as the public search query parameter.
+        ranking_profile:
+          type: string
+          minLength: 1
+          maxLength: 120
+        sort:
+          type: string
+          enum:
+          - relevance
+          - price
+          - name
+          - created_at
+        order:
+          type: string
+          enum:
+          - asc
+          - desc
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+    SearchPreviewRequest:
+      type: object
+      required:
+      - filters
+      properties:
+        filters:
+          type: object
+          properties:
+            q:
+              type: string
+              maxLength: 200
+            min_price:
+              type: number
+              format: double
+              minimum: 0
+              maximum: 9999999999.99
+            max_price:
+              type: number
+              format: double
+              minimum: 0
+              maximum: 9999999999.99
+            brand_slug:
+              type: array
+              maxItems: 20
+              items:
+                type: string
+                minLength: 1
+                maxLength: 120
+              description: Same semantics as the public search query parameter.
+            category_slug:
+              type: array
+              maxItems: 20
+              items:
+                type: string
+                minLength: 1
+                maxLength: 120
+              description: Same semantics as the public search query parameter.
+            has_variant_stock:
+              type: array
+              maxItems: 2
+              items:
+                type: boolean
+              description: Same semantics as the public search query parameter.
+            price_range:
+              type: array
+              maxItems: 10
+              items:
+                type: string
+                pattern: ^(?:[0-9]+(?:\.[0-9]{1,2})?:(?:[0-9]+(?:\.[0-9]{1,2})?)?|:(?:[0-9]+(?:\.[0-9]{1,2})?))$
+              description: Same semantics as the public search query parameter.
+            attribute:
+              type: object
+              maxProperties: 20
+              additionalProperties:
+                type: array
+                minItems: 1
+                maxItems: 20
+                items:
+                  type: string
+                  minLength: 1
+                  maxLength: 120
+              description: Same semantics as the public search query parameter.
+            ranking_profile:
+              type: string
+              minLength: 1
+              maxLength: 120
+            sort:
+              type: string
+              enum:
+              - relevance
+              - price
+              - name
+              - created_at
+            order:
+              type: string
+              enum:
+              - asc
+              - desc
+            page:
+              type: integer
+              minimum: 1
+            limit:
+              type: integer
+              minimum: 1
+              maximum: 100
+          x-go-type: '*SearchPreviewFilters'
+        rules:
+          type: array
+          maxItems: 500
+          description: Complete replacement rule set. Omit to use persisted rules; an empty array disables all rules for the proposed side. Preview never saves changes.
+          items:
+            $ref: '#/components/schemas/SearchMerchandisingPreviewRule'
+        at:
+          type: string
+          format: date-time
+          description: Simulated UTC time for campaign windows; ranking signals are unchanged.
+    SearchPreviewResponse:
+      type: object
+      required:
+      - baseline
+      - proposed
+      properties:
+        baseline:
+          $ref: '#/components/schemas/AdminProductSearchResponse'
+        proposed:
+          $ref: '#/components/schemas/AdminProductSearchResponse'
 
     SearchFacetValue:
       type: object

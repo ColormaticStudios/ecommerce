@@ -4786,6 +4786,649 @@ To perform this operation, you must be authenticated by means of one of the foll
 cookieAuth, bearerAuth
 </aside>
 
+## List search merchandising rules
+
+<a id="opIdlistAdminSearchMerchandisingRules"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/merchandising-rules',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/merchandising-rules`
+
+<h3 id="list-search-merchandising-rules-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search merchandising rules|SearchMerchandisingRuleListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Create a named search merchandising rule
+
+<a id="opIdcreateAdminSearchMerchandisingRule"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "rule_type": "pin",
+  "predicate": {
+    "query": {
+      "mode": "exact",
+      "value": "string"
+    },
+    "category_slugs": [
+      "string"
+    ],
+    "channel": ""
+  },
+  "action": {
+    "targets": [
+      {
+        "product_id": 1,
+        "position": 1
+      }
+    ],
+    "multiplier": 2
+  },
+  "priority": 0,
+  "starts_at": "2019-08-24T14:15:22Z",
+  "ends_at": "2019-08-24T14:15:22Z",
+  "is_active": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/merchandising-rules',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/search/merchandising-rules`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "rule_type": "pin",
+  "predicate": {
+    "query": {
+      "mode": "exact",
+      "value": "string"
+    },
+    "category_slugs": [
+      "string"
+    ],
+    "channel": ""
+  },
+  "action": {
+    "targets": [
+      {
+        "product_id": 1,
+        "position": 1
+      }
+    ],
+    "multiplier": 2
+  },
+  "priority": 0,
+  "starts_at": "2019-08-24T14:15:22Z",
+  "ends_at": "2019-08-24T14:15:22Z",
+  "is_active": true
+}
+```
+
+<h3 id="create-a-named-search-merchandising-rule-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|SearchMerchandisingRuleInput|true|none|
+
+<h3 id="create-a-named-search-merchandising-rule-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|201|[Created](https://tools.ietf.org/html/rfc7231#section-6.3.2)|Created search merchandising rule|SearchMerchandisingRule|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Get a search merchandising rule
+
+<a id="opIdgetAdminSearchMerchandisingRule"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/merchandising-rules/{id}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/merchandising-rules/{id}`
+
+<h3 id="get-a-search-merchandising-rule-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="get-a-search-merchandising-rule-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search merchandising rule|SearchMerchandisingRule|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Update a search merchandising rule
+
+<a id="opIdupdateAdminSearchMerchandisingRule"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "name": "string",
+  "rule_type": "pin",
+  "predicate": {
+    "query": {
+      "mode": "exact",
+      "value": "string"
+    },
+    "category_slugs": [
+      "string"
+    ],
+    "channel": ""
+  },
+  "action": {
+    "targets": [
+      {
+        "product_id": 1,
+        "position": 1
+      }
+    ],
+    "multiplier": 2
+  },
+  "priority": 0,
+  "starts_at": "2019-08-24T14:15:22Z",
+  "ends_at": "2019-08-24T14:15:22Z",
+  "is_active": true,
+  "clear_starts_at": true,
+  "clear_ends_at": true
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/merchandising-rules/{id}',
+{
+  method: 'PATCH',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`PATCH /api/v1/admin/search/merchandising-rules/{id}`
+
+> Body parameter
+
+```json
+{
+  "name": "string",
+  "rule_type": "pin",
+  "predicate": {
+    "query": {
+      "mode": "exact",
+      "value": "string"
+    },
+    "category_slugs": [
+      "string"
+    ],
+    "channel": ""
+  },
+  "action": {
+    "targets": [
+      {
+        "product_id": 1,
+        "position": 1
+      }
+    ],
+    "multiplier": 2
+  },
+  "priority": 0,
+  "starts_at": "2019-08-24T14:15:22Z",
+  "ends_at": "2019-08-24T14:15:22Z",
+  "is_active": true,
+  "clear_starts_at": true,
+  "clear_ends_at": true
+}
+```
+
+<h3 id="update-a-search-merchandising-rule-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+|body|body|SearchMerchandisingRulePatch|true|none|
+
+<h3 id="update-a-search-merchandising-rule-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Updated search merchandising rule|SearchMerchandisingRule|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Delete a search merchandising rule
+
+<a id="opIddeleteAdminSearchMerchandisingRule"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/problem+json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/merchandising-rules/{id}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`DELETE /api/v1/admin/search/merchandising-rules/{id}`
+
+<h3 id="delete-a-search-merchandising-rule-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="delete-a-search-merchandising-rule-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|Search merchandising rule deleted|None|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## listAdminSearchMerchandisingRuleAudit
+
+<a id="opIdlistAdminSearchMerchandisingRuleAudit"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/merchandising-rules/{id}/audit',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/merchandising-rules/{id}/audit`
+
+<h3 id="listadminsearchmerchandisingruleaudit-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|id|path|integer|true|none|
+
+<h3 id="listadminsearchmerchandisingruleaudit-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search merchandising result|SearchMerchandisingAuditListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## List all merchandising audit history, including deleted rules
+
+<a id="opIdlistAdminSearchMerchandisingAudit"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/merchandising-audit',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/merchandising-audit`
+
+<h3 id="list-all-merchandising-audit-history,-including-deleted-rules-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search merchandising result|SearchMerchandisingAuditListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## previewAdminSearch
+
+<a id="opIdpreviewAdminSearch"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "filters": {
+    "q": "string",
+    "min_price": 0,
+    "max_price": 0,
+    "brand_slug": [
+      "string"
+    ],
+    "category_slug": [
+      "string"
+    ],
+    "has_variant_stock": [
+      true
+    ],
+    "price_range": [
+      "string"
+    ],
+    "attribute": {
+      "property1": [
+        "string"
+      ],
+      "property2": [
+        "string"
+      ]
+    },
+    "ranking_profile": "string",
+    "sort": "relevance",
+    "order": "asc",
+    "page": 1,
+    "limit": 1
+  },
+  "rules": [
+    {
+      "name": "string",
+      "rule_type": "pin",
+      "predicate": {
+        "query": {
+          "mode": "exact",
+          "value": "string"
+        },
+        "category_slugs": [
+          "string"
+        ],
+        "channel": ""
+      },
+      "action": {
+        "targets": [
+          {
+            "product_id": 1,
+            "position": 1
+          }
+        ],
+        "multiplier": 2
+      },
+      "priority": 0,
+      "starts_at": "2019-08-24T14:15:22Z",
+      "ends_at": "2019-08-24T14:15:22Z",
+      "is_active": true,
+      "id": 0
+    }
+  ],
+  "at": "2019-08-24T14:15:22Z"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/preview',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/admin/search/preview`
+
+> Body parameter
+
+```json
+{
+  "filters": {
+    "q": "string",
+    "min_price": 0,
+    "max_price": 0,
+    "brand_slug": [
+      "string"
+    ],
+    "category_slug": [
+      "string"
+    ],
+    "has_variant_stock": [
+      true
+    ],
+    "price_range": [
+      "string"
+    ],
+    "attribute": {
+      "property1": [
+        "string"
+      ],
+      "property2": [
+        "string"
+      ]
+    },
+    "ranking_profile": "string",
+    "sort": "relevance",
+    "order": "asc",
+    "page": 1,
+    "limit": 1
+  },
+  "rules": [
+    {
+      "name": "string",
+      "rule_type": "pin",
+      "predicate": {
+        "query": {
+          "mode": "exact",
+          "value": "string"
+        },
+        "category_slugs": [
+          "string"
+        ],
+        "channel": ""
+      },
+      "action": {
+        "targets": [
+          {
+            "product_id": 1,
+            "position": 1
+          }
+        ],
+        "multiplier": 2
+      },
+      "priority": 0,
+      "starts_at": "2019-08-24T14:15:22Z",
+      "ends_at": "2019-08-24T14:15:22Z",
+      "is_active": true,
+      "id": 0
+    }
+  ],
+  "at": "2019-08-24T14:15:22Z"
+}
+```
+
+<h3 id="previewadminsearch-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|SearchPreviewRequest|true|none|
+
+<h3 id="previewadminsearch-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search merchandising result|SearchPreviewResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+|503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|A required service or capability is temporarily unavailable.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
 ## Get search index freshness
 
 <a id="opIdgetAdminSearchFreshness"></a>

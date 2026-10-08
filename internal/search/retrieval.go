@@ -19,12 +19,13 @@ import (
 const maxAttributeFacets = 10
 
 type indexedProduct struct {
-	ranking        RankingExplanation
-	document       models.SearchDocument
-	product        models.Product
-	categories     map[string]string
-	attributes     map[string]map[string]string
-	attributeNames map[string]string
+	hidden, forcedInclude bool
+	ranking               RankingExplanation
+	document              models.SearchDocument
+	product               models.Product
+	categories            map[string]string
+	attributes            map[string]map[string]string
+	attributeNames        map[string]string
 }
 
 type normalizedFilters struct {
@@ -125,6 +126,12 @@ func (b *databaseBackend) searchProducts(ctx context.Context, filters Filters) (
 		}
 	}
 
+	documents, merchandising, err := b.prepareMerchandising(ctx, documents, filters, normalizedFilters, normalizedQuery)
+	if err != nil {
+		return Result{}, err
+	}
+	merchandising.finalizeHideDecisions(documents, resultPlan, relaxed, normalizedFilters)
+	matched = filterIndexedProducts(documents, resultPlan, relaxed, normalizedFilters, "")
 	facets := buildFacets(documents, resultPlan, relaxed, normalizedFilters)
 	rankingProfile, err := b.loadRankingProfile(ctx, filters.RankingProfile)
 	if err != nil {
@@ -138,7 +145,7 @@ func (b *databaseBackend) searchProducts(ctx context.Context, filters Filters) (
 			field = "created_at"
 		}
 	}
-	if field == "relevance" || filters.Explain {
+	if field == "relevance" || filters.Explain || len(merchandising.targets) > 0 {
 		if err := b.rankProducts(ctx, matched, resultPlan, NormalizeQuery(strings.Join(originalQueryTerms(resultPlan), " ")), rankingProfile, filters.SortOrder); err != nil {
 			return Result{}, err
 		}
@@ -146,6 +153,7 @@ func (b *databaseBackend) searchProducts(ctx context.Context, filters Filters) (
 	if field != "relevance" {
 		sortIndexedProducts(matched, field, filters.SortOrder)
 	}
+	matched = merchandising.order(matched, filters.SortField == "" || field == "relevance", filters.SortOrder)
 	total := int64(len(matched))
 	totalPages := len(matched) / limit
 	if len(matched)%limit != 0 {
@@ -173,7 +181,12 @@ func (b *databaseBackend) searchProducts(ctx context.Context, filters Filters) (
 			indexedAt = &value
 		}
 	}
+	var decisions []RuleDecision
+	if filters.Explain {
+		decisions = merchandising.decisions
+	}
 	return Result{
+		RuleDecisions:  decisions,
 		RankingProfile: rankingProfile.Name, RankingProfileVersion: rankingProfile.Version, Explanations: explanations,
 		Products: products, Facets: facets, Total: total, TotalPages: totalPages,
 		NormalizedQuery: normalizedQuery, AppliedRewrites: rewrites, DidYouMean: didYouMean,
@@ -198,6 +211,10 @@ func (b *databaseBackend) loadIndexedProducts(ctx context.Context, plan *queryPl
 	if err := query.Order("entity_id asc").Find(&rows).Error; err != nil {
 		return nil, err
 	}
+	return decodeIndexedProducts(ctx, rows)
+}
+
+func decodeIndexedProducts(ctx context.Context, rows []models.SearchDocument) ([]indexedProduct, error) {
 	result := make([]indexedProduct, 0, len(rows))
 	for index, row := range rows {
 		if index%256 == 0 {
@@ -443,12 +460,16 @@ func uniqueStrings(values []string) []string {
 func filterIndexedProducts(documents []indexedProduct, plan queryPlan, relaxed bool, filters normalizedFilters, excludedFacet string) []indexedProduct {
 	result := make([]indexedProduct, 0, len(documents))
 	for _, document := range documents {
-		if !matchesQuery(document.document.SearchableText, plan, relaxed) || !matchesFilters(document, filters, excludedFacet) {
+		if !matchesSearchCandidate(document, plan, relaxed) || !matchesFilters(document, filters, excludedFacet) {
 			continue
 		}
 		result = append(result, document)
 	}
 	return result
+}
+
+func matchesSearchCandidate(document indexedProduct, plan queryPlan, relaxed bool) bool {
+	return !document.hidden && (document.forcedInclude || matchesQuery(document.document.SearchableText, plan, relaxed))
 }
 
 func matchesQuery(searchableText string, plan queryPlan, relaxed bool) bool {
@@ -665,7 +686,7 @@ func minInt(values ...int) int {
 func buildFacets(documents []indexedProduct, plan queryPlan, relaxed bool, filters normalizedFilters) []Facet {
 	queryMatches := make([]indexedProduct, 0, len(documents))
 	for _, document := range documents {
-		if matchesQuery(document.document.SearchableText, plan, relaxed) {
+		if matchesSearchCandidate(document, plan, relaxed) {
 			queryMatches = append(queryMatches, document)
 		}
 	}

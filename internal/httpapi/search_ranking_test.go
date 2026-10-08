@@ -22,7 +22,7 @@ import (
 func searchRankingRouter(t *testing.T) *gin.Engine {
 	t.Helper()
 	db := catalogTestDB(t)
-	require.NoError(t, db.AutoMigrate(&models.SearchRankingProfile{}, &models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}, &models.SearchDocument{}, &models.SearchIndexState{}, &models.SearchSalesSignal{}, &models.Product{}))
+	require.NoError(t, db.AutoMigrate(&models.SearchRankingProfile{}, &models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}, &models.SearchDocument{}, &models.SearchIndexState{}, &models.SearchSalesSignal{}, &models.Product{}, &models.SearchMerchandisingRule{}, &models.SearchMerchandisingAudit{}))
 	service := searchservice.NewService(db, nil, nil)
 	_, err := service.CreateRankingProfile(context.Background(), searchservice.RankingProfileInput{Name: "default", IsDefault: true, Weights: searchservice.RankingWeights{TokenCoverage: 10, Name: 10, ExactPhrase: 10}}, nil)
 	require.NoError(t, err)
@@ -41,7 +41,7 @@ func searchRankingRouter(t *testing.T) *gin.Engine {
 	require.NoError(t, err)
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	require.NoError(t, httpapi.RegisterStrict(router, &httpapi.Server{CatalogEndpoints: endpoints}, httpapi.RegisterStrictOptions{Strict: httpapi.StrictOptions{Policies: policies}, Security: httpapi.SecurityOptions{Authenticator: httpapi.JWTAuthenticator{Secret: []byte("secret")}}, RequestContext: httpapi.RequestContextOptions{NewID: func() string { return "ranking-request" }}}))
+	require.NoError(t, httpapi.RegisterStrict(router, &httpapi.Server{CatalogEndpoints: endpoints}, httpapi.RegisterStrictOptions{Strict: httpapi.StrictOptions{Policies: policies}, Security: httpapi.SecurityOptions{Authenticator: httpapi.JWTAuthenticator{Secret: []byte("secret"), ResolveAccountID: func(context.Context, string) (uint, error) { return 17, nil }}}, RequestContext: httpapi.RequestContextOptions{NewID: func() string { return "ranking-request" }}}))
 	return router
 }
 

@@ -569,7 +569,7 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, searchRankingP2Version, status.LatestAppliedVersion)
+	require.Equal(t, searchMerchandisingP3Version, status.LatestAppliedVersion)
 	require.Equal(t, 3, status.PendingCount)
 }
 
@@ -727,7 +727,7 @@ func TestLocalizationP1BaselineContainsExtractedSourceCatalog(t *testing.T) {
 		} `json:"messages"`
 	}
 	require.NoError(t, json.Unmarshal(data, &catalog))
-	seeded := make(map[string]localizationP1BaselineKey, len(localizationP1BaselineKeys)+len(localizationP3CatalogKeys)+len(localizationP4CatalogKeys)+len(localizationP5ErrorCatalogKeys)+len(oidcLoginUICatalogKeys))
+	seeded := make(map[string]localizationP1BaselineKey, len(localizationP1BaselineKeys)+len(localizationP3CatalogKeys)+len(localizationP4CatalogKeys)+len(localizationP5ErrorCatalogKeys)+len(oidcLoginUICatalogKeys)+len(searchMerchandisingP3CatalogKeys))
 	for _, key := range localizationP1BaselineKeys {
 		seeded[key.Namespace+"."+key.Key] = key
 	}
@@ -741,6 +741,9 @@ func TestLocalizationP1BaselineContainsExtractedSourceCatalog(t *testing.T) {
 		seeded[key.Namespace+"."+key.Key] = key
 	}
 	for _, key := range oidcLoginUICatalogKeys {
+		seeded[key.Namespace+"."+key.Key] = key
+	}
+	for _, key := range searchMerchandisingP3CatalogKeys {
 		seeded[key.Namespace+"."+key.Key] = key
 	}
 	for _, message := range catalog.Messages {

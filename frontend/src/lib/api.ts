@@ -32,6 +32,7 @@ import { buildOIDCLoginUrl } from "$lib/auth";
 import { ApiProblemError, isApiProblem } from "$lib/api/errors";
 import { appendQueryParams } from "$lib/api/http";
 import type { components, paths } from "$lib/api/generated/openapi";
+import * as searchMerchandisingDomain from "$lib/api/domains/search-merchandising";
 import * as cartDomain from "$lib/api/domains/cart";
 import * as ordersDomain from "$lib/api/domains/orders";
 import * as profileDomain from "$lib/api/domains/profile";
@@ -528,6 +529,31 @@ export class API {
 		const Product: ProductModel = parseProduct(response);
 
 		return Product;
+	}
+
+	public listAdminSearchMerchandisingRules() {
+		return searchMerchandisingDomain.listRules(this.request.bind(this));
+	}
+	public createAdminSearchMerchandisingRule(body: searchMerchandisingDomain.MerchandisingInput) {
+		return searchMerchandisingDomain.createRule(this.request.bind(this), body);
+	}
+	public updateAdminSearchMerchandisingRule(
+		id: number,
+		body: searchMerchandisingDomain.MerchandisingPatch
+	) {
+		return searchMerchandisingDomain.updateRule(this.request.bind(this), id, body);
+	}
+	public deleteAdminSearchMerchandisingRule(id: number) {
+		return searchMerchandisingDomain.deleteRule(this.request.bind(this), id);
+	}
+	public listAdminSearchMerchandisingAudit(id: number) {
+		return searchMerchandisingDomain.listAudit(this.request.bind(this), id);
+	}
+	public listAllAdminSearchMerchandisingAudit() {
+		return searchMerchandisingDomain.listAllAudit(this.request.bind(this));
+	}
+	public previewAdminSearch(body: searchMerchandisingDomain.MerchandisingPreviewRequest) {
+		return searchMerchandisingDomain.preview(this.request.bind(this), body);
 	}
 
 	// Cart Operations

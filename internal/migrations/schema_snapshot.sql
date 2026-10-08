@@ -1597,6 +1597,17 @@ TABLE search_index_states
   COLUMN updated_at
   INDEX idx_search_index_states_last_full_reindex_at columns=last_full_reindex_at unique=false option=
   INDEX idx_search_index_states_last_indexed_at columns=last_indexed_at unique=false option=
+TABLE search_merchandising_audits
+  COLUMN actor_id
+  COLUMN after_json
+  COLUMN before_json
+  COLUMN created_at
+  COLUMN id
+  COLUMN operation
+  COLUMN rule_id
+  INDEX idx_search_merchandising_audits_actor_id columns=actor_id unique=false option=
+  INDEX idx_search_merchandising_audits_created_at columns=created_at unique=false option=
+  INDEX idx_search_merchandising_audits_rule_id columns=rule_id unique=false option=
 TABLE search_merchandising_rules
   COLUMN action_json
   COLUMN created_at
@@ -1611,6 +1622,7 @@ TABLE search_merchandising_rules
   COLUMN starts_at
   COLUMN updated_at
   COLUMN updated_by
+  COLUMN version
   INDEX idx_search_merchandising_rules_deleted_at columns=deleted_at unique=false option=
   INDEX idx_search_merchandising_rules_ends_at columns=ends_at unique=false option=
   INDEX idx_search_merchandising_rules_is_active columns=is_active unique=false option=

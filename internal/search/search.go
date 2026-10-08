@@ -56,6 +56,10 @@ type Filters struct {
 	Attributes        map[string]string
 	AttributeValues   map[string][]string
 	PriceRanges       []PriceRange
+	Channel           string
+	RuleOverrides     *[]MerchandisingRule
+	SkipMerchandising bool
+	MerchandisingAt   *time.Time
 	RankingProfile    string
 	Explain           bool
 	SortField         string
@@ -93,6 +97,7 @@ type AppliedRewrite struct {
 }
 
 type Result struct {
+	RuleDecisions         []RuleDecision
 	RankingProfile        string
 	RankingProfileVersion int
 	Explanations          []RankingExplanation
