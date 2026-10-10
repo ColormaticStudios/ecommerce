@@ -1439,6 +1439,46 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/admin/search/refresh-sales": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Queue the daily search sales signal refresh
+		 * @description Reuses the current UTC day's durable job, including a previously completed job. Execution is owned by the background worker.
+		 */
+		post: operations["createAdminSearchSalesRefresh"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/refresh-conversion": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Queue the daily search conversion signal refresh
+		 * @description Reuses the current UTC day's durable job, including a previously completed job. Execution is owned by the background worker.
+		 */
+		post: operations["createAdminSearchConversionRefresh"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/admin/search/synonyms": {
 		parameters: {
 			query?: never;
@@ -5799,6 +5839,11 @@ export interface components {
 			/** Format: date-time */
 			last_full_reindex_at: string | null;
 		};
+		SearchRefreshAccepted: {
+			job_id: string;
+			/** @enum {string} */
+			status: "queued";
+		};
 		SearchReindexAccepted: {
 			job_id: string;
 			/** @enum {string} */
@@ -10064,6 +10109,56 @@ export interface operations {
 			429: components["responses"]["TooManyRequestsProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
 			503: components["responses"]["ServiceUnavailableProblem"];
+		};
+	};
+	createAdminSearchSalesRefresh: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Daily signal refresh job accepted */
+			202: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchRefreshAccepted"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createAdminSearchConversionRefresh: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Daily signal refresh job accepted */
+			202: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchRefreshAccepted"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
 	listAdminSearchSynonyms: {

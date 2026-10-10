@@ -362,6 +362,9 @@ func (e *CatalogEndpoints) productToContract(ctx context.Context, product models
 	}
 	if admin {
 		result.IsPublished, result.HasDraftChanges, result.DraftUpdatedAt = &published, &draft, product.DraftUpdatedAt
+		if err := e.hydrateAdminProduct(ctx, product.ID, &result); err != nil {
+			return apicontract.Product{}, err
+		}
 	}
 	return result, nil
 }

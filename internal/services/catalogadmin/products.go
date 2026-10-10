@@ -229,7 +229,7 @@ func replaceDraft(tx *gorm.DB, product models.Product, input apicontract.Product
 			}
 		}
 	}
-	return nil
+	return persistDraftMetadata(tx, draft, input)
 }
 func deleteDraft(tx *gorm.DB, id uint) error {
 	variantIDs := tx.Unscoped().Model(&models.ProductVariantDraft{}).Select("id").Where("product_draft_id = ?", id)
@@ -374,6 +374,9 @@ func (s *Service) PublishProduct(ctx context.Context, id uint) (models.Product, 
 			return err
 		}
 		removedMediaIDs = removedReferenceIDs(oldLiveRefs, draftRefs)
+		if err := publishDraftMetadata(tx, id, draft.ID); err != nil {
+			return err
+		}
 		if err := deleteDraft(tx, draft.ID); err != nil {
 			return err
 		}
@@ -393,8 +396,11 @@ func (s *Service) UnpublishProduct(ctx context.Context, id uint) (models.Product
 		return product, err
 	}
 	if product.DraftUpdatedAt == nil {
-		input := productInputFromLive(product)
 		if err := db.Transaction(func(tx *gorm.DB) error {
+			input, err := LoadLiveProductUpsertInput(tx, nil, id)
+			if err != nil {
+				return err
+			}
 			now := time.Now().UTC()
 			if err := tx.Model(&product).Updates(map[string]any{"is_published": false, "draft_updated_at": now}).Error; err != nil {
 				return err
@@ -405,7 +411,7 @@ func (s *Service) UnpublishProduct(ctx context.Context, id uint) (models.Product
 			if err := copyProductMediaRole(tx, id, media.RoleProductImage, media.RoleProductDraftImage); err != nil {
 				return err
 			}
-			_, err := searchservice.EnqueueProductSyncTx(ctx, s.jobs, tx, id, now)
+			_, err = searchservice.EnqueueProductSyncTx(ctx, s.jobs, tx, id, now)
 			return err
 		}); err != nil {
 			return product, err
@@ -423,20 +429,6 @@ func (s *Service) UnpublishProduct(ctx context.Context, id uint) (models.Product
 		}
 	}
 	return s.GetProduct(ctx, id, true)
-}
-func productInputFromLive(product models.Product) apicontract.ProductUpsertInput {
-	input := apicontract.ProductUpsertInput{Sku: product.SKU, Name: product.Name, Subtitle: product.Subtitle, Description: product.Description, Images: product.Images, Seo: apicontract.ProductSEOInput{}}
-	for _, item := range product.Variants {
-		published := item.IsPublished
-		input.Variants = append(input.Variants, apicontract.ProductVariantInput{Sku: item.SKU, Title: item.Title, Price: item.Price.Float64(), UnitCost: moneyFloatPtr(item.UnitCost), Stock: item.Stock, IsPublished: &published, Position: &item.Position})
-	}
-	for _, item := range product.Categories {
-		input.CategoryIds = append(input.CategoryIds, int(item.ID))
-	}
-	for _, item := range product.Related {
-		input.RelatedProductIds = append(input.RelatedProductIds, int(item.ID))
-	}
-	return input
 }
 func (s *Service) DiscardProductDraft(ctx context.Context, id uint) (models.Product, error) {
 	db := s.db.WithContext(ctx)
@@ -716,7 +708,11 @@ func ensureProductDraft(tx *gorm.DB, product *models.Product) error {
 		}
 	}
 	now := time.Now().UTC()
-	if err := replaceDraft(tx, *product, productInputFromLive(*product)); err != nil {
+	input, err := LoadLiveProductUpsertInput(tx, nil, product.ID)
+	if err != nil {
+		return err
+	}
+	if err := replaceDraft(tx, *product, input); err != nil {
 		return err
 	}
 	if err := copyProductMediaRole(tx, product.ID, media.RoleProductImage, media.RoleProductDraftImage); err != nil {

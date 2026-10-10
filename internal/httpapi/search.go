@@ -292,7 +292,7 @@ func (e *CatalogEndpoints) CreateAdminSearchReindex(ctx context.Context, _ apico
 	if err != nil {
 		return nil, searchConfigurationEndpointError(err)
 	}
-	return apicontract.CreateAdminSearchReindex202JSONResponse{JobId: job.ID, Status: apicontract.Queued}, nil
+	return apicontract.CreateAdminSearchReindex202JSONResponse{JobId: job.ID, Status: apicontract.SearchReindexAcceptedStatusQueued}, nil
 }
 
 func optionalSearchText(v string) *string {

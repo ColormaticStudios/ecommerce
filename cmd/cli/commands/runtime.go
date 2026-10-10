@@ -153,6 +153,10 @@ func shouldSkipTargetResolution(cmd *cobra.Command) bool {
 		return true
 	}
 
+	if (cmd.Name() == "evaluate" || cmd.Name() == "scaffold") && cmd.Parent() != nil && cmd.Parent().Name() == "search" {
+		return true
+	}
+
 	for current := cmd; current != nil; current = current.Parent() {
 		switch current.Name() {
 		case "setup", "config", "help", "completion":

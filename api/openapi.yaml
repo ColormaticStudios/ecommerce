@@ -3100,6 +3100,52 @@ paths:
           $ref: "#/components/responses/ConflictProblem"
         "500":
           $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/search/refresh-sales:
+    post:
+      tags: [admin, search]
+      operationId: createAdminSearchSalesRefresh
+      summary: Queue the daily search sales signal refresh
+      description: Reuses the current UTC day's durable job, including a previously completed job. Execution is owned by the background worker.
+      responses:
+        "202":
+          description: Daily signal refresh job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchRefreshAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/admin/search/refresh-conversion:
+    post:
+      tags: [admin, search]
+      operationId: createAdminSearchConversionRefresh
+      summary: Queue the daily search conversion signal refresh
+      description: Reuses the current UTC day's durable job, including a previously completed job. Execution is owned by the background worker.
+      responses:
+        "202":
+          description: Daily signal refresh job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchRefreshAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequestProblem"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequiredProblem"
+        "403":
+          $ref: "#/components/responses/ForbiddenProblem"
+        "409":
+          $ref: "#/components/responses/ConflictProblem"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorProblem"
   /api/v1/admin/search/synonyms:
     get:
       tags: [admin, search]
@@ -13450,6 +13496,16 @@ components:
           type: string
           format: date-time
           nullable: true
+
+    SearchRefreshAccepted:
+      type: object
+      required: [job_id, status]
+      properties:
+        job_id:
+          type: string
+        status:
+          type: string
+          enum: [queued]
 
     SearchReindexAccepted:
       type: object

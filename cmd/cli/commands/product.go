@@ -45,6 +45,7 @@ func NewProductCmd() *cobra.Command {
 	productCmd.AddCommand(newDiscardProductDraftCmd())
 	productCmd.AddCommand(newPublishProductCmd())
 	productCmd.AddCommand(newUnpublishProductCmd())
+	productCmd.AddCommand(newVariantCostCmd())
 
 	return productCmd
 }

@@ -91,7 +91,7 @@ func TestCreateProductPersistsExplicitlyUnpublishedVariantDraft(t *testing.T) {
 		&models.ProductCategory{},
 		&models.ProductCategoryDraft{},
 		&models.ProductAttributeValueDraft{},
-		&models.ProductOptionDraft{},
+		&models.ProductOptionDraft{}, &models.ProductOption{}, &models.ProductOptionValue{}, &models.ProductVariantOptionValue{}, &models.ProductAttribute{}, &models.ProductAttributeValue{}, &models.SEOMetadata{},
 		&models.ProductOptionValueDraft{},
 		&models.ProductVariantOptionValueDraft{},
 		&models.MediaReference{},
@@ -136,7 +136,7 @@ func TestPublishProductPersistsExplicitlyUnpublishedNewVariant(t *testing.T) {
 		&models.ProductCategory{},
 		&models.ProductCategoryDraft{},
 		&models.ProductAttributeValueDraft{},
-		&models.ProductOptionDraft{},
+		&models.ProductOptionDraft{}, &models.ProductOption{}, &models.ProductOptionValue{}, &models.ProductVariantOptionValue{}, &models.ProductAttribute{}, &models.ProductAttributeValue{}, &models.SEOMetadata{},
 		&models.ProductOptionValueDraft{},
 		&models.ProductVariantOptionValueDraft{},
 		&models.MediaReference{},
@@ -182,7 +182,7 @@ func TestPublishProductUpdatesExistingVariantWithSameSKU(t *testing.T) {
 		&models.ProductCategory{},
 		&models.ProductCategoryDraft{},
 		&models.ProductAttributeValueDraft{},
-		&models.ProductOptionDraft{},
+		&models.ProductOptionDraft{}, &models.ProductOption{}, &models.ProductOptionValue{}, &models.ProductVariantOptionValue{}, &models.ProductAttribute{}, &models.ProductAttributeValue{}, &models.SEOMetadata{},
 		&models.ProductOptionValueDraft{},
 		&models.ProductVariantOptionValueDraft{},
 		&models.MediaReference{},
@@ -222,7 +222,7 @@ func TestProductDraftLifecycleCanRepeatAfterPublish(t *testing.T) {
 		t.Run(fmt.Sprintf("legacy_deleted_draft_%t", legacyDeletedDraft), func(t *testing.T) {
 			db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory&cache=shared"), &gorm.Config{})
 			require.NoError(t, err)
-			require.NoError(t, db.AutoMigrate(&models.Locale{}, &models.LocalizedEntityValue{}, &models.Product{}, &models.ProductVariant{}, &models.ProductDraft{}, &models.ProductVariantDraft{}, &models.ProductRelatedDraft{}, &models.ProductCategory{}, &models.ProductCategoryDraft{}, &models.ProductAttributeValueDraft{}, &models.ProductOptionDraft{},
+			require.NoError(t, db.AutoMigrate(&models.Locale{}, &models.LocalizedEntityValue{}, &models.Product{}, &models.ProductVariant{}, &models.ProductDraft{}, &models.ProductVariantDraft{}, &models.ProductRelatedDraft{}, &models.ProductCategory{}, &models.ProductCategoryDraft{}, &models.ProductAttributeValueDraft{}, &models.ProductOptionDraft{}, &models.ProductOption{}, &models.ProductOptionValue{}, &models.ProductVariantOptionValue{}, &models.ProductAttribute{}, &models.ProductAttributeValue{}, &models.SEOMetadata{},
 				&models.ProductOptionValueDraft{},
 				&models.ProductVariantOptionValueDraft{}, &models.MediaReference{}, &models.Brand{}, &models.Category{}, &models.ProductAttribute{}, &models.ProductAttributeValue{}, &models.SearchDocument{}, &models.SearchIndexState{}, &models.JobQueue{}))
 			require.NoError(t, db.Create(&models.Locale{Code: "en-US", Name: "English", IsEnabled: true, IsDefault: true}).Error)
