@@ -161,7 +161,7 @@ func (e *CheckoutProviderEndpoints) AddCheckoutCartItem(ctx context.Context, req
 	if request.Body == nil {
 		return nil, errors.New("cart item body is required")
 	}
-	cart, err := e.checkout.AddCartItem(ctx, id, uint(request.Body.ProductVariantId), request.Body.Quantity)
+	cart, err := e.checkout.AddCartItemWithSearchAttribution(ctx, id, uint(request.Body.ProductVariantId), request.Body.Quantity, searchAttributionString(request.Body.SearchSessionToken), searchAttributionString(request.Body.SearchClickId))
 	if err != nil {
 		return nil, checkoutEndpointError(err)
 	}
@@ -225,7 +225,7 @@ func (e *CheckoutProviderEndpoints) AddCartItem(ctx context.Context, r apicontra
 	if r.Body == nil {
 		return nil, errors.New("cart item body is required")
 	}
-	cart, err := e.checkout.AddCartItem(ctx, id, uint(r.Body.ProductVariantId), r.Body.Quantity)
+	cart, err := e.checkout.AddCartItemWithSearchAttribution(ctx, id, uint(r.Body.ProductVariantId), r.Body.Quantity, searchAttributionString(r.Body.SearchSessionToken), searchAttributionString(r.Body.SearchClickId))
 	if err != nil {
 		return nil, checkoutEndpointError(err)
 	}
@@ -639,4 +639,11 @@ func checkoutPluginProviderType(v string) (checkoutplugins.ProviderType, error) 
 	default:
 		return "", fmt.Errorf("unsupported provider type: %s", v)
 	}
+}
+
+func searchAttributionString(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
 }

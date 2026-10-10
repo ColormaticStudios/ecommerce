@@ -22,7 +22,7 @@ import (
 func searchRankingRouter(t *testing.T) *gin.Engine {
 	t.Helper()
 	db := catalogTestDB(t)
-	require.NoError(t, db.AutoMigrate(&models.SearchRankingProfile{}, &models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}, &models.SearchDocument{}, &models.SearchIndexState{}, &models.SearchSalesSignal{}, &models.Product{}, &models.SearchMerchandisingRule{}, &models.SearchMerchandisingAudit{}))
+	require.NoError(t, db.AutoMigrate(&models.SearchQueryEvent{}, &models.SearchClickEvent{}, &models.SearchCartAttribution{}, &models.SearchOrderAttribution{}, &models.SearchRevokedSession{}, &models.SearchRankingProfile{}, &models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}, &models.SearchDocument{}, &models.SearchIndexState{}, &models.SearchSalesSignal{}, &models.SearchConversionSignal{}, &models.Product{}, &models.SearchMerchandisingRule{}, &models.SearchMerchandisingAudit{}))
 	service := searchservice.NewService(db, nil, nil)
 	_, err := service.CreateRankingProfile(context.Background(), searchservice.RankingProfileInput{Name: "default", IsDefault: true, Weights: searchservice.RankingWeights{TokenCoverage: 10, Name: 10, ExactPhrase: 10}}, nil)
 	require.NoError(t, err)
@@ -119,7 +119,7 @@ func TestSearchRankingExplainIsAdminOnlyAndPublicMetadata(t *testing.T) {
 	require.NoError(t, json.Unmarshal(admin.Body.Bytes(), &explanation))
 	require.Len(t, explanation.Explanations, 1)
 	require.Equal(t, 42, explanation.Explanations[0].ProductId)
-	require.Len(t, explanation.Explanations[0].Components, 8)
+	require.Len(t, explanation.Explanations[0].Components, 10)
 	total := 0.0
 	for _, component := range explanation.Explanations[0].Components {
 		require.False(t, math.IsNaN(component.Value))
@@ -138,7 +138,7 @@ func TestSearchRankingExplainIsAdminOnlyAndPublicMetadata(t *testing.T) {
 }
 
 func rankingWeightsInput(value apicontract.SearchRankingWeights) apicontract.SearchRankingWeightsInput {
-	return apicontract.SearchRankingWeightsInput{TokenCoverage: &value.TokenCoverage, ExactPhrase: &value.ExactPhrase, Name: &value.Name, Brand: &value.Brand, Attributes: &value.Attributes, Recency: &value.Recency, Availability: &value.Availability, Sales: &value.Sales}
+	return apicontract.SearchRankingWeightsInput{TokenCoverage: &value.TokenCoverage, ExactPhrase: &value.ExactPhrase, Name: &value.Name, Brand: &value.Brand, Attributes: &value.Attributes, Recency: &value.Recency, Availability: &value.Availability, Sales: &value.Sales, Margin: &value.Margin, Conversion: &value.Conversion}
 }
 func rankingWeightsPointer(value apicontract.SearchRankingWeights) *apicontract.SearchRankingWeightsInput {
 	input := rankingWeightsInput(value)

@@ -46,7 +46,7 @@ func TestRankingConfigurationChangesLiveAndPaginationIsStable(t *testing.T) {
 			require.Equal(t, "ties", result.RankingProfile)
 			require.Equal(t, 1, result.RankingProfileVersion)
 			require.Len(t, result.Explanations, 1)
-			require.Len(t, result.Explanations[0].Components, 8)
+			require.Len(t, result.Explanations[0].Components, 10)
 			sum := 0.0
 			for _, c := range result.Explanations[0].Components {
 				require.InDelta(t, c.Value*c.Weight, c.Contribution, 1e-12)
@@ -85,7 +85,7 @@ func TestRankingOriginalTermsOutscoreSynonymsAndBusinessComponentsAreBounded(t *
 	now := time.Date(2026, 10, 2, 0, 0, 0, 0, time.UTC)
 	plan := queryPlan{groups: []queryGroup{{original: "shoe", alternatives: []string{"sneaker"}}}}
 	profile := RankingProfile{Weights: DefaultRankingWeights()}
-	document := indexedProduct{document: models.SearchDocument{EntityID: 1, SearchableText: "shoe", Available: true, SourceCreatedAt: now.Add(-30 * 24 * time.Hour)}, product: models.Product{Name: "Shoe"}}
+	document := indexedProduct{document: &models.SearchDocument{EntityID: 1, SearchableText: "shoe", Available: true, SourceCreatedAt: now.Add(-30 * 24 * time.Hour)}, product: &models.Product{Name: "Shoe"}}
 	original := explainRanking(document, plan, "shoe", profile, 20, now)
 	require.Equal(t, 1.0, original.Components[0].Value)
 	require.Equal(t, .5, original.Components[5].Value)
@@ -118,7 +118,7 @@ func TestRankingPhraseBonusRequiresMultipleWords(t *testing.T) {
 		{"reversed words", "red cup", "Cup Red", "", 0},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			document := indexedProduct{document: models.SearchDocument{SourceCreatedAt: now}, product: models.Product{Name: test.productName, Description: test.description}}
+			document := indexedProduct{document: &models.SearchDocument{SourceCreatedAt: now}, product: &models.Product{Name: test.productName, Description: test.description}}
 			explanation := explainRanking(document, queryPlan{}, test.query, profile, 0, now)
 			require.Equal(t, test.want, explanation.Components[1].Value)
 			require.Equal(t, test.want*6, explanation.Components[1].Contribution)

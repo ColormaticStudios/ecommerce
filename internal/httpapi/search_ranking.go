@@ -75,14 +75,14 @@ func (e *CatalogEndpoints) DeleteAdminSearchRankingProfile(ctx context.Context, 
 	return apicontract.DeleteAdminSearchRankingProfile204Response{}, nil
 }
 func searchRankingWeightsInput(value apicontract.SearchRankingWeightsInput) (searchservice.RankingWeights, error) {
-	for _, weight := range []*float64{value.TokenCoverage, value.ExactPhrase, value.Name, value.Brand, value.Attributes, value.Recency, value.Availability, value.Sales} {
+	for _, weight := range []*float64{value.TokenCoverage, value.ExactPhrase, value.Name, value.Brand, value.Attributes, value.Recency, value.Availability, value.Sales, value.Margin, value.Conversion} {
 		if weight == nil {
-			return searchservice.RankingWeights{}, fmt.Errorf("all eight ranking weights are required and must not be null")
+			return searchservice.RankingWeights{}, fmt.Errorf("all ten ranking weights are required and must not be null")
 		}
 	}
-	return searchservice.RankingWeights{TokenCoverage: *value.TokenCoverage, ExactPhrase: *value.ExactPhrase, Name: *value.Name, Brand: *value.Brand, Attributes: *value.Attributes, Recency: *value.Recency, Availability: *value.Availability, Sales: *value.Sales}, nil
+	return searchservice.RankingWeights{TokenCoverage: *value.TokenCoverage, ExactPhrase: *value.ExactPhrase, Name: *value.Name, Brand: *value.Brand, Attributes: *value.Attributes, Recency: *value.Recency, Availability: *value.Availability, Sales: *value.Sales, Margin: *value.Margin, Conversion: *value.Conversion}, nil
 }
 func searchRankingProfileContract(value searchservice.RankingProfile) apicontract.SearchRankingProfile {
 	weights := value.Weights
-	return apicontract.SearchRankingProfile{Id: int(value.ID), Name: value.Name, IsDefault: value.IsDefault, Version: value.Version, UpdatedBy: searchConfigurationUpdatedBy(value.UpdatedBy), CreatedAt: value.CreatedAt, UpdatedAt: value.UpdatedAt, Weights: apicontract.SearchRankingWeights{TokenCoverage: weights.TokenCoverage, ExactPhrase: weights.ExactPhrase, Name: weights.Name, Brand: weights.Brand, Attributes: weights.Attributes, Recency: weights.Recency, Availability: weights.Availability, Sales: weights.Sales}}
+	return apicontract.SearchRankingProfile{Id: int(value.ID), Name: value.Name, IsDefault: value.IsDefault, Version: value.Version, UpdatedBy: searchConfigurationUpdatedBy(value.UpdatedBy), CreatedAt: value.CreatedAt, UpdatedAt: value.UpdatedAt, Weights: apicontract.SearchRankingWeights{TokenCoverage: weights.TokenCoverage, ExactPhrase: weights.ExactPhrase, Name: weights.Name, Brand: weights.Brand, Attributes: weights.Attributes, Recency: weights.Recency, Availability: weights.Availability, Sales: weights.Sales, Margin: weights.Margin, Conversion: weights.Conversion}}
 }

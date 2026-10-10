@@ -2,6 +2,7 @@ import type { PageServerLoad } from "./$types";
 import { defaultSearchSort, isSearchSort } from "./search-params";
 import {
 	parseBrand,
+	parseCategory,
 	parseProduct,
 	parseProductAttributeDefinition,
 	type BrandModel,
@@ -37,7 +38,15 @@ export const load: PageServerLoad = async (event) => {
 	setPublicPageCacheHeaders(event);
 	const { url } = event;
 	const searchQuery = url.searchParams.get("q") ?? "";
-	const brandSlug = url.searchParams.get("brand_slug") ?? "";
+	const brandSlugs = url.searchParams.getAll("brand_slug").filter(Boolean);
+	const brandSlug = brandSlugs[0] ?? "";
+	const categorySlugs = url.searchParams.getAll("category_slug").filter(Boolean);
+	const stockSelections = url.searchParams
+		.getAll("has_variant_stock")
+		.filter((value) => value === "true" || value === "false")
+		.map((value) => value === "true");
+	const priceRanges = url.searchParams.getAll("price_range").filter(Boolean);
+	const attributeSelections: Record<string, string[]> = {};
 	const hasVariantStock = url.searchParams.get("has_variant_stock") === "true";
 	const currentPage = Math.max(1, Number(url.searchParams.get("page") ?? 1));
 	const pageSize = normalizeLimit(Number(url.searchParams.get("limit") ?? 12));
@@ -56,36 +65,47 @@ export const load: PageServerLoad = async (event) => {
 			continue;
 		}
 		attributeFilters[slug] = value.trim();
+		(attributeSelections[slug] ??= []).push(value.trim());
 	}
 
 	let results: ProductModel[] = [];
 	let brands: BrandModel[] = [];
+	let categories: ReturnType<typeof parseCategory>[] = [];
+	let facets: ProductSearchPayload["facets"] = [];
 	let attributes: ProductAttributeDefinitionModel[] = [];
 	let totalPages = 1;
 	let totalResults = 0;
 	let errorMessage = "";
+	let metadata: ProductSearchPayload["metadata"] | null = null;
+	let suggestions: components["schemas"]["SearchSuggestionsResponse"] = {
+		suggestions: [],
+		corrections: [],
+		popular: [],
+		trending: [],
+	};
 
 	try {
-		const [response, brandsPayload, attributesPayload] = await Promise.all([
+		const [response, brandsPayload, attributesPayload, categoriesPayload] = await Promise.all([
 			serverRequest<ProductSearchPayload>(event, "/search/products", {
 				q: searchQuery.trim() || undefined,
-				brand_slug: brandSlug || undefined,
-				has_variant_stock: hasVariantStock ? true : undefined,
-				attribute:
-					Object.keys(attributeFilters).length > 0
-						? Object.fromEntries(
-								Object.entries(attributeFilters).map(([slug, value]) => [slug, [value]])
-							)
-						: undefined,
+				brand_slug: brandSlugs.length ? brandSlugs : undefined,
+				category_slug: categorySlugs.length ? categorySlugs : undefined,
+				has_variant_stock: stockSelections.length ? stockSelections : undefined,
+				price_range: priceRanges.length ? priceRanges : undefined,
+				attribute: Object.keys(attributeSelections).length ? attributeSelections : undefined,
 				page: currentPage,
 				limit: pageSize,
-				sort: sortBy,
+				sort: sortExplicit ? sortBy : undefined,
 				ranking_profile: rankingProfile || undefined,
 				order: sortOrder,
 			}),
 			serverRequest<BrandListPayload>(event, "/brands"),
 			serverRequest<ProductAttributeDefinitionListPayload>(event, "/product-attributes"),
+			serverRequest<components["schemas"]["CategoryListResponse"]>(event, "/categories"),
 		]);
+		metadata = response.metadata ?? null;
+		facets = response.facets ?? [];
+		categories = categoriesPayload.data.map(parseCategory);
 		results = response.items.map(parseProduct);
 		brands = brandsPayload.data.map(parseBrand);
 		attributes = attributesPayload.data.map(parseProductAttributeDefinition);
@@ -96,7 +116,25 @@ export const load: PageServerLoad = async (event) => {
 		errorMessage = "Unable to load search results.";
 	}
 
+	try {
+		suggestions = await serverRequest<components["schemas"]["SearchSuggestionsResponse"]>(
+			event,
+			"/search/suggestions",
+			{ q: searchQuery.trim() || undefined }
+		);
+	} catch {
+		/* Discovery is optional during search outages. */
+	}
 	return {
+		brandSlugs,
+		categorySlugs,
+		stockSelections,
+		priceRanges,
+		attributeSelections,
+		facets,
+		categories,
+		metadata,
+		suggestions,
 		results,
 		brands,
 		attributes,

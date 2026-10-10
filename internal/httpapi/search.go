@@ -171,7 +171,7 @@ func (e *CatalogEndpoints) searchResultContract(ctx context.Context, result sear
 		RuleDecisions: decisions,
 		Items:         products,
 		Facets:        facets,
-		Metadata:      apicontract.ProductSearchMetadata{NormalizedQuery: result.NormalizedQuery, IndexedAt: result.IndexedAt, AppliedRewrites: rewrites, DidYouMean: didYouMean, Relaxed: result.Relaxed, RankingProfile: result.RankingProfile, RankingProfileVersion: result.RankingProfileVersion},
+		Metadata:      apicontract.ProductSearchMetadata{Degraded: result.Degraded, FallbackReason: optionalSearchText(result.FallbackReason), NormalizedQuery: result.NormalizedQuery, IndexedAt: result.IndexedAt, AppliedRewrites: rewrites, DidYouMean: didYouMean, Relaxed: result.Relaxed, RankingProfile: result.RankingProfile, RankingProfileVersion: result.RankingProfileVersion},
 		Pagination:    apicontract.Pagination{Page: filters.Page, Limit: filters.Limit, Total: int(result.Total), TotalPages: result.TotalPages},
 	}, nil
 }
@@ -268,17 +268,17 @@ func (e *CatalogEndpoints) GetSearchSuggestions(ctx context.Context, request api
 	}
 	result, err := e.search.Suggest(ctx, request.Params.Q, limit)
 	if err != nil {
-		return nil, catalogEndpointError(err)
+		return nil, searchConfigurationEndpointError(err)
 	}
 	return apicontract.GetSearchSuggestions200JSONResponse{
-		Suggestions: result.Suggestions, Corrections: result.Corrections, Popular: result.Popular,
+		Suggestions: result.Suggestions, Corrections: result.Corrections, Popular: result.Popular, Trending: result.Trending,
 	}, nil
 }
 
 func (e *CatalogEndpoints) GetAdminSearchFreshness(ctx context.Context, _ apicontract.GetAdminSearchFreshnessRequestObject) (apicontract.GetAdminSearchFreshnessResponseObject, error) {
 	value, err := e.search.Freshness(ctx)
 	if err != nil {
-		return nil, catalogEndpointError(err)
+		return nil, searchConfigurationEndpointError(err)
 	}
 	return apicontract.GetAdminSearchFreshness200JSONResponse{
 		Status: apicontract.SearchFreshnessStatus(value.Status), LagSeconds: int64(value.Lag.Seconds()),
@@ -290,7 +290,14 @@ func (e *CatalogEndpoints) GetAdminSearchFreshness(ctx context.Context, _ apicon
 func (e *CatalogEndpoints) CreateAdminSearchReindex(ctx context.Context, _ apicontract.CreateAdminSearchReindexRequestObject) (apicontract.CreateAdminSearchReindexResponseObject, error) {
 	job, err := e.search.EnqueueFullReindex(ctx)
 	if err != nil {
-		return nil, catalogEndpointError(err)
+		return nil, searchConfigurationEndpointError(err)
 	}
 	return apicontract.CreateAdminSearchReindex202JSONResponse{JobId: job.ID, Status: apicontract.Queued}, nil
+}
+
+func optionalSearchText(v string) *string {
+	if v == "" {
+		return nil
+	}
+	return &v
 }

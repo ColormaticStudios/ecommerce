@@ -107,7 +107,7 @@
 
 {#if href}
 	<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-	<a {href} class={classes}>
+	<a {href} class={classes} {onclick}>
 		{@render children?.()}
 	</a>
 {:else if as === "button"}

@@ -8,7 +8,9 @@ import {
 	createOption,
 	createVariant,
 	emptyEditorValues,
+	editorValuesFromProduct,
 } from "./state";
+import { makeProduct, makeVariant } from "$lib/storybook/factories";
 import type { ProductEditorValues } from "./types";
 import { validateProductPayload } from "./validation";
 import { generateVariants } from "./variants";
@@ -170,5 +172,68 @@ describe("product editor problem mapping", () => {
 		expect(mapMediaUploadProblem({ status: 500, body: { error: "internal" } })).toBe(
 			"Unable to upload media."
 		);
+	});
+});
+
+describe("private variant unit costs", () => {
+	it.each([
+		["", null],
+		["0", 0],
+		["12.34", 12.34],
+		["9999999999.99", 9999999999.99],
+	] as const)("serializes %s with explicit nullable semantics", (input, expected) => {
+		const values = validValues();
+		values.variants[0].unit_cost = input;
+		const payload = buildProductPayload(values, []);
+		expect(payload.variants[0].unit_cost).toBe(expected);
+		expect(validateProductPayload(payload, [], [])).toBeNull();
+	});
+	it.each(["-0.01", "NaN", "Infinity", "-Infinity", "10000000000"])(
+		"rejects invalid unit cost %s before saving",
+		(input) => {
+			const values = validValues();
+			values.variants[0].unit_cost = input;
+			expect(validateProductPayload(buildProductPayload(values, []), [], [])).toMatch(/unit cost/);
+		}
+	);
+	it("loads known zero and unknown costs without conflating them", () => {
+		const product = makeProduct({
+			variants: [
+				makeVariant({ unit_cost: 0 }),
+				makeVariant({ id: 12, sku: "other", unit_cost: null }),
+			],
+		});
+		const values = editorValuesFromProduct(product, createEditorKeyFactory());
+		expect(values.variants.map((variant) => variant.unit_cost)).toEqual(["0", ""]);
+	});
+	it("includes cost changes in the unsaved snapshot", () => {
+		const values = validValues();
+		const before = buildProductSnapshot(1, values);
+		values.variants[0].unit_cost = "0";
+		expect(buildProductSnapshot(1, values)).not.toBe(before);
+	});
+	it("preserves matching variant costs and leaves new option variants unknown", () => {
+		const nextKey = createEditorKeyFactory();
+		const color = createOption(nextKey, 1, "Color", "select", ["Blue", "Red"]);
+		const existing = createVariant(nextKey, {
+			sku: "CUSTOM-BLUE",
+			price: "30",
+			unit_cost: "12.34",
+			selections: [
+				{ key: nextKey("selection"), option_name: "Color", option_value: "Blue", position: 1 },
+			],
+		});
+		const variants = generateVariants(
+			[color],
+			[existing],
+			"JACKET",
+			"Jacket",
+			existing.sku,
+			nextKey
+		);
+		expect(variants.map((variant) => variant.unit_cost)).toEqual(["12.34", ""]);
+		expect(
+			generateVariants([], [existing], "JACKET", "Jacket", existing.sku, nextKey)[0].unit_cost
+		).toBe("12.34");
 	});
 });

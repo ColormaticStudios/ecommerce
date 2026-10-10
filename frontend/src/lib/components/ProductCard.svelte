@@ -20,9 +20,10 @@
 		href: string;
 		data: ProductCardData;
 		imageAspect?: "square" | "wide";
+		onclick?: (event: MouseEvent) => void;
 	};
 
-	let { href, data, imageAspect = "square" }: Props = $props();
+	let { href, data, imageAspect = "square", onclick }: Props = $props();
 
 	const imageClass = $derived(imageAspect === "wide" ? "aspect-[4/3]" : "aspect-square");
 	const unitPrice = $derived(
@@ -58,6 +59,7 @@
 
 <Card
 	{href}
+	{onclick}
 	padding="none"
 	overflowHidden={true}
 	interactive={true}

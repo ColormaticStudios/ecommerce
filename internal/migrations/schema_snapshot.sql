@@ -1221,6 +1221,7 @@ TABLE product_variant_drafts
   COLUMN source_product_variant_id
   COLUMN stock
   COLUMN title
+  COLUMN unit_cost
   COLUMN updated_at
   COLUMN weight_grams
   COLUMN width_cm
@@ -1267,6 +1268,7 @@ TABLE product_variants
   COLUMN sku
   COLUMN stock
   COLUMN title
+  COLUMN unit_cost
   COLUMN updated_at
   COLUMN weight_grams
   COLUMN width_cm
@@ -1546,15 +1548,39 @@ TABLE schema_migrations
   COLUMN execution_meta
   COLUMN name
   COLUMN version
+TABLE search_cart_attributions
+  COLUMN cart_item_id
+  COLUMN click_id
+  COLUMN created_at
+  COLUMN impression_id
+  COLUMN product_id
+  INDEX idx_search_cart_attributions_click_id columns=click_id unique=false option=
+  INDEX idx_search_cart_attributions_created_at columns=created_at unique=false option=
+  INDEX idx_search_cart_attributions_impression_id columns=impression_id unique=false option=
 TABLE search_click_events
   COLUMN clicked_at
+  COLUMN event_id
   COLUMN id
+  COLUMN impression_id
   COLUMN position
+  COLUMN product_id
   COLUMN product_variant_id
   COLUMN query_event_id
+  COLUMN session_hash
   INDEX idx_search_click_events_clicked_at columns=clicked_at unique=false option=
+  INDEX idx_search_click_events_event_id columns=event_id unique=true option=
+  INDEX idx_search_click_events_impression_id columns=impression_id unique=false option=
+  INDEX idx_search_click_events_product_id columns=product_id unique=false option=
   INDEX idx_search_click_events_product_variant_id columns=product_variant_id unique=false option=
   INDEX idx_search_click_events_query_event_id columns=query_event_id unique=false option=
+  INDEX idx_search_click_events_session_hash columns=session_hash unique=false option=
+TABLE search_conversion_signals
+  COLUMN as_of
+  COLUMN conversions30_days
+  COLUMN impressions30_days
+  COLUMN product_id
+  COLUMN updated_at
+  INDEX idx_search_conversion_signals_as_of columns=as_of unique=false option=
 TABLE search_documents
   COLUMN active
   COLUMN attribute_tokens
@@ -1566,6 +1592,7 @@ TABLE search_documents
   COLUMN entity_type
   COLUMN id
   COLUMN indexed_at
+  COLUMN margin_rate
   COLUMN max_price
   COLUMN min_price
   COLUMN normalized_name
@@ -1587,9 +1614,30 @@ TABLE search_documents
   INDEX idx_search_documents_normalized_name columns=normalized_name unique=false option=
   INDEX idx_search_documents_source_created_at columns=source_created_at unique=false option=
   INDEX idx_search_documents_source_updated_at columns=source_updated_at unique=false option=
+TABLE search_freshness_observations
+  COLUMN index_name
+  COLUMN last_observed_at
+  COLUMN missing_baseline_since
+TABLE search_index_incidents
+  COLUMN detected_at
+  COLUMN document_count
+  COLUMN id
+  COLUMN index_name
+  COLUMN last_observed_at
+  COLUMN max_lag_seconds
+  COLUMN max_pending_jobs
+  COLUMN opened_at
+  COLUMN reason
+  COLUMN recovered_at
+  INDEX idx_search_index_incidents_index_name columns=index_name unique=false option=
+  INDEX idx_search_index_incidents_open columns=index_name unique=true option=
+  INDEX idx_search_index_incidents_opened_at columns=opened_at unique=false option=
+  INDEX idx_search_index_incidents_recovered_at columns=recovered_at unique=false option=
 TABLE search_index_states
   COLUMN created_at
   COLUMN document_count
+  COLUMN generation
+  COLUMN last_conversion_refresh_at
   COLUMN last_full_reindex_at
   COLUMN last_full_reindex_started
   COLUMN last_indexed_at
@@ -1630,18 +1678,37 @@ TABLE search_merchandising_rules
   INDEX idx_search_merchandising_rules_rule_type columns=rule_type unique=false option=
   INDEX idx_search_merchandising_rules_starts_at columns=starts_at unique=false option=
   INDEX idx_search_merchandising_rules_updated_by columns=updated_by unique=false option=
+TABLE search_order_attributions
+  COLUMN click_id
+  COLUMN created_at
+  COLUMN id
+  COLUMN impression_id
+  COLUMN order_id
+  COLUMN paid_at
+  COLUMN product_id
+  INDEX idx_search_order_attributions_created_at columns=created_at unique=false option=
+  INDEX idx_search_order_attributions_impression_id columns=impression_id unique=false option=
+  INDEX idx_search_order_attributions_order_id columns=order_id unique=false option=
+  INDEX idx_search_order_attributions_paid_at columns=paid_at unique=false option=
+  INDEX idx_search_order_product columns=order_id,product_id unique=true option=
 TABLE search_query_events
   COLUMN created_at
   COLUMN filters_json
   COLUMN id
+  COLUMN impression_id
   COLUMN latency_ms
   COLUMN normalized_query
+  COLUMN products_json
   COLUMN query
   COLUMN result_count
+  COLUMN result_json
+  COLUMN session_hash
   COLUMN session_id
   COLUMN user_id
   INDEX idx_search_query_events_created_at columns=created_at unique=false option=
+  INDEX idx_search_query_events_impression_id columns=impression_id unique=true option=
   INDEX idx_search_query_events_normalized_query columns=normalized_query unique=false option=
+  INDEX idx_search_query_events_session_hash columns=session_hash unique=false option=
   INDEX idx_search_query_events_session_id columns=session_id unique=false option=
   INDEX idx_search_query_events_user_id columns=user_id unique=false option=
 TABLE search_ranking_profiles
@@ -1659,6 +1726,10 @@ TABLE search_ranking_profiles
   INDEX idx_search_ranking_profiles_name columns=name unique=true option=
   INDEX idx_search_ranking_profiles_one_default columns=is_default unique=true option=
   INDEX idx_search_ranking_profiles_updated_by columns=updated_by unique=false option=
+TABLE search_revoked_sessions
+  COLUMN created_at
+  COLUMN session_hash
+  INDEX idx_search_revoked_sessions_created_at columns=created_at unique=false option=
 TABLE search_sales_signals
   COLUMN as_of
   COLUMN product_id

@@ -114,6 +114,7 @@ func run(parentCtx context.Context) error {
 			SlowThreshold:             200 * time.Millisecond,
 			LogLevel:                  logger.Warn,
 			IgnoreRecordNotFoundError: true,
+			ParameterizedQueries:      true,
 		},
 	)
 	db, err := gorm.Open(postgres.Open(cfg.DBURL), &gorm.Config{
@@ -387,6 +388,13 @@ func run(parentCtx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("initialize catalog endpoints: %w", err)
 	}
+	if err := catalogEndpoints.ConfigureSearchHardening(searchservice.HardeningConfig{
+		MaxConcurrent: cfg.SearchMaxConcurrent, SearchTimeoutMS: cfg.SearchTimeoutMS,
+		CircuitFailureThreshold: cfg.SearchCircuitFailureThreshold, CircuitOpenMS: cfg.SearchCircuitOpenMS,
+		ReindexQueueLimit: cfg.SearchReindexQueueLimit,
+	}); err != nil {
+		return fmt.Errorf("configure search hardening: %w", err)
+	}
 	if err := catalogEndpoints.RegisterSearchJobHandlers(); err != nil {
 		return fmt.Errorf("register search job handlers: %w", err)
 	}
@@ -446,6 +454,22 @@ func run(parentCtx context.Context) error {
 		runPeriodic(ctx, time.Hour, true, func(workerCtx context.Context) {
 			if _, err := salesSearch.EnqueueSalesRefresh(workerCtx); err != nil && !errors.Is(err, context.Canceled) {
 				applicationLogger.ErrorContext(workerCtx, "Search sales refresh enqueue failed", "error", err)
+			}
+			if _, err := salesSearch.EnqueueConversionRefresh(workerCtx); err != nil && !errors.Is(err, context.Canceled) {
+				applicationLogger.ErrorContext(workerCtx, "Search conversion refresh enqueue failed", "error_type", fmt.Sprintf("%T", err))
+			}
+			if _, err := salesSearch.EnqueueAnalyticsRetention(workerCtx); err != nil && !errors.Is(err, context.Canceled) {
+				applicationLogger.ErrorContext(workerCtx, "Search analytics retention enqueue failed", "error_type", fmt.Sprintf("%T", err))
+			}
+		})
+	})
+	startWorker(func() {
+		incidentSearch := searchservice.NewService(db, nil, jobRuntime)
+		runPeriodic(ctx, time.Minute, true, func(workerCtx context.Context) {
+			observationCtx, cancel := context.WithTimeout(workerCtx, 10*time.Second)
+			defer cancel()
+			if err := incidentSearch.ObserveFreshness(observationCtx); err != nil && !errors.Is(err, context.Canceled) {
+				applicationLogger.ErrorContext(workerCtx, "Search freshness observation failed", "error_type", fmt.Sprintf("%T", err))
 			}
 		})
 	})

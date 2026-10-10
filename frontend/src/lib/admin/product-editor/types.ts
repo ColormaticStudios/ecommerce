@@ -33,6 +33,7 @@ export interface EditorVariant {
 	title: string;
 	price: string;
 	compare_at_price: string;
+	unit_cost: string;
 	stock: string;
 	is_published: boolean;
 	selections: EditorVariantSelection[];

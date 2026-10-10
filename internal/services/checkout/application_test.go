@@ -78,3 +78,26 @@ func TestIdempotencyReplayAndPayloadMismatch(t *testing.T) {
 	_, err = service.BeginIdempotency(ctx, 7, "create", "same-key", map[string]string{"email": "two@example.com"}, "correlation")
 	assert.ErrorIs(t, err, ErrIdempotencyConflict)
 }
+
+func TestSearchAttributionFailureDoesNotInterruptCart(t *testing.T) {
+	db := applicationTestDB(t)
+	product := models.Product{Name: "Test product", SKU: "search-attribution-cart", IsPublished: true}
+	require.NoError(t, db.Create(&product).Error)
+	variant := models.ProductVariant{ProductID: product.ID, SKU: "search-attribution-variant", IsPublished: true, Stock: 5}
+	require.NoError(t, db.Create(&variant).Error)
+	service := NewService(db)
+	// This schema deliberately excludes analytics tables, simulating a telemetry failure.
+	token := "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+	cart, err := service.AddCartItemWithSearchAttribution(context.Background(), 42, variant.ID, 2, token, "no-such-click")
+	require.NoError(t, err)
+	require.Len(t, cart.Items, 1)
+	require.Equal(t, 2, cart.Items[0].Quantity)
+	cart, err = service.AddCartItemWithSearchAttribution(context.Background(), 42, variant.ID, 1, "invalid", "invalid")
+	require.NoError(t, err)
+	require.Equal(t, 3, cart.Items[0].Quantity)
+	_, err = service.AddCartItemWithSearchAttribution(context.Background(), 42, variant.ID, 3, token, "invalid")
+	require.ErrorIs(t, err, ErrInvalidQuantity)
+	cart, err = service.Cart(context.Background(), 42)
+	require.NoError(t, err)
+	require.Equal(t, 3, cart.Items[0].Quantity)
+}

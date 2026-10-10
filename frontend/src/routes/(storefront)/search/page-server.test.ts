@@ -59,8 +59,37 @@ test.each([
 			rankingProfile,
 		});
 		const search = urls.find((url) => url.pathname.endsWith("/search/products"));
-		expect(search?.searchParams.get("sort")).toBe(sortBy);
+		expect(search?.searchParams.get("sort")).toBe(sortExplicit ? sortBy : null);
 		expect(search?.searchParams.get("order")).toBe(sortOrder);
 		expect(search?.searchParams.get("ranking_profile")).toBe(rankingProfile || null);
 	}
 );
+test("search loader retains all selected values for disjunctive facets", async () => {
+	const urls: URL[] = [];
+	vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+		const url = new URL(String(input));
+		urls.push(url);
+		return new Response(
+			JSON.stringify(
+				url.pathname.endsWith("/search/products")
+					? { items: [], facets: [], pagination: { total: 0, total_pages: 1 } }
+					: { data: [] }
+			)
+		);
+	});
+	const url = new URL(
+		"http://localhost/search?brand_slug=one&brand_slug=two&category_slug=jackets&category_slug=coats&has_variant_stock=true&has_variant_stock=false&price_range=0:100&price_range=100:200&attribute[color]=red&attribute[color]=blue"
+	);
+	const result = await load({ url, request: new Request(url), setHeaders: vi.fn() } as never);
+	expect(result).toMatchObject({
+		brandSlugs: ["one", "two"],
+		categorySlugs: ["jackets", "coats"],
+		stockSelections: [true, false],
+		priceRanges: ["0:100", "100:200"],
+		attributeSelections: { color: ["red", "blue"] },
+	});
+	const search = urls.find((url) => url.pathname.endsWith("/search/products"));
+	expect(search?.searchParams.getAll("brand_slug")).toEqual(["one", "two"]);
+	expect(search?.searchParams.get("attribute[color][0]")).toBe("red");
+	expect(search?.searchParams.get("attribute[color][1]")).toBe("blue");
+});

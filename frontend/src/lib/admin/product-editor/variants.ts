@@ -51,6 +51,7 @@ export function generateVariants(
 				title: asTrimmedString(name) || "Default Variant",
 				price: seed.price,
 				compare_at_price: seed.compare_at_price,
+				unit_cost: seed.unit_cost,
 				stock: seed.stock,
 			}),
 		];
@@ -77,6 +78,7 @@ export function generateVariants(
 			title: existing?.title ?? set.map((item) => item.option_value).join(" / "),
 			price: existing?.price ?? seed.price,
 			compare_at_price: existing?.compare_at_price ?? seed.compare_at_price,
+			unit_cost: existing?.unit_cost ?? "",
 			stock: existing?.stock ?? seed.stock,
 			is_published: existing?.is_published ?? true,
 			selections: set.map((selection, index) =>

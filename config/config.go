@@ -14,6 +14,12 @@ import (
 )
 
 type Config struct {
+	SearchMaxConcurrent           int `mapstructure:"SEARCH_MAX_CONCURRENT"`
+	SearchTimeoutMS               int `mapstructure:"SEARCH_TIMEOUT_MS"`
+	SearchCircuitFailureThreshold int `mapstructure:"SEARCH_CIRCUIT_FAILURE_THRESHOLD"`
+	SearchCircuitOpenMS           int `mapstructure:"SEARCH_CIRCUIT_OPEN_MS"`
+	SearchReindexQueueLimit       int `mapstructure:"SEARCH_REINDEX_QUEUE_LIMIT"`
+
 	DBURL                          string        `mapstructure:"DATABASE_URL"`
 	AutoApplyMigrations            bool          `mapstructure:"AUTO_APPLY_MIGRATIONS"`
 	Port                           string        `mapstructure:"PORT"`
@@ -60,6 +66,12 @@ type Config struct {
 }
 
 var configKeys = []string{
+	"SEARCH_MAX_CONCURRENT",
+	"SEARCH_TIMEOUT_MS",
+	"SEARCH_CIRCUIT_FAILURE_THRESHOLD",
+	"SEARCH_CIRCUIT_OPEN_MS",
+	"SEARCH_REINDEX_QUEUE_LIMIT",
+
 	"DATABASE_URL",
 	"AUTO_APPLY_MIGRATIONS",
 	"PORT",
@@ -137,6 +149,12 @@ func LoadConfig() (config Config, err error) {
 
 	// Highest precedence: runtime environment variables.
 	v.SetDefault("AUTO_APPLY_MIGRATIONS", false)
+	v.SetDefault("SEARCH_MAX_CONCURRENT", 50)
+	v.SetDefault("SEARCH_TIMEOUT_MS", 2000)
+	v.SetDefault("SEARCH_CIRCUIT_FAILURE_THRESHOLD", 5)
+	v.SetDefault("SEARCH_CIRCUIT_OPEN_MS", 30000)
+	v.SetDefault("SEARCH_REINDEX_QUEUE_LIMIT", 1)
+
 	v.SetDefault("HTTP_READ_HEADER_TIMEOUT", "10s")
 	v.SetDefault("HTTP_READ_TIMEOUT", "5m")
 	v.SetDefault("HTTP_WRITE_TIMEOUT", "5m")
@@ -179,6 +197,22 @@ func LoadConfig() (config Config, err error) {
 }
 
 func (c Config) validate() error {
+	if c.SearchMaxConcurrent < 1 || c.SearchMaxConcurrent > 512 {
+		return errors.New("SEARCH_MAX_CONCURRENT must be between 1 and 512")
+	}
+	if c.SearchTimeoutMS < 10 || c.SearchTimeoutMS > 60000 {
+		return errors.New("SEARCH_TIMEOUT_MS must be between 10 and 60000")
+	}
+	if c.SearchCircuitFailureThreshold < 1 || c.SearchCircuitFailureThreshold > 100 {
+		return errors.New("SEARCH_CIRCUIT_FAILURE_THRESHOLD must be between 1 and 100")
+	}
+	if c.SearchCircuitOpenMS < 10 || c.SearchCircuitOpenMS > 600000 {
+		return errors.New("SEARCH_CIRCUIT_OPEN_MS must be between 10 and 600000")
+	}
+	if c.SearchReindexQueueLimit < 1 || c.SearchReindexQueueLimit > 20 {
+		return errors.New("SEARCH_REINDEX_QUEUE_LIMIT must be between 1 and 20")
+	}
+
 	if c.MetricsPath == "" || c.MetricsPath[0] != '/' || len(c.MetricsPath) > 255 || strings.TrimSpace(c.MetricsPath) != c.MetricsPath {
 		return errors.New("METRICS_PATH must be an absolute path no longer than 255 characters")
 	}

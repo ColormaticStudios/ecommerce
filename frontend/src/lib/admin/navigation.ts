@@ -4,6 +4,11 @@ export type AdminSectionId =
 	| "categories"
 	| "orders"
 	| "discounts"
+	| "search-analytics"
+	| "search-synonyms"
+	| "search-typo-profiles"
+	| "search-ranking-profiles"
+	| "search-operations"
 	| "search-merchandising"
 	| "inventory"
 	| "purchase-orders"
@@ -19,6 +24,11 @@ type AdminRouteHref =
 	| "/admin/categories"
 	| "/admin/orders"
 	| "/admin/discounts"
+	| "/admin/search/analytics"
+	| "/admin/search/synonyms"
+	| "/admin/search/typo-profiles"
+	| "/admin/search/ranking-profiles"
+	| "/admin/search/operations"
 	| "/admin/search/merchandising"
 	| "/admin/inventory"
 	| "/admin/purchase-orders"
@@ -79,12 +89,52 @@ export const adminNavItems: AdminNavItem[] = [
 		matchPrefixes: ["/admin/discounts"],
 	},
 	{
+		id: "search-analytics",
+		label: "Search analytics",
+		messageKey: "admin.navigation.search_analytics",
+		href: "/admin/search/analytics",
+		icon: "bi-bar-chart",
+		matchPrefixes: ["/admin/search/analytics"],
+	},
+	{
+		id: "search-synonyms",
+		label: "Search synonyms",
+		messageKey: "admin.navigation.search_synonyms",
+		href: "/admin/search/synonyms",
+		icon: "bi-arrow-left-right",
+		matchPrefixes: ["/admin/search/synonyms"],
+	},
+	{
+		id: "search-typo-profiles",
+		label: "Search typo profiles",
+		messageKey: "admin.navigation.search_typo_profiles",
+		href: "/admin/search/typo-profiles",
+		icon: "bi-spellcheck",
+		matchPrefixes: ["/admin/search/typo-profiles"],
+	},
+	{
+		id: "search-ranking-profiles",
+		label: "Search ranking profiles",
+		messageKey: "admin.navigation.search_ranking_profiles",
+		href: "/admin/search/ranking-profiles",
+		icon: "bi-sort-down",
+		matchPrefixes: ["/admin/search/ranking-profiles"],
+	},
+	{
+		id: "search-operations",
+		label: "Search operations",
+		messageKey: "admin.navigation.search_operations",
+		href: "/admin/search/operations",
+		icon: "bi-activity",
+		matchPrefixes: ["/admin/search/operations"],
+	},
+	{
 		id: "search-merchandising",
 		label: "Search merchandising",
 		messageKey: "admin.navigation.search_merchandising",
 		href: "/admin/search/merchandising",
 		icon: "bi-search",
-		matchPrefixes: ["/admin/search"],
+		matchPrefixes: ["/admin/search/merchandising"],
 	},
 	{
 		id: "inventory",

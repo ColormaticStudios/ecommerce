@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/sveltekit";
+import { expect, within } from "storybook/test";
 import type { ComponentProps } from "svelte";
 import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
 import { createApiStub } from "$lib/storybook/api";
@@ -237,5 +238,30 @@ export const UnpublishedProduct: Story = {
 				},
 			},
 		},
+	},
+};
+
+const productWithCosts = makeProduct({
+	id: 104,
+	name: "Field Jacket",
+	variants: [
+		makeVariant({ id: 41, sku: "FIELD-JACKET-S", title: "Small", unit_cost: 64.25 }),
+		makeVariant({ id: 42, sku: "FIELD-JACKET-L", title: "Large", position: 2, unit_cost: null }),
+	],
+});
+export const PrivateVariantCosts: Story = {
+	render: () =>
+		renderRouteStory({
+			component: AdminProductPage,
+			componentProps: { data: createData({ initialProduct: productWithCosts }) },
+			api: createEditorApi(productWithCosts),
+		}),
+	parameters: {
+		sveltekit_experimental: { state: { page: { params: { id: String(productWithCosts.id) } } } },
+	},
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		await expect(canvas.getByRole("textbox", { name: "Variant 1 unit cost" })).toHaveValue("64.25");
+		await expect(canvas.getByRole("textbox", { name: "Variant 2 unit cost" })).toHaveValue("");
 	},
 };

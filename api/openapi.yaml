@@ -912,6 +912,158 @@ paths:
           $ref: "#/components/responses/AuthenticationRequiredProblem"
         "500":
           $ref: "#/components/responses/InternalServerErrorProblem"
+  /api/v1/search/consent/revoke:
+    post:
+      tags:
+      - search
+      operationId: revokeSearchConsent
+      security: []
+      summary: Revoke anonymous search analytics consent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchConsentRevokeInput'
+      responses:
+        '204':
+          description: Anonymous analytics deleted and session revoked
+        '400':
+          $ref: '#/components/responses/BadRequestProblem'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorProblem'
+
+  /api/v1/search/impressions:
+    post:
+      tags:
+      - search
+      operationId: createSearchImpression
+      summary: Record an opted-in search impression
+      responses:
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableProblem"
+        "429":
+          $ref: "#/components/responses/TooManyRequestsProblem"
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchImpressionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestProblem'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorProblem'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchImpressionInput'
+  /api/v1/search/events:
+    post:
+      tags:
+      - search
+      operationId: createSearchEvent
+      summary: Record a verified search result click
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchEventResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestProblem'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorProblem'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchEventInput'
+  /api/v1/admin/search/analytics:
+    get:
+      tags:
+      - admin
+      - search
+      operationId: getAdminSearchAnalytics
+      summary: Read consented search analytics
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchAnalytics'
+        '400':
+          $ref: '#/components/responses/BadRequestProblem'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorProblem'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequiredProblem'
+        '403':
+          $ref: '#/components/responses/ForbiddenProblem'
+      parameters:
+      - in: query
+        name: days
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 90
+          default: 7
+  /api/v1/admin/search/incidents:
+    get:
+      tags: [admin, search]
+      operationId: getAdminSearchIncidents
+      summary: List stale-index incidents and recovery history
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - name: status
+          in: query
+          schema: { type: string, enum: [open, resolved] }
+      responses:
+        '200':
+          description: Incident history, newest first
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SearchIndexIncidentListResponse' }
+        '400':
+          $ref: '#/components/responses/BadRequestProblem'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequiredProblem'
+        '403':
+          $ref: '#/components/responses/ForbiddenProblem'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorProblem'
+
+  /api/v1/admin/search/operations:
+    get:
+      tags:
+      - admin
+      - search
+      operationId: getAdminSearchOperations
+      summary: Inspect search capacity and circuit status
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchOperationsStatus'
+        '400':
+          $ref: '#/components/responses/BadRequestProblem'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorProblem'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequiredProblem'
+        '403':
+          $ref: '#/components/responses/ForbiddenProblem'
+
   /api/v1/search/products:
     get:
       tags: [search]
@@ -1037,6 +1189,8 @@ paths:
             minimum: 1
             maximum: 100
       responses:
+        "429":
+          $ref: "#/components/responses/TooManyRequestsProblem"
         "200":
           description: Search results, facets, and index metadata
           content:
@@ -1071,6 +1225,8 @@ paths:
             minimum: 1
             maximum: 20
       responses:
+        "429":
+          $ref: "#/components/responses/TooManyRequestsProblem"
         "200":
           description: Prefix suggestions and optional discovery hints
           content:
@@ -2513,6 +2669,8 @@ paths:
             minimum: 1
             maximum: 100
       responses:
+        "429":
+          $ref: "#/components/responses/TooManyRequestsProblem"
         "200":
           description: Search results, facets, and index metadata
           content:
@@ -2868,6 +3026,8 @@ paths:
       - search
       operationId: previewAdminSearch
       responses:
+        "429":
+          $ref: "#/components/responses/TooManyRequestsProblem"
         '200':
           description: Search merchandising result
           content:
@@ -2920,6 +3080,10 @@ paths:
       operationId: createAdminSearchReindex
       summary: Queue a full search reindex
       responses:
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableProblem"
+        "429":
+          $ref: "#/components/responses/TooManyRequestsProblem"
         "202":
           description: Full search reindex accepted
           content:
@@ -10436,6 +10600,14 @@ components:
         price:
           type: number
           format: double
+        unit_cost:
+          type: number
+          format: double
+          nullable: true
+          x-omitempty: true
+          minimum: 0
+          maximum: 9999999999.99
+          description: Private variant unit cost, returned only by administrator catalog endpoints and omitted from all storefront responses.
         compare_at_price:
           type: number
           format: double
@@ -11536,6 +11708,13 @@ components:
         price:
           type: number
           format: double
+        unit_cost:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          maximum: 9999999999.99
+          description: Private unit cost. Omission or null clears the cost when replacing the product draft.
         compare_at_price:
           type: number
           format: double
@@ -11902,6 +12081,8 @@ components:
       - recency
       - availability
       - sales
+      - margin
+      - conversion
       properties:
         token_coverage:
           type: number
@@ -11939,6 +12120,17 @@ components:
           minimum: 0
           maximum: 100
         sales:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+        margin:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+
+        conversion:
           type: number
           format: double
           minimum: 0
@@ -11955,6 +12147,8 @@ components:
       - recency
       - availability
       - sales
+      - margin
+      - conversion
       properties:
         token_coverage:
           type: number
@@ -11999,6 +12193,19 @@ components:
           maximum: 100
           x-go-type: '*float64'
         sales:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          x-go-type: '*float64'
+        margin:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          x-go-type: '*float64'
+
+        conversion:
           type: number
           format: double
           minimum: 0
@@ -12755,9 +12962,376 @@ components:
           items:
             $ref: "#/components/schemas/SearchFacetValue"
 
+    SearchConsentRevokeInput:
+      type: object
+      required:
+      - session_token
+      properties:
+        session_token:
+          type: string
+
+    SearchImpressionInput:
+      type: object
+      required:
+      - event_id
+      - consent
+      - filters
+      properties:
+        event_id:
+          type: string
+          format: uuid
+        consent:
+          type: boolean
+          enum:
+          - true
+        session_token:
+          type: string
+          maxLength: 128
+        filters:
+          type: object
+          properties:
+            q:
+              type: string
+              maxLength: 200
+            min_price:
+              type: number
+              format: double
+              minimum: 0
+              maximum: 9999999999.99
+            max_price:
+              type: number
+              format: double
+              minimum: 0
+              maximum: 9999999999.99
+            brand_slug:
+              type: array
+              maxItems: 20
+              items:
+                type: string
+                minLength: 1
+                maxLength: 120
+              description: Same semantics as the public search query parameter.
+            category_slug:
+              type: array
+              maxItems: 20
+              items:
+                type: string
+                minLength: 1
+                maxLength: 120
+              description: Same semantics as the public search query parameter.
+            has_variant_stock:
+              type: array
+              maxItems: 2
+              items:
+                type: boolean
+              description: Same semantics as the public search query parameter.
+            price_range:
+              type: array
+              maxItems: 10
+              items:
+                type: string
+                pattern: ^(?:[0-9]+(?:\.[0-9]{1,2})?:(?:[0-9]+(?:\.[0-9]{1,2})?)?|:(?:[0-9]+(?:\.[0-9]{1,2})?))$
+              description: Same semantics as the public search query parameter.
+            attribute:
+              type: object
+              maxProperties: 20
+              additionalProperties:
+                type: array
+                minItems: 1
+                maxItems: 20
+                items:
+                  type: string
+                  minLength: 1
+                  maxLength: 120
+              description: Same semantics as the public search query parameter.
+            ranking_profile:
+              type: string
+              minLength: 1
+              maxLength: 120
+            sort:
+              type: string
+              enum:
+              - relevance
+              - price
+              - name
+              - created_at
+            order:
+              type: string
+              enum:
+              - asc
+              - desc
+            page:
+              type: integer
+              minimum: 1
+            limit:
+              type: integer
+              minimum: 1
+              maximum: 100
+          x-go-type: '*SearchPreviewFilters'
+    SearchImpressionResponse:
+      type: object
+      required:
+      - impression_id
+      - session_token
+      - result
+      properties:
+        impression_id:
+          type: string
+        session_token:
+          type: string
+        result:
+          $ref: '#/components/schemas/ProductSearchResponse'
+    SearchEventInput:
+      type: object
+      required:
+      - session_token
+      - impression_id
+      - event_id
+      - type
+      - product_id
+      - position
+      properties:
+        session_token:
+          type: string
+        impression_id:
+          type: string
+        event_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+          - click
+        product_id:
+          type: integer
+          minimum: 1
+        position:
+          type: integer
+          minimum: 1
+    SearchEventResponse:
+      type: object
+      required:
+      - event_id
+      - click_id
+      properties:
+        event_id:
+          type: string
+        click_id:
+          type: string
+    SearchQueryMetrics:
+      type: object
+      required:
+      - zero_result_rate
+      - ctr_at_5
+      - ctr_at_10
+      - conversion_at_5
+      - conversion_at_10
+      - p95_latency_ms
+      - p99_latency_ms
+      - query
+      - searches
+      - unique_sessions
+      - zero_results
+      - clicks
+      - add_to_carts
+      - paid_orders
+      - ctr
+      - conversion_rate
+      - average_latency_ms
+      properties:
+        zero_result_rate:
+          type: number
+          format: double
+        ctr_at_5:
+          type: number
+          format: double
+        ctr_at_10:
+          type: number
+          format: double
+        conversion_at_5:
+          type: number
+          format: double
+        conversion_at_10:
+          type: number
+          format: double
+        p95_latency_ms:
+          type: number
+          format: double
+        p99_latency_ms:
+          type: number
+          format: double
+        query:
+          type: string
+        searches:
+          type: integer
+        unique_sessions:
+          type: integer
+        zero_results:
+          type: integer
+        clicks:
+          type: integer
+        add_to_carts:
+          type: integer
+        paid_orders:
+          type: integer
+        ctr:
+          type: number
+        conversion_rate:
+          type: number
+        average_latency_ms:
+          type: number
+    SearchAnalytics:
+      type: object
+      required:
+      - facet_usage
+      - zero_result_rate
+      - ctr_at_5
+      - ctr_at_10
+      - conversion_at_5
+      - conversion_at_10
+      - p95_latency_ms
+      - p99_latency_ms
+      - days
+      - searches
+      - unique_sessions
+      - zero_results
+      - clicks
+      - add_to_carts
+      - paid_orders
+      - ctr
+      - conversion_rate
+      - average_latency_ms
+      - queries
+      - popular
+      - trending
+      properties:
+        facet_usage:
+          type: object
+          additionalProperties:
+            type: integer
+        zero_result_rate:
+          type: number
+          format: double
+        ctr_at_5:
+          type: number
+          format: double
+        ctr_at_10:
+          type: number
+          format: double
+        conversion_at_5:
+          type: number
+          format: double
+        conversion_at_10:
+          type: number
+          format: double
+        p95_latency_ms:
+          type: number
+          format: double
+        p99_latency_ms:
+          type: number
+          format: double
+        days:
+          type: integer
+        searches:
+          type: integer
+        unique_sessions:
+          type: integer
+        zero_results:
+          type: integer
+        clicks:
+          type: integer
+        add_to_carts:
+          type: integer
+        paid_orders:
+          type: integer
+        ctr:
+          type: number
+        conversion_rate:
+          type: number
+        average_latency_ms:
+          type: number
+        queries:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchQueryMetrics'
+        popular:
+          type: array
+          items:
+            type: string
+        trending:
+          type: array
+          items:
+            type: string
+    SearchIndexIncident:
+      type: object
+      required: [id, index_name, reason, status, opened_at, detected_at, last_observed_at, recovered_at, duration_seconds, max_lag_seconds, max_pending_jobs, document_count]
+      properties:
+        id: { type: integer, minimum: 1 }
+        index_name: { type: string }
+        reason: { type: string, enum: [index_lag, missing_baseline] }
+        status: { type: string, enum: [open, resolved] }
+        opened_at: { type: string, format: date-time }
+        detected_at: { type: string, format: date-time }
+        last_observed_at: { type: string, format: date-time }
+        recovered_at: { type: string, format: date-time, nullable: true }
+        duration_seconds: { type: integer, format: int64, minimum: 0 }
+        max_lag_seconds: { type: integer, format: int64, minimum: 0 }
+        max_pending_jobs: { type: integer, format: int64, minimum: 0 }
+        document_count: { type: integer, format: int64, minimum: 0 }
+    SearchIndexIncidentListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/SearchIndexIncident' }
+        pagination: { $ref: '#/components/schemas/Pagination' }
+
+    SearchOperationsStatus:
+      type: object
+      required:
+      - max_concurrent
+      - search_timeout_ms
+      - circuit_failure_threshold
+      - circuit_open_ms
+      - reindex_queue_limit
+      - active_searches
+      - circuit_state
+      - consecutive_failures
+      - circuit_open_until
+      - pending_reindexes
+      properties:
+        max_concurrent:
+          type: integer
+        search_timeout_ms:
+          type: integer
+        circuit_failure_threshold:
+          type: integer
+        circuit_open_ms:
+          type: integer
+        reindex_queue_limit:
+          type: integer
+        active_searches:
+          type: integer
+        circuit_state:
+          type: string
+          enum:
+          - closed
+          - open
+          - half_open
+        consecutive_failures:
+          type: integer
+        circuit_open_until:
+          type: string
+          format: date-time
+          nullable: true
+        pending_reindexes:
+          type: integer
+
     ProductSearchMetadata:
       type: object
       required:
+        - degraded
         - normalized_query
         - applied_rewrites
         - did_you_mean
@@ -12766,6 +13340,10 @@ components:
         - ranking_profile
         - ranking_profile_version
       properties:
+        degraded:
+          type: boolean
+        fallback_reason:
+          type: string
         ranking_profile:
           type: string
         ranking_profile_version:
@@ -12820,8 +13398,12 @@ components:
 
     SearchSuggestionsResponse:
       type: object
-      required: [suggestions, corrections, popular]
+      required: [suggestions, corrections, popular, trending]
       properties:
+        trending:
+          type: array
+          items:
+            type: string
         suggestions:
           type: array
           items:
@@ -12962,6 +13544,10 @@ components:
       type: object
       required: [product_variant_id, quantity]
       properties:
+        search_click_id:
+          type: string
+        search_session_token:
+          type: string
         product_variant_id:
           type: integer
           minimum: 1

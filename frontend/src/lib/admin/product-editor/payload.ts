@@ -18,6 +18,7 @@ export function buildProductPayload(
 			asTrimmedString(variant.compare_at_price) === ""
 				? undefined
 				: Number(variant.compare_at_price),
+		unit_cost: asTrimmedString(variant.unit_cost) === "" ? null : Number(variant.unit_cost),
 		stock: Number(variant.stock),
 		position: variantIndex + 1,
 		is_published: variant.is_published,

@@ -500,6 +500,108 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/search/consent/revoke": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Revoke anonymous search analytics consent */
+		post: operations["revokeSearchConsent"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/search/impressions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Record an opted-in search impression */
+		post: operations["createSearchImpression"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/search/events": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Record a verified search result click */
+		post: operations["createSearchEvent"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/analytics": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Read consented search analytics */
+		get: operations["getAdminSearchAnalytics"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/incidents": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List stale-index incidents and recovery history */
+		get: operations["getAdminSearchIncidents"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/operations": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Inspect search capacity and circuit status */
+		get: operations["getAdminSearchOperations"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/search/products": {
 		parameters: {
 			query?: never;
@@ -4591,6 +4693,11 @@ export interface components {
 			title: string;
 			/** Format: double */
 			price: number;
+			/**
+			 * Format: double
+			 * @description Private variant unit cost, returned only by administrator catalog endpoints and omitted from all storefront responses.
+			 */
+			unit_cost?: number | null;
 			/** Format: double */
 			compare_at_price?: number | null;
 			stock: number;
@@ -5030,6 +5137,11 @@ export interface components {
 			title: string;
 			/** Format: double */
 			price: number;
+			/**
+			 * Format: double
+			 * @description Private unit cost. Omission or null clears the cost when replacing the product draft.
+			 */
+			unit_cost?: number | null;
 			/** Format: double */
 			compare_at_price?: number | null;
 			stock: number;
@@ -5172,6 +5284,10 @@ export interface components {
 			availability: number;
 			/** Format: double */
 			sales: number;
+			/** Format: double */
+			margin: number;
+			/** Format: double */
+			conversion: number;
 		};
 		SearchRankingWeightsInput: {
 			/** Format: double */
@@ -5190,6 +5306,10 @@ export interface components {
 			availability: number;
 			/** Format: double */
 			sales: number;
+			/** Format: double */
+			margin: number;
+			/** Format: double */
+			conversion: number;
 		};
 		SearchRankingProfileInput: {
 			name: string;
@@ -5478,7 +5598,164 @@ export interface components {
 			type: "terms" | "range" | "boolean" | "attribute";
 			values: components["schemas"]["SearchFacetValue"][];
 		};
+		SearchConsentRevokeInput: {
+			session_token: string;
+		};
+		SearchImpressionInput: {
+			/** Format: uuid */
+			event_id: string;
+			/** @enum {boolean} */
+			consent: true;
+			session_token?: string;
+			filters: {
+				q?: string;
+				/** Format: double */
+				min_price?: number;
+				/** Format: double */
+				max_price?: number;
+				/** @description Same semantics as the public search query parameter. */
+				brand_slug?: string[];
+				/** @description Same semantics as the public search query parameter. */
+				category_slug?: string[];
+				/** @description Same semantics as the public search query parameter. */
+				has_variant_stock?: boolean[];
+				/** @description Same semantics as the public search query parameter. */
+				price_range?: string[];
+				/** @description Same semantics as the public search query parameter. */
+				attribute?: {
+					[key: string]: string[];
+				};
+				ranking_profile?: string;
+				/** @enum {string} */
+				sort?: "relevance" | "price" | "name" | "created_at";
+				/** @enum {string} */
+				order?: "asc" | "desc";
+				page?: number;
+				limit?: number;
+			};
+		};
+		SearchImpressionResponse: {
+			impression_id: string;
+			session_token: string;
+			result: components["schemas"]["ProductSearchResponse"];
+		};
+		SearchEventInput: {
+			session_token: string;
+			impression_id: string;
+			/** Format: uuid */
+			event_id: string;
+			/** @enum {string} */
+			type: "click";
+			product_id: number;
+			position: number;
+		};
+		SearchEventResponse: {
+			event_id: string;
+			click_id: string;
+		};
+		SearchQueryMetrics: {
+			/** Format: double */
+			zero_result_rate: number;
+			/** Format: double */
+			ctr_at_5: number;
+			/** Format: double */
+			ctr_at_10: number;
+			/** Format: double */
+			conversion_at_5: number;
+			/** Format: double */
+			conversion_at_10: number;
+			/** Format: double */
+			p95_latency_ms: number;
+			/** Format: double */
+			p99_latency_ms: number;
+			query: string;
+			searches: number;
+			unique_sessions: number;
+			zero_results: number;
+			clicks: number;
+			add_to_carts: number;
+			paid_orders: number;
+			ctr: number;
+			conversion_rate: number;
+			average_latency_ms: number;
+		};
+		SearchAnalytics: {
+			facet_usage: {
+				[key: string]: number;
+			};
+			/** Format: double */
+			zero_result_rate: number;
+			/** Format: double */
+			ctr_at_5: number;
+			/** Format: double */
+			ctr_at_10: number;
+			/** Format: double */
+			conversion_at_5: number;
+			/** Format: double */
+			conversion_at_10: number;
+			/** Format: double */
+			p95_latency_ms: number;
+			/** Format: double */
+			p99_latency_ms: number;
+			days: number;
+			searches: number;
+			unique_sessions: number;
+			zero_results: number;
+			clicks: number;
+			add_to_carts: number;
+			paid_orders: number;
+			ctr: number;
+			conversion_rate: number;
+			average_latency_ms: number;
+			queries: components["schemas"]["SearchQueryMetrics"][];
+			popular: string[];
+			trending: string[];
+		};
+		SearchIndexIncident: {
+			id: number;
+			index_name: string;
+			/** @enum {string} */
+			reason: "index_lag" | "missing_baseline";
+			/** @enum {string} */
+			status: "open" | "resolved";
+			/** Format: date-time */
+			opened_at: string;
+			/** Format: date-time */
+			detected_at: string;
+			/** Format: date-time */
+			last_observed_at: string;
+			/** Format: date-time */
+			recovered_at: string | null;
+			/** Format: int64 */
+			duration_seconds: number;
+			/** Format: int64 */
+			max_lag_seconds: number;
+			/** Format: int64 */
+			max_pending_jobs: number;
+			/** Format: int64 */
+			document_count: number;
+		};
+		SearchIndexIncidentListResponse: {
+			data: components["schemas"]["SearchIndexIncident"][];
+			pagination: components["schemas"]["Pagination"];
+		};
+		SearchOperationsStatus: {
+			max_concurrent: number;
+			search_timeout_ms: number;
+			circuit_failure_threshold: number;
+			circuit_open_ms: number;
+			reindex_queue_limit: number;
+			active_searches: number;
+			/** @enum {string} */
+			circuit_state: "closed" | "open" | "half_open";
+			consecutive_failures: number;
+			/** Format: date-time */
+			circuit_open_until: string | null;
+			pending_reindexes: number;
+		};
 		ProductSearchMetadata: {
+			degraded: boolean;
+			fallback_reason?: string;
 			ranking_profile: string;
 			ranking_profile_version: number;
 			normalized_query: string;
@@ -5503,6 +5780,7 @@ export interface components {
 			pagination: components["schemas"]["Pagination"];
 		};
 		SearchSuggestionsResponse: {
+			trending: string[];
 			suggestions: string[];
 			corrections: string[];
 			popular: string[];
@@ -5562,6 +5840,8 @@ export interface components {
 			item_count: number;
 		};
 		AddCartItemRequest: {
+			search_click_id?: string;
+			search_session_token?: string;
 			product_variant_id: number;
 			quantity: number;
 		};
@@ -7796,6 +8076,162 @@ export interface operations {
 			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
+	revokeSearchConsent: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchConsentRevokeInput"];
+			};
+		};
+		responses: {
+			/** @description Anonymous analytics deleted and session revoked */
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createSearchImpression: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchImpressionInput"];
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchImpressionResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
+		};
+	};
+	createSearchEvent: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchEventInput"];
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchEventResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminSearchAnalytics: {
+		parameters: {
+			query?: {
+				days?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchAnalytics"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminSearchIncidents: {
+		parameters: {
+			query?: {
+				page?: number;
+				limit?: number;
+				status?: "open" | "resolved";
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Incident history, newest first */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchIndexIncidentListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminSearchOperations: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchOperationsStatus"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
 	searchProducts: {
 		parameters: {
 			query?: {
@@ -7845,6 +8281,7 @@ export interface operations {
 			};
 			400: components["responses"]["BadRequestProblem"];
 			404: components["responses"]["NotFoundProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
 			503: components["responses"]["ServiceUnavailableProblem"];
 		};
@@ -7871,6 +8308,7 @@ export interface operations {
 				};
 			};
 			400: components["responses"]["BadRequestProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
 			503: components["responses"]["ServiceUnavailableProblem"];
 		};
@@ -9212,6 +9650,7 @@ export interface operations {
 			401: components["responses"]["AuthenticationRequiredProblem"];
 			403: components["responses"]["ForbiddenProblem"];
 			404: components["responses"]["NotFoundProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
 			503: components["responses"]["ServiceUnavailableProblem"];
 		};
@@ -9571,6 +10010,7 @@ export interface operations {
 			403: components["responses"]["ForbiddenProblem"];
 			404: components["responses"]["NotFoundProblem"];
 			422: components["responses"]["ValidationProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
 			503: components["responses"]["ServiceUnavailableProblem"];
 		};
@@ -9621,7 +10061,9 @@ export interface operations {
 			401: components["responses"]["AuthenticationRequiredProblem"];
 			403: components["responses"]["ForbiddenProblem"];
 			409: components["responses"]["ConflictProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
 		};
 	};
 	listAdminSearchSynonyms: {

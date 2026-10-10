@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 
@@ -23,14 +24,15 @@ import (
 )
 
 const (
-	ProductEntityType      = "product"
-	ProductIndexName       = "products"
-	JobTypeProductSync     = "search.product_sync"
-	JobTypeFullReindex     = "search.full_reindex"
-	ProductSyncVersion     = 1
-	FullReindexVersion     = 1
-	HealthyFreshnessTarget = 60 * time.Second
-	StaleFreshnessTarget   = 5 * time.Minute
+	JobTypeConversionRefresh = "search.conversion_refresh"
+	ProductEntityType        = "product"
+	ProductIndexName         = "products"
+	JobTypeProductSync       = "search.product_sync"
+	JobTypeFullReindex       = "search.full_reindex"
+	ProductSyncVersion       = 1
+	FullReindexVersion       = 1
+	HealthyFreshnessTarget   = 60 * time.Second
+	StaleFreshnessTarget     = 5 * time.Minute
 )
 
 type ProductSyncPayload struct {
@@ -97,6 +99,8 @@ type AppliedRewrite struct {
 }
 
 type Result struct {
+	Degraded              bool
+	FallbackReason        string
 	RuleDecisions         []RuleDecision
 	RankingProfile        string
 	RankingProfileVersion int
@@ -113,6 +117,7 @@ type Result struct {
 }
 
 type SuggestionResult struct {
+	Trending    []string
 	Suggestions []string
 	Corrections []string
 	Popular     []string
@@ -140,17 +145,19 @@ type SearchBackend interface {
 }
 
 type Service struct {
-	db      *gorm.DB
-	backend SearchBackend
-	jobs    *jobs.Runtime
-	now     func() time.Time
+	db        *gorm.DB
+	backend   SearchBackend
+	jobs      *jobs.Runtime
+	now       func() time.Time
+	hardening *hardeningState
+	reindexMu sync.Mutex
 }
 
 func NewService(db *gorm.DB, backend SearchBackend, runtime *jobs.Runtime) *Service {
 	if backend == nil && db != nil {
 		backend = NewDatabaseBackend(db)
 	}
-	return &Service{db: db, backend: backend, jobs: runtime, now: func() time.Time { return time.Now().UTC() }}
+	return &Service{db: db, backend: backend, jobs: runtime, now: func() time.Time { return time.Now().UTC() }, hardening: newHardeningState(DefaultHardeningConfig())}
 }
 
 func NewDatabaseBackend(db *gorm.DB) SearchBackend {
@@ -178,14 +185,14 @@ func (s *Service) Search(ctx context.Context, filters Filters) (Result, error) {
 	if s == nil || s.backend == nil {
 		return Result{}, errors.New("search backend is required")
 	}
-	return s.backend.Search(ctx, filters)
+	return s.searchWithProtection(ctx, filters)
 }
 
 func (s *Service) Suggest(ctx context.Context, query string, limit int) (SuggestionResult, error) {
 	if s == nil || s.backend == nil {
 		return SuggestionResult{}, errors.New("search backend is required")
 	}
-	return s.backend.Suggest(ctx, query, limit)
+	return s.suggestWithProtection(ctx, query, limit)
 }
 
 func (s *Service) Freshness(ctx context.Context) (Freshness, error) {
@@ -205,18 +212,42 @@ func (s *Service) RegisterJobHandlers() error {
 	if err := s.jobs.Register(JobTypeFullReindex, jobs.Registration{Handle: s.handleFullReindex}); err != nil {
 		return err
 	}
-	return s.jobs.Register(JobTypeSalesRefresh, jobs.Registration{Handle: s.handleSalesRefresh})
+	if err := s.jobs.Register(JobTypeSalesRefresh, jobs.Registration{Handle: s.handleSalesRefresh}); err != nil {
+		return err
+	}
+	if err := s.RegisterAnalyticsJobHandler(); err != nil {
+		return err
+	}
+	return s.jobs.Register(JobTypeConversionRefresh, jobs.Registration{Handle: s.handleConversionRefresh})
 }
 
 func (s *Service) EnqueueFullReindex(ctx context.Context) (models.JobQueue, error) {
-	if s == nil || s.jobs == nil {
+	if s == nil || s.jobs == nil || s.db == nil {
 		return models.JobQueue{}, errors.New("search job runtime is required")
 	}
-	requestID := uuid.NewString()
-	return s.jobs.Enqueue(ctx, jobs.EnqueueInput{
-		JobType: JobTypeFullReindex, Payload: FullReindexPayload{Version: FullReindexVersion, RequestID: requestID},
-		IdempotencyKey: "full:" + requestID,
+	var job models.JobQueue
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// Serialize admission across replicas through the index-state row.
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&models.SearchIndexState{Name: ProductIndexName}).Error; err != nil {
+			return err
+		}
+		var state models.SearchIndexState
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&state, "name = ?", ProductIndexName).Error; err != nil {
+			return err
+		}
+		var count int64
+		if err := tx.Model(&models.JobQueue{}).Where("job_type = ? AND status IN ?", JobTypeFullReindex, []string{models.JobStatusPending, models.JobStatusRunning, models.JobStatusRetryScheduled}).Count(&count).Error; err != nil {
+			return err
+		}
+		if count >= int64(s.hardening.config.ReindexQueueLimit) {
+			return ErrCapacity
+		}
+		requestID := uuid.NewString()
+		var err error
+		job, err = s.jobs.EnqueueTx(ctx, tx, jobs.EnqueueInput{JobType: JobTypeFullReindex, Payload: FullReindexPayload{Version: FullReindexVersion, RequestID: requestID}, IdempotencyKey: "full:" + requestID})
+		return err
 	})
+	return job, err
 }
 
 // EnsureInitialReindex durably schedules the first catalog backfill. The fixed
@@ -260,6 +291,12 @@ func (s *Service) Reindex(ctx context.Context) error {
 	if s == nil || s.db == nil || s.backend == nil {
 		return errors.New("search database and backend are required")
 	}
+	if !s.reindexMu.TryLock() {
+		return ErrCapacity
+	}
+	defer s.reindexMu.Unlock()
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+	defer cancel()
 	started := s.now()
 	if err := s.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "name"}},
@@ -268,24 +305,28 @@ func (s *Service) Reindex(ctx context.Context) error {
 		return err
 	}
 	var products []models.Product
+	documents := make([]models.SearchDocument, 0)
 	err := s.db.WithContext(ctx).
-		Preload("Brand").Preload("Categories").Preload("Variants").
-		Preload("AttributeValues.ProductAttribute").
+		Preload("Brand").Preload("Categories").Preload("Variants").Preload("AttributeValues.ProductAttribute").
 		Where("products.is_published = ?", true).
 		Where(`NOT EXISTS (SELECT 1 FROM product_variants pv_all WHERE pv_all.product_id = products.id) OR EXISTS (SELECT 1 FROM product_variants pv_public WHERE pv_public.product_id = products.id AND pv_public.is_published = TRUE)`).
-		Order("products.id asc").Find(&products).Error
+		Order("products.id asc").FindInBatches(&products, 500, func(tx *gorm.DB, batch int) error {
+		for _, product := range products {
+			if err := ctx.Err(); err != nil {
+				return err
+			}
+			document, include, err := projectProduct(product, started)
+			if err != nil {
+				return err
+			}
+			if include {
+				documents = append(documents, document)
+			}
+		}
+		return nil
+	}).Error
 	if err != nil {
 		return err
-	}
-	documents := make([]models.SearchDocument, 0, len(products))
-	for _, product := range products {
-		document, include, err := projectProduct(product, started)
-		if err != nil {
-			return err
-		}
-		if include {
-			documents = append(documents, document)
-		}
 	}
 	return s.backend.ReplaceAll(ctx, documents, started)
 }
@@ -413,7 +454,7 @@ func projectProduct(product models.Product, indexedAt time.Time) (models.SearchD
 		EntityType: ProductEntityType, EntityID: product.ID, PayloadJSON: string(payload),
 		SearchableText: NormalizeQuery(strings.Join(terms, " ")), NormalizedName: NormalizeQuery(product.Name),
 		BrandSlug: brandSlug, CategoryTokens: categoryTokens, AttributeTokens: attributeTokens,
-		MinPrice: minPrice, MaxPrice: maxPrice, Available: available,
+		MinPrice: minPrice, MaxPrice: maxPrice, Available: available, MarginRate: productMarginRate(product),
 		Active:  true,
 		Version: product.UpdatedAt.UnixNano(), SourceCreatedAt: product.CreatedAt, SourceUpdatedAt: product.UpdatedAt,
 		IndexedAt: indexedAt,
@@ -436,8 +477,10 @@ func attributeValue(value models.ProductAttributeValue) string {
 }
 
 type databaseBackend struct {
-	db  *gorm.DB
-	now func() time.Time
+	cache     documentCache
+	rankCache rankingCache
+	db        *gorm.DB
+	now       func() time.Time
 }
 
 func (b *databaseBackend) ReplaceAll(ctx context.Context, documents []models.SearchDocument, completed time.Time) error {
@@ -497,23 +540,23 @@ func upsertDocument(tx *gorm.DB, document models.SearchDocument) error {
 		"entity_type": document.EntityType, "entity_id": document.EntityID, "payload_json": document.PayloadJSON,
 		"searchable_text": document.SearchableText, "normalized_name": document.NormalizedName, "brand_slug": document.BrandSlug,
 		"category_tokens": document.CategoryTokens, "attribute_tokens": document.AttributeTokens,
-		"min_price": document.MinPrice, "max_price": document.MaxPrice, "available": document.Available, "active": document.Active,
+		"min_price": document.MinPrice, "max_price": document.MaxPrice, "available": document.Available, "margin_rate": document.MarginRate, "active": document.Active,
 		"version": document.Version, "source_created_at": document.SourceCreatedAt, "source_updated_at": document.SourceUpdatedAt,
 		"indexed_at": document.IndexedAt, "created_at": now, "updated_at": now,
 	}
 	return tx.Table("search_documents").Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "entity_type"}, {Name: "entity_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"payload_json", "searchable_text", "normalized_name", "brand_slug", "category_tokens", "attribute_tokens", "min_price", "max_price", "available", "active", "version", "source_created_at", "source_updated_at", "indexed_at", "updated_at"}),
+		DoUpdates: clause.AssignmentColumns([]string{"payload_json", "searchable_text", "normalized_name", "brand_slug", "category_tokens", "attribute_tokens", "min_price", "max_price", "available", "margin_rate", "active", "version", "source_created_at", "source_updated_at", "indexed_at", "updated_at"}),
 		Where:     clause.Where{Exprs: []clause.Expression{clause.Expr{SQL: "search_documents.version <= excluded.version"}}},
 	}).Create(values).Error
 }
 
 func upsertIndexState(tx *gorm.DB, indexedAt time.Time, fullAt *time.Time, count int64) error {
-	values := map[string]any{"last_indexed_at": indexedAt, "document_count": count, "updated_at": indexedAt}
+	values := map[string]any{"last_indexed_at": indexedAt, "document_count": count, "updated_at": indexedAt, "generation": gorm.Expr("search_index_states.generation + 1")}
 	if fullAt != nil {
 		values["last_full_reindex_at"] = *fullAt
 	}
-	state := models.SearchIndexState{Name: ProductIndexName, LastIndexedAt: &indexedAt, DocumentCount: count}
+	state := models.SearchIndexState{Name: ProductIndexName, LastIndexedAt: &indexedAt, DocumentCount: count, Generation: 1}
 	if fullAt != nil {
 		state.LastFullReindexAt = fullAt
 	}
@@ -545,14 +588,14 @@ func (b *databaseBackend) Suggest(ctx context.Context, query string, limit int) 
 	var documents []models.SearchDocument
 	prefix := escapeLike(normalized) + "%"
 	if err := b.db.WithContext(ctx).Where("entity_type = ? AND active = ? AND (normalized_name LIKE ? OR brand_slug LIKE ?)", ProductEntityType, true, prefix, prefix).Order("normalized_name asc, entity_id asc").Limit(limit * 2).Find(&documents).Error; err != nil {
-		return result, err
+		return result, fmt.Errorf("%w: %w", ErrIndexUnavailable, err)
 	}
 	seen := map[string]struct{}{}
 	values := make([]string, 0, limit)
 	for _, document := range documents {
 		var product models.Product
 		if err := json.Unmarshal([]byte(document.PayloadJSON), &product); err != nil {
-			return result, err
+			return result, fmt.Errorf("%w: %w", ErrIndexUnavailable, err)
 		}
 		candidates := []string{product.Name}
 		if product.Brand != nil {

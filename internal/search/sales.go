@@ -97,6 +97,7 @@ func (s *Service) RefreshSalesSignals(ctx context.Context, asOf time.Time) error
 				return fmt.Errorf("project search sales signals: %w", err)
 			}
 		}
-		return nil
+		// Invalidate scoring caches without advancing product freshness.
+		return tx.Model(&models.SearchIndexState{}).Where("name = ?", ProductIndexName).UpdateColumn("generation", gorm.Expr("generation + 1")).Error
 	})
 }

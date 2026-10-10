@@ -40,3 +40,19 @@ test("implicit ordering remains implicit when navigating or changing a query", (
 	expect(params.get("limit")).toBe("24");
 	expect(params.get("ranking_profile")).toBe("new_arrivals");
 });
+test("multi-value facets survive pagination and explicit ordering", () => {
+	const params = buildSearchParams({
+		...state,
+		brandSlugs: ["one", "two"],
+		categorySlugs: ["jackets", "coats"],
+		stockSelections: [true, false],
+		priceRanges: ["0:100", "100:200"],
+		attributeSelections: { color: ["red", "blue"] },
+	});
+	expect(params.getAll("brand_slug")).toEqual(["one", "two"]);
+	expect(params.getAll("category_slug")).toEqual(["jackets", "coats"]);
+	expect(params.getAll("has_variant_stock")).toEqual(["true", "false"]);
+	expect(params.getAll("price_range")).toEqual(["0:100", "100:200"]);
+	expect(params.getAll("attribute[color]")).toEqual(["red", "blue"]);
+	expect(params.get("page")).toBe("3");
+});

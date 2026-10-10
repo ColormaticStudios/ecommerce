@@ -2058,6 +2058,54 @@ var orderedMigrations = []Migration{
 			return nil
 		}}},
 	},
+	{Version: searchAnalyticsP4Version, Name: "activate anonymous search analytics and verified commerce attribution", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "search", "analytics"}, Up: migrateSearchAnalyticsP4},
+	{Version: searchSignalsIncidentsVersion, Name: "add private variant costs, ranking signals, and stale-index incident history", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "search", "catalog"}, Up: migrateSearchSignalsIncidents},
+}
+
+var searchAnalyticsP4CatalogKeys = []localizationP1BaselineKey{
+	{Namespace: "admin", Key: "navigation.search_analytics", SourceText: "Search analytics", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.search_synonyms", SourceText: "Search synonyms", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.search_typo_profiles", SourceText: "Search typo profiles", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.search_ranking_profiles", SourceText: "Search ranking profiles", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.search_operations", SourceText: "Search operations", OwnerDomain: "admin"},
+
+	{Namespace: "storefront", Key: "search.apply_filters", SourceText: "Apply filters", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.availability", SourceText: "Availability", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.brands", SourceText: "Brands", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.categories", SourceText: "Categories", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.consent", SourceText: "Allow anonymous search activity to improve search. You can turn this off at any time; raw activity is retained for 90 days.", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.degraded", SourceText: "Search is temporarily unavailable. Showing basic catalog browsing with your filters; keyword matching and relevance sorting are unavailable.", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.did_you_mean", SourceText: "Did you mean", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.in_stock", SourceText: "In stock", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.out_of_stock", SourceText: "Out of stock", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.popular", SourceText: "Popular searches", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.price", SourceText: "Price", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.relaxed", SourceText: "Showing related matches. Try the spelling suggestion or adjust your filters for closer results.", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.submit", SourceText: "Search", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.suggestions", SourceText: "Search suggestions", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.title", SourceText: "Product search", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.trending", SourceText: "Trending searches", OwnerDomain: "storefront"},
+
+	{Namespace: "errors", Key: "invalid_search_event", SourceText: "The search event is invalid or expired.", OwnerDomain: "http"},
+
+	{Namespace: "errors", Key: "search_capacity_exhausted", SourceText: "Search is busy. Please try again shortly.", OwnerDomain: "http"},
+
+	{Namespace: "errors", Key: "search_unavailable", SourceText: "Search is temporarily unavailable.", OwnerDomain: "http"},
 }
 
 // These schemas freeze the tables introduced by the search P0 migration.
@@ -5638,4 +5686,10 @@ func migrationStepAlertThresholdMs() int64 {
 		return 30_000
 	}
 	return parsed.Milliseconds()
+}
+
+var searchSignalsCatalogKeys = []localizationP1BaselineKey{
+	{Namespace: "admin", Key: "product.variant.unit_cost", SourceText: "Unit cost", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "product.variant.unit_cost_label", SourceText: "Variant {number} unit cost", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "product.variant.unit_cost_help", SourceText: "Private to administrators. Leave blank when the cost is unknown.", OwnerDomain: "admin"},
 }

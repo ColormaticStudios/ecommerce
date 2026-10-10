@@ -232,6 +232,10 @@ func searchConfigurationUpdatedBy(value *uint) *int {
 
 func searchConfigurationEndpointError(err error) error {
 	switch {
+	case errors.Is(err, searchservice.ErrCapacity):
+		return problemError(http.StatusTooManyRequests, "search_capacity_exhausted", "Search is busy. Please try again shortly.", err)
+	case errors.Is(err, searchservice.ErrCircuitOpen), errors.Is(err, searchservice.ErrIndexUnavailable):
+		return problemError(http.StatusServiceUnavailable, "search_unavailable", "Search is temporarily unavailable.", err)
 	case errors.Is(err, searchservice.ErrConfigurationInvalid):
 		return problemError(http.StatusUnprocessableEntity, "invalid_search_configuration", err.Error(), err)
 	case errors.Is(err, searchservice.ErrConfigurationNotFound):

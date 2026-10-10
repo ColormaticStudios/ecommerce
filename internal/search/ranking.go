@@ -26,6 +26,8 @@ type RankingWeights struct {
 	Recency       float64 `json:"recency"`
 	Availability  float64 `json:"availability"`
 	Sales         float64 `json:"sales"`
+	Margin        float64 `json:"margin"`
+	Conversion    float64 `json:"conversion"`
 }
 
 type RankingProfile struct {
@@ -65,7 +67,7 @@ func DefaultRankingWeights() RankingWeights {
 }
 
 func validateRankingWeights(w RankingWeights) error {
-	values := []float64{w.TokenCoverage, w.ExactPhrase, w.Name, w.Brand, w.Attributes, w.Recency, w.Availability, w.Sales}
+	values := []float64{w.TokenCoverage, w.ExactPhrase, w.Name, w.Brand, w.Attributes, w.Recency, w.Availability, w.Sales, w.Margin, w.Conversion}
 	total := 0.0
 	for _, value := range values {
 		if math.IsNaN(value) || math.IsInf(value, 0) || value < 0 || value > 100 {
@@ -271,19 +273,37 @@ func (b *databaseBackend) loadRankingProfile(ctx context.Context, name string) (
 func containsRankingTerm(field, term string) bool {
 	return term != "" && strings.Contains(" "+NormalizeQuery(field)+" ", " "+term+" ")
 }
+
+type rankingFields struct{ searchable, name, description, brand, attributes string }
+
+func normalizedRankingFields(product models.Product, row models.SearchDocument) rankingFields {
+	values := make([]string, 0, len(product.AttributeValues))
+	for _, value := range product.AttributeValues {
+		values = append(values, attributeValue(value))
+	}
+	brand := ""
+	if product.Brand != nil {
+		brand = product.Brand.Name
+	}
+	pad := func(value string) string { return " " + NormalizeQuery(value) + " " }
+	return rankingFields{pad(row.SearchableText), pad(product.Name), pad(product.Description), pad(brand), pad(strings.Join(values, " "))}
+}
 func rankingCoverage(field string, plan queryPlan) float64 {
+	return normalizedRankingCoverage(" "+NormalizeQuery(field)+" ", plan)
+}
+func normalizedRankingCoverage(field string, plan queryPlan) float64 {
 	if len(plan.groups) == 0 {
 		return 0
 	}
 	total := 0.0
 	for _, group := range plan.groups {
-		if containsRankingTerm(field, group.original) {
+		if group.original != "" && strings.Contains(field, " "+group.original+" ") {
 			total++
 			continue
 		}
 		for _, alternative := range group.alternatives {
-			if containsRankingTerm(field, alternative) {
-				total += 0.5
+			if alternative != "" && strings.Contains(field, " "+alternative+" ") {
+				total += .5
 				break
 			}
 		}
@@ -291,19 +311,15 @@ func rankingCoverage(field string, plan queryPlan) float64 {
 	return total / float64(len(plan.groups))
 }
 func explainRanking(document indexedProduct, plan queryPlan, query string, profile RankingProfile, units int64, now time.Time) RankingExplanation {
-	attributes := make([]string, 0, len(document.product.AttributeValues))
-	for _, value := range document.product.AttributeValues {
-		attributes = append(attributes, attributeValue(value))
-	}
-	brand := ""
-	if document.product.Brand != nil {
-		brand = document.product.Brand.Name
+	text := document.rankingText
+	if text.searchable == "" {
+		text = normalizedRankingFields(*document.product, *document.document)
 	}
 	phrase := 0.0
 	if len(strings.Fields(query)) > 1 {
-		if containsRankingTerm(document.product.Name, query) {
+		if strings.Contains(text.name, " "+query+" ") {
 			phrase = 1
-		} else if containsRankingTerm(document.product.Description, query) {
+		} else if strings.Contains(text.description, " "+query+" ") {
 			phrase = 0.5
 		}
 	}
@@ -317,14 +333,16 @@ func explainRanking(document indexedProduct, plan queryPlan, query string, profi
 		sales = float64(units) / (float64(units) + 20)
 	}
 	result := RankingExplanation{ProductID: document.document.EntityID, Components: []RankingComponent{
-		{Name: "token_coverage", Value: rankingCoverage(document.document.SearchableText, plan), Weight: profile.Weights.TokenCoverage},
+		{Name: "token_coverage", Value: normalizedRankingCoverage(text.searchable, plan), Weight: profile.Weights.TokenCoverage},
 		{Name: "exact_phrase", Value: phrase, Weight: profile.Weights.ExactPhrase},
-		{Name: "name", Value: rankingCoverage(document.product.Name, plan), Weight: profile.Weights.Name},
-		{Name: "brand", Value: rankingCoverage(brand, plan), Weight: profile.Weights.Brand},
-		{Name: "attributes", Value: rankingCoverage(strings.Join(attributes, " "), plan), Weight: profile.Weights.Attributes},
+		{Name: "name", Value: normalizedRankingCoverage(text.name, plan), Weight: profile.Weights.Name},
+		{Name: "brand", Value: normalizedRankingCoverage(text.brand, plan), Weight: profile.Weights.Brand},
+		{Name: "attributes", Value: normalizedRankingCoverage(text.attributes, plan), Weight: profile.Weights.Attributes},
 		{Name: "recency", Value: math.Exp2(-age / 30), Weight: profile.Weights.Recency},
 		{Name: "availability", Value: available, Weight: profile.Weights.Availability},
 		{Name: "sales", Value: sales, Weight: profile.Weights.Sales},
+		{Name: "margin", Value: document.document.MarginRate, Weight: profile.Weights.Margin},
+		{Name: "conversion", Value: document.conversion, Weight: profile.Weights.Conversion},
 	}}
 	for i := range result.Components {
 		component := &result.Components[i]
@@ -334,21 +352,64 @@ func explainRanking(document indexedProduct, plan queryPlan, query string, profi
 	result.AdjustedScore = result.Score
 	return result
 }
-func (b *databaseBackend) rankProducts(ctx context.Context, documents []indexedProduct, plan queryPlan, query string, profile RankingProfile, order string) error {
+func (b *databaseBackend) rankProductsUncached(ctx context.Context, documents []indexedProduct, plan queryPlan, query string, profile RankingProfile, order string, explain bool) error {
 	signals := map[uint]int64{}
-	// Batch IDs to remain below SQLite/Postgres parameter limits.
-	for start := 0; start < len(documents); start += 500 {
-		end := min(start+500, len(documents))
-		ids := make([]uint, 0, end-start)
-		for _, doc := range documents[start:end] {
-			ids = append(ids, doc.document.EntityID)
+	// Sparse sales snapshots avoid one query per candidate batch. Read at
+	// most 501 positive signals; larger snapshots retain bounded ID batches.
+	var activeSignals []models.SearchSalesSignal
+	if err := b.db.WithContext(ctx).Where("units30_days > 0").Limit(501).Find(&activeSignals).Error; err != nil {
+		return err
+	}
+	if len(activeSignals) <= 500 {
+		for _, row := range activeSignals {
+			signals[row.ProductID] = row.Units30Days
 		}
-		var rows []models.SearchSalesSignal
-		if err := b.db.WithContext(ctx).Where("product_id IN ?", ids).Find(&rows).Error; err != nil {
+	}
+	// Batch IDs to remain below SQLite/Postgres parameter limits.
+	if len(activeSignals) > 500 {
+		for start := 0; start < len(documents); start += 500 {
+			end := min(start+500, len(documents))
+			ids := make([]uint, 0, end-start)
+			for _, doc := range documents[start:end] {
+				ids = append(ids, doc.document.EntityID)
+			}
+			var rows []models.SearchSalesSignal
+			if err := b.db.WithContext(ctx).Where("product_id IN ? AND units30_days > 0", ids).Find(&rows).Error; err != nil {
+				return err
+			}
+			for _, row := range rows {
+				signals[row.ProductID] = row.Units30Days
+			}
+		}
+	}
+	if profile.Weights.Conversion > 0 || explain {
+		conversionSignals := map[uint]float64{}
+		var activeConversions []models.SearchConversionSignal
+		if err := b.db.WithContext(ctx).Where("conversions30_days > 0").Limit(501).Find(&activeConversions).Error; err != nil {
 			return err
 		}
-		for _, row := range rows {
-			signals[row.ProductID] = row.Units30Days
+		if len(activeConversions) <= 500 {
+			for _, row := range activeConversions {
+				conversionSignals[row.ProductID] = conversionRate(row)
+			}
+		} else {
+			for start := 0; start < len(documents); start += 500 {
+				end := min(start+500, len(documents))
+				ids := make([]uint, 0, end-start)
+				for _, doc := range documents[start:end] {
+					ids = append(ids, doc.document.EntityID)
+				}
+				var rows []models.SearchConversionSignal
+				if err := b.db.WithContext(ctx).Where("product_id IN ? AND conversions30_days > 0", ids).Find(&rows).Error; err != nil {
+					return err
+				}
+				for _, row := range rows {
+					conversionSignals[row.ProductID] = conversionRate(row)
+				}
+			}
+		}
+		for i := range documents {
+			documents[i].conversion = conversionSignals[documents[i].document.EntityID]
 		}
 	}
 	now := b.now().UTC().Truncate(24 * time.Hour)

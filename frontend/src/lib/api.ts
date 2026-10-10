@@ -32,6 +32,8 @@ import { buildOIDCLoginUrl } from "$lib/auth";
 import { ApiProblemError, isApiProblem } from "$lib/api/errors";
 import { appendQueryParams } from "$lib/api/http";
 import type { components, paths } from "$lib/api/generated/openapi";
+import * as searchDomain from "$lib/api/domains/search";
+import * as searchIncidentsDomain from "$lib/api/domains/search-incidents";
 import * as searchMerchandisingDomain from "$lib/api/domains/search-merchandising";
 import * as cartDomain from "$lib/api/domains/cart";
 import * as ordersDomain from "$lib/api/domains/orders";
@@ -554,6 +556,99 @@ export class API {
 	}
 	public previewAdminSearch(body: searchMerchandisingDomain.MerchandisingPreviewRequest) {
 		return searchMerchandisingDomain.preview(this.request.bind(this), body);
+	}
+
+	public searchSuggestions(q = "") {
+		return this.request<components["schemas"]["SearchSuggestionsResponse"]>(
+			"GET",
+			"/search/suggestions",
+			undefined,
+			{ q }
+		);
+	}
+	public listAdminSearchSynonyms() {
+		return searchDomain.listSynonyms(this.request.bind(this));
+	}
+	public saveAdminSearchSynonym(body: searchDomain.SynonymInput, id?: number) {
+		return this.request<searchDomain.Synonym>(
+			id ? "PATCH" : "POST",
+			`/admin/search/synonyms${id ? `/${id}` : ""}`,
+			body
+		);
+	}
+	public deleteAdminSearchSynonym(id: number) {
+		return this.request<void>("DELETE", `/admin/search/synonyms/${id}`);
+	}
+	public listAdminSearchTypoProfiles() {
+		return searchDomain.listTypoProfiles(this.request.bind(this));
+	}
+	public saveAdminSearchTypoProfile(body: searchDomain.TypoInput, id?: number) {
+		return this.request<searchDomain.TypoProfile>(
+			id ? "PATCH" : "POST",
+			`/admin/search/typo-profiles${id ? `/${id}` : ""}`,
+			body
+		);
+	}
+	public deleteAdminSearchTypoProfile(id: number) {
+		return this.request<void>("DELETE", `/admin/search/typo-profiles/${id}`);
+	}
+	public listAdminSearchRankingProfiles() {
+		return searchDomain.listRankingProfiles(this.request.bind(this));
+	}
+	public saveAdminSearchRankingProfile(body: searchDomain.RankingInput, id?: number) {
+		return this.request<searchDomain.RankingProfile>(
+			id ? "PATCH" : "POST",
+			`/admin/search/ranking-profiles${id ? `/${id}` : ""}`,
+			body
+		);
+	}
+	public deleteAdminSearchRankingProfile(id: number) {
+		return this.request<void>("DELETE", `/admin/search/ranking-profiles/${id}`);
+	}
+	public adminSearchFreshness() {
+		return this.request<components["schemas"]["SearchFreshness"]>("GET", "/admin/search/freshness");
+	}
+	public reindexAdminSearch() {
+		return this.request<components["schemas"]["SearchReindexAccepted"]>(
+			"POST",
+			"/admin/search/reindex"
+		);
+	}
+
+	public revokeSearchConsent(session_token: string) {
+		return this.request<void>("POST", "/search/consent/revoke", { session_token });
+	}
+	public recordSearchImpression(body: components["schemas"]["SearchImpressionInput"]) {
+		return this.request<components["schemas"]["SearchImpressionResponse"]>(
+			"POST",
+			"/search/impressions",
+			body
+		);
+	}
+	public recordSearchEvent(body: components["schemas"]["SearchEventInput"]) {
+		return this.request<components["schemas"]["SearchEventResponse"]>(
+			"POST",
+			"/search/events",
+			body
+		);
+	}
+	public adminSearchAnalytics(days = 7) {
+		return this.request<components["schemas"]["SearchAnalytics"]>(
+			"GET",
+			"/admin/search/analytics",
+			undefined,
+			{ days }
+		);
+	}
+	public adminSearchIncidents(query: searchIncidentsDomain.IncidentQuery = {}) {
+		return searchIncidentsDomain.listIncidents(this.request.bind(this), query);
+	}
+
+	public adminSearchOperations() {
+		return this.request<components["schemas"]["SearchOperationsStatus"]>(
+			"GET",
+			"/admin/search/operations"
+		);
 	}
 
 	// Cart Operations

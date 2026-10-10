@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math"
 	"strings"
 	"time"
 
@@ -36,7 +37,7 @@ func (s *Service) GetProduct(ctx context.Context, id uint, draft bool) (models.P
 	product.Variants = make([]models.ProductVariant, 0, len(value.VariantDrafts))
 	for _, item := range value.VariantDrafts {
 		if !item.IsDeleted {
-			product.Variants = append(product.Variants, models.ProductVariant{BaseModel: item.BaseModel, ProductID: id, SKU: item.SKU, Title: item.Title, Price: item.Price, CompareAtPrice: item.CompareAtPrice, Stock: item.Stock, Position: item.Position, IsPublished: item.IsPublished, WeightGrams: item.WeightGrams, LengthCm: item.LengthCm, WidthCm: item.WidthCm, HeightCm: item.HeightCm})
+			product.Variants = append(product.Variants, models.ProductVariant{BaseModel: item.BaseModel, ProductID: id, SKU: item.SKU, Title: item.Title, Price: item.Price, CompareAtPrice: item.CompareAtPrice, UnitCost: item.UnitCost, Stock: item.Stock, Position: item.Position, IsPublished: item.IsPublished, WeightGrams: item.WeightGrams, LengthCm: item.LengthCm, WidthCm: item.WidthCm, HeightCm: item.HeightCm})
 		}
 	}
 	categoryIDs := make([]uint, 0, len(value.CategoryDrafts))
@@ -135,6 +136,9 @@ func validateProductInput(input apicontract.ProductUpsertInput) error {
 		if sku == "" {
 			return invalidInput("invalid_product_variant", "Variant SKU is required.")
 		}
+		if value.UnitCost != nil && (math.IsNaN(*value.UnitCost) || math.IsInf(*value.UnitCost, 0) || *value.UnitCost < 0 || *value.UnitCost > 9999999999.99) {
+			return invalidInput("invalid_product_variant", "Variant unit cost must be a finite amount between zero and 9999999999.99.")
+		}
 		if value.Price < 0 || value.Stock < 0 {
 			return invalidInput("invalid_product_variant", "Variant price and stock cannot be negative.")
 		}
@@ -197,7 +201,7 @@ func replaceDraft(tx *gorm.DB, product models.Product, input apicontract.Product
 			value := models.MoneyFromFloat(*item.CompareAtPrice)
 			compare = &value
 		}
-		value := models.ProductVariantDraft{ProductDraftID: draft.ID, SKU: strings.TrimSpace(item.Sku), Title: strings.TrimSpace(item.Title), Price: models.MoneyFromFloat(item.Price), CompareAtPrice: compare, Stock: item.Stock, Position: position, IsPublished: published, WeightGrams: item.WeightGrams, LengthCm: item.LengthCm, WidthCm: item.WidthCm, HeightCm: item.HeightCm}
+		value := models.ProductVariantDraft{ProductDraftID: draft.ID, SKU: strings.TrimSpace(item.Sku), Title: strings.TrimSpace(item.Title), Price: models.MoneyFromFloat(item.Price), CompareAtPrice: compare, UnitCost: moneyFromFloatPtr(item.UnitCost), Stock: item.Stock, Position: position, IsPublished: published, WeightGrams: item.WeightGrams, LengthCm: item.LengthCm, WidthCm: item.WidthCm, HeightCm: item.HeightCm}
 		if err := tx.Select("*").Create(&value).Error; err != nil {
 			return err
 		}
@@ -299,7 +303,7 @@ func (s *Service) PublishProduct(ctx context.Context, id uint) (models.Product, 
 			if !exists {
 				value = &models.ProductVariant{ProductID: id, SKU: item.SKU}
 			}
-			value.Title, value.Price, value.CompareAtPrice, value.Stock = item.Title, item.Price, item.CompareAtPrice, item.Stock
+			value.Title, value.Price, value.CompareAtPrice, value.UnitCost, value.Stock = item.Title, item.Price, item.CompareAtPrice, item.UnitCost, item.Stock
 			value.Position, value.IsPublished = item.Position, item.IsPublished
 			value.WeightGrams, value.LengthCm, value.WidthCm, value.HeightCm = item.WeightGrams, item.LengthCm, item.WidthCm, item.HeightCm
 			if exists {
@@ -424,7 +428,7 @@ func productInputFromLive(product models.Product) apicontract.ProductUpsertInput
 	input := apicontract.ProductUpsertInput{Sku: product.SKU, Name: product.Name, Subtitle: product.Subtitle, Description: product.Description, Images: product.Images, Seo: apicontract.ProductSEOInput{}}
 	for _, item := range product.Variants {
 		published := item.IsPublished
-		input.Variants = append(input.Variants, apicontract.ProductVariantInput{Sku: item.SKU, Title: item.Title, Price: item.Price.Float64(), Stock: item.Stock, IsPublished: &published, Position: &item.Position})
+		input.Variants = append(input.Variants, apicontract.ProductVariantInput{Sku: item.SKU, Title: item.Title, Price: item.Price.Float64(), UnitCost: moneyFloatPtr(item.UnitCost), Stock: item.Stock, IsPublished: &published, Position: &item.Position})
 	}
 	for _, item := range product.Categories {
 		input.CategoryIds = append(input.CategoryIds, int(item.ID))
@@ -758,4 +762,12 @@ func removedReferenceIDs(previous, current []models.MediaReference) []string {
 		}
 	}
 	return removed
+}
+
+func moneyFromFloatPtr(value *float64) *models.Money {
+	if value == nil {
+		return nil
+	}
+	result := models.MoneyFromFloat(*value)
+	return &result
 }

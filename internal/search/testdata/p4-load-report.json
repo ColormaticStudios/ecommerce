@@ -1,0 +1,4337 @@
+{
+  "scope": "Disposable local SQLite service workload; no production/HTTP/PostgreSQL SLO assertion",
+  "fixture": "10000 published synthetic products without brand/category/attribute/variant/order data; 80% specific queries, 20% broad queries",
+  "baseline_before_optimization": {
+    "backend": "sqlite local WAL; service-level not HTTP",
+    "concurrency": 50,
+    "degraded": 0,
+    "elapsed_ms": 1328,
+    "errors": 0,
+    "go_version": "go1.27.1-X:nodwarf5",
+    "gomaxprocs": 6,
+    "heap_sys_mb": 884.34375,
+    "index_duration_ms": 1138,
+    "logical_cpus": 6,
+    "p50_ms": 148.082,
+    "p95_ms": 1259.675,
+    "p99_ms": 1303.054,
+    "products": 10000,
+    "requests": 100,
+    "throughput_requests_second": 75.29260717460663
+  },
+  "optimized_cold_and_warm": {
+    "backend": "sqlite local WAL; service-level not HTTP",
+    "concurrency": 50,
+    "degraded": 0,
+    "elapsed_ms": 809,
+    "errors": 0,
+    "go_version": "go1.27.1-X:nodwarf5",
+    "gomaxprocs": 6,
+    "heap_sys_mb": 264.6875,
+    "index_duration_ms": 1152,
+    "logical_cpus": 6,
+    "p50_ms": 74.744,
+    "p95_ms": 462.871,
+    "p99_ms": 497.204,
+    "products": 10000,
+    "requests": 200,
+    "requests_per_wave": 100,
+    "samples": [
+      {
+        "DurationMS": 468.147,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 148.648,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 95.708,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 70.011,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 151.537,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 497.204,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 154.675,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 162.321,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 94.626,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 99.75,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 479.508,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 152.067,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 200.57,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 74.744,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 145.452,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 462.871,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 146.09,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 166.911,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 107.947,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 146.082,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 467.829,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 145.037,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 119.658,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 98.268,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 153.607,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 474.142,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 153.288,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 166.666,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 143.541,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 91.716,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 508.205,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 145.386,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 66.516,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 150.295,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 120.439,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 470.039,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 147.967,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 120.208,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 137.833,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 94.378,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 483.481,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 97.262,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 158.141,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 144.894,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 161.453,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 471.581,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 93.985,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 54.765,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 142.703,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 72.992,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 398.346,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 77.565,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 94.347,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 93.478,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 78.64,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 375.134,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 54.891,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 62.666,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 23.77,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 48.382,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 387.824,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 22.309,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 64.861,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 92.172,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 33.831,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 381.583,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 87.61,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 90.855,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 93.389,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 62.944,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 317.67,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 60.805,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 64.696,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 50.532,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 41.588,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 323.994,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 62.483,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 58.519,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 46.034,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 15.288,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 348.579,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 52.591,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 64.763,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 43.255,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 55.804,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 303.074,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 61.438,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 51.037,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 39.979,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 55.82,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 340.349,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 46.551,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 47.603,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 47.592,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 7.732,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 290.288,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 49.094,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 50.476,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 55.403,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 39.117,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 120.225,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 41.703,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 39.978,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 67.383,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 20.847,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 205.959,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 41.916,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 42.714,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 20.632,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 42.541,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 218.875,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 41.433,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 149.23,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 48.341,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 37.844,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 267.169,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 46.772,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 50.206,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 21.052,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 20.316,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 204.577,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 38.479,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 25.098,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 34.741,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 27.94,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 185.924,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 42.171,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 65.573,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 48.519,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 183.998,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 194.2,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 28.556,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 21.409,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 50.546,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 7.909,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 173.938,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 31.543,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 89.526,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 128.404,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 31.475,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 137.561,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 68.181,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 37.584,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 50.175,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 35.727,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 79.453,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 57.48,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 30.575,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 71.371,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 10.162,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 144.479,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 17.399,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 226.769,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 34.259,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 12.31,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 243.804,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 7.168,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 199.003,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 12.423,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 54.692,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 207.448,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 38.878,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 44.334,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 28.101,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 36.457,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 198.104,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 27.93,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 42.133,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 36.205,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 111.715,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 124.253,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 53.786,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 21.98,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 46.175,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 54.116,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 122.491,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 21.222,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 49.948,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 30.148,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 81.455,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 154.627,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 38.128,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 27.645,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 90.059,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 27.66,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 137.583,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 135.618,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 40.174,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 38.216,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 57.952,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 153.982,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 128.347,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 23.609,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 128.199,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 85.685,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 122.154,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 119.27,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 100.753,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 127.008,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 24.827,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      }
+    ],
+    "throughput_requests_second": 246.9938941232219,
+    "wave_latencies": {
+      "cold": {
+        "p50_ms": 97.262,
+        "p95_ms": 474.142,
+        "p99_ms": 508.205
+      },
+      "warm": {
+        "p50_ms": 48.519,
+        "p95_ms": 207.448,
+        "p99_ms": 267.169
+      }
+    },
+    "waves": [
+      "cold",
+      "warm"
+    ]
+  },
+  "limit": "Cold p95 474ms has little margin; rerun on deployment hardware and richer PostgreSQL fixtures before capacity promises.",
+  "current_signals_minimal": {
+    "backend": "sqlite local WAL; service-level not HTTP",
+    "concurrency": 50,
+    "degraded": 0,
+    "elapsed_ms": 2778,
+    "errors": 0,
+    "fixture": "minimal products only",
+    "go_version": "go1.27.1-X:nodwarf5",
+    "gomaxprocs": 6,
+    "heap_sys_mb": 268.9375,
+    "index_duration_ms": 3147,
+    "logical_cpus": 6,
+    "p50_ms": 198.82,
+    "p95_ms": 1316.124,
+    "p99_ms": 1546.284,
+    "products": 10000,
+    "requests": 200,
+    "requests_per_wave": 100,
+    "samples": [
+      {
+        "DurationMS": 1372.336,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 23.141,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 250.626,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 143.769,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 115.723,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1534.35,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 359.139,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 252.488,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 261.641,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 216.539,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1270.534,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 159.925,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 246.196,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 231.51,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 239.165,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1327.628,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 395.197,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 164.071,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 97.865,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 121.135,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1568.716,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 311.018,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 446.828,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 302.478,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 88.804,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1546.284,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 291.387,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 101.241,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 124.85,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 324.681,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1532.663,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 112.352,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 312.723,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 341.737,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 83.997,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1278.513,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 174.529,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 217.266,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 141.509,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 238.123,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1474.862,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 183.97,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 209.807,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 196.463,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 117.854,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1489.787,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 156.622,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 197.99,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 330.69,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 106.638,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1456.427,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 163.261,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 106.182,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 134.413,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 253.079,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1316.124,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 288.317,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 174.256,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 131.212,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 108.508,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1219.712,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 71.536,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 105.678,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 159.579,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 145.046,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1297.334,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 198.82,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 97.287,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 93.384,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 161.225,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1166.721,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 171.934,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 65.305,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 74.081,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 75.086,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1287.785,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 167.22,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 58.392,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 134.811,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 134.381,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1060.074,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 138.996,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 72.075,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 161.256,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 131.375,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1111.643,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 70.54,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 115.269,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 87.472,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 101.469,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1118.725,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 43.866,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 109.242,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 103.367,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 59.104,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1017.638,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 43.717,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 74.012,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 64.07,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 51.257,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 808.453,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 156.275,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 265.83,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 230.664,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 365.964,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 814.329,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 138.835,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 269.347,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 179.079,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 78.953,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 626.253,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 94.719,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 339.795,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 72.481,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 167.809,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 646.91,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 249.413,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 310.903,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 110.759,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 338.167,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 719.156,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 532.687,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 551.808,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 115.006,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 263.977,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 716.102,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 105.116,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 236.454,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 111.676,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 383.941,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 680.218,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 344.268,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 175.64,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 349.504,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 502.792,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 594.941,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 346.768,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 318.712,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 519.932,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 476.372,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 785.3,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 191.384,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 279.054,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 76.183,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 473.415,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 732.173,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 121.846,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 26.99,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 0.417,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 182.425,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 652.469,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 137.931,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 443.054,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 314.943,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 422.865,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 672.644,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 95.91,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 270.023,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 260.301,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 261.198,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 619.774,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 91.25,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 179.256,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 89.079,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 158.794,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 579.192,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 344.828,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 328.8,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 111.807,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 94.217,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 567.77,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 134.876,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 57.475,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 74.812,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 143.037,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 572.388,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 262.358,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 263.753,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 167.106,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 63.038,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 821.91,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 163.341,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 199.257,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 295.79,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 43.477,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 806.157,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 188.67,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 114.389,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 148.934,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 270.506,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 757.279,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 277.237,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 150.378,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 115.287,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 134.849,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 732.718,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 101.394,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 166.637,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 96.775,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 304.425,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      }
+    ],
+    "throughput_requests_second": 71.97802794112476,
+    "wave_latencies": {
+      "cold": {
+        "p50_ms": 167.22,
+        "p95_ms": 1489.787,
+        "p99_ms": 1568.716
+      },
+      "warm": {
+        "p50_ms": 263.753,
+        "p95_ms": 785.3,
+        "p99_ms": 821.91
+      }
+    },
+    "waves": [
+      "cold",
+      "warm"
+    ]
+  },
+  "current_signals_representative": {
+    "backend": "sqlite local WAL; service-level not HTTP",
+    "concurrency": 50,
+    "degraded": 0,
+    "elapsed_ms": 6211,
+    "errors": 0,
+    "fixture": "100 categories;20brands;4filterableattributes/25values;1published+1unpublishedvariantperproduct;costs",
+    "go_version": "go1.27.1-X:nodwarf5",
+    "gomaxprocs": 6,
+    "heap_sys_mb": 512.8125,
+    "index_duration_ms": 7303,
+    "logical_cpus": 6,
+    "p50_ms": 537.163,
+    "p95_ms": 2819.599,
+    "p99_ms": 3009.853,
+    "products": 10000,
+    "requests": 200,
+    "requests_per_wave": 100,
+    "samples": [
+      {
+        "DurationMS": 2954.352,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 394.902,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 373.348,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 393.552,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 166.666,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 3009.853,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 652.059,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 403.157,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 821.687,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 685.076,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2955.54,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 688.215,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 349.514,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 809.117,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 727.001,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2871.028,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 667.749,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 365.032,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 393.255,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 587.182,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 3013.619,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 405.003,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 371.57,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 622.537,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 557.36,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2711.253,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 269.892,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 633.201,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 642.948,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 422.069,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2508.515,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 751.044,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 635.314,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 784.383,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 515.017,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2924.174,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 546.157,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 354.72,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 812.835,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 796.52,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2676.024,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 335.05,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 114.071,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 343.217,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 799.232,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2606.292,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 320.688,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 673.467,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 337.276,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 192.38,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2819.599,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 537.163,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 495.609,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 479.44,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 207.84,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2471.694,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 204.453,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 496.24,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 198.739,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 475.025,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2462.005,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 88.066,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 150.448,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 483.694,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 485.6,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2317.401,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 342.469,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 30.661,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 30.292,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 34.185,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2465.121,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 26.311,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 30.273,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 24.4,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 28.95,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2414.919,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 24.214,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 146.053,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 267.171,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 198.295,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2355.071,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 211.437,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 25.104,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 120.456,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 230.521,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2357.869,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 27.078,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 193.153,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 50.352,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 238.707,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2373.887,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 96.627,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 103.176,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 159.131,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 138.355,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 2108.463,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 230.208,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 119.092,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 151.807,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 36.615,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "cold"
+      },
+      {
+        "DurationMS": 1840.466,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 226.108,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 243.077,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 317.268,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 69.832,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2868.399,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1530.601,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 59.323,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 158.858,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 286.759,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1905.271,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 272.735,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 762.35,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 518.041,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 223.709,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2739.995,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 188.656,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 136.56,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 296.525,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 192.56,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2691.175,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 686.736,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 126.179,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 788.077,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1516.528,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2800.208,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 227.773,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1277.757,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 62.818,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1433.938,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2541.287,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 548.083,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 701.488,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 8.153,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 258.277,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2816.491,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 137.988,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 407.084,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 0.833,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 156.21,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2948.448,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 584.403,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1496.237,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 117.743,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 220.696,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2862.48,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 537.272,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1129.116,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1359.554,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 830.156,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2663.805,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1212.998,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1185.018,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 463.346,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 588.213,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2701.352,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1198.335,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1055.409,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1252.278,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1347.516,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2590.817,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1066.058,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1347.135,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1627.421,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 27.162,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2561.889,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1191.502,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 351.545,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1150.004,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 352.348,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2589.351,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 348.49,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 218.923,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 186.1,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 980.695,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2465.431,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 833.427,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 830.712,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 793.067,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 822.721,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2125.821,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 704.41,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 83.026,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 801.635,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 773.103,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2081.712,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 724.383,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 724.022,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 391.395,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 747.859,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 2154.345,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1105.47,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 397.996,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 260.59,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 315.94,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 1765.644,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "broad",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 290.223,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 291.294,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 276.901,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      },
+      {
+        "DurationMS": 114.335,
+        "Error": "",
+        "Degraded": false,
+        "Kind": "specific",
+        "Wave": "warm"
+      }
+    ],
+    "throughput_requests_second": 32.196603728602426,
+    "wave_latencies": {
+      "cold": {
+        "p50_ms": 405.003,
+        "p95_ms": 2924.174,
+        "p99_ms": 3013.619
+      },
+      "warm": {
+        "p50_ms": 747.859,
+        "p95_ms": 2800.208,
+        "p99_ms": 2948.448
+      }
+    },
+    "waves": [
+      "cold",
+      "warm"
+    ]
+  },
+  "current_limit": "Both current runs were measured while repository validation also used the six-CPU host. Current representative cold p95 2924ms and warm p95 2800ms exceed the 500ms target; this workload has no production capacity/SLO claim. Deadline is raised to60s tomeasure latency rather than conceal overload behind degradation. Before concurrent full suites, representative cold p95 was1648ms/warm1106ms, also failingtarget. Broad facet aggregation over richer catalog metadata is an existing backend limit."
+}

@@ -139,6 +139,7 @@ func LoadLiveProductUpsertInput(db *gorm.DB, mediaService *media.Service, produc
 		isPublished := variant.IsPublished
 		variantInput := apicontract.ProductVariantInput{
 			CompareAtPrice: moneyFloatPtr(variant.CompareAtPrice),
+			UnitCost:       moneyFloatPtr(variant.UnitCost),
 			HeightCm:       variant.HeightCm,
 			IsPublished:    &isPublished,
 			LengthCm:       variant.LengthCm,
@@ -248,6 +249,7 @@ func ProductContractToUpsertInput(product apicontract.Product) apicontract.Produ
 		isPublished := variant.IsPublished
 		entry := apicontract.ProductVariantInput{
 			CompareAtPrice: variant.CompareAtPrice,
+			UnitCost:       variant.UnitCost,
 			HeightCm:       variant.HeightCm,
 			IsPublished:    &isPublished,
 			LengthCm:       variant.LengthCm,

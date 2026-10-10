@@ -150,6 +150,13 @@ func publicProductPayload(product apicontract.Product) (map[string]any, error) {
 	delete(payload, "is_published")
 	delete(payload, "has_draft_changes")
 	delete(payload, "draft_updated_at")
+	if variants, ok := payload["variants"].([]any); ok {
+		for _, value := range variants {
+			if variant, ok := value.(map[string]any); ok {
+				delete(variant, "unit_cost")
+			}
+		}
+	}
 	return payload, nil
 }
 
@@ -292,6 +299,11 @@ func (e *CatalogEndpoints) productToContract(ctx context.Context, product models
 		if len(variants) == 0 || price > maxPrice {
 			maxPrice = price
 		}
+		var unitCost *float64
+		if admin && value.UnitCost != nil {
+			converted := value.UnitCost.Float64()
+			unitCost = &converted
+		}
 		var compareAt *float64
 		if value.CompareAtPrice != nil {
 			converted := value.CompareAtPrice.Float64()
@@ -305,7 +317,7 @@ func (e *CatalogEndpoints) productToContract(ctx context.Context, product models
 			}
 			title = localized.Fields["title"]
 		}
-		variants = append(variants, apicontract.ProductVariant{Id: &id, Sku: value.SKU, Title: title, Price: price, CompareAtPrice: compareAt, Stock: value.Stock, Position: value.Position, IsPublished: value.IsPublished, WeightGrams: value.WeightGrams, LengthCm: value.LengthCm, WidthCm: value.WidthCm, HeightCm: value.HeightCm, Selections: []apicontract.ProductVariantSelection{}})
+		variants = append(variants, apicontract.ProductVariant{Id: &id, Sku: value.SKU, Title: title, Price: price, CompareAtPrice: compareAt, UnitCost: unitCost, Stock: value.Stock, Position: value.Position, IsPublished: value.IsPublished, WeightGrams: value.WeightGrams, LengthCm: value.LengthCm, WidthCm: value.WidthCm, HeightCm: value.HeightCm, Selections: []apicontract.ProductVariantSelection{}})
 	}
 	var defaultVariantID *int
 	if product.DefaultVariantID != nil {
@@ -399,4 +411,8 @@ func deletedAt(value gorm.DeletedAt) *time.Time {
 		return nil
 	}
 	return &value.Time
+}
+
+func (e *CatalogEndpoints) ConfigureSearchHardening(config searchservice.HardeningConfig) error {
+	return e.search.ConfigureHardening(config)
 }

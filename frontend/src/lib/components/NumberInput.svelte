@@ -18,6 +18,7 @@
 		class: className = "",
 		value = $bindable(),
 		inputmode = "numeric",
+		step = allowDecimal ? "any" : 1,
 		...rest
 	}: Props = $props();
 
@@ -136,6 +137,7 @@
 	type="number"
 	bind:value
 	inputmode={allowDecimal ? "decimal" : inputmode}
+	{step}
 	class={`${baseClasses} ${widthClasses} ${className}`}
 	oninput={handleInput}
 	onkeydown={handleKeyDown}

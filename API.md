@@ -558,6 +558,253 @@ This operation does not require authentication
 
 <h1 id="ecommerce-api-search">search</h1>
 
+## Revoke anonymous search analytics consent
+
+<a id="opIdrevokeSearchConsent"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "session_token": "string"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/problem+json'
+};
+
+fetch('http://localhost:3000/api/v1/search/consent/revoke',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/search/consent/revoke`
+
+> Body parameter
+
+```json
+{
+  "session_token": "string"
+}
+```
+
+<h3 id="revoke-anonymous-search-analytics-consent-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|SearchConsentRevokeInput|true|none|
+
+<h3 id="revoke-anonymous-search-analytics-consent-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|Anonymous analytics deleted and session revoked|None|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## Record an opted-in search impression
+
+<a id="opIdcreateSearchImpression"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "event_id": "a7a26ff2-e851-45b6-9634-d595f45458b7",
+  "consent": true,
+  "session_token": "string",
+  "filters": {
+    "q": "string",
+    "min_price": 0,
+    "max_price": 0,
+    "brand_slug": [
+      "string"
+    ],
+    "category_slug": [
+      "string"
+    ],
+    "has_variant_stock": [
+      true
+    ],
+    "price_range": [
+      "string"
+    ],
+    "attribute": {
+      "property1": [
+        "string"
+      ],
+      "property2": [
+        "string"
+      ]
+    },
+    "ranking_profile": "string",
+    "sort": "relevance",
+    "order": "asc",
+    "page": 1,
+    "limit": 1
+  }
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/search/impressions',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/search/impressions`
+
+> Body parameter
+
+```json
+{
+  "event_id": "a7a26ff2-e851-45b6-9634-d595f45458b7",
+  "consent": true,
+  "session_token": "string",
+  "filters": {
+    "q": "string",
+    "min_price": 0,
+    "max_price": 0,
+    "brand_slug": [
+      "string"
+    ],
+    "category_slug": [
+      "string"
+    ],
+    "has_variant_stock": [
+      true
+    ],
+    "price_range": [
+      "string"
+    ],
+    "attribute": {
+      "property1": [
+        "string"
+      ],
+      "property2": [
+        "string"
+      ]
+    },
+    "ranking_profile": "string",
+    "sort": "relevance",
+    "order": "asc",
+    "page": 1,
+    "limit": 1
+  }
+}
+```
+
+<h3 id="record-an-opted-in-search-impression-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|SearchImpressionInput|true|none|
+
+<h3 id="record-an-opted-in-search-impression-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Success|SearchImpressionResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|429|[Too Many Requests](https://tools.ietf.org/html/rfc6585#section-4)|The caller has exceeded an applicable request limit.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+|503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|A required service or capability is temporarily unavailable.|Problem|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## Record a verified search result click
+
+<a id="opIdcreateSearchEvent"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "session_token": "string",
+  "impression_id": "string",
+  "event_id": "a7a26ff2-e851-45b6-9634-d595f45458b7",
+  "type": "click",
+  "product_id": 1,
+  "position": 1
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/search/events',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/search/events`
+
+> Body parameter
+
+```json
+{
+  "session_token": "string",
+  "impression_id": "string",
+  "event_id": "a7a26ff2-e851-45b6-9634-d595f45458b7",
+  "type": "click",
+  "product_id": 1,
+  "position": 1
+}
+```
+
+<h3 id="record-a-verified-search-result-click-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|SearchEventInput|true|none|
+
+<h3 id="record-a-verified-search-result-click-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Success|SearchEventResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## Search published products
 
 <a id="opIdsearchProducts"></a>
@@ -622,6 +869,7 @@ fetch('http://localhost:3000/api/v1/search/products',
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Search results, facets, and index metadata|ProductSearchResponse|
 |400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|429|[Too Many Requests](https://tools.ietf.org/html/rfc6585#section-4)|The caller has exceeded an applicable request limit.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
 |503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|A required service or capability is temporarily unavailable.|Problem|
 
@@ -670,6 +918,7 @@ fetch('http://localhost:3000/api/v1/search/suggestions?q=string',
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Prefix suggestions and optional discovery hints|SearchSuggestionsResponse|
 |400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|429|[Too Many Requests](https://tools.ietf.org/html/rfc6585#section-4)|The caller has exceeded an applicable request limit.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
 |503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|A required service or capability is temporarily unavailable.|Problem|
 
@@ -1317,6 +1566,8 @@ cookieAuth, bearerAuth
 
 ```javascript
 const inputBody = '{
+  "search_click_id": "string",
+  "search_session_token": "string",
   "product_variant_id": 1,
   "quantity": 1
 }';
@@ -1345,6 +1596,8 @@ fetch('http://localhost:3000/api/v1/me/cart',
 
 ```json
 {
+  "search_click_id": "string",
+  "search_session_token": "string",
   "product_variant_id": 1,
   "quantity": 1
 }
@@ -1577,6 +1830,8 @@ cookieAuth, bearerAuth
 
 ```javascript
 const inputBody = '{
+  "search_click_id": "string",
+  "search_session_token": "string",
   "product_variant_id": 1,
   "quantity": 1
 }';
@@ -1605,6 +1860,8 @@ fetch('http://localhost:3000/api/v1/checkout/cart/items',
 
 ```json
 {
+  "search_click_id": "string",
+  "search_session_token": "string",
   "product_variant_id": 1,
   "quantity": 1
 }
@@ -4398,6 +4655,156 @@ To perform this operation, you must be authenticated by means of one of the foll
 cookieAuth, bearerAuth
 </aside>
 
+## Read consented search analytics
+
+<a id="opIdgetAdminSearchAnalytics"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/analytics',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/analytics`
+
+<h3 id="read-consented-search-analytics-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|days|query|integer|false|none|
+
+<h3 id="read-consented-search-analytics-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Success|SearchAnalytics|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## List stale-index incidents and recovery history
+
+<a id="opIdgetAdminSearchIncidents"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/incidents',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/incidents`
+
+<h3 id="list-stale-index-incidents-and-recovery-history-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|page|query|integer|false|none|
+|limit|query|integer|false|none|
+|status|query|string|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|status|open|
+|status|resolved|
+
+<h3 id="list-stale-index-incidents-and-recovery-history-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Incident history, newest first|SearchIndexIncidentListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## Inspect search capacity and circuit status
+
+<a id="opIdgetAdminSearchOperations"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/operations',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/operations`
+
+<h3 id="inspect-search-capacity-and-circuit-status-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Success|SearchOperationsStatus|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
 ## Search published products with ranking explanations
 
 <a id="opIdsearchAdminProducts"></a>
@@ -4464,6 +4871,7 @@ fetch('http://localhost:3000/api/v1/admin/search/products',
 |401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
 |403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
+|429|[Too Many Requests](https://tools.ietf.org/html/rfc6585#section-4)|The caller has exceeded an applicable request limit.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
 |503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|A required service or capability is temporarily unavailable.|Problem|
 
@@ -4532,7 +4940,9 @@ const inputBody = '{
     "attributes": 0,
     "recency": 0,
     "availability": 0,
-    "sales": 0
+    "sales": 0,
+    "margin": 0,
+    "conversion": 0
   },
   "is_default": true
 }';
@@ -4570,7 +4980,9 @@ fetch('http://localhost:3000/api/v1/admin/search/ranking-profiles',
     "attributes": 0,
     "recency": 0,
     "availability": 0,
-    "sales": 0
+    "sales": 0,
+    "margin": 0,
+    "conversion": 0
   },
   "is_default": true
 }
@@ -4666,7 +5078,9 @@ const inputBody = '{
     "attributes": 0,
     "recency": 0,
     "availability": 0,
-    "sales": 0
+    "sales": 0,
+    "margin": 0,
+    "conversion": 0
   },
   "is_default": true
 }';
@@ -4704,7 +5118,9 @@ fetch('http://localhost:3000/api/v1/admin/search/ranking-profiles/{id}',
     "attributes": 0,
     "recency": 0,
     "availability": 0,
-    "sales": 0
+    "sales": 0,
+    "margin": 0,
+    "conversion": 0
   },
   "is_default": true
 }
@@ -5421,6 +5837,7 @@ fetch('http://localhost:3000/api/v1/admin/search/preview',
 |403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
 |404|[Not Found](https://tools.ietf.org/html/rfc7231#section-6.5.4)|The requested resource does not exist or is not visible to the caller.|Problem|
 |422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|The request is well-formed but fails semantic validation.|Problem|
+|429|[Too Many Requests](https://tools.ietf.org/html/rfc6585#section-4)|The caller has exceeded an applicable request limit.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
 |503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|A required service or capability is temporarily unavailable.|Problem|
 
@@ -5509,7 +5926,9 @@ fetch('http://localhost:3000/api/v1/admin/search/reindex',
 |401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
 |403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
 |409|[Conflict](https://tools.ietf.org/html/rfc7231#section-6.5.8)|The request conflicts with resource state, version, or idempotency history.|Problem|
+|429|[Too Many Requests](https://tools.ietf.org/html/rfc6585#section-4)|The caller has exceeded an applicable request limit.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+|503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|A required service or capability is temporarily unavailable.|Problem|
 
 <aside class="warning">
 To perform this operation, you must be authenticated by means of one of the following methods:
@@ -6211,6 +6630,7 @@ const inputBody = '{
       "sku": "string",
       "title": "string",
       "price": 0.1,
+      "unit_cost": 0,
       "compare_at_price": 0.1,
       "stock": 0,
       "position": 1,
@@ -6304,6 +6724,7 @@ fetch('http://localhost:3000/api/v1/admin/products',
       "sku": "string",
       "title": "string",
       "price": 0.1,
+      "unit_cost": 0,
       "compare_at_price": 0.1,
       "stock": 0,
       "position": 1,
@@ -8541,6 +8962,7 @@ const inputBody = '{
       "sku": "string",
       "title": "string",
       "price": 0.1,
+      "unit_cost": 0,
       "compare_at_price": 0.1,
       "stock": 0,
       "position": 1,
@@ -8634,6 +9056,7 @@ fetch('http://localhost:3000/api/v1/admin/products/{id}',
       "sku": "string",
       "title": "string",
       "price": 0.1,
+      "unit_cost": 0,
       "compare_at_price": 0.1,
       "stock": 0,
       "position": 1,

@@ -20,9 +20,12 @@ const maxAttributeFacets = 10
 
 type indexedProduct struct {
 	hidden, forcedInclude bool
+	cacheGeneration       uint64
+	conversion            float64
+	rankingText           rankingFields
 	ranking               RankingExplanation
-	document              models.SearchDocument
-	product               models.Product
+	document              *models.SearchDocument
+	product               *models.Product
 	categories            map[string]string
 	attributes            map[string]map[string]string
 	attributeNames        map[string]string
@@ -146,7 +149,7 @@ func (b *databaseBackend) searchProducts(ctx context.Context, filters Filters) (
 		}
 	}
 	if field == "relevance" || filters.Explain || len(merchandising.targets) > 0 {
-		if err := b.rankProducts(ctx, matched, resultPlan, NormalizeQuery(strings.Join(originalQueryTerms(resultPlan), " ")), rankingProfile, filters.SortOrder); err != nil {
+		if err := b.rankProducts(ctx, matched, resultPlan, NormalizeQuery(strings.Join(originalQueryTerms(resultPlan), " ")), rankingProfile, filters.SortOrder, filters.Explain); err != nil {
 			return Result{}, err
 		}
 	}
@@ -172,9 +175,15 @@ func (b *databaseBackend) searchProducts(ctx context.Context, filters Filters) (
 	explanations := make([]RankingExplanation, 0, end-start)
 	var indexedAt *time.Time
 	for _, document := range matched[start:end] {
-		products = append(products, document.product)
+		product, err := cloneIndexedProduct(document)
+		if err != nil {
+			return Result{}, err
+		}
+		products = append(products, product)
 		if filters.Explain {
-			explanations = append(explanations, document.ranking)
+			explanation := document.ranking
+			explanation.Components = append([]RankingComponent(nil), explanation.Components...)
+			explanations = append(explanations, explanation)
 		}
 		if indexedAt == nil || document.document.IndexedAt.After(*indexedAt) {
 			value := document.document.IndexedAt
@@ -194,7 +203,7 @@ func (b *databaseBackend) searchProducts(ctx context.Context, filters Filters) (
 	}, nil
 }
 
-func (b *databaseBackend) loadIndexedProducts(ctx context.Context, plan *queryPlan) ([]indexedProduct, error) {
+func (b *databaseBackend) loadIndexedProductsUncached(ctx context.Context, plan *queryPlan) ([]indexedProduct, error) {
 	var rows []models.SearchDocument
 	query := b.db.WithContext(ctx).Where("entity_type = ? AND active = ?", ProductEntityType, true)
 	if plan != nil {
@@ -209,9 +218,13 @@ func (b *databaseBackend) loadIndexedProducts(ctx context.Context, plan *queryPl
 		}
 	}
 	if err := query.Order("entity_id asc").Find(&rows).Error; err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrIndexUnavailable, err)
 	}
-	return decodeIndexedProducts(ctx, rows)
+	products, err := decodeIndexedProducts(ctx, rows)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrIndexUnavailable, err)
+	}
+	return products, nil
 }
 
 func decodeIndexedProducts(ctx context.Context, rows []models.SearchDocument) ([]indexedProduct, error) {
@@ -227,7 +240,7 @@ func decodeIndexedProducts(ctx context.Context, rows []models.SearchDocument) ([
 			return nil, fmt.Errorf("decode search document %d: %w", row.ID, err)
 		}
 		item := indexedProduct{
-			document: row, product: product, categories: map[string]string{},
+			document: &row, product: &product, categories: map[string]string{},
 			attributes: map[string]map[string]string{}, attributeNames: map[string]string{},
 		}
 		categorySet := parseTokenSet(row.CategoryTokens)
@@ -258,6 +271,7 @@ func decodeIndexedProducts(ctx context.Context, rows []models.SearchDocument) ([
 			item.attributes[slug][normalizedValue] = raw
 			item.attributeNames[slug] = value.ProductAttribute.Key
 		}
+		item.rankingText = normalizedRankingFields(product, row)
 		result = append(result, item)
 	}
 	return result, nil
@@ -515,7 +529,7 @@ func matchesFilters(document indexedProduct, filters normalizedFilters, excluded
 			return false
 		}
 	}
-	if excludedFacet != "price" && !matchesPriceFilter(document.document, filters) {
+	if excludedFacet != "price" && !matchesPriceFilter(*document.document, filters) {
 		return false
 	}
 	for slug, selected := range filters.attributes {
@@ -684,14 +698,15 @@ func minInt(values ...int) int {
 }
 
 func buildFacets(documents []indexedProduct, plan queryPlan, relaxed bool, filters normalizedFilters) []Facet {
-	queryMatches := make([]indexedProduct, 0, len(documents))
-	for _, document := range documents {
-		if matchesSearchCandidate(document, plan, relaxed) {
+	queryMatches := make([]*indexedProduct, 0, len(documents))
+	for i := range documents {
+		document := &documents[i]
+		if matchesSearchCandidate(*document, plan, relaxed) {
 			queryMatches = append(queryMatches, document)
 		}
 	}
 	result := []Facet{
-		buildTermsFacet("category", "Category", "terms", queryMatches, filters, func(document indexedProduct) map[string]string { return document.categories }),
+		buildTermsFacet("category", "Category", "terms", queryMatches, filters, func(document *indexedProduct) map[string]string { return document.categories }),
 		buildBrandFacet(queryMatches, filters),
 		buildPriceFacet(queryMatches, filters),
 		buildStockFacet(queryMatches, filters),
@@ -700,7 +715,7 @@ func buildFacets(documents []indexedProduct, plan queryPlan, relaxed bool, filte
 	return result
 }
 
-func buildTermsFacet(name, label, facetType string, documents []indexedProduct, filters normalizedFilters, values func(indexedProduct) map[string]string) Facet {
+func buildTermsFacet(name, label, facetType string, documents []*indexedProduct, filters normalizedFilters, values func(*indexedProduct) map[string]string) Facet {
 	contextDocuments := filterFacetContext(documents, filters, name)
 	counts := map[string]int64{}
 	labels := map[string]string{}
@@ -719,8 +734,8 @@ func buildTermsFacet(name, label, facetType string, documents []indexedProduct, 
 	return Facet{Name: name, Label: label, Type: facetType, Values: facetValues(counts, labels, selected)}
 }
 
-func buildBrandFacet(documents []indexedProduct, filters normalizedFilters) Facet {
-	return buildTermsFacet("brand", "Brand", "terms", documents, filters, func(document indexedProduct) map[string]string {
+func buildBrandFacet(documents []*indexedProduct, filters normalizedFilters) Facet {
+	return buildTermsFacet("brand", "Brand", "terms", documents, filters, func(document *indexedProduct) map[string]string {
 		if document.document.BrandSlug == "" {
 			return nil
 		}
@@ -755,17 +770,17 @@ func facetValues(counts map[string]int64, labels map[string]string, selected map
 	return values
 }
 
-func filterFacetContext(documents []indexedProduct, filters normalizedFilters, excludedFacet string) []indexedProduct {
-	result := make([]indexedProduct, 0, len(documents))
+func filterFacetContext(documents []*indexedProduct, filters normalizedFilters, excludedFacet string) []*indexedProduct {
+	result := make([]*indexedProduct, 0, len(documents))
 	for _, document := range documents {
-		if matchesFilters(document, filters, excludedFacet) {
+		if matchesFilters(*document, filters, excludedFacet) {
 			result = append(result, document)
 		}
 	}
 	return result
 }
 
-func buildStockFacet(documents []indexedProduct, filters normalizedFilters) Facet {
+func buildStockFacet(documents []*indexedProduct, filters normalizedFilters) Facet {
 	contextDocuments := filterFacetContext(documents, filters, "stock")
 	counts := map[bool]int64{}
 	for _, document := range contextDocuments {
@@ -783,7 +798,7 @@ func buildStockFacet(documents []indexedProduct, filters normalizedFilters) Face
 	return Facet{Name: "stock", Label: "Availability", Type: "boolean", Values: values}
 }
 
-func buildPriceFacet(documents []indexedProduct, filters normalizedFilters) Facet {
+func buildPriceFacet(documents []*indexedProduct, filters normalizedFilters) Facet {
 	contextDocuments := filterFacetContext(documents, filters, "price")
 	buckets := dynamicPriceRanges(contextDocuments)
 	for _, selected := range selectedPriceRanges(filters) {
@@ -796,7 +811,7 @@ func buildPriceFacet(documents []indexedProduct, filters normalizedFilters) Face
 	for _, bucket := range buckets {
 		count := int64(0)
 		for _, document := range contextDocuments {
-			if overlapsPriceRange(document.document, bucket) {
+			if overlapsPriceRange(*document.document, bucket) {
 				count++
 			}
 		}
@@ -833,7 +848,7 @@ func selectedPriceRanges(filters normalizedFilters) []PriceRange {
 	return []PriceRange{result}
 }
 
-func dynamicPriceRanges(documents []indexedProduct) []PriceRange {
+func dynamicPriceRanges(documents []*indexedProduct) []PriceRange {
 	if len(documents) == 0 {
 		return nil
 	}
@@ -953,7 +968,7 @@ type attributeFacetRank struct {
 	coverage int
 }
 
-func buildAttributeFacets(documents []indexedProduct, filters normalizedFilters) []Facet {
+func buildAttributeFacets(documents []*indexedProduct, filters normalizedFilters) []Facet {
 	candidates := map[string]struct{}{}
 	for _, document := range documents {
 		for slug := range document.attributes {

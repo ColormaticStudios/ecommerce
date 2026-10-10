@@ -73,6 +73,7 @@ const response: components["schemas"]["AdminProductSearchResponse"] = {
 	],
 	rule_decisions: [],
 	metadata: {
+		degraded: false,
 		ranking_profile: "default",
 		ranking_profile_version: 1,
 		normalized_query: "jacket",

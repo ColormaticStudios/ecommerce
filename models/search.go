@@ -6,6 +6,7 @@ import "time"
 // is the retrieval source; the remaining columns are intentionally denormalized
 // lookup and ordering fields shared by SQLite and PostgreSQL.
 type SearchDocument struct {
+	MarginRate      float64   `gorm:"not null;default:0" json:"-"`
 	ID              uint      `gorm:"primaryKey"`
 	EntityType      string    `gorm:"not null;size:32;uniqueIndex:idx_search_documents_entity,priority:1;index"`
 	EntityID        uint      `gorm:"not null;uniqueIndex:idx_search_documents_entity,priority:2;index"`
@@ -28,13 +29,15 @@ type SearchDocument struct {
 }
 
 type SearchIndexState struct {
-	Name                   string     `gorm:"primaryKey;size:64"`
-	LastIndexedAt          *time.Time `gorm:"index"`
-	LastFullReindexStarted *time.Time
-	LastFullReindexAt      *time.Time `gorm:"index"`
-	DocumentCount          int64      `gorm:"not null;default:0"`
-	CreatedAt              time.Time  `gorm:"not null"`
-	UpdatedAt              time.Time  `gorm:"not null"`
+	LastConversionRefreshAt *time.Time `json:"-"`
+	Generation              uint64     `gorm:"not null;default:0"`
+	Name                    string     `gorm:"primaryKey;size:64"`
+	LastIndexedAt           *time.Time `gorm:"index"`
+	LastFullReindexStarted  *time.Time
+	LastFullReindexAt       *time.Time `gorm:"index"`
+	DocumentCount           int64      `gorm:"not null;default:0"`
+	CreatedAt               time.Time  `gorm:"not null"`
+	UpdatedAt               time.Time  `gorm:"not null"`
 }
 
 type SearchSynonymSet struct {
@@ -95,6 +98,10 @@ type SearchMerchandisingAudit struct {
 }
 
 type SearchQueryEvent struct {
+	ResultJSON      string    `gorm:"type:text"`
+	ImpressionID    string    `gorm:"size:64;uniqueIndex"`
+	SessionHash     string    `gorm:"size:64;index"`
+	ProductsJSON    string    `gorm:"type:text"`
 	ID              uint      `gorm:"primaryKey"`
 	Query           string    `gorm:"type:text;not null"`
 	NormalizedQuery string    `gorm:"type:text;not null;index"`
@@ -107,6 +114,10 @@ type SearchQueryEvent struct {
 }
 
 type SearchClickEvent struct {
+	EventID          string    `gorm:"size:64;uniqueIndex"`
+	ImpressionID     string    `gorm:"size:64;index"`
+	SessionHash      string    `gorm:"size:64;index"`
+	ProductID        uint      `gorm:"index"`
 	ID               uint      `gorm:"primaryKey"`
 	QueryEventID     uint      `gorm:"not null;index"`
 	ProductVariantID uint      `gorm:"not null;index"`
@@ -120,4 +131,35 @@ type SearchSalesSignal struct {
 	Units30Days int64     `gorm:"not null;default:0"`
 	AsOf        time.Time `gorm:"not null;index"`
 	UpdatedAt   time.Time `gorm:"not null"`
+}
+
+type SearchCartAttribution struct {
+	CartItemID   uint      `gorm:"primaryKey;autoIncrement:false"`
+	ClickID      string    `gorm:"not null;size:64;index"`
+	ImpressionID string    `gorm:"not null;size:64;index"`
+	ProductID    uint      `gorm:"not null"`
+	CreatedAt    time.Time `gorm:"not null;index"`
+}
+type SearchOrderAttribution struct {
+	ID           uint       `gorm:"primaryKey"`
+	OrderID      uint       `gorm:"not null;uniqueIndex:idx_search_order_product,priority:1;index"`
+	ProductID    uint       `gorm:"not null;uniqueIndex:idx_search_order_product,priority:2"`
+	ImpressionID string     `gorm:"not null;size:64;index"`
+	ClickID      string     `gorm:"not null;size:64"`
+	CreatedAt    time.Time  `gorm:"not null;index"`
+	PaidAt       *time.Time `gorm:"index"`
+}
+
+type SearchRevokedSession struct {
+	SessionHash string    `gorm:"primaryKey;size:64"`
+	CreatedAt   time.Time `gorm:"not null;index"`
+}
+
+// SearchConversionSignal is a consent-aware mature exposure cohort snapshot.
+type SearchConversionSignal struct {
+	ProductID         uint      `gorm:"primaryKey;autoIncrement:false"`
+	Impressions30Days int64     `gorm:"not null;default:0"`
+	Conversions30Days int64     `gorm:"not null;default:0"`
+	AsOf              time.Time `gorm:"not null;index"`
+	UpdatedAt         time.Time `gorm:"not null"`
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
+	import { getSearchAttribution } from "$lib/search/analytics";
 	import Card from "$lib/components/Card.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import MediaThumbnail from "$lib/components/MediaThumbnail.svelte";
@@ -75,7 +76,14 @@
 				showToast("This product is not purchasable yet.");
 				return;
 			}
-			await api.addToCart({ product_variant_id: variantId, quantity: clampedQuantity });
+			const attribution = getSearchAttribution(product.id);
+			await api.addToCart({
+				product_variant_id: variantId,
+				quantity: clampedQuantity,
+				...(attribution
+					? { search_click_id: attribution.clickId, search_session_token: attribution.sessionToken }
+					: {}),
+			});
 			window.dispatchEvent(new CustomEvent("cart:updated"));
 			showToast("Added to cart.");
 		} catch (err) {

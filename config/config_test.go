@@ -347,3 +347,36 @@ func unsetEnvironment(t *testing.T, keys ...string) {
 		})
 	}
 }
+
+func TestSearchHardeningConfiguration(t *testing.T) {
+	useEmptyConfigDir(t)
+	unsetEnvironment(t, configKeys...)
+	cfg, err := LoadConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.SearchMaxConcurrent != 50 || cfg.SearchTimeoutMS != 2000 || cfg.SearchCircuitFailureThreshold != 5 || cfg.SearchCircuitOpenMS != 30000 || cfg.SearchReindexQueueLimit != 1 {
+		t.Fatalf("unexpected search defaults: %+v", cfg)
+	}
+	for _, item := range []struct{ key, value string }{
+		{"SEARCH_MAX_CONCURRENT", "0"}, {"SEARCH_MAX_CONCURRENT", "513"}, {"SEARCH_TIMEOUT_MS", "9"},
+		{"SEARCH_CIRCUIT_FAILURE_THRESHOLD", "101"}, {"SEARCH_CIRCUIT_OPEN_MS", "600001"}, {"SEARCH_REINDEX_QUEUE_LIMIT", "21"},
+	} {
+		t.Run(item.key+item.value, func(t *testing.T) {
+			t.Setenv(item.key, item.value)
+			_, err := LoadConfig()
+			if err == nil || !strings.Contains(err.Error(), item.key) {
+				t.Fatalf("expected validation for %s, got %v", item.key, err)
+			}
+		})
+	}
+	t.Setenv("SEARCH_MAX_CONCURRENT", "32")
+	t.Setenv("SEARCH_TIMEOUT_MS", "1500")
+	cfg, err = LoadConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.SearchMaxConcurrent != 32 || cfg.SearchTimeoutMS != 1500 {
+		t.Fatal("search environment overrides ignored")
+	}
+}

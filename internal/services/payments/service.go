@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	searchservice "ecommerce/internal/search"
 	checkoutservice "ecommerce/internal/services/checkout"
 	orderservice "ecommerce/internal/services/orders"
 	"ecommerce/models"
@@ -353,6 +354,9 @@ func ApplyAuthorizedCheckoutState(
 	); err != nil {
 		return err
 	}
+	searchservice.BestEffortAnalyticsTx(tx.Statement.Context, tx, func() error {
+		return searchservice.CaptureOrderAttributionTx(tx.Statement.Context, tx, order.ID, order.CheckoutSessionID)
+	})
 	if err := checkoutservice.ClearOrderedItemsFromCart(tx, order.CheckoutSessionID, order.Items); err != nil {
 		return err
 	}
