@@ -2,6 +2,7 @@ package webhooks
 
 import (
 	"context"
+	"ecommerce/internal/jobs"
 	"io"
 	"log"
 	"testing"
@@ -24,7 +25,7 @@ func newWebhookTestDB(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	require.NoError(t, err)
 	require.NoError(t, migrations.RunWithoutContract(db))
-	return db
+	return jobs.WithRuntime(db, jobs.NewRuntime(db, jobs.Config{}))
 }
 
 func waitForWebhookState(

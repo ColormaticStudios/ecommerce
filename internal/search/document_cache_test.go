@@ -2,7 +2,6 @@ package search
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -11,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDocumentCacheInvalidatesAcrossBackendInstances(t *testing.T) {
+func TestSQLRetrievalReflectsWritesAcrossBackendInstances(t *testing.T) {
 	db := searchTestDB(t)
 	p := models.Product{Name: "Initial", SKU: "CACHE", IsPublished: true}
 	require.NoError(t, db.Create(&p).Error)
@@ -45,7 +44,7 @@ func TestDocumentCacheInvalidatesAcrossBackendInstances(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int64(1), result.Total)
 }
-func TestDocumentCacheKeepsLiveRulesAndDeletes(t *testing.T) {
+func TestSQLRetrievalKeepsLiveRulesAndDeletes(t *testing.T) {
 	db := searchTestDB(t)
 	p := models.Product{Name: "Shoe", SKU: "LIVE", IsPublished: true}
 	require.NoError(t, db.Create(&p).Error)
@@ -68,18 +67,19 @@ func TestDocumentCacheKeepsLiveRulesAndDeletes(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int64(1), result.Total)
 }
-func TestDocumentCacheIsBounded(t *testing.T) {
+func TestSQLRetrievalDoesNotDecodeUnreturnedDocuments(t *testing.T) {
 	db := searchTestDB(t)
 	s := NewService(db, nil, nil)
 	require.NoError(t, s.Reindex(context.Background()))
-	b := s.backend.(*databaseBackend)
-	for i := 0; i < 40; i++ {
-		raw, _ := json.Marshal(i)
-		plan := queryPlan{groups: []queryGroup{{alternatives: []string{string(raw)}}}}
-		_, err := b.loadIndexedProducts(context.Background(), &plan)
-		require.NoError(t, err)
-	}
-	require.LessOrEqual(t, len(b.cache.entries), cachedPlanLimit)
+	indexedFixture(t, db, 1, "First", "", "", "", 10, true)
+	indexedFixture(t, db, 2, "Unreturned", "", "", "", 20, true)
+	require.NoError(t, db.Model(&models.SearchDocument{}).Where("entity_id = ?", 2).Update("payload_json", "malformed unreturned JSON").Error)
+	result, err := s.backend.Search(context.Background(), Filters{SortField: "price", SortOrder: "asc", Limit: 1})
+	require.NoError(t, err)
+	require.Equal(t, int64(2), result.Total)
+	require.Equal(t, uint(1), result.Products[0].ID)
+	_, err = s.backend.Search(context.Background(), Filters{SortField: "price", SortOrder: "desc", Limit: 1})
+	require.ErrorIs(t, err, ErrIndexUnavailable)
 }
 func TestCircuitIgnoresOldInflightCompletion(t *testing.T) {
 	c := DefaultHardeningConfig()
@@ -94,7 +94,7 @@ func TestCircuitIgnoresOldInflightCompletion(t *testing.T) {
 	require.False(t, allowed)
 }
 
-func TestRankingCacheUsesLiveWeightsSalesAndImmutableExplanations(t *testing.T) {
+func TestSQLRankingUsesLiveWeightsSalesAndImmutableExplanations(t *testing.T) {
 	db := searchTestDB(t)
 	ctx := context.Background()
 	products := make([]models.Product, 500)

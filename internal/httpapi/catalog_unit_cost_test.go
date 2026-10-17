@@ -2,6 +2,7 @@ package httpapi_test
 
 import (
 	"context"
+	"ecommerce/internal/jobs"
 	"encoding/json"
 	"net/http/httptest"
 	"testing"
@@ -23,7 +24,7 @@ func TestCatalogVariantUnitCostIsPrivateEvenForAdminStorefrontRequests(t *testin
 	require.NoError(t, db.Create(&product).Error)
 	require.NoError(t, localizationservice.SyncDefaultEntityLocalization(db, localizationservice.EntityTypeProduct, product.ID, map[string]string{"name": product.Name, "description": product.Description}, nil))
 	require.NoError(t, localizationservice.SyncDefaultEntityLocalization(db, localizationservice.EntityTypeProductVariant, product.Variants[0].ID, map[string]string{"title": "Default"}, nil))
-	endpoints, err := httpapi.NewCatalogEndpoints(db, nil)
+	endpoints, err := httpapi.NewCatalogEndpoints(db, nil, jobs.NewRuntime(db, jobs.Config{}))
 	require.NoError(t, err)
 	adminCtx := requestctx.WithPrincipal(context.Background(), requestctx.Principal{Subject: "admin", AccountID: 1, Roles: []string{"admin"}})
 	admin, err := endpoints.GetAdminProduct(adminCtx, apicontract.GetAdminProductRequestObject{Id: int(product.ID)})

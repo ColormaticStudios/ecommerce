@@ -17,7 +17,7 @@ import (
 
 func TestSearchAttributionFollowsCartAndPaidOrder(t *testing.T) {
 	db := newOrdersTestDB(t)
-	require.NoError(t, db.AutoMigrate(&models.WebsiteSettings{}, &models.Cart{}, &models.CartItem{}, &models.SearchQueryEvent{}, &models.SearchClickEvent{}, &models.SearchCartAttribution{}, &models.SearchOrderAttribution{}, &models.SearchRevokedSession{}, &models.SearchIndexState{}, &models.SearchConversionSignal{}))
+	require.NoError(t, db.AutoMigrate(&models.WebsiteSettings{}, &models.Cart{}, &models.CartItem{}, &models.SearchQueryEvent{}, &models.SearchClickEvent{}, &models.SearchCartAttribution{}, &models.SearchOrderAttribution{}, &models.SearchRevokedSession{}, &models.SearchIndexState{}, &models.SearchCatalogFanoutDebt{}, &models.SearchInventoryRevision{}, &models.SearchProductRevision{}, &models.SearchConversionSignal{}))
 	variant := seedVariant(t, db, "attributed-product", 5)
 	userID := uint(42)
 	ctx := context.Background()

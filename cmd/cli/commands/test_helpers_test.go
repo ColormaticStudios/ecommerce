@@ -1,6 +1,9 @@
 package commands
 
 import (
+	"ecommerce/internal/jobs"
+	"ecommerce/internal/searchprojection"
+	catalogmodels "ecommerce/models"
 	"fmt"
 	"testing"
 
@@ -18,7 +21,7 @@ func newTestDB(t *testing.T, models ...any) *gorm.DB {
 	}
 
 	if len(models) > 0 {
-		if err := db.AutoMigrate(models...); err != nil {
+		if err := db.AutoMigrate(append(models, &searchprojection.Rank{}, &searchprojection.Category{}, &searchprojection.Attribute{}, &searchprojection.Term{}, &catalogmodels.SearchConfigurationAudit{}, &catalogmodels.SearchCatalogFanoutDebt{}, &catalogmodels.SearchInventoryRevision{}, &catalogmodels.SearchProductRevision{}, &catalogmodels.SearchDocument{})...); err != nil {
 			t.Fatalf("migrate sqlite db: %v", err)
 		}
 	}
@@ -30,5 +33,5 @@ func newTestDB(t *testing.T, models ...any) *gorm.DB {
 		})
 	}
 
-	return db
+	return jobs.WithRuntime(db, jobs.NewRuntime(db, jobs.Config{}))
 }

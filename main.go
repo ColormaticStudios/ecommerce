@@ -173,7 +173,9 @@ func run(parentCtx context.Context) error {
 		r.Static("/media", cfg.MediaRoot)
 	}
 
-	r.SetTrustedProxies(nil)
+	if err := r.SetTrustedProxies(cfg.TrustedProxyCIDRs); err != nil {
+		return fmt.Errorf("invalid trusted proxy configuration: %w", err)
+	}
 
 	// CORS configuration
 	if cfg.DevMode {
@@ -231,6 +233,7 @@ func run(parentCtx context.Context) error {
 		Logger:            applicationLogger,
 		Observer:          jobObserver,
 	})
+	db = jobs.WithRuntime(db, jobRuntime)
 	mediaService := media.NewService(db, cfg.MediaRoot, cfg.MediaPublicURL, legacyLogger, jobRuntime)
 	if err := mediaService.EnsureDirs(); err != nil {
 		return fmt.Errorf("failed to initialize media directories: %w", err)
@@ -388,6 +391,16 @@ func run(parentCtx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("initialize catalog endpoints: %w", err)
 	}
+	if err := catalogEndpoints.ConfigureAnalyticsSigningKey([]byte(jwtSecret)); err != nil {
+		return fmt.Errorf("configure search analytics signing: %w", err)
+	}
+	if err := catalogEndpoints.ConfigureSearchAdmission(httpapi.SearchAdmissionConfig{
+		ClientMaxConcurrent: cfg.SearchClientMaxConcurrent, ClientRequestsPerMinute: cfg.SearchClientRequestsPerMinute,
+		ImpressionMaxConcurrent: cfg.SearchImpressionMaxConcurrent, ImpressionRequestsPerMinute: cfg.SearchImpressionRequestsPerMinute,
+		ClientImpressionsPerMinute: cfg.SearchClientImpressionsPerMinute,
+	}); err != nil {
+		return fmt.Errorf("configure search admission: %w", err)
+	}
 	if err := catalogEndpoints.ConfigureSearchHardening(searchservice.HardeningConfig{
 		MaxConcurrent: cfg.SearchMaxConcurrent, SearchTimeoutMS: cfg.SearchTimeoutMS,
 		CircuitFailureThreshold: cfg.SearchCircuitFailureThreshold, CircuitOpenMS: cfg.SearchCircuitOpenMS,
@@ -453,13 +466,13 @@ func run(parentCtx context.Context) error {
 		salesSearch := searchservice.NewService(db, nil, jobRuntime)
 		runPeriodic(ctx, time.Hour, true, func(workerCtx context.Context) {
 			if _, err := salesSearch.EnqueueSalesRefresh(workerCtx); err != nil && !errors.Is(err, context.Canceled) {
-				applicationLogger.ErrorContext(workerCtx, "Search sales refresh enqueue failed", "error", err)
+				applicationLogger.ErrorContext(workerCtx, "Search sales refresh enqueue failed", "error", searchservice.ErrorDiagnostic(err))
 			}
 			if _, err := salesSearch.EnqueueConversionRefresh(workerCtx); err != nil && !errors.Is(err, context.Canceled) {
-				applicationLogger.ErrorContext(workerCtx, "Search conversion refresh enqueue failed", "error_type", fmt.Sprintf("%T", err))
+				applicationLogger.ErrorContext(workerCtx, "Search conversion refresh enqueue failed", "error_type", fmt.Sprintf("%T", err), "error", searchservice.ErrorDiagnostic(err))
 			}
 			if _, err := salesSearch.EnqueueAnalyticsRetention(workerCtx); err != nil && !errors.Is(err, context.Canceled) {
-				applicationLogger.ErrorContext(workerCtx, "Search analytics retention enqueue failed", "error_type", fmt.Sprintf("%T", err))
+				applicationLogger.ErrorContext(workerCtx, "Search analytics retention enqueue failed", "error_type", fmt.Sprintf("%T", err), "error", searchservice.ErrorDiagnostic(err))
 			}
 		})
 	})
@@ -469,7 +482,7 @@ func run(parentCtx context.Context) error {
 			observationCtx, cancel := context.WithTimeout(workerCtx, 10*time.Second)
 			defer cancel()
 			if err := incidentSearch.ObserveFreshness(observationCtx); err != nil && !errors.Is(err, context.Canceled) {
-				applicationLogger.ErrorContext(workerCtx, "Search freshness observation failed", "error_type", fmt.Sprintf("%T", err))
+				applicationLogger.ErrorContext(workerCtx, "Search freshness observation failed", "error_type", fmt.Sprintf("%T", err), "error", searchservice.ErrorDiagnostic(err))
 			}
 		})
 	})

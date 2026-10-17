@@ -615,6 +615,76 @@ fetch('http://localhost:3000/api/v1/search/consent/revoke',
 This operation does not require authentication
 </aside>
 
+## Exchange a cacheable server snapshot for a consented browser exposure proof
+
+<a id="opIdcreateSearchProof"></a>
+
+> Code samples
+
+```javascript
+const inputBody = '{
+  "snapshot_token": "string",
+  "consent": true,
+  "event_id": "a7a26ff2-e851-45b6-9634-d595f45458b7"
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/search/proofs',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /api/v1/search/proofs`
+
+> Body parameter
+
+```json
+{
+  "snapshot_token": "string",
+  "consent": true,
+  "event_id": "a7a26ff2-e851-45b6-9634-d595f45458b7"
+}
+```
+
+<h3 id="exchange-a-cacheable-server-snapshot-for-a-consented-browser-exposure-proof-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|SearchProofInput|true|none|
+
+<h3 id="exchange-a-cacheable-server-snapshot-for-a-consented-browser-exposure-proof-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Short-lived exposure proof; this response must not be cached|SearchProofResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|429|[Too Many Requests](https://tools.ietf.org/html/rfc6585#section-4)|The caller has exceeded an applicable request limit.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+|503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|A required service or capability is temporarily unavailable.|Problem|
+
+### Response Headers
+
+|Status|Header|Type|Format|Description|
+|---|---|---|---|---|
+|200|Cache-Control|string||none|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## Record an opted-in search impression
 
 <a id="opIdcreateSearchImpression"></a>
@@ -626,36 +696,7 @@ const inputBody = '{
   "event_id": "a7a26ff2-e851-45b6-9634-d595f45458b7",
   "consent": true,
   "session_token": "string",
-  "filters": {
-    "q": "string",
-    "min_price": 0,
-    "max_price": 0,
-    "brand_slug": [
-      "string"
-    ],
-    "category_slug": [
-      "string"
-    ],
-    "has_variant_stock": [
-      true
-    ],
-    "price_range": [
-      "string"
-    ],
-    "attribute": {
-      "property1": [
-        "string"
-      ],
-      "property2": [
-        "string"
-      ]
-    },
-    "ranking_profile": "string",
-    "sort": "relevance",
-    "order": "asc",
-    "page": 1,
-    "limit": 1
-  }
+  "result_token": "string"
 }';
 const headers = {
   'Content-Type':'application/json',
@@ -685,36 +726,7 @@ fetch('http://localhost:3000/api/v1/search/impressions',
   "event_id": "a7a26ff2-e851-45b6-9634-d595f45458b7",
   "consent": true,
   "session_token": "string",
-  "filters": {
-    "q": "string",
-    "min_price": 0,
-    "max_price": 0,
-    "brand_slug": [
-      "string"
-    ],
-    "category_slug": [
-      "string"
-    ],
-    "has_variant_stock": [
-      true
-    ],
-    "price_range": [
-      "string"
-    ],
-    "attribute": {
-      "property1": [
-        "string"
-      ],
-      "property2": [
-        "string"
-      ]
-    },
-    "ranking_profile": "string",
-    "sort": "relevance",
-    "order": "asc",
-    "page": 1,
-    "limit": 1
-  }
+  "result_token": "string"
 }
 ```
 
@@ -730,6 +742,7 @@ fetch('http://localhost:3000/api/v1/search/impressions',
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Success|SearchImpressionResponse|
 |400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
 |429|[Too Many Requests](https://tools.ietf.org/html/rfc6585#section-4)|The caller has exceeded an applicable request limit.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
 |503|[Service Unavailable](https://tools.ietf.org/html/rfc7231#section-6.6.4)|A required service or capability is temporarily unavailable.|Problem|
@@ -799,6 +812,8 @@ fetch('http://localhost:3000/api/v1/search/events',
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Success|SearchEventResponse|
 |400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|429|[Too Many Requests](https://tools.ietf.org/html/rfc6585#section-4)|The caller has exceeded an applicable request limit.|Problem|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
 
 <aside class="success">
@@ -845,7 +860,6 @@ fetch('http://localhost:3000/api/v1/search/products',
 |has_variant_stock|query|array[boolean]|false|Repeated values use OR semantics within the stock facet.|
 |price_range|query|array[string]|false|Repeated inclusive price ranges use OR semantics within the price facet. Each value is encoded as min:max; either boundary may be omitted. Overlapping ranges are treated as a union.|
 |attribute|query|object|false|Attribute values use OR within each attribute and AND across attributes. Encode array values with indexed deep-object keys, such as attribute[color][0]=red&attribute[color][1]=blue.|
-|ranking_profile|query|string|false|Named ranking profile; omitted selects the global default.|
 |sort|query|string|false|Defaults to relevance for a keyword query and newest for an empty query.|
 |order|query|string|false|none|
 |page|query|integer|false|none|
@@ -4547,6 +4561,7 @@ fetch('http://localhost:3000/api/v1/admin/localization/entities/{entity_type}/{e
 |entity_type|product_variant|
 |entity_type|product_option|
 |entity_type|product_option_value|
+|entity_type|product_attribute|
 |entity_type|brand|
 |entity_type|category|
 |entity_type|website_settings|
@@ -4633,6 +4648,7 @@ fetch('http://localhost:3000/api/v1/admin/localization/entities/{entity_type}/{e
 |entity_type|product_variant|
 |entity_type|product_option|
 |entity_type|product_option_value|
+|entity_type|product_attribute|
 |entity_type|brand|
 |entity_type|category|
 |entity_type|website_settings|
@@ -4688,6 +4704,8 @@ fetch('http://localhost:3000/api/v1/admin/search/analytics',
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
 |days|query|integer|false|none|
+|page|query|integer|false|none|
+|limit|query|integer|false|none|
 
 <h3 id="read-consented-search-analytics-responses">Responses</h3>
 
@@ -4752,6 +4770,66 @@ fetch('http://localhost:3000/api/v1/admin/search/incidents',
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Incident history, newest first|SearchIndexIncidentListResponse|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
+|401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
+|403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|An unexpected internal error occurred.|Problem|
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+cookieAuth, bearerAuth
+</aside>
+
+## List immutable search configuration changes
+
+<a id="opIdlistAdminSearchConfigurationHistory"></a>
+
+> Code samples
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:3000/api/v1/admin/search/configuration-history',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /api/v1/admin/search/configuration-history`
+
+<h3 id="list-immutable-search-configuration-changes-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|kind|query|string|false|none|
+|entity_id|query|integer|false|none|
+|page|query|integer|false|none|
+|limit|query|integer|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|kind|synonym|
+|kind|typo_profile|
+|kind|ranking_profile|
+
+<h3 id="list-immutable-search-configuration-changes-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Configuration changes, newest first|SearchConfigurationAuditListResponse|
 |400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|The request is malformed or does not satisfy the operation contract.|Problem|
 |401|[Unauthorized](https://tools.ietf.org/html/rfc7235#section-3.1)|Authentication is required or the supplied credentials are invalid.|Problem|
 |403|[Forbidden](https://tools.ietf.org/html/rfc7231#section-6.5.3)|The authenticated principal is not allowed to perform this operation.|Problem|
@@ -18525,9 +18603,9 @@ fetch('http://localhost:3000/api/v1/localization/bundles/{locale}',
 |Status|Header|Type|Format|Description|
 |---|---|---|---|---|
 |200|ETag|string||none|
-|200|Cache-Control|string||none|
+|200|Cache-Control|string||Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution.|
 |304|ETag|string||none|
-|304|Cache-Control|string||none|
+|304|Cache-Control|string||Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution.|
 
 <aside class="success">
 This operation does not require authentication
@@ -18596,9 +18674,9 @@ fetch('http://localhost:3000/api/v1/localization/bundles/{locale}/meta',
 |Status|Header|Type|Format|Description|
 |---|---|---|---|---|
 |200|ETag|string||none|
-|200|Cache-Control|string||none|
+|200|Cache-Control|string||Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution.|
 |304|ETag|string||none|
-|304|Cache-Control|string||none|
+|304|Cache-Control|string||Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution.|
 
 <aside class="success">
 This operation does not require authentication

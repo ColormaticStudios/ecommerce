@@ -717,7 +717,7 @@ func newUploadProductMediaCmd() *cobra.Command {
 				log.Fatalf("Upload failed: %v", err)
 			}
 
-			if _, err := catalogadminservice.NewService(db, mediaService).AttachMedia(cmd.Context(), product.ID, []string{mediaObj.ID}); err != nil {
+			if _, err := catalogadminservice.NewService(db, mediaService, newJobRuntime(db, getConfig())).AttachMedia(cmd.Context(), product.ID, []string{mediaObj.ID}); err != nil {
 				_ = mediaService.DeleteIfOrphan(mediaObj.ID)
 				log.Fatalf("Failed to attach media: %v", err)
 			}

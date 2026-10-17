@@ -1,6 +1,7 @@
 package inventory
 
 import (
+	"ecommerce/internal/jobs"
 	"testing"
 	"time"
 
@@ -19,7 +20,7 @@ func newInventoryTestDB(t *testing.T) *gorm.DB {
 	require.NoError(t, db.AutoMigrate(
 		&models.Product{},
 		&models.ProductVariant{},
-		&models.InventoryItem{},
+		&models.InventoryItem{}, &models.JobQueue{}, &models.SearchCatalogFanoutDebt{}, &models.SearchInventoryRevision{}, &models.SearchProductRevision{}, &models.SearchDocument{},
 		&models.InventoryLevel{},
 		&models.InventoryMovement{},
 		&models.InventoryReservation{},
@@ -35,7 +36,7 @@ func newInventoryTestDB(t *testing.T) *gorm.DB {
 		&models.InventoryReceipt{},
 		&models.InventoryReceiptItem{},
 	))
-	return db
+	return jobs.WithRuntime(db, jobs.NewRuntime(db, jobs.Config{}))
 }
 
 func TestApplyMovementCreatesAndDeduplicatesLowStockAlert(t *testing.T) {
@@ -507,4 +508,31 @@ func TestExpireReservationsKeepsAuthorizedOrderHold(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 3, availability.Reserved)
 	assert.Equal(t, 2, availability.Available)
+}
+
+func TestStockChangesEnqueueSearchAtomically(t *testing.T) {
+	db := newInventoryTestDB(t)
+	variant := seedInventoryVariant(t, db, 8)
+	_, err := ApplyMovement(db, MovementInput{ProductVariantID: variant.ID, MovementType: MovementTypeOrderCommit, QuantityDelta: -3})
+	require.NoError(t, err)
+	var revision models.SearchInventoryRevision
+	require.NoError(t, db.First(&revision, "variant_id = ?", variant.ID).Error)
+	require.Greater(t, revision.Revision, int64(0))
+	require.NotNil(t, revision.PendingSince)
+	var queued []models.JobQueue
+	require.NoError(t, db.Where("job_type = ?", "search.product_sync").Find(&queued).Error)
+	require.Len(t, queued, 1)
+	_, err = SetOnHand(db, variant.ID, 9, MovementInput{})
+	require.NoError(t, err)
+	require.NoError(t, db.First(&revision, "variant_id = ?", variant.ID).Error)
+	require.NoError(t, db.Where("job_type = ?", "search.product_sync").Find(&queued).Error)
+	require.Len(t, queued, 1)
+	require.NoError(t, db.Migrator().DropTable(&models.JobQueue{}))
+	_, err = SetOnHand(db, variant.ID, 20, MovementInput{})
+	require.Error(t, err)
+	require.NoError(t, db.First(&variant, variant.ID).Error)
+	require.Equal(t, 9, variant.Stock, "queue failure must roll back inventory and variant stock")
+	var level models.InventoryLevel
+	require.NoError(t, db.First(&level, "inventory_item_id = (SELECT id FROM inventory_items WHERE product_variant_id = ?)", variant.ID).Error)
+	require.Equal(t, 9, level.OnHand)
 }

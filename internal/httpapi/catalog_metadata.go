@@ -91,7 +91,15 @@ func (e *CatalogEndpoints) brandsContract(ctx context.Context, values []models.B
 
 func (e *CatalogEndpoints) brandContract(ctx context.Context, value models.Brand, localized bool) (apicontract.Brand, error) {
 	result := apicontract.Brand{Id: int(value.ID), Name: value.Name, Slug: value.Slug, Description: value.Description, IsActive: value.IsActive}
-	if e.media != nil {
+	if metadata, ok := ctx.Value(adminMetadataKey{}).(*adminMetadata); ok && metadata.logos != nil {
+		if urls := metadata.logos[value.ID]; len(urls) > 0 {
+			result.LogoUrl = &urls[0]
+		}
+	} else if metadata, ok := ctx.Value(publicMetadataKey{}).(*publicMetadata); ok {
+		if urls := metadata.logos[value.ID]; len(urls) > 0 {
+			result.LogoUrl = &urls[0]
+		}
+	} else if e.media != nil {
 		if url, err := e.media.BrandLogoURL(value.ID); err == nil && url != "" {
 			result.LogoUrl = &url
 		}
@@ -240,7 +248,7 @@ func (e *CatalogEndpoints) CreateAdminProductAttribute(ctx context.Context, requ
 	if request.Body == nil {
 		return nil, errors.New("product attribute body is required")
 	}
-	value, err := e.catalogAdmin.CreateAttribute(ctx, *request.Body)
+	value, err := e.catalogAdmin.CreateAttribute(ctx, *request.Body, searchConfigurationActorID(ctx))
 	if err != nil {
 		return nil, catalogEndpointError(err)
 	}
@@ -251,7 +259,7 @@ func (e *CatalogEndpoints) UpdateAdminProductAttribute(ctx context.Context, requ
 	if request.Id < 1 || request.Body == nil {
 		return nil, errors.New("valid product attribute id and body are required")
 	}
-	value, err := e.catalogAdmin.UpdateAttribute(ctx, uint(request.Id), *request.Body)
+	value, err := e.catalogAdmin.UpdateAttribute(ctx, uint(request.Id), *request.Body, searchConfigurationActorID(ctx))
 	if err != nil {
 		return nil, catalogEndpointError(err)
 	}

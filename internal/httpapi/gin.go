@@ -55,6 +55,7 @@ func RequestContextMiddleware(options RequestContextOptions) gin.HandlerFunc {
 				headers[name] = ctx.Request.Header.Get(name)
 			}
 			metadata = requestctx.Metadata{
+				ClientIP:      ctx.ClientIP(),
 				RequestID:     correlation.RequestID,
 				CorrelationID: correlation.CorrelationID,
 				Method:        ctx.Request.Method,

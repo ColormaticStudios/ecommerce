@@ -82,7 +82,7 @@ func addExposure(t *testing.T, db *gorm.DB, name, owner string, at time.Time, id
 	t.Helper()
 	raw, err := json.Marshal(ids)
 	require.NoError(t, err)
-	q := models.SearchQueryEvent{ImpressionID: name, SessionHash: owner, Query: "shoe", NormalizedQuery: "shoe", ProductsJSON: string(raw), FiltersJSON: "{}", CreatedAt: at}
+	q := models.SearchQueryEvent{ImpressionID: name, SnapshotID: name, SessionHash: owner, Query: "shoe", NormalizedQuery: "shoe", ProductsJSON: string(raw), FiltersJSON: "{}", FirstPosition: 1, ProductCount: len(ids), CreatedAt: at}
 	require.NoError(t, db.Create(&q).Error)
 	return q
 }
@@ -188,7 +188,7 @@ func TestEmptyConversionSnapshotCannotBeOverwrittenByOlderJob(t *testing.T) {
 	require.Nil(t, state.LastIndexedAt)
 	require.Nil(t, state.LastFullReindexAt)
 }
-func TestConversionSnapshotInvalidatesRankingCache(t *testing.T) {
+func TestConversionSnapshotsAffectAdminPreviewButNotPublicRanking(t *testing.T) {
 	s, db, now := conversionTestService(t)
 	products := make([]models.Product, 500)
 	ids := make([]uint, 500)
@@ -213,9 +213,19 @@ func TestConversionSnapshotInvalidatesRankingCache(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, target, result.Products[0].ID)
 	require.InDelta(t, 1.0/21, result.Explanations[0].Components[9].Value, 1e-12)
+	// Public requests ignore conversion even when the saved default enables it.
+	public, err := s.Search(context.Background(), Filters{Query: "shoe"})
+	require.NoError(t, err)
+	require.Equal(t, products[0].ID, public.Products[0].ID)
+	require.Empty(t, public.Explanations)
+	// The public boundary must not mutate the shared configuration cache.
+	preview, err := s.Search(context.Background(), Filters{Query: "shoe", Explain: true})
+	require.NoError(t, err)
+	require.Equal(t, target, preview.Products[0].ID)
+	require.Equal(t, float64(10), preview.Explanations[0].Components[9].Weight)
 	require.NoError(t, db.Exec("UPDATE orders SET status = ?", models.StatusRefunded).Error)
 	require.NoError(t, s.RefreshConversionSignals(context.Background(), now))
-	result, err = s.Search(context.Background(), Filters{Query: "shoe"})
+	result, err = s.Search(context.Background(), Filters{Query: "shoe", Explain: true})
 	require.NoError(t, err)
 	require.Equal(t, products[0].ID, result.Products[0].ID)
 }

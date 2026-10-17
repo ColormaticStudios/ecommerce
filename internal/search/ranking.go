@@ -148,18 +148,21 @@ func (s *Service) CreateRankingProfile(ctx context.Context, input RankingProfile
 	}
 	raw, _ := json.Marshal(input.Weights)
 	row := models.SearchRankingProfile{Name: name, WeightsJSON: string(raw), Version: 1, UpdatedBy: actor}
-	err = db.Transaction(func(tx *gorm.DB) error {
-		rows, err := lockRankingProfiles(tx)
-		if err != nil {
-			return err
-		}
-		if input.IsDefault || len(rows) == 0 {
-			if err := s.clearRankingDefault(tx, actor); err != nil {
+	err = s.configurationTransaction(db, rankingConfiguration, func(tx *gorm.DB) error {
+		return s.auditConfigurationChanges(tx, "ranking_profile", actor, func() error {
+			rows, err := lockRankingProfiles(tx)
+			if err != nil {
 				return err
 			}
-			row.IsDefault = true
-		}
-		return tx.Create(&row).Error
+			if input.IsDefault || len(rows) == 0 {
+				if err := s.clearRankingDefault(tx, actor); err != nil {
+					return err
+				}
+				row.IsDefault = true
+			}
+			return tx.Create(&row).Error
+
+		})
 	})
 	if err != nil {
 		return RankingProfile{}, configurationWriteError(err)
@@ -174,98 +177,119 @@ func (s *Service) UpdateRankingProfile(ctx context.Context, id uint, patch Ranki
 	if patch.Name == nil && patch.Weights == nil && patch.IsDefault == nil {
 		return RankingProfile{}, fmt.Errorf("%w: patch cannot be empty", ErrConfigurationInvalid)
 	}
-	err = db.Transaction(func(tx *gorm.DB) error {
-		rows, err := lockRankingProfiles(tx)
-		if err != nil {
-			return err
-		}
-		var current *models.SearchRankingProfile
-		for i := range rows {
-			if rows[i].ID == id {
-				current = &rows[i]
-				break
-			}
-		}
-		if current == nil {
-			return ErrConfigurationNotFound
-		}
-		updates := map[string]any{"version": gorm.Expr("version + 1"), "updated_by": actor, "updated_at": s.now().UTC()}
-		if patch.Name != nil {
-			name, err := normalizeConfigurationName(*patch.Name)
+	err = s.configurationTransaction(db, rankingConfiguration, func(tx *gorm.DB) error {
+		return s.auditConfigurationChanges(tx, "ranking_profile", actor, func() error {
+			rows, err := lockRankingProfiles(tx)
 			if err != nil {
 				return err
 			}
-			updates["name"] = name
-		}
-		if patch.Weights != nil {
-			if err := validateRankingWeights(*patch.Weights); err != nil {
-				return err
-			}
-			raw, _ := json.Marshal(patch.Weights)
-			updates["weights_json"] = string(raw)
-		}
-		if patch.IsDefault != nil {
-			if current.IsDefault && !*patch.IsDefault {
-				return ErrDefaultRankingProfileRequired
-			}
-			if *patch.IsDefault && !current.IsDefault {
-				if err := s.clearRankingDefault(tx, actor); err != nil {
-					return err
+			var current *models.SearchRankingProfile
+			for i := range rows {
+				if rows[i].ID == id {
+					current = &rows[i]
+					break
 				}
 			}
-			updates["is_default"] = *patch.IsDefault
-		}
-		return tx.Model(current).Updates(updates).Error
+			if current == nil {
+				return ErrConfigurationNotFound
+			}
+			updates := map[string]any{"version": gorm.Expr("version + 1"), "updated_by": actor, "updated_at": s.now().UTC()}
+			if patch.Name != nil {
+				name, err := normalizeConfigurationName(*patch.Name)
+				if err != nil {
+					return err
+				}
+				updates["name"] = name
+			}
+			if patch.Weights != nil {
+				if err := validateRankingWeights(*patch.Weights); err != nil {
+					return err
+				}
+				raw, _ := json.Marshal(patch.Weights)
+				updates["weights_json"] = string(raw)
+			}
+			if patch.IsDefault != nil {
+				if current.IsDefault && !*patch.IsDefault {
+					return ErrDefaultRankingProfileRequired
+				}
+				if *patch.IsDefault && !current.IsDefault {
+					if err := s.clearRankingDefault(tx, actor); err != nil {
+						return err
+					}
+				}
+				updates["is_default"] = *patch.IsDefault
+			}
+			return tx.Model(current).Updates(updates).Error
+
+		})
 	})
 	if err != nil {
 		return RankingProfile{}, configurationWriteError(err)
 	}
 	return s.GetRankingProfile(ctx, id)
 }
-func (s *Service) DeleteRankingProfile(ctx context.Context, id uint) error {
+func (s *Service) DeleteRankingProfile(ctx context.Context, id uint, actor *uint) error {
 	db, err := s.configurationDB(ctx)
 	if err != nil {
 		return err
 	}
-	return db.Transaction(func(tx *gorm.DB) error {
-		rows, err := lockRankingProfiles(tx)
-		if err != nil {
-			return err
-		}
-		for _, row := range rows {
-			if row.ID == id {
-				if row.IsDefault {
-					return ErrDefaultRankingProfileRequired
-				}
-				return tx.Unscoped().Delete(&row).Error
+	return s.configurationTransaction(db, rankingConfiguration, func(tx *gorm.DB) error {
+		return s.auditConfigurationChanges(tx, "ranking_profile", actor, func() error {
+			rows, err := lockRankingProfiles(tx)
+			if err != nil {
+				return err
 			}
-		}
-		return ErrConfigurationNotFound
+			for _, row := range rows {
+				if row.ID == id {
+					if row.IsDefault {
+						return ErrDefaultRankingProfileRequired
+					}
+					return tx.Unscoped().Delete(&row).Error
+				}
+			}
+			return ErrConfigurationNotFound
+
+		})
 	})
 }
 
 func (b *databaseBackend) loadRankingProfile(ctx context.Context, name string) (RankingProfile, error) {
-	var rows []models.SearchRankingProfile
-	q := b.db.WithContext(ctx)
-	if name != "" {
-		q = q.Where("name = ?", name)
-	} else {
-		q = q.Where("is_default = ?", true)
-	}
-	if err := q.Find(&rows).Error; err != nil {
+	profiles, err := cachedConfiguration(ctx, b.configuration, rankingConfiguration, func() ([]RankingProfile, error) {
+		var rows []models.SearchRankingProfile
+		if err := b.db.WithContext(ctx).Order("id ASC").Find(&rows).Error; err != nil {
+			return nil, err
+		}
+		profiles := make([]RankingProfile, 0, len(rows))
+		for _, row := range rows {
+			profile, err := rankingProfileFromModel(row)
+			if err != nil {
+				return nil, fmt.Errorf("search ranking configuration invalid: %v", err)
+			}
+			profiles = append(profiles, profile)
+		}
+		return profiles, nil
+	})
+	if err != nil {
 		return RankingProfile{}, err
 	}
-	if len(rows) != 1 {
-		if name != "" && len(rows) == 0 {
-			return RankingProfile{}, ErrConfigurationNotFound
+	if name == "" {
+		defaults := 0
+		for _, profile := range profiles {
+			if profile.IsDefault {
+				defaults++
+			}
 		}
-		return RankingProfile{}, errors.New("search ranking configuration requires exactly one default profile")
+		if defaults != 1 {
+			b.configuration.invalidate(rankingConfiguration)
+			return RankingProfile{}, errors.New("search ranking configuration requires exactly one default profile")
+		}
 	}
-	profile, err := rankingProfileFromModel(rows[0])
-	if err != nil {
-		return RankingProfile{}, fmt.Errorf("search ranking configuration invalid: %v", err)
+	for _, profile := range profiles {
+		if name != "" && profile.Name == name || name == "" && profile.IsDefault {
+			return profile, nil
+		}
 	}
-	return profile, nil
+	return RankingProfile{}, ErrConfigurationNotFound
 }
 
 // Boundary matching prevents short tokens in an unrelated field from receiving

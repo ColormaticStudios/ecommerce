@@ -31,33 +31,35 @@ import (
 // operations. It contains no Gin handlers and can be embedded in a composed
 // StrictServerInterface implementation.
 type CatalogEndpoints struct {
-	db           *gorm.DB
-	media        *media.Service
-	catalog      *catalogservice.Service
-	catalogAdmin *catalogadminservice.Service
-	inventory    *inventoryservice.Service
-	discounts    *discountservice.Service
-	localization *localizationservice.Service
-	search       *searchservice.Service
+	db            *gorm.DB
+	media         *media.Service
+	catalog       *catalogservice.Service
+	catalogAdmin  *catalogadminservice.Service
+	inventory     *inventoryservice.Service
+	discounts     *discountservice.Service
+	localization  *localizationservice.Service
+	search        *searchservice.Service
+	searchClients *searchClientLimiter
 }
 
-func NewCatalogEndpoints(db *gorm.DB, mediaService *media.Service, runtimes ...*jobs.Runtime) (*CatalogEndpoints, error) {
+func NewCatalogEndpoints(db *gorm.DB, mediaService *media.Service, runtime *jobs.Runtime) (*CatalogEndpoints, error) {
 	if db == nil {
 		return nil, errors.New("catalog database is required")
 	}
-	var runtime *jobs.Runtime
-	if len(runtimes) != 0 {
-		runtime = runtimes[0]
+	if runtime == nil {
+		return nil, errors.New("catalog job runtime is required")
 	}
+	db = jobs.WithRuntime(db, runtime)
 	return &CatalogEndpoints{
-		db:           db,
-		media:        mediaService,
-		catalog:      catalogservice.NewService(db, mediaService),
-		catalogAdmin: catalogadminservice.NewService(db, mediaService, runtime),
-		inventory:    inventoryservice.NewService(db),
-		discounts:    discountservice.NewService(db),
-		localization: localizationservice.NewService(db),
-		search:       searchservice.NewService(db, nil, runtime),
+		db:            db,
+		media:         mediaService,
+		catalog:       catalogservice.NewService(db, mediaService),
+		catalogAdmin:  catalogadminservice.NewService(db, mediaService, runtime),
+		inventory:     inventoryservice.NewService(db),
+		discounts:     discountservice.NewService(db),
+		localization:  localizationservice.NewService(db),
+		search:        searchservice.NewService(db, nil, runtime),
+		searchClients: newSearchClientLimiter(DefaultSearchAdmissionConfig()),
 	}, nil
 }
 
@@ -230,6 +232,20 @@ func adminListInput(params apicontract.ListAdminProductsParams) catalogservice.L
 }
 
 func (e *CatalogEndpoints) productsToContract(ctx context.Context, products []models.Product, admin bool) ([]apicontract.Product, error) {
+	if admin && len(products) > 0 {
+		var err error
+		ctx, err = e.adminMetadataContext(ctx, products)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if !admin && len(products) > 0 {
+		var err error
+		ctx, err = e.publicMetadataContext(ctx, products)
+		if err != nil {
+			return nil, err
+		}
+	}
 	result := make([]apicontract.Product, 0, len(products))
 	for _, product := range products {
 		value, err := e.productToContract(ctx, product, admin)
@@ -243,17 +259,25 @@ func (e *CatalogEndpoints) productsToContract(ctx context.Context, products []mo
 
 func (e *CatalogEndpoints) productToContract(ctx context.Context, product models.Product, admin bool) (apicontract.Product, error) {
 	db := e.db.WithContext(ctx)
-	if product.ID != 0 && product.Related == nil && product.Categories == nil && product.Variants == nil {
+	if product.ID != 0 && product.Related == nil && product.Categories == nil && product.Variants == nil && ctx.Value(publicMetadataKey{}) == nil {
 		if err := db.Preload("Related").Preload("Categories").Preload("Variants").First(&product, product.ID).Error; err != nil {
 			return apicontract.Product{}, err
 		}
 	}
 	images := append([]string(nil), product.Images...)
+	public, publicBatched := ctx.Value(publicMetadataKey{}).(*publicMetadata)
+	if !admin && publicBatched && len(public.images[product.ID]) != 0 {
+		images = append([]string(nil), public.images[product.ID]...)
+	}
+	metadata, batched := ctx.Value(adminMetadataKey{}).(*adminMetadata)
+	if admin && batched && len(metadata.inputs[product.ID].Images) != 0 {
+		images = append([]string(nil), metadata.inputs[product.ID].Images...)
+	}
 	role := media.RoleProductImage
 	if admin && product.DraftUpdatedAt != nil {
 		role = media.RoleProductDraftImage
 	}
-	if e.media != nil {
+	if e.media != nil && !(admin && batched) && !publicBatched {
 		if urls, err := e.media.ProductMediaURLsByRole(product.ID, role); err == nil && len(urls) != 0 {
 			images = urls
 		}
@@ -338,7 +362,7 @@ func (e *CatalogEndpoints) productToContract(ctx context.Context, product models
 	}
 	published, draft := product.IsPublished, product.DraftUpdatedAt != nil
 	result := apicontract.Product{Id: int(product.ID), Sku: product.SKU, Name: product.Name, Subtitle: product.Subtitle, Description: product.Description, Price: product.Price.Float64(), Stock: product.Stock, Images: images, CoverImage: cover, Categories: categories, RelatedProducts: related, Options: []apicontract.ProductOption{}, Attributes: []apicontract.ProductAttributeValue{}, Seo: apicontract.ProductSEO{}, PriceRange: apicontract.ProductPriceRange{Min: minPrice, Max: maxPrice}, DefaultVariantId: defaultVariantID, DefaultVariantSku: defaultVariantSKU, Variants: variants, CreatedAt: product.CreatedAt, UpdatedAt: product.UpdatedAt, DeletedAt: deletedAt(product.DeletedAt)}
-	if product.Brand != nil {
+	if product.Brand != nil && !admin {
 		brand, err := e.brandContract(ctx, *product.Brand, !admin)
 		if err != nil {
 			return apicontract.Product{}, err
@@ -370,6 +394,13 @@ func (e *CatalogEndpoints) productToContract(ctx context.Context, product models
 }
 
 func (e *CatalogEndpoints) resolveEntityLocalization(ctx context.Context, entityType localizationservice.EntityType, entityID uint) (localizationservice.EntityResolution, error) {
+	if metadata, ok := ctx.Value(publicMetadataKey{}).(*publicMetadata); ok {
+		value, found := metadata.localized[localizationservice.EntityReference{EntityType: entityType, EntityID: entityID}]
+		if !found {
+			return localizationservice.EntityResolution{}, localizationservice.ErrLocalizedEntityNotFound
+		}
+		return value, nil
+	}
 	input := localizationservice.ResolutionInput{}
 	if resolution, ok := requestctx.LocaleResolutionFrom(ctx); ok {
 		input.ExplicitLocale = resolution.ResolvedLocale

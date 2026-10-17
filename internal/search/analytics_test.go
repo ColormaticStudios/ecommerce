@@ -18,22 +18,37 @@ func analyticsFixture(t *testing.T) (*Service, uint) {
 	p := models.Product{Name: "Green boots", SKU: uuid.NewString(), IsPublished: true, Price: models.MoneyFromFloat(10)}
 	require.NoError(t, db.Create(&p).Error)
 	s := NewService(db, nil, nil)
+	require.NoError(t, s.ConfigureAnalyticsSigningKey([]byte("analytics-test-key")))
 	require.NoError(t, s.Reindex(context.Background()))
 	return s, p.ID
+}
+func analyticsProof(t *testing.T, s *Service, f Filters) (string, Result) {
+	t.Helper()
+	r, err := s.Search(context.Background(), f)
+	require.NoError(t, err)
+	token, err := s.SignResultSnapshot(r, f, 12*time.Millisecond)
+	require.NoError(t, err)
+	return token, r
+}
+func recordTestImpression(t *testing.T, s *Service, consent bool, session string, f Filters) (Impression, error) {
+	t.Helper()
+	token, _ := analyticsProof(t, s, f)
+	return s.RecordImpression(context.Background(), consent, session, "", token)
 }
 func TestAnalyticsConsentSnapshotOwnershipAndDedupe(t *testing.T) {
 	s, p := analyticsFixture(t)
 	ctx := context.Background()
 	filters := Filters{Query: "boots", Page: 1, Limit: 10}
-	_, err := s.CreateImpression(ctx, false, "", filters)
+	token, result := analyticsProof(t, s, filters)
+	_, err := s.RecordImpression(ctx, false, "", "", token)
 	require.ErrorIs(t, err, ErrAnalyticsInvalid)
 	id := uuid.NewString()
-	im, err := s.CreateImpressionIdempotent(ctx, true, "", id, filters)
+	im, err := s.RecordImpression(ctx, true, "", id, token)
 	require.NoError(t, err)
-	require.Equal(t, p, im.Result.Products[0].ID)
-	again, err := s.CreateImpressionIdempotent(ctx, true, im.SessionToken, id, filters)
+	require.Equal(t, p, result.Products[0].ID)
+	again, err := s.RecordImpression(ctx, true, im.SessionToken, id, token)
 	require.NoError(t, err)
-	require.Equal(t, im.Result, again.Result)
+	require.Equal(t, im.ID, again.ID)
 	var count int64
 	require.NoError(t, s.db.Model(&models.SearchQueryEvent{}).Count(&count).Error)
 	require.Equal(t, int64(1), count)
@@ -58,13 +73,14 @@ func TestAnalyticsConsentSnapshotOwnershipAndDedupe(t *testing.T) {
 	_, err = s.RecordClick(ctx, invalid)
 	require.ErrorIs(t, err, ErrAnalyticsInvalid)
 	filters.Query = "green"
-	_, err = s.CreateImpressionIdempotent(ctx, true, im.SessionToken, id, filters)
+	otherToken, _ := analyticsProof(t, s, filters)
+	_, err = s.RecordImpression(ctx, true, im.SessionToken, id, otherToken)
 	require.ErrorIs(t, err, ErrAnalyticsInvalid)
 	require.NoError(t, s.RevokeConsent(ctx, im.SessionToken))
 	require.NoError(t, s.RevokeConsent(ctx, im.SessionToken))
 	_, err = s.RecordClick(ctx, click)
 	require.ErrorIs(t, err, ErrAnalyticsInvalid)
-	_, err = s.CreateImpression(ctx, true, im.SessionToken, filters)
+	_, err = s.RecordImpression(ctx, true, im.SessionToken, "", otherToken)
 	require.ErrorIs(t, err, ErrAnalyticsInvalid)
 	require.NoError(t, s.db.Model(&models.SearchQueryEvent{}).Count(&count).Error)
 	require.Zero(t, count)
@@ -75,7 +91,7 @@ func TestAnalyticsPopularityThresholdMetricsAndRetention(t *testing.T) {
 	now := time.Now().UTC()
 	s.now = func() time.Time { return now }
 	for i := 0; i < 5; i++ {
-		im, err := s.CreateImpression(ctx, true, "", Filters{Query: "boots", Page: 1, Limit: 10})
+		im, err := recordTestImpression(t, s, true, "", Filters{Query: "boots", Page: 1, Limit: 10})
 		require.NoError(t, err)
 		if i == 0 {
 			_, err = s.RecordClick(ctx, ClickInput{SessionToken: im.SessionToken, ImpressionID: im.ID, EventID: uuid.NewString(), ProductID: p, Position: 1})
@@ -105,9 +121,9 @@ func TestAnalyticsPopularityThresholdMetricsAndRetention(t *testing.T) {
 func TestAnalyticsPreviewAndExpiredClickAreExcluded(t *testing.T) {
 	s, p := analyticsFixture(t)
 	ctx := context.Background()
-	_, err := s.CreateImpression(ctx, true, "", Filters{Explain: true})
+	_, err := recordTestImpression(t, s, true, "", Filters{Explain: true})
 	require.ErrorIs(t, err, ErrAnalyticsInvalid)
-	im, err := s.CreateImpression(ctx, true, "", Filters{Query: "boots", Page: 1, Limit: 10})
+	im, err := recordTestImpression(t, s, true, "", Filters{Query: "boots", Page: 1, Limit: 10})
 	require.NoError(t, err)
 	now := s.now()
 	s.now = func() time.Time { return now.Add(8 * 24 * time.Hour) }
@@ -122,10 +138,11 @@ func TestAnalyticsSnapshotReplaysAfterCatalogChangesAndUsesAbsoluteRanks(t *test
 	require.NoError(t, s.db.Create(&second).Error)
 	require.NoError(t, s.Reindex(ctx))
 	filters := Filters{Query: "boots", Page: 2, Limit: 1, SortField: "name", SortOrder: "asc"}
-	im, err := s.CreateImpression(ctx, true, "", filters)
+	token, result := analyticsProof(t, s, filters)
+	im, err := s.RecordImpression(ctx, true, "", "", token)
 	require.NoError(t, err)
-	require.Len(t, im.Result.Products, 1)
-	target := im.Result.Products[0].ID
+	require.Len(t, result.Products, 1)
+	target := result.Products[0].ID
 	click := ClickInput{SessionToken: im.SessionToken, ImpressionID: im.ID, EventID: uuid.NewString(), ProductID: target, Position: 1}
 	_, err = s.RecordClick(ctx, click)
 	require.ErrorIs(t, err, ErrAnalyticsInvalid)
@@ -138,9 +155,9 @@ func TestAnalyticsSnapshotReplaysAfterCatalogChangesAndUsesAbsoluteRanks(t *test
 	current, err := s.Search(ctx, filters)
 	require.NoError(t, err)
 	require.Zero(t, current.Total)
-	replay, err := s.CreateImpressionIdempotent(ctx, true, im.SessionToken, im.ID, filters)
+	replay, err := s.RecordImpression(ctx, true, im.SessionToken, im.ID, token)
 	require.NoError(t, err)
-	require.Equal(t, im.Result, replay.Result)
+	require.Equal(t, im.ID, replay.ID)
 	metrics, err := s.Analytics(ctx, 7)
 	require.NoError(t, err)
 	require.Equal(t, 1.0, metrics.CTRAt5)

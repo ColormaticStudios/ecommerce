@@ -569,8 +569,17 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, searchSignalsIncidentsVersion, status.LatestAppliedVersion)
-	require.Equal(t, 3, status.PendingCount)
+	var expectedLatest string
+	expectedPending := 0
+	for _, migration := range orderedMigrations {
+		if slices.Contains(migration.Tags, "contract") {
+			expectedPending++
+		} else {
+			expectedLatest = migration.Version
+		}
+	}
+	require.Equal(t, expectedLatest, status.LatestAppliedVersion)
+	require.Equal(t, expectedPending, status.PendingCount)
 }
 
 func TestRunAppliesAllOrderedMigrationsAndReplayIsIdempotent(t *testing.T) {
@@ -715,7 +724,7 @@ func TestLocalizationP1BackfillsAccountPreferencesMarketsAndBaselineKeys(t *test
 	require.Equal(t, int64(len(localizationP1BaselineKeys)), keyCount)
 }
 
-func TestLocalizationP1BaselineContainsExtractedSourceCatalog(t *testing.T) {
+func TestLocalizationMigrationsContainExtractedSourceCatalog(t *testing.T) {
 	data, err := os.ReadFile(filepath.Join("..", "..", "defaults", "localization.en-US.json"))
 	require.NoError(t, err)
 	var catalog struct {
@@ -750,6 +759,12 @@ func TestLocalizationP1BaselineContainsExtractedSourceCatalog(t *testing.T) {
 		seeded[key.Namespace+"."+key.Key] = key
 	}
 	for _, key := range searchAnalyticsP4CatalogKeys {
+		seeded[key.Namespace+"."+key.Key] = key
+	}
+	for _, key := range searchReviewCatalogKeys {
+		seeded[key.Namespace+"."+key.Key] = key
+	}
+	for _, key := range searchUICatalogKeys {
 		seeded[key.Namespace+"."+key.Key] = key
 	}
 	for _, message := range catalog.Messages {

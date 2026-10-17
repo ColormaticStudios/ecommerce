@@ -114,19 +114,22 @@ func (s *Service) CreateSynonymSet(ctx context.Context, input SynonymSetInput) (
 		Name: name, Direction: input.Direction, TermsJSON: termsJSON,
 		IsActive: wantActive, UpdatedBy: input.UpdatedBy,
 	}
-	if err := db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Select("*").Create(&row).Error; err != nil {
-			return err
-		}
-		// SearchSynonymSet has default:true. Correct an explicitly false value
-		// in the same transaction because GORM applies that default on Create.
-		if !wantActive {
-			if err := tx.Model(&row).Update("is_active", false).Error; err != nil {
+	if err := s.configurationTransaction(db, synonymConfiguration, func(tx *gorm.DB) error {
+		return s.auditConfigurationChanges(tx, "synonym", input.UpdatedBy, func() error {
+			if err := tx.Select("*").Create(&row).Error; err != nil {
 				return err
 			}
-			row.IsActive = false
-		}
-		return nil
+			// SearchSynonymSet has default:true. Correct an explicitly false value
+			// in the same transaction because GORM applies that default on Create.
+			if !wantActive {
+				if err := tx.Model(&row).Update("is_active", false).Error; err != nil {
+					return err
+				}
+				row.IsActive = false
+			}
+			return nil
+
+		})
 	}); err != nil {
 		return SynonymSet{}, configurationWriteError(err)
 	}
@@ -143,18 +146,21 @@ func (s *Service) UpdateSynonymSet(ctx context.Context, id uint, input SynonymSe
 		return SynonymSet{}, err
 	}
 	var row models.SearchSynonymSet
-	err = db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.First(&row, id).Error; err != nil {
-			return configurationLookupError(err)
-		}
-		updates := map[string]any{
-			"name": name, "direction": input.Direction, "terms_json": termsJSON,
-			"is_active": input.IsActive, "updated_by": input.UpdatedBy, "updated_at": s.now().UTC(),
-		}
-		if err := tx.Model(&row).Updates(updates).Error; err != nil {
-			return err
-		}
-		return tx.First(&row, id).Error
+	err = s.configurationTransaction(db, synonymConfiguration, func(tx *gorm.DB) error {
+		return s.auditConfigurationChanges(tx, "synonym", input.UpdatedBy, func() error {
+			if err := tx.First(&row, id).Error; err != nil {
+				return configurationLookupError(err)
+			}
+			updates := map[string]any{
+				"name": name, "direction": input.Direction, "terms_json": termsJSON,
+				"is_active": input.IsActive, "updated_by": input.UpdatedBy, "updated_at": s.now().UTC(),
+			}
+			if err := tx.Model(&row).Updates(updates).Error; err != nil {
+				return err
+			}
+			return tx.First(&row, id).Error
+
+		})
 	})
 	if err != nil {
 		return SynonymSet{}, configurationWriteError(err)
@@ -162,19 +168,23 @@ func (s *Service) UpdateSynonymSet(ctx context.Context, id uint, input SynonymSe
 	return synonymSetFromModel(row)
 }
 
-func (s *Service) DeleteSynonymSet(ctx context.Context, id uint) error {
+func (s *Service) DeleteSynonymSet(ctx context.Context, id uint, actor *uint) error {
 	db, err := s.configurationDB(ctx)
 	if err != nil {
 		return err
 	}
-	result := db.Unscoped().Delete(&models.SearchSynonymSet{}, id)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return ErrConfigurationNotFound
-	}
-	return nil
+	return s.configurationTransaction(db, synonymConfiguration, func(tx *gorm.DB) error {
+		return s.auditConfigurationChanges(tx, "synonym", actor, func() error {
+			result := tx.Unscoped().Delete(&models.SearchSynonymSet{}, id)
+			if result.Error != nil {
+				return result.Error
+			}
+			if result.RowsAffected == 0 {
+				return ErrConfigurationNotFound
+			}
+			return nil
+		})
+	})
 }
 
 func (s *Service) ListTypoToleranceProfiles(ctx context.Context) ([]models.SearchTypoToleranceProfile, error) {
@@ -228,18 +238,21 @@ func (s *Service) CreateTypoToleranceProfile(ctx context.Context, input TypoTole
 		OneEditMinimumLength: input.OneEditMinimumLength, TwoEditMinimumLength: input.TwoEditMinimumLength,
 		StrictMode: input.StrictMode, IsActive: false, UpdatedBy: input.UpdatedBy,
 	}
-	err = db.Transaction(func(tx *gorm.DB) error {
-		var activeCount int64
-		if err := tx.Model(&models.SearchTypoToleranceProfile{}).Where("is_active = ?", true).Count(&activeCount).Error; err != nil {
-			return err
-		}
-		if err := tx.Select("*").Create(&profile).Error; err != nil {
-			return err
-		}
-		if input.IsActive || activeCount == 0 {
-			return s.activateTypoToleranceProfileTx(tx, profile.ID, input.UpdatedBy)
-		}
-		return nil
+	err = s.configurationTransaction(db, typoConfiguration, func(tx *gorm.DB) error {
+		return s.auditConfigurationChanges(tx, "typo_profile", input.UpdatedBy, func() error {
+			var activeCount int64
+			if err := tx.Model(&models.SearchTypoToleranceProfile{}).Where("is_active = ?", true).Count(&activeCount).Error; err != nil {
+				return err
+			}
+			if err := tx.Select("*").Create(&profile).Error; err != nil {
+				return err
+			}
+			if input.IsActive || activeCount == 0 {
+				return s.activateTypoToleranceProfileTx(tx, profile.ID, input.UpdatedBy)
+			}
+			return nil
+
+		})
 	})
 	if err != nil {
 		return models.SearchTypoToleranceProfile{}, configurationWriteError(err)
@@ -256,27 +269,30 @@ func (s *Service) UpdateTypoToleranceProfile(ctx context.Context, id uint, input
 	if err != nil {
 		return models.SearchTypoToleranceProfile{}, err
 	}
-	err = db.Transaction(func(tx *gorm.DB) error {
-		var current models.SearchTypoToleranceProfile
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&current, id).Error; err != nil {
-			return configurationLookupError(err)
-		}
-		if current.IsActive && !input.IsActive {
-			return fmt.Errorf("%w: activate another profile before deactivating this one", ErrActiveTypoProfileRequired)
-		}
-		updates := map[string]any{
-			"name": input.Name, "minimum_token_length": input.MinimumTokenLength,
-			"one_edit_minimum_length": input.OneEditMinimumLength,
-			"two_edit_minimum_length": input.TwoEditMinimumLength,
-			"strict_mode":             input.StrictMode, "updated_by": input.UpdatedBy, "updated_at": s.now().UTC(),
-		}
-		if err := tx.Model(&current).Updates(updates).Error; err != nil {
-			return err
-		}
-		if input.IsActive && !current.IsActive {
-			return s.activateTypoToleranceProfileTx(tx, id, input.UpdatedBy)
-		}
-		return nil
+	err = s.configurationTransaction(db, typoConfiguration, func(tx *gorm.DB) error {
+		return s.auditConfigurationChanges(tx, "typo_profile", input.UpdatedBy, func() error {
+			var current models.SearchTypoToleranceProfile
+			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&current, id).Error; err != nil {
+				return configurationLookupError(err)
+			}
+			if current.IsActive && !input.IsActive {
+				return fmt.Errorf("%w: activate another profile before deactivating this one", ErrActiveTypoProfileRequired)
+			}
+			updates := map[string]any{
+				"name": input.Name, "minimum_token_length": input.MinimumTokenLength,
+				"one_edit_minimum_length": input.OneEditMinimumLength,
+				"two_edit_minimum_length": input.TwoEditMinimumLength,
+				"strict_mode":             input.StrictMode, "updated_by": input.UpdatedBy, "updated_at": s.now().UTC(),
+			}
+			if err := tx.Model(&current).Updates(updates).Error; err != nil {
+				return err
+			}
+			if input.IsActive && !current.IsActive {
+				return s.activateTypoToleranceProfileTx(tx, id, input.UpdatedBy)
+			}
+			return nil
+
+		})
 	})
 	if err != nil {
 		return models.SearchTypoToleranceProfile{}, configurationWriteError(err)
@@ -289,35 +305,41 @@ func (s *Service) ActivateTypoToleranceProfile(ctx context.Context, id uint, upd
 	if err != nil {
 		return models.SearchTypoToleranceProfile{}, err
 	}
-	if err := db.Transaction(func(tx *gorm.DB) error {
-		return s.activateTypoToleranceProfileTx(tx, id, updatedBy)
+	if err := s.configurationTransaction(db, typoConfiguration, func(tx *gorm.DB) error {
+		return s.auditConfigurationChanges(tx, "typo_profile", updatedBy, func() error {
+			return s.activateTypoToleranceProfileTx(tx, id, updatedBy)
+
+		})
 	}); err != nil {
 		return models.SearchTypoToleranceProfile{}, configurationWriteError(err)
 	}
 	return s.GetTypoToleranceProfile(ctx, id)
 }
 
-func (s *Service) DeleteTypoToleranceProfile(ctx context.Context, id uint) error {
+func (s *Service) DeleteTypoToleranceProfile(ctx context.Context, id uint, actor *uint) error {
 	db, err := s.configurationDB(ctx)
 	if err != nil {
 		return err
 	}
-	return db.Transaction(func(tx *gorm.DB) error {
-		var profile models.SearchTypoToleranceProfile
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&profile, id).Error; err != nil {
-			return configurationLookupError(err)
-		}
-		if profile.IsActive {
-			return fmt.Errorf("%w: activate another profile before deleting this one", ErrActiveTypoProfileRequired)
-		}
-		result := tx.Unscoped().Delete(&profile)
-		if result.Error != nil {
-			return result.Error
-		}
-		if result.RowsAffected == 0 {
-			return ErrConfigurationNotFound
-		}
-		return nil
+	return s.configurationTransaction(db, typoConfiguration, func(tx *gorm.DB) error {
+		return s.auditConfigurationChanges(tx, "typo_profile", actor, func() error {
+			var profile models.SearchTypoToleranceProfile
+			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&profile, id).Error; err != nil {
+				return configurationLookupError(err)
+			}
+			if profile.IsActive {
+				return fmt.Errorf("%w: activate another profile before deleting this one", ErrActiveTypoProfileRequired)
+			}
+			result := tx.Unscoped().Delete(&profile)
+			if result.Error != nil {
+				return result.Error
+			}
+			if result.RowsAffected == 0 {
+				return ErrConfigurationNotFound
+			}
+			return nil
+
+		})
 	})
 }
 

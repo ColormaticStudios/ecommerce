@@ -2060,6 +2060,16 @@ var orderedMigrations = []Migration{
 	},
 	{Version: searchAnalyticsP4Version, Name: "activate anonymous search analytics and verified commerce attribution", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "search", "analytics"}, Up: migrateSearchAnalyticsP4},
 	{Version: searchSignalsIncidentsVersion, Name: "add private variant costs, ranking signals, and stale-index incident history", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "search", "catalog"}, Up: migrateSearchSignalsIncidents},
+	{Version: searchProjectionRevisionsVersion, Name: "track outstanding product projection revisions", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "backfill", "search"}, Up: migrateSearchProjectionRevisions},
+	{Version: searchCompactAnalyticsVersion, Name: "backfill compact authoritative search analytics", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "backfill", "search"}, Up: migrateSearchCompactAnalytics},
+	{Version: searchSQLRetrievalVersion, Name: "normalize exact SQL search retrieval and vocabulary postings", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "backfill", "search"}, Up: migrateSearchSQLRetrieval},
+	{Version: searchCompactAnalyticsContractVersion, Name: "remove full search result analytics payloads", TransactionMode: TransactionModeRequired, Tags: []string{"contract", "search"}, ContractBlockers: []string{"allow_contract_migrations"}, Up: migrateSearchCompactAnalyticsContract},
+	{Version: searchConfigurationHistoryVersion, Name: "retain search configuration change snapshots", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "backfill", "search"}, Up: migrateSearchConfigurationHistory},
+	{Version: searchAttributeLocalizationVersion, Name: "localize product attribute headings", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "backfill", "search", "localization"}, Up: migrateSearchAttributeLocalization},
+	{Version: searchReviewCatalogVersion, Name: "publish search administration and storefront messages", TransactionMode: TransactionModeRequired, Tags: []string{"backfill", "search", "localization"}, Up: migrateSearchReviewCatalog, PostChecks: []PostCheck{{Name: "search_review_source_catalog_ready", Check: localizationDefaultSourceCatalogPublished}}},
+	{Version: searchInventoryDebtVersion, Name: "track inventory projection debt per variant", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "search"}, Up: migrateSearchInventoryDebt},
+	{Version: searchUICatalogVersion, Name: "publish search UI review messages", TransactionMode: TransactionModeRequired, Tags: []string{"backfill", "search", "localization"}, Up: migrateSearchUICatalog, PostChecks: []PostCheck{{Name: "search_ui_source_catalog_ready", Check: localizationDefaultSourceCatalogPublished}}},
+	{Version: searchFanoutCheckpointVersion, Name: "checkpoint catalog search fanout batches", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "search"}, Up: migrateSearchFanoutCheckpoint},
 }
 
 var searchAnalyticsP4CatalogKeys = []localizationP1BaselineKey{

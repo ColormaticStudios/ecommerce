@@ -2,6 +2,7 @@ package commands
 
 import (
 	"ecommerce/config"
+	"ecommerce/internal/jobs"
 	"ecommerce/internal/migrations"
 	"log"
 	"os"
@@ -48,7 +49,7 @@ func getDBWithConfig(cfg config.Config) *gorm.DB {
 		log.Fatalf("Database migration readiness check failed: %v", err)
 	}
 
-	return db
+	return jobs.WithRuntime(db, newJobRuntime(db, cfg))
 }
 
 func closeDB(db *gorm.DB) {

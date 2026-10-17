@@ -220,3 +220,43 @@ func TestLocalizationEndpointsCoverExactStrictFamily(t *testing.T) {
 		require.Truef(t, implemented, "LocalizationEndpoints must implement %s", operation)
 	}
 }
+
+func TestLocalizationBundleCachePolicyTracksAudienceDependence(t *testing.T) {
+	db := newLocalizationEndpointTestDB(t)
+	service := localizationservice.NewService(db)
+	ctx := context.Background()
+	_, err := service.ReplaceLocales(ctx, []localizationservice.LocaleInput{
+		{Code: "en-US", Name: "English", IsEnabled: true, IsDefault: true},
+		{Code: "fr", Name: "French", IsEnabled: true, FallbackLocale: "en-US"},
+	})
+	require.NoError(t, err)
+	release, err := service.CreateRelease(ctx, "cache-policy", "")
+	require.NoError(t, err)
+	_, err = service.ActivateRelease(ctx, release.ID, nil)
+	require.NoError(t, err)
+	var locale models.Locale
+	require.NoError(t, db.Where("code = ?", "fr").First(&locale).Error)
+	endpoints, err := httpapi.NewLocalizationEndpoints(db)
+	require.NoError(t, err)
+	for _, percentage := range []int{100, 50, 0} {
+		require.NoError(t, db.Model(&models.LocalizationRollout{}).Where("locale_id = ? AND domain = ?", locale.ID, "storefront").Update("percentage", percentage).Error)
+		want := "public, max-age=0, must-revalidate"
+		if percentage == 50 {
+			want = "private, no-store"
+		}
+		response, err := endpoints.GetLocalizationBundle(ctx, apicontract.GetLocalizationBundleRequestObject{Locale: "fr"})
+		require.NoError(t, err)
+		bundle := response.(apicontract.GetLocalizationBundle200JSONResponse)
+		require.Equal(t, want, bundle.Headers.CacheControl)
+		cached, err := endpoints.GetLocalizationBundle(ctx, apicontract.GetLocalizationBundleRequestObject{Locale: "fr", Params: apicontract.GetLocalizationBundleParams{IfNoneMatch: &bundle.Headers.ETag}})
+		require.NoError(t, err)
+		require.Equal(t, want, cached.(apicontract.GetLocalizationBundle304Response).Headers.CacheControl)
+		meta, err := endpoints.GetLocalizationBundleMeta(ctx, apicontract.GetLocalizationBundleMetaRequestObject{Locale: "fr"})
+		require.NoError(t, err)
+		metadata := meta.(apicontract.GetLocalizationBundleMeta200JSONResponse)
+		require.Equal(t, want, metadata.Headers.CacheControl)
+		conditionalMeta, err := endpoints.GetLocalizationBundleMeta(ctx, apicontract.GetLocalizationBundleMetaRequestObject{Locale: "fr", Params: apicontract.GetLocalizationBundleMetaParams{IfNoneMatch: &metadata.Headers.ETag}})
+		require.NoError(t, err)
+		require.Equal(t, want, conditionalMeta.(apicontract.GetLocalizationBundleMeta304Response).Headers.CacheControl)
+	}
+}

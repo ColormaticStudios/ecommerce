@@ -202,6 +202,10 @@ func (renderer Renderer) FromError(ctx context.Context, status int, err error) P
 }
 
 func (renderer Renderer) Render(w http.ResponseWriter, ctx context.Context, status int, err error) {
+	var retry interface{ RetryAfter() string }
+	if errors.As(err, &retry) {
+		w.Header().Set("Retry-After", retry.RetryAfter())
+	}
 	renderer.Write(w, renderer.FromError(ctx, status, err))
 }
 

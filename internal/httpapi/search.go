@@ -8,9 +8,11 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"ecommerce/internal/apicontract"
+	"ecommerce/internal/requestctx"
 	searchservice "ecommerce/internal/search"
 )
 
@@ -19,16 +21,41 @@ var searchPriceRangePattern = regexp.MustCompile(`^(?:[0-9]+(?:\.[0-9]{1,2})?:(?
 const maxSearchPrice = 9999999999.99
 
 func (e *CatalogEndpoints) SearchProducts(ctx context.Context, request apicontract.SearchProductsRequestObject) (apicontract.SearchProductsResponseObject, error) {
-	response, err := e.searchProductsResponse(ctx, request.Params, false)
+	release, err := e.admitSearchClient(ctx, false)
 	if err != nil {
 		return nil, err
 	}
-	return apicontract.SearchProducts200JSONResponse{Items: response.Items, Facets: response.Facets, Metadata: response.Metadata, Pagination: response.Pagination}, nil
+	defer release()
+	filters, err := searchProductFilters(request.Params, false)
+	if err != nil {
+		return nil, err
+	}
+	started := time.Now()
+	result, err := e.search.Search(ctx, filters)
+	if err != nil {
+		return nil, searchConfigurationEndpointError(err)
+	}
+	response, err := e.searchResultContract(ctx, result, filters)
+	if err != nil {
+		return nil, err
+	}
+	proof, snapshot := "", ""
+	if p, ok := requestctx.PrincipalFrom(ctx); !ok || !p.HasRole("admin") {
+		proof, err = e.search.SignResultSnapshot(result, filters, time.Since(started))
+		if err != nil {
+			return nil, analyticsEndpointError(err)
+		}
+		snapshot, err = e.search.SignCacheableSnapshot(result, filters, time.Since(started))
+		if err != nil {
+			return nil, analyticsEndpointError(err)
+		}
+	}
+	return apicontract.SearchProducts200JSONResponse{ResultSnapshot: optionalSearchText(snapshot), ResultToken: optionalSearchText(proof), Items: response.Items, Facets: response.Facets, Metadata: response.Metadata, Pagination: response.Pagination}, nil
 }
 
 func (e *CatalogEndpoints) SearchAdminProducts(ctx context.Context, request apicontract.SearchAdminProductsRequestObject) (apicontract.SearchAdminProductsResponseObject, error) {
 	params := request.Params
-	input := apicontract.SearchProductsParams{Q: params.Q, MinPrice: params.MinPrice, MaxPrice: params.MaxPrice, BrandSlug: params.BrandSlug, CategorySlug: params.CategorySlug, HasVariantStock: params.HasVariantStock, PriceRange: params.PriceRange, Attribute: params.Attribute, RankingProfile: params.RankingProfile, Page: params.Page, Limit: params.Limit}
+	input := apicontract.SearchProductsParams{Q: params.Q, MinPrice: params.MinPrice, MaxPrice: params.MaxPrice, BrandSlug: params.BrandSlug, CategorySlug: params.CategorySlug, HasVariantStock: params.HasVariantStock, PriceRange: params.PriceRange, Attribute: params.Attribute, Page: params.Page, Limit: params.Limit}
 	if params.Sort != nil {
 		value := apicontract.SearchProductsParamsSort(*params.Sort)
 		input.Sort = &value
@@ -37,16 +64,19 @@ func (e *CatalogEndpoints) SearchAdminProducts(ctx context.Context, request apic
 		value := apicontract.SearchProductsParamsOrder(*params.Order)
 		input.Order = &value
 	}
-	response, err := e.searchProductsResponse(ctx, input, true)
+	response, err := e.searchProductsResponse(ctx, input, true, params.RankingProfile)
 	if err != nil {
 		return nil, err
 	}
 	return apicontract.SearchAdminProducts200JSONResponse(response), nil
 }
 
-func (e *CatalogEndpoints) searchProductsResponse(ctx context.Context, params apicontract.SearchProductsParams, explain bool) (apicontract.AdminProductSearchResponse, error) {
+func (e *CatalogEndpoints) searchProductsResponse(ctx context.Context, params apicontract.SearchProductsParams, explain bool, profile *string) (apicontract.AdminProductSearchResponse, error) {
 	input, err := searchProductFilters(params, explain)
 	if err != nil {
+		return apicontract.AdminProductSearchResponse{}, err
+	}
+	if err := setAdminSearchProfile(&input, profile); err != nil {
 		return apicontract.AdminProductSearchResponse{}, err
 	}
 	result, err := e.search.Search(ctx, input)
@@ -63,9 +93,6 @@ func searchProductFilters(params apicontract.SearchProductsParams, explain bool)
 	input := searchservice.Filters{Page: 1, Limit: 10, SortOrder: "desc", Explain: explain}
 	if params.Q != nil {
 		input.Query = strings.TrimSpace(*params.Q)
-	}
-	if params.RankingProfile != nil {
-		input.RankingProfile = strings.TrimSpace(*params.RankingProfile)
 	}
 	input.MinPrice, input.MaxPrice = params.MinPrice, params.MaxPrice
 	for _, bound := range []*float64{input.MinPrice, input.MaxPrice} {
@@ -122,8 +149,12 @@ func (e *CatalogEndpoints) searchResultContract(ctx context.Context, result sear
 	if err != nil {
 		return apicontract.AdminProductSearchResponse{}, err
 	}
-	facets := make([]apicontract.SearchFacet, 0, len(result.Facets))
-	for _, facet := range result.Facets {
+	localizedFacets, err := e.localizeSearchFacets(ctx, result.Facets)
+	if err != nil {
+		return apicontract.AdminProductSearchResponse{}, err
+	}
+	facets := make([]apicontract.SearchFacet, 0, len(localizedFacets))
+	for _, facet := range localizedFacets {
 		values := make([]apicontract.SearchFacetValue, 0, len(facet.Values))
 		for _, value := range facet.Values {
 			contract := apicontract.SearchFacetValue{
@@ -177,9 +208,6 @@ func (e *CatalogEndpoints) searchResultContract(ctx context.Context, result sear
 }
 
 func validateSearchProductParams(params apicontract.SearchProductsParams) error {
-	if params.RankingProfile != nil && (strings.TrimSpace(*params.RankingProfile) == "" || utf8.RuneCountInString(*params.RankingProfile) > 120) {
-		return fmt.Errorf("ranking profile must contain text and be at most 120 characters")
-	}
 	if params.Q != nil {
 		if utf8.RuneCountInString(*params.Q) > 200 || len(strings.Fields(searchservice.NormalizeQuery(*params.Q))) > 20 {
 			return fmt.Errorf("query must be at most 200 characters and 20 terms")
@@ -219,7 +247,7 @@ func validateSearchProductParams(params apicontract.SearchProductsParams) error 
 			}
 		}
 	}
-	if params.Page != nil && *params.Page < 1 || params.Limit != nil && (*params.Limit < 1 || *params.Limit > 100) {
+	if params.Page != nil && (*params.Page < 1 || *params.Page > 1000000) || params.Limit != nil && (*params.Limit < 1 || *params.Limit > 100) {
 		return fmt.Errorf("page must be positive and limit must be between 1 and 100")
 	}
 	if params.Sort != nil {
@@ -262,6 +290,11 @@ func parseSearchPriceRange(raw string) (searchservice.PriceRange, error) {
 }
 
 func (e *CatalogEndpoints) GetSearchSuggestions(ctx context.Context, request apicontract.GetSearchSuggestionsRequestObject) (apicontract.GetSearchSuggestionsResponseObject, error) {
+	release, err := e.admitSearchClient(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	defer release()
 	limit := 8
 	if request.Params.Limit != nil {
 		limit = *request.Params.Limit
@@ -271,8 +304,19 @@ func (e *CatalogEndpoints) GetSearchSuggestions(ctx context.Context, request api
 		return nil, searchConfigurationEndpointError(err)
 	}
 	return apicontract.GetSearchSuggestions200JSONResponse{
-		Suggestions: result.Suggestions, Corrections: result.Corrections, Popular: result.Popular, Trending: result.Trending,
+		Suggestions: result.Suggestions, Corrections: result.Corrections,
 	}, nil
+}
+
+func setAdminSearchProfile(filters *searchservice.Filters, profile *string) error {
+	if profile == nil {
+		return nil
+	}
+	if strings.TrimSpace(*profile) == "" || utf8.RuneCountInString(*profile) > 120 {
+		return problemError(http.StatusBadRequest, "invalid_search_query", "Ranking profile must contain text and be at most 120 characters.", nil)
+	}
+	filters.RankingProfile = strings.TrimSpace(*profile)
+	return nil
 }
 
 func (e *CatalogEndpoints) GetAdminSearchFreshness(ctx context.Context, _ apicontract.GetAdminSearchFreshnessRequestObject) (apicontract.GetAdminSearchFreshnessResponseObject, error) {
@@ -292,7 +336,7 @@ func (e *CatalogEndpoints) CreateAdminSearchReindex(ctx context.Context, _ apico
 	if err != nil {
 		return nil, searchConfigurationEndpointError(err)
 	}
-	return apicontract.CreateAdminSearchReindex202JSONResponse{JobId: job.ID, Status: apicontract.SearchReindexAcceptedStatusQueued}, nil
+	return apicontract.CreateAdminSearchReindex202JSONResponse{JobId: job.ID, Status: apicontract.SearchReindexAcceptedStatus("queued")}, nil
 }
 
 func optionalSearchText(v string) *string {

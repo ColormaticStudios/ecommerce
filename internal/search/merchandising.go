@@ -230,6 +230,25 @@ func hydrateMerchandisingTargets(db *gorm.DB, rules []MerchandisingRule, require
 	}
 	return nil
 }
+func (b *databaseBackend) loadMerchandisingRules(ctx context.Context) ([]MerchandisingRule, error) {
+	// Do not retain target names: they belong to the live catalog, not rules.
+	return cachedConfiguration(ctx, b.configuration, merchandisingConfiguration, func() ([]MerchandisingRule, error) {
+		var rows []models.SearchMerchandisingRule
+		if err := b.db.WithContext(ctx).Order("priority DESC, id ASC").Find(&rows).Error; err != nil {
+			return nil, err
+		}
+		rules := make([]MerchandisingRule, 0, len(rows))
+		for _, row := range rows {
+			rule, err := merchandisingRuleFromModel(row)
+			if err != nil {
+				return nil, fmt.Errorf("invalid persisted merchandising rule %d: %v", row.ID, err)
+			}
+			rules = append(rules, rule)
+		}
+		return rules, nil
+	})
+}
+
 func (s *Service) ListMerchandisingRules(ctx context.Context) ([]MerchandisingRule, error) {
 	db, err := s.configurationDB(ctx)
 	if err != nil {
@@ -300,7 +319,7 @@ func (s *Service) CreateMerchandisingRule(ctx context.Context, input Merchandisi
 		return MerchandisingRule{}, err
 	}
 	var result MerchandisingRule
-	err = db.Transaction(func(tx *gorm.DB) error {
+	err = s.configurationTransaction(db, merchandisingConfiguration, func(tx *gorm.DB) error {
 		targets := []MerchandisingRule{{MerchandisingRuleInput: input}}
 		if err := hydrateMerchandisingTargets(tx, targets, true); err != nil {
 			return err
@@ -378,7 +397,7 @@ func (s *Service) UpdateMerchandisingRule(ctx context.Context, id uint, patch Me
 		return MerchandisingRule{}, err
 	}
 	var result MerchandisingRule
-	err = db.Transaction(func(tx *gorm.DB) error {
+	err = s.configurationTransaction(db, merchandisingConfiguration, func(tx *gorm.DB) error {
 		var row models.SearchMerchandisingRule
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&row, id).Error; err != nil {
 			return configurationLookupError(err)
@@ -423,7 +442,7 @@ func (s *Service) DeleteMerchandisingRule(ctx context.Context, id uint, actor *u
 	if err != nil {
 		return err
 	}
-	return db.Transaction(func(tx *gorm.DB) error {
+	return s.configurationTransaction(db, merchandisingConfiguration, func(tx *gorm.DB) error {
 		var row models.SearchMerchandisingRule
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&row, id).Error; err != nil {
 			return configurationLookupError(err)

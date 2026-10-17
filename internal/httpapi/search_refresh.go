@@ -7,6 +7,7 @@ import (
 
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/jobs"
+	"ecommerce/models"
 )
 
 func (e *CatalogEndpoints) CreateAdminSearchSalesRefresh(ctx context.Context, _ apicontract.CreateAdminSearchSalesRefreshRequestObject) (apicontract.CreateAdminSearchSalesRefreshResponseObject, error) {
@@ -14,7 +15,7 @@ func (e *CatalogEndpoints) CreateAdminSearchSalesRefresh(ctx context.Context, _ 
 	if err != nil {
 		return nil, searchRefreshEndpointError(err)
 	}
-	return apicontract.CreateAdminSearchSalesRefresh202JSONResponse{JobId: job.ID, Status: apicontract.SearchRefreshAcceptedStatusQueued}, nil
+	return apicontract.CreateAdminSearchSalesRefresh202JSONResponse(searchRefreshAccepted(job)), nil
 }
 
 func (e *CatalogEndpoints) CreateAdminSearchConversionRefresh(ctx context.Context, _ apicontract.CreateAdminSearchConversionRefreshRequestObject) (apicontract.CreateAdminSearchConversionRefreshResponseObject, error) {
@@ -22,7 +23,17 @@ func (e *CatalogEndpoints) CreateAdminSearchConversionRefresh(ctx context.Contex
 	if err != nil {
 		return nil, searchRefreshEndpointError(err)
 	}
-	return apicontract.CreateAdminSearchConversionRefresh202JSONResponse{JobId: job.ID, Status: apicontract.SearchRefreshAcceptedStatusQueued}, nil
+	return apicontract.CreateAdminSearchConversionRefresh202JSONResponse(searchRefreshAccepted(job)), nil
+}
+
+func searchRefreshAccepted(job models.JobQueue) apicontract.SearchRefreshAccepted {
+	status := apicontract.SearchRefreshAcceptedStatusQueued
+	disposition := apicontract.SearchRefreshAcceptedDispositionQueued
+	if job.Status == models.JobStatusSucceeded {
+		status = apicontract.SearchRefreshAcceptedStatusSucceeded
+		disposition = apicontract.SearchRefreshAcceptedDispositionReusedCompleted
+	}
+	return apicontract.SearchRefreshAccepted{JobId: job.ID, Status: status, Disposition: &disposition}
 }
 
 func searchRefreshEndpointError(err error) error {

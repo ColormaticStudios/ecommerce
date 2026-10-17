@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 	"unicode"
 	"unicode/utf8"
 
@@ -20,7 +19,6 @@ const maxAttributeFacets = 10
 
 type indexedProduct struct {
 	hidden, forcedInclude bool
-	cacheGeneration       uint64
 	conversion            float64
 	rankingText           rankingFields
 	ranking               RankingExplanation
@@ -60,147 +58,6 @@ type queryPlan struct {
 type vocabularyEntry struct {
 	term      string
 	frequency int
-}
-
-func (b *databaseBackend) searchProducts(ctx context.Context, filters Filters) (Result, error) {
-	page, limit := filters.Page, filters.Limit
-	if page < 1 {
-		page = 1
-	}
-	if limit < 1 {
-		limit = 20
-	}
-	if limit > 100 {
-		limit = 100
-	}
-
-	normalizedFilters, err := normalizeFilters(filters)
-	if err != nil {
-		return Result{}, err
-	}
-	rules, err := b.loadSynonymRules(ctx)
-	if err != nil {
-		return Result{}, err
-	}
-	profile, err := b.loadTypoToleranceProfile(ctx)
-	if err != nil {
-		return Result{}, err
-	}
-
-	normalizedQuery := NormalizeQuery(filters.Query)
-	plan := buildQueryPlan(normalizedQuery, rules)
-	documents, err := b.loadIndexedProducts(ctx, &plan)
-	if err != nil {
-		return Result{}, err
-	}
-	matched := filterIndexedProducts(documents, plan, false, normalizedFilters, "")
-	resultPlan := plan
-	rewrites := append([]AppliedRewrite(nil), plan.rewrites...)
-	didYouMean := ""
-	relaxed := false
-
-	if normalizedQuery != "" && len(matched) == 0 {
-		// Correction and relaxed recovery need the complete vocabulary. Successful
-		// searches retain only SQL prefiltered candidates for facet aggregation.
-		documents, err = b.loadIndexedProducts(ctx, nil)
-		if err != nil {
-			return Result{}, err
-		}
-		correctedQuery, typoRewrites := correctQuery(normalizedQuery, buildVocabulary(documents), profile)
-		if len(typoRewrites) > 0 {
-			correctedPlan := buildQueryPlan(correctedQuery, rules)
-			correctedMatches := filterIndexedProducts(documents, correctedPlan, false, normalizedFilters, "")
-			if len(correctedMatches) > 0 {
-				didYouMean = correctedQuery
-				if !profile.StrictMode {
-					matched = correctedMatches
-					resultPlan = correctedPlan
-					rewrites = append(append([]AppliedRewrite(nil), typoRewrites...), correctedPlan.rewrites...)
-				}
-			}
-		}
-		if !profile.StrictMode && len(matched) == 0 && len(plan.groups) > 1 {
-			relaxedMatches := filterIndexedProducts(documents, plan, true, normalizedFilters, "")
-			if len(relaxedMatches) > 0 {
-				matched = relaxedMatches
-				resultPlan = plan
-				relaxed = true
-			}
-		}
-	}
-
-	documents, merchandising, err := b.prepareMerchandising(ctx, documents, filters, normalizedFilters, normalizedQuery)
-	if err != nil {
-		return Result{}, err
-	}
-	merchandising.finalizeHideDecisions(documents, resultPlan, relaxed, normalizedFilters)
-	matched = filterIndexedProducts(documents, resultPlan, relaxed, normalizedFilters, "")
-	facets := buildFacets(documents, resultPlan, relaxed, normalizedFilters)
-	rankingProfile, err := b.loadRankingProfile(ctx, filters.RankingProfile)
-	if err != nil {
-		return Result{}, err
-	}
-	field := filters.SortField
-	if field == "" {
-		if normalizedQuery != "" {
-			field = "relevance"
-		} else {
-			field = "created_at"
-		}
-	}
-	if field == "relevance" || filters.Explain || len(merchandising.targets) > 0 {
-		if err := b.rankProducts(ctx, matched, resultPlan, NormalizeQuery(strings.Join(originalQueryTerms(resultPlan), " ")), rankingProfile, filters.SortOrder, filters.Explain); err != nil {
-			return Result{}, err
-		}
-	}
-	if field != "relevance" {
-		sortIndexedProducts(matched, field, filters.SortOrder)
-	}
-	matched = merchandising.order(matched, filters.SortField == "" || field == "relevance", filters.SortOrder)
-	total := int64(len(matched))
-	totalPages := len(matched) / limit
-	if len(matched)%limit != 0 {
-		totalPages++
-	}
-	start := (page - 1) * limit
-	if start > len(matched) {
-		start = len(matched)
-	}
-	end := start + limit
-	if end > len(matched) {
-		end = len(matched)
-	}
-
-	products := make([]models.Product, 0, end-start)
-	explanations := make([]RankingExplanation, 0, end-start)
-	var indexedAt *time.Time
-	for _, document := range matched[start:end] {
-		product, err := cloneIndexedProduct(document)
-		if err != nil {
-			return Result{}, err
-		}
-		products = append(products, product)
-		if filters.Explain {
-			explanation := document.ranking
-			explanation.Components = append([]RankingComponent(nil), explanation.Components...)
-			explanations = append(explanations, explanation)
-		}
-		if indexedAt == nil || document.document.IndexedAt.After(*indexedAt) {
-			value := document.document.IndexedAt
-			indexedAt = &value
-		}
-	}
-	var decisions []RuleDecision
-	if filters.Explain {
-		decisions = merchandising.decisions
-	}
-	return Result{
-		RuleDecisions:  decisions,
-		RankingProfile: rankingProfile.Name, RankingProfileVersion: rankingProfile.Version, Explanations: explanations,
-		Products: products, Facets: facets, Total: total, TotalPages: totalPages,
-		NormalizedQuery: normalizedQuery, AppliedRewrites: rewrites, DidYouMean: didYouMean,
-		Relaxed: relaxed, IndexedAt: indexedAt,
-	}, nil
 }
 
 func (b *databaseBackend) loadIndexedProductsUncached(ctx context.Context, plan *queryPlan) ([]indexedProduct, error) {
@@ -278,10 +135,22 @@ func decodeIndexedProducts(ctx context.Context, rows []models.SearchDocument) ([
 }
 
 func (b *databaseBackend) loadSynonymRules(ctx context.Context) ([]synonymRule, error) {
-	var sets []models.SearchSynonymSet
-	if err := b.db.WithContext(ctx).Where("is_active = ?", true).Order("id asc").Find(&sets).Error; err != nil {
+	sets, err := cachedConfiguration(ctx, b.configuration, synonymConfiguration, func() ([]models.SearchSynonymSet, error) {
+		var sets []models.SearchSynonymSet
+		if err := b.db.WithContext(ctx).Where("is_active = ?", true).Order("id asc").Find(&sets).Error; err != nil {
+			return nil, err
+		}
+		if _, err := decodeSynonymRules(sets); err != nil {
+			return nil, err
+		}
+		return sets, nil
+	})
+	if err != nil {
 		return nil, err
 	}
+	return decodeSynonymRules(sets)
+}
+func decodeSynonymRules(sets []models.SearchSynonymSet) ([]synonymRule, error) {
 	rules := make([]synonymRule, 0, len(sets))
 	for _, set := range sets {
 		var storedTerms []string
@@ -319,22 +188,28 @@ func (b *databaseBackend) loadSynonymRules(ctx context.Context) ([]synonymRule, 
 }
 
 func (b *databaseBackend) loadTypoToleranceProfile(ctx context.Context) (models.SearchTypoToleranceProfile, error) {
-	var profiles []models.SearchTypoToleranceProfile
-	err := b.db.WithContext(ctx).Where("is_active = ?", true).Order("id asc").Limit(2).Find(&profiles).Error
+	profiles, err := cachedConfiguration(ctx, b.configuration, typoConfiguration, func() ([]models.SearchTypoToleranceProfile, error) {
+		var profiles []models.SearchTypoToleranceProfile
+		err := b.db.WithContext(ctx).Where("is_active = ?", true).Order("id asc").Limit(2).Find(&profiles).Error
+		if err != nil {
+			return nil, err
+		}
+		if len(profiles) == 0 {
+			return nil, ErrActiveTypoProfileRequired
+		}
+		if len(profiles) > 1 {
+			return nil, errors.New("multiple active search typo tolerance profiles")
+		}
+		p := profiles[0]
+		if p.MinimumTokenLength < 1 || p.OneEditMinimumLength < p.MinimumTokenLength || p.TwoEditMinimumLength < p.OneEditMinimumLength {
+			return nil, fmt.Errorf("invalid active search typo tolerance profile %d", p.ID)
+		}
+		return profiles, nil
+	})
 	if err != nil {
 		return models.SearchTypoToleranceProfile{}, err
 	}
-	if len(profiles) == 0 {
-		return models.SearchTypoToleranceProfile{}, ErrActiveTypoProfileRequired
-	}
-	if len(profiles) > 1 {
-		return models.SearchTypoToleranceProfile{}, errors.New("multiple active search typo tolerance profiles")
-	}
-	profile := profiles[0]
-	if profile.MinimumTokenLength < 1 || profile.OneEditMinimumLength < profile.MinimumTokenLength || profile.TwoEditMinimumLength < profile.OneEditMinimumLength {
-		return models.SearchTypoToleranceProfile{}, fmt.Errorf("invalid active search typo tolerance profile %d", profile.ID)
-	}
-	return profile, nil
+	return profiles[0], nil
 }
 
 func normalizeFilters(filters Filters) (normalizedFilters, error) {

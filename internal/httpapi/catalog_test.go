@@ -2,6 +2,7 @@ package httpapi_test
 
 import (
 	"context"
+	"ecommerce/internal/jobs"
 	"fmt"
 	"reflect"
 	"testing"
@@ -41,7 +42,7 @@ func TestCatalogEndpointsLocalizesPublicMetadataAndReportsFieldSources(t *testin
 	require.NoError(t, db.Select("*").Create(&models.LocalizedEntityValue{EntityType: "brand", EntityID: brand.ID, LocaleID: french.ID, Field: "name", Value: "Étoile du Nord"}).Error)
 
 	ctx := requestctx.WithLocaleResolution(context.Background(), requestctx.LocaleResolution{RequestedLocale: "fr", ResolvedLocale: "fr", Source: "explicit", FallbackChain: []string{"fr", "en-US"}})
-	endpoints, err := httpapi.NewCatalogEndpoints(db, nil)
+	endpoints, err := httpapi.NewCatalogEndpoints(db, nil, jobs.NewRuntime(db, jobs.Config{}))
 	require.NoError(t, err)
 	response, err := endpoints.ListBrands(ctx, apicontract.ListBrandsRequestObject{})
 	require.NoError(t, err)
@@ -56,7 +57,7 @@ func TestCatalogEndpointsLocalizesPublicMetadataAndReportsFieldSources(t *testin
 }
 
 func TestNewCatalogEndpointsRequiresDatabase(t *testing.T) {
-	_, err := httpapi.NewCatalogEndpoints(nil, nil)
+	_, err := httpapi.NewCatalogEndpoints(nil, nil, nil)
 	require.Error(t, err)
 }
 
@@ -64,7 +65,7 @@ func TestCatalogEndpointsCoversStrictCatalogFamily(t *testing.T) {
 	operations := []string{
 		"ListBrands", "ListCategories", "ListProductAttributes", "ListProducts", "GetProduct", "SearchProducts", "GetSearchSuggestions",
 		"RevokeSearchConsent", "CreateSearchImpression", "CreateSearchEvent", "GetAdminSearchAnalytics", "GetAdminSearchOperations", "GetAdminSearchFreshness", "CreateAdminSearchReindex", "CreateAdminSearchSalesRefresh", "CreateAdminSearchConversionRefresh", "SearchAdminProducts",
-		"ListAdminSearchMerchandisingRules", "CreateAdminSearchMerchandisingRule", "GetAdminSearchMerchandisingRule", "UpdateAdminSearchMerchandisingRule", "DeleteAdminSearchMerchandisingRule", "ListAdminSearchMerchandisingRuleAudit", "ListAdminSearchMerchandisingAudit", "PreviewAdminSearch",
+		"ListAdminSearchConfigurationHistory", "ListAdminSearchMerchandisingRules", "CreateAdminSearchMerchandisingRule", "GetAdminSearchMerchandisingRule", "UpdateAdminSearchMerchandisingRule", "DeleteAdminSearchMerchandisingRule", "ListAdminSearchMerchandisingRuleAudit", "ListAdminSearchMerchandisingAudit", "PreviewAdminSearch",
 		"ListAdminSearchRankingProfiles", "CreateAdminSearchRankingProfile", "GetAdminSearchRankingProfile", "UpdateAdminSearchRankingProfile", "DeleteAdminSearchRankingProfile",
 		"ListAdminSearchSynonyms", "CreateAdminSearchSynonym", "GetAdminSearchSynonym", "UpdateAdminSearchSynonym", "DeleteAdminSearchSynonym",
 		"ListAdminSearchTypoProfiles", "CreateAdminSearchTypoProfile", "GetAdminSearchTypoProfile", "UpdateAdminSearchTypoProfile", "DeleteAdminSearchTypoProfile",
@@ -102,7 +103,7 @@ func TestCatalogEndpointsPublicMetadataFiltersInactiveRows(t *testing.T) {
 	require.NoError(t, db.Select("*").Create(&models.ProductAttribute{Key: "Color", Slug: "color", Type: "enum", Filterable: true}).Error)
 	require.NoError(t, db.Select("*").Create(&models.ProductAttribute{Key: "Internal", Slug: "internal", Type: "text", Filterable: false}).Error)
 
-	endpoints, err := httpapi.NewCatalogEndpoints(db, nil)
+	endpoints, err := httpapi.NewCatalogEndpoints(db, nil, jobs.NewRuntime(db, jobs.Config{}))
 	require.NoError(t, err)
 	brandsResponse, err := endpoints.ListBrands(context.Background(), apicontract.ListBrandsRequestObject{})
 	require.NoError(t, err)
@@ -121,4 +122,11 @@ func TestCatalogEndpointsPublicMetadataFiltersInactiveRows(t *testing.T) {
 	attributes := apicontract.ProductAttributeDefinitionListResponse(attributesResponse.(apicontract.ListProductAttributes200JSONResponse))
 	require.Len(t, attributes.Data, 1)
 	assert.Equal(t, "color", attributes.Data[0].Slug)
+}
+
+func TestNewCatalogEndpointsRequiresSearchRuntime(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory&cache=shared"), &gorm.Config{})
+	require.NoError(t, err)
+	_, err = httpapi.NewCatalogEndpoints(db, nil, nil)
+	require.ErrorContains(t, err, "runtime")
 }

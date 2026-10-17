@@ -70,7 +70,10 @@ func LoadLiveProductUpsertInput(db *gorm.DB, mediaService *media.Service, produc
 	if err != nil {
 		return apicontract.ProductUpsertInput{}, err
 	}
+	return inputFromLiveProduct(product, options, variants, attributeValues, seo, valueMap, mediaService)
+}
 
+func inputFromLiveProduct(product models.Product, options []models.ProductOption, variants []models.ProductVariant, attributeValues []models.ProductAttributeValue, seo models.SEOMetadata, valueMap map[uint]liveOptionValueRecord, mediaService *media.Service) (apicontract.ProductUpsertInput, error) {
 	input := apicontract.ProductUpsertInput{
 		Attributes:        make([]apicontract.ProductAttributeValueInput, 0, len(attributeValues)),
 		Description:       product.Description,

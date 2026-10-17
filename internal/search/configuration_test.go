@@ -18,7 +18,7 @@ func newConfigurationTestService(t *testing.T) (*Service, *gorm.DB) {
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	require.NoError(t, err)
-	require.NoError(t, db.AutoMigrate(&models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}))
+	require.NoError(t, db.AutoMigrate(&models.SearchConfigurationAudit{}, &models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}))
 	return NewService(db, nil, nil), db
 }
 
@@ -52,7 +52,7 @@ func TestSynonymSetLifecycleNormalizesAndHardDeletes(t *testing.T) {
 	require.Len(t, sets, 1)
 	assert.Equal(t, updated.ID, sets[0].ID)
 
-	require.NoError(t, service.DeleteSynonymSet(ctx, created.ID))
+	require.NoError(t, service.DeleteSynonymSet(ctx, created.ID, nil))
 	_, err = service.GetSynonymSet(ctx, created.ID)
 	require.ErrorIs(t, err, ErrConfigurationNotFound)
 
@@ -112,7 +112,7 @@ func TestTypoToleranceProfileActivationMaintainsExactlyOneActive(t *testing.T) {
 		StrictMode: first.StrictMode, IsActive: false,
 	})
 	require.ErrorIs(t, err, ErrActiveTypoProfileRequired)
-	require.ErrorIs(t, service.DeleteTypoToleranceProfile(ctx, first.ID), ErrActiveTypoProfileRequired)
+	require.ErrorIs(t, service.DeleteTypoToleranceProfile(ctx, first.ID, nil), ErrActiveTypoProfileRequired)
 
 	activated, err := service.ActivateTypoToleranceProfile(ctx, second.ID, &actorID)
 	require.NoError(t, err)
@@ -132,7 +132,7 @@ func TestTypoToleranceProfileActivationMaintainsExactlyOneActive(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, second.ID, active.ID, "failed activation must not deactivate the current profile")
 
-	require.NoError(t, service.DeleteTypoToleranceProfile(ctx, first.ID))
+	require.NoError(t, service.DeleteTypoToleranceProfile(ctx, first.ID, nil))
 	recreated, err := service.CreateTypoToleranceProfile(ctx, TypoToleranceProfileInput{
 		Name: "default", MinimumTokenLength: 4, OneEditMinimumLength: 4,
 		TwoEditMinimumLength: 8, StrictMode: false, IsActive: false,

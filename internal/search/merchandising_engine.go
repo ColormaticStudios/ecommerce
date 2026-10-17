@@ -86,8 +86,13 @@ func (b *databaseBackend) prepareMerchandising(ctx context.Context, documents []
 		rules = append([]MerchandisingRule(nil), (*filters.RuleOverrides)...)
 	} else {
 		var err error
-		rules, err = NewService(b.db, nil, nil).ListMerchandisingRules(ctx)
+		rules, err = b.loadMerchandisingRules(ctx)
 		if err != nil {
+			return nil, nil, err
+		}
+	}
+	if filters.Explain {
+		if err := hydrateMerchandisingTargets(b.db.WithContext(ctx), rules, false); err != nil {
 			return nil, nil, err
 		}
 	}

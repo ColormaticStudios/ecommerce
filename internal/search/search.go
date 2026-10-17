@@ -16,6 +16,7 @@ import (
 
 	"ecommerce/internal/jobs"
 	"ecommerce/internal/reliability"
+	"ecommerce/internal/searchprojection"
 	"ecommerce/models"
 
 	"github.com/google/uuid"
@@ -38,7 +39,8 @@ const (
 type ProductSyncPayload struct {
 	Version   int   `json:"version"`
 	ProductID uint  `json:"product_id"`
-	Revision  int64 `json:"revision"`
+	VariantID uint  `json:"variant_id,omitempty"`
+	Revision  int64 `json:"revision,omitempty"`
 }
 
 type FullReindexPayload struct {
@@ -117,10 +119,8 @@ type Result struct {
 }
 
 type SuggestionResult struct {
-	Trending    []string
 	Suggestions []string
 	Corrections []string
-	Popular     []string
 }
 
 type Freshness struct {
@@ -136,6 +136,9 @@ type Freshness struct {
 // index. A later engine adapter can implement this contract without moving
 // catalog lifecycle logic into HTTP handlers.
 type SearchBackend interface {
+	// ReplaceAll applies a captured full snapshot, including explicit tombstones
+	// for captured absent sources. Other rows must not be deactivated or
+	// acknowledged using wall-clock time: they may cover newer source changes.
 	ReplaceAll(context.Context, []models.SearchDocument, time.Time) error
 	Upsert(context.Context, models.SearchDocument) error
 	Delete(context.Context, string, uint, int64) error
@@ -145,12 +148,13 @@ type SearchBackend interface {
 }
 
 type Service struct {
-	db        *gorm.DB
-	backend   SearchBackend
-	jobs      *jobs.Runtime
-	now       func() time.Time
-	hardening *hardeningState
-	reindexMu sync.Mutex
+	db           *gorm.DB
+	backend      SearchBackend
+	jobs         *jobs.Runtime
+	now          func() time.Time
+	hardening    *hardeningState
+	reindexMu    sync.Mutex
+	analyticsKey []byte
 }
 
 func NewService(db *gorm.DB, backend SearchBackend, runtime *jobs.Runtime) *Service {
@@ -161,7 +165,7 @@ func NewService(db *gorm.DB, backend SearchBackend, runtime *jobs.Runtime) *Serv
 }
 
 func NewDatabaseBackend(db *gorm.DB) SearchBackend {
-	return &databaseBackend{db: db, now: func() time.Time { return time.Now().UTC() }}
+	return &databaseBackend{db: db, now: func() time.Time { return time.Now().UTC() }, configuration: newConfigurationCache()}
 }
 
 func NormalizeQuery(value string) string {
@@ -206,7 +210,10 @@ func (s *Service) RegisterJobHandlers() error {
 	if s == nil || s.jobs == nil {
 		return errors.New("search job runtime is required")
 	}
-	if err := s.jobs.Register(JobTypeProductSync, jobs.Registration{Handle: s.handleProductSync}); err != nil {
+	if err := s.jobs.Register(JobTypeProductSync, jobs.Registration{Handle: s.handleProductSync, ReleaseKeyOnCompletion: true, OnSuccess: s.finishProductSync}); err != nil {
+		return err
+	}
+	if err := s.jobs.Register(JobTypeCatalogFanout, jobs.Registration{Handle: s.handleCatalogFanout, OnSuccess: s.finishCatalogFanout}); err != nil {
 		return err
 	}
 	if err := s.jobs.Register(JobTypeFullReindex, jobs.Registration{Handle: s.handleFullReindex}); err != nil {
@@ -221,7 +228,18 @@ func (s *Service) RegisterJobHandlers() error {
 	return s.jobs.Register(JobTypeConversionRefresh, jobs.Registration{Handle: s.handleConversionRefresh})
 }
 
+var ErrReindexQueued = errors.New("a full search reindex is already queued or running")
+
 func (s *Service) EnqueueFullReindex(ctx context.Context) (models.JobQueue, error) {
+	return s.enqueueFullReindex(ctx, false)
+}
+
+// EnqueueOrReuseFullReindex lets synchronous administrators join existing work
+// without bypassing queue admission or executing an already-owned lease.
+func (s *Service) EnqueueOrReuseFullReindex(ctx context.Context) (models.JobQueue, error) {
+	return s.enqueueFullReindex(ctx, true)
+}
+func (s *Service) enqueueFullReindex(ctx context.Context, reuse bool) (models.JobQueue, error) {
 	if s == nil || s.jobs == nil || s.db == nil {
 		return models.JobQueue{}, errors.New("search job runtime is required")
 	}
@@ -239,8 +257,11 @@ func (s *Service) EnqueueFullReindex(ctx context.Context) (models.JobQueue, erro
 		if err := tx.Model(&models.JobQueue{}).Where("job_type = ? AND status IN ?", JobTypeFullReindex, []string{models.JobStatusPending, models.JobStatusRunning, models.JobStatusRetryScheduled}).Count(&count).Error; err != nil {
 			return err
 		}
+		if reuse && count > 0 {
+			return tx.Where("job_type = ? AND status IN ?", JobTypeFullReindex, []string{models.JobStatusPending, models.JobStatusRunning, models.JobStatusRetryScheduled}).Order("created_at ASC, id ASC").First(&job).Error
+		}
 		if count >= int64(s.hardening.config.ReindexQueueLimit) {
-			return ErrCapacity
+			return ErrReindexQueued
 		}
 		requestID := uuid.NewString()
 		var err error
@@ -265,26 +286,13 @@ func (s *Service) EnsureInitialReindex(ctx context.Context) (models.JobQueue, bo
 		return models.JobQueue{}, false, err
 	}
 	job, err := s.jobs.Enqueue(ctx, jobs.EnqueueInput{
-		JobType: JobTypeFullReindex, Payload: FullReindexPayload{Version: FullReindexVersion, RequestID: "initial"}, IdempotencyKey: "initial",
+		JobType: JobTypeFullReindex, Payload: FullReindexPayload{Version: FullReindexVersion, RequestID: "initial"}, IdempotencyKey: "full:initial",
 	})
 	return job, err == nil, err
 }
 
 func EnqueueProductSyncTx(ctx context.Context, runtime *jobs.Runtime, tx *gorm.DB, productID uint, revision time.Time) (models.JobQueue, error) {
-	if runtime == nil {
-		return models.JobQueue{}, nil
-	}
-	if productID == 0 {
-		return models.JobQueue{}, errors.New("search product ID is required")
-	}
-	if revision.IsZero() {
-		revision = time.Now().UTC()
-	}
-	payload := ProductSyncPayload{Version: ProductSyncVersion, ProductID: productID, Revision: revision.UnixNano()}
-	return runtime.EnqueueTx(ctx, tx, jobs.EnqueueInput{
-		JobType: JobTypeProductSync, Payload: payload,
-		IdempotencyKey: fmt.Sprintf("product:%d:%d", productID, payload.Revision),
-	})
+	return RecordProductChangeTx(ctx, runtime, tx, productID, revision)
 }
 
 func (s *Service) Reindex(ctx context.Context) error {
@@ -298,15 +306,48 @@ func (s *Service) Reindex(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 	started := s.now()
+	var fanoutIDs []string
+	if err := s.db.WithContext(ctx).Model(&models.SearchCatalogFanoutDebt{}).Where("covered_at IS NULL").Pluck("job_id", &fanoutIDs).Error; err != nil {
+		return err
+	}
+	if len(fanoutIDs) > 0 {
+		// Shared metadata has no per-product revision until fanout expands.
+		// Allocate rebuild-owned boundaries before source reads, so a pre-edit
+		// incremental write cannot later overwrite this rebuild at equal version.
+		if err := allocateRebuildFanoutRevisions(ctx, s.db, started); err != nil {
+			return err
+		}
+	}
+	inventoryDebt, err := captureInventoryDebt(ctx, s.db, nil)
+	if err != nil {
+		return err
+	}
 	if err := s.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "name"}},
 		DoUpdates: clause.Assignments(map[string]any{"last_full_reindex_started": started, "updated_at": started}),
 	}).Create(&models.SearchIndexState{Name: ProductIndexName, LastFullReindexStarted: &started}).Error; err != nil {
 		return err
 	}
+	if err := repairProjectionRevisionFloors(s.db.WithContext(ctx), nil); err != nil {
+		return err
+	}
+	// Capture source debt and existing projections in one statement. Explicit
+	// tombstones below cover only these boundaries, never later source writes.
+	var revisions []models.SearchProductRevision
+	if err := s.db.WithContext(ctx).Raw(`SELECT product_id, revision FROM search_product_revisions
+		UNION ALL SELECT d.entity_id AS product_id, d.version AS revision FROM search_documents d
+		WHERE d.entity_type = ? AND NOT EXISTS (SELECT 1 FROM search_product_revisions r WHERE r.product_id = d.entity_id)`, ProductEntityType).Scan(&revisions).Error; err != nil {
+		return err
+	}
+	revisionByID := map[uint]int64{}
+	covered := map[uint]bool{}
+	for _, revision := range revisions {
+		revisionByID[revision.ProductID] = revision.Revision
+	}
+
 	var products []models.Product
 	documents := make([]models.SearchDocument, 0)
-	err := s.db.WithContext(ctx).
+	err = s.db.WithContext(ctx).
 		Preload("Brand").Preload("Categories").Preload("Variants").Preload("AttributeValues.ProductAttribute").
 		Where("products.is_published = ?", true).
 		Where(`NOT EXISTS (SELECT 1 FROM product_variants pv_all WHERE pv_all.product_id = products.id) OR EXISTS (SELECT 1 FROM product_variants pv_public WHERE pv_public.product_id = products.id AND pv_public.is_published = TRUE)`).
@@ -320,7 +361,9 @@ func (s *Service) Reindex(ctx context.Context) error {
 				return err
 			}
 			if include {
+				document.Version = revisionByID[product.ID]
 				documents = append(documents, document)
+				covered[product.ID] = true
 			}
 		}
 		return nil
@@ -328,19 +371,41 @@ func (s *Service) Reindex(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return s.backend.ReplaceAll(ctx, documents, started)
+	// Preserve captured revision boundaries for absent sources too. A future
+	// document version (for example after correcting clock skew) must not make
+	// an orphan permanently immune to a successful full rebuild.
+	for _, revision := range revisions {
+		if covered[revision.ProductID] {
+			continue
+		}
+		documents = append(documents, models.SearchDocument{EntityType: ProductEntityType, EntityID: revision.ProductID, PayloadJSON: "{}", CategoryTokens: "|", AttributeTokens: "|", Version: revision.Revision, Active: false, IndexedAt: started, SourceCreatedAt: started, SourceUpdatedAt: started})
+	}
+	if err := s.backend.ReplaceAll(ctx, documents, started); err != nil {
+		return err
+	}
+	if err := acknowledgeInventoryDebt(ctx, s.db, inventoryDebt); err != nil {
+		return err
+	}
+	return coverFanoutDebt(ctx, s.db, fanoutIDs, s.now())
 }
 
 func (s *Service) SyncProduct(ctx context.Context, productID uint) error {
+	inventoryDebt, err := captureInventoryDebt(ctx, s.db, &productID)
+	if err != nil {
+		return err
+	}
+	revision, err := projectionRevision(ctx, s.db, productID)
+	if err != nil {
+		return err
+	}
 	var product models.Product
-	err := s.db.WithContext(ctx).Unscoped().Preload("Brand").Preload("Categories").Preload("Variants").
+	err = s.db.WithContext(ctx).Unscoped().Preload("Brand").Preload("Categories").Preload("Variants").
 		Preload("AttributeValues.ProductAttribute").First(&product, productID).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) || (err == nil && (product.DeletedAt.Valid || !product.IsPublished)) {
-		version := s.now().UnixNano()
-		if err == nil && !product.UpdatedAt.IsZero() {
-			version = product.UpdatedAt.UnixNano()
+		if err := s.backend.Delete(ctx, ProductEntityType, productID, revision); err != nil {
+			return err
 		}
-		return s.backend.Delete(ctx, ProductEntityType, productID, version)
+		return acknowledgeInventoryDebt(ctx, s.db, inventoryDebt)
 	}
 	if err != nil {
 		return err
@@ -350,9 +415,16 @@ func (s *Service) SyncProduct(ctx context.Context, productID uint) error {
 		return err
 	}
 	if !include {
-		return s.backend.Delete(ctx, ProductEntityType, productID, product.UpdatedAt.UnixNano())
+		if err := s.backend.Delete(ctx, ProductEntityType, productID, revision); err != nil {
+			return err
+		}
+		return acknowledgeInventoryDebt(ctx, s.db, inventoryDebt)
 	}
-	return s.backend.Upsert(ctx, document)
+	document.Version = revision
+	if err := s.backend.Upsert(ctx, document); err != nil {
+		return err
+	}
+	return acknowledgeInventoryDebt(ctx, s.db, inventoryDebt)
 }
 
 func (s *Service) handleProductSync(ctx context.Context, raw json.RawMessage) error {
@@ -389,7 +461,7 @@ func projectProduct(product models.Product, indexedAt time.Time) (models.SearchD
 	}
 	variants := make([]models.ProductVariant, 0, len(product.Variants))
 	minPrice, maxPrice := product.Price, product.Price
-	available := product.Stock > 0
+	available := len(product.Variants) == 0 && product.Stock > 0
 	terms := []string{product.Name, product.SKU, product.Description}
 	for _, variant := range product.Variants {
 		if !variant.IsPublished {
@@ -411,6 +483,12 @@ func projectProduct(product models.Product, indexedAt time.Time) (models.SearchD
 		return models.SearchDocument{}, false, nil
 	}
 	product.Variants = variants
+	if len(variants) > 0 {
+		product.Stock = 0
+		for _, variant := range variants {
+			product.Stock += variant.Stock
+		}
+	}
 	if product.Related == nil {
 		product.Related = []models.Product{}
 	}
@@ -419,7 +497,7 @@ func projectProduct(product models.Product, indexedAt time.Time) (models.SearchD
 	}
 	brandSlug := ""
 	if product.Brand != nil && product.Brand.IsActive {
-		brandSlug = strings.ToLower(product.Brand.Slug)
+		brandSlug = NormalizeQuery(product.Brand.Slug)
 		terms = append(terms, product.Brand.Name, product.Brand.Slug)
 	}
 	categoryTokens := "|"
@@ -477,27 +555,40 @@ func attributeValue(value models.ProductAttributeValue) string {
 }
 
 type databaseBackend struct {
-	cache     documentCache
-	rankCache rankingCache
-	db        *gorm.DB
-	now       func() time.Time
+	db            *gorm.DB
+	now           func() time.Time
+	configuration *configurationCache
 }
 
 func (b *databaseBackend) ReplaceAll(ctx context.Context, documents []models.SearchDocument, completed time.Time) error {
 	return b.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&models.SearchDocument{}).Where("entity_type = ? AND version <= ?", ProductEntityType, completed.UnixNano()).Update("active", false).Error; err != nil {
-			return err
-		}
 		for _, document := range documents {
-			if err := upsertDocument(tx, document); err != nil {
+			if _, err := upsertDocument(tx, document); err != nil {
 				return err
 			}
+		}
+		// Count reconciliation is reserved for rebuilds. Fence incremental
+		// deltas after every document lock has been taken, so a concurrent
+		// uncommitted document contributes its delta after this baseline.
+		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&models.SearchIndexState{Name: ProductIndexName}).Error; err != nil {
+			return err
+		}
+		var state models.SearchIndexState
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&state, "name = ?", ProductIndexName).Error; err != nil {
+			return err
 		}
 		var count int64
 		if err := tx.Model(&models.SearchDocument{}).Where("entity_type = ? AND active = ?", ProductEntityType, true).Count(&count).Error; err != nil {
 			return err
 		}
-		return upsertIndexState(tx, completed, &completed, count)
+
+		for _, document := range documents {
+			if err := acknowledgeProjection(tx, document.EntityID, document.Version); err != nil {
+				return err
+			}
+		}
+		finished := b.now()
+		return upsertIndexState(tx, finished, &finished, &completed, count)
 	})
 }
 
@@ -505,14 +596,15 @@ func (b *databaseBackend) Upsert(ctx context.Context, document models.SearchDocu
 	now := b.now()
 	document.IndexedAt = now
 	return b.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := upsertDocument(tx, document); err != nil {
+		delta, err := upsertDocument(tx, document)
+		if err != nil {
 			return err
 		}
-		var count int64
-		if err := tx.Model(&models.SearchDocument{}).Where("entity_type = ? AND active = ?", ProductEntityType, true).Count(&count).Error; err != nil {
+
+		if err := acknowledgeProjection(tx, document.EntityID, document.Version); err != nil {
 			return err
 		}
-		return upsertIndexState(tx, now, nil, count)
+		return incrementIndexState(tx, now, delta)
 	})
 }
 
@@ -520,18 +612,20 @@ func (b *databaseBackend) Delete(ctx context.Context, entityType string, entityI
 	now := b.now()
 	return b.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		document := models.SearchDocument{EntityType: entityType, EntityID: entityID, PayloadJSON: "{}", SearchableText: "", NormalizedName: "", CategoryTokens: "|", AttributeTokens: "|", Version: version, SourceCreatedAt: now, SourceUpdatedAt: now, IndexedAt: now, Active: false}
-		if err := upsertDocument(tx, document); err != nil {
+		delta, err := upsertDocument(tx, document)
+		if err != nil {
 			return err
 		}
-		var count int64
-		if err := tx.Model(&models.SearchDocument{}).Where("entity_type = ? AND active = ?", ProductEntityType, true).Count(&count).Error; err != nil {
+
+		if err := acknowledgeProjection(tx, document.EntityID, document.Version); err != nil {
 			return err
 		}
-		return upsertIndexState(tx, now, nil, count)
+		return incrementIndexState(tx, now, delta)
 	})
 }
 
-func upsertDocument(tx *gorm.DB, document models.SearchDocument) error {
+func upsertDocument(tx *gorm.DB, document models.SearchDocument) (int64, error) {
+	document.BrandSlug = NormalizeQuery(document.BrandSlug)
 	now := document.IndexedAt
 	if now.IsZero() {
 		now = time.Now().UTC()
@@ -544,27 +638,66 @@ func upsertDocument(tx *gorm.DB, document models.SearchDocument) error {
 		"version": document.Version, "source_created_at": document.SourceCreatedAt, "source_updated_at": document.SourceUpdatedAt,
 		"indexed_at": document.IndexedAt, "created_at": now, "updated_at": now,
 	}
-	return tx.Table("search_documents").Clauses(clause.OnConflict{
+	// Create an inactive placeholder only for new identities, then lock the
+	// durable document row. This fences both concurrent inserts and activity
+	// transitions without an index-wide count or an index-wide projection lock.
+	placeholder := make(map[string]any, len(values))
+	for key, value := range values {
+		placeholder[key] = value
+	}
+	placeholder["active"] = false
+	if err := tx.Table("search_documents").Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "entity_type"}, {Name: "entity_id"}}, DoNothing: true}).Create(placeholder).Error; err != nil {
+		return 0, err
+	}
+	var previous models.SearchDocument
+	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Select("active").Where("entity_type = ? AND entity_id = ?", document.EntityType, document.EntityID).First(&previous).Error; err != nil {
+		return 0, err
+	}
+	result := tx.Table("search_documents").Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "entity_type"}, {Name: "entity_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"payload_json", "searchable_text", "normalized_name", "brand_slug", "category_tokens", "attribute_tokens", "min_price", "max_price", "available", "margin_rate", "active", "version", "source_created_at", "source_updated_at", "indexed_at", "updated_at"}),
 		Where:     clause.Where{Exprs: []clause.Expression{clause.Expr{SQL: "search_documents.version <= excluded.version"}}},
-	}).Create(values).Error
+	}).Create(values)
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	if result.RowsAffected == 0 || document.EntityType != ProductEntityType {
+		return 0, nil
+	}
+	if err := searchprojection.Replace(tx, searchprojection.Input{ProductID: document.EntityID, Payload: document.PayloadJSON, Searchable: document.SearchableText, Categories: document.CategoryTokens, Created: document.SourceCreatedAt, Active: document.Active}); err != nil {
+		return 0, err
+	}
+	delta := int64(0)
+	if document.Active && !previous.Active {
+		delta = 1
+	} else if !document.Active && previous.Active {
+		delta = -1
+	}
+	return delta, nil
 }
 
-func upsertIndexState(tx *gorm.DB, indexedAt time.Time, fullAt *time.Time, count int64) error {
+func incrementIndexState(tx *gorm.DB, indexedAt time.Time, delta int64) error {
+	return tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "name"}}, DoUpdates: clause.Assignments(map[string]any{
+		"last_indexed_at": indexedAt, "document_count": gorm.Expr("search_index_states.document_count + ?", delta), "generation": gorm.Expr("search_index_states.generation + 1"), "updated_at": indexedAt,
+	})}).Create(&models.SearchIndexState{Name: ProductIndexName, DocumentCount: delta, LastIndexedAt: &indexedAt, Generation: 1}).Error
+}
+
+func upsertIndexState(tx *gorm.DB, indexedAt time.Time, fullAt, sourceAt *time.Time, count int64) error {
 	values := map[string]any{"last_indexed_at": indexedAt, "document_count": count, "updated_at": indexedAt, "generation": gorm.Expr("search_index_states.generation + 1")}
 	if fullAt != nil {
 		values["last_full_reindex_at"] = *fullAt
+		values["last_full_reindex_source_at"] = sourceAt
 	}
 	state := models.SearchIndexState{Name: ProductIndexName, LastIndexedAt: &indexedAt, DocumentCount: count, Generation: 1}
 	if fullAt != nil {
 		state.LastFullReindexAt = fullAt
+		state.LastFullReindexSourceAt = sourceAt
 	}
 	return tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "name"}}, DoUpdates: clause.Assignments(values)}).Create(&state).Error
 }
 
 func (b *databaseBackend) Search(ctx context.Context, filters Filters) (Result, error) {
-	return b.searchProducts(ctx, filters)
+	return b.searchProductsSQL(ctx, filters)
 }
 
 func escapeLike(value string) string {
@@ -581,30 +714,25 @@ func (b *databaseBackend) Suggest(ctx context.Context, query string, limit int) 
 		limit = 20
 	}
 	normalized := NormalizeQuery(query)
-	result := SuggestionResult{Suggestions: []string{}, Corrections: []string{}, Popular: []string{}}
+	result := SuggestionResult{Suggestions: []string{}, Corrections: []string{}}
 	if normalized == "" {
 		return result, nil
 	}
-	var documents []models.SearchDocument
-	prefix := escapeLike(normalized) + "%"
-	if err := b.db.WithContext(ctx).Where("entity_type = ? AND active = ? AND (normalized_name LIKE ? OR brand_slug LIKE ?)", ProductEntityType, true, prefix, prefix).Order("normalized_name asc, entity_id asc").Limit(limit * 2).Find(&documents).Error; err != nil {
+	var names, brands []string
+	prefix := normalized + "%"
+	base := func() *gorm.DB {
+		return b.db.WithContext(ctx).Table("search_product_ranks r").Joins("JOIN search_documents d ON d.entity_id = r.product_id AND d.entity_type = 'product' AND d.active = TRUE")
+	}
+	if err := base().Where("d.normalized_name LIKE ?", prefix).Distinct("r.name_label").Order("r.name_label ASC").Limit(limit).Pluck("r.name_label", &names).Error; err != nil {
+		return result, fmt.Errorf("%w: %w", ErrIndexUnavailable, err)
+	}
+	if err := base().Where("TRIM(r.brand) LIKE ?", prefix).Distinct("r.brand_label").Order("r.brand_label ASC").Limit(limit).Pluck("r.brand_label", &brands).Error; err != nil {
 		return result, fmt.Errorf("%w: %w", ErrIndexUnavailable, err)
 	}
 	seen := map[string]struct{}{}
 	values := make([]string, 0, limit)
-	for _, document := range documents {
-		var product models.Product
-		if err := json.Unmarshal([]byte(document.PayloadJSON), &product); err != nil {
-			return result, fmt.Errorf("%w: %w", ErrIndexUnavailable, err)
-		}
-		candidates := []string{product.Name}
-		if product.Brand != nil {
-			candidates = append(candidates, product.Brand.Name)
-		}
+	for _, candidates := range [][]string{names, brands} {
 		for _, candidate := range candidates {
-			if !strings.HasPrefix(NormalizeQuery(candidate), normalized) {
-				continue
-			}
 			if _, ok := seen[candidate]; ok {
 				continue
 			}
@@ -622,18 +750,19 @@ func (b *databaseBackend) Suggest(ctx context.Context, query string, limit int) 
 		if err != nil {
 			return result, err
 		}
-		documents, err := b.loadIndexedProducts(ctx, nil)
+		vocabulary, err := b.sqlVocabulary(ctx, normalized, profile)
 		if err != nil {
 			return result, err
 		}
-		corrected, rewrites := correctQuery(normalized, buildVocabulary(documents), profile)
+		corrected, rewrites := correctQuery(normalized, vocabulary, profile)
 		if len(rewrites) > 0 {
 			plan := buildQueryPlan(corrected, nil)
-			for _, document := range documents {
-				if matchesQuery(document.document.SearchableText, plan, false) {
-					result.Corrections = []string{corrected}
-					break
-				}
+			count, err := b.sqlCount(ctx, sqlSelection{plan: plan})
+			if err != nil {
+				return result, fmt.Errorf("%w: %w", ErrIndexUnavailable, err)
+			}
+			if count > 0 {
+				result.Corrections = []string{corrected}
 			}
 		}
 	}
@@ -648,17 +777,48 @@ func (b *databaseBackend) Freshness(ctx context.Context) (Freshness, error) {
 	}
 	var pending int64
 	if err := b.db.WithContext(ctx).Model(&models.JobQueue{}).
-		Where("job_type IN ? AND status IN ?", []string{JobTypeProductSync, JobTypeFullReindex}, []string{models.JobStatusPending, models.JobStatusRunning, models.JobStatusRetryScheduled}).Count(&pending).Error; err != nil {
+		Where("job_type IN ? AND status IN ?", []string{JobTypeProductSync, JobTypeFullReindex, JobTypeCatalogFanout}, []string{models.JobStatusPending, models.JobStatusRunning, models.JobStatusRetryScheduled}).Count(&pending).Error; err != nil {
 		return Freshness{}, err
 	}
 	result := Freshness{Status: "healthy", PendingJobs: pending, DocumentCount: state.DocumentCount, LastIndexedAt: state.LastIndexedAt, LastFullReindexAt: state.LastFullReindexAt}
-	if pending > 0 {
-		var oldest models.JobQueue
-		if err := b.db.WithContext(ctx).Where("job_type IN ? AND status IN ?", []string{JobTypeProductSync, JobTypeFullReindex}, []string{models.JobStatusPending, models.JobStatusRunning, models.JobStatusRetryScheduled}).Order("created_at asc").First(&oldest).Error; err != nil {
-			return result, err
-		}
+	var debt models.SearchProductRevision
+	debtErr := b.db.WithContext(ctx).Where("pending_since IS NOT NULL").Order("pending_since ASC").First(&debt).Error
+	if debtErr != nil && !errors.Is(debtErr, gorm.ErrRecordNotFound) {
+		return result, debtErr
+	}
+	if debtErr == nil {
+		result.Lag = b.now().Sub(*debt.PendingSince)
+	}
+	var stockDebt models.SearchInventoryRevision
+	stockErr := b.db.WithContext(ctx).Where("pending_since IS NOT NULL").Order("pending_since ASC").First(&stockDebt).Error
+	if stockErr != nil && !errors.Is(stockErr, gorm.ErrRecordNotFound) {
+		return result, stockErr
+	}
+	if stockErr == nil && b.now().Sub(*stockDebt.PendingSince) > result.Lag {
+		result.Lag = b.now().Sub(*stockDebt.PendingSince)
+	}
+	var oldest models.JobQueue
+	fullErr := b.db.WithContext(ctx).Where("job_type IN ? AND status IN ?", []string{JobTypeProductSync, JobTypeFullReindex, JobTypeCatalogFanout}, []string{models.JobStatusPending, models.JobStatusRunning, models.JobStatusRetryScheduled}).Order("created_at ASC").First(&oldest).Error
+	if fullErr != nil && !errors.Is(fullErr, gorm.ErrRecordNotFound) {
+		return result, fullErr
+	}
+	if fullErr == nil && b.now().Sub(oldest.CreatedAt) > result.Lag {
 		result.Lag = b.now().Sub(oldest.CreatedAt)
 	}
+	// Only committed fanout identities captured by a successful rebuild or
+	// expanded by their handler are covered; wall-clock timing is insufficient.
+	var fanoutDebt models.SearchCatalogFanoutDebt
+	fanoutErr := b.db.WithContext(ctx).Where("covered_at IS NULL").Order("pending_since ASC").First(&fanoutDebt).Error
+	if fanoutErr != nil && !errors.Is(fanoutErr, gorm.ErrRecordNotFound) {
+		return result, fanoutErr
+	}
+	if fanoutErr == nil && b.now().Sub(fanoutDebt.PendingSince) > result.Lag {
+		result.Lag = b.now().Sub(fanoutDebt.PendingSince)
+	}
+	if result.Lag < 0 {
+		result.Lag = 0
+	}
+
 	if state.LastFullReindexAt == nil || result.Lag > StaleFreshnessTarget {
 		result.Status = "stale"
 	} else if result.Lag > HealthyFreshnessTarget {

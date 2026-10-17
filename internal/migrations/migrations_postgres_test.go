@@ -71,8 +71,13 @@ func withPostgresSearchPath(dsn, searchPath string) (string, error) {
 }
 
 func TestRunWithMigrationsConcurrentRunnersPostgresLockApplyOnce(t *testing.T) {
-	db1 := openPostgresTestDB(t)
-	db2 := openPostgresTestDB(t)
+	db1 := openIsolatedPostgresTestDB(t)
+	var schema string
+	require.NoError(t, db1.Raw("SELECT current_schema()").Scan(&schema).Error)
+	dsn, err := withPostgresSearchPath(os.Getenv("MIGRATIONS_TEST_POSTGRES_DSN"), schema)
+	require.NoError(t, err)
+	db2, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	require.NoError(t, err)
 
 	require.NoError(t, ensureTable(db1))
 
@@ -115,6 +120,21 @@ func TestRunWithMigrationsConcurrentRunnersPostgresLockApplyOnce(t *testing.T) {
 	var rows []SchemaMigration
 	require.NoError(t, db1.Where("version = ?", version).Find(&rows).Error)
 	require.Len(t, rows, 1)
+}
+
+func TestPostgresSnapshotPreservesCompositeIndexColumnOrder(t *testing.T) {
+	db := openIsolatedPostgresTestDB(t)
+	require.NoError(t, db.Exec("CREATE TABLE snapshot_order (z INTEGER, a INTEGER)").Error)
+	require.NoError(t, db.Exec("CREATE INDEX idx_snapshot_order ON snapshot_order (z,a)").Error)
+	indexes, err := tableIndexes(db, "snapshot_order")
+	require.NoError(t, err)
+	require.Equal(t, []string{"idx_snapshot_order columns=z,a unique=false option="}, indexes)
+}
+
+func TestPostgresCommittedSnapshotMatchesLatestMigrations(t *testing.T) {
+	db := openIsolatedPostgresTestDB(t)
+	require.NoError(t, Run(db))
+	require.NoError(t, DriftCheck(db, "schema_snapshot.sql"))
 }
 
 func TestRunReplayFromEmptyToLatestPostgres(t *testing.T) {

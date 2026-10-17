@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	searchservice "ecommerce/internal/search"
 	"ecommerce/models"
 
 	"gorm.io/gorm"
@@ -752,24 +753,29 @@ func ensureLevel(db *gorm.DB, productVariantID uint) (models.InventoryItem, mode
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return models.InventoryItem{}, models.InventoryLevel{}, err
 		}
-		var variant models.ProductVariant
-		if err := db.Clauses(clause.Locking{Strength: "UPDATE"}).First(&variant, productVariantID).Error; err != nil {
-			return models.InventoryItem{}, models.InventoryLevel{}, err
-		}
-		item = models.InventoryItem{ProductVariantID: productVariantID}
-		if err := db.Create(&item).Error; err != nil {
-			return models.InventoryItem{}, models.InventoryLevel{}, err
-		}
-		level := models.InventoryLevel{
-			InventoryItemID: item.ID,
-			OnHand:          variant.Stock,
-			Reserved:        0,
-			Available:       variant.Stock,
-		}
-		if err := db.Create(&level).Error; err != nil {
-			return models.InventoryItem{}, models.InventoryLevel{}, err
-		}
-		return item, level, nil
+		var level models.InventoryLevel
+		err := db.Transaction(func(tx *gorm.DB) error {
+			var variant models.ProductVariant
+			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&variant, productVariantID).Error; err != nil {
+				return err
+			}
+			// Another initializer may have committed while this transaction
+			// waited for the variant lock. Recheck before creating either row.
+			err := tx.Where("product_variant_id = ?", productVariantID).First(&item).Error
+			if err == nil {
+				return tx.Where("inventory_item_id = ?", item.ID).First(&level).Error
+			}
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
+			item = models.InventoryItem{ProductVariantID: productVariantID}
+			if err := tx.Create(&item).Error; err != nil {
+				return err
+			}
+			level = models.InventoryLevel{InventoryItemID: item.ID, OnHand: variant.Stock, Reserved: 0, Available: variant.Stock}
+			return tx.Create(&level).Error
+		})
+		return item, level, err
 	}
 
 	var level models.InventoryLevel
@@ -780,6 +786,12 @@ func ensureLevel(db *gorm.DB, productVariantID uint) (models.InventoryItem, mode
 }
 
 func lockedLevel(tx *gorm.DB, productVariantID uint) (models.InventoryItem, models.InventoryLevel, error) {
+	// Keep the mutation lock order variant -> level, including initialization.
+	// Updating published stock later in the transaction takes the same lock.
+	var variant models.ProductVariant
+	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Select("id").First(&variant, productVariantID).Error; err != nil {
+		return models.InventoryItem{}, models.InventoryLevel{}, err
+	}
 	item, level, err := ensureLevel(tx, productVariantID)
 	if err != nil {
 		return models.InventoryItem{}, models.InventoryLevel{}, err
@@ -812,7 +824,10 @@ func updateLevelAndVariant(tx *gorm.DB, levelID uint, productVariantID uint, ava
 	level.OnHand = availability.OnHand
 	level.Reserved = availability.Reserved
 	level.Available = availability.Available
-	return reconcileAlerts(tx, level.InventoryItemID, productVariantID, availability.Available)
+	if err := reconcileAlerts(tx, level.InventoryItemID, productVariantID, availability.Available); err != nil {
+		return err
+	}
+	return searchservice.RecordInventoryChangeTx(tx.Statement.Context, tx, productVariantID)
 }
 
 func updateAlertStatus(db *gorm.DB, alertID uint, input AlertActionInput, status string) (models.InventoryAlert, error) {

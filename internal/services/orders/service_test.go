@@ -2,6 +2,7 @@ package orders
 
 import (
 	"context"
+	"ecommerce/internal/jobs"
 	"testing"
 	"time"
 
@@ -18,6 +19,8 @@ func newOrdersTestDB(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory&cache=shared"), &gorm.Config{})
 	require.NoError(t, err)
 	require.NoError(t, db.AutoMigrate(
+		&models.JobQueue{},
+		&models.SearchCatalogFanoutDebt{}, &models.SearchInventoryRevision{}, &models.SearchProductRevision{}, &models.SearchDocument{},
 		&models.CheckoutSession{},
 		&models.Product{},
 		&models.ProductVariant{},
@@ -30,7 +33,7 @@ func newOrdersTestDB(t *testing.T) *gorm.DB {
 		&models.Order{},
 		&models.OrderItem{},
 	))
-	return db
+	return jobs.WithRuntime(db, jobs.NewRuntime(db, jobs.Config{}))
 }
 
 func seedOrderSession(t *testing.T, db *gorm.DB, userID *uint) models.CheckoutSession {

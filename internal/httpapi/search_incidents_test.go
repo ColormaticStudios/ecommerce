@@ -2,6 +2,7 @@ package httpapi_test
 
 import (
 	"context"
+	"ecommerce/internal/jobs"
 	"encoding/json"
 	"testing"
 	"time"
@@ -20,7 +21,7 @@ func incidentRouter(t *testing.T) *gin.Engine {
 	opened := time.Date(2026, 10, 7, 12, 0, 0, 0, time.UTC)
 	recovered := opened.Add(time.Hour)
 	require.NoError(t, db.Create(&[]models.SearchIndexIncident{{IndexName: "products", Reason: "index_lag", OpenedAt: opened, DetectedAt: opened, LastObservedAt: recovered, RecoveredAt: &recovered, MaxLagSeconds: 600, MaxPendingJobs: 5, DocumentCount: 20}, {IndexName: "products", Reason: "missing_baseline", OpenedAt: recovered, DetectedAt: recovered, LastObservedAt: recovered}}).Error)
-	endpoints, err := httpapi.NewCatalogEndpoints(db, nil)
+	endpoints, err := httpapi.NewCatalogEndpoints(db, nil, jobs.NewRuntime(db, jobs.Config{}))
 	require.NoError(t, err)
 	policies, err := httpapi.ContractPolicySet()
 	require.NoError(t, err)

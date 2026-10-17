@@ -69,7 +69,7 @@ func (e *CatalogEndpoints) DeleteAdminSearchRankingProfile(ctx context.Context, 
 	if request.Id < 1 {
 		return nil, problemError(http.StatusBadRequest, "invalid_request", "Ranking profile ID must be positive.", nil)
 	}
-	if err := e.search.DeleteRankingProfile(ctx, uint(request.Id)); err != nil {
+	if err := e.search.DeleteRankingProfile(ctx, uint(request.Id), searchConfigurationActorID(ctx)); err != nil {
 		return nil, searchConfigurationEndpointError(err)
 	}
 	return apicontract.DeleteAdminSearchRankingProfile204Response{}, nil

@@ -17,17 +17,17 @@ func BestEffortAnalyticsTx(ctx context.Context, tx *gorm.DB, write func() error)
 	}
 	const savepoint = "search_analytics_commerce"
 	if err := tx.SavePoint(savepoint).Error; err != nil {
-		slog.WarnContext(ctx, "Search analytics write skipped", "event", "search_analytics_commerce_skipped", "error_type", fmt.Sprintf("%T", err))
+		slog.WarnContext(ctx, "Search analytics write skipped", "event", "search_analytics_commerce_skipped", "error_type", fmt.Sprintf("%T", err), "error", ErrorDiagnostic(err))
 		return
 	}
 	if err := write(); err != nil {
 		if rollbackErr := tx.RollbackTo(savepoint).Error; rollbackErr != nil {
-			slog.ErrorContext(ctx, "Search analytics savepoint rollback failed", "event", "search_analytics_rollback_failed", "error_type", fmt.Sprintf("%T", rollbackErr))
+			slog.ErrorContext(ctx, "Search analytics savepoint rollback failed", "event", "search_analytics_rollback_failed", "error_type", fmt.Sprintf("%T", rollbackErr), "error", ErrorDiagnostic(rollbackErr))
 		} else {
-			slog.WarnContext(ctx, "Search analytics write skipped", "event", "search_analytics_commerce_skipped", "error_type", fmt.Sprintf("%T", err))
+			slog.WarnContext(ctx, "Search analytics write skipped", "event", "search_analytics_commerce_skipped", "error_type", fmt.Sprintf("%T", err), "error", ErrorDiagnostic(err))
 		}
 	}
 	if err := tx.Exec("RELEASE SAVEPOINT " + savepoint).Error; err != nil {
-		slog.ErrorContext(ctx, "Search analytics savepoint release failed", "event", "search_analytics_release_failed", "error_type", fmt.Sprintf("%T", err))
+		slog.ErrorContext(ctx, "Search analytics savepoint release failed", "event", "search_analytics_release_failed", "error_type", fmt.Sprintf("%T", err), "error", ErrorDiagnostic(err))
 	}
 }

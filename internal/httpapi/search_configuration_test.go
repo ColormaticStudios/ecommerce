@@ -2,6 +2,7 @@ package httpapi_test
 
 import (
 	"context"
+	"ecommerce/internal/jobs"
 	"testing"
 
 	"ecommerce/internal/apicontract"
@@ -15,8 +16,8 @@ import (
 func searchConfigurationEndpoints(t *testing.T) (*httpapi.CatalogEndpoints, context.Context) {
 	t.Helper()
 	db := catalogTestDB(t)
-	require.NoError(t, db.AutoMigrate(&models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}))
-	endpoints, err := httpapi.NewCatalogEndpoints(db, nil)
+	require.NoError(t, db.AutoMigrate(&models.SearchConfigurationAudit{}, &models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}))
+	endpoints, err := httpapi.NewCatalogEndpoints(db, nil, jobs.NewRuntime(db, jobs.Config{}))
 	require.NoError(t, err)
 	ctx := requestctx.WithPrincipal(context.Background(), requestctx.Principal{
 		Subject: "admin@example.com", AccountID: 17, Roles: []string{"admin"},

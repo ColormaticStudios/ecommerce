@@ -87,7 +87,7 @@ func (e *CatalogEndpoints) DeleteAdminSearchSynonym(ctx context.Context, request
 	if request.Id < 1 {
 		return nil, problemError(http.StatusBadRequest, "invalid_request", "Synonym set ID must be positive.", nil)
 	}
-	if err := e.search.DeleteSynonymSet(ctx, uint(request.Id)); err != nil {
+	if err := e.search.DeleteSynonymSet(ctx, uint(request.Id), searchConfigurationActorID(ctx)); err != nil {
 		return nil, searchConfigurationEndpointError(err)
 	}
 	return apicontract.DeleteAdminSearchSynonym204Response{}, nil
@@ -190,7 +190,7 @@ func (e *CatalogEndpoints) DeleteAdminSearchTypoProfile(ctx context.Context, req
 	if request.Id < 1 {
 		return nil, problemError(http.StatusBadRequest, "invalid_request", "Typo tolerance profile ID must be positive.", nil)
 	}
-	if err := e.search.DeleteTypoToleranceProfile(ctx, uint(request.Id)); err != nil {
+	if err := e.search.DeleteTypoToleranceProfile(ctx, uint(request.Id), searchConfigurationActorID(ctx)); err != nil {
 		return nil, searchConfigurationEndpointError(err)
 	}
 	return apicontract.DeleteAdminSearchTypoProfile204Response{}, nil
@@ -232,6 +232,8 @@ func searchConfigurationUpdatedBy(value *uint) *int {
 
 func searchConfigurationEndpointError(err error) error {
 	switch {
+	case errors.Is(err, searchservice.ErrReindexQueued):
+		return problemError(http.StatusConflict, "search_reindex_already_queued", "A search reindex is already queued or running.", err)
 	case errors.Is(err, searchservice.ErrCapacity):
 		return problemError(http.StatusTooManyRequests, "search_capacity_exhausted", "Search is busy. Please try again shortly.", err)
 	case errors.Is(err, searchservice.ErrCircuitOpen), errors.Is(err, searchservice.ErrIndexUnavailable):

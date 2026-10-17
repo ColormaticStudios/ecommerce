@@ -3,6 +3,8 @@ package httpapi_test
 import (
 	"bytes"
 	"context"
+	"ecommerce/internal/jobs"
+	"ecommerce/internal/searchprojection"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -22,7 +24,7 @@ import (
 func searchRankingRouter(t *testing.T) *gin.Engine {
 	t.Helper()
 	db := catalogTestDB(t)
-	require.NoError(t, db.AutoMigrate(&models.SearchQueryEvent{}, &models.SearchClickEvent{}, &models.SearchCartAttribution{}, &models.SearchOrderAttribution{}, &models.SearchRevokedSession{}, &models.SearchRankingProfile{}, &models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}, &models.SearchDocument{}, &models.SearchIndexState{}, &models.SearchSalesSignal{}, &models.SearchConversionSignal{}, &models.Product{}, &models.SearchMerchandisingRule{}, &models.SearchMerchandisingAudit{}))
+	require.NoError(t, db.AutoMigrate(&models.SearchQueryEvent{}, &models.SearchClickEvent{}, &models.SearchCartAttribution{}, &models.SearchOrderAttribution{}, &models.SearchRevokedSession{}, &models.SearchConfigurationAudit{}, &models.SearchRankingProfile{}, &models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}, &searchprojection.Rank{}, &searchprojection.Category{}, &searchprojection.Attribute{}, &searchprojection.Term{}, &models.SearchDocument{}, &models.SearchIndexState{}, &models.SearchCatalogFanoutDebt{}, &models.SearchInventoryRevision{}, &models.SearchProductRevision{}, &models.SearchSalesSignal{}, &models.SearchConversionSignal{}, &models.Product{}, &models.SearchMerchandisingRule{}, &models.SearchMerchandisingAudit{}))
 	service := searchservice.NewService(db, nil, nil)
 	_, err := service.CreateRankingProfile(context.Background(), searchservice.RankingProfileInput{Name: "default", IsDefault: true, Weights: searchservice.RankingWeights{TokenCoverage: 10, Name: 10, ExactPhrase: 10}}, nil)
 	require.NoError(t, err)
@@ -35,8 +37,9 @@ func searchRankingRouter(t *testing.T) *gin.Engine {
 	require.NoError(t, err)
 	now := time.Now().UTC()
 	require.NoError(t, searchservice.NewDatabaseBackend(db).Upsert(context.Background(), models.SearchDocument{EntityType: "product", EntityID: 42, PayloadJSON: string(payload), SearchableText: "canvas bag", NormalizedName: "canvas bag", Active: true, Version: 1, SourceCreatedAt: now, SourceUpdatedAt: now, IndexedAt: now}))
-	endpoints, err := httpapi.NewCatalogEndpoints(db, nil)
+	endpoints, err := httpapi.NewCatalogEndpoints(db, nil, jobs.NewRuntime(db, jobs.Config{}))
 	require.NoError(t, err)
+	require.NoError(t, endpoints.ConfigureAnalyticsSigningKey([]byte("secret")))
 	policies, err := httpapi.ContractPolicySet()
 	require.NoError(t, err)
 	gin.SetMode(gin.TestMode)
@@ -133,8 +136,15 @@ func TestSearchRankingExplainIsAdminOnlyAndPublicMetadata(t *testing.T) {
 	require.NoError(t, json.Unmarshal(public.Body.Bytes(), &result))
 	require.Equal(t, "default", result.Metadata.RankingProfile)
 	require.Equal(t, 1, result.Metadata.RankingProfileVersion)
-	assertRankingProblem(t, rankingRequest(t, router, "GET", "/api/v1/search/products?ranking_profile=unknown", "", ""), 404)
-	assertRankingProblem(t, rankingRequest(t, router, "GET", "/api/v1/search/products?ranking_profile=%20", "", ""), 400)
+	// Removed public selectors cannot choose a profile or reveal its existence.
+	for _, profile := range []string{"unknown", "%20"} {
+		ignored := rankingRequest(t, router, "GET", "/api/v1/search/products?ranking_profile="+profile, "", "")
+		require.Equal(t, 200, ignored.Code, ignored.Body.String())
+		require.NoError(t, json.Unmarshal(ignored.Body.Bytes(), &result))
+		require.Equal(t, "default", result.Metadata.RankingProfile)
+	}
+	assertRankingProblem(t, rankingRequest(t, router, "GET", "/api/v1/admin/search/products?ranking_profile=unknown", "", "admin"), 404)
+	assertRankingProblem(t, rankingRequest(t, router, "GET", "/api/v1/admin/search/products?ranking_profile=%20", "", "admin"), 400)
 }
 
 func rankingWeightsInput(value apicontract.SearchRankingWeights) apicontract.SearchRankingWeightsInput {

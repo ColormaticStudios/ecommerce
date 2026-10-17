@@ -121,7 +121,7 @@ func (s *Service) RecomputeConversionSignalsTx(ctx context.Context, tx *gorm.DB)
 		if resetErr := tx.WithContext(ctx).Model(&models.SearchIndexState{}).Where("name = ?", ProductIndexName).UpdateColumn("generation", gorm.Expr("generation + 1")).Error; resetErr != nil {
 			return resetErr
 		}
-		slog.WarnContext(ctx, "Conversion ranking snapshot cleared after consent revocation", "event", "search_conversion_revocation_reset", "error_type", fmt.Sprintf("%T", err))
+		slog.WarnContext(ctx, "Conversion ranking snapshot cleared after consent revocation", "event", "search_conversion_revocation_reset", "error_type", fmt.Sprintf("%T", err), "error", ErrorDiagnostic(err))
 	}
 	return tx.Exec("RELEASE SAVEPOINT " + savepoint).Error
 

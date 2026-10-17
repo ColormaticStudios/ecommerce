@@ -22,6 +22,7 @@ const (
 	EntityTypeProductVariant     EntityType = "product_variant"
 	EntityTypeProductOption      EntityType = "product_option"
 	EntityTypeProductOptionValue EntityType = "product_option_value"
+	EntityTypeProductAttribute   EntityType = "product_attribute"
 	EntityTypeBrand              EntityType = "brand"
 	EntityTypeCategory           EntityType = "category"
 	EntityTypeWebsiteSettings    EntityType = "website_settings"
@@ -59,6 +60,7 @@ var entityPolicies = map[EntityType]entityPolicy{
 	EntityTypeProductVariant:     {table: "product_variants", fields: []string{"title"}},
 	EntityTypeProductOption:      {table: "product_options", fields: []string{"name"}},
 	EntityTypeProductOptionValue: {table: "product_option_values", fields: []string{"value"}},
+	EntityTypeProductAttribute:   {table: "product_attributes", fields: []string{"key"}},
 	EntityTypeBrand:              {table: "brands", fields: []string{"name", "description"}},
 	EntityTypeCategory:           {table: "categories", fields: []string{"name", "description"}},
 	EntityTypeWebsiteSettings:    {table: "website_settings", fields: []string{"site_title"}},

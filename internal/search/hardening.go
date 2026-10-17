@@ -197,7 +197,7 @@ func (s *Service) suggestWithProtection(ctx context.Context, q string, limit int
 	}
 	h.finish(s.now(), err, generation)
 	if err == nil {
-		result.Popular, result.Trending, err = s.PopularQueries(bounded, q, limit)
+		// Arbitrary shopper text is never promoted into public suggestions.
 	}
 	return result, err
 }
@@ -229,69 +229,9 @@ func (s *Service) catalogFallback(ctx context.Context, f Filters) (Result, error
 			}
 		}
 	}
-	documents := []indexedProduct{}
-	var cursor uint
-	for {
-		if err := ctx.Err(); err != nil {
-			return Result{}, err
-		}
-		var batch []models.Product
-		err := s.db.WithContext(ctx).Preload("Brand").Preload("Categories").Preload("Variants").Preload("AttributeValues.ProductAttribute").Where("products.is_published = ? AND products.id > ?", true, cursor).Order("products.id ASC").Limit(250).Find(&batch).Error
-		if err != nil {
-			return Result{}, err
-		}
-		if len(batch) == 0 {
-			break
-		}
-		rows := make([]models.SearchDocument, 0, len(batch))
-		for _, product := range batch {
-			cursor = product.ID
-			if hidden[product.ID] {
-				continue
-			}
-			row, include, err := projectProduct(product, s.now())
-			if err != nil {
-				return Result{}, err
-			}
-			if include {
-				rows = append(rows, row)
-			}
-		}
-		decoded, err := decodeIndexedProducts(ctx, rows)
-		if err != nil {
-			return Result{}, err
-		}
-		for _, item := range decoded {
-			if matchesFilters(item, normalized, "") {
-				documents = append(documents, item)
-			}
-		}
+	hiddenIDs := []uint{}
+	for id := range hidden {
+		hiddenIDs = append(hiddenIDs, id)
 	}
-	field := f.SortField
-	if field == "" || field == "relevance" {
-		field = "created_at"
-	}
-	sortIndexedProducts(documents, field, f.SortOrder)
-	page, limit := f.Page, f.Limit
-	if page < 1 {
-		page = 1
-	}
-	if limit < 1 {
-		limit = 20
-	}
-	if limit > 100 {
-		limit = 100
-	}
-	total := len(documents)
-	pages := (total + limit - 1) / limit
-	start := total
-	if page <= total/limit+1 {
-		start = min((page-1)*limit, total)
-	}
-	end := min(start+limit, total)
-	products := make([]models.Product, 0, end-start)
-	for _, item := range documents[start:end] {
-		products = append(products, *item.product)
-	}
-	return Result{Products: products, Facets: []Facet{}, Total: int64(total), TotalPages: pages, NormalizedQuery: NormalizeQuery(f.Query), AppliedRewrites: []AppliedRewrite{}}, nil
+	return s.canonicalSQLPage(ctx, f, normalized, hiddenIDs)
 }

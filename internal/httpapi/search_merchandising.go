@@ -134,6 +134,9 @@ func (e *CatalogEndpoints) PreviewAdminSearch(ctx context.Context, request apico
 	if err != nil {
 		return nil, err
 	}
+	if err := setAdminSearchProfile(&filters, request.Body.Filters.RankingProfile); err != nil {
+		return nil, err
+	}
 	input := searchservice.MerchandisingPreviewInput{Filters: filters, At: request.Body.At}
 	if request.Body.Rules != nil {
 		rules := make([]searchservice.MerchandisingRule, 0, len(*request.Body.Rules))
@@ -232,7 +235,7 @@ func merchandisingRuleContract(value searchservice.MerchandisingRule) apicontrac
 	return apicontract.SearchMerchandisingRule{Id: int(value.ID), Name: value.Name, RuleType: apicontract.SearchMerchandisingRuleRuleType(value.RuleType), Predicate: predicate, Action: apicontract.SearchMerchandisingAction{Targets: targets, Multiplier: value.Action.Multiplier}, Priority: value.Priority, StartsAt: value.StartsAt, EndsAt: value.EndsAt, IsActive: value.IsActive, Version: value.Version, UpdatedBy: searchConfigurationUpdatedBy(value.UpdatedBy), CreatedAt: value.CreatedAt, UpdatedAt: value.UpdatedAt}
 }
 func previewSearchParams(body apicontract.SearchPreviewFilters) apicontract.SearchProductsParams {
-	params := apicontract.SearchProductsParams{Q: body.Q, MinPrice: body.MinPrice, MaxPrice: body.MaxPrice, BrandSlug: body.BrandSlug, CategorySlug: body.CategorySlug, HasVariantStock: body.HasVariantStock, PriceRange: body.PriceRange, Attribute: body.Attribute, RankingProfile: body.RankingProfile, Page: body.Page, Limit: body.Limit}
+	params := apicontract.SearchProductsParams{Q: body.Q, MinPrice: body.MinPrice, MaxPrice: body.MaxPrice, BrandSlug: body.BrandSlug, CategorySlug: body.CategorySlug, HasVariantStock: body.HasVariantStock, PriceRange: body.PriceRange, Attribute: body.Attribute, Page: body.Page, Limit: body.Limit}
 	if body.Sort != nil {
 		sort := apicontract.SearchProductsParamsSort(*body.Sort)
 		params.Sort = &sort

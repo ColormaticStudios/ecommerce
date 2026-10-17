@@ -84,6 +84,7 @@ paths:
             ETag:
               schema: { type: string }
             Cache-Control:
+              description: Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution.
               schema: { type: string }
           content:
             application/json:
@@ -95,6 +96,7 @@ paths:
             ETag:
               schema: { type: string }
             Cache-Control:
+              description: Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution.
               schema: { type: string }
         "400":
           $ref: "#/components/responses/BadRequestProblem"
@@ -128,6 +130,7 @@ paths:
             ETag:
               schema: { type: string }
             Cache-Control:
+              description: Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution.
               schema: { type: string }
           content:
             application/json:
@@ -139,6 +142,7 @@ paths:
             ETag:
               schema: { type: string }
             Cache-Control:
+              description: Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution.
               schema: { type: string }
         "400":
           $ref: "#/components/responses/BadRequestProblem"
@@ -933,6 +937,39 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerErrorProblem'
 
+  /api/v1/search/proofs:
+    post:
+      tags: [search]
+      operationId: createSearchProof
+      security: []
+      summary: Exchange a cacheable server snapshot for a consented browser exposure proof
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchProofInput'
+      responses:
+        '200':
+          description: Short-lived exposure proof; this response must not be cached
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchProofResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestProblem'
+        '403':
+          $ref: '#/components/responses/ForbiddenProblem'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsProblem'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorProblem'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableProblem'
   /api/v1/search/impressions:
     post:
       tags:
@@ -940,6 +977,8 @@ paths:
       operationId: createSearchImpression
       summary: Record an opted-in search impression
       responses:
+        '403':
+          $ref: '#/components/responses/ForbiddenProblem'
         "503":
           $ref: "#/components/responses/ServiceUnavailableProblem"
         "429":
@@ -968,6 +1007,10 @@ paths:
       operationId: createSearchEvent
       summary: Record a verified search result click
       responses:
+        '403':
+          $ref: '#/components/responses/ForbiddenProblem'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsProblem'
         '200':
           description: Success
           content:
@@ -1015,6 +1058,8 @@ paths:
           minimum: 1
           maximum: 90
           default: 7
+      - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+      - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
   /api/v1/admin/search/incidents:
     get:
       tags: [admin, search]
@@ -1041,6 +1086,30 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerErrorProblem'
 
+  /api/v1/admin/search/configuration-history:
+    get:
+      tags: [admin, search]
+      operationId: listAdminSearchConfigurationHistory
+      summary: List immutable search configuration changes
+      parameters:
+        - { name: kind, in: query, schema: { type: string, enum: [synonym, typo_profile, ranking_profile] } }
+        - { name: entity_id, in: query, schema: { type: integer, minimum: 1 } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, maximum: 1000000, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        '200':
+          description: Configuration changes, newest first
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SearchConfigurationAuditListResponse' }
+        '400':
+          $ref: '#/components/responses/BadRequestProblem'
+        '401':
+          $ref: '#/components/responses/AuthenticationRequiredProblem'
+        '403':
+          $ref: '#/components/responses/ForbiddenProblem'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorProblem'
   /api/v1/admin/search/operations:
     get:
       tags:
@@ -1159,13 +1228,6 @@ paths:
                 type: string
                 minLength: 1
                 maxLength: 120
-        - in: query
-          name: ranking_profile
-          description: Named ranking profile; omitted selects the global default.
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 120
         - in: query
           name: sort
           description: Defaults to relevance for a keyword query and newest for an empty query.
@@ -8586,7 +8648,7 @@ components:
 
     LocalizedEntityType:
       type: string
-      enum: [product, product_variant, product_option, product_option_value, brand, category, website_settings, seo_metadata]
+      enum: [product, product_variant, product_option, product_option_value, product_attribute, brand, category, website_settings, seo_metadata]
 
     LocalizedFieldSet:
       type: object
@@ -13016,12 +13078,36 @@ components:
         session_token:
           type: string
 
+    SearchProofInput:
+      type: object
+      additionalProperties: false
+      required: [snapshot_token, consent, event_id]
+      properties:
+        snapshot_token:
+          type: string
+          minLength: 1
+          maxLength: 65536
+        consent:
+          type: boolean
+          enum: [true]
+        event_id:
+          type: string
+          format: uuid
+    SearchProofResponse:
+      type: object
+      required: [result_token]
+      properties:
+        result_token:
+          type: string
+          maxLength: 65536
+
     SearchImpressionInput:
       type: object
+      additionalProperties: false
       required:
       - event_id
       - consent
-      - filters
+      - result_token
       properties:
         event_id:
           type: string
@@ -13033,100 +13119,21 @@ components:
         session_token:
           type: string
           maxLength: 128
-        filters:
-          type: object
-          properties:
-            q:
-              type: string
-              maxLength: 200
-            min_price:
-              type: number
-              format: double
-              minimum: 0
-              maximum: 9999999999.99
-            max_price:
-              type: number
-              format: double
-              minimum: 0
-              maximum: 9999999999.99
-            brand_slug:
-              type: array
-              maxItems: 20
-              items:
-                type: string
-                minLength: 1
-                maxLength: 120
-              description: Same semantics as the public search query parameter.
-            category_slug:
-              type: array
-              maxItems: 20
-              items:
-                type: string
-                minLength: 1
-                maxLength: 120
-              description: Same semantics as the public search query parameter.
-            has_variant_stock:
-              type: array
-              maxItems: 2
-              items:
-                type: boolean
-              description: Same semantics as the public search query parameter.
-            price_range:
-              type: array
-              maxItems: 10
-              items:
-                type: string
-                pattern: ^(?:[0-9]+(?:\.[0-9]{1,2})?:(?:[0-9]+(?:\.[0-9]{1,2})?)?|:(?:[0-9]+(?:\.[0-9]{1,2})?))$
-              description: Same semantics as the public search query parameter.
-            attribute:
-              type: object
-              maxProperties: 20
-              additionalProperties:
-                type: array
-                minItems: 1
-                maxItems: 20
-                items:
-                  type: string
-                  minLength: 1
-                  maxLength: 120
-              description: Same semantics as the public search query parameter.
-            ranking_profile:
-              type: string
-              minLength: 1
-              maxLength: 120
-            sort:
-              type: string
-              enum:
-              - relevance
-              - price
-              - name
-              - created_at
-            order:
-              type: string
-              enum:
-              - asc
-              - desc
-            page:
-              type: integer
-              minimum: 1
-            limit:
-              type: integer
-              minimum: 1
-              maximum: 100
-          x-go-type: '*SearchPreviewFilters'
+        result_token:
+          type: string
+          minLength: 1
+          maxLength: 65536
+          description: Short-lived signed server exposure snapshot from public search; never produced for admin or degraded results.
     SearchImpressionResponse:
       type: object
       required:
       - impression_id
       - session_token
-      - result
       properties:
         impression_id:
           type: string
         session_token:
           type: string
-        result:
-          $ref: '#/components/schemas/ProductSearchResponse'
     SearchEventInput:
       type: object
       required:
@@ -13229,6 +13236,7 @@ components:
     SearchAnalytics:
       type: object
       required:
+      - pagination
       - facet_usage
       - zero_result_rate
       - ctr_at_5
@@ -13251,6 +13259,8 @@ components:
       - popular
       - trending
       properties:
+        pagination:
+          $ref: '#/components/schemas/Pagination'
         facet_usage:
           type: object
           additionalProperties:
@@ -13333,6 +13343,26 @@ components:
           items: { $ref: '#/components/schemas/SearchIndexIncident' }
         pagination: { $ref: '#/components/schemas/Pagination' }
 
+    SearchConfigurationAudit:
+      type: object
+      required: [id, kind, entity_id, operation, actor_id, before, after, created_at]
+      properties:
+        id: { type: integer }
+        kind: { type: string, enum: [synonym, typo_profile, ranking_profile] }
+        entity_id: { type: integer }
+        operation: { type: string, enum: [baseline, create, update, delete] }
+        actor_id: { type: integer, nullable: true }
+        before: { type: object, additionalProperties: true, nullable: true }
+        after: { type: object, additionalProperties: true, nullable: true }
+        created_at: { type: string, format: date-time }
+    SearchConfigurationAuditListResponse:
+      type: object
+      required: [items, pagination]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/SearchConfigurationAudit' }
+        pagination: { $ref: '#/components/schemas/Pagination' }
     SearchOperationsStatus:
       type: object
       required:
@@ -13429,6 +13459,14 @@ components:
       type: object
       required: [items, facets, metadata, pagination]
       properties:
+        result_snapshot:
+          type: string
+          maxLength: 65536
+          description: Server-signed snapshot valid for one hour. Cacheable pages exchange it through the consented browser proof endpoint; omitted for admin or degraded search.
+        result_token:
+          type: string
+          maxLength: 65536
+          description: Signed exposure proof expiring after five minutes. Omitted for admin or degraded search.
         items:
           type: array
           items:
@@ -13444,21 +13482,13 @@ components:
 
     SearchSuggestionsResponse:
       type: object
-      required: [suggestions, corrections, popular, trending]
+      required: [suggestions, corrections]
       properties:
-        trending:
-          type: array
-          items:
-            type: string
         suggestions:
           type: array
           items:
             type: string
         corrections:
-          type: array
-          items:
-            type: string
-        popular:
           type: array
           items:
             type: string
@@ -13505,7 +13535,10 @@ components:
           type: string
         status:
           type: string
-          enum: [queued]
+          enum: [queued, succeeded]
+        disposition:
+          type: string
+          enum: [queued, reused_completed]
 
     SearchReindexAccepted:
       type: object

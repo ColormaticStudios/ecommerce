@@ -36,7 +36,7 @@ func TestBusinessSignalsAndIncidentSerializationPostgres(t *testing.T) {
 	sqlDB, err := db.DB()
 	require.NoError(t, err)
 	defer sqlDB.Close()
-	require.NoError(t, db.AutoMigrate(&models.SearchIndexState{}, &models.SearchQueryEvent{}, &models.SearchClickEvent{}, &models.SearchRevokedSession{}, &models.SearchConversionSignal{}, &models.SearchOrderAttribution{}, &models.SearchCartAttribution{}, &models.SearchIndexIncident{}, &models.SearchFreshnessObservation{}, &models.JobQueue{}))
+	require.NoError(t, db.AutoMigrate(&models.SearchIndexState{}, &models.SearchCatalogFanoutDebt{}, &models.SearchInventoryRevision{}, &models.SearchProductRevision{}, &models.SearchQueryEvent{}, &models.SearchClickEvent{}, &models.SearchRevokedSession{}, &models.SearchConversionSignal{}, &models.SearchOrderAttribution{}, &models.SearchCartAttribution{}, &models.SearchIndexIncident{}, &models.SearchFreshnessObservation{}, &models.JobQueue{}))
 	require.NoError(t, db.Exec("CREATE UNIQUE INDEX idx_search_open ON search_index_incidents(index_name) WHERE recovered_at IS NULL").Error)
 	require.NoError(t, db.Exec("CREATE TABLE orders (id INTEGER PRIMARY KEY,status TEXT,created_at TIMESTAMPTZ,deleted_at TIMESTAMPTZ)").Error)
 	now := time.Date(2026, 10, 8, 0, 0, 0, 0, time.UTC)

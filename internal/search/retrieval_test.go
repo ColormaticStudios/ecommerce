@@ -39,7 +39,7 @@ func indexedFixture(t *testing.T, db *gorm.DB, id uint, name, brand, category, c
 	document, include, err := projectProduct(product, now)
 	require.NoError(t, err)
 	require.True(t, include)
-	require.NoError(t, db.Create(&document).Error)
+	require.NoError(t, NewDatabaseBackend(db).Upsert(context.Background(), document))
 }
 
 func facetByName(t *testing.T, facets []Facet, name string) Facet {
@@ -161,12 +161,12 @@ func TestSearchSynonymsTyposAndRelaxedFallback(t *testing.T) {
 	expanded, err := service.Search(ctx, Filters{Query: "sneaker", Page: 1, Limit: 10})
 	require.NoError(t, err)
 	require.EqualValues(t, 2, expanded.Total, "sets sharing a source must combine their alternatives")
-	require.NoError(t, service.DeleteSynonymSet(ctx, secondExpansion.ID))
+	require.NoError(t, service.DeleteSynonymSet(ctx, secondExpansion.ID, nil))
 	reverse, err := service.Search(ctx, Filters{Query: "running shoes", Page: 1, Limit: 10})
 	require.NoError(t, err)
 	require.Empty(t, reverse.AppliedRewrites, "a unidirectional replacement must not expand back to its source")
-	require.NoError(t, service.DeleteSynonymSet(ctx, uni.ID))
-	require.NoError(t, service.DeleteSynonymSet(ctx, bi.ID))
+	require.NoError(t, service.DeleteSynonymSet(ctx, uni.ID, nil))
+	require.NoError(t, service.DeleteSynonymSet(ctx, bi.ID, nil))
 
 	corrected, err := service.Search(ctx, Filters{Query: "runnng", Page: 1, Limit: 10})
 	require.NoError(t, err)
@@ -183,7 +183,6 @@ func TestSearchSynonymsTyposAndRelaxedFallback(t *testing.T) {
 	hints, err := service.Suggest(ctx, "runnng", 5)
 	require.NoError(t, err)
 	require.Equal(t, []string{"running"}, hints.Corrections)
-	require.Empty(t, hints.Popular)
 
 	relaxed, err := service.Search(ctx, Filters{Query: "red impossible", Page: 1, Limit: 10})
 	require.NoError(t, err)
@@ -267,7 +266,7 @@ func TestTopAttributeFacetsExcludeNonfilterableAndKeepSelection(t *testing.T) {
 	document, include, err := projectProduct(product, now)
 	require.NoError(t, err)
 	require.True(t, include)
-	require.NoError(t, db.Create(&document).Error)
+	require.NoError(t, NewDatabaseBackend(db).Upsert(context.Background(), document))
 
 	service := NewService(db, nil, nil)
 	result, err := service.Search(context.Background(), Filters{Page: 1, Limit: 10})

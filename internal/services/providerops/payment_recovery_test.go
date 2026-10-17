@@ -2,6 +2,7 @@ package providerops
 
 import (
 	"context"
+	"ecommerce/internal/jobs"
 	"errors"
 	"fmt"
 	"sync/atomic"
@@ -74,7 +75,7 @@ func newPaymentRecoveryDB(t *testing.T) *gorm.DB {
 		&models.ProviderReconciliationCase{},
 		&models.ProviderCallAudit{},
 	))
-	return db
+	return jobs.WithRuntime(db, jobs.NewRuntime(db, jobs.Config{}))
 }
 
 func TestPaymentRequestFingerprintIgnoresTransportIdentity(t *testing.T) {

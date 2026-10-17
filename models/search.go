@@ -8,8 +8,8 @@ import "time"
 type SearchDocument struct {
 	MarginRate      float64   `gorm:"not null;default:0" json:"-"`
 	ID              uint      `gorm:"primaryKey"`
-	EntityType      string    `gorm:"not null;size:32;uniqueIndex:idx_search_documents_entity,priority:1;index"`
-	EntityID        uint      `gorm:"not null;uniqueIndex:idx_search_documents_entity,priority:2;index"`
+	EntityType      string    `gorm:"not null;size:32;uniqueIndex:idx_search_documents_entity,priority:1;index;index:idx_search_documents_eligibility,priority:1"`
+	EntityID        uint      `gorm:"not null;uniqueIndex:idx_search_documents_entity,priority:2;index;index:idx_search_documents_eligibility,priority:3"`
 	PayloadJSON     string    `gorm:"type:text;not null"`
 	SearchableText  string    `gorm:"type:text;not null"`
 	NormalizedName  string    `gorm:"not null;size:255;index"`
@@ -19,7 +19,7 @@ type SearchDocument struct {
 	MinPrice        Money     `gorm:"type:numeric(12,2);not null;index"`
 	MaxPrice        Money     `gorm:"type:numeric(12,2);not null;index"`
 	Available       bool      `gorm:"not null;default:false;index"`
-	Active          bool      `gorm:"not null;default:true;index"`
+	Active          bool      `gorm:"not null;default:true;index;index:idx_search_documents_eligibility,priority:2"`
 	Version         int64     `gorm:"not null"`
 	SourceCreatedAt time.Time `gorm:"not null;index"`
 	SourceUpdatedAt time.Time `gorm:"not null;index"`
@@ -35,9 +35,10 @@ type SearchIndexState struct {
 	LastIndexedAt           *time.Time `gorm:"index"`
 	LastFullReindexStarted  *time.Time
 	LastFullReindexAt       *time.Time `gorm:"index"`
-	DocumentCount           int64      `gorm:"not null;default:0"`
-	CreatedAt               time.Time  `gorm:"not null"`
-	UpdatedAt               time.Time  `gorm:"not null"`
+	LastFullReindexSourceAt *time.Time
+	DocumentCount           int64     `gorm:"not null;default:0"`
+	CreatedAt               time.Time `gorm:"not null"`
+	UpdatedAt               time.Time `gorm:"not null"`
 }
 
 type SearchSynonymSet struct {
@@ -98,9 +99,12 @@ type SearchMerchandisingAudit struct {
 }
 
 type SearchQueryEvent struct {
-	ResultJSON      string    `gorm:"type:text"`
+	SnapshotID      string    `gorm:"size:64;uniqueIndex:idx_search_session_snapshot,priority:2"`
+	FirstPosition   int       `gorm:"not null;default:1"`
+	ProductCount    int       `gorm:"not null;default:0"`
+	FacetMask       int       `gorm:"not null;default:0"`
 	ImpressionID    string    `gorm:"size:64;uniqueIndex"`
-	SessionHash     string    `gorm:"size:64;index"`
+	SessionHash     string    `gorm:"size:64;index;uniqueIndex:idx_search_session_snapshot,priority:1"`
 	ProductsJSON    string    `gorm:"type:text"`
 	ID              uint      `gorm:"primaryKey"`
 	Query           string    `gorm:"type:text;not null"`
@@ -162,4 +166,46 @@ type SearchConversionSignal struct {
 	Conversions30Days int64     `gorm:"not null;default:0"`
 	AsOf              time.Time `gorm:"not null;index"`
 	UpdatedAt         time.Time `gorm:"not null"`
+}
+
+// SearchProductRevision records projection debt independently of job status.
+// PendingSince survives failed delivery until a successful covered projection.
+type SearchProductRevision struct {
+	ProductID       uint       `gorm:"primaryKey;autoIncrement:false"`
+	Revision        int64      `gorm:"not null"`
+	IndexedRevision int64      `gorm:"not null;default:0"`
+	ChangedAt       time.Time  `gorm:"not null"`
+	PendingSince    *time.Time `gorm:"index"`
+}
+
+// SearchInventoryRevision records stock projection debt at the variant boundary,
+// avoiding a shared product revision lock in unrelated variant checkouts.
+type SearchInventoryRevision struct {
+	VariantID    uint       `gorm:"primaryKey;autoIncrement:false"`
+	ProductID    uint       `gorm:"not null;index"`
+	Revision     int64      `gorm:"not null"`
+	ChangedAt    time.Time  `gorm:"not null"`
+	PendingSince *time.Time `gorm:"index"`
+}
+
+// SearchCatalogFanoutDebt is committed alongside the shared source mutation.
+// Rebuild coverage names exact committed job identities, never wall-clock time.
+type SearchCatalogFanoutDebt struct {
+	JobID         string     `gorm:"primaryKey;size:36"`
+	PendingSince  time.Time  `gorm:"not null;index"`
+	CoveredAt     *time.Time `gorm:"index"`
+	LastProductID uint       `gorm:"not null;default:0"`
+}
+
+// SearchConfigurationAudit is an immutable snapshot of a configuration change,
+// including changes to active/default ownership and deleted configurations.
+type SearchConfigurationAudit struct {
+	ID         uint   `gorm:"primaryKey"`
+	Kind       string `gorm:"size:32;not null;index:idx_search_configuration_history,priority:1"`
+	EntityID   uint   `gorm:"not null;index:idx_search_configuration_history,priority:2"`
+	Operation  string `gorm:"size:16;not null"`
+	ActorID    *uint
+	BeforeJSON *string   `gorm:"type:text"`
+	AfterJSON  *string   `gorm:"type:text"`
+	CreatedAt  time.Time `gorm:"not null;index"`
 }

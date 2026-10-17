@@ -9,6 +9,7 @@ import (
 	"ecommerce/internal/apperror"
 	"ecommerce/internal/jobs"
 	"ecommerce/internal/media"
+	searchservice "ecommerce/internal/search"
 	"ecommerce/internal/services/categories"
 	localizationservice "ecommerce/internal/services/localization"
 	"ecommerce/models"
@@ -35,11 +36,7 @@ type Service struct {
 	jobs  *jobs.Runtime
 }
 
-func NewService(db *gorm.DB, mediaService *media.Service, runtimes ...*jobs.Runtime) *Service {
-	var runtime *jobs.Runtime
-	if len(runtimes) != 0 {
-		runtime = runtimes[0]
-	}
+func NewService(db *gorm.DB, mediaService *media.Service, runtime *jobs.Runtime) *Service {
 	return &Service{db: db, media: mediaService, jobs: runtime}
 }
 
@@ -121,7 +118,10 @@ func (s *Service) UpdateBrand(ctx context.Context, id uint, input apicontract.Br
 		if err != nil {
 			return err
 		}
-		return replaceBrandLogo(tx, brand.ID, logoID)
+		if err := replaceBrandLogo(tx, brand.ID, logoID); err != nil {
+			return err
+		}
+		return searchservice.EnqueueCatalogFanoutTx(ctx, s.jobs, tx, "brand", []uint{brand.ID})
 	})
 	if err == nil {
 		s.cleanupMedia(removed)
@@ -320,7 +320,12 @@ func (s *Service) UpdateCategory(ctx context.Context, id uint, input apicontract
 		}, nil); err != nil {
 			return err
 		}
-		return rebuildCategoryPaths(tx, category)
+		descendants, err := rebuildCategoryPaths(tx, category)
+		if err != nil {
+			return err
+		}
+		categoryIDs := append([]uint{category.ID}, descendants...)
+		return searchservice.EnqueueCatalogFanoutTx(ctx, s.jobs, tx, "category", categoryIDs)
 	})
 	return category, err
 }
@@ -423,25 +428,29 @@ func validateCategory(db *gorm.DB, input apicontract.CategoryInput, excludeID ui
 	return result, nil
 }
 
-func rebuildCategoryPaths(db *gorm.DB, parent models.Category) error {
+func rebuildCategoryPaths(db *gorm.DB, parent models.Category) ([]uint, error) {
 	var children []models.Category
 	if err := db.Where("parent_id = ?", parent.ID).Find(&children).Error; err != nil {
-		return err
+		return nil, err
 	}
+	var affected []uint
 	for i := range children {
 		children[i].Depth = parent.Depth + 1
 		children[i].Path = strings.TrimRight(parent.Path, "/") + "/" + children[i].Slug
 		if children[i].Depth > maxCategoryDepth {
-			return invalidInput("category_depth_exceeded", "Category depth exceeds the maximum.")
+			return nil, invalidInput("category_depth_exceeded", "Category depth exceeds the maximum.")
 		}
 		if err := db.Save(&children[i]).Error; err != nil {
-			return err
+			return nil, err
 		}
-		if err := rebuildCategoryPaths(db, children[i]); err != nil {
-			return err
+		descendants, err := rebuildCategoryPaths(db, children[i])
+		if err != nil {
+			return nil, err
 		}
+		affected = append(affected, children[i].ID)
+		affected = append(affected, descendants...)
 	}
-	return nil
+	return affected, nil
 }
 
 func (s *Service) ListAttributes(ctx context.Context, filterableOnly bool) ([]models.ProductAttribute, error) {
@@ -453,16 +462,22 @@ func (s *Service) ListAttributes(ctx context.Context, filterableOnly bool) ([]mo
 	return values, db.Order("key asc, id asc").Find(&values).Error
 }
 
-func (s *Service) CreateAttribute(ctx context.Context, input apicontract.ProductAttributeDefinitionInput) (models.ProductAttribute, error) {
+func (s *Service) CreateAttribute(ctx context.Context, input apicontract.ProductAttributeDefinitionInput, actor *uint) (models.ProductAttribute, error) {
 	db := s.db.WithContext(ctx)
 	value, err := validateAttribute(db, input, 0)
 	if err != nil {
 		return value, err
 	}
-	return value, db.Select("*").Create(&value).Error
+	err = db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Select("*").Create(&value).Error; err != nil {
+			return err
+		}
+		return localizationservice.SyncDefaultEntityLocalization(tx, localizationservice.EntityTypeProductAttribute, value.ID, map[string]string{"key": value.Key}, actor)
+	})
+	return value, err
 }
 
-func (s *Service) UpdateAttribute(ctx context.Context, id uint, input apicontract.ProductAttributeDefinitionInput) (models.ProductAttribute, error) {
+func (s *Service) UpdateAttribute(ctx context.Context, id uint, input apicontract.ProductAttributeDefinitionInput, actor *uint) (models.ProductAttribute, error) {
 	db := s.db.WithContext(ctx)
 	var value models.ProductAttribute
 	if err := db.First(&value, id).Error; err != nil {
@@ -474,7 +489,16 @@ func (s *Service) UpdateAttribute(ctx context.Context, id uint, input apicontrac
 	}
 	value.Key, value.Slug, value.Type = normalized.Key, normalized.Slug, normalized.Type
 	value.Filterable, value.Sortable, value.EnumValues = normalized.Filterable, normalized.Sortable, normalized.EnumValues
-	return value, db.Save(&value).Error
+	err = db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(&value).Error; err != nil {
+			return err
+		}
+		if err := localizationservice.SyncDefaultEntityLocalization(tx, localizationservice.EntityTypeProductAttribute, value.ID, map[string]string{"key": value.Key}, actor); err != nil {
+			return err
+		}
+		return searchservice.EnqueueCatalogFanoutTx(ctx, s.jobs, tx, "attribute", []uint{value.ID})
+	})
+	return value, err
 }
 
 func (s *Service) DeleteAttribute(ctx context.Context, id uint) error {

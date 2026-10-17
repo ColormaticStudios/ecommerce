@@ -51,6 +51,8 @@ func TestSearchRefreshRegisteredAuthorizationAndDailyQueue(t *testing.T) {
 			require.NoError(t, json.Unmarshal(response.Body.Bytes(), &accepted))
 			require.NotEmpty(t, accepted.JobId)
 			require.Equal(t, apicontract.SearchRefreshAcceptedStatusQueued, accepted.Status)
+			require.NotNil(t, accepted.Disposition)
+			require.Equal(t, apicontract.SearchRefreshAcceptedDispositionQueued, *accepted.Disposition)
 			var job models.JobQueue
 			require.NoError(t, db.First(&job, "id = ?", accepted.JobId).Error)
 			require.Equal(t, "search."+signal+"_refresh", job.JobType)
@@ -70,6 +72,9 @@ func TestSearchRefreshRegisteredAuthorizationAndDailyQueue(t *testing.T) {
 			var replay apicontract.SearchRefreshAccepted
 			require.NoError(t, json.Unmarshal(repeated.Body.Bytes(), &replay))
 			require.Equal(t, accepted.JobId, replay.JobId)
+			require.Equal(t, apicontract.SearchRefreshAcceptedStatusSucceeded, replay.Status)
+			require.NotNil(t, replay.Disposition)
+			require.Equal(t, apicontract.SearchRefreshAcceptedDispositionReusedCompleted, *replay.Disposition)
 			require.NoError(t, db.Model(&models.JobQueue{}).Count(&count).Error)
 			require.Equal(t, int64(1), count)
 			require.NoError(t, db.First(&job, "id = ?", accepted.JobId).Error)

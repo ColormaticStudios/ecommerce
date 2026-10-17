@@ -2,6 +2,7 @@ package providerops
 
 import (
 	"context"
+	"ecommerce/internal/jobs"
 	"errors"
 	"io"
 	"strings"
@@ -97,7 +98,7 @@ func newDurableShippingTaxDB(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory&cache=shared"), &gorm.Config{})
 	require.NoError(t, err)
 	require.NoError(t, db.AutoMigrate(&models.ProviderOperation{}, &models.ProviderOperationAttempt{}, &models.ProviderReconciliationCase{}))
-	return db
+	return jobs.WithRuntime(db, jobs.NewRuntime(db, jobs.Config{}))
 }
 
 func TestExecuteDurableShippingLabelSuppressesDuplicateProviderMutation(t *testing.T) {

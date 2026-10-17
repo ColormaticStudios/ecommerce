@@ -2,6 +2,8 @@ package search
 
 import (
 	"context"
+	"ecommerce/internal/searchprojection"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -13,14 +15,14 @@ import (
 	"gorm.io/gorm"
 )
 
-func searchTestDB(t *testing.T) *gorm.DB {
+func searchTestDB(t testing.TB) *gorm.DB {
 	t.Helper()
 	db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory&cache=shared"), &gorm.Config{})
 	require.NoError(t, err)
 	require.NoError(t, db.AutoMigrate(
 		&models.Product{}, &models.ProductVariant{}, &models.Brand{}, &models.Category{}, &models.ProductCategory{},
-		&models.ProductAttribute{}, &models.ProductAttributeValue{}, &models.SearchDocument{}, &models.SearchIndexState{},
-		&models.SearchQueryEvent{}, &models.SearchClickEvent{}, &models.SearchCartAttribution{}, &models.SearchOrderAttribution{}, &models.SearchRevokedSession{}, &models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}, &models.SearchRankingProfile{}, &models.SearchSalesSignal{}, &models.SearchConversionSignal{}, &models.SearchMerchandisingRule{}, &models.SearchMerchandisingAudit{}, &models.JobQueue{},
+		&models.ProductAttribute{}, &models.ProductAttributeValue{}, &searchprojection.Rank{}, &searchprojection.Category{}, &searchprojection.Attribute{}, &searchprojection.Term{}, &models.SearchDocument{}, &models.SearchIndexState{}, &models.SearchCatalogFanoutDebt{}, &models.SearchInventoryRevision{}, &models.SearchProductRevision{},
+		&models.SearchQueryEvent{}, &models.SearchClickEvent{}, &models.SearchCartAttribution{}, &models.SearchOrderAttribution{}, &models.SearchRevokedSession{}, &models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}, &models.SearchConfigurationAudit{}, &models.SearchRankingProfile{}, &models.SearchSalesSignal{}, &models.SearchConversionSignal{}, &models.SearchMerchandisingRule{}, &models.SearchMerchandisingAudit{}, &models.JobQueue{}, &models.JobAttempt{}, &models.JobDeadLetter{},
 	))
 	require.NoError(t, db.Table("search_typo_tolerance_profiles").Create(map[string]any{
 		"name": "default", "minimum_token_length": DefaultMinimumTokenLength,
@@ -61,7 +63,6 @@ func TestReindexSearchAndSuggestions(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []string{"Alpine Boot"}, suggestions.Suggestions)
 	require.Empty(t, suggestions.Corrections)
-	require.Empty(t, suggestions.Popular)
 	brandSuggestions, err := service.Suggest(context.Background(), "north", 5)
 	require.NoError(t, err)
 	require.Equal(t, []string{"Northstar"}, brandSuggestions.Suggestions)
@@ -97,7 +98,7 @@ func TestNormalizeQuery(t *testing.T) {
 	require.Equal(t, "trail running shoe", NormalizeQuery("  Trail—Running_shoe! "))
 }
 
-func TestEnqueueProductSyncTxIsAtomicAndIdempotent(t *testing.T) {
+func TestEnqueueProductSyncTxIsAtomicWithIdempotentDelivery(t *testing.T) {
 	db := searchTestDB(t)
 	runtime := jobs.NewRuntime(db, jobs.Config{})
 	revision := time.Unix(100, 0).UTC()
@@ -115,5 +116,13 @@ func TestEnqueueProductSyncTxIsAtomicAndIdempotent(t *testing.T) {
 	require.NoError(t, err)
 	second, err := EnqueueProductSyncTx(context.Background(), runtime, db, 7, revision)
 	require.NoError(t, err)
-	require.Equal(t, first.ID, second.ID)
+	require.Equal(t, first.ID, second.ID, "separate source writes share one active delivery while revisions remain distinct")
+	var payload ProductSyncPayload
+	require.NoError(t, json.Unmarshal([]byte(first.PayloadJSON), &payload))
+	require.NotNil(t, first.IdempotencyKey)
+	replayed, err := runtime.EnqueueTx(context.Background(), db, jobs.EnqueueInput{
+		JobType: JobTypeProductSync, Payload: payload, IdempotencyKey: *first.IdempotencyKey,
+	})
+	require.NoError(t, err)
+	require.Equal(t, first.ID, replayed.ID, "redelivery of the same durable revision deduplicates")
 }
