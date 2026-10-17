@@ -71,6 +71,9 @@ func (r *Runtime) finalize(ctx context.Context, claimed models.JobQueue, workerI
 			"status": status, "run_at": runAt, "lease_owner": "", "lease_expires_at": nil,
 			"attempt_started_at": nil, "completed_at": completedAt, "last_error": attempt.ErrorMessage,
 		}
+		if registration.ReleaseKeyOnCompletion && completedAt != nil {
+			updates["idempotency_key"] = nil
+		}
 		update := tx.Model(&models.JobQueue{}).
 			Where("id = ? AND status = ? AND lease_owner = ? AND attempt_count = ?", claimed.ID, models.JobStatusRunning, workerID, claimed.AttemptCount).
 			Updates(updates)
@@ -79,6 +82,11 @@ func (r *Runtime) finalize(ctx context.Context, claimed models.JobQueue, workerI
 		}
 		if update.RowsAffected != 1 {
 			return ErrLeaseLost
+		}
+		if status == models.JobStatusSucceeded && registration.OnSuccess != nil {
+			if err := registration.OnSuccess(ctx, tx, claimed); err != nil {
+				return fmt.Errorf("success hook: %w", err)
+			}
 		}
 		if result.deadLettered {
 			deadLetter := models.JobDeadLetter{

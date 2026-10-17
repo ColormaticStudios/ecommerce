@@ -27,6 +27,9 @@ func newTestRuntime(t *testing.T, configure func(*Config)) (*Runtime, *gorm.DB, 
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared&_busy_timeout=5000", t.Name())
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	require.NoError(t, err)
+	sqlDB, err := db.DB()
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, sqlDB.Close()) })
 	require.NoError(t, db.AutoMigrate(&models.JobQueue{}, &models.JobAttempt{}, &models.JobDeadLetter{}))
 	now := time.Date(2026, time.September, 3, 12, 0, 0, 0, time.UTC)
 	config := Config{

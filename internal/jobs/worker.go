@@ -138,13 +138,19 @@ func (r *Runtime) claim(ctx context.Context, jobID, workerID string) (models.Job
 					correlation.CorrelationID = correlation.RequestID
 				}
 				exhaustedContext = reliability.WithCorrelation(ctx, correlation)
+				registration, registered := r.registration(candidate.JobType)
+				updates := map[string]any{
+					"status": models.JobStatusDeadLetter, "lease_owner": "", "lease_expires_at": nil,
+					"attempt_started_at": nil, "completed_at": &now, "last_error": failure.Error(),
+				}
+				if registered && registration.ReleaseKeyOnCompletion {
+					updates["idempotency_key"] = nil
+					candidate.IdempotencyKey = nil
+				}
 				update := tx.Model(&models.JobQueue{}).
 					Where("id = ? AND status = ? AND lease_owner = ? AND attempt_count = ? AND lease_expires_at IS NOT NULL AND lease_expires_at <= ?",
 						candidate.ID, models.JobStatusRunning, candidate.LeaseOwner, candidate.AttemptCount, now).
-					Updates(map[string]any{
-						"status": models.JobStatusDeadLetter, "lease_owner": "", "lease_expires_at": nil,
-						"attempt_started_at": nil, "completed_at": &now, "last_error": failure.Error(),
-					})
+					Updates(updates)
 				if update.Error != nil {
 					return update.Error
 				}
@@ -159,7 +165,6 @@ func (r *Runtime) claim(ctx context.Context, jobID, workerID string) (models.Job
 				if err := tx.Create(&deadLetter).Error; err != nil {
 					return err
 				}
-				registration, registered := r.registration(candidate.JobType)
 				if registered && registration.OnDeadLetter != nil {
 					if err := registration.OnDeadLetter(exhaustedContext, tx, json.RawMessage(candidate.PayloadJSON), failure); err != nil {
 						return fmt.Errorf("dead-letter hook: %w", err)
@@ -216,6 +221,7 @@ func (r *Runtime) executeClaimed(ctx context.Context, job models.JobQueue, worke
 		correlation.CorrelationID = correlation.RequestID
 	}
 	executionContext, cancel := context.WithCancel(reliability.WithCorrelation(ctx, correlation))
+	executionContext = withExecution(executionContext, job, workerID, r.config.Now)
 	executionContext, span := otel.Tracer("ecommerce/jobs").Start(
 		executionContext,
 		job.JobType,

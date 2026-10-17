@@ -26,20 +26,27 @@ import (
 const maxPayloadBytes = 1024 * 1024
 
 var (
-	ErrNoRunnableJob       = errors.New("no runnable job")
-	ErrIdempotencyConflict = errors.New("job idempotency conflict")
-	ErrLeaseLost           = errors.New("job lease lost")
-	ErrInvalidJob          = errors.New("invalid job")
-	jobTypePattern         = regexp.MustCompile(`^[a-z][a-z0-9_.-]{0,127}$`)
+	ErrNoRunnableJob        = errors.New("no runnable job")
+	ErrIdempotencyConflict  = errors.New("job idempotency conflict")
+	ErrLeaseLost            = errors.New("job lease lost")
+	ErrInvalidJob           = errors.New("invalid job")
+	ErrCoalescingContention = errors.New("job coalescing contention")
+	jobTypePattern          = regexp.MustCompile(`^[a-z][a-z0-9_.-]{0,127}$`)
 )
 
 type Handler func(context.Context, json.RawMessage) error
 
 type DeadLetterHandler func(context.Context, *gorm.DB, json.RawMessage, error) error
 
+type SuccessHandler func(context.Context, *gorm.DB, models.JobQueue) error
+
 type Registration struct {
 	Handle       Handler
 	OnDeadLetter DeadLetterHandler
+	// Coalesced jobs retain their key only while pending/running/retrying.
+	// Success hooks may persist successor work in the finalization transaction.
+	ReleaseKeyOnCompletion bool
+	OnSuccess              SuccessHandler
 }
 
 // Observer receives bounded-cardinality runtime events for platform telemetry.
@@ -153,6 +160,64 @@ func (r *Runtime) Enqueue(ctx context.Context, input EnqueueInput) (models.JobQu
 		return models.JobQueue{}, errors.New("job runtime database is required")
 	}
 	return r.EnqueueTx(ctx, r.db, input)
+}
+
+// EnqueueCoalescedTx joins one active delivery for an immutable entity payload.
+// The caller must own a transaction, and the registered handler must release its
+// key on completion. Locking the selected row fences completion against a
+// concurrent producer; if completion won, the producer creates the successor.
+// Vanished-key races have bounded, cancelable retries; exhaustion returns
+// ErrCoalescingContention and the caller must roll back its whole transaction.
+func (r *Runtime) EnqueueCoalescedTx(ctx context.Context, tx *gorm.DB, input EnqueueInput) (models.JobQueue, error) {
+	input.IdempotencyKey = strings.TrimSpace(input.IdempotencyKey)
+	if input.IdempotencyKey == "" {
+		return models.JobQueue{}, fmt.Errorf("%w: coalesced job key is required", ErrInvalidJob)
+	}
+	for attempt := 0; ; attempt++ {
+		if err := ctx.Err(); err != nil {
+			return models.JobQueue{}, err
+		}
+		if attempt > 0 {
+			if err := waitCoalescingRetry(ctx, attempt); err != nil {
+				return models.JobQueue{}, err
+			}
+		}
+		job, err := r.EnqueueTx(ctx, tx, input)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			continue
+		}
+		if err != nil {
+			return models.JobQueue{}, err
+		}
+		var locked models.JobQueue
+		err = tx.WithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ? AND idempotency_key = ?", job.ID, input.IdempotencyKey).First(&locked).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			continue
+		}
+		return locked, err
+	}
+}
+
+// Only a disappearing active key is safe to retry in the same transaction.
+// SQL failures are returned immediately: PostgreSQL may have aborted the
+// transaction, and the caller must roll back its domain change with the intent.
+func waitCoalescingRetry(ctx context.Context, attempt int) error {
+	const maxAttempts = 8
+	if attempt >= maxAttempts {
+		return reliability.Classify(ErrCoalescingContention, reliability.ClassRetryable)
+	}
+	delay := time.Millisecond << (attempt - 1)
+	if delay > 25*time.Millisecond {
+		delay = 25 * time.Millisecond
+	}
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
 }
 
 // EnqueueTx allows domain services to persist intent and the job in the same
