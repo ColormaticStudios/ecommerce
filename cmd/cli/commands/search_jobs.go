@@ -2,8 +2,11 @@ package commands
 
 import (
 	"context"
+	"ecommerce/internal/jobs"
+	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"ecommerce/internal/httpapi"
 	searchservice "ecommerce/internal/search"
@@ -41,7 +44,7 @@ func newSearchJobCmd(kind string) *cobra.Command {
 		var job models.JobQueue
 		switch kind {
 		case "reindex":
-			job, err = service.EnqueueFullReindex(cmd.Context())
+			job, err = service.EnqueueOrReuseFullReindex(cmd.Context())
 		case "refresh-sales":
 			job, err = service.EnqueueSalesRefresh(cmd.Context())
 		case "refresh-conversion":
@@ -52,11 +55,39 @@ func newSearchJobCmd(kind string) *cobra.Command {
 		if err != nil {
 			return err
 		}
+
+		disposition := "reused_completed"
 		if job.Status != models.JobStatusSucceeded {
-			if err = runtime.Execute(cmd.Context(), job.ID, "cli-search-"+kind); err != nil {
-				return fmt.Errorf("execute search job %s: %w", job.ID, err)
+			disposition = "executed"
+			waitCtx, cancel := context.WithTimeout(cmd.Context(), 10*time.Minute)
+			defer cancel()
+			for {
+				executeErr := runtime.Execute(waitCtx, job.ID, "cli-search-"+kind)
+				if executeErr != nil && !errors.Is(executeErr, jobs.ErrNoRunnableJob) {
+					return fmt.Errorf("execute search job %s: %w", job.ID, executeErr)
+				}
+				if errors.Is(executeErr, jobs.ErrNoRunnableJob) {
+					disposition = "awaited_existing"
+				}
+				if err = db.WithContext(waitCtx).First(&job, "id = ?", job.ID).Error; err != nil {
+					return err
+				}
+				if job.Status == models.JobStatusSucceeded {
+					break
+				}
+				if job.Status == models.JobStatusDeadLetter {
+					return fmt.Errorf("search job %s failed permanently; inspect its dead-letter record", job.ID)
+				}
+				disposition = "awaited_existing"
+				timer := time.NewTimer(100 * time.Millisecond)
+				select {
+				case <-waitCtx.Done():
+					timer.Stop()
+					return waitCtx.Err()
+				case <-timer.C:
+				}
 			}
 		}
-		return writeSearchOutput(cmd, map[string]any{"job_id": job.ID, "status": "succeeded"})
+		return writeSearchOutput(cmd, map[string]any{"job_id": job.ID, "status": job.Status, "disposition": disposition})
 	}}
 }

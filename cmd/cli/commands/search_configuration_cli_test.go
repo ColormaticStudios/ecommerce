@@ -3,6 +3,7 @@ package commands
 import (
 	"bytes"
 	"context"
+	"ecommerce/internal/jobs"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -32,7 +33,7 @@ func runSearchConfigurationTestCommand(input string, args ...string) (string, er
 
 func TestSearchConfigurationCLILocalLifecycle(t *testing.T) {
 	db := newTestDB(t, &models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}, &models.SearchRankingProfile{}, &models.SearchMerchandisingRule{}, &models.SearchMerchandisingAudit{}, &models.Product{})
-	endpoint, err := httpapi.NewCatalogEndpoints(db, nil)
+	endpoint, err := httpapi.NewCatalogEndpoints(db, nil, jobs.NewRuntime(db, jobs.Config{}))
 	require.NoError(t, err)
 	oldOpen, oldRuntime := searchCLIOpenEndpoints, activeCLIRuntime
 	searchCLIOpenEndpoints = func(context.Context) (*httpapi.CatalogEndpoints, func(), error) { return endpoint, func() {}, nil }

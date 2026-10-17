@@ -81,7 +81,11 @@ func TestSearchWorkflowsLocalJobsExecuteDurableHandlers(t *testing.T) {
 		if kind != "reindex" {
 			repeated, err := runSearchWorkflowCommand(context.Background(), "", kind)
 			require.NoError(t, err)
-			require.JSONEq(t, output, repeated)
+			var reused map[string]any
+			require.NoError(t, json.Unmarshal([]byte(repeated), &reused))
+			require.Equal(t, result.JobID, reused["job_id"])
+			require.Equal(t, "succeeded", reused["status"])
+			require.Equal(t, "reused_completed", reused["disposition"])
 			require.NoError(t, db.First(&job, "id = ?", result.JobID).Error)
 			require.Equal(t, 1, job.AttemptCount)
 		}

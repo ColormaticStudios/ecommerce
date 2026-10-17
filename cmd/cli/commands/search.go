@@ -19,7 +19,7 @@ func NewSearchCmd() *cobra.Command {
 	command := &cobra.Command{Use: "search", Short: "Administer search configuration, relevance, and index health"}
 	command.PersistentFlags().String("format", "text", "Output format: text or json")
 	command.AddCommand(newSearchConfigurationCommands()...)
-	command.AddCommand(newSearchScaffoldCmd(), newSearchProductsCmd(), newSearchAnalyticsCmd(), newSearchFreshnessCmd(), newSearchOperationsCmd(), newSearchIncidentsCmd(), newSearchEvaluateCmd())
+	command.AddCommand(newSearchConfigurationHistoryCmd(), newSearchScaffoldCmd(), newSearchProductsCmd(), newSearchAnalyticsCmd(), newSearchFreshnessCmd(), newSearchOperationsCmd(), newSearchIncidentsCmd(), newSearchEvaluateCmd())
 	for _, kind := range []string{"reindex", "refresh-sales", "refresh-conversion"} {
 		command.AddCommand(newSearchJobCmd(kind))
 	}
@@ -148,13 +148,16 @@ func resolveSearchProduct(cmd *cobra.Command, query string) (int, error) {
 	return 0, fmt.Errorf("product lookup %q is ambiguous (%d matches); refine the query or use an explicit product ID", query, result.Pagination.Total)
 }
 func newSearchAnalyticsCmd() *cobra.Command {
-	var days int
+	var days, page, limit int
 	cmd := &cobra.Command{Use: "analytics", Short: "Report consented search quality, popular queries, and trends", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
 		if days < 1 || days > 90 {
 			return fmt.Errorf("days must be between 1 and 90")
 		}
-		value, err := searchCLIRequest(cmd, http.MethodGet, "/api/v1/admin/search/analytics?days="+strconv.Itoa(days), nil, func(ctx context.Context, e *httpapi.CatalogEndpoints) (any, error) {
-			return e.GetAdminSearchAnalytics(ctx, apicontract.GetAdminSearchAnalyticsRequestObject{Params: apicontract.GetAdminSearchAnalyticsParams{Days: &days}})
+		if page < 1 || page > 1000000 || limit < 1 || limit > 100 {
+			return fmt.Errorf("page must be between 1 and 1000000 and limit between 1 and 100")
+		}
+		value, err := searchCLIRequest(cmd, http.MethodGet, "/api/v1/admin/search/analytics?days="+strconv.Itoa(days)+"&page="+strconv.Itoa(page)+"&limit="+strconv.Itoa(limit), nil, func(ctx context.Context, e *httpapi.CatalogEndpoints) (any, error) {
+			return e.GetAdminSearchAnalytics(ctx, apicontract.GetAdminSearchAnalyticsRequestObject{Params: apicontract.GetAdminSearchAnalyticsParams{Days: &days, Page: &page, Limit: &limit}})
 		})
 		if err != nil {
 			return err
@@ -162,6 +165,8 @@ func newSearchAnalyticsCmd() *cobra.Command {
 		return writeSearchOutput(cmd, value)
 	}}
 	cmd.Flags().IntVar(&days, "days", 7, "Reporting window in days (1–90)")
+	cmd.Flags().IntVar(&page, "page", 1, "Query summary page")
+	cmd.Flags().IntVar(&limit, "limit", 20, "Query summaries per page (1–100)")
 	return cmd
 }
 func newSearchFreshnessCmd() *cobra.Command {
