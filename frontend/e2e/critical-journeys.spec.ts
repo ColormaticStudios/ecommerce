@@ -82,16 +82,16 @@ test("sign up, checkout, and persist order/cart state", async ({ page, request }
 	await registerUser(request, { username, email, password, name: "Checkout Buyer" });
 	await establishSession(page, email, password);
 	await page.goto("/");
-	await expect(page).toHaveURL(/\/$/);
+	await expect(page).toHaveURL((url) => url.pathname === "/");
 	await expect(page.getByRole("link", { name: "View cart" })).toBeVisible();
 	await seedCartItem(request, { email, quantity: 1, product_variant_id: 1 });
 	await seedSavedCheckoutData(request, email);
 
 	await page.goto("/cart");
 
-	await expect(page).toHaveURL(/\/cart$/);
+	await expect(page).toHaveURL((url) => url.pathname === "/cart");
 	await page.getByRole("link", { name: "Go to checkout" }).click();
-	await expect(page).toHaveURL(/\/checkout$/);
+	await expect(page).toHaveURL((url) => url.pathname === "/checkout");
 	await page.getByRole("button", { name: /Dummy Card Gateway/i }).click();
 	await page.getByLabel("Use a saved card").selectOption({ index: 1 });
 	await page.getByRole("button", { name: /Dummy Ground Carrier/i }).click();
@@ -100,7 +100,7 @@ test("sign up, checkout, and persist order/cart state", async ({ page, request }
 
 	await page.getByRole("button", { name: "Place order" }).click();
 
-	await expect(page).toHaveURL(/\/orders$/, { timeout: 15_000 });
+	await expect(page).toHaveURL((url) => url.pathname === "/orders", { timeout: 15_000 });
 	await expect(page.getByText("Order placed successfully.")).toBeVisible();
 	await expect(page.getByText(/Order #\d+/)).toBeVisible();
 	await expect(page.locator("span").filter({ hasText: "Pending" })).toBeVisible();
@@ -175,7 +175,7 @@ test("guest can add to cart and complete checkout", async ({ page, request }) =>
 
 	await page.goto("/cart");
 
-	await expect(page).toHaveURL(/\/cart$/);
+	await expect(page).toHaveURL((url) => url.pathname === "/cart");
 	await expect(
 		page.getByText(
 			"Your cart is attached to this browser session. You can still check out as a guest."
@@ -184,7 +184,7 @@ test("guest can add to cart and complete checkout", async ({ page, request }) =>
 	await expect(page.getByRole("heading", { name: "E2E Running Shoes" })).toBeVisible();
 	await page.getByRole("link", { name: "Go to checkout" }).click();
 
-	await expect(page).toHaveURL(/\/checkout$/);
+	await expect(page).toHaveURL((url) => url.pathname === "/checkout");
 	await page.getByLabel("Email address").fill(email);
 	await page.getByRole("button", { name: /Dummy Card Gateway/i }).click();
 	await page.getByLabel("Cardholder name").fill("Guest Buyer");
@@ -264,11 +264,11 @@ test("invalid data paths show user-facing errors", async ({ page, request }) => 
 	await registerUser(request, { username, email, password });
 	await establishSession(page, email, password);
 	await page.goto("/");
-	await expect(page).toHaveURL(/\/$/);
+	await expect(page).toHaveURL((url) => url.pathname === "/");
 	await seedCartItem(request, { email, quantity: 1, product_variant_id: 1 });
 	await page.goto("/cart");
 	await page.getByRole("link", { name: "Go to checkout" }).click();
-	await expect(page).toHaveURL(/\/checkout$/);
+	await expect(page).toHaveURL((url) => url.pathname === "/checkout");
 
 	await page.getByRole("button", { name: "Place order" }).click();
 	await expect(
@@ -305,6 +305,6 @@ test("storefront product search uses the indexed search endpoint", async ({ page
 	expect(search.items.map((item) => item.name)).toContain("E2E Running Shoes");
 
 	await page.goto("/search?q=Running");
-	await expect(page.getByText('1 result for "Running"')).toBeVisible();
+	await expect(page.getByText("1 result for “Running”", { exact: true })).toBeVisible();
 	await expect(page.getByText("E2E Running Shoes", { exact: true })).toBeVisible();
 });

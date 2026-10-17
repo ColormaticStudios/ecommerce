@@ -68,8 +68,18 @@ func TestRelevanceQualityGate(t *testing.T) {
 	report, err := EvaluateRelevance(context.Background())
 	require.NoError(t, err)
 	require.NoError(t, report.CheckRegression(), "query report: %+v", report.Queries)
-	require.Len(t, report.Queries, 13)
+	require.Len(t, report.Queries, 45)
 	repeat, err := EvaluateRelevance(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, report, repeat, "the clock, seeds, and ordering must be deterministic")
+}
+
+func TestPerQueryGateRejectsRegressionHiddenByAggregate(t *testing.T) {
+	baseline := RelevanceMetrics{NDCG10: 1, Precision5: 0.6}
+	report := RelevanceReport{RelevanceMetrics: RelevanceMetrics{NDCG10: 0.999, Precision5: 0.599}, Baseline: baseline, QueryBaselines: map[string]RelevanceMetrics{"important intent": baseline}, Queries: []RelevanceQueryReport{{Name: "important intent", RelevanceMetrics: RelevanceMetrics{NDCG10: 0.5, Precision5: 0.2}}}}
+	require.ErrorContains(t, report.CheckRegression(), "important intent")
+	report.Queries[0].RelevanceMetrics = baseline
+	require.NoError(t, report.CheckRegression())
+	report.Queries[0].Name = "unreviewed intent"
+	require.ErrorContains(t, report.CheckRegression(), "no reviewed baseline")
 }

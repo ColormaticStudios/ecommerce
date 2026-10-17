@@ -36,8 +36,9 @@ type RelevanceQueryReport struct {
 
 type RelevanceReport struct {
 	RelevanceMetrics
-	Baseline RelevanceMetrics       `json:"baseline"`
-	Queries  []RelevanceQueryReport `json:"queries"`
+	Baseline       RelevanceMetrics            `json:"baseline"`
+	QueryBaselines map[string]RelevanceMetrics `json:"query_baselines,omitempty"`
+	Queries        []RelevanceQueryReport      `json:"queries"`
 }
 
 type relevanceCorpus struct {
@@ -83,7 +84,10 @@ func EvaluateRelevance(ctx context.Context) (RelevanceReport, error) {
 	if err := validateRelevanceCorpus(corpus); err != nil {
 		return RelevanceReport{}, err
 	}
-	var baseline RelevanceMetrics
+	var baseline struct {
+		RelevanceMetrics
+		Queries map[string]RelevanceMetrics `json:"queries"`
+	}
 	if err := decodeRelevanceFixture("testdata/relevance-baseline.json", &baseline); err != nil {
 		return RelevanceReport{}, err
 	}
@@ -136,7 +140,7 @@ func EvaluateRelevance(ctx context.Context) (RelevanceReport, error) {
 			return RelevanceReport{}, err
 		}
 	}
-	report := RelevanceReport{Baseline: baseline, Queries: make([]RelevanceQueryReport, 0, len(corpus.Queries))}
+	report := RelevanceReport{Baseline: baseline.RelevanceMetrics, QueryBaselines: baseline.Queries, Queries: make([]RelevanceQueryReport, 0, len(corpus.Queries))}
 	for _, query := range corpus.Queries {
 		filters := Filters{Query: query.Query, RankingProfile: query.Profile, SortField: "relevance", Page: 1, Limit: 10, BrandSlug: query.Brand, HasVariantStock: query.Available, MaxPrice: query.MaxPrice}
 		if query.Category != "" {
@@ -169,6 +173,20 @@ func (report RelevanceReport) CheckRegression() error {
 	const tolerance = 0.02
 	if report.NDCG10+tolerance+1e-12 < report.Baseline.NDCG10 || report.Precision5+tolerance+1e-12 < report.Baseline.Precision5 {
 		return fmt.Errorf("search relevance regression: NDCG@10 %.6f (baseline %.6f), precision@5 %.6f (baseline %.6f), allowed loss %.2f", report.NDCG10, report.Baseline.NDCG10, report.Precision5, report.Baseline.Precision5, tolerance)
+	}
+	if len(report.QueryBaselines) > 0 {
+		if len(report.Queries) != len(report.QueryBaselines) {
+			return fmt.Errorf("search relevance corpus and query baselines must be reviewed together")
+		}
+		for _, query := range report.Queries {
+			baseline, ok := report.QueryBaselines[query.Name]
+			if !ok {
+				return fmt.Errorf("search query %q has no reviewed baseline", query.Name)
+			}
+			if query.NDCG10+tolerance+1e-12 < baseline.NDCG10 || query.Precision5+tolerance+1e-12 < baseline.Precision5 {
+				return fmt.Errorf("search query %q regressed: NDCG@10 %.6f (baseline %.6f), precision@5 %.6f (baseline %.6f)", query.Name, query.NDCG10, baseline.NDCG10, query.Precision5, baseline.Precision5)
+			}
+		}
 	}
 	return nil
 }

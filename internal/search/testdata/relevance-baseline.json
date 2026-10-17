@@ -1,4 +1,186 @@
 {
-  "ndcg_at_10": 1,
-  "precision_at_5": 0.5846153846153845
+  "ndcg_at_10": 0.9700663059943452,
+  "precision_at_5": 0.42666666666666636,
+  "queries": {
+    "exact phrase versus name tokens and description": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.6
+    },
+    "original sneaker versus synonym footwear": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.8
+    },
+    "bidirectional mug synonym": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.4
+    },
+    "typo correction preserves ranking": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.6
+    },
+    "category excludes guide": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.4
+    },
+    "attribute restricts synonym results": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.4
+    },
+    "brand restricts footwear": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.4
+    },
+    "price restricts drinkware": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.2
+    },
+    "sales availability and recency": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.8
+    },
+    "new arrivals profile": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.8
+    },
+    "availability filter": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.8
+    },
+    "name versus brand matches": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 1
+    },
+    "attribute versus incidental description": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.4
+    },
+    "purchase intent waterproof": {
+      "ndcg_at_10": 0.7482484020681008,
+      "precision_at_5": 0.6
+    },
+    "purchase intent waterproof jacket": {
+      "ndcg_at_10": 0.7482484020681008,
+      "precision_at_5": 0.6
+    },
+    "outerwear category removes repair handbook": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.4
+    },
+    "available waterproof outerwear": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.2
+    },
+    "blue sold out shell": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.2
+    },
+    "insulation purchase intent": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.2
+    },
+    "packable lightweight phrase": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.2
+    },
+    "backpack direct and description matches": {
+      "ndcg_at_10": 0.9307550306045229,
+      "precision_at_5": 0.8
+    },
+    "laptop work backpack": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.4
+    },
+    "backpack price ceiling": {
+      "ndcg_at_10": 0.9721212198129315,
+      "precision_at_5": 0.6
+    },
+    "camping durable backpack": {
+      "ndcg_at_10": 0.8339912323981489,
+      "precision_at_5": 0.4
+    },
+    "backpack category removes accessories": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.6
+    },
+    "battery purchase intent versus guide": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.6
+    },
+    "phone charging phrase": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.2
+    },
+    "USB name and description alternatives": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.4
+    },
+    "charger typo recovery": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.2
+    },
+    "headphone product versus accessory": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.4
+    },
+    "black electronics excludes accessory": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.2
+    },
+    "glass product versus cleaning supply": {
+      "ndcg_at_10": 0.7098097413968654,
+      "precision_at_5": 0.4
+    },
+    "flower decoration synonym vocabulary": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.4
+    },
+    "blue vase filter": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.2
+    },
+    "office chair versus cushion": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.4
+    },
+    "camping chair phrase": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.2
+    },
+    "Unicode case and accent": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.2
+    },
+    "linen name coverage": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.4
+    },
+    "coffee grinder versus cleaning accessory": {
+      "ndcg_at_10": 0.7098097413968654,
+      "precision_at_5": 0.4
+    },
+    "grinder kitchen scope": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.2
+    },
+    "camping light versus spare battery": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.4
+    },
+    "cycling helmet purchase intent": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.4
+    },
+    "red cycling sports": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.2
+    },
+    "wool garment versus cleaning supply": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.4
+    },
+    "garden gloves prefix typo": {
+      "ndcg_at_10": 1,
+      "precision_at_5": 0.2
+    }
+  }
 }

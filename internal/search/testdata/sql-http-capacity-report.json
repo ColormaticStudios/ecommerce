@@ -1,0 +1,164 @@
+{
+  "measured_on": "2026-10-12",
+  "gate": "p95 <= 500 ms for every workload; HTTP 200 only; no degraded responses",
+  "result": "passed",
+  "environment": {
+    "go": "go1.27.2-X:nodwarf5",
+    "postgresql": "17.11",
+    "logical_cpus": 6,
+    "gomaxprocs": 6
+  },
+  "fixture": {
+    "product_counts": [
+      10000,
+      25000
+    ],
+    "brands": 20,
+    "categories": 100,
+    "filterable_attributes": 4,
+    "values_per_attribute": 25,
+    "variants_per_product": 3,
+    "published_variants_per_product": 2,
+    "localized_entities": true,
+    "private_variant_costs": true,
+    "business_signals": true,
+    "typed_hide_rule": true
+  },
+  "method": {
+    "sequential_requests_per_case_and_mode": 30,
+    "mixed_requests_per_catalog": 60,
+    "mixed_concurrency": 4,
+    "page_limit": 20,
+    "request_deadline_ms": 2000,
+    "client_concurrency_limit": 4,
+    "client_requests_per_minute": 60000,
+    "cold": "fresh application services; PostgreSQL and OS buffers are not flushed",
+    "queries": "data queries only; PostgreSQL product retrieval also uses BEGIN, SET LOCAL, COMMIT",
+    "configuration_cache": "10-second bounded TTL; warm reuses cache; fresh services start with empty cache"
+  },
+  "measured_requests": 720,
+  "errors": 0,
+  "degraded": 0,
+  "maximum_p95_ms": 486.74,
+  "workloads": [
+    {
+      "products": 10000,
+      "case": "broad",
+      "cold_p95_ms": 146.581,
+      "warm_p95_ms": 137.894,
+      "maximum_p99_ms": 277.444,
+      "maximum_allocated_bytes_per_request": 2791502,
+      "cold_data_queries_per_request": 29,
+      "warm_data_queries_per_request": 25
+    },
+    {
+      "products": 10000,
+      "case": "typo",
+      "cold_p95_ms": 180.902,
+      "warm_p95_ms": 173.644,
+      "maximum_p99_ms": 181.14,
+      "maximum_allocated_bytes_per_request": 2833322,
+      "cold_data_queries_per_request": 32,
+      "warm_data_queries_per_request": 28
+    },
+    {
+      "products": 10000,
+      "case": "mixed_facets",
+      "cold_p95_ms": 130.916,
+      "warm_p95_ms": 103.835,
+      "maximum_p99_ms": 131.707,
+      "maximum_allocated_bytes_per_request": 1886739,
+      "cold_data_queries_per_request": 39,
+      "warm_data_queries_per_request": 35
+    },
+    {
+      "products": 10000,
+      "case": "deep_page",
+      "cold_p95_ms": 161.15,
+      "warm_p95_ms": 145.579,
+      "maximum_p99_ms": 164.469,
+      "maximum_allocated_bytes_per_request": 2796587,
+      "cold_data_queries_per_request": 29,
+      "warm_data_queries_per_request": 25
+    },
+    {
+      "products": 10000,
+      "case": "suggest",
+      "cold_p95_ms": 77.792,
+      "warm_p95_ms": 75.012,
+      "maximum_p99_ms": 78.549,
+      "maximum_allocated_bytes_per_request": 216567,
+      "cold_data_queries_per_request": 6,
+      "warm_data_queries_per_request": 5
+    },
+    {
+      "products": 10000,
+      "case": "mixed_query_load",
+      "concurrency": 4,
+      "p95_ms": 184.213,
+      "p99_ms": 220.431,
+      "allocated_bytes_per_request": 1992764,
+      "data_queries_per_request": 23.667
+    },
+    {
+      "products": 25000,
+      "case": "broad",
+      "cold_p95_ms": 486.74,
+      "warm_p95_ms": 273.792,
+      "maximum_p99_ms": 963.6,
+      "maximum_allocated_bytes_per_request": 2789091,
+      "cold_data_queries_per_request": 29,
+      "warm_data_queries_per_request": 25
+    },
+    {
+      "products": 25000,
+      "case": "typo",
+      "cold_p95_ms": 325.962,
+      "warm_p95_ms": 331.944,
+      "maximum_p99_ms": 338.025,
+      "maximum_allocated_bytes_per_request": 2827242,
+      "cold_data_queries_per_request": 32,
+      "warm_data_queries_per_request": 28
+    },
+    {
+      "products": 25000,
+      "case": "mixed_facets",
+      "cold_p95_ms": 176.452,
+      "warm_p95_ms": 169.597,
+      "maximum_p99_ms": 184.91,
+      "maximum_allocated_bytes_per_request": 1901783,
+      "cold_data_queries_per_request": 39,
+      "warm_data_queries_per_request": 35
+    },
+    {
+      "products": 25000,
+      "case": "deep_page",
+      "cold_p95_ms": 350.977,
+      "warm_p95_ms": 339.417,
+      "maximum_p99_ms": 363.391,
+      "maximum_allocated_bytes_per_request": 2795279,
+      "cold_data_queries_per_request": 29,
+      "warm_data_queries_per_request": 25
+    },
+    {
+      "products": 25000,
+      "case": "suggest",
+      "cold_p95_ms": 242.879,
+      "warm_p95_ms": 239.882,
+      "maximum_p99_ms": 243.437,
+      "maximum_allocated_bytes_per_request": 213418,
+      "cold_data_queries_per_request": 6,
+      "warm_data_queries_per_request": 5
+    },
+    {
+      "products": 25000,
+      "case": "mixed_query_load",
+      "concurrency": 4,
+      "p95_ms": 372.119,
+      "p99_ms": 392.36,
+      "allocated_bytes_per_request": 2012035,
+      "data_queries_per_request": 23.667
+    }
+  ],
+  "limit": "Synthetic local PostgreSQL HTTP regression evidence; rerun on deployment hardware before promising production capacity or a monthly SLO."
+}

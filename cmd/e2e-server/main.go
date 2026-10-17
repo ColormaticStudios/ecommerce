@@ -42,7 +42,7 @@ const (
 	defaultE2EAPIPort = 3001
 	defaultE2EDriver  = "sqlite"
 	defaultE2EDBPath  = "/tmp/ecommerce-e2e.sqlite"
-	e2eJWTSecret      = "e2e-test-jwt-secret"
+	e2eJWTSecret      = "e2e-test-jwt-secret-for-search-signing"
 	testRoutePrefix   = "/__test"
 )
 
@@ -285,10 +285,11 @@ func main() {
 
 	r := gin.New()
 	r.Use(gin.Recovery())
+	appPort := envInt("E2E_APP_PORT", 4173)
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
-			"http://127.0.0.1:4173",
-			"http://localhost:4173",
+			fmt.Sprintf("http://127.0.0.1:%d", appPort),
+			fmt.Sprintf("http://localhost:%d", appPort),
 		},
 		AllowMethods:     httpcors.AllowMethods(),
 		AllowHeaders:     httpcors.AllowHeaders(),
@@ -301,6 +302,7 @@ func main() {
 
 	pluginManager := checkoutplugins.NewDefaultManager()
 	jobRuntime := jobs.NewRuntime(db, jobs.Config{})
+	db = jobs.WithRuntime(db, jobRuntime)
 	providerRuntime := providerops.NewRuntime(db, providerops.RuntimeConfig{})
 	webhookService := webhookservice.NewService(db, providerRuntime.PaymentProviders, providerRuntime.ShippingProviders, log.Default())
 	accountService := accountservice.NewService(db, nil)
@@ -318,6 +320,12 @@ func main() {
 	catalogEndpoints, err := httpapi.NewCatalogEndpoints(db, nil, jobRuntime)
 	if err != nil {
 		log.Fatalf("failed to initialize e2e catalog endpoints: %v", err)
+	}
+	if err := catalogEndpoints.ConfigureAnalyticsSigningKey([]byte(e2eJWTSecret)); err != nil {
+		log.Fatalf("failed to configure e2e search signing: %v", err)
+	}
+	if err := catalogEndpoints.ConfigureSearchAdmission(httpapi.DefaultSearchAdmissionConfig()); err != nil {
+		log.Fatalf("failed to configure e2e search admission: %v", err)
 	}
 	if err := catalogEndpoints.RegisterSearchJobHandlers(); err != nil {
 		log.Fatalf("failed to register e2e search jobs: %v", err)
@@ -383,6 +391,7 @@ func main() {
 	}()
 
 	// Test-only helper endpoints consumed by Playwright E2E tests.
+	registerSearchTestHelpers(testRoutes, db, catalogEndpoints)
 	testRoutes.GET("/summary", func(c *gin.Context) {
 		summary, err := buildSummary(db, c.Query("email"))
 		if err != nil {

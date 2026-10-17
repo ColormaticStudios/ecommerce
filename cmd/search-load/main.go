@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"ecommerce/internal/search"
+	"ecommerce/internal/searchprojection"
 	"ecommerce/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -54,7 +55,7 @@ func run() error {
 	}
 	defer sqlDB.Close()
 	sqlDB.SetMaxOpenConns(*workers)
-	if err = db.AutoMigrate(&models.Product{}, &models.ProductVariant{}, &models.Brand{}, &models.Category{}, &models.ProductCategory{}, &models.ProductAttribute{}, &models.ProductAttributeValue{}, &models.SearchDocument{}, &models.SearchIndexState{}, &models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}, &models.SearchRankingProfile{}, &models.SearchSalesSignal{}, &models.SearchConversionSignal{}, &models.SearchMerchandisingRule{}, &models.SearchMerchandisingAudit{}); err != nil {
+	if err = db.AutoMigrate(&models.Product{}, &models.ProductVariant{}, &models.Brand{}, &models.Category{}, &models.ProductCategory{}, &models.ProductAttribute{}, &models.ProductAttributeValue{}, &models.SearchDocument{}, &models.SearchIndexState{}, &models.SearchProductRevision{}, &models.SearchConfigurationAudit{}, &searchprojection.Rank{}, &searchprojection.Category{}, &searchprojection.Attribute{}, &searchprojection.Term{}, &models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}, &models.SearchRankingProfile{}, &models.SearchSalesSignal{}, &models.SearchConversionSignal{}, &models.SearchMerchandisingRule{}, &models.SearchMerchandisingAudit{}); err != nil {
 		return err
 	}
 	svc := search.NewService(db, nil, nil)

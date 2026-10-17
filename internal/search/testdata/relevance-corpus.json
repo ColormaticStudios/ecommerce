@@ -1,38 +1,994 @@
 {
   "now": "2026-10-02T00:00:00Z",
   "products": [
-    {"id": 1, "name": "Trail Running Shoes", "description": "Lightweight footwear for rocky paths", "brand": "northstar", "category": "shoes", "color": "red", "price": 90, "stock": 8, "age_days": 14, "sales": 25},
-    {"id": 2, "name": "Running Trail Shoes", "description": "Trail running shoes for everyday training", "brand": "south", "category": "shoes", "color": "blue", "price": 70, "stock": 8, "age_days": 14, "sales": 25},
-    {"id": 3, "name": "Trail Footwear Guide", "description": "A printed guide to trail running shoes", "brand": "northstar", "category": "books", "color": "red", "price": 15, "stock": 8, "age_days": 14, "sales": 25},
-    {"id": 4, "name": "Red Sneaker", "description": "Casual city footwear", "brand": "northstar", "category": "shoes", "color": "red", "price": 45, "stock": 8, "age_days": 14, "sales": 25},
-    {"id": 5, "name": "Leather Boots", "description": "Durable winter footwear", "brand": "south", "category": "shoes", "color": "brown", "price": 110, "stock": 8, "age_days": 14, "sales": 25},
-    {"id": 6, "name": "Ceramic Mug", "description": "Glazed coffee cup", "brand": "northstar", "category": "home", "color": "blue", "price": 18, "stock": 8, "age_days": 14, "sales": 25},
-    {"id": 7, "name": "Travel Coffee Cup", "description": "Insulated steel drinkware", "brand": "south", "category": "home", "color": "red", "price": 25, "stock": 8, "age_days": 14, "sales": 25},
-    {"id": 8, "name": "Canvas Bag", "description": "Reusable shopping tote", "brand": "northstar", "category": "bags", "color": "red", "price": 30, "stock": 8, "age_days": 10, "sales": 80},
-    {"id": 9, "name": "Canvas Bag", "description": "Reusable shopping tote", "brand": "northstar", "category": "bags", "color": "blue", "price": 30, "stock": 8, "age_days": 4, "sales": 0},
-    {"id": 10, "name": "Canvas Bag", "description": "Reusable shopping tote", "brand": "northstar", "category": "bags", "color": "brown", "price": 30, "stock": 0, "age_days": 4, "sales": 0},
-    {"id": 11, "name": "Canvas Bag", "description": "Reusable shopping tote", "brand": "northstar", "category": "bags", "color": "white", "price": 30, "stock": 8, "age_days": 180, "sales": 0},
-    {"id": 12, "name": "Canvas Bag", "description": "Reusable shopping tote", "brand": "northstar", "category": "bags", "color": "black", "price": 30, "stock": 8, "age_days": 1, "sales": 0},
-    {"id": 13, "name": "Northstar Sticker", "description": "Brand decal", "brand": "south", "category": "home", "color": "blue", "price": 3, "stock": 8, "age_days": 14, "sales": 25},
-    {"id": 14, "name": "Color Swatch", "description": "Red textile sample", "brand": "south", "category": "home", "color": "blue", "price": 3, "stock": 8, "age_days": 14, "sales": 25}
+    {
+      "id": 1,
+      "name": "Trail Running Shoes",
+      "description": "Lightweight footwear for rocky paths",
+      "brand": "northstar",
+      "category": "shoes",
+      "color": "red",
+      "price": 90,
+      "stock": 8,
+      "age_days": 14,
+      "sales": 25
+    },
+    {
+      "id": 2,
+      "name": "Running Trail Shoes",
+      "description": "Trail running shoes for everyday training",
+      "brand": "south",
+      "category": "shoes",
+      "color": "blue",
+      "price": 70,
+      "stock": 8,
+      "age_days": 14,
+      "sales": 25
+    },
+    {
+      "id": 3,
+      "name": "Trail Footwear Guide",
+      "description": "A printed guide to trail running shoes",
+      "brand": "northstar",
+      "category": "books",
+      "color": "red",
+      "price": 15,
+      "stock": 8,
+      "age_days": 14,
+      "sales": 25
+    },
+    {
+      "id": 4,
+      "name": "Red Sneaker",
+      "description": "Casual city footwear",
+      "brand": "northstar",
+      "category": "shoes",
+      "color": "red",
+      "price": 45,
+      "stock": 8,
+      "age_days": 14,
+      "sales": 25
+    },
+    {
+      "id": 5,
+      "name": "Leather Boots",
+      "description": "Durable winter footwear",
+      "brand": "south",
+      "category": "shoes",
+      "color": "brown",
+      "price": 110,
+      "stock": 8,
+      "age_days": 14,
+      "sales": 25
+    },
+    {
+      "id": 6,
+      "name": "Ceramic Mug",
+      "description": "Glazed coffee cup",
+      "brand": "northstar",
+      "category": "home",
+      "color": "blue",
+      "price": 18,
+      "stock": 8,
+      "age_days": 14,
+      "sales": 25
+    },
+    {
+      "id": 7,
+      "name": "Travel Coffee Cup",
+      "description": "Insulated steel drinkware",
+      "brand": "south",
+      "category": "home",
+      "color": "red",
+      "price": 25,
+      "stock": 8,
+      "age_days": 14,
+      "sales": 25
+    },
+    {
+      "id": 8,
+      "name": "Canvas Bag",
+      "description": "Reusable shopping tote",
+      "brand": "northstar",
+      "category": "bags",
+      "color": "red",
+      "price": 30,
+      "stock": 8,
+      "age_days": 10,
+      "sales": 80
+    },
+    {
+      "id": 9,
+      "name": "Canvas Bag",
+      "description": "Reusable shopping tote",
+      "brand": "northstar",
+      "category": "bags",
+      "color": "blue",
+      "price": 30,
+      "stock": 8,
+      "age_days": 4,
+      "sales": 0
+    },
+    {
+      "id": 10,
+      "name": "Canvas Bag",
+      "description": "Reusable shopping tote",
+      "brand": "northstar",
+      "category": "bags",
+      "color": "brown",
+      "price": 30,
+      "stock": 0,
+      "age_days": 4,
+      "sales": 0
+    },
+    {
+      "id": 11,
+      "name": "Canvas Bag",
+      "description": "Reusable shopping tote",
+      "brand": "northstar",
+      "category": "bags",
+      "color": "white",
+      "price": 30,
+      "stock": 8,
+      "age_days": 180,
+      "sales": 0
+    },
+    {
+      "id": 12,
+      "name": "Canvas Bag",
+      "description": "Reusable shopping tote",
+      "brand": "northstar",
+      "category": "bags",
+      "color": "black",
+      "price": 30,
+      "stock": 8,
+      "age_days": 1,
+      "sales": 0
+    },
+    {
+      "id": 13,
+      "name": "Northstar Sticker",
+      "description": "Brand decal",
+      "brand": "south",
+      "category": "home",
+      "color": "blue",
+      "price": 3,
+      "stock": 8,
+      "age_days": 14,
+      "sales": 25
+    },
+    {
+      "id": 14,
+      "name": "Color Swatch",
+      "description": "Red textile sample",
+      "brand": "south",
+      "category": "home",
+      "color": "blue",
+      "price": 3,
+      "stock": 8,
+      "age_days": 14,
+      "sales": 25
+    },
+    {
+      "id": 15,
+      "name": "Rain Shell",
+      "description": "A waterproof jacket for wet weather",
+      "brand": "field",
+      "category": "outerwear",
+      "color": "green",
+      "price": 120,
+      "stock": 8,
+      "age_days": 10,
+      "sales": 25
+    },
+    {
+      "id": 16,
+      "name": "Waterproof Jacket Guide",
+      "description": "A printed repair handbook for waterproof jacket owners",
+      "brand": "press",
+      "category": "books",
+      "color": "white",
+      "price": 12,
+      "stock": 8,
+      "age_days": 60,
+      "sales": 0
+    },
+    {
+      "id": 17,
+      "name": "Rain Shell",
+      "description": "A waterproof jacket for wet weather",
+      "brand": "field",
+      "category": "outerwear",
+      "color": "blue",
+      "price": 110,
+      "stock": 0,
+      "age_days": 2,
+      "sales": 60
+    },
+    {
+      "id": 18,
+      "name": "Winter Parka",
+      "description": "Insulated warm coat for freezing weather",
+      "brand": "field",
+      "category": "outerwear",
+      "color": "black",
+      "price": 220,
+      "stock": 4,
+      "age_days": 35,
+      "sales": 18
+    },
+    {
+      "id": 19,
+      "name": "Windbreaker",
+      "description": "Packable lightweight jacket for breezy afternoons",
+      "brand": "ridge",
+      "category": "outerwear",
+      "color": "yellow",
+      "price": 65,
+      "stock": 12,
+      "age_days": 4,
+      "sales": 9
+    },
+    {
+      "id": 20,
+      "name": "Daypack",
+      "description": "A durable backpack with padded laptop sleeve",
+      "brand": "ridge",
+      "category": "packs",
+      "color": "black",
+      "price": 60,
+      "stock": 9,
+      "age_days": 8,
+      "sales": 15
+    },
+    {
+      "id": 21,
+      "name": "Laptop Backpack",
+      "description": "A compact office backpack with a laptop sleeve",
+      "brand": "desk",
+      "category": "packs",
+      "color": "gray",
+      "price": 45,
+      "stock": 10,
+      "age_days": 20,
+      "sales": 18
+    },
+    {
+      "id": 22,
+      "name": "Backpack Repair Kit",
+      "description": "Replacement buckles for a backpack",
+      "brand": "ridge",
+      "category": "accessories",
+      "color": "black",
+      "price": 9,
+      "stock": 8,
+      "age_days": 50,
+      "sales": 30
+    },
+    {
+      "id": 23,
+      "name": "Trekking Pack",
+      "description": "Large durable backpack for overnight camping",
+      "brand": "ridge",
+      "category": "packs",
+      "color": "green",
+      "price": 145,
+      "stock": 8,
+      "age_days": 9,
+      "sales": 12
+    },
+    {
+      "id": 24,
+      "name": "Battery Pack",
+      "description": "Rechargeable portable battery for phone charging",
+      "brand": "volt",
+      "category": "electronics",
+      "color": "black",
+      "price": 35,
+      "stock": 8,
+      "age_days": 5,
+      "sales": 80
+    },
+    {
+      "id": 25,
+      "name": "Battery Guide",
+      "description": "Printed instructions for battery recycling",
+      "brand": "press",
+      "category": "books",
+      "color": "white",
+      "price": 8,
+      "stock": 8,
+      "age_days": 60,
+      "sales": 0
+    },
+    {
+      "id": 26,
+      "name": "USB Cable",
+      "description": "Braided charging cable with USB connectors",
+      "brand": "volt",
+      "category": "electronics",
+      "color": "black",
+      "price": 12,
+      "stock": 8,
+      "age_days": 10,
+      "sales": 45
+    },
+    {
+      "id": 27,
+      "name": "USB Charger",
+      "description": "Fast wall charger with two USB ports",
+      "brand": "volt",
+      "category": "electronics",
+      "color": "white",
+      "price": 25,
+      "stock": 8,
+      "age_days": 8,
+      "sales": 40
+    },
+    {
+      "id": 28,
+      "name": "Wireless Headphones",
+      "description": "Noise reduction headphones for travel",
+      "brand": "sound",
+      "category": "electronics",
+      "color": "black",
+      "price": 150,
+      "stock": 8,
+      "age_days": 6,
+      "sales": 70
+    },
+    {
+      "id": 29,
+      "name": "Headphone Case",
+      "description": "Protective carrying case for headphones",
+      "brand": "sound",
+      "category": "accessories",
+      "color": "black",
+      "price": 15,
+      "stock": 8,
+      "age_days": 35,
+      "sales": 5
+    },
+    {
+      "id": 30,
+      "name": "Glass Vase",
+      "description": "Clear decorative vessel for cut flowers",
+      "brand": "atelier",
+      "category": "decor",
+      "color": "clear",
+      "price": 28,
+      "stock": 8,
+      "age_days": 20,
+      "sales": 12
+    },
+    {
+      "id": 31,
+      "name": "Flower Vase",
+      "description": "Blue ceramic vessel for cut flowers",
+      "brand": "atelier",
+      "category": "decor",
+      "color": "blue",
+      "price": 32,
+      "stock": 8,
+      "age_days": 7,
+      "sales": 8
+    },
+    {
+      "id": 32,
+      "name": "Glass Cleaner",
+      "description": "Spray for cleaning windows and glass",
+      "brand": "clean",
+      "category": "supplies",
+      "color": "clear",
+      "price": 6,
+      "stock": 8,
+      "age_days": 25,
+      "sales": 60
+    },
+    {
+      "id": 33,
+      "name": "Office Chair",
+      "description": "Adjustable ergonomic desk seating",
+      "brand": "desk",
+      "category": "furniture",
+      "color": "black",
+      "price": 180,
+      "stock": 8,
+      "age_days": 14,
+      "sales": 20
+    },
+    {
+      "id": 34,
+      "name": "Chair Cushion",
+      "description": "Soft cushion for an office chair",
+      "brand": "desk",
+      "category": "accessories",
+      "color": "gray",
+      "price": 25,
+      "stock": 8,
+      "age_days": 14,
+      "sales": 15
+    },
+    {
+      "id": 35,
+      "name": "Folding Chair",
+      "description": "Compact portable chair for camping",
+      "brand": "ridge",
+      "category": "furniture",
+      "color": "green",
+      "price": 40,
+      "stock": 8,
+      "age_days": 14,
+      "sales": 25
+    },
+    {
+      "id": 36,
+      "name": "Été Linen Shirt",
+      "description": "Breathable linen shirt for summer",
+      "brand": "atelier",
+      "category": "apparel",
+      "color": "white",
+      "price": 55,
+      "stock": 8,
+      "age_days": 3,
+      "sales": 22
+    },
+    {
+      "id": 37,
+      "name": "Summer Linen Shirt",
+      "description": "Relaxed linen shirt with long sleeves",
+      "brand": "atelier",
+      "category": "apparel",
+      "color": "blue",
+      "price": 65,
+      "stock": 8,
+      "age_days": 20,
+      "sales": 30
+    },
+    {
+      "id": 38,
+      "name": "Coffee Grinder",
+      "description": "Manual burr grinder for coffee beans",
+      "brand": "brew",
+      "category": "kitchen",
+      "color": "black",
+      "price": 45,
+      "stock": 8,
+      "age_days": 10,
+      "sales": 35
+    },
+    {
+      "id": 39,
+      "name": "Coffee Grinder Brush",
+      "description": "Cleaning brush for a coffee grinder",
+      "brand": "brew",
+      "category": "accessories",
+      "color": "brown",
+      "price": 8,
+      "stock": 8,
+      "age_days": 10,
+      "sales": 40
+    },
+    {
+      "id": 40,
+      "name": "Camping Lantern",
+      "description": "Rechargeable light for a camping tent",
+      "brand": "ridge",
+      "category": "outdoors",
+      "color": "yellow",
+      "price": 30,
+      "stock": 8,
+      "age_days": 15,
+      "sales": 25
+    },
+    {
+      "id": 41,
+      "name": "Lantern Battery",
+      "description": "Spare rechargeable battery for a camping lantern",
+      "brand": "volt",
+      "category": "accessories",
+      "color": "black",
+      "price": 10,
+      "stock": 8,
+      "age_days": 15,
+      "sales": 15
+    },
+    {
+      "id": 42,
+      "name": "Safety Helmet",
+      "description": "Protective helmet for cycling",
+      "brand": "road",
+      "category": "sports",
+      "color": "red",
+      "price": 70,
+      "stock": 8,
+      "age_days": 5,
+      "sales": 40
+    },
+    {
+      "id": 43,
+      "name": "Helmet Cover",
+      "description": "Rain cover for a cycling helmet",
+      "brand": "road",
+      "category": "accessories",
+      "color": "red",
+      "price": 12,
+      "stock": 8,
+      "age_days": 10,
+      "sales": 5
+    },
+    {
+      "id": 44,
+      "name": "Wool Scarf",
+      "description": "Warm merino wool neckwear",
+      "brand": "field",
+      "category": "apparel",
+      "color": "red",
+      "price": 35,
+      "stock": 8,
+      "age_days": 10,
+      "sales": 15
+    },
+    {
+      "id": 45,
+      "name": "Wool Detergent",
+      "description": "Gentle cleaner for wool garments",
+      "brand": "clean",
+      "category": "supplies",
+      "color": "clear",
+      "price": 10,
+      "stock": 8,
+      "age_days": 10,
+      "sales": 15
+    },
+    {
+      "id": 46,
+      "name": "Garden Gloves",
+      "description": "Durable gloves for garden work",
+      "brand": "garden",
+      "category": "outdoors",
+      "color": "green",
+      "price": 14,
+      "stock": 8,
+      "age_days": 10,
+      "sales": 60
+    }
   ],
   "synonyms": [
-    {"Name": "footwear", "Direction": "uni", "Terms": ["sneaker", "running shoes", "boots"], "IsActive": true},
-    {"Name": "drinkware", "Direction": "bi", "Terms": ["mug", "coffee cup"], "IsActive": true}
+    {
+      "Name": "footwear",
+      "Direction": "uni",
+      "Terms": [
+        "sneaker",
+        "running shoes",
+        "boots"
+      ],
+      "IsActive": true
+    },
+    {
+      "Name": "drinkware",
+      "Direction": "bi",
+      "Terms": [
+        "mug",
+        "coffee cup"
+      ],
+      "IsActive": true
+    }
   ],
   "queries": [
-    {"name": "exact phrase versus name tokens and description", "query": "trail running shoes", "judgments": {"1": 3, "2": 2, "3": 1}},
-    {"name": "original sneaker versus synonym footwear", "query": "sneaker", "judgments": {"4": 3, "1": 2, "2": 2, "5": 2, "3": 0}},
-    {"name": "bidirectional mug synonym", "query": "mug", "judgments": {"6": 3, "7": 2}},
-    {"name": "typo correction preserves ranking", "query": "runnng", "judgments": {"1": 3, "2": 3, "3": 1}},
-    {"name": "category excludes guide", "query": "trail running shoes", "category": "shoes", "judgments": {"1": 3, "2": 2, "3": 0}},
-    {"name": "attribute restricts synonym results", "query": "sneaker", "color": "red", "category": "shoes", "judgments": {"4": 3, "1": 2, "2": 0, "3": 0}},
-    {"name": "brand restricts footwear", "query": "sneaker", "brand": "south", "judgments": {"2": 3, "5": 3, "4": 0}},
-    {"name": "price restricts drinkware", "query": "mug", "max_price": 20, "judgments": {"6": 3, "7": 0}},
-    {"name": "sales availability and recency", "query": "canvas bag", "judgments": {"8": 3, "12": 2, "9": 2, "11": 1, "10": 0}},
-    {"name": "new arrivals profile", "query": "canvas bag", "profile": "new_arrivals", "judgments": {"12": 3, "8": 2, "9": 2, "10": 1, "11": 0}},
-    {"name": "availability filter", "query": "canvas bag", "available": true, "judgments": {"8": 3, "12": 2, "9": 2, "11": 1, "10": 0}},
-    {"name": "name versus brand matches", "query": "northstar", "judgments": {"13": 3, "1": 2, "3": 2, "4": 2, "6": 2, "8": 2, "9": 2, "10": 2, "11": 2, "12": 2}},
-    {"name": "attribute versus incidental description", "query": "red", "category": "home", "judgments": {"7": 3, "14": 1}}
+    {
+      "name": "exact phrase versus name tokens and description",
+      "query": "trail running shoes",
+      "judgments": {
+        "1": 3,
+        "2": 2,
+        "3": 1
+      }
+    },
+    {
+      "name": "original sneaker versus synonym footwear",
+      "query": "sneaker",
+      "judgments": {
+        "4": 3,
+        "1": 2,
+        "2": 2,
+        "5": 2,
+        "3": 0
+      }
+    },
+    {
+      "name": "bidirectional mug synonym",
+      "query": "mug",
+      "judgments": {
+        "6": 3,
+        "7": 2
+      }
+    },
+    {
+      "name": "typo correction preserves ranking",
+      "query": "runnng",
+      "judgments": {
+        "1": 3,
+        "2": 3,
+        "3": 1
+      }
+    },
+    {
+      "name": "category excludes guide",
+      "query": "trail running shoes",
+      "category": "shoes",
+      "judgments": {
+        "1": 3,
+        "2": 2,
+        "3": 0
+      }
+    },
+    {
+      "name": "attribute restricts synonym results",
+      "query": "sneaker",
+      "color": "red",
+      "category": "shoes",
+      "judgments": {
+        "4": 3,
+        "1": 2,
+        "2": 0,
+        "3": 0
+      }
+    },
+    {
+      "name": "brand restricts footwear",
+      "query": "sneaker",
+      "brand": "south",
+      "judgments": {
+        "2": 3,
+        "5": 3,
+        "4": 0
+      }
+    },
+    {
+      "name": "price restricts drinkware",
+      "query": "mug",
+      "max_price": 20,
+      "judgments": {
+        "6": 3,
+        "7": 0
+      }
+    },
+    {
+      "name": "sales availability and recency",
+      "query": "canvas bag",
+      "judgments": {
+        "8": 3,
+        "12": 2,
+        "9": 2,
+        "11": 1,
+        "10": 0
+      }
+    },
+    {
+      "name": "new arrivals profile",
+      "query": "canvas bag",
+      "profile": "new_arrivals",
+      "judgments": {
+        "12": 3,
+        "8": 2,
+        "9": 2,
+        "10": 1,
+        "11": 0
+      }
+    },
+    {
+      "name": "availability filter",
+      "query": "canvas bag",
+      "available": true,
+      "judgments": {
+        "8": 3,
+        "12": 2,
+        "9": 2,
+        "11": 1,
+        "10": 0
+      }
+    },
+    {
+      "name": "name versus brand matches",
+      "query": "northstar",
+      "judgments": {
+        "13": 3,
+        "1": 2,
+        "3": 2,
+        "4": 2,
+        "6": 2,
+        "8": 2,
+        "9": 2,
+        "10": 2,
+        "11": 2,
+        "12": 2
+      }
+    },
+    {
+      "name": "attribute versus incidental description",
+      "query": "red",
+      "category": "home",
+      "judgments": {
+        "7": 3,
+        "14": 1
+      }
+    },
+    {
+      "name": "purchase intent waterproof",
+      "query": "waterproof",
+      "judgments": {
+        "15": 3,
+        "17": 3,
+        "16": 1
+      }
+    },
+    {
+      "name": "purchase intent waterproof jacket",
+      "query": "waterproof jacket",
+      "judgments": {
+        "15": 3,
+        "17": 3,
+        "16": 1
+      }
+    },
+    {
+      "name": "outerwear category removes repair handbook",
+      "query": "waterproof jacket",
+      "judgments": {
+        "15": 3,
+        "17": 2,
+        "16": 0
+      },
+      "category": "outerwear"
+    },
+    {
+      "name": "available waterproof outerwear",
+      "query": "waterproof",
+      "judgments": {
+        "15": 3,
+        "17": 0,
+        "16": 0
+      },
+      "category": "outerwear",
+      "available": true
+    },
+    {
+      "name": "blue sold out shell",
+      "query": "rain shell",
+      "judgments": {
+        "17": 3,
+        "15": 0
+      },
+      "color": "blue"
+    },
+    {
+      "name": "insulation purchase intent",
+      "query": "warm coat",
+      "judgments": {
+        "18": 3
+      }
+    },
+    {
+      "name": "packable lightweight phrase",
+      "query": "packable lightweight",
+      "judgments": {
+        "19": 3
+      }
+    },
+    {
+      "name": "backpack direct and description matches",
+      "query": "backpack",
+      "judgments": {
+        "20": 3,
+        "21": 3,
+        "23": 2,
+        "22": 1
+      }
+    },
+    {
+      "name": "laptop work backpack",
+      "query": "laptop backpack",
+      "judgments": {
+        "21": 3,
+        "20": 3,
+        "22": 0,
+        "23": 0
+      }
+    },
+    {
+      "name": "backpack price ceiling",
+      "query": "backpack",
+      "judgments": {
+        "21": 3,
+        "20": 2,
+        "22": 1,
+        "23": 0
+      },
+      "max_price": 70
+    },
+    {
+      "name": "camping durable backpack",
+      "query": "durable backpack",
+      "judgments": {
+        "23": 3,
+        "20": 2,
+        "21": 0,
+        "22": 0
+      }
+    },
+    {
+      "name": "backpack category removes accessories",
+      "query": "backpack",
+      "judgments": {
+        "20": 3,
+        "21": 3,
+        "23": 2,
+        "22": 0
+      },
+      "category": "packs"
+    },
+    {
+      "name": "battery purchase intent versus guide",
+      "query": "battery",
+      "judgments": {
+        "24": 3,
+        "41": 2,
+        "25": 1
+      }
+    },
+    {
+      "name": "phone charging phrase",
+      "query": "phone charging",
+      "judgments": {
+        "24": 3
+      }
+    },
+    {
+      "name": "USB name and description alternatives",
+      "query": "usb",
+      "judgments": {
+        "26": 3,
+        "27": 3
+      }
+    },
+    {
+      "name": "charger typo recovery",
+      "query": "chrger",
+      "judgments": {
+        "27": 3
+      }
+    },
+    {
+      "name": "headphone product versus accessory",
+      "query": "headphones",
+      "judgments": {
+        "28": 3,
+        "29": 1
+      }
+    },
+    {
+      "name": "black electronics excludes accessory",
+      "query": "headphones",
+      "judgments": {
+        "28": 3,
+        "29": 0
+      },
+      "category": "electronics",
+      "color": "black"
+    },
+    {
+      "name": "glass product versus cleaning supply",
+      "query": "glass",
+      "judgments": {
+        "30": 3,
+        "32": 1
+      }
+    },
+    {
+      "name": "flower decoration synonym vocabulary",
+      "query": "flowers",
+      "judgments": {
+        "30": 3,
+        "31": 3
+      }
+    },
+    {
+      "name": "blue vase filter",
+      "query": "vase",
+      "judgments": {
+        "31": 3,
+        "30": 0
+      },
+      "color": "blue"
+    },
+    {
+      "name": "office chair versus cushion",
+      "query": "office chair",
+      "judgments": {
+        "33": 3,
+        "34": 1
+      }
+    },
+    {
+      "name": "camping chair phrase",
+      "query": "camping chair",
+      "judgments": {
+        "35": 3
+      }
+    },
+    {
+      "name": "Unicode case and accent",
+      "query": "ÉTÉ",
+      "judgments": {
+        "36": 3
+      }
+    },
+    {
+      "name": "linen name coverage",
+      "query": "linen shirt",
+      "judgments": {
+        "36": 3,
+        "37": 3
+      }
+    },
+    {
+      "name": "coffee grinder versus cleaning accessory",
+      "query": "coffee grinder",
+      "judgments": {
+        "38": 3,
+        "39": 1
+      }
+    },
+    {
+      "name": "grinder kitchen scope",
+      "query": "grinder",
+      "judgments": {
+        "38": 3,
+        "39": 0
+      },
+      "category": "kitchen"
+    },
+    {
+      "name": "camping light versus spare battery",
+      "query": "camping lantern",
+      "judgments": {
+        "40": 3,
+        "41": 1
+      }
+    },
+    {
+      "name": "cycling helmet purchase intent",
+      "query": "helmet",
+      "judgments": {
+        "42": 3,
+        "43": 1
+      }
+    },
+    {
+      "name": "red cycling sports",
+      "query": "helmet",
+      "judgments": {
+        "42": 3,
+        "43": 0
+      },
+      "category": "sports",
+      "color": "red"
+    },
+    {
+      "name": "wool garment versus cleaning supply",
+      "query": "wool",
+      "judgments": {
+        "44": 3,
+        "45": 1
+      }
+    },
+    {
+      "name": "garden gloves prefix typo",
+      "query": "glvoes",
+      "judgments": {
+        "46": 3
+      }
+    }
   ]
 }

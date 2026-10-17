@@ -1,0 +1,67 @@
+name: application validation
+on:
+  push:
+  pull_request:
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: ecommerce
+          POSTGRES_PASSWORD: testing-only
+          POSTGRES_DB: ecommerce_tests
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecommerce -d ecommerce_tests"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      CI: "true"
+      DATABASE_URL: postgres://ecommerce:testing-only@localhost:5432/ecommerce_tests?sslmode=disable
+      MIGRATIONS_CI_POSTGRES_DSN: postgres://ecommerce:testing-only@localhost:5432/ecommerce_tests?sslmode=disable
+      MIGRATIONS_TEST_POSTGRES_DSN: postgres://ecommerce:testing-only@localhost:5432/ecommerce_tests?sslmode=disable
+      SEARCH_TEST_POSTGRES_DSN: postgres://ecommerce:testing-only@localhost:5432/ecommerce_tests?sslmode=disable
+      E2E_DB_DRIVER: postgres
+      E2E_DB_URL: postgres://ecommerce:testing-only@localhost:5432/ecommerce_e2e?sslmode=disable
+      JWT_SECRET: ci-only-strong-key-for-application-validation
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.19
+      - name: install frontend dependencies
+        run: cd frontend && bun install --frozen-lockfile
+      - name: build and test backend including PostgreSQL paths
+        run: |
+          go build ./...
+          go vet ./...
+          go test ./...
+      - name: validate migrations and schema compatibility
+        run: |
+          make migrate-lint
+          MIGRATIONS_ALLOW_CONTRACT=true make migrate-guard
+          make migrate-ci-gate
+      - name: validate frontend and generated contracts
+        run: |
+          make openapi-check
+          cd frontend
+          bun run check
+          bun run lint
+          bun run test:unit
+          bun run localization:check
+          bun run build
+      - name: prepare disposable PostgreSQL browser database
+        run: |
+          docker exec "${{ job.services.postgres.id }}" createdb -U ecommerce ecommerce_e2e
+          cd frontend
+          bunx playwright install --with-deps chromium
+      - name: run PostgreSQL browser journeys
+        run: cd frontend && bun run test:e2e
