@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from "$app/state";
+	import { localizedHref } from "$lib/localization/url";
 	import { resolve } from "$app/paths";
 	import { cmsMediaURL } from "$lib/cms";
 	import Card from "$lib/components/Card.svelte";
@@ -27,8 +29,13 @@
 	{:else}
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 			{#each categories as category (category.id)}
+				<!-- localizedHref preserves the base path already supplied by resolve. -->
+				<!-- eslint-disable svelte/no-navigation-without-resolve -->
 				<a
-					href={resolve(`/search?category_slug=${encodeURIComponent(category.slug)}`)}
+					href={localizedHref(
+						resolve(`/search?category_slug=${encodeURIComponent(category.slug)}`),
+						page.url
+					)}
 					class="group overflow-hidden rounded-lg border border-gray-200 transition hover:border-gray-400 dark:border-gray-800 dark:hover:border-gray-600"
 				>
 					{#if block.category_media_ids?.[category.slug]}
@@ -51,6 +58,7 @@
 						{/if}
 					</div>
 				</a>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			{/each}
 		</div>
 	{/if}

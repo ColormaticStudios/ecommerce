@@ -52,10 +52,11 @@ export const Activity: Story = {
 				data: data({
 					analytics: {
 						...metrics,
+						pagination: { page: 1, limit: 20, total: 42, total_pages: 3 },
 						days: 7,
 						queries: [{ ...metrics, query: "jacket" }],
-						popular: ["jacket"],
-						trending: ["storm shell"],
+						popular: [],
+						trending: [],
 						facet_usage: { brand: 20, stock: 32 },
 					},
 				}),

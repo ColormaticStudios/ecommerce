@@ -1,10 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/sveltekit";
 import { expect, fn, userEvent, within } from "storybook/test";
 import ProductCard from "./ProductCard.svelte";
+import { renderRouteStory } from "$lib/storybook/render";
 const clicked = fn((event: MouseEvent) => event.preventDefault());
 const meta = {
 	title: "Components/Product card",
 	component: ProductCard,
+	render: (args) => renderRouteStory({ component: ProductCard, componentProps: args }),
 	args: {
 		href: "/product/101",
 		data: {

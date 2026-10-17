@@ -1,26 +1,78 @@
-export function utcDateTimeInput(value: string | null | undefined): string {
+import type { LocalizationRuntime } from "$lib/localization/runtime";
+
+type Messages = Pick<LocalizationRuntime, "translate">;
+const sourceMessages: Messages = {
+	translate: (_key, source = "", parameters = {}) =>
+		source.replace(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g, (match, name: string) =>
+			parameters[name] === undefined ? match : String(parameters[name])
+		),
+};
+
+export function localDateTimeInput(value: string | null | undefined): string {
 	if (!value) return "";
 	const date = new Date(value);
-	return Number.isFinite(date.getTime()) ? date.toISOString().replace(/(?:\.000)?Z$/, "") : "";
+	if (!Number.isFinite(date.getTime())) return "";
+	const pad = (part: number, length = 2) => String(part).padStart(length, "0");
+	return `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}.${pad(date.getMilliseconds(), 3)}`;
 }
 
-export function utcDateTime(value: string): string | null {
+export function localDateTime(value: string, messages: Messages = sourceMessages): string | null {
 	if (!value.trim()) return null;
-	if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(value)) {
-		throw new Error("Enter a valid UTC date and time.");
-	}
-	const date = new Date(`${value}Z`);
-	if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, value.length) !== value) {
-		throw new Error("Enter a valid UTC date and time.");
+	const parts = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?$/.exec(
+		value
+	);
+	if (!parts)
+		throw new Error(
+			messages.translate(
+				"admin.search.merchandising.invalid_time",
+				"Enter a valid local date and time."
+			)
+		);
+	const date = new Date(value);
+	const expected = [
+		Number(parts[1]),
+		Number(parts[2]) - 1,
+		Number(parts[3]),
+		Number(parts[4]),
+		Number(parts[5]),
+		Number(parts[6] ?? 0),
+		Number((parts[7] ?? "0").padEnd(3, "0")),
+	];
+	const actual = [
+		date.getFullYear(),
+		date.getMonth(),
+		date.getDate(),
+		date.getHours(),
+		date.getMinutes(),
+		date.getSeconds(),
+		date.getMilliseconds(),
+	];
+	// Reject calendar overflow and nonexistent local times at daylight-saving transitions.
+	if (!Number.isFinite(date.getTime()) || expected.some((part, index) => part !== actual[index])) {
+		throw new Error(
+			messages.translate(
+				"admin.search.merchandising.invalid_time",
+				"Enter a valid local date and time."
+			)
+		);
 	}
 	return date.toISOString();
 }
 
-export function validateSchedule(startsAt: string, endsAt: string) {
-	const starts_at = utcDateTime(startsAt);
-	const ends_at = utcDateTime(endsAt);
+export function validateSchedule(
+	startsAt: string,
+	endsAt: string,
+	messages: Messages = sourceMessages
+) {
+	const starts_at = localDateTime(startsAt, messages);
+	const ends_at = localDateTime(endsAt, messages);
 	if (starts_at && ends_at && starts_at >= ends_at) {
-		throw new Error("End time must be after start time.");
+		throw new Error(
+			messages.translate(
+				"admin.search.merchandising.invalid_schedule",
+				"End time must be after start time."
+			)
+		);
 	}
 	return { starts_at, ends_at };
 }
@@ -30,7 +82,8 @@ export function merchandisingNumber(
 	label: string,
 	min: number,
 	max: number,
-	integer = true
+	integer = true,
+	messages: Messages = sourceMessages
 ): number {
 	const number = typeof value === "string" && !value.trim() ? NaN : Number(value);
 	if (
@@ -40,7 +93,17 @@ export function merchandisingNumber(
 		(integer && !Number.isInteger(number))
 	) {
 		throw new Error(
-			`${label} must be ${integer ? "a whole number" : "a number"} between ${min} and ${max}.`
+			integer
+				? messages.translate(
+						"admin.search.merchandising.invalid_integer",
+						"{label} must be a whole number between {min} and {max}.",
+						{ label, min, max }
+					)
+				: messages.translate(
+						"admin.search.merchandising.invalid_number",
+						"{label} must be a number between {min} and {max}.",
+						{ label, min, max }
+					)
 		);
 	}
 	return number;
@@ -85,7 +148,10 @@ export function emptyMerchandisingDraft(): MerchandisingDraft {
 	};
 }
 
-export function ruleDraft(rule: MerchandisingRule): MerchandisingDraft {
+export function ruleDraft(
+	rule: MerchandisingRule,
+	messages: Messages = sourceMessages
+): MerchandisingDraft {
 	return {
 		name: rule.name,
 		ruleType: rule.rule_type,
@@ -97,43 +163,101 @@ export function ruleDraft(rule: MerchandisingRule): MerchandisingDraft {
 		channel: rule.predicate.channel ?? "",
 		targets: rule.action.targets.map((target) => ({
 			productId: target.product_id,
-			name: target.product_name || "Unavailable product",
+			name:
+				target.product_name ||
+				messages.translate("admin.search.merchandising.unavailable_product", "Unavailable product"),
 			position: String(target.position ?? 1),
 		})),
 		multiplier: String(rule.action.multiplier ?? 2),
-		startsAt: utcDateTimeInput(rule.starts_at),
-		endsAt: utcDateTimeInput(rule.ends_at),
+		startsAt: localDateTimeInput(rule.starts_at),
+		endsAt: localDateTimeInput(rule.ends_at),
 	};
 }
 
-export function buildMerchandisingInput(draft: MerchandisingDraft): MerchandisingInput {
-	if (!draft.name.trim()) throw new Error("Rule name is required.");
-	if (draft.name.trim().length > 120) throw new Error("Rule name must be 120 characters or fewer.");
-	if (draft.targets.length === 0) throw new Error("Select at least one product.");
+export function buildMerchandisingInput(
+	draft: MerchandisingDraft,
+	messages: Messages = sourceMessages
+): MerchandisingInput {
+	if (!draft.name.trim())
+		throw new Error(
+			messages.translate("admin.search.merchandising.required_name", "Rule name is required.")
+		);
+	if (draft.name.trim().length > 120)
+		throw new Error(
+			messages.translate(
+				"admin.search.merchandising.long_name",
+				"Rule name must be 120 characters or fewer."
+			)
+		);
+	if (draft.targets.length === 0)
+		throw new Error(
+			messages.translate(
+				"admin.search.merchandising.required_target",
+				"Select at least one product."
+			)
+		);
 	if (new Set(draft.targets.map((target) => target.productId)).size !== draft.targets.length)
-		throw new Error("Select each product only once.");
+		throw new Error(
+			messages.translate(
+				"admin.search.merchandising.duplicate_product",
+				"Select each product only once."
+			)
+		);
 	const targets = draft.targets.map((target) => ({
 		product_id: target.productId,
 		...(draft.ruleType === "pin"
-			? { position: merchandisingNumber(target.position, "Position", 1, 10000) }
+			? {
+					position: merchandisingNumber(
+						target.position,
+						messages.translate("admin.search.merchandising.position", "Position"),
+						1,
+						10000,
+						true,
+						messages
+					),
+				}
 			: {}),
 	}));
 	if (
 		draft.ruleType === "pin" &&
 		new Set(targets.map((target) => target.position)).size !== targets.length
 	)
-		throw new Error("Pinned positions must be distinct within a rule.");
+		throw new Error(
+			messages.translate(
+				"admin.search.merchandising.duplicate_position",
+				"Pinned positions must be distinct within a rule."
+			)
+		);
 	const multiplier =
 		draft.ruleType === "boost"
-			? merchandisingNumber(draft.multiplier, "Multiplier", 1, 100, false)
+			? merchandisingNumber(
+					draft.multiplier,
+					messages.translate("admin.search.merchandising.multiplier", "Multiplier"),
+					1,
+					100,
+					false,
+					messages
+				)
 			: undefined;
 	if (multiplier !== undefined && multiplier <= 1)
-		throw new Error("Boost multiplier must be greater than 1.");
-	const schedule = validateSchedule(draft.startsAt, draft.endsAt);
+		throw new Error(
+			messages.translate(
+				"admin.search.merchandising.invalid_multiplier",
+				"Boost multiplier must be greater than 1."
+			)
+		);
+	const schedule = validateSchedule(draft.startsAt, draft.endsAt, messages);
 	return {
 		name: draft.name.trim(),
 		rule_type: draft.ruleType,
-		priority: merchandisingNumber(draft.priority, "Priority", 0, 10000),
+		priority: merchandisingNumber(
+			draft.priority,
+			messages.translate("admin.search.merchandising.priority", "Priority"),
+			0,
+			10000,
+			true,
+			messages
+		),
 		is_active: draft.isActive,
 		predicate: {
 			...(draft.queryValue.trim()
@@ -183,4 +307,19 @@ export function previewRules(
 			ends_at: rule.ends_at ?? undefined,
 		}));
 	return [...retained, { ...draft, ...(editingId ? { id: editingId } : {}) }];
+}
+
+export function formatMerchandisingSchedule(
+	value: string | null,
+	timezone: string,
+	messages: Pick<LocalizationRuntime, "translate" | "formatDate">
+): string {
+	if (!value) return messages.translate("admin.search.merchandising.open_ended", "Open ended");
+	if (!timezone)
+		return messages.translate("admin.search.merchandising.loading_time", "Loading local time…");
+	return messages.formatDate(value, {
+		dateStyle: "medium",
+		timeStyle: "short",
+		timeZone: timezone,
+	});
 }

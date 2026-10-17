@@ -39,18 +39,43 @@ function appendQueryParams(url: URL, params?: Record<string, unknown>) {
 }
 
 export async function serverRequest<T>(
-	event: Pick<RequestEvent, "request">,
+	event: Pick<RequestEvent, "request" | "getClientAddress"> &
+		Partial<Pick<RequestEvent, "url" | "locals" | "cookies">>,
 	path: string,
 	params?: Record<string, unknown>
 ): Promise<T> {
 	const url = new URL(`${API_BASE_URL}${API_ROUTE}${path}`);
 	appendQueryParams(url, params);
+	const pageUrl = event.url ?? new URL(event.request.url);
+	const registryRequest = path === "/localization/locales";
+	const localizedPublicRequest =
+		!path.startsWith("/admin/") && !path.startsWith("/auth/") && path !== "/me/";
+	if (!registryRequest && localizedPublicRequest && pageUrl.searchParams.has("locale"))
+		url.searchParams.set("locale", pageUrl.searchParams.get("locale") ?? "");
+	if (!registryRequest && localizedPublicRequest && pageUrl.searchParams.has("market"))
+		url.searchParams.set("market", pageUrl.searchParams.get("market") ?? "");
 
+	if (registryRequest) url.searchParams.set("market", "");
 	const headers = new Headers();
 	headers.set("Content-Type", "application/json");
-	const cookie = event.request.headers.get("cookie");
+	// SvelteKit resolves trusted ingress hops. Never relay an incoming XFF value.
+	headers.set("X-Forwarded-For", event.getClientAddress());
+	const cookie = event.cookies
+		? event.cookies
+				.getAll()
+				.map(({ name, value }) => `${name}=${encodeURIComponent(value)}`)
+				.join("; ")
+		: event.request.headers.get("cookie");
 	if (cookie) {
-		headers.set("cookie", cookie);
+		headers.set(
+			"cookie",
+			registryRequest
+				? cookie
+						.split(";")
+						.filter((part) => !/^\s*(?:locale|market)=/.test(part))
+						.join(";")
+				: cookie
+		);
 	}
 	for (const name of [
 		"user-agent",
@@ -61,7 +86,16 @@ export async function serverRequest<T>(
 		"x-market",
 	]) {
 		const value = event.request.headers.get(name);
-		if (value) headers.set(name, value);
+		if (
+			value &&
+			!(registryRequest && ["x-locale", "accept-language", "x-market"].includes(name)) &&
+			!(
+				pageUrl.searchParams.has("locale") &&
+				(name === "x-locale" || name === "accept-language")
+			) &&
+			!(pageUrl.searchParams.has("market") && name === "x-market")
+		)
+			headers.set(name, value);
 	}
 	const host = event.request.headers.get("x-forwarded-host") ?? event.request.headers.get("host");
 	if (host) headers.set("x-forwarded-host", host);
@@ -74,6 +108,25 @@ export async function serverRequest<T>(
 		method: "GET",
 		headers,
 	});
+	if (path.startsWith("/localization/bundles/")) {
+		if (
+			event.locals?.publicLocalization &&
+			!response.headers.get("cache-control")?.startsWith("public,")
+		)
+			event.locals.publicLocalization.cacheable = false;
+		const rollout = response.headers
+			.getSetCookie()
+			.map((cookie) => /^localization_rollout=([^;]+)/.exec(cookie)?.[1])
+			.find(Boolean);
+		if (rollout && event.cookies)
+			event.cookies.set("localization_rollout", rollout, {
+				path: "/",
+				httpOnly: true,
+				sameSite: "lax",
+				secure: pageUrl.protocol === "https:",
+				maxAge: 31536000,
+			});
+	}
 	const text = await response.text();
 	let body: unknown;
 	try {
@@ -90,7 +143,7 @@ export async function serverRequest<T>(
 }
 
 export async function serverIsAuthenticated(
-	event: Pick<RequestEvent, "request">
+	event: Pick<RequestEvent, "request" | "getClientAddress">
 ): Promise<boolean> {
 	try {
 		await serverRequest(event, "/me/");

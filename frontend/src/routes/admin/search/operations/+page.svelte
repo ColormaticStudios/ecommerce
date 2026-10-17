@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getContext } from "svelte";
 	import type { API } from "$lib/api";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 	import type { PageData } from "./$types";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
 	import AdminPanel from "$lib/admin/AdminPanel.svelte";
@@ -17,6 +18,7 @@
 	import TableCell from "$lib/admin/table/TableCell.svelte";
 	let { data }: { data: PageData } = $props();
 	const api = getContext<API>("api");
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 	const notices = createAdminNotices();
 	let freshness = $state<PageData["freshness"]>(null);
 	let busy = $state(false);
@@ -111,7 +113,8 @@
 </script>
 
 <section class="space-y-6">
-	<AdminPageHeader title="Search operations"
+	<AdminPageHeader
+		title={$localization.translate("admin.search.operations.title", "search operations")}
 		>{#snippet actions()}<Button tone="admin" onclick={refresh} disabled={busy}>Refresh</Button
 			>{/snippet}</AdminPageHeader
 	>

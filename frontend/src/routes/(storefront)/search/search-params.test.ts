@@ -3,15 +3,16 @@ import { buildSearchParams, defaultSearchSort, type SearchUrlState } from "./sea
 
 const state: SearchUrlState = {
 	query: "jacket",
-	brandSlug: "colormatic",
-	hasVariantStock: true,
-	attributeFilters: { color: "red" },
+	brandSlugs: ["colormatic"],
+	categorySlugs: [],
+	stockSelections: [true],
+	priceRanges: [],
+	attributeSelections: { color: ["red"] },
 	page: 3,
 	limit: 24,
 	sort: "relevance",
 	sortExplicit: false,
 	order: "desc",
-	rankingProfile: "new_arrivals",
 };
 
 test("default ordering follows whether the query has keywords", () => {
@@ -20,12 +21,12 @@ test("default ordering follows whether the query has keywords", () => {
 });
 
 test.each(["relevance", "created_at", "price", "name"] as const)(
-	"explicit %s ordering survives query changes and preserves the ranking profile",
+	"explicit %s ordering survives query changes without a public ranking override",
 	(sort) => {
 		for (const query of ["jacket", ""]) {
 			const params = buildSearchParams({ ...state, query, sort, sortExplicit: true, page: 1 });
 			expect(params.get("sort")).toBe(sort);
-			expect(params.get("ranking_profile")).toBe("new_arrivals");
+			expect(params.has("ranking_profile")).toBe(false);
 			expect(params.has("page")).toBe(false);
 			expect(params.get("brand_slug")).toBe("colormatic");
 			expect(params.get("attribute[color]")).toBe("red");
@@ -38,7 +39,7 @@ test("implicit ordering remains implicit when navigating or changing a query", (
 	expect(params.has("sort")).toBe(false);
 	expect(params.get("page")).toBe("3");
 	expect(params.get("limit")).toBe("24");
-	expect(params.get("ranking_profile")).toBe("new_arrivals");
+	expect(params.has("ranking_profile")).toBe(false);
 });
 test("multi-value facets survive pagination and explicit ordering", () => {
 	const params = buildSearchParams({

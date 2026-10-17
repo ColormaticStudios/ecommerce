@@ -65,3 +65,11 @@ export const BusinessSignalsEnabled: Story = {
 		return renderRouteStory({ component: Page, componentProps: { data: configured } });
 	},
 };
+
+export const ConversionPreviewOnly: Story = {
+	render: () => {
+		const configured = data();
+		configured.items[0].weights.conversion = 50;
+		return renderRouteStory({ component: Page, componentProps: { data: configured } });
+	},
+};

@@ -7,7 +7,8 @@
 	import { getContext, onMount } from "svelte";
 	import { invalidateAll } from "$app/navigation";
 	import { resolve } from "$app/paths";
-	import { navigating } from "$app/state";
+	import { navigating, page } from "$app/state";
+	import { localizedHref } from "$lib/localization/url";
 	import type { LayoutData } from "./$types";
 	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 
@@ -178,7 +179,7 @@
 		if (hash) {
 			resolved += `#${hash}`;
 		}
-		return resolved;
+		return localizedHref(resolved, page.url);
 	}
 
 	function targetFor(url: string): string | undefined {
@@ -276,7 +277,7 @@
 		class="flex flex-wrap items-center justify-between gap-2 bg-gray-100 px-3 py-2 dark:bg-gray-900"
 	>
 		<div class="flex items-center gap-2">
-			<a href={resolve("/")} class="navlink text-2xl">Ecommerce</a>
+			<a href={hrefFor("/")} class="navlink text-2xl">Ecommerce</a>
 			{#if headerNavigation?.items?.length}
 				<div class="hidden items-center gap-1 pl-3 md:flex">
 					{#each headerNavigation.items as item (item.id)}
@@ -317,7 +318,7 @@
 		</div>
 		<div class="flex items-center gap-3">
 			<a
-				href={resolve("/search")}
+				href={hrefFor("/search")}
 				class="navlink text-lg"
 				aria-label={$localization.translate("storefront.shell.search", "Search")}
 			>
@@ -522,7 +523,7 @@
 											: "grid gap-10 md:grid-cols-[minmax(14rem,1.1fr)_2fr]"}
 								>
 									<div>
-										<a href={resolve("/")} class="text-lg font-semibold">{block.brand_name}</a
+										<a href={hrefFor("/")} class="text-lg font-semibold">{block.brand_name}</a
 										>{#if block.tagline}<p
 												class={`mt-3 max-w-sm opacity-70 ${block.layout === "centered" ? "mx-auto" : ""}`}
 											>

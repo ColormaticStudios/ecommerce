@@ -18,7 +18,17 @@ declare global {
 
 	namespace App {
 		// interface Error {}
-		// interface Locals {}
+		interface Locals {
+			publicLocalization?: {
+				locale: string;
+				market: string;
+				cacheable: boolean;
+				locales: import("$lib/api/generated/openapi").components["schemas"]["LocalizationLocaleList"];
+				bundle:
+					| import("$lib/api/generated/openapi").components["schemas"]["LocalizationBundle"]
+					| null;
+			};
+		}
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}

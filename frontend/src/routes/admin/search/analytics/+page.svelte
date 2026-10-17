@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContext } from "svelte";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 	import type { API } from "$lib/api";
 	import type { PageData } from "./$types";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
@@ -16,6 +17,7 @@
 	import TableRow from "$lib/admin/table/TableRow.svelte";
 	let { data }: { data: PageData } = $props();
 	const api = getContext<API>("api");
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 	const notices = createAdminNotices();
 	let analytics = $state<PageData["analytics"]>(null);
 	let days = $state(7);
@@ -25,11 +27,11 @@
 		analytics = data.analytics;
 		days = data.analytics?.days ?? 7;
 	});
-	async function refresh() {
+	async function refresh(page = analytics?.pagination.page ?? 1) {
 		const requestRevision = ++revision;
 		loading = true;
 		try {
-			const response = await api.adminSearchAnalytics(days);
+			const response = await api.adminSearchAnalytics(days, page, 20);
 			if (requestRevision === revision) analytics = response;
 		} catch {
 			if (requestRevision === revision) notices.setError("Unable to load search analytics.");
@@ -41,12 +43,17 @@
 </script>
 
 <section class="space-y-6">
-	<AdminPageHeader title="Search analytics"
-		>{#snippet actions()}<Dropdown tone="admin" full={false} bind:value={days} onchange={refresh}
+	<AdminPageHeader
+		title={$localization.translate("admin.search.analytics.title", "search analytics")}
+		>{#snippet actions()}<Dropdown
+				tone="admin"
+				full={false}
+				bind:value={days}
+				onchange={() => refresh(1)}
 				><option value={7}>Last 7 days</option><option value={30}>Last 30 days</option><option
 					value={90}>Last 90 days</option
 				></Dropdown
-			><Button tone="admin" disabled={loading} onclick={refresh}>Refresh</Button
+			><Button tone="admin" disabled={loading} onclick={() => refresh()}>Refresh</Button
 			>{/snippet}</AdminPageHeader
 	>
 	{#if data.errorMessage}<AdminEmptyState tone="error">{data.errorMessage}</AdminEmptyState>{/if}
@@ -87,6 +94,31 @@
 					></Table
 				>
 			{:else}<AdminEmptyState>No opted-in search activity in this period.</AdminEmptyState>{/if}
+			<div class="mt-4 flex flex-wrap items-center gap-3">
+				<Button
+					tone="admin"
+					disabled={loading || analytics.pagination.page <= 1}
+					onclick={() => refresh((analytics?.pagination.page ?? 1) - 1)}
+					>{localization.translate("storefront.search.previous", "Previous")}</Button
+				>
+				<span class="text-sm text-stone-500"
+					>{localization.translate(
+						"admin.search.analytics.pagination",
+						"Page {page} of {pages} · {total} queries",
+						{
+							page: analytics.pagination.page,
+							pages: Math.max(1, analytics.pagination.total_pages),
+							total: analytics.pagination.total,
+						}
+					)}</span
+				>
+				<Button
+					tone="admin"
+					disabled={loading || analytics.pagination.page >= analytics.pagination.total_pages}
+					onclick={() => refresh((analytics?.pagination.page ?? 1) + 1)}
+					>{localization.translate("storefront.search.next", "Next")}</Button
+				>
+			</div>
 		</AdminPanel>
 		<AdminPanel title="filter usage"
 			><dl class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -94,22 +126,6 @@
 						<dt class="text-sm text-stone-500">{name}</dt>
 						<dd class="mt-1 font-medium">{count}</dd>
 					</div>{:else}<AdminEmptyState>No filter activity in this period.</AdminEmptyState>{/each}
-			</dl></AdminPanel
-		>
-		<AdminPanel title="public discovery"
-			><p class="mb-4 text-sm text-stone-500">
-				Popular and trending queries use seven-day activity and need at least five distinct opted-in
-				sessions.
-			</p>
-			<dl class="grid gap-4 sm:grid-cols-2">
-				<div>
-					<dt class="font-medium">Popular searches</dt>
-					<dd class="mt-2 text-sm">{analytics.popular.join(", ") || "No qualifying queries"}</dd>
-				</div>
-				<div>
-					<dt class="font-medium">Trending searches</dt>
-					<dd class="mt-2 text-sm">{analytics.trending.join(", ") || "No qualifying queries"}</dd>
-				</div>
 			</dl></AdminPanel
 		>
 	{:else}<AdminEmptyState>Search analytics are unavailable.</AdminEmptyState>{/if}

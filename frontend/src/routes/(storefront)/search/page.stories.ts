@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/sveltekit";
 import type { ComponentProps } from "svelte";
+import { expect, userEvent, within } from "storybook/test";
 import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
-import { makeAttributeDefinition, makeBrand, makeProduct } from "$lib/storybook/factories";
+import { makeProduct } from "$lib/storybook/factories";
 import { makeRouteLayoutData } from "$lib/storybook/layout";
 import { renderRouteStory } from "$lib/storybook/render";
 import SearchPage from "./+page.svelte";
@@ -49,21 +50,13 @@ function createData(overrides: Partial<SearchPageData> = {}): SearchPageData {
 		priceRanges: [],
 		attributeSelections: {},
 		facets: [],
-		categories: [],
+		resultSnapshot: "",
 		metadata: null,
-		suggestions: { suggestions: [], corrections: [], popular: [], trending: [] },
+		suggestions: { suggestions: [], corrections: [] },
 		results: [],
-		brands: [makeBrand(), makeBrand({ id: 2, name: "Northline", slug: "northline" })],
-		attributes: [
-			makeAttributeDefinition(),
-			makeAttributeDefinition({ id: 2, key: "waterproof", slug: "waterproof", type: "boolean" }),
-		],
 		errorMessage: "",
 		searchQuery: "",
 		draftQuery: "",
-		brandSlug: "",
-		hasVariantStock: false,
-		attributeFilters: {},
 		currentPage: 1,
 		pageSize: 12,
 		totalPages: 1,
@@ -71,7 +64,6 @@ function createData(overrides: Partial<SearchPageData> = {}): SearchPageData {
 		sortBy: "created_at",
 		sortOrder: "desc",
 		sortExplicit: false,
-		rankingProfile: "",
 		...overrides,
 	};
 }
@@ -87,6 +79,45 @@ export const BrowseAll: Story = {
 				}),
 			},
 		}),
+};
+
+export const SinglePriceAndSelectedUnknown: Story = {
+	render: () =>
+		renderRouteStory({
+			component: SearchPage,
+			componentProps: {
+				data: createData({
+					results: browseResults.slice(0, 1),
+					totalResults: 1,
+					brandSlugs: ["retired-brand"],
+					facets: [
+						{ name: "brand", type: "terms", values: [] },
+						{ name: "category", type: "terms", values: [] },
+						{
+							name: "price",
+							type: "range",
+							values: [
+								{
+									value: "120:120",
+									min_price: 120,
+									max_price: 120,
+									count: 1,
+									selected: false,
+									disabled: false,
+								},
+							],
+						},
+					],
+				}),
+			},
+		}),
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		await expect(canvas.getByText("Browse 1 product")).toBeVisible();
+		await expect(canvas.getByRole("checkbox", { name: /retired-brand/ })).toBeChecked();
+		await expect(canvas.getByRole("checkbox", { name: /\$120\.00/ })).toBeVisible();
+		await expect(canvas.queryByRole("group", { name: "Categories" })).not.toBeInTheDocument();
+	},
 };
 
 export const Results: Story = {
@@ -117,7 +148,7 @@ export const NoMatches: Story = {
 					searchQuery: "unobtainium",
 					sortBy: "relevance",
 					draftQuery: "unobtainium",
-					brandSlug: "colormatic",
+					brandSlugs: ["colormatic"],
 					totalResults: 0,
 				}),
 			},
@@ -146,7 +177,6 @@ export const RankedNewArrivals: Story = {
 					draftQuery: "jacket",
 					sortBy: "relevance",
 					sortExplicit: true,
-					rankingProfile: "new_arrivals",
 					results: browseResults.slice(0, 2),
 					totalResults: 2,
 				}),
@@ -179,23 +209,34 @@ export const SpellingRecovery: Story = {
 			},
 		}),
 };
-export const PopularDiscovery: Story = {
+export const KeyboardSuggestions: Story = {
 	render: () =>
 		renderRouteStory({
 			component: SearchPage,
 			componentProps: {
 				data: createData({
 					suggestions: {
-						suggestions: [],
-						corrections: [],
-						popular: ["jacket", "tote"],
-						trending: ["storm shell"],
+						suggestions: ["jacket", "jacket waterproof"],
+						corrections: ["jackets"],
 					},
+					draftQuery: "jac",
+					searchQuery: "jac",
 					results: browseResults,
 					totalResults: 3,
 				}),
 			},
 		}),
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const input = canvas.getByRole("combobox", { name: "Search products" });
+		await userEvent.click(input);
+		await userEvent.keyboard("{ArrowDown}{End}");
+		await expect(input).toHaveAttribute("aria-expanded", "true");
+		await expect(canvas.getByRole("option", { name: "Did you mean jackets" })).toHaveAttribute(
+			"aria-selected",
+			"true"
+		);
+	},
 };
 export const CatalogFallback: Story = {
 	render: () =>
@@ -206,11 +247,31 @@ export const CatalogFallback: Story = {
 					searchQuery: "jacket",
 					draftQuery: "jacket",
 					metadata: { ...searchMetadata, degraded: true, fallback_reason: "circuit_open" },
+					brandSlugs: ["colormatic"],
+					stockSelections: [true, false],
+					attributeSelections: { color: ["blue"] },
 					results: browseResults,
 					totalResults: 3,
 				}),
 			},
 		}),
+};
+
+export const AnalyticsConsent: Story = {
+	render: () =>
+		renderRouteStory({
+			component: SearchPage,
+			componentProps: {
+				data: createData({ metadata: searchMetadata, results: browseResults, totalResults: 3 }),
+			},
+		}),
+	play: async ({ canvasElement }) => {
+		const checkbox = within(canvasElement).getByRole("checkbox", {
+			name: /Allow anonymous search activity/,
+		});
+		if (!(checkbox as HTMLInputElement).checked) await userEvent.click(checkbox);
+		await expect(checkbox).toBeChecked();
+	},
 };
 
 export const FacetSelections: Story = {

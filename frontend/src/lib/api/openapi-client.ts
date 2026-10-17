@@ -1,3 +1,4 @@
+import { appendBrowserLocalization } from "$lib/localization/url";
 import type { paths } from "$lib/api/generated/openapi";
 import { API_BASE_URL } from "$lib/config";
 import { appendQueryParams } from "$lib/api/http";
@@ -26,6 +27,7 @@ export async function fetchProducts(baseUrl = DEFAULT_BASE_URL, query?: ListProd
 	const url = new URL("/api/v1/products", baseUrl);
 	appendQueryParams(url, query as Record<string, unknown> | undefined);
 
+	appendBrowserLocalization(url);
 	const response = await fetch(url.toString(), {
 		method: "GET",
 		credentials: "include",
@@ -50,6 +52,7 @@ export async function fetchSearchProducts(baseUrl = DEFAULT_BASE_URL, query?: Se
 	const url = new URL("/api/v1/search/products", baseUrl);
 	appendQueryParams(url, query as Record<string, unknown> | undefined);
 
+	appendBrowserLocalization(url);
 	const response = await fetch(url.toString(), {
 		method: "GET",
 		credentials: "include",
@@ -72,6 +75,7 @@ export async function fetchSearchProducts(baseUrl = DEFAULT_BASE_URL, query?: Se
 
 export async function fetchProduct(baseUrl = DEFAULT_BASE_URL, id: number) {
 	const url = new URL(`/api/v1/products/${id}`, baseUrl);
+	appendBrowserLocalization(url);
 	const response = await fetch(url.toString(), {
 		method: "GET",
 		credentials: "include",

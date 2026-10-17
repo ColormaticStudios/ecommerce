@@ -1,21 +1,24 @@
 import { expect, test } from "vitest";
 import {
 	merchandisingNumber,
-	utcDateTime,
-	utcDateTimeInput,
+	localDateTime,
+	localDateTimeInput,
 	validateSchedule,
 } from "./search-merchandising";
 
-test("schedule inputs use UTC without the browser timezone", () => {
-	expect(utcDateTime("2026-10-10T12:30")).toBe("2026-10-10T12:30:00.000Z");
-	expect(utcDateTimeInput("2026-10-10T14:30:00+02:00")).toBe("2026-10-10T12:30:00");
+test("schedule inputs use local timezone and persist UTC", () => {
+	const expected = new Date(2026, 9, 10, 12, 30).toISOString();
+	expect(localDateTime("2026-10-10T12:30")).toBe(expected);
+	expect(localDateTime(localDateTimeInput("2026-10-10T14:30:00+02:00"))).toBe(
+		"2026-10-10T12:30:00.000Z"
+	);
 	expect(validateSchedule("", "")).toEqual({ starts_at: null, ends_at: null });
 });
 
 test.each(["invalid", "2026-02-30T12:00", "2026-10-10T25:00", "2026-10-10"])(
-	"invalid UTC date %s is rejected",
+	"invalid local date %s is rejected",
 	(value) => {
-		expect(() => utcDateTime(value)).toThrow("valid UTC");
+		expect(() => localDateTime(value)).toThrow("valid local");
 	}
 );
 
@@ -118,5 +121,47 @@ test("unsaved preview replaces the editing rule and retains other identities wit
 
 test("schedule editing preserves seconds and milliseconds", () => {
 	const original = "2026-10-10T12:30:45.250Z";
-	expect(utcDateTime(utcDateTimeInput(original))).toBe(original);
+	expect(localDateTime(localDateTimeInput(original))).toBe(original);
+});
+test("local schedules account for summer offset and reject nonexistent DST wall time", () => {
+	const previous = process.env.TZ;
+	process.env.TZ = "Europe/Paris";
+	try {
+		expect(localDateTime("2026-10-10T12:30")).toBe("2026-10-10T10:30:00.000Z");
+		expect(localDateTime("2026-12-10T12:30")).toBe("2026-12-10T11:30:00.000Z");
+		expect(() => localDateTime("2026-03-29T02:30")).toThrow("valid local");
+	} finally {
+		if (previous === undefined) delete process.env.TZ;
+		else process.env.TZ = previous;
+	}
+});
+
+test("validation and missing product names use the supplied localization runtime", () => {
+	const messages = { translate: (key: string) => `translated:${key}` };
+	expect(() => buildMerchandisingInput(emptyMerchandisingDraft(), messages)).toThrow(
+		"translated:admin.search.merchandising.required_name"
+	);
+	expect(() => localDateTime("invalid", messages)).toThrow(
+		"translated:admin.search.merchandising.invalid_time"
+	);
+	expect(
+		ruleDraft({ ...rule, action: { targets: [{ product_id: 1, product_name: "" }] } }, messages)
+			.targets[0].name
+	).toBe("translated:admin.search.merchandising.unavailable_product");
+});
+
+import { formatMerchandisingSchedule } from "./search-merchandising";
+import { createFallbackLocalization } from "$lib/localization/runtime";
+
+test("rule list and history show the browser zone rather than UTC or server time", () => {
+	const messages = createFallbackLocalization();
+	const instant = "2026-11-01T00:00:00Z";
+	expect(formatMerchandisingSchedule(instant, "America/Los_Angeles", messages)).toBe(
+		"Oct 31, 2026, 5:00 PM"
+	);
+	expect(formatMerchandisingSchedule(instant, "Europe/Berlin", messages)).toBe(
+		"Nov 1, 2026, 1:00 AM"
+	);
+	expect(formatMerchandisingSchedule(instant, "", messages)).toBe("Loading local time…");
+	expect(formatMerchandisingSchedule(null, "America/Los_Angeles", messages)).toBe("Open ended");
 });

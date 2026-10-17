@@ -1,4 +1,8 @@
 <script lang="ts">
+	import { page } from "$app/state";
+	import { localizedHref } from "$lib/localization/url";
+	import { getContext } from "svelte";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 	import Card from "$lib/components/Card.svelte";
 	import { displayBasePrice, displayUnitPrice, formatPrice, hasDiscount } from "$lib/utils";
 
@@ -21,9 +25,11 @@
 		data: ProductCardData;
 		imageAspect?: "square" | "wide";
 		onclick?: (event: MouseEvent) => void;
+		onauxclick?: (event: MouseEvent) => void;
 	};
 
-	let { href, data, imageAspect = "square", onclick }: Props = $props();
+	let { href, data, imageAspect = "square", onclick, onauxclick }: Props = $props();
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 
 	const imageClass = $derived(imageAspect === "wide" ? "aspect-[4/3]" : "aspect-square");
 	const unitPrice = $derived(
@@ -58,8 +64,9 @@
 </script>
 
 <Card
-	{href}
+	href={localizedHref(href, page.url)}
 	{onclick}
+	{onauxclick}
 	padding="none"
 	overflowHidden={true}
 	interactive={true}
@@ -74,7 +81,9 @@
 				loading="lazy"
 			/>
 		{:else}
-			<div class="flex h-full items-center justify-center text-gray-400">No image</div>
+			<div class="flex h-full items-center justify-center text-gray-400">
+				{$localization.translate("storefront.product.no_image", "No image")}
+			</div>
 		{/if}
 	</div>
 	<div class="flex flex-1 flex-col gap-2 p-4">
@@ -98,7 +107,9 @@
 					class="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-lg font-semibold text-gray-900 dark:text-gray-100"
 				>
 					{#if data.priceRange && data.priceRange.min < data.priceRange.max}
-						From {formatPrice(data.priceRange.min)}
+						{$localization.translate("storefront.product.price_from", "From {price}", {
+							price: formatPrice(data.priceRange.min),
+						})}
 					{:else}
 						{formatPrice(unitPrice)}
 					{/if}

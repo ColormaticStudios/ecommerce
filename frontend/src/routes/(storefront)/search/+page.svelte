@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { navigating } from "$app/state";
+	import { navigating, page } from "$app/state";
 	import { getContext, onMount, onDestroy } from "svelte";
 	import type { components } from "$lib/api/generated/openapi";
 	import type { API } from "$lib/api";
-	import { parseProduct } from "$lib/models";
 	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 	import {
 		recordSearchImpression,
@@ -21,9 +20,11 @@
 	import Dropdown from "$lib/components/Dropdown.svelte";
 	import EmptyStateCard from "$lib/components/EmptyStateCard.svelte";
 	import FilterPanel from "$lib/components/FilterPanel.svelte";
-	import TextInput from "$lib/components/TextInput.svelte";
+	import SearchCombobox from "$lib/search/SearchCombobox.svelte";
 	import type { ProductModel } from "$lib/models";
 	import ProductCard from "$lib/components/ProductCard.svelte";
+	import { formatPrice } from "$lib/utils";
+	import { priceFacetBounds, visibleSearchFacets } from "./search-facets";
 	import {
 		buildSearchParams,
 		defaultSearchSort,
@@ -42,8 +43,6 @@
 	let suggestions = $state<PageData["suggestions"]>({
 		suggestions: [],
 		corrections: [],
-		popular: [],
-		trending: [],
 	});
 	let consent = $state(false);
 	let impressionId = $state("");
@@ -55,31 +54,15 @@
 	async function collectImpression() {
 		const revision = ++impressionRevision;
 		impressionId = "";
-		if (!consent || data.metadata?.degraded || data.draftPreview?.active) return;
+		if (!consent || !data.resultSnapshot || data.metadata?.degraded || data.draftPreview?.active)
+			return;
 		try {
 			const response = await recordSearchImpression(
 				api,
-				{
-					q: data.searchQuery || undefined,
-					brand_slug: data.brandSlugs.length ? data.brandSlugs : undefined,
-					category_slug: data.categorySlugs.length ? data.categorySlugs : undefined,
-					price_range: data.priceRanges.length ? data.priceRanges : undefined,
-					has_variant_stock: data.stockSelections.length ? data.stockSelections : undefined,
-					attribute: data.attributeSelections,
-					page: data.currentPage,
-					limit: data.pageSize,
-					sort: data.sortExplicit ? data.sortBy : undefined,
-					order: data.sortOrder,
-					ranking_profile: data.rankingProfile || undefined,
-				},
+				data.resultSnapshot,
 				(impressionEventId ||= crypto.randomUUID())
 			);
 			if (!response || revision !== impressionRevision || !searchConsent()) return;
-			results = response.result.items.map(parseProduct);
-			metadata = response.result.metadata;
-			facets = response.result.facets;
-			totalResults = response.result.pagination.total;
-			totalPages = Math.max(1, response.result.pagination.total_pages);
 			impressionId = response.impression_id;
 		} catch {
 			/* Search remains usable without analytics. */
@@ -128,34 +111,19 @@
 				const response = await api.searchSuggestions(query);
 				if (revision === suggestionsRevision) suggestions = response;
 			} catch {
-				if (revision === suggestionsRevision)
-					suggestions = { suggestions: [], corrections: [], popular: [], trending: [] };
+				if (revision === suggestionsRevision) suggestions = { suggestions: [], corrections: [] };
 			}
 		}, 200);
 	}
-	async function clickProduct(event: MouseEvent, product: ProductModel, index: number) {
+	function clickProduct(product: ProductModel, index: number) {
 		if (!consent || !impressionId || degraded) return;
-		const ordinary =
-			event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
-		if (ordinary) event.preventDefault();
-		let navigationTimer: ReturnType<typeof setTimeout> | undefined;
-		try {
-			await Promise.race([
-				recordSearchClick(api, {
-					impressionId,
-					productId: product.id,
-					position: (currentPage - 1) * pageSize + index + 1,
-				}),
-				new Promise<void>((resolve) => {
-					navigationTimer = setTimeout(resolve, 1000);
-				}),
-			]);
-		} catch {
-			/* Analytics must not prevent navigation. */
-		} finally {
-			if (navigationTimer) clearTimeout(navigationTimer);
-		}
-		if (ordinary) void goto(resolve(`/product/${product.id}`));
+		void recordSearchClick(api, {
+			impressionId,
+			productId: product.id,
+			position: (currentPage - 1) * pageSize + index + 1,
+		}).catch(() => {
+			/* Persisted click can be retried before cart attribution. */
+		});
 	}
 
 	let results = $state<ProductModel[]>([]);
@@ -168,17 +136,57 @@
 	let totalResults = $state(0);
 	let sortBy = $state<SearchSort>("created_at");
 	let sortExplicit = $state(false);
-	let rankingProfile = $state("");
 	let sortOrder = $state<"asc" | "desc">("desc");
 	const loading = $derived(Boolean(navigating.to));
 
 	const pageSizeOptions = [8, 12, 24, 36];
-	const sortOptions: Array<{ value: SearchSort; label: string }> = [
-		{ value: "relevance", label: "Relevance" },
-		{ value: "created_at", label: "Newest" },
-		{ value: "price", label: "Price" },
-		{ value: "name", label: "Name" },
-	];
+	const sortOptions = $derived([
+		{
+			value: "relevance",
+			label: $localization.translate("storefront.search.sort_relevance", "Relevance"),
+		},
+		{
+			value: "created_at",
+			label: $localization.translate("storefront.search.sort_newest", "Newest"),
+		},
+		{ value: "price", label: $localization.translate("storefront.search.price", "Price") },
+		{ value: "name", label: $localization.translate("storefront.search.sort_name", "Name") },
+	]);
+	function facetLabel(facet: Facet) {
+		if (facet.name === "brand")
+			return $localization.translate("storefront.search.brands", "Brands");
+		if (facet.name === "category")
+			return $localization.translate("storefront.search.categories", "Categories");
+		if (facet.name === "stock")
+			return $localization.translate("storefront.search.availability", "Availability");
+		if (facet.name === "price") return $localization.translate("storefront.search.price", "Price");
+		return facet.label ?? facet.name;
+	}
+	function valueLabel(facet: Facet, value: Facet["values"][number]) {
+		if (facet.name === "stock")
+			return value.value === "true"
+				? $localization.translate("storefront.search.in_stock", "In stock")
+				: $localization.translate("storefront.search.out_of_stock", "Out of stock");
+		if (facet.name === "price") {
+			const { min, max } = priceFacetBounds(value);
+			if (min !== undefined && max !== undefined) {
+				if (min === max) return formatPrice(min);
+				return $localization.translate("storefront.search.price_range", "{min} – {max}", {
+					min: formatPrice(min),
+					max: formatPrice(max),
+				});
+			}
+			if (min !== undefined)
+				return $localization.translate("storefront.search.price_from", "{min} and up", {
+					min: formatPrice(min),
+				});
+			if (max !== undefined)
+				return $localization.translate("storefront.search.price_to", "Up to {max}", {
+					max: formatPrice(max),
+				});
+		}
+		return value.label ?? value.value;
+	}
 	type Facet = components["schemas"]["SearchFacet"];
 	let facets = $state<Facet[]>([]);
 	const hasActiveFilters = $derived(
@@ -229,13 +237,10 @@
 				disabled: false,
 			})),
 		});
-		const brands = data.brands.map((brand) => ({ value: brand.slug, label: brand.name }));
+		const brands: Array<{ value: string; label: string }> = [];
 		for (const value of data.brandSlugs)
 			if (!brands.some((item) => item.value === value)) brands.push({ value, label: value });
-		const categories = data.categories.map((category) => ({
-			value: category.slug,
-			label: category.name,
-		}));
+		const categories: Array<{ value: string; label: string }> = [];
 		for (const value of data.categorySlugs)
 			if (!categories.some((item) => item.value === value))
 				categories.push({ value, label: value });
@@ -277,44 +282,26 @@
 			),
 		].filter((facet) => facet.values.length > 0);
 	});
-	const visibleFacets = $derived(degraded ? fallbackFacets : facets);
+	const visibleFacets = $derived(visibleSearchFacets(facets, fallbackFacets));
 
 	function updateUrl(next: Partial<SearchUrlState>) {
 		const query = next.query ?? searchQuery;
 		const params = buildSearchParams({
 			query,
-			brandSlug: next.brandSlug ?? data.brandSlug,
-			brandSlugs:
-				next.brandSlugs ??
-				(next.brandSlug !== undefined ? (next.brandSlug ? [next.brandSlug] : []) : data.brandSlugs),
+			brandSlugs: next.brandSlugs ?? data.brandSlugs,
 			categorySlugs: next.categorySlugs ?? data.categorySlugs,
-			stockSelections:
-				next.stockSelections ??
-				(next.hasVariantStock !== undefined
-					? next.hasVariantStock
-						? [true]
-						: []
-					: data.stockSelections),
+			stockSelections: next.stockSelections ?? data.stockSelections,
 			priceRanges: next.priceRanges ?? data.priceRanges,
-			attributeSelections:
-				next.attributeSelections ??
-				(next.attributeFilters
-					? Object.fromEntries(
-							Object.entries(next.attributeFilters).map(([slug, value]) => [
-								slug,
-								value ? [value] : [],
-							])
-						)
-					: data.attributeSelections),
-			hasVariantStock: next.hasVariantStock ?? data.hasVariantStock,
-			attributeFilters: next.attributeFilters ?? data.attributeFilters,
+			attributeSelections: next.attributeSelections ?? data.attributeSelections,
 			page: next.page ?? currentPage,
 			limit: next.limit ?? pageSize,
 			sort: next.sort ?? (sortExplicit ? sortBy : defaultSearchSort(query)),
 			sortExplicit: next.sort !== undefined || sortExplicit,
-			rankingProfile: next.rankingProfile ?? rankingProfile,
 			order: next.order ?? sortOrder,
 		});
+		for (const key of ["locale", "market"]) {
+			if (page.url.searchParams.has(key)) params.set(key, page.url.searchParams.get(key) ?? "");
+		}
 		const path = resolve("/search");
 		const queryString = params.toString();
 		const nextUrl = queryString ? `${path}?${queryString}` : path;
@@ -336,7 +323,6 @@
 		totalResults = data.totalResults;
 		sortBy = data.metadata?.degraded && data.sortBy === "relevance" ? "created_at" : data.sortBy;
 		sortExplicit = data.sortExplicit;
-		rankingProfile = data.rankingProfile;
 		sortOrder = data.sortOrder;
 	});
 </script>
@@ -390,13 +376,14 @@
 					}}
 				>
 					<div class="flex flex-row flex-wrap items-center gap-3">
-						<TextInput
-							type="search"
-							placeholder="Search products"
-							class="min-w-[16rem] flex-1"
+						<SearchCombobox
+							label={$localization.translate("storefront.search.placeholder", "Search products")}
+							suggestions={suggestions.suggestions}
+							corrections={suggestions.corrections}
 							bind:value={draftQuery}
 							disabled={degraded}
 							oninput={requestSuggestions}
+							onselect={(query) => updateUrl({ query, page: 1 })}
 						/>
 						<Button type="submit" variant="primary" class="flex items-center gap-2">
 							<i class={degraded ? "bi bi-funnel mr-1" : "bi bi-search mr-1"}></i>
@@ -406,22 +393,11 @@
 						</Button>
 					</div>
 
-					{#if !degraded && draftQuery.trim() && suggestions.suggestions.length}<div
-							class="flex flex-wrap gap-2"
-							aria-label={$localization.translate(
-								"storefront.search.suggestions",
-								"Search suggestions"
-							)}
-						>
-							{#each suggestions.suggestions as suggestion (suggestion)}<Button
-									type="button"
-									size="small"
-									onclick={() => updateUrl({ query: suggestion, page: 1 })}>{suggestion}</Button
-								>{/each}
-						</div>{/if}
 					<div class="flex flex-wrap items-end gap-3">
 						<div class="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-							<span class="text-xs text-gray-600 dark:text-gray-400">Sort by</span>
+							<span class="text-xs text-gray-600 dark:text-gray-400"
+								>{$localization.translate("storefront.search.sort_by", "Sort by")}</span
+							>
 							<Dropdown
 								tone="surface"
 								full={false}
@@ -445,7 +421,9 @@
 								onclick={() => updateUrl({ order: sortOrder === "asc" ? "desc" : "asc", page: 1 })}
 							>
 								<i class={sortOrder === "asc" ? "bi bi-sort-up" : "bi bi-sort-down"}></i>
-								{sortOrder === "asc" ? "Ascending" : "Descending"}
+								{sortOrder === "asc"
+									? $localization.translate("storefront.search.ascending", "Ascending")
+									: $localization.translate("storefront.search.descending", "Descending")}
 							</Button>
 						</div>
 						{#if hasActiveFilters}
@@ -456,23 +434,23 @@
 								onclick={() =>
 									updateUrl({
 										query: "",
-										brandSlug: "",
+										brandSlugs: [],
 										categorySlugs: [],
 										priceRanges: [],
-										hasVariantStock: false,
-										attributeFilters: {},
+										stockSelections: [],
+										attributeSelections: {},
 										page: 1,
 									})}
 							>
 								<i class="bi bi-x-circle mr-1"></i>
-								Clear filters
+								{$localization.translate("storefront.search.clear_filters", "Clear filters")}
 							</Button>
 						{/if}
 					</div>
 					{#if visibleFacets.length}<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 							{#each visibleFacets as facet (facet.name)}<fieldset class="min-w-0">
 									<legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200"
-										>{facet.label ?? facet.name}</legend
+										>{facetLabel(facet)}</legend
 									>
 									<div class="max-h-48 space-y-2 overflow-y-auto">
 										{#each facet.values as value (value.value)}<label
@@ -484,8 +462,7 @@
 													disabled={loading || (value.disabled && !value.selected)}
 													onchange={(event) =>
 														toggleFacet(facet.name, value.value, event.currentTarget.checked)}
-												/><span class="min-w-0 flex-1 break-words"
-													>{value.label ?? value.value}</span
+												/><span class="min-w-0 flex-1 break-words">{valueLabel(facet, value)}</span
 												>{#if !degraded}<span class="text-gray-400 tabular-nums">{value.count}</span
 													>{/if}</label
 											>{/each}
@@ -495,21 +472,6 @@
 				</form>
 			</FilterPanel>
 
-			{#if !degraded && (!searchQuery || totalResults === 0)}<div class="space-y-3">
-					{#each [{ title: $localization.translate("storefront.search.popular", "Popular searches"), values: suggestions.popular }, { title: $localization.translate("storefront.search.trending", "Trending searches"), values: suggestions.trending }] as group (group.title)}{#if group.values.length}<div
-							>
-								<h2 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-									{group.title}
-								</h2>
-								<div class="flex flex-wrap gap-2">
-									{#each group.values as value (value)}<Button
-											type="button"
-											size="small"
-											onclick={() => updateUrl({ query: value, page: 1 })}>{value}</Button
-										>{/each}
-								</div>
-							</div>{/if}{/each}
-				</div>{/if}
 			<label class="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300"
 				><input
 					type="checkbox"
@@ -531,29 +493,42 @@
 	<div class="flex flex-wrap items-center justify-between gap-4">
 		<div class="text-sm text-gray-500 dark:text-gray-400">
 			{#if loading}
-				Loading results...
+				{$localization.translate("storefront.search.loading", "Loading results…")}
 			{:else if errorMessage}
-				{errorMessage}
+				{$localization.translate("storefront.search.load_error", "Unable to load search results.")}
 			{:else if searchQuery && !degraded}
 				<span class="font-medium text-gray-700 dark:text-gray-200">
-					{totalResults}
-					{totalResults === 1 ? "result" : "results"} for "{searchQuery}"
+					{$localization.plural(
+						"storefront.search.results",
+						totalResults,
+						{ one: "{count} result for “{query}”", other: "{count} results for “{query}”" },
+						{ query: searchQuery }
+					)}
 				</span>
 			{:else}
 				<span class="font-medium text-gray-700 dark:text-gray-200">
-					Browse {totalResults} products
+					{$localization.plural("storefront.search.browse_count", totalResults, {
+						one: "Browse {count} product",
+						other: "Browse {count} products",
+					})}
 				</span>
 			{/if}
 		</div>
 		<Badge tone="neutral" size="md" class="shadow-sm">
-			Page {currentPage} of {totalPages}
+			{$localization.translate("storefront.search.page_count", "Page {page} of {pages}", {
+				page: currentPage,
+				pages: totalPages,
+			})}
 		</Badge>
 	</div>
 
 	{#if !errorMessage && results.length === 0}
 		<EmptyStateCard
-			title="No matches found."
-			description="Try a different keyword or clear filters."
+			title={$localization.translate("storefront.search.no_matches", "No matches found.")}
+			description={$localization.translate(
+				"storefront.search.no_matches_help",
+				"Try a different keyword or clear filters."
+			)}
 			headingClass="text-3xl font-semibold"
 			class="sm:px-10"
 		>
@@ -564,15 +539,15 @@
 					onclick={() =>
 						updateUrl({
 							query: "",
-							brandSlug: "",
+							brandSlugs: [],
 							categorySlugs: [],
 							priceRanges: [],
-							hasVariantStock: false,
-							attributeFilters: {},
+							stockSelections: [],
+							attributeSelections: {},
 							page: 1,
 						})}
 				>
-					Browse all products
+					{$localization.translate("storefront.search.browse_all", "Browse all products")}
 				</Button>
 			</div>
 		</EmptyStateCard>
@@ -581,7 +556,10 @@
 			{#each results as product, index (product.id)}
 				<ProductCard
 					href={resolve(`/product/${product.id}`)}
-					onclick={(event) => void clickProduct(event, product, index)}
+					onclick={() => clickProduct(product, index)}
+					onauxclick={(event) => {
+						if (event.button === 1) clickProduct(product, index);
+					}}
 					data={{
 						//id: product.id, // Unused
 						name: product.name,
@@ -603,7 +581,7 @@
 			class="flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-400"
 		>
 			<div class="flex items-center gap-2">
-				<span>Per page</span>
+				<span>{$localization.translate("storefront.search.per_page", "Per page")}</span>
 				<Dropdown
 					full={false}
 					class="px-2 py-1 text-xs"
@@ -615,7 +593,12 @@
 					{/each}
 				</Dropdown>
 			</div>
-			<span>Page {currentPage} of {totalPages}</span>
+			<span
+				>{$localization.translate("storefront.search.page_count", "Page {page} of {pages}", {
+					page: currentPage,
+					pages: totalPages,
+				})}</span
+			>
 			<div class="flex items-center gap-2">
 				<Button
 					variant="regular"
@@ -626,7 +609,7 @@
 					onclick={() => updateUrl({ page: currentPage - 1 })}
 				>
 					<i class="bi bi-arrow-left"></i>
-					Prev
+					{$localization.translate("storefront.search.previous", "Previous")}
 				</Button>
 				<Button
 					variant="regular"
@@ -636,7 +619,7 @@
 					disabled={currentPage >= totalPages}
 					onclick={() => updateUrl({ page: currentPage + 1 })}
 				>
-					Next
+					{$localization.translate("storefront.search.next", "Next")}
 					<i class="bi bi-arrow-right"></i>
 				</Button>
 			</div>

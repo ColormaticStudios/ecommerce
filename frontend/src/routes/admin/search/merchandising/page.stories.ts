@@ -8,7 +8,12 @@ import type {
 } from "$lib/api/domains/search-merchandising";
 import RouteStoryHarness from "$lib/storybook/RouteStoryHarness.svelte";
 import { makeAdminLayoutData } from "$lib/storybook/layout";
-import { makeCategory } from "$lib/storybook/factories";
+import {
+	makeCategory,
+	makeBrand,
+	makeAttributeDefinition,
+	makeProduct,
+} from "$lib/storybook/factories";
 import { renderRouteStory } from "$lib/storybook/render";
 import { createApiStub } from "$lib/storybook/api";
 import Page from "./+page.svelte";
@@ -118,6 +123,8 @@ function data(overrides: Partial<Data> = {}): Data {
 		...makeAdminLayoutData(),
 		rules: [pin, secondary],
 		categories: [makeCategory()],
+		brands: [makeBrand()],
+		attributes: [makeAttributeDefinition()],
 		audit: [
 			{
 				id: 1,
@@ -156,6 +163,13 @@ function api(state: Data) {
 		}),
 		deleteAdminSearchMerchandisingRule: async () => undefined,
 		previewAdminSearch: async () => preview,
+		listAdminProducts: async () => ({
+			data: [
+				makeProduct({ id: 101, name: "Field Jacket" }),
+				makeProduct({ id: 102, name: "Storm Shell" }),
+			],
+			pagination: { page: 1, limit: 20, total: 2, total_pages: 1 },
+		}),
 	});
 }
 const meta = {
@@ -283,5 +297,65 @@ export const ProductSelection: Story = {
 		await expect(result).toHaveAttribute("aria-pressed", "false");
 		await userEvent.click(result);
 		await expect(result).toHaveAttribute("aria-pressed", "true");
+	},
+};
+
+export const ScalableMultiFacetPreview: Story = {
+	render: () => {
+		const state = data({
+			categories: Array.from({ length: 80 }, (_, index) =>
+				makeCategory({
+					id: index + 1,
+					name: `Collection ${index + 1}`,
+					slug: `collection-${index + 1}`,
+				})
+			),
+			brands: [
+				makeBrand({ id: 1, name: "Northline", slug: "northline" }),
+				makeBrand({ id: 2, name: "Colormatic", slug: "colormatic" }),
+			],
+		});
+		return renderRouteStory({ component: Page, componentProps: { data: state }, api: api(state) });
+	},
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const category = canvas.getByRole("combobox", { name: "Search categories to add" });
+		await userEvent.type(category, "Collection 7");
+		await userEvent.keyboard("{ArrowDown}{Enter}");
+		await expect(canvas.getByRole("button", { name: "Remove Collection 7" })).toBeVisible();
+		const stock = canvas.getByRole("combobox", { name: "Search stock to add" });
+		await userEvent.click(stock);
+		await userEvent.keyboard("{ArrowDown}{Enter}");
+		await userEvent.click(stock);
+		await userEvent.keyboard("{ArrowDown}{Enter}");
+		await expect(canvas.getByRole("button", { name: "Remove In stock" })).toBeVisible();
+		await expect(canvas.getByRole("button", { name: "Remove Out of stock" })).toBeVisible();
+		await userEvent.type(canvas.getByRole("spinbutton", { name: "Minimum price" }), "50");
+		await userEvent.type(canvas.getByRole("spinbutton", { name: "Maximum price" }), "200");
+		await userEvent.click(canvas.getByRole("button", { name: "Add attribute" }));
+		await expect(canvas.getByRole("textbox", { name: "Attribute values" })).toBeVisible();
+	},
+};
+
+export const DuplicateCategoryLabels: Story = {
+	render: () => {
+		const state = data({
+			categories: [
+				makeCategory({ id: 1, name: "Same label", slug: "first" }),
+				makeCategory({ id: 2, name: "Same label", slug: "second" }),
+			],
+		});
+		return renderRouteStory({ component: Page, componentProps: { data: state }, api: api(state) });
+	},
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const input = canvas.getByRole("combobox", { name: "Search category context to add" });
+		await userEvent.click(input);
+		await userEvent.keyboard("{ArrowDown}{ArrowDown}{Enter}");
+		await expect(canvas.getByRole("button", { name: "Remove Same label" })).toBeVisible();
+		await userEvent.click(input);
+		await expect(canvas.getAllByRole("option", { name: "Same label /first" })).toHaveLength(1);
+		await userEvent.keyboard("{ArrowDown}{Enter}");
+		await expect(canvas.getAllByRole("button", { name: "Remove Same label" })).toHaveLength(2);
 	},
 };

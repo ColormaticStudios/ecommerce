@@ -8,7 +8,7 @@
       "source_text": "Unable to load the translation workspace.",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 3120
+      "line": 3130
     },
     {
       "namespace": "admin",
@@ -16,7 +16,7 @@
       "source_text": "Unable to refresh localization health metrics.",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 3121
+      "line": 3131
     },
     {
       "namespace": "admin",
@@ -24,7 +24,7 @@
       "source_text": "Localization rollout controls saved.",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 3122
+      "line": 3132
     },
     {
       "namespace": "admin",
@@ -32,7 +32,7 @@
       "source_text": "Unable to save localization rollout controls.",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 3123
+      "line": 3133
     },
     {
       "namespace": "admin",
@@ -40,7 +40,7 @@
       "source_text": "Brands",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2539
+      "line": 2549
     },
     {
       "namespace": "admin",
@@ -48,7 +48,7 @@
       "source_text": "Categories",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2540
+      "line": 2550
     },
     {
       "namespace": "admin",
@@ -56,7 +56,7 @@
       "source_text": "CMS",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2547
+      "line": 2557
     },
     {
       "namespace": "admin",
@@ -64,7 +64,7 @@
       "source_text": "Discounts",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2542
+      "line": 2552
     },
     {
       "namespace": "admin",
@@ -72,7 +72,7 @@
       "source_text": "Inventory",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2543
+      "line": 2553
     },
     {
       "namespace": "admin",
@@ -80,7 +80,7 @@
       "source_text": "Orders",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2541
+      "line": 2551
     },
     {
       "namespace": "admin",
@@ -88,7 +88,7 @@
       "source_text": "Products",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2538
+      "line": 2548
     },
     {
       "namespace": "admin",
@@ -96,7 +96,7 @@
       "source_text": "Providers",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2546
+      "line": 2556
     },
     {
       "namespace": "admin",
@@ -104,7 +104,15 @@
       "source_text": "Purchase Orders",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2544
+      "line": 2554
+    },
+    {
+      "namespace": "admin",
+      "key": "navigation.search",
+      "source_text": "Search",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/AdminSearchTabs.svelte",
+      "line": 48
     },
     {
       "namespace": "admin",
@@ -112,7 +120,7 @@
       "source_text": "Search analytics",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2066
+      "line": 2076
     },
     {
       "namespace": "admin",
@@ -120,7 +128,7 @@
       "source_text": "Search operations",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2070
+      "line": 2080
     },
     {
       "namespace": "admin",
@@ -128,7 +136,7 @@
       "source_text": "Search ranking profiles",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2069
+      "line": 2079
     },
     {
       "namespace": "admin",
@@ -136,7 +144,7 @@
       "source_text": "Search synonyms",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2067
+      "line": 2077
     },
     {
       "namespace": "admin",
@@ -144,7 +152,7 @@
       "source_text": "Search typo profiles",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2068
+      "line": 2078
     },
     {
       "namespace": "admin",
@@ -152,7 +160,7 @@
       "source_text": "Translations",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 3069
+      "line": 3079
     },
     {
       "namespace": "admin",
@@ -160,7 +168,7 @@
       "source_text": "Users",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2545
+      "line": 2555
     },
     {
       "namespace": "admin",
@@ -168,7 +176,7 @@
       "source_text": "Website",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2548
+      "line": 2558
     },
     {
       "namespace": "admin",
@@ -176,7 +184,7 @@
       "source_text": "Unit cost",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 5692
+      "line": 5702
     },
     {
       "namespace": "admin",
@@ -184,7 +192,7 @@
       "source_text": "Private to administrators. Leave blank when the cost is unknown.",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 5694
+      "line": 5704
     },
     {
       "namespace": "admin",
@@ -192,7 +200,1767 @@
       "source_text": "Variant {number} unit cost",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 5693
+      "line": 5703
+    },
+    {
+      "namespace": "admin",
+      "key": "search.analytics.pagination",
+      "source_text": "Page {page} of {pages} · {total} queries",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/analytics/+page.svelte",
+      "line": 105
+    },
+    {
+      "namespace": "admin",
+      "key": "search.analytics.title",
+      "source_text": "search analytics",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/analytics/+page.svelte",
+      "line": 47
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.actor",
+      "source_text": "Actor",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 96
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.after",
+      "source_text": "After",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 135
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.all",
+      "source_text": "All types",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 39
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.apply",
+      "source_text": "Apply filters",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 69
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.before",
+      "source_text": "Before",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 135
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.changes",
+      "source_text": "configuration changes",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 80
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.configuration",
+      "source_text": "Configuration",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 87
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.empty",
+      "source_text": "No configuration changes match these filters.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 154
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.entity_id",
+      "source_text": "Configuration ID (optional)",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 57
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.filters",
+      "source_text": "filter history",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 33
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.inspect",
+      "source_text": "Inspect changes",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 129
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.kind",
+      "source_text": "Configuration type",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 36
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.load_error",
+      "source_text": "Unable to load search configuration history.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 74
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.operation",
+      "source_text": "Operation",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 93
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.pagination",
+      "source_text": "Page {page} of {pages} · {total} changes",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 167
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.snapshots",
+      "source_text": "Before and after",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 102
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.time",
+      "source_text": "Changed at",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 99
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.title",
+      "source_text": "search configuration history",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 31
+    },
+    {
+      "namespace": "admin",
+      "key": "search.history.unnamed",
+      "source_text": "Unnamed configuration",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 115
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.action",
+      "source_text": "Action",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 590
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.active",
+      "source_text": "Active",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 526
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.active_storefront",
+      "source_text": "Active in storefront",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 630
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.actor",
+      "source_text": "Actor {id}",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1184
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.add",
+      "source_text": "Add",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 788
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.after",
+      "source_text": "after",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1198
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.all_history",
+      "source_text": "All history",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1159
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.any_category",
+      "source_text": "Any category",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 420
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.any_channel",
+      "source_text": "Any channel",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 677
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.any_query",
+      "source_text": "Any query",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 407
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.ascending",
+      "source_text": "Ascending",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1046
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.baseline",
+      "source_text": "baseline",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1083
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.before",
+      "source_text": "before",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1192
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.boost",
+      "source_text": "Boost",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 599
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.bury",
+      "source_text": "Bury",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 595
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.categories",
+      "source_text": "Categories",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 412
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.category_context",
+      "source_text": "Category context (any selected)",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 697
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.channel",
+      "source_text": "Channel",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 674
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.clear",
+      "source_text": "Clear",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 844
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.conflict_help",
+      "source_text": "{message} Refresh the rule list before saving again.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 128
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.contains",
+      "source_text": "Contains",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 657
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.create_rule",
+      "source_text": "Create rule",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 838
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.create_rule_title",
+      "source_text": "create rule",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 574
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.decisions",
+      "source_text": "rule decisions and conflicts",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1129
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.delete_confirm",
+      "source_text": "Delete “{name}”? This change takes effect immediately.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1226
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.delete_error",
+      "source_text": "Unable to delete rule.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 249
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.delete_rule",
+      "source_text": "Delete rule",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1231
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.delete_title",
+      "source_text": "delete rule",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1225
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.deleted",
+      "source_text": "Rule deleted.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 243
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.deleted_rule",
+      "source_text": "Deleted rule",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1179
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.descending",
+      "source_text": "Descending",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1041
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.disabled_help",
+      "source_text": "Disabled rules remain available for editing and preview.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 635
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.discard_prompt",
+      "source_text": "You have unsaved rule changes. Leave this section and discard them?",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 66
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.duplicate_position",
+      "source_text": "Pinned positions must be distinct within a rule.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 226
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.duplicate_product",
+      "source_text": "Select each product only once.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 201
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.edit_rule",
+      "source_text": "edit rule",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 573
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.editor",
+      "source_text": "Rule editor",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 579
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.empty",
+      "source_text": "No merchandising rules yet.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 562
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.empty_history",
+      "source_text": "No history available.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1204
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.ends_at",
+      "source_text": "Ends at (local time, optional)",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 725
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.exact",
+      "source_text": "Exact",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 653
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.hide",
+      "source_text": "Hide",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 597
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.history",
+      "source_text": "rule history",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1153
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.history_error",
+      "source_text": "Unable to load rule history.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 192
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.inactive",
+      "source_text": "Inactive",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 527
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.include",
+      "source_text": "Include",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 601
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.invalid_integer",
+      "source_text": "{label} must be a whole number between {min} and {max}.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 97
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.invalid_multiplier",
+      "source_text": "Boost multiplier must be greater than 1.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 244
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.invalid_number",
+      "source_text": "{label} must be a number between {min} and {max}.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 102
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.invalid_schedule",
+      "source_text": "End time must be after start time.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 71
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.invalid_time",
+      "source_text": "Enter a valid local date and time.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 53
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.labels.applied",
+      "source_text": "Applied",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 27
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.labels.boost",
+      "source_text": "Boost",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 15
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.labels.bury",
+      "source_text": "Bury",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 11
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.labels.conflict",
+      "source_text": "Conflict",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 31
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.labels.contains",
+      "source_text": "Contains",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 23
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.labels.create",
+      "source_text": "Created",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 33
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.labels.delete",
+      "source_text": "Deleted",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 37
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.labels.exact",
+      "source_text": "Exact",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 19
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.labels.hide",
+      "source_text": "Hide",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 13
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.labels.include",
+      "source_text": "Include",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 17
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.labels.pin",
+      "source_text": "Pin",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 9
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.labels.prefix",
+      "source_text": "Prefix",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 21
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.labels.skipped",
+      "source_text": "Skipped",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 29
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.labels.storefront",
+      "source_text": "Storefront",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 25
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.labels.update",
+      "source_text": "Updated",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 35
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.load_attributes_error",
+      "source_text": "Unable to load attributes.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.server.ts",
+      "line": 75
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.load_brands_error",
+      "source_text": "Unable to load brands.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.server.ts",
+      "line": 69
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.load_categories_error",
+      "source_text": "Unable to load categories.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.server.ts",
+      "line": 56
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.load_error",
+      "source_text": "Unable to load rules.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 172
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.load_rules_error",
+      "source_text": "Unable to load merchandising rules.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.server.ts",
+      "line": 47
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.loading_history",
+      "source_text": "Loading history…",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1173
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.loading_preview",
+      "source_text": "Loading preview…",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1073
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.loading_time",
+      "source_text": "Loading local time…",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 319
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.long_name",
+      "source_text": "Rule name must be 120 characters or fewer.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 187
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.multiplier",
+      "source_text": "Multiplier",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 235
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.name",
+      "source_text": "Rule name",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 585
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.newest",
+      "source_text": "Newest",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1029
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.no_decisions",
+      "source_text": "No rule decisions.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1145
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.no_matching",
+      "source_text": "No matching products.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1119
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.no_products",
+      "source_text": "No products matched this search.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 264
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.no_rule",
+      "source_text": "No rule.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 472
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.open_ended",
+      "source_text": "Open ended",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 317
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.pin",
+      "source_text": "Pin",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 593
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.position",
+      "source_text": "Position",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 212
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.position_value",
+      "source_text": "Position {position}",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 458
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.prefix",
+      "source_text": "Prefix",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 655
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.preview",
+      "source_text": "preview",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 866
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.preview_controls",
+      "source_text": "Preview controls",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 871
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.preview_error",
+      "source_text": "Unable to preview search.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 361
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.preview_saved",
+      "source_text": "Preview saved rules",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1056
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.preview_saved_notice",
+      "source_text": "Preview uses saved rules.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 353
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.preview_unsaved",
+      "source_text": "Preview unsaved rule",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1065
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.preview_unsaved_notice",
+      "source_text": "Preview includes unsaved changes. Nothing was saved.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 349
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.price",
+      "source_text": "Price",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1025
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.priority",
+      "source_text": "Priority",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 255
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.priority_help",
+      "source_text": "Higher priorities take precedence. Price, name, and newest sorts bypass pin, bury, and boost; hide and include still respect shopper filters.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 621
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.priority_version",
+      "source_text": "Priority {priority} · version {version}",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 534
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.product_error",
+      "source_text": "Unable to search products.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 274
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.products",
+      "source_text": "Products",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 448
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.products_title",
+      "source_text": "products",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 754
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.proposed",
+      "source_text": "proposed",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1083
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.query",
+      "source_text": "Query",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 402
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.query_help",
+      "source_text": "Query (blank matches all)",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 666
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.query_match",
+      "source_text": "Query match",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 647
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.a_higher_precedence_bury_rule_already_demotes_this_product",
+      "source_text": "A higher-precedence bury rule already demotes this product.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 134
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.a_higher_precedence_hide_rule_already_excludes_this_product",
+      "source_text": "A higher-precedence hide rule already excludes this product.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 74
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.a_higher_precedence_include_rule_already_includes_this_product",
+      "source_text": "A higher-precedence include rule already includes this product.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 94
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.a_higher_precedence_pin_already_positions_this_product",
+      "source_text": "A higher-precedence pin already positions this product.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 109
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.a_higher_precedence_pin_occupies_this_position",
+      "source_text": "A higher-precedence pin occupies this position.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 119
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.category_context_does_not_match",
+      "source_text": "Category context does not match.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 59
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.channel_does_not_match",
+      "source_text": "Channel does not match.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 54
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.explicit_sorting_overrides_this_ordering_action",
+      "source_text": "Explicit sorting overrides this ordering action.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 104
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.hide_takes_precedence_over_this_action",
+      "source_text": "Hide takes precedence over this action.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 89
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.only_the_highest_precedence_boost_multiplier_applies",
+      "source_text": "Only the highest-precedence boost multiplier applies.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 144
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.original_query_does_not_match",
+      "source_text": "Original query does not match.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 64
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.pin_takes_precedence_over_this_ordering_action",
+      "source_text": "Pin takes precedence over this ordering action.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 129
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.product_is_excluded_from_results_and_facets",
+      "source_text": "Product is excluded from results and facets.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 79
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.product_is_included_while_preserving_shopper_filters",
+      "source_text": "Product is included while preserving shopper filters.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 99
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.product_is_moved_after_unburied_results",
+      "source_text": "Product is moved after unburied results.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 139
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.product_is_not_an_eligible_indexed_result_or_facet_candidate",
+      "source_text": "Product is not an eligible indexed result or facet candidate.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 84
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.product_is_not_an_eligible_search_result",
+      "source_text": "Product is not an eligible search result.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 69
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.product_is_pinned_to_its_requested_position",
+      "source_text": "Product is pinned to its requested position.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 124
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.requested_pin_position_exceeds_the_result_count_ordinary_ordering_is_retained",
+      "source_text": "Requested pin position exceeds the result count; ordinary ordering is retained.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 114
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.rule_has_expired",
+      "source_text": "Rule has expired.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 49
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.rule_has_not_started",
+      "source_text": "Rule has not started.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 44
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.rule_is_disabled",
+      "source_text": "Rule is disabled.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 39
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.reasons.winning_boost_multiplier_adjusts_the_relevance_score",
+      "source_text": "Winning boost multiplier adjusts the relevance score.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising-labels.ts",
+      "line": 149
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.refresh",
+      "source_text": "Refresh rules",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 503
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.refreshed",
+      "source_text": "Rule list refreshed.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 166
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.relevance",
+      "source_text": "Relevance",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1020
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.remove",
+      "source_text": "Remove",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 823
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.required_name",
+      "source_text": "Rule name is required.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 183
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.required_target",
+      "source_text": "Select at least one product.",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 194
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.result_count.one",
+      "source_text": "{count} result",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1089
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.result_count.other",
+      "source_text": "{count} results",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1089
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.rule",
+      "source_text": "Rule",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 382
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.rule_count.one",
+      "source_text": "{count} rule",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 482
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.rule_count.other",
+      "source_text": "{count} rules",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 482
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.rules",
+      "source_text": "rules",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 494
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.save",
+      "source_text": "Save changes",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 837
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.save_error",
+      "source_text": "Unable to save rule.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 228
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.saved",
+      "source_text": "Rule saved.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 223
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.saving",
+      "source_text": "Saving…",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 835
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.schedule",
+      "source_text": "Schedule",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 436
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.score",
+      "source_text": "Score {score}",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1107
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.score_multiplier",
+      "source_text": "Score multiplier",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 739
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.search_products",
+      "source_text": "Search products",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 758
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.search_query",
+      "source_text": "Search query",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 879
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.selected",
+      "source_text": "Selected",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 787
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.show_all_history",
+      "source_text": "Showing all rules, including deleted rules.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1163
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.show_selected_history",
+      "source_text": "Showing the selected rule.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1167
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.sort",
+      "source_text": "Sort",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1012
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.sort_default",
+      "source_text": "Search default",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1015
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.sort_direction",
+      "source_text": "Preview sort direction",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1035
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.sort_name",
+      "source_text": "Name",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1027
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.stale_preview",
+      "source_text": "Inputs changed. Run preview again to compare the latest changes.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1077
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.starts_at",
+      "source_text": "Starts at (local time, optional)",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 713
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.status",
+      "source_text": "Status",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 388
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.storefront",
+      "source_text": "Storefront",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 682
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.system",
+      "source_text": "System",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1187
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.target_help",
+      "source_text": "Select products to target. Only published products can appear in storefront results.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 826
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.timezone",
+      "source_text": "Times use your browser timezone: {timezone}. Saved as UTC.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 894
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.title",
+      "source_text": "search merchandising",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 478
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.unavailable_product",
+      "source_text": "Unavailable product",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/search-merchandising.ts",
+      "line": 168
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.unnamed_product",
+      "source_text": "Unnamed product",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1103
+    },
+    {
+      "namespace": "admin",
+      "key": "search.merchandising.unsaved",
+      "source_text": "You have unsaved rule changes.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1213
+    },
+    {
+      "namespace": "admin",
+      "key": "search.operations.title",
+      "source_text": "search operations",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/operations/+page.svelte",
+      "line": 117
+    },
+    {
+      "namespace": "admin",
+      "key": "search.preview.add_attribute",
+      "source_text": "Add attribute",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 1006
+    },
+    {
+      "namespace": "admin",
+      "key": "search.preview.attribute",
+      "source_text": "Attribute",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 965
+    },
+    {
+      "namespace": "admin",
+      "key": "search.preview.attribute_values",
+      "source_text": "Attribute values",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 981
+    },
+    {
+      "namespace": "admin",
+      "key": "search.preview.attributes",
+      "source_text": "Attributes (comma-separated values)",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 955
+    },
+    {
+      "namespace": "admin",
+      "key": "search.preview.brands",
+      "source_text": "Brands",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 918
+    },
+    {
+      "namespace": "admin",
+      "key": "search.preview.categories",
+      "source_text": "Categories",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 908
+    },
+    {
+      "namespace": "admin",
+      "key": "search.preview.invalid_price",
+      "source_text": "Enter a valid price range.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 313
+    },
+    {
+      "namespace": "admin",
+      "key": "search.preview.price_max",
+      "source_text": "Maximum price",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 948
+    },
+    {
+      "namespace": "admin",
+      "key": "search.preview.price_min",
+      "source_text": "Minimum price",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 943
+    },
+    {
+      "namespace": "admin",
+      "key": "search.preview.remove_attribute",
+      "source_text": "Remove attribute",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 993
+    },
+    {
+      "namespace": "admin",
+      "key": "search.preview.select_attribute",
+      "source_text": "Select an attribute",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 969
+    },
+    {
+      "namespace": "admin",
+      "key": "search.preview.simulate_time",
+      "source_text": "Simulate time (local time, optional)",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 886
+    },
+    {
+      "namespace": "admin",
+      "key": "search.preview.stock",
+      "source_text": "Stock",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 937
+    },
+    {
+      "namespace": "admin",
+      "key": "search.ranking_profiles.title",
+      "source_text": "search ranking profiles",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/ranking-profiles/+page.svelte",
+      "line": 139
+    },
+    {
+      "namespace": "admin",
+      "key": "search.ranking.conversion_preview_only",
+      "source_text": "Purchase conversion affects admin previews only. Storefront ranking ignores this weight until exposure validation is strengthened.",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/ranking-profiles/+page.svelte",
+      "line": 190
+    },
+    {
+      "namespace": "admin",
+      "key": "search.selection.brands",
+      "source_text": "Search brands to add",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 914
+    },
+    {
+      "namespace": "admin",
+      "key": "search.selection.categories",
+      "source_text": "Search categories to add",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 904
+    },
+    {
+      "namespace": "admin",
+      "key": "search.selection.context",
+      "source_text": "Search category context to add",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 693
+    },
+    {
+      "namespace": "admin",
+      "key": "search.selection.remove",
+      "source_text": "Remove {name}",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/SearchMultiSelect.svelte",
+      "line": 48
+    },
+    {
+      "namespace": "admin",
+      "key": "search.selection.search",
+      "source_text": "Search options to add",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/SearchMultiSelect.svelte",
+      "line": 67
+    },
+    {
+      "namespace": "admin",
+      "key": "search.selection.stock",
+      "source_text": "Search stock to add",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/merchandising/+page.svelte",
+      "line": 933
+    },
+    {
+      "namespace": "admin",
+      "key": "search.synonyms.title",
+      "source_text": "search synonyms",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/synonyms/+page.svelte",
+      "line": 114
+    },
+    {
+      "namespace": "admin",
+      "key": "search.tabs.analytics",
+      "source_text": "Analytics",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/AdminSearchTabs.svelte",
+      "line": 11
+    },
+    {
+      "namespace": "admin",
+      "key": "search.tabs.history",
+      "source_text": "History",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/AdminSearchTabs.svelte",
+      "line": 41
+    },
+    {
+      "namespace": "admin",
+      "key": "search.tabs.label",
+      "source_text": "{search} sections",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/AdminSearchTabs.svelte",
+      "line": 47
+    },
+    {
+      "namespace": "admin",
+      "key": "search.tabs.merchandising",
+      "source_text": "Merchandising",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/AdminSearchTabs.svelte",
+      "line": 31
+    },
+    {
+      "namespace": "admin",
+      "key": "search.tabs.operations",
+      "source_text": "Operations",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/AdminSearchTabs.svelte",
+      "line": 36
+    },
+    {
+      "namespace": "admin",
+      "key": "search.tabs.ranking_profiles",
+      "source_text": "Ranking profiles",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/AdminSearchTabs.svelte",
+      "line": 26
+    },
+    {
+      "namespace": "admin",
+      "key": "search.tabs.synonyms",
+      "source_text": "Synonyms",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/AdminSearchTabs.svelte",
+      "line": 16
+    },
+    {
+      "namespace": "admin",
+      "key": "search.tabs.typo_profiles",
+      "source_text": "Typo profiles",
+      "owner_domain": "admin",
+      "file": "frontend/src/lib/admin/AdminSearchTabs.svelte",
+      "line": 21
+    },
+    {
+      "namespace": "admin",
+      "key": "search.typo_profiles.title",
+      "source_text": "search typo profiles",
+      "owner_domain": "admin",
+      "file": "frontend/src/routes/admin/search/typo-profiles/+page.svelte",
+      "line": 124
     },
     {
       "namespace": "admin",
@@ -200,7 +1968,7 @@
       "source_text": "Close admin drawer",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2532
+      "line": 2542
     },
     {
       "namespace": "admin",
@@ -208,7 +1976,7 @@
       "source_text": "Open admin sections",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2533
+      "line": 2543
     },
     {
       "namespace": "admin",
@@ -216,7 +1984,7 @@
       "source_text": "Operations console",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2534
+      "line": 2544
     },
     {
       "namespace": "admin",
@@ -224,7 +1992,7 @@
       "source_text": "Admin section drawer",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2535
+      "line": 2545
     },
     {
       "namespace": "admin",
@@ -232,7 +2000,7 @@
       "source_text": "Back to storefront",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2536
+      "line": 2546
     },
     {
       "namespace": "admin",
@@ -240,7 +2008,7 @@
       "source_text": "Admin",
       "owner_domain": "admin",
       "file": "internal/migrations/migrations.go",
-      "line": 2537
+      "line": 2547
     },
     {
       "namespace": "checkout",
@@ -248,7 +2016,7 @@
       "source_text": "Already have an account?",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2550
+      "line": 2560
     },
     {
       "namespace": "checkout",
@@ -256,7 +2024,7 @@
       "source_text": "Available",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2551
+      "line": 2561
     },
     {
       "namespace": "checkout",
@@ -264,7 +2032,7 @@
       "source_text": "Back",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2552
+      "line": 2562
     },
     {
       "namespace": "checkout",
@@ -272,7 +2040,7 @@
       "source_text": "Choose a payment method and a shipping method to see delivery options.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2549
+      "line": 2559
     },
     {
       "namespace": "checkout",
@@ -280,7 +2048,7 @@
       "source_text": "Choose a payment method and a shipping method to update your total.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2593
+      "line": 2603
     },
     {
       "namespace": "checkout",
@@ -288,7 +2056,7 @@
       "source_text": "Choose a payment method before loading delivery options.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2594
+      "line": 2604
     },
     {
       "namespace": "checkout",
@@ -296,7 +2064,7 @@
       "source_text": "Choose a payment method to update your total.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2595
+      "line": 2605
     },
     {
       "namespace": "checkout",
@@ -304,7 +2072,7 @@
       "source_text": "Choose your payment and shipping providers.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2553
+      "line": 2563
     },
     {
       "namespace": "checkout",
@@ -312,7 +2080,7 @@
       "source_text": "Choose a shipping method to see delivery options.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2596
+      "line": 2606
     },
     {
       "namespace": "checkout",
@@ -320,7 +2088,7 @@
       "source_text": "Choose a shipping method to update your total.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2597
+      "line": 2607
     },
     {
       "namespace": "checkout",
@@ -328,7 +2096,7 @@
       "source_text": "Need to claim an older guest order?",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2554
+      "line": 2564
     },
     {
       "namespace": "checkout",
@@ -336,7 +2104,7 @@
       "source_text": "Claim This Order",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 3124
+      "line": 3134
     },
     {
       "namespace": "checkout",
@@ -344,7 +2112,7 @@
       "source_text": "Sign in first, then continue to your account to claim a past guest order with your confirmation token.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2555
+      "line": 2565
     },
     {
       "namespace": "checkout",
@@ -352,7 +2120,7 @@
       "source_text": "Claim past guest order",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2556
+      "line": 2566
     },
     {
       "namespace": "checkout",
@@ -360,7 +2128,7 @@
       "source_text": "Create account",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2557
+      "line": 2567
     },
     {
       "namespace": "checkout",
@@ -368,7 +2136,7 @@
       "source_text": "We couldn't load delivery options right now. Please try again.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2598
+      "line": 2608
     },
     {
       "namespace": "checkout",
@@ -376,7 +2144,7 @@
       "source_text": "Discounts",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2599
+      "line": 2609
     },
     {
       "namespace": "checkout",
@@ -384,7 +2152,7 @@
       "source_text": "Email address",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2558
+      "line": 2568
     },
     {
       "namespace": "checkout",
@@ -392,7 +2160,7 @@
       "source_text": "Your cart is empty. Visit the",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2559
+      "line": 2569
     },
     {
       "namespace": "checkout",
@@ -400,7 +2168,7 @@
       "source_text": "to add items.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2560
+      "line": 2570
     },
     {
       "namespace": "checkout",
@@ -408,7 +2176,7 @@
       "source_text": "Enter address manually",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2561
+      "line": 2571
     },
     {
       "namespace": "checkout",
@@ -416,7 +2184,7 @@
       "source_text": "Enter card manually",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2562
+      "line": 2572
     },
     {
       "namespace": "checkout",
@@ -424,7 +2192,7 @@
       "source_text": "Estimated total",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2600
+      "line": 2610
     },
     {
       "namespace": "checkout",
@@ -432,7 +2200,7 @@
       "source_text": "Checkout is still getting ready. Try again in a moment.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2601
+      "line": 2611
     },
     {
       "namespace": "checkout",
@@ -440,7 +2208,7 @@
       "source_text": "Guest confirmation token",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2563
+      "line": 2573
     },
     {
       "namespace": "checkout",
@@ -448,7 +2216,7 @@
       "source_text": "Guest contact",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2564
+      "line": 2574
     },
     {
       "namespace": "checkout",
@@ -456,7 +2224,7 @@
       "source_text": "We will use your email for order confirmation and any follow-up about delivery.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2565
+      "line": 2575
     },
     {
       "namespace": "checkout",
@@ -464,7 +2232,7 @@
       "source_text": "Enter your email to place a guest order.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2602
+      "line": 2612
     },
     {
       "namespace": "checkout",
@@ -472,7 +2240,7 @@
       "source_text": "Some checkout details are invalid. Review the messages below.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2603
+      "line": 2613
     },
     {
       "namespace": "checkout",
@@ -480,7 +2248,7 @@
       "source_text": "Load shipping",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2566
+      "line": 2576
     },
     {
       "namespace": "checkout",
@@ -488,7 +2256,7 @@
       "source_text": "Loading options...",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2567
+      "line": 2577
     },
     {
       "namespace": "checkout",
@@ -496,7 +2264,7 @@
       "source_text": "Log in",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2568
+      "line": 2578
     },
     {
       "namespace": "checkout",
@@ -504,7 +2272,7 @@
       "source_text": "Checkout options",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2604
+      "line": 2614
     },
     {
       "namespace": "checkout",
@@ -512,7 +2280,7 @@
       "source_text": "Order confirmation was sent to {email}.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 3125
+      "line": 3135
     },
     {
       "namespace": "checkout",
@@ -520,7 +2288,7 @@
       "source_text": "Order placed",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2605
+      "line": 2615
     },
     {
       "namespace": "checkout",
@@ -528,7 +2296,7 @@
       "source_text": "Order submitted. Keep your confirmation details for reference.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2606
+      "line": 2616
     },
     {
       "namespace": "checkout",
@@ -536,7 +2304,7 @@
       "source_text": "Order summary",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2569
+      "line": 2579
     },
     {
       "namespace": "checkout",
@@ -544,7 +2312,7 @@
       "source_text": "Payment processed.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2607
+      "line": 2617
     },
     {
       "namespace": "checkout",
@@ -552,7 +2320,7 @@
       "source_text": "Payment provider",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2570
+      "line": 2580
     },
     {
       "namespace": "checkout",
@@ -560,7 +2328,7 @@
       "source_text": "Payment status: {status}",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2608
+      "line": 2618
     },
     {
       "namespace": "checkout",
@@ -568,7 +2336,7 @@
       "source_text": "Place order",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2609
+      "line": 2619
     },
     {
       "namespace": "checkout",
@@ -576,7 +2344,7 @@
       "source_text": "Unable to place your order.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2610
+      "line": 2620
     },
     {
       "namespace": "checkout",
@@ -584,7 +2352,7 @@
       "source_text": "We couldn't prepare your checkout right now. Please try again.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2611
+      "line": 2621
     },
     {
       "namespace": "checkout",
@@ -592,7 +2360,7 @@
       "source_text": "Processing...",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2612
+      "line": 2622
     },
     {
       "namespace": "checkout",
@@ -600,7 +2368,7 @@
       "source_text": "Unable to calculate quote.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2613
+      "line": 2623
     },
     {
       "namespace": "checkout",
@@ -608,7 +2376,7 @@
       "source_text": "Ready",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2571
+      "line": 2581
     },
     {
       "namespace": "checkout",
@@ -616,7 +2384,7 @@
       "source_text": "Refresh",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2614
+      "line": 2624
     },
     {
       "namespace": "checkout",
@@ -624,7 +2392,7 @@
       "source_text": "Refresh shipping",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2572
+      "line": 2582
     },
     {
       "namespace": "checkout",
@@ -632,7 +2400,7 @@
       "source_text": "Sales tax",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2573
+      "line": 2583
     },
     {
       "namespace": "checkout",
@@ -640,7 +2408,7 @@
       "source_text": "Save this address to my profile",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2574
+      "line": 2584
     },
     {
       "namespace": "checkout",
@@ -648,7 +2416,7 @@
       "source_text": "Save this card to my profile",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2575
+      "line": 2585
     },
     {
       "namespace": "checkout",
@@ -656,7 +2424,7 @@
       "source_text": "Select",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2576
+      "line": 2586
     },
     {
       "namespace": "checkout",
@@ -664,7 +2432,7 @@
       "source_text": "Selected",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2577
+      "line": 2587
     },
     {
       "namespace": "checkout",
@@ -672,7 +2440,7 @@
       "source_text": "Shipping",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2615
+      "line": 2625
     },
     {
       "namespace": "checkout",
@@ -680,7 +2448,7 @@
       "source_text": "The shipping method will be chosen for you automatically after the rates load.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2578
+      "line": 2588
     },
     {
       "namespace": "checkout",
@@ -688,7 +2456,7 @@
       "source_text": "{count} option",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2579
+      "line": 2589
     },
     {
       "namespace": "checkout",
@@ -696,7 +2464,7 @@
       "source_text": "{count} options",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2580
+      "line": 2590
     },
     {
       "namespace": "checkout",
@@ -704,7 +2472,7 @@
       "source_text": "Shipping options",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2581
+      "line": 2591
     },
     {
       "namespace": "checkout",
@@ -712,7 +2480,7 @@
       "source_text": "See available delivery methods and pick the one that works best for you.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2582
+      "line": 2592
     },
     {
       "namespace": "checkout",
@@ -720,7 +2488,7 @@
       "source_text": "Unable to load shipping options.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2616
+      "line": 2626
     },
     {
       "namespace": "checkout",
@@ -728,7 +2496,7 @@
       "source_text": "Choose your shipping method and enter your delivery details to compare available options.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2583
+      "line": 2593
     },
     {
       "namespace": "checkout",
@@ -736,7 +2504,7 @@
       "source_text": "Price available until {date}",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2584
+      "line": 2594
     },
     {
       "namespace": "checkout",
@@ -744,7 +2512,7 @@
       "source_text": "Shipping provider",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 3164
+      "line": 3174
     },
     {
       "namespace": "checkout",
@@ -752,7 +2520,7 @@
       "source_text": "{service} selected for shipping.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2617
+      "line": 2627
     },
     {
       "namespace": "checkout",
@@ -760,7 +2528,7 @@
       "source_text": "Sign in to use your saved cards, addresses, and order history after checkout.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2585
+      "line": 2595
     },
     {
       "namespace": "checkout",
@@ -768,7 +2536,7 @@
       "source_text": "You need to sign in to check out.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2586
+      "line": 2596
     },
     {
       "namespace": "checkout",
@@ -776,7 +2544,7 @@
       "source_text": "Sign in or create an account to continue with this order.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2587
+      "line": 2597
     },
     {
       "namespace": "checkout",
@@ -784,7 +2552,7 @@
       "source_text": "store",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2588
+      "line": 2598
     },
     {
       "namespace": "checkout",
@@ -792,7 +2560,7 @@
       "source_text": "Subtotal",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2618
+      "line": 2628
     },
     {
       "namespace": "checkout",
@@ -800,7 +2568,7 @@
       "source_text": "Subtotal {value}",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2619
+      "line": 2629
     },
     {
       "namespace": "checkout",
@@ -808,7 +2576,7 @@
       "source_text": "Tax",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2620
+      "line": 2630
     },
     {
       "namespace": "checkout",
@@ -816,7 +2584,7 @@
       "source_text": "Unable to finalize taxes.",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2621
+      "line": 2631
     },
     {
       "namespace": "checkout",
@@ -824,7 +2592,7 @@
       "source_text": "Tax status",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2589
+      "line": 2599
     },
     {
       "namespace": "checkout",
@@ -832,7 +2600,7 @@
       "source_text": "Checkout",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2622
+      "line": 2632
     },
     {
       "namespace": "checkout",
@@ -840,7 +2608,7 @@
       "source_text": "Updating...",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2590
+      "line": 2600
     },
     {
       "namespace": "checkout",
@@ -848,7 +2616,7 @@
       "source_text": "Updating quote...",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2623
+      "line": 2633
     },
     {
       "namespace": "checkout",
@@ -856,7 +2624,7 @@
       "source_text": "Use a saved address",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2591
+      "line": 2601
     },
     {
       "namespace": "checkout",
@@ -864,7 +2632,7 @@
       "source_text": "Use a saved card",
       "owner_domain": "checkout",
       "file": "internal/migrations/migrations.go",
-      "line": 2592
+      "line": 2602
     },
     {
       "namespace": "communications",
@@ -872,7 +2640,7 @@
       "source_text": "We received order {order_number}. Total: {total}. We will send another update when it ships.",
       "owner_domain": "communications",
       "file": "internal/migrations/migrations.go",
-      "line": 3127
+      "line": 3137
     },
     {
       "namespace": "communications",
@@ -880,7 +2648,7 @@
       "source_text": "Order {order_number} confirmed",
       "owner_domain": "communications",
       "file": "internal/migrations/migrations.go",
-      "line": 3126
+      "line": 3136
     },
     {
       "namespace": "communications",
@@ -888,7 +2656,7 @@
       "source_text": "Order {order_number} is confirmed. Total: {total}.",
       "owner_domain": "communications",
       "file": "internal/migrations/migrations.go",
-      "line": 3128
+      "line": 3138
     },
     {
       "namespace": "communications",
@@ -896,7 +2664,7 @@
       "source_text": "We could not complete payment for order {order_number}. Please update your payment method.",
       "owner_domain": "communications",
       "file": "internal/migrations/migrations.go",
-      "line": 3130
+      "line": 3140
     },
     {
       "namespace": "communications",
@@ -904,7 +2672,7 @@
       "source_text": "Payment issue for order {order_number}",
       "owner_domain": "communications",
       "file": "internal/migrations/migrations.go",
-      "line": 3129
+      "line": 3139
     },
     {
       "namespace": "communications",
@@ -912,7 +2680,7 @@
       "source_text": "Payment for order {order_number} needs attention. Please update your payment method.",
       "owner_domain": "communications",
       "file": "internal/migrations/migrations.go",
-      "line": 3131
+      "line": 3141
     },
     {
       "namespace": "communications",
@@ -920,7 +2688,7 @@
       "source_text": "Your return for order {order_number} was approved. Follow these instructions: {instructions}",
       "owner_domain": "communications",
       "file": "internal/migrations/migrations.go",
-      "line": 3136
+      "line": 3146
     },
     {
       "namespace": "communications",
@@ -928,7 +2696,7 @@
       "source_text": "Return approved for order {order_number}",
       "owner_domain": "communications",
       "file": "internal/migrations/migrations.go",
-      "line": 3135
+      "line": 3145
     },
     {
       "namespace": "communications",
@@ -936,7 +2704,7 @@
       "source_text": "Your return for order {order_number} was approved. Check your email for instructions.",
       "owner_domain": "communications",
       "file": "internal/migrations/migrations.go",
-      "line": 3137
+      "line": 3147
     },
     {
       "namespace": "communications",
@@ -944,7 +2712,7 @@
       "source_text": "Order {order_number} is now {status}. Track it here: {tracking_url}",
       "owner_domain": "communications",
       "file": "internal/migrations/migrations.go",
-      "line": 3133
+      "line": 3143
     },
     {
       "namespace": "communications",
@@ -952,7 +2720,7 @@
       "source_text": "Shipping update for order {order_number}",
       "owner_domain": "communications",
       "file": "internal/migrations/migrations.go",
-      "line": 3132
+      "line": 3142
     },
     {
       "namespace": "communications",
@@ -960,7 +2728,7 @@
       "source_text": "Order {order_number} is {status}. Track: {tracking_url}",
       "owner_domain": "communications",
       "file": "internal/migrations/migrations.go",
-      "line": 3134
+      "line": 3144
     },
     {
       "namespace": "errors",
@@ -968,7 +2736,7 @@
       "source_text": "The account conflicts with the current state.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3165
+      "line": 3175
     },
     {
       "namespace": "errors",
@@ -976,7 +2744,7 @@
       "source_text": "The requested address was not found.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3166
+      "line": 3176
     },
     {
       "namespace": "errors",
@@ -984,7 +2752,7 @@
       "source_text": "Authentication is required.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 2727
+      "line": 2737
     },
     {
       "namespace": "errors",
@@ -992,7 +2760,7 @@
       "source_text": "Too many checkout attempts were made. Please wait and try again.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3167
+      "line": 3177
     },
     {
       "namespace": "errors",
@@ -1000,7 +2768,7 @@
       "source_text": "A checkout session is required.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3168
+      "line": 3178
     },
     {
       "namespace": "errors",
@@ -1008,7 +2776,7 @@
       "source_text": "The checkout snapshot conflicts with the current order.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3169
+      "line": 3179
     },
     {
       "namespace": "errors",
@@ -1016,7 +2784,7 @@
       "source_text": "The checkout state changed. Refresh and try again.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3170
+      "line": 3180
     },
     {
       "namespace": "errors",
@@ -1024,7 +2792,7 @@
       "source_text": "Secure credential storage is unavailable.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3171
+      "line": 3181
     },
     {
       "namespace": "errors",
@@ -1032,7 +2800,7 @@
       "source_text": "You are not allowed to perform this action.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 2728
+      "line": 2738
     },
     {
       "namespace": "errors",
@@ -1040,7 +2808,7 @@
       "source_text": "Guest checkout is disabled.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3172
+      "line": 3182
     },
     {
       "namespace": "errors",
@@ -1048,7 +2816,7 @@
       "source_text": "An email address is required for guest checkout.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3173
+      "line": 3183
     },
     {
       "namespace": "errors",
@@ -1056,7 +2824,7 @@
       "source_text": "An identical request is still in progress.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3174
+      "line": 3184
     },
     {
       "namespace": "errors",
@@ -1064,7 +2832,7 @@
       "source_text": "The request key was already used for different data.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3175
+      "line": 3185
     },
     {
       "namespace": "errors",
@@ -1072,7 +2840,7 @@
       "source_text": "An unexpected error occurred.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 2731
+      "line": 2741
     },
     {
       "namespace": "errors",
@@ -1080,7 +2848,7 @@
       "source_text": "The address is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3176
+      "line": 3186
     },
     {
       "namespace": "errors",
@@ -1088,7 +2856,7 @@
       "source_text": "The address identifier is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3177
+      "line": 3187
     },
     {
       "namespace": "errors",
@@ -1096,7 +2864,7 @@
       "source_text": "The checkout snapshot is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3178
+      "line": 3188
     },
     {
       "namespace": "errors",
@@ -1104,7 +2872,7 @@
       "source_text": "The guest order claim is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3188
+      "line": 3198
     },
     {
       "namespace": "errors",
@@ -1112,7 +2880,7 @@
       "source_text": "The supplied credentials are invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3179
+      "line": 3189
     },
     {
       "namespace": "errors",
@@ -1120,7 +2888,7 @@
       "source_text": "The selected currency is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3180
+      "line": 3190
     },
     {
       "namespace": "errors",
@@ -1128,7 +2896,7 @@
       "source_text": "The selected date range is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3181
+      "line": 3191
     },
     {
       "namespace": "errors",
@@ -1136,7 +2904,7 @@
       "source_text": "The end date is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3182
+      "line": 3192
     },
     {
       "namespace": "errors",
@@ -1144,7 +2912,7 @@
       "source_text": "The guest email address is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3183
+      "line": 3193
     },
     {
       "namespace": "errors",
@@ -1152,7 +2920,7 @@
       "source_text": "The selected locale is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3184
+      "line": 3194
     },
     {
       "namespace": "errors",
@@ -1160,7 +2928,7 @@
       "source_text": "The selected media is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3185
+      "line": 3195
     },
     {
       "namespace": "errors",
@@ -1168,7 +2936,7 @@
       "source_text": "The sign-in callback is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3186
+      "line": 3196
     },
     {
       "namespace": "errors",
@@ -1176,7 +2944,7 @@
       "source_text": "The sign-in provider display name is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 5640
+      "line": 5650
     },
     {
       "namespace": "errors",
@@ -1184,7 +2952,7 @@
       "source_text": "The sign-in secret update is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3187
+      "line": 3197
     },
     {
       "namespace": "errors",
@@ -1192,7 +2960,7 @@
       "source_text": "The order is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3189
+      "line": 3199
     },
     {
       "namespace": "errors",
@@ -1200,7 +2968,7 @@
       "source_text": "The requested page is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3190
+      "line": 3200
     },
     {
       "namespace": "errors",
@@ -1208,7 +2976,7 @@
       "source_text": "The payment method is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3191
+      "line": 3201
     },
     {
       "namespace": "errors",
@@ -1216,7 +2984,7 @@
       "source_text": "The payment method identifier is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3192
+      "line": 3202
     },
     {
       "namespace": "errors",
@@ -1224,7 +2992,7 @@
       "source_text": "The quantity is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3193
+      "line": 3203
     },
     {
       "namespace": "errors",
@@ -1232,7 +3000,7 @@
       "source_text": "The request is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 2726
+      "line": 2736
     },
     {
       "namespace": "errors",
@@ -1240,7 +3008,7 @@
       "source_text": "The search event is invalid or expired.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 2104
+      "line": 2114
     },
     {
       "namespace": "errors",
@@ -1248,7 +3016,7 @@
       "source_text": "The start date is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3194
+      "line": 3204
     },
     {
       "namespace": "errors",
@@ -1256,7 +3024,7 @@
       "source_text": "The selected user role is invalid.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3195
+      "line": 3205
     },
     {
       "namespace": "errors",
@@ -1264,7 +3032,7 @@
       "source_text": "The translation release is missing required content.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3196
+      "line": 3206
     },
     {
       "namespace": "errors",
@@ -1272,7 +3040,7 @@
       "source_text": "Localized content is temporarily unavailable.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3197
+      "line": 3207
     },
     {
       "namespace": "errors",
@@ -1280,7 +3048,7 @@
       "source_text": "The media is still processing.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3198
+      "line": 3208
     },
     {
       "namespace": "errors",
@@ -1288,7 +3056,7 @@
       "source_text": "The media could not be processed.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3199
+      "line": 3209
     },
     {
       "namespace": "errors",
@@ -1296,7 +3064,7 @@
       "source_text": "The requested resource was not found.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 2729
+      "line": 2739
     },
     {
       "namespace": "errors",
@@ -1304,7 +3072,7 @@
       "source_text": "This order was already claimed by another account.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3201
+      "line": 3211
     },
     {
       "namespace": "errors",
@@ -1312,7 +3080,7 @@
       "source_text": "The order cannot be cancelled.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3200
+      "line": 3210
     },
     {
       "namespace": "errors",
@@ -1320,7 +3088,7 @@
       "source_text": "The uploaded content is too large.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3202
+      "line": 3212
     },
     {
       "namespace": "errors",
@@ -1328,7 +3096,7 @@
       "source_text": "Payment was already submitted.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3203
+      "line": 3213
     },
     {
       "namespace": "errors",
@@ -1336,7 +3104,7 @@
       "source_text": "The requested payment method was not found.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3204
+      "line": 3214
     },
     {
       "namespace": "errors",
@@ -1344,7 +3112,7 @@
       "source_text": "Search is busy. Please try again shortly.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 2106
+      "line": 2116
     },
     {
       "namespace": "errors",
@@ -1352,7 +3120,7 @@
       "source_text": "Search is temporarily unavailable.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 2108
+      "line": 2118
     },
     {
       "namespace": "errors",
@@ -1360,7 +3128,7 @@
       "source_text": "The request conflicts with the current state.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 2730
+      "line": 2740
     },
     {
       "namespace": "errors",
@@ -1368,7 +3136,7 @@
       "source_text": "The requested product option was not found.",
       "owner_domain": "http",
       "file": "internal/migrations/migrations.go",
-      "line": 3205
+      "line": 3215
     },
     {
       "namespace": "storefront",
@@ -1376,7 +3144,7 @@
       "source_text": "Could not set default address.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2625
+      "line": 2635
     },
     {
       "namespace": "storefront",
@@ -1384,7 +3152,7 @@
       "source_text": "Default address updated.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2626
+      "line": 2636
     },
     {
       "namespace": "storefront",
@@ -1392,7 +3160,7 @@
       "source_text": "Could not remove address.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2627
+      "line": 2637
     },
     {
       "namespace": "storefront",
@@ -1400,7 +3168,7 @@
       "source_text": "Address removed.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2628
+      "line": 2638
     },
     {
       "namespace": "storefront",
@@ -1408,7 +3176,7 @@
       "source_text": "Could not save address.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2629
+      "line": 2639
     },
     {
       "namespace": "storefront",
@@ -1416,7 +3184,7 @@
       "source_text": "Address saved.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2630
+      "line": 2640
     },
     {
       "namespace": "storefront",
@@ -1424,7 +3192,7 @@
       "source_text": "Already have an account?",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 5625
+      "line": 5635
     },
     {
       "namespace": "storefront",
@@ -1432,7 +3200,7 @@
       "source_text": "Card number",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2631
+      "line": 2641
     },
     {
       "namespace": "storefront",
@@ -1440,7 +3208,7 @@
       "source_text": "Cardholder name",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2632
+      "line": 2642
     },
     {
       "namespace": "storefront",
@@ -1448,7 +3216,7 @@
       "source_text": "Choose photo",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2633
+      "line": 2643
     },
     {
       "namespace": "storefront",
@@ -1456,7 +3224,7 @@
       "source_text": "Confirm Password",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2624
+      "line": 2634
     },
     {
       "namespace": "storefront",
@@ -1464,7 +3232,7 @@
       "source_text": "Continue to {provider}",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 5626
+      "line": 5636
     },
     {
       "namespace": "storefront",
@@ -1472,7 +3240,7 @@
       "source_text": "Continue with OpenID Connect",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2676
+      "line": 2686
     },
     {
       "namespace": "storefront",
@@ -1480,7 +3248,7 @@
       "source_text": "Create Account",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2677
+      "line": 2687
     },
     {
       "namespace": "storefront",
@@ -1488,7 +3256,7 @@
       "source_text": "Create an account",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 5627
+      "line": 5637
     },
     {
       "namespace": "storefront",
@@ -1496,7 +3264,7 @@
       "source_text": "Create your account",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 5628
+      "line": 5638
     },
     {
       "namespace": "storefront",
@@ -1504,7 +3272,7 @@
       "source_text": "Unable to create account. Please check your details.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2678
+      "line": 2688
     },
     {
       "namespace": "storefront",
@@ -1512,7 +3280,7 @@
       "source_text": "Account creation is currently unavailable.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2679
+      "line": 2689
     },
     {
       "namespace": "storefront",
@@ -1520,7 +3288,7 @@
       "source_text": "Default",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2634
+      "line": 2644
     },
     {
       "namespace": "storefront",
@@ -1528,7 +3296,7 @@
       "source_text": "Delete address",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2635
+      "line": 2645
     },
     {
       "namespace": "storefront",
@@ -1536,7 +3304,7 @@
       "source_text": "Delete payment method",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2636
+      "line": 2646
     },
     {
       "namespace": "storefront",
@@ -1544,7 +3312,7 @@
       "source_text": "Account details",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2637
+      "line": 2647
     },
     {
       "namespace": "storefront",
@@ -1552,7 +3320,7 @@
       "source_text": "Email",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2680
+      "line": 2690
     },
     {
       "namespace": "storefront",
@@ -1560,7 +3328,7 @@
       "source_text": "Exp month",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2638
+      "line": 2648
     },
     {
       "namespace": "storefront",
@@ -1568,7 +3336,7 @@
       "source_text": "Exp year",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2639
+      "line": 2649
     },
     {
       "namespace": "storefront",
@@ -1576,7 +3344,7 @@
       "source_text": "Invalid email or password.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2681
+      "line": 2691
     },
     {
       "namespace": "storefront",
@@ -1584,7 +3352,7 @@
       "source_text": "Language",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2682
+      "line": 2692
     },
     {
       "namespace": "storefront",
@@ -1592,7 +3360,7 @@
       "source_text": "Log In",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2683
+      "line": 2693
     },
     {
       "namespace": "storefront",
@@ -1600,7 +3368,7 @@
       "source_text": "log in",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2640
+      "line": 2650
     },
     {
       "namespace": "storefront",
@@ -1608,7 +3376,7 @@
       "source_text": "Name",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2641
+      "line": 2651
     },
     {
       "namespace": "storefront",
@@ -1616,7 +3384,7 @@
       "source_text": "Name (optional)",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2684
+      "line": 2694
     },
     {
       "namespace": "storefront",
@@ -1624,7 +3392,7 @@
       "source_text": "New here?",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 5629
+      "line": 5639
     },
     {
       "namespace": "storefront",
@@ -1632,7 +3400,7 @@
       "source_text": "No saved addresses.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2642
+      "line": 2652
     },
     {
       "namespace": "storefront",
@@ -1640,7 +3408,7 @@
       "source_text": "No saved payment methods.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2643
+      "line": 2653
     },
     {
       "namespace": "storefront",
@@ -1648,7 +3416,7 @@
       "source_text": "Sign-in was cancelled. You can try again.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 5630
+      "line": 5640
     },
     {
       "namespace": "storefront",
@@ -1656,7 +3424,7 @@
       "source_text": "We couldn't complete sign-in. Please try again.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 5631
+      "line": 5641
     },
     {
       "namespace": "storefront",
@@ -1664,7 +3432,7 @@
       "source_text": "Or",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2685
+      "line": 2695
     },
     {
       "namespace": "storefront",
@@ -1672,7 +3440,7 @@
       "source_text": "or create an account with email",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 5632
+      "line": 5642
     },
     {
       "namespace": "storefront",
@@ -1680,7 +3448,7 @@
       "source_text": "or sign in with email",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 5633
+      "line": 5643
     },
     {
       "namespace": "storefront",
@@ -1688,7 +3456,7 @@
       "source_text": "Password",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2686
+      "line": 2696
     },
     {
       "namespace": "storefront",
@@ -1696,7 +3464,7 @@
       "source_text": "Passwords do not match.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2687
+      "line": 2697
     },
     {
       "namespace": "storefront",
@@ -1704,7 +3472,7 @@
       "source_text": "Could not set default payment method.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2644
+      "line": 2654
     },
     {
       "namespace": "storefront",
@@ -1712,7 +3480,7 @@
       "source_text": "Default payment method updated.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2645
+      "line": 2655
     },
     {
       "namespace": "storefront",
@@ -1720,7 +3488,7 @@
       "source_text": "Could not remove payment method.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2646
+      "line": 2656
     },
     {
       "namespace": "storefront",
@@ -1728,7 +3496,7 @@
       "source_text": "Payment method removed.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2647
+      "line": 2657
     },
     {
       "namespace": "storefront",
@@ -1736,7 +3504,7 @@
       "source_text": "Could not save payment method.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2648
+      "line": 2658
     },
     {
       "namespace": "storefront",
@@ -1744,7 +3512,7 @@
       "source_text": "Payment method saved.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2649
+      "line": 2659
     },
     {
       "namespace": "storefront",
@@ -1752,7 +3520,7 @@
       "source_text": "Photo is still processing. Please try again in a moment.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2650
+      "line": 2660
     },
     {
       "namespace": "storefront",
@@ -1760,7 +3528,7 @@
       "source_text": "Could not remove the photo.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2651
+      "line": 2661
     },
     {
       "namespace": "storefront",
@@ -1768,7 +3536,7 @@
       "source_text": "Profile photo removed.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2652
+      "line": 2662
     },
     {
       "namespace": "storefront",
@@ -1776,7 +3544,7 @@
       "source_text": "Profile photo updated.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2653
+      "line": 2663
     },
     {
       "namespace": "storefront",
@@ -1784,7 +3552,7 @@
       "source_text": "Could not upload the photo. Please try again.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2654
+      "line": 2664
     },
     {
       "namespace": "storefront",
@@ -1792,7 +3560,7 @@
       "source_text": "Please",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2655
+      "line": 2665
     },
     {
       "namespace": "storefront",
@@ -1800,7 +3568,7 @@
       "source_text": "Preferred currency",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2656
+      "line": 2666
     },
     {
       "namespace": "storefront",
@@ -1808,7 +3576,7 @@
       "source_text": "Profile",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2657
+      "line": 2667
     },
     {
       "namespace": "storefront",
@@ -1816,7 +3584,7 @@
       "source_text": "Unable to load your profile. Please try again.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2658
+      "line": 2668
     },
     {
       "namespace": "storefront",
@@ -1824,7 +3592,7 @@
       "source_text": "Profile photo",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2659
+      "line": 2669
     },
     {
       "namespace": "storefront",
@@ -1832,7 +3600,7 @@
       "source_text": "Profile preview",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2660
+      "line": 2670
     },
     {
       "namespace": "storefront",
@@ -1840,7 +3608,7 @@
       "source_text": "Could not update profile. Please try again.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2661
+      "line": 2671
     },
     {
       "namespace": "storefront",
@@ -1848,7 +3616,7 @@
       "source_text": "Profile updated.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2662
+      "line": 2672
     },
     {
       "namespace": "storefront",
@@ -1856,7 +3624,7 @@
       "source_text": "Your account will be created automatically the first time your provider signs you in.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2688
+      "line": 2698
     },
     {
       "namespace": "storefront",
@@ -1864,7 +3632,7 @@
       "source_text": "New to the store? Your account will be created after you sign in.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 5634
+      "line": 5644
     },
     {
       "namespace": "storefront",
@@ -1872,7 +3640,7 @@
       "source_text": "Use your identity provider to sign in without a local password.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2689
+      "line": 2699
     },
     {
       "namespace": "storefront",
@@ -1880,7 +3648,7 @@
       "source_text": "You'll be redirected to {provider} to sign in.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 5635
+      "line": 5645
     },
     {
       "namespace": "storefront",
@@ -1888,7 +3656,7 @@
       "source_text": "Redirecting to {provider}...",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 5636
+      "line": 5646
     },
     {
       "namespace": "storefront",
@@ -1896,7 +3664,7 @@
       "source_text": "Remove photo",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2663
+      "line": 2673
     },
     {
       "namespace": "storefront",
@@ -1904,7 +3672,7 @@
       "source_text": "Removing...",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2664
+      "line": 2674
     },
     {
       "namespace": "storefront",
@@ -1912,7 +3680,7 @@
       "source_text": "Save changes",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2690
+      "line": 2700
     },
     {
       "namespace": "storefront",
@@ -1920,7 +3688,7 @@
       "source_text": "Save address",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2665
+      "line": 2675
     },
     {
       "namespace": "storefront",
@@ -1928,7 +3696,7 @@
       "source_text": "Save payment method",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2666
+      "line": 2676
     },
     {
       "namespace": "storefront",
@@ -1936,7 +3704,7 @@
       "source_text": "Saved addresses",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2667
+      "line": 2677
     },
     {
       "namespace": "storefront",
@@ -1944,7 +3712,7 @@
       "source_text": "Saved payment methods",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2668
+      "line": 2678
     },
     {
       "namespace": "storefront",
@@ -1952,7 +3720,7 @@
       "source_text": "Your session expired. Please sign in again.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2691
+      "line": 2701
     },
     {
       "namespace": "storefront",
@@ -1960,7 +3728,7 @@
       "source_text": "Set as default",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2669
+      "line": 2679
     },
     {
       "namespace": "storefront",
@@ -1968,7 +3736,7 @@
       "source_text": "Set as default address",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2670
+      "line": 2680
     },
     {
       "namespace": "storefront",
@@ -1976,7 +3744,7 @@
       "source_text": "Set as default payment method",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2671
+      "line": 2681
     },
     {
       "namespace": "storefront",
@@ -1984,7 +3752,7 @@
       "source_text": "Sign in",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 5637
+      "line": 5647
     },
     {
       "namespace": "storefront",
@@ -1992,7 +3760,7 @@
       "source_text": "Sign in",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 5638
+      "line": 5648
     },
     {
       "namespace": "storefront",
@@ -2000,7 +3768,7 @@
       "source_text": "Sign-in is currently unavailable.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2692
+      "line": 2702
     },
     {
       "namespace": "storefront",
@@ -2008,7 +3776,7 @@
       "source_text": "Sign Up",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2693
+      "line": 2703
     },
     {
       "namespace": "storefront",
@@ -2016,7 +3784,7 @@
       "source_text": "Upload photo",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2672
+      "line": 2682
     },
     {
       "namespace": "storefront",
@@ -2024,7 +3792,7 @@
       "source_text": "Uploading...",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2673
+      "line": 2683
     },
     {
       "namespace": "storefront",
@@ -2032,7 +3800,7 @@
       "source_text": "Username",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2694
+      "line": 2704
     },
     {
       "namespace": "storefront",
@@ -2040,7 +3808,7 @@
       "source_text": "to view your profile.",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2674
+      "line": 2684
     },
     {
       "namespace": "storefront",
@@ -2048,7 +3816,7 @@
       "source_text": "Welcome back",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 5639
+      "line": 5649
     },
     {
       "namespace": "storefront",
@@ -2056,7 +3824,7 @@
       "source_text": "Your name",
       "owner_domain": "account",
       "file": "internal/migrations/migrations.go",
-      "line": 2675
+      "line": 2685
     },
     {
       "namespace": "storefront",
@@ -2064,7 +3832,7 @@
       "source_text": "Calculated at checkout",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2695
+      "line": 2705
     },
     {
       "namespace": "storefront",
@@ -2072,7 +3840,7 @@
       "source_text": "Continue shopping",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2696
+      "line": 2706
     },
     {
       "namespace": "storefront",
@@ -2080,7 +3848,7 @@
       "source_text": "Discounts",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2697
+      "line": 2707
     },
     {
       "namespace": "storefront",
@@ -2088,7 +3856,7 @@
       "source_text": "Your cart is empty.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2698
+      "line": 2708
     },
     {
       "namespace": "storefront",
@@ -2096,7 +3864,7 @@
       "source_text": "Go to checkout",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2699
+      "line": 2709
     },
     {
       "namespace": "storefront",
@@ -2104,7 +3872,7 @@
       "source_text": "Your cart is attached to this browser session. You can still check out as a guest.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2700
+      "line": 2710
     },
     {
       "namespace": "storefront",
@@ -2112,7 +3880,7 @@
       "source_text": "Your selections are saved to this browser until you check out or clear them.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2701
+      "line": 2711
     },
     {
       "namespace": "storefront",
@@ -2120,7 +3888,7 @@
       "source_text": "{count} item",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2702
+      "line": 2712
     },
     {
       "namespace": "storefront",
@@ -2128,7 +3896,7 @@
       "source_text": "{count} items",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2703
+      "line": 2713
     },
     {
       "namespace": "storefront",
@@ -2136,7 +3904,7 @@
       "source_text": "Order summary",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2704
+      "line": 2714
     },
     {
       "namespace": "storefront",
@@ -2144,7 +3912,7 @@
       "source_text": "Unable to remove that item.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2705
+      "line": 2715
     },
     {
       "namespace": "storefront",
@@ -2152,7 +3920,7 @@
       "source_text": "Remove item",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2706
+      "line": 2716
     },
     {
       "namespace": "storefront",
@@ -2160,7 +3928,7 @@
       "source_text": "Shipping",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2707
+      "line": 2717
     },
     {
       "namespace": "storefront",
@@ -2168,7 +3936,7 @@
       "source_text": "Subtotal",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2708
+      "line": 2718
     },
     {
       "namespace": "storefront",
@@ -2176,7 +3944,7 @@
       "source_text": "Your Cart",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2709
+      "line": 2719
     },
     {
       "namespace": "storefront",
@@ -2184,7 +3952,7 @@
       "source_text": "Unable to update that item.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2710
+      "line": 2720
     },
     {
       "namespace": "storefront",
@@ -2192,7 +3960,7 @@
       "source_text": "Cancel this order? This cannot be undone and eligible items will be restocked.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3138
+      "line": 3148
     },
     {
       "namespace": "storefront",
@@ -2200,7 +3968,7 @@
       "source_text": "Unable to cancel order.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3139
+      "line": 3149
     },
     {
       "namespace": "storefront",
@@ -2208,7 +3976,7 @@
       "source_text": "Order cancelled.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3140
+      "line": 3150
     },
     {
       "namespace": "storefront",
@@ -2216,7 +3984,7 @@
       "source_text": "This guest order has already been claimed.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3141
+      "line": 3151
     },
     {
       "namespace": "storefront",
@@ -2224,7 +3992,7 @@
       "source_text": "Order claimed.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3142
+      "line": 3152
     },
     {
       "namespace": "storefront",
@@ -2232,7 +4000,7 @@
       "source_text": "Unable to claim this guest order.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3143
+      "line": 3153
     },
     {
       "namespace": "storefront",
@@ -2240,7 +4008,7 @@
       "source_text": "No guest order matched that email and confirmation token.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3144
+      "line": 3154
     },
     {
       "namespace": "storefront",
@@ -2248,7 +4016,7 @@
       "source_text": "Enter the email and confirmation token from the guest order.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3145
+      "line": 3155
     },
     {
       "namespace": "storefront",
@@ -2256,7 +4024,7 @@
       "source_text": "Order placed successfully.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3146
+      "line": 3156
     },
     {
       "namespace": "storefront",
@@ -2264,7 +4032,7 @@
       "source_text": "Cancelled",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3147
+      "line": 3157
     },
     {
       "namespace": "storefront",
@@ -2272,7 +4040,7 @@
       "source_text": "Delivered",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3148
+      "line": 3158
     },
     {
       "namespace": "storefront",
@@ -2280,7 +4048,7 @@
       "source_text": "Failed",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3149
+      "line": 3159
     },
     {
       "namespace": "storefront",
@@ -2288,7 +4056,7 @@
       "source_text": "Paid",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3150
+      "line": 3160
     },
     {
       "namespace": "storefront",
@@ -2296,7 +4064,7 @@
       "source_text": "Pending",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3151
+      "line": 3161
     },
     {
       "namespace": "storefront",
@@ -2304,7 +4072,7 @@
       "source_text": "Refunded",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3152
+      "line": 3162
     },
     {
       "namespace": "storefront",
@@ -2312,7 +4080,23 @@
       "source_text": "Shipped",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3153
+      "line": 3163
+    },
+    {
+      "namespace": "storefront",
+      "key": "product.no_image",
+      "source_text": "No image",
+      "owner_domain": "storefront",
+      "file": "frontend/src/lib/components/ProductCard.svelte",
+      "line": 85
+    },
+    {
+      "namespace": "storefront",
+      "key": "product.price_from",
+      "source_text": "From {price}",
+      "owner_domain": "storefront",
+      "file": "frontend/src/lib/components/ProductCard.svelte",
+      "line": 110
     },
     {
       "namespace": "storefront",
@@ -2320,7 +4104,15 @@
       "source_text": "Apply filters",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2072
+      "line": 2082
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.ascending",
+      "source_text": "Ascending",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 425
     },
     {
       "namespace": "storefront",
@@ -2328,7 +4120,7 @@
       "source_text": "Availability",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2074
+      "line": 2084
     },
     {
       "namespace": "storefront",
@@ -2336,7 +4128,31 @@
       "source_text": "Brands",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2076
+      "line": 2086
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.browse_all",
+      "source_text": "Browse all products",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 550
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.browse_count.one",
+      "source_text": "Browse {count} product",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 510
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.browse_count.other",
+      "source_text": "Browse {count} products",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 510
     },
     {
       "namespace": "storefront",
@@ -2344,7 +4160,15 @@
       "source_text": "Categories",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2078
+      "line": 2088
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.clear_filters",
+      "source_text": "Clear filters",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 446
     },
     {
       "namespace": "storefront",
@@ -2352,7 +4176,15 @@
       "source_text": "Allow anonymous search activity to improve search. You can turn this off at any time; raw activity is retained for 90 days.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2080
+      "line": 2090
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.correction_label",
+      "source_text": "Did you mean",
+      "owner_domain": "storefront",
+      "file": "frontend/src/lib/search/SearchCombobox.svelte",
+      "line": 127
     },
     {
       "namespace": "storefront",
@@ -2360,7 +4192,15 @@
       "source_text": "Search is temporarily unavailable. Showing basic catalog browsing with your filters; keyword matching and relevance sorting are unavailable.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2082
+      "line": 2092
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.descending",
+      "source_text": "Descending",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 426
     },
     {
       "namespace": "storefront",
@@ -2368,7 +4208,7 @@
       "source_text": "Did you mean",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2084
+      "line": 2094
     },
     {
       "namespace": "storefront",
@@ -2376,7 +4216,47 @@
       "source_text": "In stock",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2086
+      "line": 2096
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.load_error",
+      "source_text": "Unable to load search results.",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 498
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.loading",
+      "source_text": "Loading results…",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 496
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.next",
+      "source_text": "Next",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 181
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.no_matches",
+      "source_text": "No matches found.",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 527
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.no_matches_help",
+      "source_text": "Try a different keyword or clear filters.",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 528
     },
     {
       "namespace": "storefront",
@@ -2384,7 +4264,31 @@
       "source_text": "Out of stock",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2088
+      "line": 2098
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.page_count",
+      "source_text": "Page {page} of {pages}",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 597
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.per_page",
+      "source_text": "Per page",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 584
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.placeholder",
+      "source_text": "Search products",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 380
     },
     {
       "namespace": "storefront",
@@ -2392,7 +4296,15 @@
       "source_text": "Popular searches",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2090
+      "line": 2100
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.previous",
+      "source_text": "Previous",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/admin/search/history/+page.svelte",
+      "line": 164
     },
     {
       "namespace": "storefront",
@@ -2400,7 +4312,31 @@
       "source_text": "Price",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2092
+      "line": 2102
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.price_from",
+      "source_text": "{min} and up",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 180
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.price_range",
+      "source_text": "{min} – {max}",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 174
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.price_to",
+      "source_text": "Up to {max}",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 184
     },
     {
       "namespace": "storefront",
@@ -2408,7 +4344,55 @@
       "source_text": "Showing related matches. Try the spelling suggestion or adjust your filters for closer results.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2094
+      "line": 2104
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.results.one",
+      "source_text": "{count} result for “{query}”",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 501
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.results.other",
+      "source_text": "{count} results for “{query}”",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 501
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.sort_by",
+      "source_text": "Sort by",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 399
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.sort_name",
+      "source_text": "Name",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 153
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.sort_newest",
+      "source_text": "Newest",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 150
+    },
+    {
+      "namespace": "storefront",
+      "key": "search.sort_relevance",
+      "source_text": "Relevance",
+      "owner_domain": "storefront",
+      "file": "frontend/src/routes/(storefront)/search/+page.svelte",
+      "line": 146
     },
     {
       "namespace": "storefront",
@@ -2416,7 +4400,7 @@
       "source_text": "Search",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2096
+      "line": 2106
     },
     {
       "namespace": "storefront",
@@ -2424,7 +4408,7 @@
       "source_text": "Search suggestions",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2098
+      "line": 2108
     },
     {
       "namespace": "storefront",
@@ -2432,7 +4416,7 @@
       "source_text": "Product search",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2100
+      "line": 2110
     },
     {
       "namespace": "storefront",
@@ -2440,7 +4424,7 @@
       "source_text": "Trending searches",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2102
+      "line": 2112
     },
     {
       "namespace": "storefront",
@@ -2448,7 +4432,7 @@
       "source_text": "Admin",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2711
+      "line": 2721
     },
     {
       "namespace": "storefront",
@@ -2456,7 +4440,7 @@
       "source_text": "Edit profile",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2712
+      "line": 2722
     },
     {
       "namespace": "storefront",
@@ -2464,7 +4448,7 @@
       "source_text": "Exit",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2713
+      "line": 2723
     },
     {
       "namespace": "storefront",
@@ -2472,7 +4456,7 @@
       "source_text": "Could not exit draft view.",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2714
+      "line": 2724
     },
     {
       "namespace": "storefront",
@@ -2480,7 +4464,7 @@
       "source_text": "Exiting...",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2715
+      "line": 2725
     },
     {
       "namespace": "storefront",
@@ -2488,7 +4472,7 @@
       "source_text": "Loading...",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2716
+      "line": 2726
     },
     {
       "namespace": "storefront",
@@ -2496,7 +4480,7 @@
       "source_text": "Orders",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2717
+      "line": 2727
     },
     {
       "namespace": "storefront",
@@ -2504,7 +4488,7 @@
       "source_text": "Page loading",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2718
+      "line": 2728
     },
     {
       "namespace": "storefront",
@@ -2512,7 +4496,7 @@
       "source_text": "Search",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2719
+      "line": 2729
     },
     {
       "namespace": "storefront",
@@ -2520,7 +4504,7 @@
       "source_text": "Log In",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2720
+      "line": 2730
     },
     {
       "namespace": "storefront",
@@ -2528,7 +4512,7 @@
       "source_text": "Sign out",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2721
+      "line": 2731
     },
     {
       "namespace": "storefront",
@@ -2536,7 +4520,7 @@
       "source_text": "Sign Up",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2722
+      "line": 2732
     },
     {
       "namespace": "storefront",
@@ -2544,7 +4528,7 @@
       "source_text": "until {time}",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2723
+      "line": 2733
     },
     {
       "namespace": "storefront",
@@ -2552,7 +4536,7 @@
       "source_text": "View cart",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2724
+      "line": 2734
     },
     {
       "namespace": "storefront",
@@ -2560,7 +4544,7 @@
       "source_text": "Viewing draft preview",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 2725
+      "line": 2735
     },
     {
       "namespace": "storefront",
@@ -2568,7 +4552,7 @@
       "source_text": "Delivered",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3154
+      "line": 3164
     },
     {
       "namespace": "storefront",
@@ -2576,7 +4560,7 @@
       "source_text": "Exception",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3155
+      "line": 3165
     },
     {
       "namespace": "storefront",
@@ -2584,7 +4568,7 @@
       "source_text": "In transit",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3156
+      "line": 3166
     },
     {
       "namespace": "storefront",
@@ -2592,7 +4576,7 @@
       "source_text": "Label purchased",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3157
+      "line": 3167
     },
     {
       "namespace": "storefront",
@@ -2600,7 +4584,7 @@
       "source_text": "Quoted",
       "owner_domain": "storefront",
       "file": "internal/migrations/migrations.go",
-      "line": 3158
+      "line": 3168
     }
   ]
 }

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { type API } from "$lib/api";
-	import { getSearchAttribution } from "$lib/search/analytics";
+	import { resolveSearchAttribution } from "$lib/search/analytics";
 	import Card from "$lib/components/Card.svelte";
 	import IconButton from "$lib/components/IconButton.svelte";
 	import MediaThumbnail from "$lib/components/MediaThumbnail.svelte";
@@ -76,7 +76,7 @@
 				showToast("This product is not purchasable yet.");
 				return;
 			}
-			const attribution = getSearchAttribution(product.id);
+			const attribution = await resolveSearchAttribution(api, product.id);
 			await api.addToCart({
 				product_variant_id: variantId,
 				quantity: clampedQuantity,

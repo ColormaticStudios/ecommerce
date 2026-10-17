@@ -64,34 +64,40 @@ export const load: LayoutServerLoad = async (event) => {
 		}
 	}
 
-	try {
-		localizationLocales = await serverRequest<LocalizationLocaleList>(
-			event,
-			"/localization/locales"
-		);
-		const cookieLocale = event.cookies.get("locale") ?? "";
-		const market =
-			event.url.searchParams.get("market") ??
-			event.cookies.get("market") ??
-			event.request.headers.get("x-market") ??
-			"";
-		const locale = selectInitialLocale({
-			locales: localizationLocales.locales,
-			queryLocale: event.url.searchParams.get("locale") ?? "",
-			cookieLocale,
-			headerLocale: event.request.headers.get("x-locale") ?? "",
-			accountLocale,
-			acceptedLanguages: parseAcceptedLanguages(event.request.headers.get("accept-language") ?? ""),
-			market,
-		});
-		localizationBundle = await serverRequest<LocalizationBundle>(
-			event,
-			`/localization/bundles/${encodeURIComponent(locale)}`,
-			{ domain: localizationDomainForPath(event.url.pathname) }
-		);
-	} catch (err) {
-		console.error("Failed to load localization bundle in layout", err);
-	}
+	if (event.locals.publicLocalization) {
+		localizationLocales = event.locals.publicLocalization.locales;
+		localizationBundle = event.locals.publicLocalization.bundle;
+	} else
+		try {
+			localizationLocales = await serverRequest<LocalizationLocaleList>(
+				event,
+				"/localization/locales"
+			);
+			const cookieLocale = event.cookies.get("locale") ?? "";
+			const market =
+				event.url.searchParams.get("market") ??
+				event.cookies.get("market") ??
+				event.request.headers.get("x-market") ??
+				"";
+			const locale = selectInitialLocale({
+				locales: localizationLocales.locales,
+				queryLocale: event.url.searchParams.get("locale") ?? "",
+				cookieLocale,
+				headerLocale: event.request.headers.get("x-locale") ?? "",
+				accountLocale,
+				acceptedLanguages: parseAcceptedLanguages(
+					event.request.headers.get("accept-language") ?? ""
+				),
+				market,
+			});
+			localizationBundle = await serverRequest<LocalizationBundle>(
+				event,
+				`/localization/bundles/${encodeURIComponent(locale)}`,
+				{ domain: localizationDomainForPath(event.url.pathname) }
+			);
+		} catch (err) {
+			console.error("Failed to load localization bundle in layout", err);
+		}
 
 	try {
 		const navigation = await optionalServerRequest<CmsNavigationResponsePayload>(

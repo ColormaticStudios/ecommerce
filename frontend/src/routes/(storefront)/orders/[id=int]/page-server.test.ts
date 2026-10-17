@@ -26,6 +26,7 @@ afterEach(() => {
 function createEvent(id: string) {
 	return {
 		params: { id },
+		getClientAddress: () => "198.51.100.1",
 		request: new Request("http://localhost/orders/" + id),
 	};
 }

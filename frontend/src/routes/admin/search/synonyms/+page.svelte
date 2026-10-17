@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getContext, onMount } from "svelte";
 	import type { API } from "$lib/api";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 	import type { Synonym, SynonymInput } from "$lib/api/domains/search";
 	import type { PageData } from "./$types";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
@@ -19,6 +20,7 @@
 
 	let { data }: { data: PageData } = $props();
 	const api = getContext<API>("api");
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 	const notices = createAdminNotices();
 	const savePrompt = createAdminSavePrompt({
 		navigationMessage: "You have unsaved search settings. Leave and discard them?",
@@ -109,7 +111,7 @@
 </script>
 
 <section class="space-y-6 pb-16">
-	<AdminPageHeader title="Search synonyms"
+	<AdminPageHeader title={$localization.translate("admin.search.synonyms.title", "search synonyms")}
 		>{#snippet actions()}<AdminResourceActions
 				countLabel={`${items.length} synonym sets`}
 			/>{/snippet}</AdminPageHeader

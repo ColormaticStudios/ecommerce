@@ -1,3 +1,5 @@
+import { page } from "$app/state";
+import { localizedHref } from "$lib/localization/url";
 import { resolve } from "$app/paths";
 import { cmsHref, isExternalHref } from "$lib/cms";
 
@@ -15,7 +17,7 @@ export function cmsRenderHref(url: string): string {
 	if (hash) {
 		resolved += `#${hash}`;
 	}
-	return resolved;
+	return localizedHref(resolved, page.url);
 }
 
 export function cmsRenderTarget(url: string): string | undefined {

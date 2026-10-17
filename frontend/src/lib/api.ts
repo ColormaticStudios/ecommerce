@@ -1,3 +1,4 @@
+import { appendBrowserLocalization } from "$lib/localization/url";
 import {
 	type BrandModel,
 	type CategoryModel,
@@ -236,6 +237,7 @@ export interface DraftPreviewSessionModel {
 
 export interface RequestOptions {
 	headers?: Record<string, string>;
+	keepalive?: boolean;
 }
 
 export type ProductSearchModel = Omit<SearchProductsSuccess, "items"> & {
@@ -348,12 +350,14 @@ export class API {
 
 		const url = new URL(`${this.baseUrl}${API_ROUTE}${path}`);
 		appendQueryParams(url, params);
+		appendBrowserLocalization(url);
 
 		const response = await fetch(url.toString(), {
 			method,
 			headers,
 			body: method === "GET" ? undefined : JSON.stringify(data),
 			credentials: "include",
+			keepalive: options?.keepalive,
 		});
 
 		const text = await response.text();
@@ -618,6 +622,13 @@ export class API {
 	public revokeSearchConsent(session_token: string) {
 		return this.request<void>("POST", "/search/consent/revoke", { session_token });
 	}
+	public createSearchProof(body: components["schemas"]["SearchProofInput"]) {
+		return this.request<components["schemas"]["SearchProofResponse"]>(
+			"POST",
+			"/search/proofs",
+			body
+		);
+	}
 	public recordSearchImpression(body: components["schemas"]["SearchImpressionInput"]) {
 		return this.request<components["schemas"]["SearchImpressionResponse"]>(
 			"POST",
@@ -629,15 +640,17 @@ export class API {
 		return this.request<components["schemas"]["SearchEventResponse"]>(
 			"POST",
 			"/search/events",
-			body
+			body,
+			undefined,
+			{ keepalive: true }
 		);
 	}
-	public adminSearchAnalytics(days = 7) {
+	public adminSearchAnalytics(days = 7, page = 1, limit = 20) {
 		return this.request<components["schemas"]["SearchAnalytics"]>(
 			"GET",
 			"/admin/search/analytics",
 			undefined,
-			{ days }
+			{ days, page, limit }
 		);
 	}
 	public adminSearchIncidents(query: searchIncidentsDomain.IncidentQuery = {}) {

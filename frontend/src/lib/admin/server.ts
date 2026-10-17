@@ -12,7 +12,7 @@ export interface AdminAccessData {
 }
 
 export async function loadAdminAccess(
-	event: Pick<RequestEvent, "fetch" | "request">
+	event: Pick<RequestEvent, "fetch" | "request" | "getClientAddress">
 ): Promise<AdminAccessData> {
 	let isAuthenticated = false;
 	let isAdmin = false;

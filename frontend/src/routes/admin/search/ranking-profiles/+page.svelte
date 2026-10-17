@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getContext, onMount, untrack } from "svelte";
 	import type { API } from "$lib/api";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 	import type { RankingProfile, RankingInput } from "$lib/api/domains/search";
 	import type { PageData } from "./$types";
 	import AdminPageHeader from "$lib/admin/AdminPageHeader.svelte";
@@ -18,6 +19,7 @@
 
 	let { data }: { data: PageData } = $props();
 	const api = getContext<API>("api");
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 	const notices = createAdminNotices();
 	const savePrompt = createAdminSavePrompt({
 		navigationMessage: "You have unsaved search settings. Leave and discard them?",
@@ -133,7 +135,11 @@
 </script>
 
 <section class="space-y-6 pb-16">
-	<AdminPageHeader title="Search ranking profiles"
+	<AdminPageHeader
+		title={$localization.translate(
+			"admin.search.ranking_profiles.title",
+			"search ranking profiles"
+		)}
 		>{#snippet actions()}<AdminResourceActions
 				countLabel={`${items.length} ranking profiles`}
 			/>{/snippet}</AdminPageHeader
@@ -179,6 +185,12 @@
 						Weights range from 0 to 100. Zero disables a boost. Gross margin uses the lowest
 						published variant margin; unknown costs contribute zero. Purchase conversion uses
 						consented impressions and paid purchases after the seven-day attribution window.
+					</p>
+					<p class="text-sm text-stone-500">
+						{$localization.translate(
+							"admin.search.ranking.conversion_preview_only",
+							"Purchase conversion affects admin previews only. Storefront ranking ignores this weight until exposure validation is strengthened."
+						)}
 					</p>
 					<div class="grid gap-4 sm:grid-cols-2">
 						{#each weightFields as field (field.key)}<label

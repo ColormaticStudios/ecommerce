@@ -8,6 +8,8 @@ const pendingRevocationKey = "search.analytics.pending-revocation";
 const attributionWindow = 7 * 24 * 60 * 60 * 1000;
 export const SEARCH_CONSENT_CHANGED = "search:consent-changed";
 type Attribution = { clickId: string; sessionToken: string; expiresAt: number };
+type PendingClick = { body: components["schemas"]["SearchEventInput"]; expiresAt: number };
+const pendingClicksKey = "search.analytics.pending-clicks";
 let consentRevision = 0;
 function read(key: string): string | null {
 	try {
@@ -52,6 +54,7 @@ export function setSearchConsent(enabled: boolean, api?: API): void {
 		if (token) queueRevocation(token);
 		write(sessionKey);
 		write(attributionKey);
+		write(pendingClicksKey);
 		if (api) void revokePendingSearchConsent(api);
 	}
 	if (typeof window !== "undefined") window.dispatchEvent(new Event(SEARCH_CONSENT_CHANGED));
@@ -97,13 +100,15 @@ export async function revokePendingSearchConsent(api: API) {
 		}
 	}
 }
-export async function recordSearchImpression(
-	api: API,
-	filters: components["schemas"]["SearchPreviewFilters"],
-	eventId: string
-) {
-	if (!searchConsent()) return;
+export async function recordSearchImpression(api: API, snapshotToken: string, eventId: string) {
+	if (!searchConsent() || !snapshotToken) return;
 	const revision = consentRevision;
+	const proof = await api.createSearchProof({
+		snapshot_token: snapshotToken,
+		consent: true,
+		event_id: eventId,
+	});
+	if (!searchConsent() || consentRevision !== revision) return;
 	let sessionToken = read(sessionKey);
 	if (!sessionToken) {
 		try {
@@ -120,7 +125,7 @@ export async function recordSearchImpression(
 		consent: true,
 		event_id: eventId,
 		session_token: sessionToken,
-		filters,
+		result_token: proof.result_token,
 	});
 	if (!searchConsent() || consentRevision !== revision) {
 		queueRevocation(response.session_token);
@@ -138,14 +143,32 @@ export async function recordSearchClick(
 	const revision = consentRevision;
 	const sessionToken = read(sessionKey);
 	if (!sessionToken) return;
-	const response = await api.recordSearchEvent({
+	const body: components["schemas"]["SearchEventInput"] = {
 		session_token: sessionToken,
 		impression_id: input.impressionId,
 		event_id: crypto.randomUUID(),
 		type: "click",
 		product_id: input.productId,
 		position: input.position,
-	});
+	};
+	const pending = pendingClicks();
+	pending[input.productId] = { body, expiresAt: Date.now() + attributionWindow };
+	write(pendingClicksKey, JSON.stringify(pending));
+	return completeClick(api, pending[input.productId], revision);
+}
+
+function pendingClicks(): Record<string, PendingClick> {
+	try {
+		const parsed = JSON.parse(read(pendingClicksKey) ?? "{}");
+		return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+	} catch {
+		return {};
+	}
+}
+
+async function completeClick(api: API, pending: PendingClick, revision: number) {
+	const sessionToken = pending.body.session_token;
+	const response = await api.recordSearchEvent(pending.body);
 	if (
 		!searchConsent() ||
 		consentRevision !== revision ||
@@ -160,11 +183,61 @@ export async function recordSearchClick(
 	} catch {
 		/* Ignore invalid local state. */
 	}
-	values[input.productId] = {
+	const remaining = pendingClicks();
+	const currentPending = remaining[pending.body.product_id];
+	if (currentPending && currentPending.body.event_id !== pending.body.event_id) return;
+	if (values[pending.body.product_id]?.expiresAt > pending.expiresAt) return;
+	if (
+		!currentPending &&
+		values[pending.body.product_id]?.expiresAt === pending.expiresAt &&
+		values[pending.body.product_id]?.clickId !== response.click_id
+	)
+		return;
+	values[pending.body.product_id] = {
 		clickId: response.click_id,
 		sessionToken,
-		expiresAt: Date.now() + attributionWindow,
+		expiresAt: pending.expiresAt,
 	};
 	write(attributionKey, JSON.stringify(values));
+	if (remaining[pending.body.product_id]?.body.event_id === pending.body.event_id) {
+		delete remaining[pending.body.product_id];
+		write(pendingClicksKey, JSON.stringify(remaining));
+	}
 	return response.click_id;
+}
+
+// A navigation may finish before its keepalive request. Replay the same idempotent
+// event before cart mutation, including after a full-page navigation or in a new tab.
+export async function resolveSearchAttribution(api: API, productId: number) {
+	if (!searchConsent()) return;
+	const pending = pendingClicks()[productId];
+	if (
+		pending?.expiresAt > Date.now() &&
+		pending.body?.session_token === read(sessionKey) &&
+		pending.body?.product_id === productId &&
+		pending.body?.type === "click" &&
+		typeof pending.body.event_id === "string" &&
+		typeof pending.body.impression_id === "string"
+	) {
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		try {
+			await Promise.race([
+				completeClick(api, pending, consentRevision),
+				new Promise<void>((resolve) => {
+					timer = setTimeout(resolve, 1500);
+				}),
+			]);
+		} catch {
+			/* Cart remains usable if optional analytics fails. */
+		} finally {
+			if (timer) clearTimeout(timer);
+		}
+	}
+	const attribution = getSearchAttribution(productId);
+	const outstanding = pendingClicks()[productId];
+	// Do not attach an older click when the shopper's newer click has not been
+	// verified. Optional analytics failure must not misattribute a cart mutation.
+	if (outstanding?.expiresAt > Date.now() && outstanding.body?.session_token === read(sessionKey))
+		return;
+	return attribution;
 }

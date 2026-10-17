@@ -517,6 +517,23 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/search/proofs": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Exchange a cacheable server snapshot for a consented browser exposure proof */
+		post: operations["createSearchProof"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/search/impressions": {
 		parameters: {
 			query?: never;
@@ -577,6 +594,23 @@ export interface paths {
 		};
 		/** List stale-index incidents and recovery history */
 		get: operations["getAdminSearchIncidents"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/configuration-history": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List immutable search configuration changes */
+		get: operations["listAdminSearchConfigurationHistory"];
 		put?: never;
 		post?: never;
 		delete?: never;
@@ -3714,6 +3748,7 @@ export interface components {
 			| "product_variant"
 			| "product_option"
 			| "product_option_value"
+			| "product_attribute"
 			| "brand"
 			| "category"
 			| "website_settings"
@@ -5641,43 +5676,28 @@ export interface components {
 		SearchConsentRevokeInput: {
 			session_token: string;
 		};
+		SearchProofInput: {
+			snapshot_token: string;
+			/** @enum {boolean} */
+			consent: true;
+			/** Format: uuid */
+			event_id: string;
+		};
+		SearchProofResponse: {
+			result_token: string;
+		};
 		SearchImpressionInput: {
 			/** Format: uuid */
 			event_id: string;
 			/** @enum {boolean} */
 			consent: true;
 			session_token?: string;
-			filters: {
-				q?: string;
-				/** Format: double */
-				min_price?: number;
-				/** Format: double */
-				max_price?: number;
-				/** @description Same semantics as the public search query parameter. */
-				brand_slug?: string[];
-				/** @description Same semantics as the public search query parameter. */
-				category_slug?: string[];
-				/** @description Same semantics as the public search query parameter. */
-				has_variant_stock?: boolean[];
-				/** @description Same semantics as the public search query parameter. */
-				price_range?: string[];
-				/** @description Same semantics as the public search query parameter. */
-				attribute?: {
-					[key: string]: string[];
-				};
-				ranking_profile?: string;
-				/** @enum {string} */
-				sort?: "relevance" | "price" | "name" | "created_at";
-				/** @enum {string} */
-				order?: "asc" | "desc";
-				page?: number;
-				limit?: number;
-			};
+			/** @description Short-lived signed server exposure snapshot from public search; never produced for admin or degraded results. */
+			result_token: string;
 		};
 		SearchImpressionResponse: {
 			impression_id: string;
 			session_token: string;
-			result: components["schemas"]["ProductSearchResponse"];
 		};
 		SearchEventInput: {
 			session_token: string;
@@ -5720,6 +5740,7 @@ export interface components {
 			average_latency_ms: number;
 		};
 		SearchAnalytics: {
+			pagination: components["schemas"]["Pagination"];
 			facet_usage: {
 				[key: string]: number;
 			};
@@ -5779,6 +5800,27 @@ export interface components {
 			data: components["schemas"]["SearchIndexIncident"][];
 			pagination: components["schemas"]["Pagination"];
 		};
+		SearchConfigurationAudit: {
+			id: number;
+			/** @enum {string} */
+			kind: "synonym" | "typo_profile" | "ranking_profile";
+			entity_id: number;
+			/** @enum {string} */
+			operation: "baseline" | "create" | "update" | "delete";
+			actor_id: number | null;
+			before: {
+				[key: string]: unknown;
+			} | null;
+			after: {
+				[key: string]: unknown;
+			} | null;
+			/** Format: date-time */
+			created_at: string;
+		};
+		SearchConfigurationAuditListResponse: {
+			items: components["schemas"]["SearchConfigurationAudit"][];
+			pagination: components["schemas"]["Pagination"];
+		};
 		SearchOperationsStatus: {
 			max_concurrent: number;
 			search_timeout_ms: number;
@@ -5814,16 +5856,18 @@ export interface components {
 			replacement: string;
 		};
 		ProductSearchResponse: {
+			/** @description Server-signed snapshot valid for one hour. Cacheable pages exchange it through the consented browser proof endpoint; omitted for admin or degraded search. */
+			result_snapshot?: string;
+			/** @description Signed exposure proof expiring after five minutes. Omitted for admin or degraded search. */
+			result_token?: string;
 			items: components["schemas"]["Product"][];
 			facets: components["schemas"]["SearchFacet"][];
 			metadata: components["schemas"]["ProductSearchMetadata"];
 			pagination: components["schemas"]["Pagination"];
 		};
 		SearchSuggestionsResponse: {
-			trending: string[];
 			suggestions: string[];
 			corrections: string[];
-			popular: string[];
 		};
 		SearchFreshness: {
 			/** @enum {string} */
@@ -5842,7 +5886,9 @@ export interface components {
 		SearchRefreshAccepted: {
 			job_id: string;
 			/** @enum {string} */
-			status: "queued";
+			status: "queued" | "succeeded";
+			/** @enum {string} */
+			disposition?: "queued" | "reused_completed";
 		};
 		SearchReindexAccepted: {
 			job_id: string;
@@ -7015,6 +7061,7 @@ export interface operations {
 			200: {
 				headers: {
 					ETag?: string;
+					/** @description Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution. */
 					"Cache-Control"?: string;
 					[name: string]: unknown;
 				};
@@ -7026,6 +7073,7 @@ export interface operations {
 			304: {
 				headers: {
 					ETag?: string;
+					/** @description Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution. */
 					"Cache-Control"?: string;
 					[name: string]: unknown;
 				};
@@ -7055,6 +7103,7 @@ export interface operations {
 			200: {
 				headers: {
 					ETag?: string;
+					/** @description Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution. */
 					"Cache-Control"?: string;
 					[name: string]: unknown;
 				};
@@ -7066,6 +7115,7 @@ export interface operations {
 			304: {
 				headers: {
 					ETag?: string;
+					/** @description Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution. */
 					"Cache-Control"?: string;
 					[name: string]: unknown;
 				};
@@ -8145,6 +8195,36 @@ export interface operations {
 			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
+	createSearchProof: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchProofInput"];
+			};
+		};
+		responses: {
+			/** @description Short-lived exposure proof; this response must not be cached */
+			200: {
+				headers: {
+					"Cache-Control"?: string;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchProofResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
+		};
+	};
 	createSearchImpression: {
 		parameters: {
 			query?: never;
@@ -8168,6 +8248,7 @@ export interface operations {
 				};
 			};
 			400: components["responses"]["BadRequestProblem"];
+			403: components["responses"]["ForbiddenProblem"];
 			429: components["responses"]["TooManyRequestsProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
 			503: components["responses"]["ServiceUnavailableProblem"];
@@ -8196,6 +8277,8 @@ export interface operations {
 				};
 			};
 			400: components["responses"]["BadRequestProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
@@ -8203,6 +8286,8 @@ export interface operations {
 		parameters: {
 			query?: {
 				days?: number;
+				page?: number;
+				limit?: number;
 			};
 			header?: never;
 			path?: never;
@@ -8245,6 +8330,35 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["SearchIndexIncidentListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminSearchConfigurationHistory: {
+		parameters: {
+			query?: {
+				kind?: "synonym" | "typo_profile" | "ranking_profile";
+				entity_id?: number;
+				page?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Configuration changes, newest first */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchConfigurationAuditListResponse"];
 				};
 			};
 			400: components["responses"]["BadRequestProblem"];
@@ -8301,8 +8415,6 @@ export interface operations {
 				attribute?: {
 					[key: string]: string[];
 				};
-				/** @description Named ranking profile; omitted selects the global default. */
-				ranking_profile?: string;
 				/** @description Defaults to relevance for a keyword query and newest for an empty query. */
 				sort?: "relevance" | "price" | "name" | "created_at";
 				order?: "asc" | "desc";

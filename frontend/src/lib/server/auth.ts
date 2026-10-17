@@ -12,7 +12,7 @@ const FALLBACK_AUTH_CONFIG: AuthConfigModel = {
 };
 
 export async function loadAuthConfig(
-	event: Pick<RequestEvent, "request">
+	event: Pick<RequestEvent, "request" | "getClientAddress">
 ): Promise<AuthConfigModel> {
 	try {
 		return await serverRequest<AuthConfigModel>(event, "/auth/config");

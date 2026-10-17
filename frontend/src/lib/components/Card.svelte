@@ -19,6 +19,7 @@
 		overflowHidden?: boolean;
 		interactive?: boolean;
 		onclick?: (event: MouseEvent) => void;
+		onauxclick?: (event: MouseEvent) => void;
 		children?: import("svelte").Snippet;
 	}
 
@@ -36,6 +37,7 @@
 		overflowHidden = false,
 		interactive = false,
 		onclick,
+		onauxclick,
 		children,
 	}: Props = $props();
 
@@ -107,7 +109,7 @@
 
 {#if href}
 	<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-	<a {href} class={classes} {onclick}>
+	<a {href} class={classes} {onclick} {onauxclick}>
 		{@render children?.()}
 	</a>
 {:else if as === "button"}
