@@ -31,7 +31,7 @@ jobs:
         with:
           fetch-depth: 2
       - name: install backend system dependencies
-        run: sudo apt-get update && sudo apt-get install -y libvips-dev pkg-config postgresql-client
+        run: sudo apt-get update && sudo apt-get install -y libvips-dev pkg-config postgresql-client ffmpeg
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
