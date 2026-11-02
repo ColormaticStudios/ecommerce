@@ -7,6 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: install backend system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libvips-dev pkg-config
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
