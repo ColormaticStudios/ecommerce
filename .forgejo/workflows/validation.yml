@@ -19,19 +19,19 @@ jobs:
           --health-interval 5s --health-timeout 5s --health-retries 12
     env:
       CI: "true"
-      DATABASE_URL: postgres://ecommerce:testing-only@localhost:5432/ecommerce_tests?sslmode=disable
-      MIGRATIONS_CI_POSTGRES_DSN: postgres://ecommerce:testing-only@localhost:5432/ecommerce_tests?sslmode=disable
-      MIGRATIONS_TEST_POSTGRES_DSN: postgres://ecommerce:testing-only@localhost:5432/ecommerce_tests?sslmode=disable
-      SEARCH_TEST_POSTGRES_DSN: postgres://ecommerce:testing-only@localhost:5432/ecommerce_tests?sslmode=disable
+      DATABASE_URL: postgres://ecommerce:testing-only@postgres:5432/ecommerce_tests?sslmode=disable
+      MIGRATIONS_CI_POSTGRES_DSN: postgres://ecommerce:testing-only@postgres:5432/ecommerce_tests?sslmode=disable
+      MIGRATIONS_TEST_POSTGRES_DSN: postgres://ecommerce:testing-only@postgres:5432/ecommerce_tests?sslmode=disable
+      SEARCH_TEST_POSTGRES_DSN: postgres://ecommerce:testing-only@postgres:5432/ecommerce_tests?sslmode=disable
       E2E_DB_DRIVER: postgres
-      E2E_DB_URL: postgres://ecommerce:testing-only@localhost:5432/ecommerce_e2e?sslmode=disable
+      E2E_DB_URL: postgres://ecommerce:testing-only@postgres:5432/ecommerce_e2e?sslmode=disable
       JWT_SECRET: ci-only-strong-key-for-application-validation
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
       - name: install backend system dependencies
-        run: sudo apt-get update && sudo apt-get install -y libvips-dev pkg-config
+        run: sudo apt-get update && sudo apt-get install -y libvips-dev pkg-config postgresql-client
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
@@ -62,7 +62,7 @@ jobs:
           bun run build
       - name: prepare disposable PostgreSQL browser database
         run: |
-          docker exec "${{ job.services.postgres.id }}" createdb -U ecommerce ecommerce_e2e
+          PGPASSWORD=testing-only createdb -h postgres -U ecommerce ecommerce_e2e
           cd frontend
           bunx playwright install --with-deps chromium
       - name: run PostgreSQL browser journeys
