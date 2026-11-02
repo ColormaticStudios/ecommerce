@@ -46,7 +46,9 @@ GOCACHE=/tmp/go-build go run ./cmd/migrate up
 echo "[forward-compat] booting current API binary against upgraded database"
 GOCACHE=/tmp/go-build go build -o "$worktree_dir/current-api" ./main.go
 smoke_port="${MIGRATIONS_SMOKE_PORT:-39001}"
-PORT="$smoke_port" GIN_MODE=release TELEMETRY_ENABLED=false timeout 15s "$worktree_dir/current-api" >"$worktree_dir/current-api.log" 2>&1 &
+# Release mode restricts CORS to PUBLIC_URL, which must be an absolute origin.
+smoke_public_url="${PUBLIC_URL:-http://127.0.0.1:$smoke_port}"
+PORT="$smoke_port" PUBLIC_URL="$smoke_public_url" GIN_MODE=release TELEMETRY_ENABLED=false timeout 15s "$worktree_dir/current-api" >"$worktree_dir/current-api.log" 2>&1 &
 api_pid=$!
 ready=false
 for _ in {1..100}; do
