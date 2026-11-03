@@ -20,7 +20,11 @@ fi
 mkdir -p "${ROOT_DIR}/internal/apicontract"
 mkdir -p "$(dirname -- "${TS_OUTPUT_FILE}")"
 
-go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.4.1 \
+# The generated file embeds a gzip-compressed spec, and compress/flate output can
+# change between Go releases. Pin the toolchain to go.mod so every machine and CI
+# produce identical bytes.
+GO_VERSION="$(awk '$1 == "go" { print $2; exit }' "${ROOT_DIR}/go.mod")"
+GOTOOLCHAIN="go${GO_VERSION}" go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.4.1 \
 	-config "${GO_CONFIG_FILE}" \
 	"${SPEC_FILE}"
 
