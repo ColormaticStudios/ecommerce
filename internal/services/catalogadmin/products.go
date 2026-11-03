@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math"
 	"strings"
 	"time"
 
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/apperror"
 	"ecommerce/internal/media"
+	searchservice "ecommerce/internal/search"
 	localizationservice "ecommerce/internal/services/localization"
 	"ecommerce/models"
 
@@ -35,7 +37,7 @@ func (s *Service) GetProduct(ctx context.Context, id uint, draft bool) (models.P
 	product.Variants = make([]models.ProductVariant, 0, len(value.VariantDrafts))
 	for _, item := range value.VariantDrafts {
 		if !item.IsDeleted {
-			product.Variants = append(product.Variants, models.ProductVariant{BaseModel: item.BaseModel, ProductID: id, SKU: item.SKU, Title: item.Title, Price: item.Price, CompareAtPrice: item.CompareAtPrice, Stock: item.Stock, Position: item.Position, IsPublished: item.IsPublished, WeightGrams: item.WeightGrams, LengthCm: item.LengthCm, WidthCm: item.WidthCm, HeightCm: item.HeightCm})
+			product.Variants = append(product.Variants, models.ProductVariant{BaseModel: item.BaseModel, ProductID: id, SKU: item.SKU, Title: item.Title, Price: item.Price, CompareAtPrice: item.CompareAtPrice, UnitCost: item.UnitCost, Stock: item.Stock, Position: item.Position, IsPublished: item.IsPublished, WeightGrams: item.WeightGrams, LengthCm: item.LengthCm, WidthCm: item.WidthCm, HeightCm: item.HeightCm})
 		}
 	}
 	categoryIDs := make([]uint, 0, len(value.CategoryDrafts))
@@ -134,6 +136,9 @@ func validateProductInput(input apicontract.ProductUpsertInput) error {
 		if sku == "" {
 			return invalidInput("invalid_product_variant", "Variant SKU is required.")
 		}
+		if value.UnitCost != nil && (math.IsNaN(*value.UnitCost) || math.IsInf(*value.UnitCost, 0) || *value.UnitCost < 0 || *value.UnitCost > 9999999999.99) {
+			return invalidInput("invalid_product_variant", "Variant unit cost must be a finite amount between zero and 9999999999.99.")
+		}
 		if value.Price < 0 || value.Stock < 0 {
 			return invalidInput("invalid_product_variant", "Variant price and stock cannot be negative.")
 		}
@@ -158,7 +163,7 @@ func productSummary(input apicontract.ProductUpsertInput) (float64, int) {
 }
 func replaceDraft(tx *gorm.DB, product models.Product, input apicontract.ProductUpsertInput) error {
 	var old models.ProductDraft
-	if err := tx.Where("product_id = ?", product.ID).First(&old).Error; err == nil {
+	if err := tx.Unscoped().Where("product_id = ?", product.ID).First(&old).Error; err == nil {
 		if err := deleteDraft(tx, old.ID); err != nil {
 			return err
 		}
@@ -196,7 +201,7 @@ func replaceDraft(tx *gorm.DB, product models.Product, input apicontract.Product
 			value := models.MoneyFromFloat(*item.CompareAtPrice)
 			compare = &value
 		}
-		value := models.ProductVariantDraft{ProductDraftID: draft.ID, SKU: strings.TrimSpace(item.Sku), Title: strings.TrimSpace(item.Title), Price: models.MoneyFromFloat(item.Price), CompareAtPrice: compare, Stock: item.Stock, Position: position, IsPublished: published, WeightGrams: item.WeightGrams, LengthCm: item.LengthCm, WidthCm: item.WidthCm, HeightCm: item.HeightCm}
+		value := models.ProductVariantDraft{ProductDraftID: draft.ID, SKU: strings.TrimSpace(item.Sku), Title: strings.TrimSpace(item.Title), Price: models.MoneyFromFloat(item.Price), CompareAtPrice: compare, UnitCost: moneyFromFloatPtr(item.UnitCost), Stock: item.Stock, Position: position, IsPublished: published, WeightGrams: item.WeightGrams, LengthCm: item.LengthCm, WidthCm: item.WidthCm, HeightCm: item.HeightCm}
 		if err := tx.Select("*").Create(&value).Error; err != nil {
 			return err
 		}
@@ -224,15 +229,25 @@ func replaceDraft(tx *gorm.DB, product models.Product, input apicontract.Product
 			}
 		}
 	}
-	return nil
+	return persistDraftMetadata(tx, draft, input)
 }
 func deleteDraft(tx *gorm.DB, id uint) error {
+	variantIDs := tx.Unscoped().Model(&models.ProductVariantDraft{}).Select("id").Where("product_draft_id = ?", id)
+	if err := tx.Unscoped().Where("product_variant_draft_id IN (?)", variantIDs).Delete(&models.ProductVariantOptionValueDraft{}).Error; err != nil {
+		return err
+	}
+	optionIDs := tx.Unscoped().Model(&models.ProductOptionDraft{}).Select("id").Where("product_draft_id = ?", id)
+	if err := tx.Unscoped().Where("product_option_draft_id IN (?)", optionIDs).Delete(&models.ProductOptionValueDraft{}).Error; err != nil {
+		return err
+	}
 	for _, value := range []any{&models.ProductVariantDraft{}, &models.ProductRelatedDraft{}, &models.ProductCategoryDraft{}, &models.ProductAttributeValueDraft{}, &models.ProductOptionDraft{}} {
-		if err := tx.Where("product_draft_id = ?", id).Delete(value).Error; err != nil {
+		if err := tx.Unscoped().Where("product_draft_id = ?", id).Delete(value).Error; err != nil {
 			return err
 		}
 	}
-	return tx.Delete(&models.ProductDraft{}, id).Error
+	// Drafts are replaceable working copies, not history. Soft deletion retains
+	// the unique product_id key and prevents future edits or unpublishing.
+	return tx.Unscoped().Delete(&models.ProductDraft{}, id).Error
 }
 
 func (s *Service) PublishProduct(ctx context.Context, id uint) (models.Product, error) {
@@ -288,7 +303,7 @@ func (s *Service) PublishProduct(ctx context.Context, id uint) (models.Product, 
 			if !exists {
 				value = &models.ProductVariant{ProductID: id, SKU: item.SKU}
 			}
-			value.Title, value.Price, value.CompareAtPrice, value.Stock = item.Title, item.Price, item.CompareAtPrice, item.Stock
+			value.Title, value.Price, value.CompareAtPrice, value.UnitCost, value.Stock = item.Title, item.Price, item.CompareAtPrice, item.UnitCost, item.Stock
 			value.Position, value.IsPublished = item.Position, item.IsPublished
 			value.WeightGrams, value.LengthCm, value.WidthCm, value.HeightCm = item.WeightGrams, item.LengthCm, item.WidthCm, item.HeightCm
 			if exists {
@@ -359,7 +374,14 @@ func (s *Service) PublishProduct(ctx context.Context, id uint) (models.Product, 
 			return err
 		}
 		removedMediaIDs = removedReferenceIDs(oldLiveRefs, draftRefs)
-		return deleteDraft(tx, draft.ID)
+		if err := publishDraftMetadata(tx, id, draft.ID); err != nil {
+			return err
+		}
+		if err := deleteDraft(tx, draft.ID); err != nil {
+			return err
+		}
+		_, err := searchservice.EnqueueProductSyncTx(ctx, s.jobs, tx, product.ID, product.UpdatedAt)
+		return err
 	})
 	if err != nil {
 		return product, err
@@ -374,8 +396,11 @@ func (s *Service) UnpublishProduct(ctx context.Context, id uint) (models.Product
 		return product, err
 	}
 	if product.DraftUpdatedAt == nil {
-		input := productInputFromLive(product)
 		if err := db.Transaction(func(tx *gorm.DB) error {
+			input, err := LoadLiveProductUpsertInput(tx, nil, id)
+			if err != nil {
+				return err
+			}
 			now := time.Now().UTC()
 			if err := tx.Model(&product).Updates(map[string]any{"is_published": false, "draft_updated_at": now}).Error; err != nil {
 				return err
@@ -383,28 +408,27 @@ func (s *Service) UnpublishProduct(ctx context.Context, id uint) (models.Product
 			if err := replaceDraft(tx, product, input); err != nil {
 				return err
 			}
-			return copyProductMediaRole(tx, id, media.RoleProductImage, media.RoleProductDraftImage)
+			if err := copyProductMediaRole(tx, id, media.RoleProductImage, media.RoleProductDraftImage); err != nil {
+				return err
+			}
+			_, err = searchservice.EnqueueProductSyncTx(ctx, s.jobs, tx, id, now)
+			return err
 		}); err != nil {
 			return product, err
 		}
-	} else if err := db.Model(&product).Update("is_published", false).Error; err != nil {
-		return product, err
+	} else {
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			now := time.Now().UTC()
+			if err := tx.Model(&product).Updates(map[string]any{"is_published": false, "updated_at": now}).Error; err != nil {
+				return err
+			}
+			_, err := searchservice.EnqueueProductSyncTx(ctx, s.jobs, tx, id, now)
+			return err
+		}); err != nil {
+			return product, err
+		}
 	}
 	return s.GetProduct(ctx, id, true)
-}
-func productInputFromLive(product models.Product) apicontract.ProductUpsertInput {
-	input := apicontract.ProductUpsertInput{Sku: product.SKU, Name: product.Name, Subtitle: product.Subtitle, Description: product.Description, Images: product.Images, Seo: apicontract.ProductSEOInput{}}
-	for _, item := range product.Variants {
-		published := item.IsPublished
-		input.Variants = append(input.Variants, apicontract.ProductVariantInput{Sku: item.SKU, Title: item.Title, Price: item.Price.Float64(), Stock: item.Stock, IsPublished: &published, Position: &item.Position})
-	}
-	for _, item := range product.Categories {
-		input.CategoryIds = append(input.CategoryIds, int(item.ID))
-	}
-	for _, item := range product.Related {
-		input.RelatedProductIds = append(input.RelatedProductIds, int(item.ID))
-	}
-	return input
 }
 func (s *Service) DiscardProductDraft(ctx context.Context, id uint) (models.Product, error) {
 	db := s.db.WithContext(ctx)
@@ -440,7 +464,11 @@ func (s *Service) DeleteProduct(ctx context.Context, id uint) ([]string, error) 
 		if err := tx.Where("owner_type = ? AND owner_id = ?", media.OwnerTypeProduct, id).Delete(&models.MediaReference{}).Error; err != nil {
 			return err
 		}
-		return tx.Delete(&product).Error
+		if err := tx.Delete(&product).Error; err != nil {
+			return err
+		}
+		_, err := searchservice.EnqueueProductSyncTx(ctx, s.jobs, tx, id, time.Now().UTC())
+		return err
 	})
 	ids := make([]string, 0, len(refs))
 	for _, ref := range refs {
@@ -680,7 +708,11 @@ func ensureProductDraft(tx *gorm.DB, product *models.Product) error {
 		}
 	}
 	now := time.Now().UTC()
-	if err := replaceDraft(tx, *product, productInputFromLive(*product)); err != nil {
+	input, err := LoadLiveProductUpsertInput(tx, nil, product.ID)
+	if err != nil {
+		return err
+	}
+	if err := replaceDraft(tx, *product, input); err != nil {
 		return err
 	}
 	if err := copyProductMediaRole(tx, product.ID, media.RoleProductImage, media.RoleProductDraftImage); err != nil {
@@ -726,4 +758,12 @@ func removedReferenceIDs(previous, current []models.MediaReference) []string {
 		}
 	}
 	return removed
+}
+
+func moneyFromFloatPtr(value *float64) *models.Money {
+	if value == nil {
+		return nil
+	}
+	result := models.MoneyFromFloat(*value)
+	return &result
 }

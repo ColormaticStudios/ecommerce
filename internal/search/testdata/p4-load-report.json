@@ -1,0 +1,131 @@
+{
+  "scope": "Disposable local SQLite service workload; no production/HTTP/PostgreSQL SLO assertion",
+  "fixture": "10000 published synthetic products without brand/category/attribute/variant/order data; 80% specific queries, 20% broad queries",
+  "baseline_before_optimization": {
+    "backend": "sqlite local WAL; service-level not HTTP",
+    "concurrency": 50,
+    "degraded": 0,
+    "elapsed_ms": 1328,
+    "errors": 0,
+    "go_version": "go1.27.1-X:nodwarf5",
+    "gomaxprocs": 6,
+    "heap_sys_mb": 884.34375,
+    "index_duration_ms": 1138,
+    "logical_cpus": 6,
+    "p50_ms": 148.082,
+    "p95_ms": 1259.675,
+    "p99_ms": 1303.054,
+    "products": 10000,
+    "requests": 100,
+    "throughput_requests_second": 75.29260717460663
+  },
+  "optimized_cold_and_warm": {
+    "backend": "sqlite local WAL; service-level not HTTP",
+    "concurrency": 50,
+    "degraded": 0,
+    "elapsed_ms": 809,
+    "errors": 0,
+    "go_version": "go1.27.1-X:nodwarf5",
+    "gomaxprocs": 6,
+    "heap_sys_mb": 264.6875,
+    "index_duration_ms": 1152,
+    "logical_cpus": 6,
+    "p50_ms": 74.744,
+    "p95_ms": 462.871,
+    "p99_ms": 497.204,
+    "products": 10000,
+    "requests": 200,
+    "requests_per_wave": 100,
+    "throughput_requests_second": 246.9938941232219,
+    "wave_latencies": {
+      "cold": {
+        "p50_ms": 97.262,
+        "p95_ms": 474.142,
+        "p99_ms": 508.205
+      },
+      "warm": {
+        "p50_ms": 48.519,
+        "p95_ms": 207.448,
+        "p99_ms": 267.169
+      }
+    },
+    "waves": [
+      "cold",
+      "warm"
+    ]
+  },
+  "limit": "Cold p95 474ms has little margin; rerun on deployment hardware and richer PostgreSQL fixtures before capacity promises.",
+  "current_signals_minimal": {
+    "backend": "sqlite local WAL; service-level not HTTP",
+    "concurrency": 50,
+    "degraded": 0,
+    "elapsed_ms": 2778,
+    "errors": 0,
+    "fixture": "minimal products only",
+    "go_version": "go1.27.1-X:nodwarf5",
+    "gomaxprocs": 6,
+    "heap_sys_mb": 268.9375,
+    "index_duration_ms": 3147,
+    "logical_cpus": 6,
+    "p50_ms": 198.82,
+    "p95_ms": 1316.124,
+    "p99_ms": 1546.284,
+    "products": 10000,
+    "requests": 200,
+    "requests_per_wave": 100,
+    "throughput_requests_second": 71.97802794112476,
+    "wave_latencies": {
+      "cold": {
+        "p50_ms": 167.22,
+        "p95_ms": 1489.787,
+        "p99_ms": 1568.716
+      },
+      "warm": {
+        "p50_ms": 263.753,
+        "p95_ms": 785.3,
+        "p99_ms": 821.91
+      }
+    },
+    "waves": [
+      "cold",
+      "warm"
+    ]
+  },
+  "current_signals_representative": {
+    "backend": "sqlite local WAL; service-level not HTTP",
+    "concurrency": 50,
+    "degraded": 0,
+    "elapsed_ms": 6211,
+    "errors": 0,
+    "fixture": "100 categories;20brands;4filterableattributes/25values;1published+1unpublishedvariantperproduct;costs",
+    "go_version": "go1.27.1-X:nodwarf5",
+    "gomaxprocs": 6,
+    "heap_sys_mb": 512.8125,
+    "index_duration_ms": 7303,
+    "logical_cpus": 6,
+    "p50_ms": 537.163,
+    "p95_ms": 2819.599,
+    "p99_ms": 3009.853,
+    "products": 10000,
+    "requests": 200,
+    "requests_per_wave": 100,
+    "throughput_requests_second": 32.196603728602426,
+    "wave_latencies": {
+      "cold": {
+        "p50_ms": 405.003,
+        "p95_ms": 2924.174,
+        "p99_ms": 3013.619
+      },
+      "warm": {
+        "p50_ms": 747.859,
+        "p95_ms": 2800.208,
+        "p99_ms": 2948.448
+      }
+    },
+    "waves": [
+      "cold",
+      "warm"
+    ]
+  },
+  "current_limit": "Both current runs were measured while repository validation also used the six-CPU host. Current representative cold p95 2924ms and warm p95 2800ms exceed the 500ms target; this workload has no production capacity/SLO claim. Deadline is raised to60s tomeasure latency rather than conceal overload behind degradation. Before concurrent full suites, representative cold p95 was1648ms/warm1106ms, also failingtarget. Broad facet aggregation over richer catalog metadata is an existing backend limit."
+}

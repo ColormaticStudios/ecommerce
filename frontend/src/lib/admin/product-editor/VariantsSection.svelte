@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { getContext } from "svelte";
+	import { LOCALIZATION_CONTEXT, type LocalizationRuntime } from "$lib/localization/runtime";
 	import AdminFieldLabel from "$lib/admin/AdminFieldLabel.svelte";
 	import { adminSurfaceVariantClasses } from "$lib/admin/tokens";
 	import Badge from "$lib/components/Badge.svelte";
@@ -21,6 +23,7 @@
 		onAdd: () => void;
 		onRemove: (key: string) => void;
 	} = $props();
+	const localization = getContext<LocalizationRuntime>(LOCALIZATION_CONTEXT);
 	const sectionClass = $derived(
 		layout === "split" ? adminSurfaceVariantClasses["panel-tight"] : ""
 	);
@@ -117,6 +120,28 @@
 							bind:value={variant.compare_at_price}
 						/>
 					</div>
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+						>{$localization.translate("admin.product.variant.unit_cost", "Unit cost")}
+						<NumberInput
+							tone="admin"
+							class="mt-1"
+							allowDecimal
+							min="0"
+							max="9999999999.99"
+							aria-label={$localization.translate(
+								"admin.product.variant.unit_cost_label",
+								"Variant {number} unit cost",
+								{ number: variantIndex + 1 }
+							)}
+							bind:value={variant.unit_cost}
+						/>
+						<span class="mt-1 block text-xs font-normal text-gray-500 dark:text-gray-400"
+							>{$localization.translate(
+								"admin.product.variant.unit_cost_help",
+								"Private to administrators. Leave blank when the cost is unknown."
+							)}</span
+						>
+					</label>
 					<label class="mt-6 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"
 						><input type="checkbox" bind:checked={variant.is_published} />Variant published</label
 					>

@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -24,6 +25,18 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
+
+func TestGORMLoggerKeepsSearchParametersOutOfSQLLogs(t *testing.T) {
+	var output bytes.Buffer
+	delegate := logger.New(log.New(&output, "", 0), logger.Config{LogLevel: logger.Warn, ParameterizedQueries: true})
+	db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory&cache=shared"), &gorm.Config{Logger: NewGORMLogger(delegate, NewMetrics("test-api", "test", "test-on-call"))})
+	require.NoError(t, err)
+	const privateQuery = "private search terms and session hash"
+	err = db.Exec("INSERT INTO missing_search_events (query) VALUES (?)", privateQuery).Error
+	require.Error(t, err)
+	require.Contains(t, output.String(), "missing_search_events")
+	require.NotContains(t, output.String(), privateQuery)
+}
 
 func newTelemetryTestDB(t *testing.T) (*gorm.DB, *Metrics) {
 	t.Helper()

@@ -29,6 +29,20 @@ func TestSchemaSnapshotAndDriftCheck(t *testing.T) {
 	require.ErrorContains(t, DriftCheck(db, path), "schema drift detected")
 }
 
+func TestCommittedSchemaSnapshotMatchesLatestMigrations(t *testing.T) {
+	db := newTestDB(t)
+	t.Setenv(contractGuardEnvVar, "true")
+	require.NoError(t, Run(db))
+	require.NoError(t, DriftCheck(db, "schema_snapshot.sql"))
+}
+
+func TestSnapshotNormalizesGeneratedIdentifierLimitsOnly(t *testing.T) {
+	table := "product_variant_option_value_drafts"
+	columns := []string{"product_variant_draft_id"}
+	require.Equal(t, "idx_product_variant_option_value_drafts_product_varianta2ba91fe", canonicalSnapshotIndexName(table, "idx_product_variant_option_value_drafts_product_variant_draft_id", columns))
+	require.Equal(t, "idx_explicit_variant_order", canonicalSnapshotIndexName(table, "idx_explicit_variant_order", columns))
+}
+
 func TestWriteCurrentSchemaSnapshotRequiresLatestMigration(t *testing.T) {
 	db := newTestDB(t)
 	require.NoError(t, RunWithoutContract(db))

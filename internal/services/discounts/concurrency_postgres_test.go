@@ -139,6 +139,6 @@ func TestConcurrentPerCustomerUsageCapAllowsOneRedemptionPostgres(t *testing.T) 
 	assert.Equal(t, 1, successes)
 	assert.Equal(t, 1, capped)
 	var count int64
-	require.NoError(t, db.Model(&models.DiscountRedemption{}).Where("user_id = ?", userID).Count(&count).Error)
+	require.NoError(t, db.Model(&models.DiscountRedemption{}).Where("customer_id = ?", userID).Count(&count).Error)
 	assert.Equal(t, int64(1), count)
 }

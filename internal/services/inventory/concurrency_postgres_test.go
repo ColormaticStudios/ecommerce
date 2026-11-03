@@ -1,7 +1,10 @@
 package inventory
 
 import (
+	"context"
+	"ecommerce/internal/jobs"
 	"fmt"
+	"gorm.io/gorm/clause"
 	"net/url"
 	"os"
 	"sync"
@@ -32,14 +35,14 @@ func newInventoryPostgresTestDB(t *testing.T) *gorm.DB {
 	query := parsed.Query()
 	query.Set("search_path", schema)
 	parsed.RawQuery = query.Encode()
-	db, err := gorm.Open(postgres.Open(parsed.String()), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(parsed.String()), &gorm.Config{DisableForeignKeyConstraintWhenMigrating: true})
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = bootstrap.Exec(fmt.Sprintf(`DROP SCHEMA IF EXISTS "%s" CASCADE`, schema)).Error })
 	require.NoError(t, db.AutoMigrate(
-		&models.Product{}, &models.ProductVariant{}, &models.InventoryItem{}, &models.InventoryLevel{},
+		&models.Product{}, &models.ProductVariant{}, &models.InventoryItem{}, &models.JobQueue{}, &models.SearchCatalogFanoutDebt{}, &models.SearchInventoryRevision{}, &models.SearchProductRevision{}, &models.SearchDocument{}, &models.InventoryLevel{},
 		&models.InventoryMovement{}, &models.InventoryReservation{}, &models.InventoryThreshold{}, &models.InventoryAlert{},
 	))
-	return db
+	return jobs.WithRuntime(db, jobs.NewRuntime(db, jobs.Config{}))
 }
 
 func TestConcurrentReservationsCannotOversellPostgres(t *testing.T) {
@@ -85,4 +88,48 @@ func TestConcurrentReservationsCannotOversellPostgres(t *testing.T) {
 	var count int64
 	require.NoError(t, db.Model(&models.InventoryReservation{}).Where("status = ?", models.InventoryReservationStatusActive).Count(&count).Error)
 	assert.Equal(t, int64(1), count)
+}
+
+func TestDifferentVariantStockChangesDoNotLockProductRevisionPostgres(t *testing.T) {
+	db := newInventoryPostgresTestDB(t)
+	product := models.Product{SKU: "independent-stock", Name: "Independent stock", IsPublished: true}
+	require.NoError(t, db.Create(&product).Error)
+	variants := []models.ProductVariant{{ProductID: product.ID, SKU: "independent-a", Title: "A", Stock: 5, IsPublished: true}, {ProductID: product.ID, SKU: "independent-b", Title: "B", Stock: 5, IsPublished: true}}
+	require.NoError(t, db.Create(&variants).Error)
+	require.NoError(t, db.Create(&models.SearchProductRevision{ProductID: product.ID, Revision: 1, ChangedAt: time.Now()}).Error)
+	for _, variant := range variants {
+		_, err := GetAvailability(db, variant.ID)
+		require.NoError(t, err)
+	}
+	locked := db.Begin()
+	require.NoError(t, locked.Error)
+	defer locked.Rollback()
+	var revision models.SearchProductRevision
+	require.NoError(t, locked.Clauses(clause.Locking{Strength: "UPDATE"}).First(&revision, "product_id = ?", product.ID).Error)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	done := make(chan error, 2)
+	for _, variant := range variants {
+		go func(id uint) {
+			_, err := ApplyMovement(db.WithContext(ctx), MovementInput{ProductVariantID: id, MovementType: MovementTypeOrderCommit, QuantityDelta: -1})
+			done <- err
+		}(variant.ID)
+	}
+	for range variants {
+		select {
+		case err := <-done:
+			require.NoError(t, err, "a held product revision must not block unrelated variant checkout")
+		case <-ctx.Done():
+			t.Fatal(ctx.Err())
+		}
+	}
+	require.NoError(t, locked.Rollback().Error)
+	var queue []models.JobQueue
+	require.NoError(t, db.Where("job_type = ? AND status = ?", "search.product_sync", models.JobStatusPending).Find(&queue).Error)
+	require.Len(t, queue, 2, "outstanding inventory deliveries are bounded by variants")
+	var debt []models.SearchInventoryRevision
+	require.NoError(t, db.Find(&debt).Error)
+	require.Len(t, debt, 2)
+	require.NoError(t, db.First(&revision, "product_id = ?", product.ID).Error)
+	require.EqualValues(t, 1, revision.Revision)
 }

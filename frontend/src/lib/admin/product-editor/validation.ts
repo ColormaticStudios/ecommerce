@@ -48,5 +48,16 @@ export function validateProductPayload(
 	) {
 		return "Each variant needs a valid price and stock value.";
 	}
+	if (
+		payload.variants.some(
+			(variant) =>
+				variant.unit_cost != null &&
+				(!Number.isFinite(variant.unit_cost) ||
+					variant.unit_cost < 0 ||
+					variant.unit_cost > 9999999999.99)
+		)
+	) {
+		return "Variant unit cost must be a finite amount between zero and 9999999999.99.";
+	}
 	return validateProductAttributes(attributes, definitions);
 }

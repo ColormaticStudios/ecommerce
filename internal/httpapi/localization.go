@@ -179,6 +179,21 @@ func (e *LocalizationEndpoints) ReplaceAdminLocalizationLocales(ctx context.Cont
 	return apicontract.ReplaceAdminLocalizationLocales200JSONResponse(contractLocalizationLocaleList(locales)), nil
 }
 
+func (e *LocalizationEndpoints) bundleCacheControl(ctx context.Context, locale, domain string) (string, error) {
+	resolution, err := e.localization.ResolveLocale(ctx, localizationservice.ResolutionInput{ExplicitLocale: locale})
+	if err != nil {
+		return "", err
+	}
+	depends, err := e.localization.RolloutDependsOnIdentity(ctx, resolution, domain)
+	if err != nil {
+		return "", err
+	}
+	if depends {
+		return "private, no-store", nil
+	}
+	return localizationBundleCacheControl, nil
+}
+
 func (e *LocalizationEndpoints) GetLocalizationBundle(ctx context.Context, request apicontract.GetLocalizationBundleRequestObject) (apicontract.GetLocalizationBundleResponseObject, error) {
 	locale, err := localizationservice.NormalizeLocale(request.Locale)
 	if err != nil {
@@ -209,13 +224,17 @@ func (e *LocalizationEndpoints) GetLocalizationBundle(ctx context.Context, reque
 	if err != nil {
 		return nil, localizationEndpointError(err)
 	}
+	cacheControl, err := e.bundleCacheControl(ctx, locale, domain)
+	if err != nil {
+		return nil, localizationEndpointError(err)
+	}
 	etag := localizationBundleETag(bundle.Release.Version)
 	if matchesLocalizationBundleETag(request.Params.IfNoneMatch, etag) {
-		return apicontract.GetLocalizationBundle304Response{Headers: apicontract.GetLocalizationBundle304ResponseHeaders{ETag: etag, CacheControl: localizationBundleCacheControl}}, nil
+		return apicontract.GetLocalizationBundle304Response{Headers: apicontract.GetLocalizationBundle304ResponseHeaders{ETag: etag, CacheControl: cacheControl}}, nil
 	}
 	return apicontract.GetLocalizationBundle200JSONResponse{
 		Body:    contractLocalizationBundle(bundle),
-		Headers: apicontract.GetLocalizationBundle200ResponseHeaders{ETag: etag, CacheControl: localizationBundleCacheControl},
+		Headers: apicontract.GetLocalizationBundle200ResponseHeaders{ETag: etag, CacheControl: cacheControl},
 	}, nil
 }
 
@@ -243,15 +262,19 @@ func (e *LocalizationEndpoints) GetLocalizationBundleMeta(ctx context.Context, r
 	if err != nil {
 		return nil, localizationEndpointError(err)
 	}
+	cacheControl, err := e.bundleCacheControl(ctx, locale, domain)
+	if err != nil {
+		return nil, localizationEndpointError(err)
+	}
 	etag := localizationBundleETag(bundle.Release.Version)
 	if matchesLocalizationBundleETag(request.Params.IfNoneMatch, etag) {
-		return apicontract.GetLocalizationBundleMeta304Response{Headers: apicontract.GetLocalizationBundleMeta304ResponseHeaders{ETag: etag, CacheControl: localizationBundleCacheControl}}, nil
+		return apicontract.GetLocalizationBundleMeta304Response{Headers: apicontract.GetLocalizationBundleMeta304ResponseHeaders{ETag: etag, CacheControl: cacheControl}}, nil
 	}
 	return apicontract.GetLocalizationBundleMeta200JSONResponse{
 		Body: apicontract.LocalizationBundleMeta{
 			Resolution: contractLocalizationResolution(bundle.Resolution),
 			Release:    contractLocalizationRelease(bundle.Release),
 		},
-		Headers: apicontract.GetLocalizationBundleMeta200ResponseHeaders{ETag: etag, CacheControl: localizationBundleCacheControl},
+		Headers: apicontract.GetLocalizationBundleMeta200ResponseHeaders{ETag: etag, CacheControl: cacheControl},
 	}, nil
 }

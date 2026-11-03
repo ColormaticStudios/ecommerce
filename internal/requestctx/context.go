@@ -38,6 +38,7 @@ func (p Principal) clone() Principal {
 
 // Metadata describes one request independently of its transport.
 type Metadata struct {
+	ClientIP      string
 	RequestID     string
 	CorrelationID string
 	OperationID   string

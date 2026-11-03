@@ -1,6 +1,17 @@
 # Search and Discoverability Quality Roadmap
 
-## Current Baseline
+## Implementation Status
+
+- Overall status: Complete as of 2026-11-01.
+- P0 shipped search contracts and durable index projection; P1 shipped facets and query understanding; P2 shipped ranking controls and judged relevance evaluation; P3 shipped merchandising administration and preview; P4 shipped storefront discovery, consented attribution, analytics, and operational hardening.
+- Deliberate scope deviations: public popular/trending queries remain disabled because signed impression exposure does not prove a human shopper. CMS product rail integration is deferred at the owner's request.
+- Environment-specific acceptance remains an operator responsibility:
+  - measure production latency SLOs on deployment hardware. The local synthetic PostgreSQL HTTP capacity gate recorded a worst workload p95 of 486.740 ms against a 500 ms target; this is not a production guarantee;
+  - conduct and retain a live non-production search game day under the Failure Drills procedure. The automated TestSearchGameDay tests provide CI simulation evidence only;
+  - validate dashboards and actual alert delivery in a non-development deployment.
+- Normative contracts live in [Search](../../wiki/Search.md), [Search Operations](../../wiki/Search-Operations.md), and [Search Relevance Evaluation](../../wiki/Search-Relevance-Evaluation.md). The plan below is retained as historical implementation direction.
+
+## Current Baseline (Historical)
 - Public product discovery currently uses `GET /api/v1/products` with only `q`, `min_price`, `max_price`, `sort`, `order`, `page`, and `limit` in `api/openapi.yaml`.
 - Search logic in `internal/repositories/catalog/products.go` is `name ILIKE '%term%'` plus basic price filters and simple sort normalization.
 - There is no faceting/aggregations API, no synonym dictionary, no typo tolerance, no query rewrite pipeline, and no ranking strategy beyond sortable fields.
@@ -40,7 +51,7 @@
 - Query -> click -> add-to-cart -> order attribution should feed analytics facts and relevance dashboards.
 
 ## P0: Search Foundation and Index Projection
-Indexing jobs must follow the [Reliability and Operability checklist](../wiki/Reliability-and-Operability.md) for correlation propagation, retry/idempotency behavior, freshness measurement, alerts, and shutdown.
+Indexing jobs must follow the [Reliability and Operability checklist](../../wiki/Reliability-and-Operability.md) for correlation propagation, retry/idempotency behavior, freshness measurement, alerts, and shutdown.
 
 ### Scope
 - Define search service boundary and index document model.
@@ -154,7 +165,7 @@ Indexing jobs must follow the [Reliability and Operability checklist](../wiki/Re
 
 ### Deliverables
 - Storefront UX:
-- Facet panel, suggestions/autocomplete, spelling suggestions, popular/trending queries, zero-result recovery modules.
+- Facet panel, suggestions/autocomplete, spelling suggestions, zero-result recovery modules. Public popular/trending queries are deliberately disabled; CMS product rails are deferred at the owner’s request.
 - Analytics capture:
 - Query impression, click-through, add-to-cart, and order attribution events keyed by query/session.
 - Search quality dashboards:
@@ -167,10 +178,10 @@ Indexing jobs must follow the [Reliability and Operability checklist](../wiki/Re
 - Incident handling for stale index, degraded latency, and bad-rule rollback.
 
 ### Done Criteria
-- Search latency and availability meet defined SLOs under load test profile.
+- The local synthetic PostgreSQL HTTP capacity gate meets its load profile target; deployment-hardware SLO acceptance remains an operator responsibility.
 - Analytics dashboards expose enough signal to prioritize relevance iteration.
 - Outage fallback keeps storefront functional (degraded but usable discovery).
-- Runbooks are documented and tested in game-day simulation.
+- Runbooks are documented and tested in CI game-day simulations; live exercises and alert/dashboard validation remain operator responsibilities.
 
 ## Data Model Changes
 1. `search_documents` (if local projection table is used for pipeline staging/debug)
@@ -237,7 +248,7 @@ Indexing jobs must follow the [Reliability and Operability checklist](../wiki/Re
 - Event telemetry noise/duplication can mislead tuning decisions.
 - Mitigation: idempotency keys and dedupe in query/click ingestion.
 
-## Immediate Next Slice
+## Immediate Next Slice (Complete; Historical)
 1. Add P0 OpenAPI endpoints for `GET /api/v1/search/products`, `GET /api/v1/search/suggestions`, and `GET /api/v1/admin/search/freshness`.
 2. Scaffold `internal/search` with:
 - Query normalizer.

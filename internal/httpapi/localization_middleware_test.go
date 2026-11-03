@@ -10,6 +10,7 @@ import (
 	"ecommerce/internal/httpapi"
 	"ecommerce/internal/requestctx"
 	localizationservice "ecommerce/internal/services/localization"
+	"ecommerce/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
@@ -129,8 +130,12 @@ func TestLocalizationNegotiationMiddlewareIssuesStableAnonymousRolloutCookie(t *
 	service := localizationservice.NewService(db)
 	_, err := service.ReplaceLocales(context.Background(), []localizationservice.LocaleInput{
 		{Code: "en-US", Name: "English", IsEnabled: true, IsDefault: true},
+		{Code: "fr", Name: "French", IsEnabled: true, FallbackLocale: "en-US"},
 	})
 	require.NoError(t, err)
+	var french models.Locale
+	require.NoError(t, db.Where("code = ?", "fr").First(&french).Error)
+	require.NoError(t, db.Model(&models.LocalizationRollout{}).Where("locale_id = ? AND domain = ?", french.ID, "storefront").Update("percentage", 50).Error)
 	negotiation, err := httpapi.LocalizationNegotiationMiddleware(httpapi.LocalizationNegotiationOptions{Service: service})
 	require.NoError(t, err)
 
@@ -143,7 +148,7 @@ func TestLocalizationNegotiationMiddlewareIssuesStableAnonymousRolloutCookie(t *
 		ctx.Status(http.StatusNoContent)
 	})
 	recorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/", nil)
+	request := httptest.NewRequest(http.MethodGet, "/?locale=fr", nil)
 	request.Header.Set("X-Forwarded-Proto", "https")
 	router.ServeHTTP(recorder, request)
 
@@ -203,4 +208,30 @@ func TestLocalizationNegotiationMiddlewareUsesBundleLocaleAndDomainRollout(t *te
 	require.Equal(t, "fr", resolution.RequestedLocale)
 	require.Equal(t, "en-US", resolution.ResolvedLocale)
 	require.True(t, resolution.UsedFallback)
+}
+
+func TestLocalizationNegotiationFullyRolledLocaleDoesNotSetCookieAndBlankMarketOverridesPreferences(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := newLocalizationEndpointTestDB(t)
+	service := localizationservice.NewService(db)
+	_, err := service.ReplaceLocales(context.Background(), []localizationservice.LocaleInput{{Code: "en-US", Name: "English", IsEnabled: true, IsDefault: true}, {Code: "fr", Name: "French", IsEnabled: true, DefaultMarkets: []string{"CA"}}})
+	require.NoError(t, err)
+	middleware, err := httpapi.LocalizationNegotiationMiddleware(httpapi.LocalizationNegotiationOptions{Service: service})
+	require.NoError(t, err)
+	router := gin.New()
+	router.Use(middleware)
+	router.GET("/", func(c *gin.Context) {
+		resolution, ok := requestctx.LocaleResolutionFrom(c.Request.Context())
+		require.True(t, ok)
+		require.Empty(t, resolution.Market)
+		require.Equal(t, "en-US", resolution.ResolvedLocale)
+		c.Status(http.StatusNoContent)
+	})
+	request := httptest.NewRequest(http.MethodGet, "/?locale=en-US&market=", nil)
+	request.Header.Set("Cookie", "market=CA; locale=fr")
+	request.Header.Set("X-Market", "CA")
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, request)
+	require.Equal(t, http.StatusNoContent, recorder.Code)
+	require.Empty(t, recorder.Result().Cookies())
 }

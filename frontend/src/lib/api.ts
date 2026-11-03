@@ -1,3 +1,4 @@
+import { appendBrowserLocalization } from "$lib/localization/url";
 import {
 	type BrandModel,
 	type CategoryModel,
@@ -20,11 +21,21 @@ import {
 	parseProfile,
 } from "$lib/models";
 import { API_BASE_URL } from "$lib/config";
-import { fetchProduct, fetchProducts, type ListProductsQuery } from "$lib/api/openapi-client";
+import {
+	fetchProduct,
+	fetchProducts,
+	fetchSearchProducts,
+	type ListProductsQuery,
+	type SearchProductsQuery,
+	type SearchProductsSuccess,
+} from "$lib/api/openapi-client";
 import { buildOIDCLoginUrl } from "$lib/auth";
 import { ApiProblemError, isApiProblem } from "$lib/api/errors";
 import { appendQueryParams } from "$lib/api/http";
 import type { components, paths } from "$lib/api/generated/openapi";
+import * as searchDomain from "$lib/api/domains/search";
+import * as searchIncidentsDomain from "$lib/api/domains/search-incidents";
+import * as searchMerchandisingDomain from "$lib/api/domains/search-merchandising";
 import * as cartDomain from "$lib/api/domains/cart";
 import * as ordersDomain from "$lib/api/domains/orders";
 import * as profileDomain from "$lib/api/domains/profile";
@@ -226,7 +237,12 @@ export interface DraftPreviewSessionModel {
 
 export interface RequestOptions {
 	headers?: Record<string, string>;
+	keepalive?: boolean;
 }
+
+export type ProductSearchModel = Omit<SearchProductsSuccess, "items"> & {
+	items: ProductModel[];
+};
 
 function parseDraftPreviewSession(response: DraftPreviewSessionResponse): DraftPreviewSessionModel {
 	return {
@@ -334,12 +350,14 @@ export class API {
 
 		const url = new URL(`${this.baseUrl}${API_ROUTE}${path}`);
 		appendQueryParams(url, params);
+		appendBrowserLocalization(url);
 
 		const response = await fetch(url.toString(), {
 			method,
 			headers,
 			body: method === "GET" ? undefined : JSON.stringify(data),
 			credentials: "include",
+			keepalive: options?.keepalive,
 		});
 
 		const text = await response.text();
@@ -488,6 +506,26 @@ export class API {
 		return page;
 	}
 
+	public async searchProducts(params?: SearchProductsQuery): Promise<ProductSearchModel> {
+		const {
+			data: response,
+			error,
+			response: rawResponse,
+		} = await fetchSearchProducts(this.baseUrl, params);
+
+		if (error || !response) {
+			throw new ApiProblemError(rawResponse.status, rawResponse.statusText, error);
+		}
+
+		return {
+			...response,
+			items: response.items.map(parseProduct).map((product) => ({
+				...product,
+				cover_image: product.cover_image ?? product.images[0] ?? null,
+			})),
+		};
+	}
+
 	public async getProduct(id: number): Promise<ProductModel> {
 		const { data: response, error, response: rawResponse } = await fetchProduct(this.baseUrl, id);
 		if (error || !response) {
@@ -497,6 +535,133 @@ export class API {
 		const Product: ProductModel = parseProduct(response);
 
 		return Product;
+	}
+
+	public listAdminSearchMerchandisingRules() {
+		return searchMerchandisingDomain.listRules(this.request.bind(this));
+	}
+	public createAdminSearchMerchandisingRule(body: searchMerchandisingDomain.MerchandisingInput) {
+		return searchMerchandisingDomain.createRule(this.request.bind(this), body);
+	}
+	public updateAdminSearchMerchandisingRule(
+		id: number,
+		body: searchMerchandisingDomain.MerchandisingPatch
+	) {
+		return searchMerchandisingDomain.updateRule(this.request.bind(this), id, body);
+	}
+	public deleteAdminSearchMerchandisingRule(id: number) {
+		return searchMerchandisingDomain.deleteRule(this.request.bind(this), id);
+	}
+	public listAdminSearchMerchandisingAudit(id: number) {
+		return searchMerchandisingDomain.listAudit(this.request.bind(this), id);
+	}
+	public listAllAdminSearchMerchandisingAudit() {
+		return searchMerchandisingDomain.listAllAudit(this.request.bind(this));
+	}
+	public previewAdminSearch(body: searchMerchandisingDomain.MerchandisingPreviewRequest) {
+		return searchMerchandisingDomain.preview(this.request.bind(this), body);
+	}
+
+	public searchSuggestions(q = "") {
+		return this.request<components["schemas"]["SearchSuggestionsResponse"]>(
+			"GET",
+			"/search/suggestions",
+			undefined,
+			{ q }
+		);
+	}
+	public listAdminSearchSynonyms() {
+		return searchDomain.listSynonyms(this.request.bind(this));
+	}
+	public saveAdminSearchSynonym(body: searchDomain.SynonymInput, id?: number) {
+		return this.request<searchDomain.Synonym>(
+			id ? "PATCH" : "POST",
+			`/admin/search/synonyms${id ? `/${id}` : ""}`,
+			body
+		);
+	}
+	public deleteAdminSearchSynonym(id: number) {
+		return this.request<void>("DELETE", `/admin/search/synonyms/${id}`);
+	}
+	public listAdminSearchTypoProfiles() {
+		return searchDomain.listTypoProfiles(this.request.bind(this));
+	}
+	public saveAdminSearchTypoProfile(body: searchDomain.TypoInput, id?: number) {
+		return this.request<searchDomain.TypoProfile>(
+			id ? "PATCH" : "POST",
+			`/admin/search/typo-profiles${id ? `/${id}` : ""}`,
+			body
+		);
+	}
+	public deleteAdminSearchTypoProfile(id: number) {
+		return this.request<void>("DELETE", `/admin/search/typo-profiles/${id}`);
+	}
+	public listAdminSearchRankingProfiles() {
+		return searchDomain.listRankingProfiles(this.request.bind(this));
+	}
+	public saveAdminSearchRankingProfile(body: searchDomain.RankingInput, id?: number) {
+		return this.request<searchDomain.RankingProfile>(
+			id ? "PATCH" : "POST",
+			`/admin/search/ranking-profiles${id ? `/${id}` : ""}`,
+			body
+		);
+	}
+	public deleteAdminSearchRankingProfile(id: number) {
+		return this.request<void>("DELETE", `/admin/search/ranking-profiles/${id}`);
+	}
+	public adminSearchFreshness() {
+		return this.request<components["schemas"]["SearchFreshness"]>("GET", "/admin/search/freshness");
+	}
+	public reindexAdminSearch() {
+		return this.request<components["schemas"]["SearchReindexAccepted"]>(
+			"POST",
+			"/admin/search/reindex"
+		);
+	}
+
+	public revokeSearchConsent(session_token: string) {
+		return this.request<void>("POST", "/search/consent/revoke", { session_token });
+	}
+	public createSearchProof(body: components["schemas"]["SearchProofInput"]) {
+		return this.request<components["schemas"]["SearchProofResponse"]>(
+			"POST",
+			"/search/proofs",
+			body
+		);
+	}
+	public recordSearchImpression(body: components["schemas"]["SearchImpressionInput"]) {
+		return this.request<components["schemas"]["SearchImpressionResponse"]>(
+			"POST",
+			"/search/impressions",
+			body
+		);
+	}
+	public recordSearchEvent(body: components["schemas"]["SearchEventInput"]) {
+		return this.request<components["schemas"]["SearchEventResponse"]>(
+			"POST",
+			"/search/events",
+			body,
+			undefined,
+			{ keepalive: true }
+		);
+	}
+	public adminSearchAnalytics(days = 7, page = 1, limit = 20) {
+		return this.request<components["schemas"]["SearchAnalytics"]>(
+			"GET",
+			"/admin/search/analytics",
+			undefined,
+			{ days, page, limit }
+		);
+	}
+	public adminSearchIncidents(query: searchIncidentsDomain.IncidentQuery = {}) {
+		return searchIncidentsDomain.listIncidents(this.request.bind(this), query);
+	}
+
+	public adminSearchOperations() {
+		return this.request<components["schemas"]["SearchOperationsStatus"]>(
+			"GET",
+			"/admin/search/operations"
+		);
 	}
 
 	// Cart Operations

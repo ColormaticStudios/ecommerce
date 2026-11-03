@@ -12,8 +12,10 @@ import (
 
 	"ecommerce/internal/apicontract"
 	"ecommerce/internal/apperror"
+	"ecommerce/internal/jobs"
 	"ecommerce/internal/media"
 	"ecommerce/internal/requestctx"
+	searchservice "ecommerce/internal/search"
 	catalogservice "ecommerce/internal/services/catalog"
 	catalogadminservice "ecommerce/internal/services/catalogadmin"
 	discountservice "ecommerce/internal/services/discounts"
@@ -29,28 +31,49 @@ import (
 // operations. It contains no Gin handlers and can be embedded in a composed
 // StrictServerInterface implementation.
 type CatalogEndpoints struct {
-	db           *gorm.DB
-	media        *media.Service
-	catalog      *catalogservice.Service
-	catalogAdmin *catalogadminservice.Service
-	inventory    *inventoryservice.Service
-	discounts    *discountservice.Service
-	localization *localizationservice.Service
+	db            *gorm.DB
+	media         *media.Service
+	catalog       *catalogservice.Service
+	catalogAdmin  *catalogadminservice.Service
+	inventory     *inventoryservice.Service
+	discounts     *discountservice.Service
+	localization  *localizationservice.Service
+	search        *searchservice.Service
+	searchClients *searchClientLimiter
 }
 
-func NewCatalogEndpoints(db *gorm.DB, mediaService *media.Service) (*CatalogEndpoints, error) {
+func NewCatalogEndpoints(db *gorm.DB, mediaService *media.Service, runtime *jobs.Runtime) (*CatalogEndpoints, error) {
 	if db == nil {
 		return nil, errors.New("catalog database is required")
 	}
+	if runtime == nil {
+		return nil, errors.New("catalog job runtime is required")
+	}
+	db = jobs.WithRuntime(db, runtime)
 	return &CatalogEndpoints{
-		db:           db,
-		media:        mediaService,
-		catalog:      catalogservice.NewService(db, mediaService),
-		catalogAdmin: catalogadminservice.NewService(db, mediaService),
-		inventory:    inventoryservice.NewService(db),
-		discounts:    discountservice.NewService(db),
-		localization: localizationservice.NewService(db),
+		db:            db,
+		media:         mediaService,
+		catalog:       catalogservice.NewService(db, mediaService),
+		catalogAdmin:  catalogadminservice.NewService(db, mediaService, runtime),
+		inventory:     inventoryservice.NewService(db),
+		discounts:     discountservice.NewService(db),
+		localization:  localizationservice.NewService(db),
+		search:        searchservice.NewService(db, nil, runtime),
+		searchClients: newSearchClientLimiter(DefaultSearchAdmissionConfig()),
 	}, nil
+}
+
+func (e *CatalogEndpoints) RegisterSearchJobHandlers() error {
+	return e.search.RegisterJobHandlers()
+}
+
+func (e *CatalogEndpoints) EnsureInitialSearchReindex(ctx context.Context) error {
+	_, _, err := e.search.EnsureInitialReindex(ctx)
+	return err
+}
+
+func (e *CatalogEndpoints) ReindexSearchNow(ctx context.Context) error {
+	return e.search.Reindex(ctx)
 }
 
 func (e *CatalogEndpoints) ListProducts(ctx context.Context, request apicontract.ListProductsRequestObject) (apicontract.ListProductsResponseObject, error) {
@@ -129,14 +152,18 @@ func publicProductPayload(product apicontract.Product) (map[string]any, error) {
 	delete(payload, "is_published")
 	delete(payload, "has_draft_changes")
 	delete(payload, "draft_updated_at")
+	if variants, ok := payload["variants"].([]any); ok {
+		for _, value := range variants {
+			if variant, ok := value.(map[string]any); ok {
+				delete(variant, "unit_cost")
+			}
+		}
+	}
 	return payload, nil
 }
 
 func publicListInput(params apicontract.ListProductsParams) catalogservice.ListProductsInput {
 	input := catalogservice.ListProductsInput{Page: 1, Limit: 10, SortField: "created_at", SortOrder: "desc"}
-	if params.Q != nil {
-		input.SearchTerm = strings.TrimSpace(*params.Q)
-	}
 	input.MinPrice, input.MaxPrice = params.MinPrice, params.MaxPrice
 	if params.BrandSlug != nil {
 		input.BrandSlug = strings.TrimSpace(*params.BrandSlug)
@@ -205,6 +232,20 @@ func adminListInput(params apicontract.ListAdminProductsParams) catalogservice.L
 }
 
 func (e *CatalogEndpoints) productsToContract(ctx context.Context, products []models.Product, admin bool) ([]apicontract.Product, error) {
+	if admin && len(products) > 0 {
+		var err error
+		ctx, err = e.adminMetadataContext(ctx, products)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if !admin && len(products) > 0 {
+		var err error
+		ctx, err = e.publicMetadataContext(ctx, products)
+		if err != nil {
+			return nil, err
+		}
+	}
 	result := make([]apicontract.Product, 0, len(products))
 	for _, product := range products {
 		value, err := e.productToContract(ctx, product, admin)
@@ -218,17 +259,25 @@ func (e *CatalogEndpoints) productsToContract(ctx context.Context, products []mo
 
 func (e *CatalogEndpoints) productToContract(ctx context.Context, product models.Product, admin bool) (apicontract.Product, error) {
 	db := e.db.WithContext(ctx)
-	if product.ID != 0 && product.Related == nil && product.Categories == nil && product.Variants == nil {
+	if product.ID != 0 && product.Related == nil && product.Categories == nil && product.Variants == nil && ctx.Value(publicMetadataKey{}) == nil {
 		if err := db.Preload("Related").Preload("Categories").Preload("Variants").First(&product, product.ID).Error; err != nil {
 			return apicontract.Product{}, err
 		}
 	}
 	images := append([]string(nil), product.Images...)
+	public, publicBatched := ctx.Value(publicMetadataKey{}).(*publicMetadata)
+	if !admin && publicBatched && len(public.images[product.ID]) != 0 {
+		images = append([]string(nil), public.images[product.ID]...)
+	}
+	metadata, batched := ctx.Value(adminMetadataKey{}).(*adminMetadata)
+	if admin && batched && len(metadata.inputs[product.ID].Images) != 0 {
+		images = append([]string(nil), metadata.inputs[product.ID].Images...)
+	}
 	role := media.RoleProductImage
 	if admin && product.DraftUpdatedAt != nil {
 		role = media.RoleProductDraftImage
 	}
-	if e.media != nil {
+	if e.media != nil && !(admin && batched) && !publicBatched {
 		if urls, err := e.media.ProductMediaURLsByRole(product.ID, role); err == nil && len(urls) != 0 {
 			images = urls
 		}
@@ -274,6 +323,11 @@ func (e *CatalogEndpoints) productToContract(ctx context.Context, product models
 		if len(variants) == 0 || price > maxPrice {
 			maxPrice = price
 		}
+		var unitCost *float64
+		if admin && value.UnitCost != nil {
+			converted := value.UnitCost.Float64()
+			unitCost = &converted
+		}
 		var compareAt *float64
 		if value.CompareAtPrice != nil {
 			converted := value.CompareAtPrice.Float64()
@@ -287,7 +341,7 @@ func (e *CatalogEndpoints) productToContract(ctx context.Context, product models
 			}
 			title = localized.Fields["title"]
 		}
-		variants = append(variants, apicontract.ProductVariant{Id: &id, Sku: value.SKU, Title: title, Price: price, CompareAtPrice: compareAt, Stock: value.Stock, Position: value.Position, IsPublished: value.IsPublished, WeightGrams: value.WeightGrams, LengthCm: value.LengthCm, WidthCm: value.WidthCm, HeightCm: value.HeightCm, Selections: []apicontract.ProductVariantSelection{}})
+		variants = append(variants, apicontract.ProductVariant{Id: &id, Sku: value.SKU, Title: title, Price: price, CompareAtPrice: compareAt, UnitCost: unitCost, Stock: value.Stock, Position: value.Position, IsPublished: value.IsPublished, WeightGrams: value.WeightGrams, LengthCm: value.LengthCm, WidthCm: value.WidthCm, HeightCm: value.HeightCm, Selections: []apicontract.ProductVariantSelection{}})
 	}
 	var defaultVariantID *int
 	if product.DefaultVariantID != nil {
@@ -308,7 +362,7 @@ func (e *CatalogEndpoints) productToContract(ctx context.Context, product models
 	}
 	published, draft := product.IsPublished, product.DraftUpdatedAt != nil
 	result := apicontract.Product{Id: int(product.ID), Sku: product.SKU, Name: product.Name, Subtitle: product.Subtitle, Description: product.Description, Price: product.Price.Float64(), Stock: product.Stock, Images: images, CoverImage: cover, Categories: categories, RelatedProducts: related, Options: []apicontract.ProductOption{}, Attributes: []apicontract.ProductAttributeValue{}, Seo: apicontract.ProductSEO{}, PriceRange: apicontract.ProductPriceRange{Min: minPrice, Max: maxPrice}, DefaultVariantId: defaultVariantID, DefaultVariantSku: defaultVariantSKU, Variants: variants, CreatedAt: product.CreatedAt, UpdatedAt: product.UpdatedAt, DeletedAt: deletedAt(product.DeletedAt)}
-	if product.Brand != nil {
+	if product.Brand != nil && !admin {
 		brand, err := e.brandContract(ctx, *product.Brand, !admin)
 		if err != nil {
 			return apicontract.Product{}, err
@@ -332,11 +386,21 @@ func (e *CatalogEndpoints) productToContract(ctx context.Context, product models
 	}
 	if admin {
 		result.IsPublished, result.HasDraftChanges, result.DraftUpdatedAt = &published, &draft, product.DraftUpdatedAt
+		if err := e.hydrateAdminProduct(ctx, product.ID, &result); err != nil {
+			return apicontract.Product{}, err
+		}
 	}
 	return result, nil
 }
 
 func (e *CatalogEndpoints) resolveEntityLocalization(ctx context.Context, entityType localizationservice.EntityType, entityID uint) (localizationservice.EntityResolution, error) {
+	if metadata, ok := ctx.Value(publicMetadataKey{}).(*publicMetadata); ok {
+		value, found := metadata.localized[localizationservice.EntityReference{EntityType: entityType, EntityID: entityID}]
+		if !found {
+			return localizationservice.EntityResolution{}, localizationservice.ErrLocalizedEntityNotFound
+		}
+		return value, nil
+	}
 	input := localizationservice.ResolutionInput{}
 	if resolution, ok := requestctx.LocaleResolutionFrom(ctx); ok {
 		input.ExplicitLocale = resolution.ResolvedLocale
@@ -381,4 +445,8 @@ func deletedAt(value gorm.DeletedAt) *time.Time {
 		return nil
 	}
 	return &value.Time
+}
+
+func (e *CatalogEndpoints) ConfigureSearchHardening(config searchservice.HardeningConfig) error {
+	return e.search.ConfigureHardening(config)
 }

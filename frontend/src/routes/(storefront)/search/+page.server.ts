@@ -1,29 +1,13 @@
 import type { PageServerLoad } from "./$types";
-import {
-	parseBrand,
-	parseProduct,
-	parseProductAttributeDefinition,
-	type BrandModel,
-	type ProductAttributeDefinitionModel,
-	type ProductModel,
-} from "$lib/models";
+import { defaultSearchSort, isSearchSort } from "./search-params";
+import { parseProduct, type ProductModel } from "$lib/models";
 import { setPublicPageCacheHeaders } from "$lib/server/cache";
 import { serverRequest } from "$lib/server/api";
 import type { components } from "$lib/api/generated/openapi";
 
-type ProductPagePayload = components["schemas"]["ProductPage"];
-type BrandListPayload = components["schemas"]["BrandListResponse"];
-type ProductAttributeDefinitionListPayload =
-	components["schemas"]["ProductAttributeDefinitionListResponse"];
+type ProductSearchPayload = components["schemas"]["ProductSearchResponse"];
 
 const pageSizeOptions = [8, 12, 24, 36] as const;
-
-function normalizeSort(value: string | null): "created_at" | "price" | "name" {
-	if (value === "price" || value === "name" || value === "created_at") {
-		return value;
-	}
-	return "created_at";
-}
 
 function normalizeOrder(value: string | null): "asc" | "desc" {
 	if (value === "asc" || value === "desc") {
@@ -40,16 +24,25 @@ function normalizeLimit(value: number): number {
 }
 
 export const load: PageServerLoad = async (event) => {
+	// Cache only server-signed snapshots; browser exposure proofs are fetched after consent.
 	setPublicPageCacheHeaders(event);
 	const { url } = event;
 	const searchQuery = url.searchParams.get("q") ?? "";
-	const brandSlug = url.searchParams.get("brand_slug") ?? "";
-	const hasVariantStock = url.searchParams.get("has_variant_stock") === "true";
-	const currentPage = Math.max(1, Number(url.searchParams.get("page") ?? 1));
+	const brandSlugs = url.searchParams.getAll("brand_slug").filter(Boolean);
+	const categorySlugs = url.searchParams.getAll("category_slug").filter(Boolean);
+	const stockSelections = url.searchParams
+		.getAll("has_variant_stock")
+		.filter((value) => value === "true" || value === "false")
+		.map((value) => value === "true");
+	const priceRanges = url.searchParams.getAll("price_range").filter(Boolean);
+	const attributeSelections: Record<string, string[]> = {};
+	const requestedPage = Number(url.searchParams.get("page") ?? 1);
+	const currentPage = Number.isSafeInteger(requestedPage) ? Math.max(1, requestedPage) : 1;
 	const pageSize = normalizeLimit(Number(url.searchParams.get("limit") ?? 12));
-	const sortBy = normalizeSort(url.searchParams.get("sort"));
+	const requestedSort = url.searchParams.get("sort");
+	const sortExplicit = isSearchSort(requestedSort);
+	const sortBy = sortExplicit ? requestedSort : defaultSearchSort(searchQuery);
 	const sortOrder = normalizeOrder(url.searchParams.get("order"));
-	const attributeFilters: Record<string, string> = {};
 	for (const [key, value] of url.searchParams.entries()) {
 		if (!key.startsWith("attribute[") || !key.endsWith("]")) {
 			continue;
@@ -58,56 +51,76 @@ export const load: PageServerLoad = async (event) => {
 		if (!slug || !value.trim()) {
 			continue;
 		}
-		attributeFilters[slug] = value.trim();
+		(attributeSelections[slug] ??= []).push(value.trim());
 	}
 
 	let results: ProductModel[] = [];
-	let brands: BrandModel[] = [];
-	let attributes: ProductAttributeDefinitionModel[] = [];
+	let facets: ProductSearchPayload["facets"] = [];
+	let resultSnapshot = "";
 	let totalPages = 1;
 	let totalResults = 0;
 	let errorMessage = "";
+	let metadata: ProductSearchPayload["metadata"] | null = null;
+	let suggestions: components["schemas"]["SearchSuggestionsResponse"] = {
+		suggestions: [],
+		corrections: [],
+	};
 
-	try {
-		const [response, brandsPayload, attributesPayload] = await Promise.all([
-			serverRequest<ProductPagePayload>(event, "/products", {
+	const [search, discovery] = await Promise.allSettled([
+		serverRequest<ProductSearchPayload>(event, "/search/products", {
+			q: searchQuery.trim() || undefined,
+			brand_slug: brandSlugs.length ? brandSlugs : undefined,
+			category_slug: categorySlugs.length ? categorySlugs : undefined,
+			has_variant_stock: stockSelections.length ? stockSelections : undefined,
+			price_range: priceRanges.length ? priceRanges : undefined,
+			attribute: Object.keys(attributeSelections).length ? attributeSelections : undefined,
+			page: currentPage,
+			limit: pageSize,
+			sort: sortExplicit ? sortBy : undefined,
+			order: sortOrder,
+		}),
+		serverRequest<components["schemas"]["SearchSuggestionsResponse"]>(
+			event,
+			"/search/suggestions",
+			{
 				q: searchQuery.trim() || undefined,
-				brand_slug: brandSlug || undefined,
-				has_variant_stock: hasVariantStock ? true : undefined,
-				attribute: Object.keys(attributeFilters).length > 0 ? attributeFilters : undefined,
-				page: currentPage,
-				limit: pageSize,
-				sort: sortBy,
-				order: sortOrder,
-			}),
-			serverRequest<BrandListPayload>(event, "/brands"),
-			serverRequest<ProductAttributeDefinitionListPayload>(event, "/product-attributes"),
-		]);
-		results = response.data.map(parseProduct);
-		brands = brandsPayload.data.map(parseBrand);
-		attributes = attributesPayload.data.map(parseProductAttributeDefinition);
+			}
+		),
+	]);
+	if (search.status === "fulfilled") {
+		const response = search.value;
+		resultSnapshot = response.result_snapshot ?? "";
+		metadata = response.metadata ?? null;
+		facets = response.facets ?? [];
+		results = response.items.map(parseProduct);
 		totalPages = Math.max(1, response.pagination.total_pages);
 		totalResults = response.pagination.total;
-	} catch (err) {
-		console.error(err);
+	} else {
+		console.error(search.reason);
 		errorMessage = "Unable to load search results.";
 	}
 
+	if (discovery.status === "fulfilled" && !metadata?.degraded) suggestions = discovery.value;
 	return {
+		brandSlugs,
+		categorySlugs,
+		stockSelections,
+		priceRanges,
+		attributeSelections,
+		facets,
+		resultSnapshot,
+		metadata,
+		suggestions,
 		results,
-		brands,
-		attributes,
 		errorMessage,
 		searchQuery,
 		draftQuery: searchQuery,
-		brandSlug,
-		hasVariantStock,
-		attributeFilters,
 		currentPage,
 		pageSize,
 		totalPages,
 		totalResults,
 		sortBy,
+		sortExplicit,
 		sortOrder,
 	};
 };

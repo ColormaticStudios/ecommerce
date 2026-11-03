@@ -39,16 +39,6 @@ func LocalizationNegotiationMiddleware(options LocalizationNegotiationOptions) (
 	}
 	return func(ctx *gin.Context) {
 		requestContext := ctx.Request.Context()
-		var err error
-		requestContext, err = ensureLocalizationRolloutIdentity(ctx.Writer, ctx.Request, requestContext)
-		if err != nil {
-			options.Renderer.Render(ctx.Writer, requestContext, http.StatusServiceUnavailable, problemError(
-				http.StatusServiceUnavailable, "localization_unavailable", "Localization rollout identity is unavailable.", err,
-			))
-			ctx.Abort()
-			return
-		}
-		ctx.Request = ctx.Request.WithContext(requestContext)
 		accountPreference := ""
 		if options.ResolveAccountPreference != nil {
 			if principal, ok := requestctx.PrincipalFrom(requestContext); ok {
@@ -87,6 +77,16 @@ func LocalizationNegotiationMiddleware(options LocalizationNegotiationOptions) (
 			options.Renderer.Render(ctx.Writer, requestContext, http.StatusServiceUnavailable, problemError(
 				http.StatusServiceUnavailable, "localization_unavailable", "Localization configuration is unavailable.", err,
 			))
+			ctx.Abort()
+			return
+		}
+		dependsOnIdentity, err := options.Service.RolloutDependsOnIdentity(requestContext, resolution, localizationRolloutDomain(ctx.Request))
+		if err == nil && dependsOnIdentity {
+			requestContext, err = ensureLocalizationRolloutIdentity(ctx.Writer, ctx.Request, requestContext)
+			ctx.Request = ctx.Request.WithContext(requestContext)
+		}
+		if err != nil {
+			options.Renderer.Render(ctx.Writer, requestContext, http.StatusServiceUnavailable, problemError(http.StatusServiceUnavailable, "localization_unavailable", "Localization rollout configuration is unavailable.", err))
 			ctx.Abort()
 			return
 		}
@@ -209,8 +209,8 @@ func isLocalizationRolloutDomain(value string) bool {
 }
 
 func requestMarket(request *http.Request) string {
-	if value := strings.TrimSpace(request.URL.Query().Get("market")); value != "" {
-		return strings.ToUpper(value)
+	if request.URL.Query().Has("market") {
+		return strings.ToUpper(strings.TrimSpace(request.URL.Query().Get("market")))
 	}
 	if cookie, err := request.Cookie("market"); err == nil && strings.TrimSpace(cookie.Value) != "" {
 		return strings.ToUpper(strings.TrimSpace(cookie.Value))

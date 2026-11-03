@@ -76,6 +76,7 @@ export function createVariant(
 		title: "",
 		price: "",
 		compare_at_price: "",
+		unit_cost: "",
 		stock: "0",
 		is_published: true,
 		selections: [],
@@ -149,6 +150,7 @@ export function editorValuesFromProduct(
 					price: String(variant.price),
 					compare_at_price:
 						variant.compare_at_price == null ? "" : String(variant.compare_at_price),
+					unit_cost: variant.unit_cost == null ? "" : String(variant.unit_cost),
 					stock: String(variant.stock),
 					is_published: variant.is_published,
 					selections: (variant.selections ?? []).map((selection, selectionIndex) => ({
@@ -228,6 +230,7 @@ export function buildProductSnapshot(
 			title: asTrimmedString(variant.title),
 			price: normalizedNumber(variant.price),
 			compare_at_price: normalizedNumber(variant.compare_at_price),
+			unit_cost: normalizedNumber(variant.unit_cost),
 			stock: normalizedNumber(variant.stock),
 			is_published: variant.is_published,
 			position: variantIndex + 1,

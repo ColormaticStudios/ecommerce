@@ -215,9 +215,9 @@ func (e *CmsMediaEndpoints) PreviewAdminCmsPayload(_ context.Context, request ap
 		for _, issue := range block.Issues {
 			messages = append(messages, issue.Message)
 		}
-		status := apicontract.Ok
+		status := apicontract.CmsPreviewBlockStatusOk
 		if block.Status != cms.AssessmentValid {
-			status = apicontract.Degraded
+			status = apicontract.CmsPreviewBlockStatusDegraded
 		}
 		blocks = append(blocks, apicontract.CmsPreviewBlock{Key: fmt.Sprintf("block-%d", block.Index), Type: block.Type, Status: status, Messages: messages, ItemCount: 0})
 	}

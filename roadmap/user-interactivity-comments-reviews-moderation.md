@@ -30,7 +30,7 @@
 ## Cross-Roadmap Alignment
 - Product catalog depth baseline:
   - Canonical item linkage should be `product_id` for display and `order_item`/`product_variant_id` for verified purchase checks.
-- Search and discoverability (`roadmap/search-discoverability-quality.md`):
+- Search and discoverability (`roadmap/completed/search-discoverability-quality.md`):
   - Review rating aggregates and helpfulness should be indexable signals for ranking/faceting in later phases.
 - Merchant analytics/reporting (`roadmap/merchant-analytics-reporting.md`):
   - Moderation throughput, abuse rates, and review conversion impact become shared analytics dimensions.

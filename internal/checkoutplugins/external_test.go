@@ -121,8 +121,10 @@ func TestExternalPluginArgsResolveRelativeToManifestDir(t *testing.T) {
 	dir := t.TempDir()
 
 	scriptPath := filepath.Join(dir, "plugin.sh")
-	script := `#!/usr/bin/env bash
-set -euo pipefail
+	// The manifest runs this through `sh`, which is dash on Debian and Ubuntu, so
+	// the script must stay POSIX (no pipefail).
+	script := `#!/bin/sh
+set -eu
 payload="$(cat)"
 case "$payload" in
   *'"action":"quote"'*)

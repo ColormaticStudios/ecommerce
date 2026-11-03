@@ -72,6 +72,7 @@ func newRootCmd() *cobra.Command {
 	rootCmd.AddCommand(NewWebsiteCmd())
 	rootCmd.AddCommand(NewCMSCmd())
 	rootCmd.AddCommand(NewLocalizationCmd())
+	rootCmd.AddCommand(NewSearchCmd())
 	rootCmd.AddCommand(NewMigrateCmd())
 	rootCmd.AddCommand(newSetupCmd())
 	rootCmd.AddCommand(newConfigCmd())
@@ -149,6 +150,10 @@ func shouldSkipTargetResolution(cmd *cobra.Command) bool {
 		return false
 	}
 	if cmd == cmd.Root() {
+		return true
+	}
+
+	if (cmd.Name() == "evaluate" || cmd.Name() == "scaffold") && cmd.Parent() != nil && cmd.Parent().Name() == "search" {
 		return true
 	}
 

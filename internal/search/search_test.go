@@ -1,0 +1,128 @@
+package search
+
+import (
+	"context"
+	"ecommerce/internal/searchprojection"
+	"encoding/json"
+	"testing"
+	"time"
+
+	"ecommerce/internal/jobs"
+	"ecommerce/models"
+
+	"github.com/stretchr/testify/require"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+)
+
+func searchTestDB(t testing.TB) *gorm.DB {
+	t.Helper()
+	db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory&cache=shared"), &gorm.Config{})
+	require.NoError(t, err)
+	require.NoError(t, db.AutoMigrate(
+		&models.Product{}, &models.ProductVariant{}, &models.Brand{}, &models.Category{}, &models.ProductCategory{},
+		&models.ProductAttribute{}, &models.ProductAttributeValue{}, &searchprojection.Rank{}, &searchprojection.Category{}, &searchprojection.Attribute{}, &searchprojection.Term{}, &models.SearchDocument{}, &models.SearchIndexState{}, &models.SearchCatalogFanoutDebt{}, &models.SearchInventoryRevision{}, &models.SearchProductRevision{},
+		&models.SearchQueryEvent{}, &models.SearchClickEvent{}, &models.SearchCartAttribution{}, &models.SearchOrderAttribution{}, &models.SearchRevokedSession{}, &models.SearchSynonymSet{}, &models.SearchTypoToleranceProfile{}, &models.SearchConfigurationAudit{}, &models.SearchRankingProfile{}, &models.SearchSalesSignal{}, &models.SearchConversionSignal{}, &models.SearchMerchandisingRule{}, &models.SearchMerchandisingAudit{}, &models.JobQueue{}, &models.JobAttempt{}, &models.JobDeadLetter{},
+	))
+	require.NoError(t, db.Table("search_typo_tolerance_profiles").Create(map[string]any{
+		"name": "default", "minimum_token_length": DefaultMinimumTokenLength,
+		"one_edit_minimum_length": DefaultOneEditMinimumLength,
+		"two_edit_minimum_length": DefaultTwoEditMinimumLength,
+		"strict_mode":             false, "is_active": true,
+		"created_at": time.Now().UTC(), "updated_at": time.Now().UTC(),
+	}).Error)
+	_, err = NewService(db, nil, nil).CreateRankingProfile(context.Background(), RankingProfileInput{Name: "default", Weights: DefaultRankingWeights(), IsDefault: true}, nil)
+	require.NoError(t, err)
+	return db
+}
+
+func TestReindexSearchAndSuggestions(t *testing.T) {
+	db := searchTestDB(t)
+	brand := models.Brand{Name: "Northstar", Slug: "northstar", IsActive: true}
+	require.NoError(t, db.Create(&brand).Error)
+	category := models.Category{Name: "Trail", Slug: "trail", IsActive: true, Path: "trail"}
+	require.NoError(t, db.Create(&category).Error)
+	product := models.Product{SKU: "BOOT-1", Name: "Alpine Boot", Description: "Waterproof hiking boot", Price: models.MoneyFromFloat(120), IsPublished: true, BrandID: &brand.ID}
+	require.NoError(t, db.Create(&product).Error)
+	require.NoError(t, db.Model(&product).Association("Categories").Append(&category))
+	variant := models.ProductVariant{ProductID: product.ID, SKU: "BOOT-1-BLK", Title: "Black", Price: models.MoneyFromFloat(125), Stock: 4, Position: 1, IsPublished: true}
+	require.NoError(t, db.Create(&variant).Error)
+
+	service := NewService(db, nil, nil)
+	require.NoError(t, service.Reindex(context.Background()))
+
+	result, err := service.Search(context.Background(), Filters{Query: "waterproof black", BrandSlug: "northstar", CategorySlugs: []string{"trail"}, Page: 1, Limit: 10})
+	require.NoError(t, err)
+	require.Equal(t, int64(1), result.Total)
+	require.Len(t, result.Products, 1)
+	require.Equal(t, "Alpine Boot", result.Products[0].Name)
+	require.Len(t, result.Products[0].Variants, 1)
+	require.Equal(t, "waterproof black", result.NormalizedQuery)
+
+	suggestions, err := service.Suggest(context.Background(), "alp", 5)
+	require.NoError(t, err)
+	require.Equal(t, []string{"Alpine Boot"}, suggestions.Suggestions)
+	require.Empty(t, suggestions.Corrections)
+	brandSuggestions, err := service.Suggest(context.Background(), "north", 5)
+	require.NoError(t, err)
+	require.Equal(t, []string{"Northstar"}, brandSuggestions.Suggestions)
+
+	freshness, err := service.Freshness(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, "healthy", freshness.Status)
+	require.Equal(t, int64(1), freshness.DocumentCount)
+	require.NotNil(t, freshness.LastFullReindexAt)
+}
+
+func TestNewerTombstoneRejectsStaleDocument(t *testing.T) {
+	db := searchTestDB(t)
+	backend := NewDatabaseBackend(db)
+	now := time.Now().UTC()
+	require.NoError(t, backend.Delete(context.Background(), ProductEntityType, 42, 20))
+	require.NoError(t, backend.Upsert(context.Background(), models.SearchDocument{
+		EntityType: ProductEntityType, EntityID: 42, PayloadJSON: `{}`, SearchableText: "old",
+		NormalizedName: "old", CategoryTokens: "|", AttributeTokens: "|", Active: true,
+		Version: 10, SourceCreatedAt: now, SourceUpdatedAt: now, IndexedAt: now,
+	}))
+
+	result, err := backend.Search(context.Background(), Filters{Page: 1, Limit: 10})
+	require.NoError(t, err)
+	require.Zero(t, result.Total)
+	var stored models.SearchDocument
+	require.NoError(t, db.Where("entity_type = ? AND entity_id = ?", ProductEntityType, 42).First(&stored).Error)
+	require.False(t, stored.Active)
+	require.Equal(t, int64(20), stored.Version)
+}
+
+func TestNormalizeQuery(t *testing.T) {
+	require.Equal(t, "trail running shoe", NormalizeQuery("  Trail—Running_shoe! "))
+}
+
+func TestEnqueueProductSyncTxIsAtomicWithIdempotentDelivery(t *testing.T) {
+	db := searchTestDB(t)
+	runtime := jobs.NewRuntime(db, jobs.Config{})
+	revision := time.Unix(100, 0).UTC()
+
+	require.Error(t, db.Transaction(func(tx *gorm.DB) error {
+		_, err := EnqueueProductSyncTx(context.Background(), runtime, tx, 7, revision)
+		require.NoError(t, err)
+		return gorm.ErrInvalidTransaction
+	}))
+	var count int64
+	require.NoError(t, db.Model(&models.JobQueue{}).Count(&count).Error)
+	require.Zero(t, count)
+
+	first, err := EnqueueProductSyncTx(context.Background(), runtime, db, 7, revision)
+	require.NoError(t, err)
+	second, err := EnqueueProductSyncTx(context.Background(), runtime, db, 7, revision)
+	require.NoError(t, err)
+	require.Equal(t, first.ID, second.ID, "separate source writes share one active delivery while revisions remain distinct")
+	var payload ProductSyncPayload
+	require.NoError(t, json.Unmarshal([]byte(first.PayloadJSON), &payload))
+	require.NotNil(t, first.IdempotencyKey)
+	replayed, err := runtime.EnqueueTx(context.Background(), db, jobs.EnqueueInput{
+		JobType: JobTypeProductSync, Payload: payload, IdempotencyKey: *first.IdempotencyKey,
+	})
+	require.NoError(t, err)
+	require.Equal(t, first.ID, replayed.ID, "redelivery of the same durable revision deduplicates")
+}

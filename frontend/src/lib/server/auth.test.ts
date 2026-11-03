@@ -22,6 +22,7 @@ test("loadAuthConfig returns backend auth config when request succeeds", async (
 	);
 
 	const result = await loadAuthConfig({
+		getClientAddress: () => "198.51.100.1",
 		request: new Request("http://127.0.0.1:4173/login"),
 	});
 
@@ -43,6 +44,7 @@ test("loadAuthConfig falls back to local-only auth when the backend request fail
 	const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
 	const result = await loadAuthConfig({
+		getClientAddress: () => "198.51.100.1",
 		request: new Request("http://127.0.0.1:4173/login"),
 	});
 

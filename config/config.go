@@ -14,6 +14,18 @@ import (
 )
 
 type Config struct {
+	TrustedProxyCIDRs                 []string `mapstructure:"TRUSTED_PROXY_CIDRS"`
+	SearchClientMaxConcurrent         int      `mapstructure:"SEARCH_CLIENT_MAX_CONCURRENT"`
+	SearchClientRequestsPerMinute     int      `mapstructure:"SEARCH_CLIENT_REQUESTS_PER_MINUTE"`
+	SearchImpressionMaxConcurrent     int      `mapstructure:"SEARCH_IMPRESSION_MAX_CONCURRENT"`
+	SearchImpressionRequestsPerMinute int      `mapstructure:"SEARCH_IMPRESSION_REQUESTS_PER_MINUTE"`
+	SearchClientImpressionsPerMinute  int      `mapstructure:"SEARCH_CLIENT_IMPRESSIONS_PER_MINUTE"`
+	SearchMaxConcurrent               int      `mapstructure:"SEARCH_MAX_CONCURRENT"`
+	SearchTimeoutMS                   int      `mapstructure:"SEARCH_TIMEOUT_MS"`
+	SearchCircuitFailureThreshold     int      `mapstructure:"SEARCH_CIRCUIT_FAILURE_THRESHOLD"`
+	SearchCircuitOpenMS               int      `mapstructure:"SEARCH_CIRCUIT_OPEN_MS"`
+	SearchReindexQueueLimit           int      `mapstructure:"SEARCH_REINDEX_QUEUE_LIMIT"`
+
 	DBURL                          string        `mapstructure:"DATABASE_URL"`
 	AutoApplyMigrations            bool          `mapstructure:"AUTO_APPLY_MIGRATIONS"`
 	Port                           string        `mapstructure:"PORT"`
@@ -60,6 +72,14 @@ type Config struct {
 }
 
 var configKeys = []string{
+	"TRUSTED_PROXY_CIDRS",
+	"SEARCH_CLIENT_MAX_CONCURRENT", "SEARCH_CLIENT_REQUESTS_PER_MINUTE", "SEARCH_IMPRESSION_MAX_CONCURRENT", "SEARCH_IMPRESSION_REQUESTS_PER_MINUTE", "SEARCH_CLIENT_IMPRESSIONS_PER_MINUTE",
+	"SEARCH_MAX_CONCURRENT",
+	"SEARCH_TIMEOUT_MS",
+	"SEARCH_CIRCUIT_FAILURE_THRESHOLD",
+	"SEARCH_CIRCUIT_OPEN_MS",
+	"SEARCH_REINDEX_QUEUE_LIMIT",
+
 	"DATABASE_URL",
 	"AUTO_APPLY_MIGRATIONS",
 	"PORT",
@@ -137,6 +157,17 @@ func LoadConfig() (config Config, err error) {
 
 	// Highest precedence: runtime environment variables.
 	v.SetDefault("AUTO_APPLY_MIGRATIONS", false)
+	v.SetDefault("SEARCH_MAX_CONCURRENT", 50)
+	v.SetDefault("SEARCH_CLIENT_MAX_CONCURRENT", 4)
+	v.SetDefault("SEARCH_CLIENT_REQUESTS_PER_MINUTE", 120)
+	v.SetDefault("SEARCH_IMPRESSION_MAX_CONCURRENT", 8)
+	v.SetDefault("SEARCH_IMPRESSION_REQUESTS_PER_MINUTE", 600)
+	v.SetDefault("SEARCH_CLIENT_IMPRESSIONS_PER_MINUTE", 20)
+	v.SetDefault("SEARCH_TIMEOUT_MS", 2000)
+	v.SetDefault("SEARCH_CIRCUIT_FAILURE_THRESHOLD", 5)
+	v.SetDefault("SEARCH_CIRCUIT_OPEN_MS", 30000)
+	v.SetDefault("SEARCH_REINDEX_QUEUE_LIMIT", 1)
+
 	v.SetDefault("HTTP_READ_HEADER_TIMEOUT", "10s")
 	v.SetDefault("HTTP_READ_TIMEOUT", "5m")
 	v.SetDefault("HTTP_WRITE_TIMEOUT", "5m")
@@ -162,6 +193,7 @@ func LoadConfig() (config Config, err error) {
 	v.SetDefault("JOB_MAX_ATTEMPTS", 5)
 	v.SetDefault("JOB_RETRY_BASE_DELAY", "5s")
 	v.SetDefault("JOB_RETRY_MAX_DELAY", "15m")
+	v.SetDefault("TRUSTED_PROXY_CIDRS", []string{})
 	v.AutomaticEnv()
 	for _, key := range configKeys {
 		if bindErr := v.BindEnv(key); bindErr != nil {
@@ -172,6 +204,9 @@ func LoadConfig() (config Config, err error) {
 	if err := v.Unmarshal(&config); err != nil {
 		return config, fmt.Errorf("decode config: %w", err)
 	}
+	for i := range config.TrustedProxyCIDRs {
+		config.TrustedProxyCIDRs[i] = strings.TrimSpace(config.TrustedProxyCIDRs[i])
+	}
 	if err := config.validate(); err != nil {
 		return config, err
 	}
@@ -179,6 +214,44 @@ func LoadConfig() (config Config, err error) {
 }
 
 func (c Config) validate() error {
+	for _, cidr := range c.TrustedProxyCIDRs {
+		if net.ParseIP(cidr) != nil {
+			continue
+		}
+		if _, _, err := net.ParseCIDR(cidr); err != nil {
+			return errors.New("TRUSTED_PROXY_CIDRS must contain IP addresses or CIDR ranges")
+		}
+	}
+	for _, setting := range []struct {
+		name       string
+		value, max int
+	}{
+		{"SEARCH_CLIENT_MAX_CONCURRENT", c.SearchClientMaxConcurrent, 512},
+		{"SEARCH_CLIENT_REQUESTS_PER_MINUTE", c.SearchClientRequestsPerMinute, 60000},
+		{"SEARCH_IMPRESSION_MAX_CONCURRENT", c.SearchImpressionMaxConcurrent, 64},
+		{"SEARCH_IMPRESSION_REQUESTS_PER_MINUTE", c.SearchImpressionRequestsPerMinute, 60000},
+		{"SEARCH_CLIENT_IMPRESSIONS_PER_MINUTE", c.SearchClientImpressionsPerMinute, 6000},
+	} {
+		if setting.value < 1 || setting.value > setting.max {
+			return fmt.Errorf("%s must be between 1 and %d", setting.name, setting.max)
+		}
+	}
+	if c.SearchMaxConcurrent < 1 || c.SearchMaxConcurrent > 512 {
+		return errors.New("SEARCH_MAX_CONCURRENT must be between 1 and 512")
+	}
+	if c.SearchTimeoutMS < 10 || c.SearchTimeoutMS > 60000 {
+		return errors.New("SEARCH_TIMEOUT_MS must be between 10 and 60000")
+	}
+	if c.SearchCircuitFailureThreshold < 1 || c.SearchCircuitFailureThreshold > 100 {
+		return errors.New("SEARCH_CIRCUIT_FAILURE_THRESHOLD must be between 1 and 100")
+	}
+	if c.SearchCircuitOpenMS < 10 || c.SearchCircuitOpenMS > 600000 {
+		return errors.New("SEARCH_CIRCUIT_OPEN_MS must be between 10 and 600000")
+	}
+	if c.SearchReindexQueueLimit < 1 || c.SearchReindexQueueLimit > 20 {
+		return errors.New("SEARCH_REINDEX_QUEUE_LIMIT must be between 1 and 20")
+	}
+
 	if c.MetricsPath == "" || c.MetricsPath[0] != '/' || len(c.MetricsPath) > 255 || strings.TrimSpace(c.MetricsPath) != c.MetricsPath {
 		return errors.New("METRICS_PATH must be an absolute path no longer than 255 characters")
 	}

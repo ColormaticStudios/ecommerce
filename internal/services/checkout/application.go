@@ -5,7 +5,9 @@ import (
 	"errors"
 	"time"
 
+	searchservice "ecommerce/internal/search"
 	"ecommerce/models"
+	"gorm.io/gorm/clause"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -186,7 +188,14 @@ func (s *Service) cartForSessionContext(ctx context.Context, sessionID uint, cre
 	return s.cartForSessionContext(ctx, sessionID, false)
 }
 
+// AddCartItem preserves the checkout API for callers without search attribution.
 func (s *Service) AddCartItem(ctx context.Context, userID, variantID uint, quantity int) (models.Cart, error) {
+	return s.AddCartItemWithSearchAttribution(ctx, userID, variantID, quantity, "", "")
+}
+
+// AddCartItemWithSearchAttribution records consented search attribution in the
+// cart transaction. Analytics failures never roll back a valid cart mutation.
+func (s *Service) AddCartItemWithSearchAttribution(ctx context.Context, userID, variantID uint, quantity int, sessionToken, clickID string) (models.Cart, error) {
 	if quantity < 1 {
 		return models.Cart{}, ErrInvalidQuantity
 	}
@@ -194,28 +203,43 @@ func (s *Service) AddCartItem(ctx context.Context, userID, variantID uint, quant
 	if err != nil {
 		return models.Cart{}, err
 	}
-	var variant models.ProductVariant
-	if err := s.db.WithContext(ctx).Where("id = ? AND is_published = ?", variantID, true).First(&variant).Error; err != nil {
+	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var lockedCart models.Cart
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&lockedCart, cart.ID).Error; err != nil {
+			return err
+		}
+		var variant models.ProductVariant
+		if err := tx.Where("id = ? AND is_published = ?", variantID, true).First(&variant).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrVariantNotFound
+			}
+			return err
+		}
+		if quantity > variant.Stock {
+			return ErrInvalidQuantity
+		}
+		var item models.CartItem
+		err := tx.Where("cart_id = ? AND product_variant_id = ?", cart.ID, variantID).First(&item).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return models.Cart{}, ErrVariantNotFound
+			item = models.CartItem{CartID: cart.ID, ProductVariantID: variantID, Quantity: quantity}
+			err = tx.Create(&item).Error
+		} else if err == nil {
+			item.Quantity += quantity
+			if item.Quantity > variant.Stock {
+				return ErrInvalidQuantity
+			}
+			err = tx.Save(&item).Error
 		}
-		return models.Cart{}, err
-	}
-	if quantity > variant.Stock {
-		return models.Cart{}, ErrInvalidQuantity
-	}
-	var item models.CartItem
-	err = s.db.WithContext(ctx).Where("cart_id = ? AND product_variant_id = ?", cart.ID, variantID).First(&item).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		item = models.CartItem{CartID: cart.ID, ProductVariantID: variantID, Quantity: quantity}
-		err = s.db.WithContext(ctx).Create(&item).Error
-	} else if err == nil {
-		item.Quantity += quantity
-		if item.Quantity > variant.Stock {
-			return models.Cart{}, ErrInvalidQuantity
+		if err != nil {
+			return err
 		}
-		err = s.db.WithContext(ctx).Save(&item).Error
-	}
+		if sessionToken != "" && clickID != "" {
+			searchservice.BestEffortAnalyticsTx(ctx, tx, func() error {
+				return searchservice.RecordCartAttributionTx(ctx, tx, sessionToken, clickID, variant.ProductID, item.ID)
+			})
+		}
+		return nil
+	})
 	if err != nil {
 		return models.Cart{}, err
 	}

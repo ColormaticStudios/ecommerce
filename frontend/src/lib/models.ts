@@ -172,6 +172,7 @@ function parseProductVariant(variant: ProductVariantPayload): ProductVariantMode
 		title: variant.title,
 		price: variant.price,
 		compare_at_price: variant.compare_at_price ?? null,
+		...(variant.unit_cost !== undefined ? { unit_cost: variant.unit_cost } : {}),
 		stock: variant.stock,
 		position: variant.position,
 		is_published: variant.is_published,
@@ -354,6 +355,7 @@ export interface ProductVariantModel {
 	title: string;
 	price: number;
 	compare_at_price: number | null;
+	unit_cost?: number | null;
 	stock: number;
 	position: number;
 	is_published: boolean;

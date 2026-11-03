@@ -242,9 +242,9 @@ const (
 
 // Defines values for CmsPreviewBlockStatus.
 const (
-	Degraded CmsPreviewBlockStatus = "degraded"
-	Ok       CmsPreviewBlockStatus = "ok"
-	Static   CmsPreviewBlockStatus = "static"
+	CmsPreviewBlockStatusDegraded CmsPreviewBlockStatus = "degraded"
+	CmsPreviewBlockStatusOk       CmsPreviewBlockStatus = "ok"
+	CmsPreviewBlockStatusStatic   CmsPreviewBlockStatus = "static"
 )
 
 // Defines values for CmsProductRailBlockImageAspect.
@@ -554,6 +554,7 @@ const (
 	LocalizedEntityTypeBrand              LocalizedEntityType = "brand"
 	LocalizedEntityTypeCategory           LocalizedEntityType = "category"
 	LocalizedEntityTypeProduct            LocalizedEntityType = "product"
+	LocalizedEntityTypeProductAttribute   LocalizedEntityType = "product_attribute"
 	LocalizedEntityTypeProductOption      LocalizedEntityType = "product_option"
 	LocalizedEntityTypeProductOptionValue LocalizedEntityType = "product_option_value"
 	LocalizedEntityTypeProductVariant     LocalizedEntityType = "product_variant"
@@ -608,10 +609,10 @@ const (
 
 // Defines values for ProductAttributeDefinitionInputType.
 const (
-	Boolean ProductAttributeDefinitionInputType = "boolean"
-	Enum    ProductAttributeDefinitionInputType = "enum"
-	Number  ProductAttributeDefinitionInputType = "number"
-	Text    ProductAttributeDefinitionInputType = "text"
+	ProductAttributeDefinitionInputTypeBoolean ProductAttributeDefinitionInputType = "boolean"
+	ProductAttributeDefinitionInputTypeEnum    ProductAttributeDefinitionInputType = "enum"
+	ProductAttributeDefinitionInputTypeNumber  ProductAttributeDefinitionInputType = "number"
+	ProductAttributeDefinitionInputTypeText    ProductAttributeDefinitionInputType = "text"
 )
 
 // Defines values for ProductDiscountInputChannels.
@@ -879,6 +880,185 @@ const (
 	PurchaseOrderStatusRECEIVED          PurchaseOrderStatus = "RECEIVED"
 )
 
+// Defines values for SearchAppliedRewriteKind.
+const (
+	SearchAppliedRewriteKindSynonym SearchAppliedRewriteKind = "synonym"
+	SearchAppliedRewriteKindTypo    SearchAppliedRewriteKind = "typo"
+)
+
+// Defines values for SearchConfigurationAuditKind.
+const (
+	SearchConfigurationAuditKindRankingProfile SearchConfigurationAuditKind = "ranking_profile"
+	SearchConfigurationAuditKindSynonym        SearchConfigurationAuditKind = "synonym"
+	SearchConfigurationAuditKindTypoProfile    SearchConfigurationAuditKind = "typo_profile"
+)
+
+// Defines values for SearchConfigurationAuditOperation.
+const (
+	SearchConfigurationAuditOperationBaseline SearchConfigurationAuditOperation = "baseline"
+	SearchConfigurationAuditOperationCreate   SearchConfigurationAuditOperation = "create"
+	SearchConfigurationAuditOperationDelete   SearchConfigurationAuditOperation = "delete"
+	SearchConfigurationAuditOperationUpdate   SearchConfigurationAuditOperation = "update"
+)
+
+// Defines values for SearchEventInputType.
+const (
+	Click SearchEventInputType = "click"
+)
+
+// Defines values for SearchFacetType.
+const (
+	SearchFacetTypeAttribute SearchFacetType = "attribute"
+	SearchFacetTypeBoolean   SearchFacetType = "boolean"
+	SearchFacetTypeRange     SearchFacetType = "range"
+	SearchFacetTypeTerms     SearchFacetType = "terms"
+)
+
+// Defines values for SearchFreshnessStatus.
+const (
+	SearchFreshnessStatusDegraded SearchFreshnessStatus = "degraded"
+	SearchFreshnessStatusHealthy  SearchFreshnessStatus = "healthy"
+	SearchFreshnessStatusStale    SearchFreshnessStatus = "stale"
+)
+
+// Defines values for SearchImpressionInputConsent.
+const (
+	SearchImpressionInputConsentTrue SearchImpressionInputConsent = true
+)
+
+// Defines values for SearchIndexIncidentReason.
+const (
+	IndexLag        SearchIndexIncidentReason = "index_lag"
+	MissingBaseline SearchIndexIncidentReason = "missing_baseline"
+)
+
+// Defines values for SearchIndexIncidentStatus.
+const (
+	SearchIndexIncidentStatusOpen     SearchIndexIncidentStatus = "open"
+	SearchIndexIncidentStatusResolved SearchIndexIncidentStatus = "resolved"
+)
+
+// Defines values for SearchMerchandisingAuditOperation.
+const (
+	SearchMerchandisingAuditOperationCreate SearchMerchandisingAuditOperation = "create"
+	SearchMerchandisingAuditOperationDelete SearchMerchandisingAuditOperation = "delete"
+	SearchMerchandisingAuditOperationUpdate SearchMerchandisingAuditOperation = "update"
+)
+
+// Defines values for SearchMerchandisingPredicateChannel.
+const (
+	SearchMerchandisingPredicateChannelEmpty      SearchMerchandisingPredicateChannel = ""
+	SearchMerchandisingPredicateChannelStorefront SearchMerchandisingPredicateChannel = "storefront"
+)
+
+// Defines values for SearchMerchandisingPreviewRuleRuleType.
+const (
+	SearchMerchandisingPreviewRuleRuleTypeBoost   SearchMerchandisingPreviewRuleRuleType = "boost"
+	SearchMerchandisingPreviewRuleRuleTypeBury    SearchMerchandisingPreviewRuleRuleType = "bury"
+	SearchMerchandisingPreviewRuleRuleTypeHide    SearchMerchandisingPreviewRuleRuleType = "hide"
+	SearchMerchandisingPreviewRuleRuleTypeInclude SearchMerchandisingPreviewRuleRuleType = "include"
+	SearchMerchandisingPreviewRuleRuleTypePin     SearchMerchandisingPreviewRuleRuleType = "pin"
+)
+
+// Defines values for SearchMerchandisingQueryMode.
+const (
+	Contains SearchMerchandisingQueryMode = "contains"
+	Exact    SearchMerchandisingQueryMode = "exact"
+	Prefix   SearchMerchandisingQueryMode = "prefix"
+)
+
+// Defines values for SearchMerchandisingRuleRuleType.
+const (
+	SearchMerchandisingRuleRuleTypeBoost   SearchMerchandisingRuleRuleType = "boost"
+	SearchMerchandisingRuleRuleTypeBury    SearchMerchandisingRuleRuleType = "bury"
+	SearchMerchandisingRuleRuleTypeHide    SearchMerchandisingRuleRuleType = "hide"
+	SearchMerchandisingRuleRuleTypeInclude SearchMerchandisingRuleRuleType = "include"
+	SearchMerchandisingRuleRuleTypePin     SearchMerchandisingRuleRuleType = "pin"
+)
+
+// Defines values for SearchMerchandisingRuleInputRuleType.
+const (
+	SearchMerchandisingRuleInputRuleTypeBoost   SearchMerchandisingRuleInputRuleType = "boost"
+	SearchMerchandisingRuleInputRuleTypeBury    SearchMerchandisingRuleInputRuleType = "bury"
+	SearchMerchandisingRuleInputRuleTypeHide    SearchMerchandisingRuleInputRuleType = "hide"
+	SearchMerchandisingRuleInputRuleTypeInclude SearchMerchandisingRuleInputRuleType = "include"
+	SearchMerchandisingRuleInputRuleTypePin     SearchMerchandisingRuleInputRuleType = "pin"
+)
+
+// Defines values for SearchMerchandisingRulePatchRuleType.
+const (
+	SearchMerchandisingRulePatchRuleTypeBoost   SearchMerchandisingRulePatchRuleType = "boost"
+	SearchMerchandisingRulePatchRuleTypeBury    SearchMerchandisingRulePatchRuleType = "bury"
+	SearchMerchandisingRulePatchRuleTypeHide    SearchMerchandisingRulePatchRuleType = "hide"
+	SearchMerchandisingRulePatchRuleTypeInclude SearchMerchandisingRulePatchRuleType = "include"
+	SearchMerchandisingRulePatchRuleTypePin     SearchMerchandisingRulePatchRuleType = "pin"
+)
+
+// Defines values for SearchOperationsStatusCircuitState.
+const (
+	SearchOperationsStatusCircuitStateClosed   SearchOperationsStatusCircuitState = "closed"
+	SearchOperationsStatusCircuitStateHalfOpen SearchOperationsStatusCircuitState = "half_open"
+	SearchOperationsStatusCircuitStateOpen     SearchOperationsStatusCircuitState = "open"
+)
+
+// Defines values for SearchPreviewFiltersOrder.
+const (
+	SearchPreviewFiltersOrderAsc  SearchPreviewFiltersOrder = "asc"
+	SearchPreviewFiltersOrderDesc SearchPreviewFiltersOrder = "desc"
+)
+
+// Defines values for SearchPreviewFiltersSort.
+const (
+	SearchPreviewFiltersSortCreatedAt SearchPreviewFiltersSort = "created_at"
+	SearchPreviewFiltersSortName      SearchPreviewFiltersSort = "name"
+	SearchPreviewFiltersSortPrice     SearchPreviewFiltersSort = "price"
+	SearchPreviewFiltersSortRelevance SearchPreviewFiltersSort = "relevance"
+)
+
+// Defines values for SearchProofInputConsent.
+const (
+	SearchProofInputConsentTrue SearchProofInputConsent = true
+)
+
+// Defines values for SearchRefreshAcceptedDisposition.
+const (
+	SearchRefreshAcceptedDispositionQueued          SearchRefreshAcceptedDisposition = "queued"
+	SearchRefreshAcceptedDispositionReusedCompleted SearchRefreshAcceptedDisposition = "reused_completed"
+)
+
+// Defines values for SearchRefreshAcceptedStatus.
+const (
+	SearchRefreshAcceptedStatusQueued    SearchRefreshAcceptedStatus = "queued"
+	SearchRefreshAcceptedStatusSucceeded SearchRefreshAcceptedStatus = "succeeded"
+)
+
+// Defines values for SearchReindexAcceptedStatus.
+const (
+	Queued SearchReindexAcceptedStatus = "queued"
+)
+
+// Defines values for SearchRuleDecisionOutcome.
+const (
+	SearchRuleDecisionOutcomeApplied  SearchRuleDecisionOutcome = "applied"
+	SearchRuleDecisionOutcomeConflict SearchRuleDecisionOutcome = "conflict"
+	SearchRuleDecisionOutcomeSkipped  SearchRuleDecisionOutcome = "skipped"
+)
+
+// Defines values for SearchRuleDecisionRuleType.
+const (
+	Boost   SearchRuleDecisionRuleType = "boost"
+	Bury    SearchRuleDecisionRuleType = "bury"
+	Hide    SearchRuleDecisionRuleType = "hide"
+	Include SearchRuleDecisionRuleType = "include"
+	Pin     SearchRuleDecisionRuleType = "pin"
+)
+
+// Defines values for SearchSynonymDirection.
+const (
+	Bi  SearchSynonymDirection = "bi"
+	Uni SearchSynonymDirection = "uni"
+)
+
 // Defines values for ShipmentStatus.
 const (
 	ShipmentStatusDELIVERED      ShipmentStatus = "DELIVERED"
@@ -911,10 +1091,10 @@ const (
 
 // Defines values for TranslationImportEntryStatus.
 const (
-	Conflict  TranslationImportEntryStatus = "conflict"
-	Created   TranslationImportEntryStatus = "created"
-	Invalid   TranslationImportEntryStatus = "invalid"
-	Unchanged TranslationImportEntryStatus = "unchanged"
+	TranslationImportEntryStatusConflict  TranslationImportEntryStatus = "conflict"
+	TranslationImportEntryStatusCreated   TranslationImportEntryStatus = "created"
+	TranslationImportEntryStatusInvalid   TranslationImportEntryStatus = "invalid"
+	TranslationImportEntryStatusUnchanged TranslationImportEntryStatus = "unchanged"
 )
 
 // Defines values for TranslationKeyInputNamespace.
@@ -1095,6 +1275,33 @@ const (
 	ListAdminProviderReconciliationRunsParamsProviderTypeTax      ListAdminProviderReconciliationRunsParamsProviderType = "tax"
 )
 
+// Defines values for ListAdminSearchConfigurationHistoryParamsKind.
+const (
+	RankingProfile ListAdminSearchConfigurationHistoryParamsKind = "ranking_profile"
+	Synonym        ListAdminSearchConfigurationHistoryParamsKind = "synonym"
+	TypoProfile    ListAdminSearchConfigurationHistoryParamsKind = "typo_profile"
+)
+
+// Defines values for GetAdminSearchIncidentsParamsStatus.
+const (
+	Open     GetAdminSearchIncidentsParamsStatus = "open"
+	Resolved GetAdminSearchIncidentsParamsStatus = "resolved"
+)
+
+// Defines values for SearchAdminProductsParamsSort.
+const (
+	SearchAdminProductsParamsSortCreatedAt SearchAdminProductsParamsSort = "created_at"
+	SearchAdminProductsParamsSortName      SearchAdminProductsParamsSort = "name"
+	SearchAdminProductsParamsSortPrice     SearchAdminProductsParamsSort = "price"
+	SearchAdminProductsParamsSortRelevance SearchAdminProductsParamsSort = "relevance"
+)
+
+// Defines values for SearchAdminProductsParamsOrder.
+const (
+	SearchAdminProductsParamsOrderAsc  SearchAdminProductsParamsOrder = "asc"
+	SearchAdminProductsParamsOrderDesc SearchAdminProductsParamsOrder = "desc"
+)
+
 // Defines values for ExportAdminTaxReportParamsFormat.
 const (
 	ExportAdminTaxReportParamsFormatCsv ExportAdminTaxReportParamsFormat = "csv"
@@ -1134,11 +1341,11 @@ const (
 
 // Defines values for GetLocalizationBundleParamsNamespace.
 const (
-	GetLocalizationBundleParamsNamespaceAdmin          GetLocalizationBundleParamsNamespace = "admin"
-	GetLocalizationBundleParamsNamespaceCheckout       GetLocalizationBundleParamsNamespace = "checkout"
-	GetLocalizationBundleParamsNamespaceCommunications GetLocalizationBundleParamsNamespace = "communications"
-	GetLocalizationBundleParamsNamespaceErrors         GetLocalizationBundleParamsNamespace = "errors"
-	GetLocalizationBundleParamsNamespaceStorefront     GetLocalizationBundleParamsNamespace = "storefront"
+	Admin          GetLocalizationBundleParamsNamespace = "admin"
+	Checkout       GetLocalizationBundleParamsNamespace = "checkout"
+	Communications GetLocalizationBundleParamsNamespace = "communications"
+	Errors         GetLocalizationBundleParamsNamespace = "errors"
+	Storefront     GetLocalizationBundleParamsNamespace = "storefront"
 )
 
 // Defines values for ListUserOrdersParamsStatus.
@@ -1169,15 +1376,29 @@ const (
 
 // Defines values for ListProductsParamsSort.
 const (
-	CreatedAt ListProductsParamsSort = "created_at"
-	Name      ListProductsParamsSort = "name"
-	Price     ListProductsParamsSort = "price"
+	ListProductsParamsSortCreatedAt ListProductsParamsSort = "created_at"
+	ListProductsParamsSortName      ListProductsParamsSort = "name"
+	ListProductsParamsSortPrice     ListProductsParamsSort = "price"
 )
 
 // Defines values for ListProductsParamsOrder.
 const (
-	Asc  ListProductsParamsOrder = "asc"
-	Desc ListProductsParamsOrder = "desc"
+	ListProductsParamsOrderAsc  ListProductsParamsOrder = "asc"
+	ListProductsParamsOrderDesc ListProductsParamsOrder = "desc"
+)
+
+// Defines values for SearchProductsParamsSort.
+const (
+	SearchProductsParamsSortCreatedAt SearchProductsParamsSort = "created_at"
+	SearchProductsParamsSortName      SearchProductsParamsSort = "name"
+	SearchProductsParamsSortPrice     SearchProductsParamsSort = "price"
+	SearchProductsParamsSortRelevance SearchProductsParamsSort = "relevance"
+)
+
+// Defines values for SearchProductsParamsOrder.
+const (
+	SearchProductsParamsOrderAsc  SearchProductsParamsOrder = "asc"
+	SearchProductsParamsOrderDesc SearchProductsParamsOrder = "desc"
 )
 
 // ActiveDiscountCampaign defines model for ActiveDiscountCampaign.
@@ -1200,8 +1421,10 @@ type ActiveDiscountCampaignType string
 
 // AddCartItemRequest defines model for AddCartItemRequest.
 type AddCartItemRequest struct {
-	ProductVariantId int `json:"product_variant_id"`
-	Quantity         int `json:"quantity"`
+	ProductVariantId   int     `json:"product_variant_id"`
+	Quantity           int     `json:"quantity"`
+	SearchClickId      *string `json:"search_click_id,omitempty"`
+	SearchSessionToken *string `json:"search_session_token,omitempty"`
 }
 
 // AdminOrderPaymentAmountRequest defines model for AdminOrderPaymentAmountRequest.
@@ -1236,6 +1459,16 @@ type AdminOrderShippingLabelRequest struct {
 type AdminOrderShippingLabelResponse struct {
 	Message  string   `json:"message"`
 	Shipment Shipment `json:"shipment"`
+}
+
+// AdminProductSearchResponse defines model for AdminProductSearchResponse.
+type AdminProductSearchResponse struct {
+	Explanations  []SearchRankingExplanation `json:"explanations"`
+	Facets        []SearchFacet              `json:"facets"`
+	Items         []Product                  `json:"items"`
+	Metadata      ProductSearchMetadata      `json:"metadata"`
+	Pagination    Pagination                 `json:"pagination"`
+	RuleDecisions []SearchRuleDecision       `json:"rule_decisions"`
 }
 
 // AppliedCampaign defines model for AppliedCampaign.
@@ -3395,6 +3628,37 @@ type ProductSEOInput struct {
 	Title          *string `json:"title"`
 }
 
+// ProductSearchMetadata defines model for ProductSearchMetadata.
+type ProductSearchMetadata struct {
+	AppliedRewrites []SearchAppliedRewrite `json:"applied_rewrites"`
+	Degraded        bool                   `json:"degraded"`
+
+	// DidYouMean Suggested corrected query when the original query has no exact results.
+	DidYouMean            *string    `json:"did_you_mean"`
+	FallbackReason        *string    `json:"fallback_reason,omitempty"`
+	IndexedAt             *time.Time `json:"indexed_at"`
+	NormalizedQuery       string     `json:"normalized_query"`
+	RankingProfile        string     `json:"ranking_profile"`
+	RankingProfileVersion int        `json:"ranking_profile_version"`
+
+	// Relaxed True when the response items come from the deterministic relaxed fallback.
+	Relaxed bool `json:"relaxed"`
+}
+
+// ProductSearchResponse defines model for ProductSearchResponse.
+type ProductSearchResponse struct {
+	Facets     []SearchFacet         `json:"facets"`
+	Items      []Product             `json:"items"`
+	Metadata   ProductSearchMetadata `json:"metadata"`
+	Pagination Pagination            `json:"pagination"`
+
+	// ResultSnapshot Server-signed snapshot valid for one hour. Cacheable pages exchange it through the consented browser proof endpoint; omitted for admin or degraded search.
+	ResultSnapshot *string `json:"result_snapshot,omitempty"`
+
+	// ResultToken Signed exposure proof expiring after five minutes. Omitted for admin or degraded search.
+	ResultToken *string `json:"result_token,omitempty"`
+}
+
 // ProductUpsertInput defines model for ProductUpsertInput.
 type ProductUpsertInput struct {
 	Attributes        []ProductAttributeValueInput `json:"attributes"`
@@ -3425,8 +3689,11 @@ type ProductVariant struct {
 	Sku            string                    `json:"sku"`
 	Stock          int                       `json:"stock"`
 	Title          string                    `json:"title"`
-	WeightGrams    *int                      `json:"weight_grams"`
-	WidthCm        *float64                  `json:"width_cm"`
+
+	// UnitCost Private variant unit cost, returned only by administrator catalog endpoints and omitted from all storefront responses.
+	UnitCost    *float64 `json:"unit_cost,omitempty"`
+	WeightGrams *int     `json:"weight_grams"`
+	WidthCm     *float64 `json:"width_cm"`
 }
 
 // ProductVariantInput defines model for ProductVariantInput.
@@ -3441,8 +3708,11 @@ type ProductVariantInput struct {
 	Sku            string                         `json:"sku"`
 	Stock          int                            `json:"stock"`
 	Title          string                         `json:"title"`
-	WeightGrams    *int                           `json:"weight_grams"`
-	WidthCm        *float64                       `json:"width_cm"`
+
+	// UnitCost Private unit cost. Omission or null clears the cost when replacing the product draft.
+	UnitCost    *float64 `json:"unit_cost"`
+	WeightGrams *int     `json:"weight_grams"`
+	WidthCm     *float64 `json:"width_cm"`
 }
 
 // ProductVariantSelection defines model for ProductVariantSelection.
@@ -4051,6 +4321,637 @@ type SavedPaymentMethod struct {
 	Type           string     `json:"type"`
 	UpdatedAt      time.Time  `json:"updated_at"`
 	UserId         int        `json:"user_id"`
+}
+
+// SearchAnalytics defines model for SearchAnalytics.
+type SearchAnalytics struct {
+	AddToCarts       int                  `json:"add_to_carts"`
+	AverageLatencyMs float32              `json:"average_latency_ms"`
+	Clicks           int                  `json:"clicks"`
+	ConversionAt10   float64              `json:"conversion_at_10"`
+	ConversionAt5    float64              `json:"conversion_at_5"`
+	ConversionRate   float32              `json:"conversion_rate"`
+	Ctr              float32              `json:"ctr"`
+	CtrAt10          float64              `json:"ctr_at_10"`
+	CtrAt5           float64              `json:"ctr_at_5"`
+	Days             int                  `json:"days"`
+	FacetUsage       map[string]int       `json:"facet_usage"`
+	P95LatencyMs     float64              `json:"p95_latency_ms"`
+	P99LatencyMs     float64              `json:"p99_latency_ms"`
+	Pagination       Pagination           `json:"pagination"`
+	PaidOrders       int                  `json:"paid_orders"`
+	Popular          []string             `json:"popular"`
+	Queries          []SearchQueryMetrics `json:"queries"`
+	Searches         int                  `json:"searches"`
+	Trending         []string             `json:"trending"`
+	UniqueSessions   int                  `json:"unique_sessions"`
+	ZeroResultRate   float64              `json:"zero_result_rate"`
+	ZeroResults      int                  `json:"zero_results"`
+}
+
+// SearchAppliedRewrite defines model for SearchAppliedRewrite.
+type SearchAppliedRewrite struct {
+	Kind        SearchAppliedRewriteKind `json:"kind"`
+	Original    string                   `json:"original"`
+	Replacement string                   `json:"replacement"`
+}
+
+// SearchAppliedRewriteKind defines model for SearchAppliedRewrite.Kind.
+type SearchAppliedRewriteKind string
+
+// SearchConfigurationAudit defines model for SearchConfigurationAudit.
+type SearchConfigurationAudit struct {
+	ActorId   *int                              `json:"actor_id"`
+	After     *map[string]interface{}           `json:"after"`
+	Before    *map[string]interface{}           `json:"before"`
+	CreatedAt time.Time                         `json:"created_at"`
+	EntityId  int                               `json:"entity_id"`
+	Id        int                               `json:"id"`
+	Kind      SearchConfigurationAuditKind      `json:"kind"`
+	Operation SearchConfigurationAuditOperation `json:"operation"`
+}
+
+// SearchConfigurationAuditKind defines model for SearchConfigurationAudit.Kind.
+type SearchConfigurationAuditKind string
+
+// SearchConfigurationAuditOperation defines model for SearchConfigurationAudit.Operation.
+type SearchConfigurationAuditOperation string
+
+// SearchConfigurationAuditListResponse defines model for SearchConfigurationAuditListResponse.
+type SearchConfigurationAuditListResponse struct {
+	Items      []SearchConfigurationAudit `json:"items"`
+	Pagination Pagination                 `json:"pagination"`
+}
+
+// SearchConsentRevokeInput defines model for SearchConsentRevokeInput.
+type SearchConsentRevokeInput struct {
+	SessionToken string `json:"session_token"`
+}
+
+// SearchEventInput defines model for SearchEventInput.
+type SearchEventInput struct {
+	EventId      openapi_types.UUID   `json:"event_id"`
+	ImpressionId string               `json:"impression_id"`
+	Position     int                  `json:"position"`
+	ProductId    int                  `json:"product_id"`
+	SessionToken string               `json:"session_token"`
+	Type         SearchEventInputType `json:"type"`
+}
+
+// SearchEventInputType defines model for SearchEventInput.Type.
+type SearchEventInputType string
+
+// SearchEventResponse defines model for SearchEventResponse.
+type SearchEventResponse struct {
+	ClickId string `json:"click_id"`
+	EventId string `json:"event_id"`
+}
+
+// SearchFacet defines model for SearchFacet.
+type SearchFacet struct {
+	Label  *string            `json:"label,omitempty"`
+	Name   string             `json:"name"`
+	Type   SearchFacetType    `json:"type"`
+	Values []SearchFacetValue `json:"values"`
+}
+
+// SearchFacetType defines model for SearchFacet.Type.
+type SearchFacetType string
+
+// SearchFacetValue defines model for SearchFacetValue.
+type SearchFacetValue struct {
+	Count    int     `json:"count"`
+	Disabled bool    `json:"disabled"`
+	Label    *string `json:"label,omitempty"`
+
+	// MaxPrice Inclusive upper boundary for a dynamically generated range value.
+	MaxPrice *float64 `json:"max_price"`
+
+	// MinPrice Inclusive lower boundary for a dynamically generated range value.
+	MinPrice *float64 `json:"min_price"`
+	Selected bool     `json:"selected"`
+	Value    string   `json:"value"`
+}
+
+// SearchFreshness defines model for SearchFreshness.
+type SearchFreshness struct {
+	DocumentCount     int64                 `json:"document_count"`
+	LagSeconds        int64                 `json:"lag_seconds"`
+	LastFullReindexAt *time.Time            `json:"last_full_reindex_at"`
+	LastIndexedAt     *time.Time            `json:"last_indexed_at"`
+	PendingJobs       int64                 `json:"pending_jobs"`
+	Status            SearchFreshnessStatus `json:"status"`
+}
+
+// SearchFreshnessStatus defines model for SearchFreshness.Status.
+type SearchFreshnessStatus string
+
+// SearchImpressionInput defines model for SearchImpressionInput.
+type SearchImpressionInput struct {
+	Consent SearchImpressionInputConsent `json:"consent"`
+	EventId openapi_types.UUID           `json:"event_id"`
+
+	// ResultToken Short-lived signed server exposure snapshot from public search; never produced for admin or degraded results.
+	ResultToken  string  `json:"result_token"`
+	SessionToken *string `json:"session_token,omitempty"`
+}
+
+// SearchImpressionInputConsent defines model for SearchImpressionInput.Consent.
+type SearchImpressionInputConsent bool
+
+// SearchImpressionResponse defines model for SearchImpressionResponse.
+type SearchImpressionResponse struct {
+	ImpressionId string `json:"impression_id"`
+	SessionToken string `json:"session_token"`
+}
+
+// SearchIndexIncident defines model for SearchIndexIncident.
+type SearchIndexIncident struct {
+	DetectedAt      time.Time                 `json:"detected_at"`
+	DocumentCount   int64                     `json:"document_count"`
+	DurationSeconds int64                     `json:"duration_seconds"`
+	Id              int                       `json:"id"`
+	IndexName       string                    `json:"index_name"`
+	LastObservedAt  time.Time                 `json:"last_observed_at"`
+	MaxLagSeconds   int64                     `json:"max_lag_seconds"`
+	MaxPendingJobs  int64                     `json:"max_pending_jobs"`
+	OpenedAt        time.Time                 `json:"opened_at"`
+	Reason          SearchIndexIncidentReason `json:"reason"`
+	RecoveredAt     *time.Time                `json:"recovered_at"`
+	Status          SearchIndexIncidentStatus `json:"status"`
+}
+
+// SearchIndexIncidentReason defines model for SearchIndexIncident.Reason.
+type SearchIndexIncidentReason string
+
+// SearchIndexIncidentStatus defines model for SearchIndexIncident.Status.
+type SearchIndexIncidentStatus string
+
+// SearchIndexIncidentListResponse defines model for SearchIndexIncidentListResponse.
+type SearchIndexIncidentListResponse struct {
+	Data       []SearchIndexIncident `json:"data"`
+	Pagination Pagination            `json:"pagination"`
+}
+
+// SearchMerchandisingAction defines model for SearchMerchandisingAction.
+type SearchMerchandisingAction struct {
+	// Multiplier Required only for boost actions; never stacks with another boost.
+	Multiplier *float64                    `json:"multiplier,omitempty"`
+	Targets    []SearchMerchandisingTarget `json:"targets"`
+}
+
+// SearchMerchandisingActionInput defines model for SearchMerchandisingActionInput.
+type SearchMerchandisingActionInput struct {
+	// Multiplier Required only for boost actions; never stacks with another boost.
+	Multiplier *float64                         `json:"multiplier,omitempty"`
+	Targets    []SearchMerchandisingTargetInput `json:"targets"`
+}
+
+// SearchMerchandisingAudit defines model for SearchMerchandisingAudit.
+type SearchMerchandisingAudit struct {
+	ActorId   *int                              `json:"actor_id"`
+	After     *SearchMerchandisingRule          `json:"after"`
+	Before    *SearchMerchandisingRule          `json:"before"`
+	CreatedAt time.Time                         `json:"created_at"`
+	Id        int                               `json:"id"`
+	Operation SearchMerchandisingAuditOperation `json:"operation"`
+	RuleId    int                               `json:"rule_id"`
+}
+
+// SearchMerchandisingAuditOperation defines model for SearchMerchandisingAudit.Operation.
+type SearchMerchandisingAuditOperation string
+
+// SearchMerchandisingAuditListResponse defines model for SearchMerchandisingAuditListResponse.
+type SearchMerchandisingAuditListResponse struct {
+	Data []SearchMerchandisingAudit `json:"data"`
+}
+
+// SearchMerchandisingPredicate defines model for SearchMerchandisingPredicate.
+type SearchMerchandisingPredicate struct {
+	CategorySlugs *[]string `json:"category_slugs,omitempty"`
+
+	// Channel Empty applies to all supported channels; P3 supports storefront.
+	Channel *SearchMerchandisingPredicateChannel `json:"channel,omitempty"`
+	Query   *SearchMerchandisingQuery            `json:"query,omitempty"`
+}
+
+// SearchMerchandisingPredicateChannel Empty applies to all supported channels; P3 supports storefront.
+type SearchMerchandisingPredicateChannel string
+
+// SearchMerchandisingPreviewRule defines model for SearchMerchandisingPreviewRule.
+type SearchMerchandisingPreviewRule struct {
+	Action SearchMerchandisingActionInput `json:"action"`
+	EndsAt *time.Time                     `json:"ends_at,omitempty"`
+
+	// Id Optional identity for a persisted rule; zero represents an unsaved rule.
+	Id        *int                                   `json:"id,omitempty"`
+	IsActive  *bool                                  `json:"is_active,omitempty"`
+	Name      string                                 `json:"name"`
+	Predicate *SearchMerchandisingPredicate          `json:"predicate,omitempty"`
+	Priority  *int                                   `json:"priority,omitempty"`
+	RuleType  SearchMerchandisingPreviewRuleRuleType `json:"rule_type"`
+	StartsAt  *time.Time                             `json:"starts_at,omitempty"`
+}
+
+// SearchMerchandisingPreviewRuleRuleType defines model for SearchMerchandisingPreviewRule.RuleType.
+type SearchMerchandisingPreviewRuleRuleType string
+
+// SearchMerchandisingQuery defines model for SearchMerchandisingQuery.
+type SearchMerchandisingQuery struct {
+	Mode  SearchMerchandisingQueryMode `json:"mode"`
+	Value string                       `json:"value"`
+}
+
+// SearchMerchandisingQueryMode defines model for SearchMerchandisingQuery.Mode.
+type SearchMerchandisingQueryMode string
+
+// SearchMerchandisingRule defines model for SearchMerchandisingRule.
+type SearchMerchandisingRule struct {
+	Action    SearchMerchandisingAction       `json:"action"`
+	CreatedAt time.Time                       `json:"created_at"`
+	EndsAt    *time.Time                      `json:"ends_at"`
+	Id        int                             `json:"id"`
+	IsActive  bool                            `json:"is_active"`
+	Name      string                          `json:"name"`
+	Predicate SearchMerchandisingPredicate    `json:"predicate"`
+	Priority  int                             `json:"priority"`
+	RuleType  SearchMerchandisingRuleRuleType `json:"rule_type"`
+	StartsAt  *time.Time                      `json:"starts_at"`
+	UpdatedAt time.Time                       `json:"updated_at"`
+	UpdatedBy *int                            `json:"updated_by"`
+	Version   int                             `json:"version"`
+}
+
+// SearchMerchandisingRuleRuleType defines model for SearchMerchandisingRule.RuleType.
+type SearchMerchandisingRuleRuleType string
+
+// SearchMerchandisingRuleInput defines model for SearchMerchandisingRuleInput.
+type SearchMerchandisingRuleInput struct {
+	Action    SearchMerchandisingActionInput       `json:"action"`
+	EndsAt    *time.Time                           `json:"ends_at,omitempty"`
+	IsActive  *bool                                `json:"is_active,omitempty"`
+	Name      string                               `json:"name"`
+	Predicate *SearchMerchandisingPredicate        `json:"predicate,omitempty"`
+	Priority  *int                                 `json:"priority,omitempty"`
+	RuleType  SearchMerchandisingRuleInputRuleType `json:"rule_type"`
+	StartsAt  *time.Time                           `json:"starts_at,omitempty"`
+}
+
+// SearchMerchandisingRuleInputRuleType defines model for SearchMerchandisingRuleInput.RuleType.
+type SearchMerchandisingRuleInputRuleType string
+
+// SearchMerchandisingRuleListResponse defines model for SearchMerchandisingRuleListResponse.
+type SearchMerchandisingRuleListResponse struct {
+	Data []SearchMerchandisingRule `json:"data"`
+}
+
+// SearchMerchandisingRulePatch defines model for SearchMerchandisingRulePatch.
+type SearchMerchandisingRulePatch struct {
+	Action *SearchMerchandisingActionInput `json:"action,omitempty"`
+
+	// ClearEndsAt Clear the end boundary; cannot be combined with ends_at.
+	ClearEndsAt *bool `json:"clear_ends_at,omitempty"`
+
+	// ClearStartsAt Clear the start boundary; cannot be combined with starts_at.
+	ClearStartsAt *bool                                 `json:"clear_starts_at,omitempty"`
+	EndsAt        *time.Time                            `json:"ends_at,omitempty"`
+	IsActive      *bool                                 `json:"is_active,omitempty"`
+	Name          *string                               `json:"name,omitempty"`
+	Predicate     *SearchMerchandisingPredicate         `json:"predicate,omitempty"`
+	Priority      *int                                  `json:"priority,omitempty"`
+	RuleType      *SearchMerchandisingRulePatchRuleType `json:"rule_type,omitempty"`
+	StartsAt      *time.Time                            `json:"starts_at,omitempty"`
+}
+
+// SearchMerchandisingRulePatchRuleType defines model for SearchMerchandisingRulePatch.RuleType.
+type SearchMerchandisingRulePatchRuleType string
+
+// SearchMerchandisingTarget defines model for SearchMerchandisingTarget.
+type SearchMerchandisingTarget struct {
+	Position    *int   `json:"position,omitempty"`
+	ProductId   int    `json:"product_id"`
+	ProductName string `json:"product_name"`
+}
+
+// SearchMerchandisingTargetInput defines model for SearchMerchandisingTargetInput.
+type SearchMerchandisingTargetInput struct {
+	Position  *int `json:"position,omitempty"`
+	ProductId *int `json:"product_id"`
+}
+
+// SearchOperationsStatus defines model for SearchOperationsStatus.
+type SearchOperationsStatus struct {
+	ActiveSearches          int                                `json:"active_searches"`
+	CircuitFailureThreshold int                                `json:"circuit_failure_threshold"`
+	CircuitOpenMs           int                                `json:"circuit_open_ms"`
+	CircuitOpenUntil        *time.Time                         `json:"circuit_open_until"`
+	CircuitState            SearchOperationsStatusCircuitState `json:"circuit_state"`
+	ConsecutiveFailures     int                                `json:"consecutive_failures"`
+	MaxConcurrent           int                                `json:"max_concurrent"`
+	PendingReindexes        int                                `json:"pending_reindexes"`
+	ReindexQueueLimit       int                                `json:"reindex_queue_limit"`
+	SearchTimeoutMs         int                                `json:"search_timeout_ms"`
+}
+
+// SearchOperationsStatusCircuitState defines model for SearchOperationsStatus.CircuitState.
+type SearchOperationsStatusCircuitState string
+
+// SearchPreviewFilters defines model for SearchPreviewFilters.
+type SearchPreviewFilters struct {
+	// Attribute Same semantics as the public search query parameter.
+	Attribute *map[string][]string `json:"attribute,omitempty"`
+
+	// BrandSlug Same semantics as the public search query parameter.
+	BrandSlug *[]string `json:"brand_slug,omitempty"`
+
+	// CategorySlug Same semantics as the public search query parameter.
+	CategorySlug *[]string `json:"category_slug,omitempty"`
+
+	// HasVariantStock Same semantics as the public search query parameter.
+	HasVariantStock *[]bool                    `json:"has_variant_stock,omitempty"`
+	Limit           *int                       `json:"limit,omitempty"`
+	MaxPrice        *float64                   `json:"max_price,omitempty"`
+	MinPrice        *float64                   `json:"min_price,omitempty"`
+	Order           *SearchPreviewFiltersOrder `json:"order,omitempty"`
+	Page            *int                       `json:"page,omitempty"`
+
+	// PriceRange Same semantics as the public search query parameter.
+	PriceRange     *[]string                 `json:"price_range,omitempty"`
+	Q              *string                   `json:"q,omitempty"`
+	RankingProfile *string                   `json:"ranking_profile,omitempty"`
+	Sort           *SearchPreviewFiltersSort `json:"sort,omitempty"`
+}
+
+// SearchPreviewFiltersOrder defines model for SearchPreviewFilters.Order.
+type SearchPreviewFiltersOrder string
+
+// SearchPreviewFiltersSort defines model for SearchPreviewFilters.Sort.
+type SearchPreviewFiltersSort string
+
+// SearchPreviewRequest defines model for SearchPreviewRequest.
+type SearchPreviewRequest struct {
+	// At Simulated UTC time for campaign windows; ranking signals are unchanged.
+	At      *time.Time            `json:"at,omitempty"`
+	Filters *SearchPreviewFilters `json:"filters"`
+
+	// Rules Complete replacement rule set. Omit to use persisted rules; an empty array disables all rules for the proposed side. Preview never saves changes.
+	Rules *[]SearchMerchandisingPreviewRule `json:"rules,omitempty"`
+}
+
+// SearchPreviewResponse defines model for SearchPreviewResponse.
+type SearchPreviewResponse struct {
+	Baseline AdminProductSearchResponse `json:"baseline"`
+	Proposed AdminProductSearchResponse `json:"proposed"`
+}
+
+// SearchProofInput defines model for SearchProofInput.
+type SearchProofInput struct {
+	Consent       SearchProofInputConsent `json:"consent"`
+	EventId       openapi_types.UUID      `json:"event_id"`
+	SnapshotToken string                  `json:"snapshot_token"`
+}
+
+// SearchProofInputConsent defines model for SearchProofInput.Consent.
+type SearchProofInputConsent bool
+
+// SearchProofResponse defines model for SearchProofResponse.
+type SearchProofResponse struct {
+	ResultToken string `json:"result_token"`
+}
+
+// SearchQueryMetrics defines model for SearchQueryMetrics.
+type SearchQueryMetrics struct {
+	AddToCarts       int     `json:"add_to_carts"`
+	AverageLatencyMs float32 `json:"average_latency_ms"`
+	Clicks           int     `json:"clicks"`
+	ConversionAt10   float64 `json:"conversion_at_10"`
+	ConversionAt5    float64 `json:"conversion_at_5"`
+	ConversionRate   float32 `json:"conversion_rate"`
+	Ctr              float32 `json:"ctr"`
+	CtrAt10          float64 `json:"ctr_at_10"`
+	CtrAt5           float64 `json:"ctr_at_5"`
+	P95LatencyMs     float64 `json:"p95_latency_ms"`
+	P99LatencyMs     float64 `json:"p99_latency_ms"`
+	PaidOrders       int     `json:"paid_orders"`
+	Query            string  `json:"query"`
+	Searches         int     `json:"searches"`
+	UniqueSessions   int     `json:"unique_sessions"`
+	ZeroResultRate   float64 `json:"zero_result_rate"`
+	ZeroResults      int     `json:"zero_results"`
+}
+
+// SearchRankingComponent defines model for SearchRankingComponent.
+type SearchRankingComponent struct {
+	Contribution float64 `json:"contribution"`
+	Name         string  `json:"name"`
+	Value        float64 `json:"value"`
+	Weight       float64 `json:"weight"`
+}
+
+// SearchRankingExplanation defines model for SearchRankingExplanation.
+type SearchRankingExplanation struct {
+	// AdjustedScore Score after the winning boost multiplier, before pin or bury placement.
+	AdjustedScore float64                  `json:"adjusted_score"`
+	Components    []SearchRankingComponent `json:"components"`
+	ProductId     int                      `json:"product_id"`
+	Score         float64                  `json:"score"`
+}
+
+// SearchRankingProfile defines model for SearchRankingProfile.
+type SearchRankingProfile struct {
+	CreatedAt time.Time `json:"created_at"`
+	Id        int       `json:"id"`
+
+	// IsDefault Selecting a default atomically deselects the previous default.
+	IsDefault bool                 `json:"is_default"`
+	Name      string               `json:"name"`
+	UpdatedAt time.Time            `json:"updated_at"`
+	UpdatedBy *int                 `json:"updated_by"`
+	Version   int                  `json:"version"`
+	Weights   SearchRankingWeights `json:"weights"`
+}
+
+// SearchRankingProfileInput defines model for SearchRankingProfileInput.
+type SearchRankingProfileInput struct {
+	// IsDefault Selecting a default atomically deselects the previous default.
+	IsDefault *bool                     `json:"is_default,omitempty"`
+	Name      string                    `json:"name"`
+	Weights   SearchRankingWeightsInput `json:"weights"`
+}
+
+// SearchRankingProfileListResponse defines model for SearchRankingProfileListResponse.
+type SearchRankingProfileListResponse struct {
+	Data []SearchRankingProfile `json:"data"`
+}
+
+// SearchRankingProfilePatch defines model for SearchRankingProfilePatch.
+type SearchRankingProfilePatch struct {
+	// IsDefault Selecting a default atomically deselects the previous default.
+	IsDefault *bool                      `json:"is_default,omitempty"`
+	Name      *string                    `json:"name,omitempty"`
+	Weights   *SearchRankingWeightsInput `json:"weights,omitempty"`
+}
+
+// SearchRankingWeights defines model for SearchRankingWeights.
+type SearchRankingWeights struct {
+	Attributes    float64 `json:"attributes"`
+	Availability  float64 `json:"availability"`
+	Brand         float64 `json:"brand"`
+	Conversion    float64 `json:"conversion"`
+	ExactPhrase   float64 `json:"exact_phrase"`
+	Margin        float64 `json:"margin"`
+	Name          float64 `json:"name"`
+	Recency       float64 `json:"recency"`
+	Sales         float64 `json:"sales"`
+	TokenCoverage float64 `json:"token_coverage"`
+}
+
+// SearchRankingWeightsInput defines model for SearchRankingWeightsInput.
+type SearchRankingWeightsInput struct {
+	Attributes    *float64 `json:"attributes"`
+	Availability  *float64 `json:"availability"`
+	Brand         *float64 `json:"brand"`
+	Conversion    *float64 `json:"conversion"`
+	ExactPhrase   *float64 `json:"exact_phrase"`
+	Margin        *float64 `json:"margin"`
+	Name          *float64 `json:"name"`
+	Recency       *float64 `json:"recency"`
+	Sales         *float64 `json:"sales"`
+	TokenCoverage *float64 `json:"token_coverage"`
+}
+
+// SearchRefreshAccepted defines model for SearchRefreshAccepted.
+type SearchRefreshAccepted struct {
+	Disposition *SearchRefreshAcceptedDisposition `json:"disposition,omitempty"`
+	JobId       string                            `json:"job_id"`
+	Status      SearchRefreshAcceptedStatus       `json:"status"`
+}
+
+// SearchRefreshAcceptedDisposition defines model for SearchRefreshAccepted.Disposition.
+type SearchRefreshAcceptedDisposition string
+
+// SearchRefreshAcceptedStatus defines model for SearchRefreshAccepted.Status.
+type SearchRefreshAcceptedStatus string
+
+// SearchReindexAccepted defines model for SearchReindexAccepted.
+type SearchReindexAccepted struct {
+	JobId  string                      `json:"job_id"`
+	Status SearchReindexAcceptedStatus `json:"status"`
+}
+
+// SearchReindexAcceptedStatus defines model for SearchReindexAccepted.Status.
+type SearchReindexAcceptedStatus string
+
+// SearchRuleDecision defines model for SearchRuleDecision.
+type SearchRuleDecision struct {
+	Multiplier *float64                  `json:"multiplier,omitempty"`
+	Outcome    SearchRuleDecisionOutcome `json:"outcome"`
+	Position   *int                      `json:"position,omitempty"`
+
+	// ProductId Zero denotes a decision about the rule rather than a target.
+	ProductId   int                        `json:"product_id"`
+	ProductName string                     `json:"product_name"`
+	Reason      string                     `json:"reason"`
+	RuleId      int                        `json:"rule_id"`
+	RuleName    string                     `json:"rule_name"`
+	RuleType    SearchRuleDecisionRuleType `json:"rule_type"`
+}
+
+// SearchRuleDecisionOutcome defines model for SearchRuleDecision.Outcome.
+type SearchRuleDecisionOutcome string
+
+// SearchRuleDecisionRuleType defines model for SearchRuleDecision.RuleType.
+type SearchRuleDecisionRuleType string
+
+// SearchSuggestionsResponse defines model for SearchSuggestionsResponse.
+type SearchSuggestionsResponse struct {
+	Corrections []string `json:"corrections"`
+	Suggestions []string `json:"suggestions"`
+}
+
+// SearchSynonymDirection defines model for SearchSynonymDirection.
+type SearchSynonymDirection string
+
+// SearchSynonymSet defines model for SearchSynonymSet.
+type SearchSynonymSet struct {
+	CreatedAt time.Time              `json:"created_at"`
+	Direction SearchSynonymDirection `json:"direction"`
+	Id        int                    `json:"id"`
+	IsActive  bool                   `json:"is_active"`
+	Name      string                 `json:"name"`
+
+	// Terms For uni direction, the first term is the source and the remaining terms are replacements. For bi direction, every term is equivalent.
+	Terms     []string  `json:"terms"`
+	UpdatedAt time.Time `json:"updated_at"`
+	UpdatedBy *int      `json:"updated_by"`
+}
+
+// SearchSynonymSetInput defines model for SearchSynonymSetInput.
+type SearchSynonymSetInput struct {
+	Direction SearchSynonymDirection `json:"direction"`
+	IsActive  *bool                  `json:"is_active,omitempty"`
+	Name      string                 `json:"name"`
+
+	// Terms For uni direction, the first term is the source and the remaining terms are replacements. For bi direction, every term is equivalent.
+	Terms []string `json:"terms"`
+}
+
+// SearchSynonymSetListResponse defines model for SearchSynonymSetListResponse.
+type SearchSynonymSetListResponse struct {
+	Data []SearchSynonymSet `json:"data"`
+}
+
+// SearchSynonymSetPatch defines model for SearchSynonymSetPatch.
+type SearchSynonymSetPatch struct {
+	Direction *SearchSynonymDirection `json:"direction,omitempty"`
+	IsActive  *bool                   `json:"is_active,omitempty"`
+	Name      *string                 `json:"name,omitempty"`
+
+	// Terms For uni direction, the first term is the source and the remaining terms are replacements. For bi direction, every term is equivalent.
+	Terms *[]string `json:"terms,omitempty"`
+}
+
+// SearchTypoToleranceProfile defines model for SearchTypoToleranceProfile.
+type SearchTypoToleranceProfile struct {
+	CreatedAt time.Time `json:"created_at"`
+	Id        int       `json:"id"`
+
+	// IsActive True for the single globally active typo tolerance profile.
+	IsActive             bool      `json:"is_active"`
+	MinimumTokenLength   int       `json:"minimum_token_length"`
+	Name                 string    `json:"name"`
+	OneEditMinimumLength int       `json:"one_edit_minimum_length"`
+	StrictMode           bool      `json:"strict_mode"`
+	TwoEditMinimumLength int       `json:"two_edit_minimum_length"`
+	UpdatedAt            time.Time `json:"updated_at"`
+	UpdatedBy            *int      `json:"updated_by"`
+}
+
+// SearchTypoToleranceProfileInput defines model for SearchTypoToleranceProfileInput.
+type SearchTypoToleranceProfileInput struct {
+	// IsActive Activating a profile atomically deactivates the prior global profile.
+	IsActive             *bool  `json:"is_active,omitempty"`
+	MinimumTokenLength   *int   `json:"minimum_token_length,omitempty"`
+	Name                 string `json:"name"`
+	OneEditMinimumLength *int   `json:"one_edit_minimum_length,omitempty"`
+	StrictMode           *bool  `json:"strict_mode,omitempty"`
+	TwoEditMinimumLength *int   `json:"two_edit_minimum_length,omitempty"`
+}
+
+// SearchTypoToleranceProfileListResponse defines model for SearchTypoToleranceProfileListResponse.
+type SearchTypoToleranceProfileListResponse struct {
+	Data []SearchTypoToleranceProfile `json:"data"`
+}
+
+// SearchTypoToleranceProfilePatch defines model for SearchTypoToleranceProfilePatch.
+type SearchTypoToleranceProfilePatch struct {
+	// IsActive Activating a profile atomically deactivates the prior global profile.
+	IsActive             *bool   `json:"is_active,omitempty"`
+	MinimumTokenLength   *int    `json:"minimum_token_length,omitempty"`
+	Name                 *string `json:"name,omitempty"`
+	OneEditMinimumLength *int    `json:"one_edit_minimum_length,omitempty"`
+	StrictMode           *bool   `json:"strict_mode,omitempty"`
+	TwoEditMinimumLength *int    `json:"two_edit_minimum_length,omitempty"`
 }
 
 // Shipment defines model for Shipment.
@@ -4815,6 +5716,71 @@ type ListAdminPurchaseOrdersParams struct {
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
+// GetAdminSearchAnalyticsParams defines parameters for GetAdminSearchAnalytics.
+type GetAdminSearchAnalyticsParams struct {
+	Days  *int `form:"days,omitempty" json:"days,omitempty"`
+	Page  *int `form:"page,omitempty" json:"page,omitempty"`
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ListAdminSearchConfigurationHistoryParams defines parameters for ListAdminSearchConfigurationHistory.
+type ListAdminSearchConfigurationHistoryParams struct {
+	Kind     *ListAdminSearchConfigurationHistoryParamsKind `form:"kind,omitempty" json:"kind,omitempty"`
+	EntityId *int                                           `form:"entity_id,omitempty" json:"entity_id,omitempty"`
+	Page     *int                                           `form:"page,omitempty" json:"page,omitempty"`
+	Limit    *int                                           `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ListAdminSearchConfigurationHistoryParamsKind defines parameters for ListAdminSearchConfigurationHistory.
+type ListAdminSearchConfigurationHistoryParamsKind string
+
+// GetAdminSearchIncidentsParams defines parameters for GetAdminSearchIncidents.
+type GetAdminSearchIncidentsParams struct {
+	Page   *int                                 `form:"page,omitempty" json:"page,omitempty"`
+	Limit  *int                                 `form:"limit,omitempty" json:"limit,omitempty"`
+	Status *GetAdminSearchIncidentsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+}
+
+// GetAdminSearchIncidentsParamsStatus defines parameters for GetAdminSearchIncidents.
+type GetAdminSearchIncidentsParamsStatus string
+
+// SearchAdminProductsParams defines parameters for SearchAdminProducts.
+type SearchAdminProductsParams struct {
+	Q *string `form:"q,omitempty" json:"q,omitempty"`
+
+	// MinPrice Legacy inclusive minimum price. Cannot be combined with price_range.
+	MinPrice *float64 `form:"min_price,omitempty" json:"min_price,omitempty"`
+
+	// MaxPrice Legacy inclusive maximum price. Cannot be combined with price_range.
+	MaxPrice     *float64  `form:"max_price,omitempty" json:"max_price,omitempty"`
+	BrandSlug    *[]string `form:"brand_slug,omitempty" json:"brand_slug,omitempty"`
+	CategorySlug *[]string `form:"category_slug,omitempty" json:"category_slug,omitempty"`
+
+	// HasVariantStock Repeated values use OR semantics within the stock facet.
+	HasVariantStock *[]bool `form:"has_variant_stock,omitempty" json:"has_variant_stock,omitempty"`
+
+	// PriceRange Repeated inclusive price ranges use OR semantics within the price facet. Each value is encoded as min:max; either boundary may be omitted. Overlapping ranges are treated as a union.
+	PriceRange *[]string `form:"price_range,omitempty" json:"price_range,omitempty"`
+
+	// Attribute Attribute values use OR within each attribute and AND across attributes. Encode array values with indexed deep-object keys, such as attribute[color][0]=red&attribute[color][1]=blue.
+	Attribute *map[string][]string `json:"attribute,omitempty"`
+
+	// RankingProfile Named ranking profile; omitted selects the global default.
+	RankingProfile *string `form:"ranking_profile,omitempty" json:"ranking_profile,omitempty"`
+
+	// Sort Defaults to relevance for a keyword query and newest for an empty query.
+	Sort  *SearchAdminProductsParamsSort  `form:"sort,omitempty" json:"sort,omitempty"`
+	Order *SearchAdminProductsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
+	Page  *int                            `form:"page,omitempty" json:"page,omitempty"`
+	Limit *int                            `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// SearchAdminProductsParamsSort defines parameters for SearchAdminProducts.
+type SearchAdminProductsParamsSort string
+
+// SearchAdminProductsParamsOrder defines parameters for SearchAdminProducts.
+type SearchAdminProductsParamsOrder string
+
 // ExportAdminTaxReportParams defines parameters for ExportAdminTaxReport.
 type ExportAdminTaxReportParams struct {
 	Provider  *string                           `form:"provider,omitempty" json:"provider,omitempty"`
@@ -4979,7 +5945,6 @@ type PatchMediaUploadParamsTusResumable string
 
 // ListProductsParams defines parameters for ListProducts.
 type ListProductsParams struct {
-	Q               *string                  `form:"q,omitempty" json:"q,omitempty"`
 	MinPrice        *float64                 `form:"min_price,omitempty" json:"min_price,omitempty"`
 	MaxPrice        *float64                 `form:"max_price,omitempty" json:"max_price,omitempty"`
 	BrandSlug       *string                  `form:"brand_slug,omitempty" json:"brand_slug,omitempty"`
@@ -4997,6 +5962,46 @@ type ListProductsParamsSort string
 
 // ListProductsParamsOrder defines parameters for ListProducts.
 type ListProductsParamsOrder string
+
+// SearchProductsParams defines parameters for SearchProducts.
+type SearchProductsParams struct {
+	Q *string `form:"q,omitempty" json:"q,omitempty"`
+
+	// MinPrice Legacy inclusive minimum price. Cannot be combined with price_range.
+	MinPrice *float64 `form:"min_price,omitempty" json:"min_price,omitempty"`
+
+	// MaxPrice Legacy inclusive maximum price. Cannot be combined with price_range.
+	MaxPrice     *float64  `form:"max_price,omitempty" json:"max_price,omitempty"`
+	BrandSlug    *[]string `form:"brand_slug,omitempty" json:"brand_slug,omitempty"`
+	CategorySlug *[]string `form:"category_slug,omitempty" json:"category_slug,omitempty"`
+
+	// HasVariantStock Repeated values use OR semantics within the stock facet.
+	HasVariantStock *[]bool `form:"has_variant_stock,omitempty" json:"has_variant_stock,omitempty"`
+
+	// PriceRange Repeated inclusive price ranges use OR semantics within the price facet. Each value is encoded as min:max; either boundary may be omitted. Overlapping ranges are treated as a union.
+	PriceRange *[]string `form:"price_range,omitempty" json:"price_range,omitempty"`
+
+	// Attribute Attribute values use OR within each attribute and AND across attributes. Encode array values with indexed deep-object keys, such as attribute[color][0]=red&attribute[color][1]=blue.
+	Attribute *map[string][]string `json:"attribute,omitempty"`
+
+	// Sort Defaults to relevance for a keyword query and newest for an empty query.
+	Sort  *SearchProductsParamsSort  `form:"sort,omitempty" json:"sort,omitempty"`
+	Order *SearchProductsParamsOrder `form:"order,omitempty" json:"order,omitempty"`
+	Page  *int                       `form:"page,omitempty" json:"page,omitempty"`
+	Limit *int                       `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// SearchProductsParamsSort defines parameters for SearchProducts.
+type SearchProductsParamsSort string
+
+// SearchProductsParamsOrder defines parameters for SearchProducts.
+type SearchProductsParamsOrder string
+
+// GetSearchSuggestionsParams defines parameters for GetSearchSuggestions.
+type GetSearchSuggestionsParams struct {
+	Q     string `form:"q" json:"q"`
+	Limit *int   `form:"limit,omitempty" json:"limit,omitempty"`
+}
 
 // ReceiveWebhookEventJSONBody defines parameters for ReceiveWebhookEvent.
 type ReceiveWebhookEventJSONBody map[string]interface{}
@@ -5220,6 +6225,33 @@ type CreateAdminPurchaseOrderJSONRequestBody = PurchaseOrderRequest
 // ReceiveAdminPurchaseOrderJSONRequestBody defines body for ReceiveAdminPurchaseOrder for application/json ContentType.
 type ReceiveAdminPurchaseOrderJSONRequestBody = PurchaseOrderReceiveRequest
 
+// CreateAdminSearchMerchandisingRuleJSONRequestBody defines body for CreateAdminSearchMerchandisingRule for application/json ContentType.
+type CreateAdminSearchMerchandisingRuleJSONRequestBody = SearchMerchandisingRuleInput
+
+// UpdateAdminSearchMerchandisingRuleJSONRequestBody defines body for UpdateAdminSearchMerchandisingRule for application/json ContentType.
+type UpdateAdminSearchMerchandisingRuleJSONRequestBody = SearchMerchandisingRulePatch
+
+// PreviewAdminSearchJSONRequestBody defines body for PreviewAdminSearch for application/json ContentType.
+type PreviewAdminSearchJSONRequestBody = SearchPreviewRequest
+
+// CreateAdminSearchRankingProfileJSONRequestBody defines body for CreateAdminSearchRankingProfile for application/json ContentType.
+type CreateAdminSearchRankingProfileJSONRequestBody = SearchRankingProfileInput
+
+// UpdateAdminSearchRankingProfileJSONRequestBody defines body for UpdateAdminSearchRankingProfile for application/json ContentType.
+type UpdateAdminSearchRankingProfileJSONRequestBody = SearchRankingProfilePatch
+
+// CreateAdminSearchSynonymJSONRequestBody defines body for CreateAdminSearchSynonym for application/json ContentType.
+type CreateAdminSearchSynonymJSONRequestBody = SearchSynonymSetInput
+
+// UpdateAdminSearchSynonymJSONRequestBody defines body for UpdateAdminSearchSynonym for application/json ContentType.
+type UpdateAdminSearchSynonymJSONRequestBody = SearchSynonymSetPatch
+
+// CreateAdminSearchTypoProfileJSONRequestBody defines body for CreateAdminSearchTypoProfile for application/json ContentType.
+type CreateAdminSearchTypoProfileJSONRequestBody = SearchTypoToleranceProfileInput
+
+// UpdateAdminSearchTypoProfileJSONRequestBody defines body for UpdateAdminSearchTypoProfile for application/json ContentType.
+type UpdateAdminSearchTypoProfileJSONRequestBody = SearchTypoToleranceProfilePatch
+
 // UpdateUserRoleJSONRequestBody defines body for UpdateUserRole for application/json ContentType.
 type UpdateUserRoleJSONRequestBody = UpdateUserRoleRequest
 
@@ -5282,6 +6314,18 @@ type CreateSavedPaymentMethodJSONRequestBody = CreateSavedPaymentMethodRequest
 
 // SetProfilePhotoJSONRequestBody defines body for SetProfilePhoto for application/json ContentType.
 type SetProfilePhotoJSONRequestBody SetProfilePhotoJSONBody
+
+// RevokeSearchConsentJSONRequestBody defines body for RevokeSearchConsent for application/json ContentType.
+type RevokeSearchConsentJSONRequestBody = SearchConsentRevokeInput
+
+// CreateSearchEventJSONRequestBody defines body for CreateSearchEvent for application/json ContentType.
+type CreateSearchEventJSONRequestBody = SearchEventInput
+
+// CreateSearchImpressionJSONRequestBody defines body for CreateSearchImpression for application/json ContentType.
+type CreateSearchImpressionJSONRequestBody = SearchImpressionInput
+
+// CreateSearchProofJSONRequestBody defines body for CreateSearchProof for application/json ContentType.
+type CreateSearchProofJSONRequestBody = SearchProofInput
 
 // ReceiveWebhookEventJSONRequestBody defines body for ReceiveWebhookEvent for application/json ContentType.
 type ReceiveWebhookEventJSONRequestBody ReceiveWebhookEventJSONBody
@@ -6677,6 +7721,120 @@ type ClientInterface interface {
 
 	ReceiveAdminPurchaseOrder(ctx context.Context, id int, body ReceiveAdminPurchaseOrderJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetAdminSearchAnalytics request
+	GetAdminSearchAnalytics(ctx context.Context, params *GetAdminSearchAnalyticsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminSearchConfigurationHistory request
+	ListAdminSearchConfigurationHistory(ctx context.Context, params *ListAdminSearchConfigurationHistoryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAdminSearchFreshness request
+	GetAdminSearchFreshness(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAdminSearchIncidents request
+	GetAdminSearchIncidents(ctx context.Context, params *GetAdminSearchIncidentsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminSearchMerchandisingAudit request
+	ListAdminSearchMerchandisingAudit(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminSearchMerchandisingRules request
+	ListAdminSearchMerchandisingRules(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateAdminSearchMerchandisingRuleWithBody request with any body
+	CreateAdminSearchMerchandisingRuleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateAdminSearchMerchandisingRule(ctx context.Context, body CreateAdminSearchMerchandisingRuleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteAdminSearchMerchandisingRule request
+	DeleteAdminSearchMerchandisingRule(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAdminSearchMerchandisingRule request
+	GetAdminSearchMerchandisingRule(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateAdminSearchMerchandisingRuleWithBody request with any body
+	UpdateAdminSearchMerchandisingRuleWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateAdminSearchMerchandisingRule(ctx context.Context, id int, body UpdateAdminSearchMerchandisingRuleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminSearchMerchandisingRuleAudit request
+	ListAdminSearchMerchandisingRuleAudit(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAdminSearchOperations request
+	GetAdminSearchOperations(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PreviewAdminSearchWithBody request with any body
+	PreviewAdminSearchWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PreviewAdminSearch(ctx context.Context, body PreviewAdminSearchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SearchAdminProducts request
+	SearchAdminProducts(ctx context.Context, params *SearchAdminProductsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminSearchRankingProfiles request
+	ListAdminSearchRankingProfiles(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateAdminSearchRankingProfileWithBody request with any body
+	CreateAdminSearchRankingProfileWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateAdminSearchRankingProfile(ctx context.Context, body CreateAdminSearchRankingProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteAdminSearchRankingProfile request
+	DeleteAdminSearchRankingProfile(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAdminSearchRankingProfile request
+	GetAdminSearchRankingProfile(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateAdminSearchRankingProfileWithBody request with any body
+	UpdateAdminSearchRankingProfileWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateAdminSearchRankingProfile(ctx context.Context, id int, body UpdateAdminSearchRankingProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateAdminSearchConversionRefresh request
+	CreateAdminSearchConversionRefresh(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateAdminSearchSalesRefresh request
+	CreateAdminSearchSalesRefresh(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateAdminSearchReindex request
+	CreateAdminSearchReindex(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminSearchSynonyms request
+	ListAdminSearchSynonyms(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateAdminSearchSynonymWithBody request with any body
+	CreateAdminSearchSynonymWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateAdminSearchSynonym(ctx context.Context, body CreateAdminSearchSynonymJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteAdminSearchSynonym request
+	DeleteAdminSearchSynonym(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAdminSearchSynonym request
+	GetAdminSearchSynonym(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateAdminSearchSynonymWithBody request with any body
+	UpdateAdminSearchSynonymWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateAdminSearchSynonym(ctx context.Context, id int, body UpdateAdminSearchSynonymJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminSearchTypoProfiles request
+	ListAdminSearchTypoProfiles(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateAdminSearchTypoProfileWithBody request with any body
+	CreateAdminSearchTypoProfileWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateAdminSearchTypoProfile(ctx context.Context, body CreateAdminSearchTypoProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteAdminSearchTypoProfile request
+	DeleteAdminSearchTypoProfile(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAdminSearchTypoProfile request
+	GetAdminSearchTypoProfile(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateAdminSearchTypoProfileWithBody request with any body
+	UpdateAdminSearchTypoProfileWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateAdminSearchTypoProfile(ctx context.Context, id int, body UpdateAdminSearchTypoProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ExportAdminTaxReport request
 	ExportAdminTaxReport(ctx context.Context, params *ExportAdminTaxReportParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -6916,6 +8074,32 @@ type ClientInterface interface {
 
 	// GetProduct request
 	GetProduct(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RevokeSearchConsentWithBody request with any body
+	RevokeSearchConsentWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	RevokeSearchConsent(ctx context.Context, body RevokeSearchConsentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateSearchEventWithBody request with any body
+	CreateSearchEventWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateSearchEvent(ctx context.Context, body CreateSearchEventJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateSearchImpressionWithBody request with any body
+	CreateSearchImpressionWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateSearchImpression(ctx context.Context, body CreateSearchImpressionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SearchProducts request
+	SearchProducts(ctx context.Context, params *SearchProductsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateSearchProofWithBody request with any body
+	CreateSearchProofWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateSearchProof(ctx context.Context, body CreateSearchProofJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSearchSuggestions request
+	GetSearchSuggestions(ctx context.Context, params *GetSearchSuggestionsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ReceiveWebhookEventWithBody request with any body
 	ReceiveWebhookEventWithBody(ctx context.Context, provider string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -9827,6 +11011,498 @@ func (c *Client) ReceiveAdminPurchaseOrder(ctx context.Context, id int, body Rec
 	return c.Client.Do(req)
 }
 
+func (c *Client) GetAdminSearchAnalytics(ctx context.Context, params *GetAdminSearchAnalyticsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAdminSearchAnalyticsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminSearchConfigurationHistory(ctx context.Context, params *ListAdminSearchConfigurationHistoryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminSearchConfigurationHistoryRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAdminSearchFreshness(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAdminSearchFreshnessRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAdminSearchIncidents(ctx context.Context, params *GetAdminSearchIncidentsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAdminSearchIncidentsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminSearchMerchandisingAudit(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminSearchMerchandisingAuditRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminSearchMerchandisingRules(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminSearchMerchandisingRulesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminSearchMerchandisingRuleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminSearchMerchandisingRuleRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminSearchMerchandisingRule(ctx context.Context, body CreateAdminSearchMerchandisingRuleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminSearchMerchandisingRuleRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteAdminSearchMerchandisingRule(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAdminSearchMerchandisingRuleRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAdminSearchMerchandisingRule(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAdminSearchMerchandisingRuleRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateAdminSearchMerchandisingRuleWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAdminSearchMerchandisingRuleRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateAdminSearchMerchandisingRule(ctx context.Context, id int, body UpdateAdminSearchMerchandisingRuleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAdminSearchMerchandisingRuleRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminSearchMerchandisingRuleAudit(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminSearchMerchandisingRuleAuditRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAdminSearchOperations(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAdminSearchOperationsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PreviewAdminSearchWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPreviewAdminSearchRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PreviewAdminSearch(ctx context.Context, body PreviewAdminSearchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPreviewAdminSearchRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SearchAdminProducts(ctx context.Context, params *SearchAdminProductsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSearchAdminProductsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminSearchRankingProfiles(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminSearchRankingProfilesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminSearchRankingProfileWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminSearchRankingProfileRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminSearchRankingProfile(ctx context.Context, body CreateAdminSearchRankingProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminSearchRankingProfileRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteAdminSearchRankingProfile(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAdminSearchRankingProfileRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAdminSearchRankingProfile(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAdminSearchRankingProfileRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateAdminSearchRankingProfileWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAdminSearchRankingProfileRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateAdminSearchRankingProfile(ctx context.Context, id int, body UpdateAdminSearchRankingProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAdminSearchRankingProfileRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminSearchConversionRefresh(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminSearchConversionRefreshRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminSearchSalesRefresh(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminSearchSalesRefreshRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminSearchReindex(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminSearchReindexRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminSearchSynonyms(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminSearchSynonymsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminSearchSynonymWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminSearchSynonymRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminSearchSynonym(ctx context.Context, body CreateAdminSearchSynonymJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminSearchSynonymRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteAdminSearchSynonym(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAdminSearchSynonymRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAdminSearchSynonym(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAdminSearchSynonymRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateAdminSearchSynonymWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAdminSearchSynonymRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateAdminSearchSynonym(ctx context.Context, id int, body UpdateAdminSearchSynonymJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAdminSearchSynonymRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListAdminSearchTypoProfiles(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminSearchTypoProfilesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminSearchTypoProfileWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminSearchTypoProfileRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAdminSearchTypoProfile(ctx context.Context, body CreateAdminSearchTypoProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAdminSearchTypoProfileRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteAdminSearchTypoProfile(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAdminSearchTypoProfileRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAdminSearchTypoProfile(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAdminSearchTypoProfileRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateAdminSearchTypoProfileWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAdminSearchTypoProfileRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateAdminSearchTypoProfile(ctx context.Context, id int, body UpdateAdminSearchTypoProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAdminSearchTypoProfileRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) ExportAdminTaxReport(ctx context.Context, params *ExportAdminTaxReportParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewExportAdminTaxReportRequest(c.Server, params)
 	if err != nil {
@@ -10861,6 +12537,126 @@ func (c *Client) ListProducts(ctx context.Context, params *ListProductsParams, r
 
 func (c *Client) GetProduct(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetProductRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RevokeSearchConsentWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRevokeSearchConsentRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RevokeSearchConsent(ctx context.Context, body RevokeSearchConsentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRevokeSearchConsentRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateSearchEventWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateSearchEventRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateSearchEvent(ctx context.Context, body CreateSearchEventJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateSearchEventRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateSearchImpressionWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateSearchImpressionRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateSearchImpression(ctx context.Context, body CreateSearchImpressionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateSearchImpressionRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SearchProducts(ctx context.Context, params *SearchProductsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSearchProductsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateSearchProofWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateSearchProofRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateSearchProof(ctx context.Context, body CreateSearchProofJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateSearchProofRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetSearchSuggestions(ctx context.Context, params *GetSearchSuggestionsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSearchSuggestionsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -18528,6 +20324,1470 @@ func NewReceiveAdminPurchaseOrderRequestWithBody(server string, id int, contentT
 	return req, nil
 }
 
+// NewGetAdminSearchAnalyticsRequest generates requests for GetAdminSearchAnalytics
+func NewGetAdminSearchAnalyticsRequest(server string, params *GetAdminSearchAnalyticsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/analytics")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Days != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "days", runtime.ParamLocationQuery, *params.Days); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListAdminSearchConfigurationHistoryRequest generates requests for ListAdminSearchConfigurationHistory
+func NewListAdminSearchConfigurationHistoryRequest(server string, params *ListAdminSearchConfigurationHistoryParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/configuration-history")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Kind != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "kind", runtime.ParamLocationQuery, *params.Kind); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.EntityId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "entity_id", runtime.ParamLocationQuery, *params.EntityId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAdminSearchFreshnessRequest generates requests for GetAdminSearchFreshness
+func NewGetAdminSearchFreshnessRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/freshness")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAdminSearchIncidentsRequest generates requests for GetAdminSearchIncidents
+func NewGetAdminSearchIncidentsRequest(server string, params *GetAdminSearchIncidentsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/incidents")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Status != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "status", runtime.ParamLocationQuery, *params.Status); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListAdminSearchMerchandisingAuditRequest generates requests for ListAdminSearchMerchandisingAudit
+func NewListAdminSearchMerchandisingAuditRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/merchandising-audit")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListAdminSearchMerchandisingRulesRequest generates requests for ListAdminSearchMerchandisingRules
+func NewListAdminSearchMerchandisingRulesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/merchandising-rules")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateAdminSearchMerchandisingRuleRequest calls the generic CreateAdminSearchMerchandisingRule builder with application/json body
+func NewCreateAdminSearchMerchandisingRuleRequest(server string, body CreateAdminSearchMerchandisingRuleJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateAdminSearchMerchandisingRuleRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateAdminSearchMerchandisingRuleRequestWithBody generates requests for CreateAdminSearchMerchandisingRule with any type of body
+func NewCreateAdminSearchMerchandisingRuleRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/merchandising-rules")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteAdminSearchMerchandisingRuleRequest generates requests for DeleteAdminSearchMerchandisingRule
+func NewDeleteAdminSearchMerchandisingRuleRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/merchandising-rules/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAdminSearchMerchandisingRuleRequest generates requests for GetAdminSearchMerchandisingRule
+func NewGetAdminSearchMerchandisingRuleRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/merchandising-rules/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateAdminSearchMerchandisingRuleRequest calls the generic UpdateAdminSearchMerchandisingRule builder with application/json body
+func NewUpdateAdminSearchMerchandisingRuleRequest(server string, id int, body UpdateAdminSearchMerchandisingRuleJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateAdminSearchMerchandisingRuleRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewUpdateAdminSearchMerchandisingRuleRequestWithBody generates requests for UpdateAdminSearchMerchandisingRule with any type of body
+func NewUpdateAdminSearchMerchandisingRuleRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/merchandising-rules/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListAdminSearchMerchandisingRuleAuditRequest generates requests for ListAdminSearchMerchandisingRuleAudit
+func NewListAdminSearchMerchandisingRuleAuditRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/merchandising-rules/%s/audit", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAdminSearchOperationsRequest generates requests for GetAdminSearchOperations
+func NewGetAdminSearchOperationsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/operations")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPreviewAdminSearchRequest calls the generic PreviewAdminSearch builder with application/json body
+func NewPreviewAdminSearchRequest(server string, body PreviewAdminSearchJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPreviewAdminSearchRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPreviewAdminSearchRequestWithBody generates requests for PreviewAdminSearch with any type of body
+func NewPreviewAdminSearchRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/preview")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewSearchAdminProductsRequest generates requests for SearchAdminProducts
+func NewSearchAdminProductsRequest(server string, params *SearchAdminProductsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/products")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Q != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "q", runtime.ParamLocationQuery, *params.Q); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.MinPrice != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "min_price", runtime.ParamLocationQuery, *params.MinPrice); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.MaxPrice != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "max_price", runtime.ParamLocationQuery, *params.MaxPrice); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BrandSlug != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "brand_slug", runtime.ParamLocationQuery, *params.BrandSlug); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.CategorySlug != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "category_slug", runtime.ParamLocationQuery, *params.CategorySlug); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.HasVariantStock != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "has_variant_stock", runtime.ParamLocationQuery, *params.HasVariantStock); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PriceRange != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "price_range", runtime.ParamLocationQuery, *params.PriceRange); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Attribute != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("deepObject", true, "attribute", runtime.ParamLocationQuery, *params.Attribute); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.RankingProfile != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "ranking_profile", runtime.ParamLocationQuery, *params.RankingProfile); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Sort != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort", runtime.ParamLocationQuery, *params.Sort); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Order != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "order", runtime.ParamLocationQuery, *params.Order); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListAdminSearchRankingProfilesRequest generates requests for ListAdminSearchRankingProfiles
+func NewListAdminSearchRankingProfilesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/ranking-profiles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateAdminSearchRankingProfileRequest calls the generic CreateAdminSearchRankingProfile builder with application/json body
+func NewCreateAdminSearchRankingProfileRequest(server string, body CreateAdminSearchRankingProfileJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateAdminSearchRankingProfileRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateAdminSearchRankingProfileRequestWithBody generates requests for CreateAdminSearchRankingProfile with any type of body
+func NewCreateAdminSearchRankingProfileRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/ranking-profiles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteAdminSearchRankingProfileRequest generates requests for DeleteAdminSearchRankingProfile
+func NewDeleteAdminSearchRankingProfileRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/ranking-profiles/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAdminSearchRankingProfileRequest generates requests for GetAdminSearchRankingProfile
+func NewGetAdminSearchRankingProfileRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/ranking-profiles/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateAdminSearchRankingProfileRequest calls the generic UpdateAdminSearchRankingProfile builder with application/json body
+func NewUpdateAdminSearchRankingProfileRequest(server string, id int, body UpdateAdminSearchRankingProfileJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateAdminSearchRankingProfileRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewUpdateAdminSearchRankingProfileRequestWithBody generates requests for UpdateAdminSearchRankingProfile with any type of body
+func NewUpdateAdminSearchRankingProfileRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/ranking-profiles/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewCreateAdminSearchConversionRefreshRequest generates requests for CreateAdminSearchConversionRefresh
+func NewCreateAdminSearchConversionRefreshRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/refresh-conversion")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateAdminSearchSalesRefreshRequest generates requests for CreateAdminSearchSalesRefresh
+func NewCreateAdminSearchSalesRefreshRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/refresh-sales")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateAdminSearchReindexRequest generates requests for CreateAdminSearchReindex
+func NewCreateAdminSearchReindexRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/reindex")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListAdminSearchSynonymsRequest generates requests for ListAdminSearchSynonyms
+func NewListAdminSearchSynonymsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/synonyms")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateAdminSearchSynonymRequest calls the generic CreateAdminSearchSynonym builder with application/json body
+func NewCreateAdminSearchSynonymRequest(server string, body CreateAdminSearchSynonymJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateAdminSearchSynonymRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateAdminSearchSynonymRequestWithBody generates requests for CreateAdminSearchSynonym with any type of body
+func NewCreateAdminSearchSynonymRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/synonyms")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteAdminSearchSynonymRequest generates requests for DeleteAdminSearchSynonym
+func NewDeleteAdminSearchSynonymRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/synonyms/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAdminSearchSynonymRequest generates requests for GetAdminSearchSynonym
+func NewGetAdminSearchSynonymRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/synonyms/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateAdminSearchSynonymRequest calls the generic UpdateAdminSearchSynonym builder with application/json body
+func NewUpdateAdminSearchSynonymRequest(server string, id int, body UpdateAdminSearchSynonymJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateAdminSearchSynonymRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewUpdateAdminSearchSynonymRequestWithBody generates requests for UpdateAdminSearchSynonym with any type of body
+func NewUpdateAdminSearchSynonymRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/synonyms/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListAdminSearchTypoProfilesRequest generates requests for ListAdminSearchTypoProfiles
+func NewListAdminSearchTypoProfilesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/typo-profiles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateAdminSearchTypoProfileRequest calls the generic CreateAdminSearchTypoProfile builder with application/json body
+func NewCreateAdminSearchTypoProfileRequest(server string, body CreateAdminSearchTypoProfileJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateAdminSearchTypoProfileRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateAdminSearchTypoProfileRequestWithBody generates requests for CreateAdminSearchTypoProfile with any type of body
+func NewCreateAdminSearchTypoProfileRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/typo-profiles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteAdminSearchTypoProfileRequest generates requests for DeleteAdminSearchTypoProfile
+func NewDeleteAdminSearchTypoProfileRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/typo-profiles/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAdminSearchTypoProfileRequest generates requests for GetAdminSearchTypoProfile
+func NewGetAdminSearchTypoProfileRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/typo-profiles/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateAdminSearchTypoProfileRequest calls the generic UpdateAdminSearchTypoProfile builder with application/json body
+func NewUpdateAdminSearchTypoProfileRequest(server string, id int, body UpdateAdminSearchTypoProfileJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateAdminSearchTypoProfileRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewUpdateAdminSearchTypoProfileRequestWithBody generates requests for UpdateAdminSearchTypoProfile with any type of body
+func NewUpdateAdminSearchTypoProfileRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/admin/search/typo-profiles/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewExportAdminTaxReportRequest generates requests for ExportAdminTaxReport
 func NewExportAdminTaxReportRequest(server string, params *ExportAdminTaxReportParams) (*http.Request, error) {
 	var err error
@@ -21546,22 +24806,6 @@ func NewListProductsRequest(server string, params *ListProductsParams) (*http.Re
 	if params != nil {
 		queryValues := queryURL.Query()
 
-		if params.Q != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "q", runtime.ParamLocationQuery, *params.Q); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
 		if params.MinPrice != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "min_price", runtime.ParamLocationQuery, *params.MinPrice); err != nil {
@@ -21757,6 +25001,452 @@ func NewGetProductRequest(server string, id int) (*http.Request, error) {
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRevokeSearchConsentRequest calls the generic RevokeSearchConsent builder with application/json body
+func NewRevokeSearchConsentRequest(server string, body RevokeSearchConsentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRevokeSearchConsentRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewRevokeSearchConsentRequestWithBody generates requests for RevokeSearchConsent with any type of body
+func NewRevokeSearchConsentRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/search/consent/revoke")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewCreateSearchEventRequest calls the generic CreateSearchEvent builder with application/json body
+func NewCreateSearchEventRequest(server string, body CreateSearchEventJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateSearchEventRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateSearchEventRequestWithBody generates requests for CreateSearchEvent with any type of body
+func NewCreateSearchEventRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/search/events")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewCreateSearchImpressionRequest calls the generic CreateSearchImpression builder with application/json body
+func NewCreateSearchImpressionRequest(server string, body CreateSearchImpressionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateSearchImpressionRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateSearchImpressionRequestWithBody generates requests for CreateSearchImpression with any type of body
+func NewCreateSearchImpressionRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/search/impressions")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewSearchProductsRequest generates requests for SearchProducts
+func NewSearchProductsRequest(server string, params *SearchProductsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/search/products")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Q != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "q", runtime.ParamLocationQuery, *params.Q); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.MinPrice != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "min_price", runtime.ParamLocationQuery, *params.MinPrice); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.MaxPrice != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "max_price", runtime.ParamLocationQuery, *params.MaxPrice); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.BrandSlug != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "brand_slug", runtime.ParamLocationQuery, *params.BrandSlug); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.CategorySlug != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "category_slug", runtime.ParamLocationQuery, *params.CategorySlug); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.HasVariantStock != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "has_variant_stock", runtime.ParamLocationQuery, *params.HasVariantStock); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PriceRange != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "price_range", runtime.ParamLocationQuery, *params.PriceRange); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Attribute != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("deepObject", true, "attribute", runtime.ParamLocationQuery, *params.Attribute); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Sort != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sort", runtime.ParamLocationQuery, *params.Sort); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Order != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "order", runtime.ParamLocationQuery, *params.Order); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateSearchProofRequest calls the generic CreateSearchProof builder with application/json body
+func NewCreateSearchProofRequest(server string, body CreateSearchProofJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateSearchProofRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateSearchProofRequestWithBody generates requests for CreateSearchProof with any type of body
+func NewCreateSearchProofRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/search/proofs")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetSearchSuggestionsRequest generates requests for GetSearchSuggestions
+func NewGetSearchSuggestionsRequest(server string, params *GetSearchSuggestionsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/search/suggestions")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "q", runtime.ParamLocationQuery, params.Q); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -22510,6 +26200,120 @@ type ClientWithResponsesInterface interface {
 
 	ReceiveAdminPurchaseOrderWithResponse(ctx context.Context, id int, body ReceiveAdminPurchaseOrderJSONRequestBody, reqEditors ...RequestEditorFn) (*ReceiveAdminPurchaseOrderClientResponse, error)
 
+	// GetAdminSearchAnalyticsWithResponse request
+	GetAdminSearchAnalyticsWithResponse(ctx context.Context, params *GetAdminSearchAnalyticsParams, reqEditors ...RequestEditorFn) (*GetAdminSearchAnalyticsClientResponse, error)
+
+	// ListAdminSearchConfigurationHistoryWithResponse request
+	ListAdminSearchConfigurationHistoryWithResponse(ctx context.Context, params *ListAdminSearchConfigurationHistoryParams, reqEditors ...RequestEditorFn) (*ListAdminSearchConfigurationHistoryClientResponse, error)
+
+	// GetAdminSearchFreshnessWithResponse request
+	GetAdminSearchFreshnessWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAdminSearchFreshnessClientResponse, error)
+
+	// GetAdminSearchIncidentsWithResponse request
+	GetAdminSearchIncidentsWithResponse(ctx context.Context, params *GetAdminSearchIncidentsParams, reqEditors ...RequestEditorFn) (*GetAdminSearchIncidentsClientResponse, error)
+
+	// ListAdminSearchMerchandisingAuditWithResponse request
+	ListAdminSearchMerchandisingAuditWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminSearchMerchandisingAuditClientResponse, error)
+
+	// ListAdminSearchMerchandisingRulesWithResponse request
+	ListAdminSearchMerchandisingRulesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminSearchMerchandisingRulesClientResponse, error)
+
+	// CreateAdminSearchMerchandisingRuleWithBodyWithResponse request with any body
+	CreateAdminSearchMerchandisingRuleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAdminSearchMerchandisingRuleClientResponse, error)
+
+	CreateAdminSearchMerchandisingRuleWithResponse(ctx context.Context, body CreateAdminSearchMerchandisingRuleJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAdminSearchMerchandisingRuleClientResponse, error)
+
+	// DeleteAdminSearchMerchandisingRuleWithResponse request
+	DeleteAdminSearchMerchandisingRuleWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteAdminSearchMerchandisingRuleClientResponse, error)
+
+	// GetAdminSearchMerchandisingRuleWithResponse request
+	GetAdminSearchMerchandisingRuleWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetAdminSearchMerchandisingRuleClientResponse, error)
+
+	// UpdateAdminSearchMerchandisingRuleWithBodyWithResponse request with any body
+	UpdateAdminSearchMerchandisingRuleWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAdminSearchMerchandisingRuleClientResponse, error)
+
+	UpdateAdminSearchMerchandisingRuleWithResponse(ctx context.Context, id int, body UpdateAdminSearchMerchandisingRuleJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAdminSearchMerchandisingRuleClientResponse, error)
+
+	// ListAdminSearchMerchandisingRuleAuditWithResponse request
+	ListAdminSearchMerchandisingRuleAuditWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*ListAdminSearchMerchandisingRuleAuditClientResponse, error)
+
+	// GetAdminSearchOperationsWithResponse request
+	GetAdminSearchOperationsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAdminSearchOperationsClientResponse, error)
+
+	// PreviewAdminSearchWithBodyWithResponse request with any body
+	PreviewAdminSearchWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PreviewAdminSearchClientResponse, error)
+
+	PreviewAdminSearchWithResponse(ctx context.Context, body PreviewAdminSearchJSONRequestBody, reqEditors ...RequestEditorFn) (*PreviewAdminSearchClientResponse, error)
+
+	// SearchAdminProductsWithResponse request
+	SearchAdminProductsWithResponse(ctx context.Context, params *SearchAdminProductsParams, reqEditors ...RequestEditorFn) (*SearchAdminProductsClientResponse, error)
+
+	// ListAdminSearchRankingProfilesWithResponse request
+	ListAdminSearchRankingProfilesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminSearchRankingProfilesClientResponse, error)
+
+	// CreateAdminSearchRankingProfileWithBodyWithResponse request with any body
+	CreateAdminSearchRankingProfileWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAdminSearchRankingProfileClientResponse, error)
+
+	CreateAdminSearchRankingProfileWithResponse(ctx context.Context, body CreateAdminSearchRankingProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAdminSearchRankingProfileClientResponse, error)
+
+	// DeleteAdminSearchRankingProfileWithResponse request
+	DeleteAdminSearchRankingProfileWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteAdminSearchRankingProfileClientResponse, error)
+
+	// GetAdminSearchRankingProfileWithResponse request
+	GetAdminSearchRankingProfileWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetAdminSearchRankingProfileClientResponse, error)
+
+	// UpdateAdminSearchRankingProfileWithBodyWithResponse request with any body
+	UpdateAdminSearchRankingProfileWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAdminSearchRankingProfileClientResponse, error)
+
+	UpdateAdminSearchRankingProfileWithResponse(ctx context.Context, id int, body UpdateAdminSearchRankingProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAdminSearchRankingProfileClientResponse, error)
+
+	// CreateAdminSearchConversionRefreshWithResponse request
+	CreateAdminSearchConversionRefreshWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CreateAdminSearchConversionRefreshClientResponse, error)
+
+	// CreateAdminSearchSalesRefreshWithResponse request
+	CreateAdminSearchSalesRefreshWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CreateAdminSearchSalesRefreshClientResponse, error)
+
+	// CreateAdminSearchReindexWithResponse request
+	CreateAdminSearchReindexWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CreateAdminSearchReindexClientResponse, error)
+
+	// ListAdminSearchSynonymsWithResponse request
+	ListAdminSearchSynonymsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminSearchSynonymsClientResponse, error)
+
+	// CreateAdminSearchSynonymWithBodyWithResponse request with any body
+	CreateAdminSearchSynonymWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAdminSearchSynonymClientResponse, error)
+
+	CreateAdminSearchSynonymWithResponse(ctx context.Context, body CreateAdminSearchSynonymJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAdminSearchSynonymClientResponse, error)
+
+	// DeleteAdminSearchSynonymWithResponse request
+	DeleteAdminSearchSynonymWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteAdminSearchSynonymClientResponse, error)
+
+	// GetAdminSearchSynonymWithResponse request
+	GetAdminSearchSynonymWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetAdminSearchSynonymClientResponse, error)
+
+	// UpdateAdminSearchSynonymWithBodyWithResponse request with any body
+	UpdateAdminSearchSynonymWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAdminSearchSynonymClientResponse, error)
+
+	UpdateAdminSearchSynonymWithResponse(ctx context.Context, id int, body UpdateAdminSearchSynonymJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAdminSearchSynonymClientResponse, error)
+
+	// ListAdminSearchTypoProfilesWithResponse request
+	ListAdminSearchTypoProfilesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminSearchTypoProfilesClientResponse, error)
+
+	// CreateAdminSearchTypoProfileWithBodyWithResponse request with any body
+	CreateAdminSearchTypoProfileWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAdminSearchTypoProfileClientResponse, error)
+
+	CreateAdminSearchTypoProfileWithResponse(ctx context.Context, body CreateAdminSearchTypoProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAdminSearchTypoProfileClientResponse, error)
+
+	// DeleteAdminSearchTypoProfileWithResponse request
+	DeleteAdminSearchTypoProfileWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteAdminSearchTypoProfileClientResponse, error)
+
+	// GetAdminSearchTypoProfileWithResponse request
+	GetAdminSearchTypoProfileWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetAdminSearchTypoProfileClientResponse, error)
+
+	// UpdateAdminSearchTypoProfileWithBodyWithResponse request with any body
+	UpdateAdminSearchTypoProfileWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAdminSearchTypoProfileClientResponse, error)
+
+	UpdateAdminSearchTypoProfileWithResponse(ctx context.Context, id int, body UpdateAdminSearchTypoProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAdminSearchTypoProfileClientResponse, error)
+
 	// ExportAdminTaxReportWithResponse request
 	ExportAdminTaxReportWithResponse(ctx context.Context, params *ExportAdminTaxReportParams, reqEditors ...RequestEditorFn) (*ExportAdminTaxReportClientResponse, error)
 
@@ -22749,6 +26553,32 @@ type ClientWithResponsesInterface interface {
 
 	// GetProductWithResponse request
 	GetProductWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetProductClientResponse, error)
+
+	// RevokeSearchConsentWithBodyWithResponse request with any body
+	RevokeSearchConsentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RevokeSearchConsentClientResponse, error)
+
+	RevokeSearchConsentWithResponse(ctx context.Context, body RevokeSearchConsentJSONRequestBody, reqEditors ...RequestEditorFn) (*RevokeSearchConsentClientResponse, error)
+
+	// CreateSearchEventWithBodyWithResponse request with any body
+	CreateSearchEventWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSearchEventClientResponse, error)
+
+	CreateSearchEventWithResponse(ctx context.Context, body CreateSearchEventJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSearchEventClientResponse, error)
+
+	// CreateSearchImpressionWithBodyWithResponse request with any body
+	CreateSearchImpressionWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSearchImpressionClientResponse, error)
+
+	CreateSearchImpressionWithResponse(ctx context.Context, body CreateSearchImpressionJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSearchImpressionClientResponse, error)
+
+	// SearchProductsWithResponse request
+	SearchProductsWithResponse(ctx context.Context, params *SearchProductsParams, reqEditors ...RequestEditorFn) (*SearchProductsClientResponse, error)
+
+	// CreateSearchProofWithBodyWithResponse request with any body
+	CreateSearchProofWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSearchProofClientResponse, error)
+
+	CreateSearchProofWithResponse(ctx context.Context, body CreateSearchProofJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSearchProofClientResponse, error)
+
+	// GetSearchSuggestionsWithResponse request
+	GetSearchSuggestionsWithResponse(ctx context.Context, params *GetSearchSuggestionsParams, reqEditors ...RequestEditorFn) (*GetSearchSuggestionsClientResponse, error)
 
 	// ReceiveWebhookEventWithBodyWithResponse request with any body
 	ReceiveWebhookEventWithBodyWithResponse(ctx context.Context, provider string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReceiveWebhookEventClientResponse, error)
@@ -27248,6 +31078,875 @@ func (r ReceiveAdminPurchaseOrderClientResponse) StatusCode() int {
 	return 0
 }
 
+type GetAdminSearchAnalyticsClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchAnalytics
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAdminSearchAnalyticsClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAdminSearchAnalyticsClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminSearchConfigurationHistoryClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchConfigurationAuditListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminSearchConfigurationHistoryClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminSearchConfigurationHistoryClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAdminSearchFreshnessClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchFreshness
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAdminSearchFreshnessClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAdminSearchFreshnessClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAdminSearchIncidentsClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchIndexIncidentListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAdminSearchIncidentsClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAdminSearchIncidentsClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminSearchMerchandisingAuditClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchMerchandisingAuditListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminSearchMerchandisingAuditClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminSearchMerchandisingAuditClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminSearchMerchandisingRulesClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchMerchandisingRuleListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminSearchMerchandisingRulesClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminSearchMerchandisingRulesClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateAdminSearchMerchandisingRuleClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON201                   *SearchMerchandisingRule
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateAdminSearchMerchandisingRuleClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateAdminSearchMerchandisingRuleClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteAdminSearchMerchandisingRuleClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteAdminSearchMerchandisingRuleClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteAdminSearchMerchandisingRuleClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAdminSearchMerchandisingRuleClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchMerchandisingRule
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAdminSearchMerchandisingRuleClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAdminSearchMerchandisingRuleClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateAdminSearchMerchandisingRuleClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchMerchandisingRule
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateAdminSearchMerchandisingRuleClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateAdminSearchMerchandisingRuleClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminSearchMerchandisingRuleAuditClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchMerchandisingAuditListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminSearchMerchandisingRuleAuditClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminSearchMerchandisingRuleAuditClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAdminSearchOperationsClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchOperationsStatus
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAdminSearchOperationsClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAdminSearchOperationsClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PreviewAdminSearchClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchPreviewResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON429 *TooManyRequestsProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+	ApplicationproblemJSON503 *ServiceUnavailableProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r PreviewAdminSearchClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PreviewAdminSearchClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type SearchAdminProductsClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *AdminProductSearchResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON429 *TooManyRequestsProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+	ApplicationproblemJSON503 *ServiceUnavailableProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r SearchAdminProductsClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SearchAdminProductsClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminSearchRankingProfilesClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchRankingProfileListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminSearchRankingProfilesClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminSearchRankingProfilesClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateAdminSearchRankingProfileClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON201                   *SearchRankingProfile
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateAdminSearchRankingProfileClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateAdminSearchRankingProfileClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteAdminSearchRankingProfileClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteAdminSearchRankingProfileClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteAdminSearchRankingProfileClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAdminSearchRankingProfileClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchRankingProfile
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAdminSearchRankingProfileClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAdminSearchRankingProfileClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateAdminSearchRankingProfileClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchRankingProfile
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateAdminSearchRankingProfileClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateAdminSearchRankingProfileClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateAdminSearchConversionRefreshClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON202                   *SearchRefreshAccepted
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateAdminSearchConversionRefreshClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateAdminSearchConversionRefreshClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateAdminSearchSalesRefreshClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON202                   *SearchRefreshAccepted
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateAdminSearchSalesRefreshClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateAdminSearchSalesRefreshClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateAdminSearchReindexClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON202                   *SearchReindexAccepted
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON429 *TooManyRequestsProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+	ApplicationproblemJSON503 *ServiceUnavailableProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateAdminSearchReindexClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateAdminSearchReindexClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminSearchSynonymsClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchSynonymSetListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminSearchSynonymsClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminSearchSynonymsClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateAdminSearchSynonymClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON201                   *SearchSynonymSet
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateAdminSearchSynonymClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateAdminSearchSynonymClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteAdminSearchSynonymClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteAdminSearchSynonymClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteAdminSearchSynonymClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAdminSearchSynonymClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchSynonymSet
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAdminSearchSynonymClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAdminSearchSynonymClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateAdminSearchSynonymClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchSynonymSet
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateAdminSearchSynonymClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateAdminSearchSynonymClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListAdminSearchTypoProfilesClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchTypoToleranceProfileListResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminSearchTypoProfilesClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminSearchTypoProfilesClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateAdminSearchTypoProfileClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON201                   *SearchTypoToleranceProfile
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateAdminSearchTypoProfileClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateAdminSearchTypoProfileClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteAdminSearchTypoProfileClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteAdminSearchTypoProfileClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteAdminSearchTypoProfileClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAdminSearchTypoProfileClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchTypoToleranceProfile
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAdminSearchTypoProfileClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAdminSearchTypoProfileClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateAdminSearchTypoProfileClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchTypoToleranceProfile
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON401 *AuthenticationRequiredProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON409 *ConflictProblem
+	ApplicationproblemJSON422 *ValidationProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateAdminSearchTypoProfileClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateAdminSearchTypoProfileClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ExportAdminTaxReportClientResponse struct {
 	Body                      []byte
 	HTTPResponse              *http.Response
@@ -28940,6 +33639,162 @@ func (r GetProductClientResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetProductClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RevokeSearchConsentClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r RevokeSearchConsentClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RevokeSearchConsentClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateSearchEventClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchEventResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON429 *TooManyRequestsProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateSearchEventClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateSearchEventClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateSearchImpressionClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchImpressionResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON429 *TooManyRequestsProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+	ApplicationproblemJSON503 *ServiceUnavailableProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateSearchImpressionClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateSearchImpressionClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type SearchProductsClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *ProductSearchResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON404 *NotFoundProblem
+	ApplicationproblemJSON429 *TooManyRequestsProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+	ApplicationproblemJSON503 *ServiceUnavailableProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r SearchProductsClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SearchProductsClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateSearchProofClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchProofResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON403 *ForbiddenProblem
+	ApplicationproblemJSON429 *TooManyRequestsProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+	ApplicationproblemJSON503 *ServiceUnavailableProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateSearchProofClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateSearchProofClientResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetSearchSuggestionsClientResponse struct {
+	Body                      []byte
+	HTTPResponse              *http.Response
+	JSON200                   *SearchSuggestionsResponse
+	ApplicationproblemJSON400 *BadRequestProblem
+	ApplicationproblemJSON429 *TooManyRequestsProblem
+	ApplicationproblemJSON500 *InternalServerErrorProblem
+	ApplicationproblemJSON503 *ServiceUnavailableProblem
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSearchSuggestionsClientResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSearchSuggestionsClientResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -31076,6 +35931,366 @@ func (c *ClientWithResponses) ReceiveAdminPurchaseOrderWithResponse(ctx context.
 	return ParseReceiveAdminPurchaseOrderClientResponse(rsp)
 }
 
+// GetAdminSearchAnalyticsWithResponse request returning *GetAdminSearchAnalyticsClientResponse
+func (c *ClientWithResponses) GetAdminSearchAnalyticsWithResponse(ctx context.Context, params *GetAdminSearchAnalyticsParams, reqEditors ...RequestEditorFn) (*GetAdminSearchAnalyticsClientResponse, error) {
+	rsp, err := c.GetAdminSearchAnalytics(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAdminSearchAnalyticsClientResponse(rsp)
+}
+
+// ListAdminSearchConfigurationHistoryWithResponse request returning *ListAdminSearchConfigurationHistoryClientResponse
+func (c *ClientWithResponses) ListAdminSearchConfigurationHistoryWithResponse(ctx context.Context, params *ListAdminSearchConfigurationHistoryParams, reqEditors ...RequestEditorFn) (*ListAdminSearchConfigurationHistoryClientResponse, error) {
+	rsp, err := c.ListAdminSearchConfigurationHistory(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminSearchConfigurationHistoryClientResponse(rsp)
+}
+
+// GetAdminSearchFreshnessWithResponse request returning *GetAdminSearchFreshnessClientResponse
+func (c *ClientWithResponses) GetAdminSearchFreshnessWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAdminSearchFreshnessClientResponse, error) {
+	rsp, err := c.GetAdminSearchFreshness(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAdminSearchFreshnessClientResponse(rsp)
+}
+
+// GetAdminSearchIncidentsWithResponse request returning *GetAdminSearchIncidentsClientResponse
+func (c *ClientWithResponses) GetAdminSearchIncidentsWithResponse(ctx context.Context, params *GetAdminSearchIncidentsParams, reqEditors ...RequestEditorFn) (*GetAdminSearchIncidentsClientResponse, error) {
+	rsp, err := c.GetAdminSearchIncidents(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAdminSearchIncidentsClientResponse(rsp)
+}
+
+// ListAdminSearchMerchandisingAuditWithResponse request returning *ListAdminSearchMerchandisingAuditClientResponse
+func (c *ClientWithResponses) ListAdminSearchMerchandisingAuditWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminSearchMerchandisingAuditClientResponse, error) {
+	rsp, err := c.ListAdminSearchMerchandisingAudit(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminSearchMerchandisingAuditClientResponse(rsp)
+}
+
+// ListAdminSearchMerchandisingRulesWithResponse request returning *ListAdminSearchMerchandisingRulesClientResponse
+func (c *ClientWithResponses) ListAdminSearchMerchandisingRulesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminSearchMerchandisingRulesClientResponse, error) {
+	rsp, err := c.ListAdminSearchMerchandisingRules(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminSearchMerchandisingRulesClientResponse(rsp)
+}
+
+// CreateAdminSearchMerchandisingRuleWithBodyWithResponse request with arbitrary body returning *CreateAdminSearchMerchandisingRuleClientResponse
+func (c *ClientWithResponses) CreateAdminSearchMerchandisingRuleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAdminSearchMerchandisingRuleClientResponse, error) {
+	rsp, err := c.CreateAdminSearchMerchandisingRuleWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminSearchMerchandisingRuleClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateAdminSearchMerchandisingRuleWithResponse(ctx context.Context, body CreateAdminSearchMerchandisingRuleJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAdminSearchMerchandisingRuleClientResponse, error) {
+	rsp, err := c.CreateAdminSearchMerchandisingRule(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminSearchMerchandisingRuleClientResponse(rsp)
+}
+
+// DeleteAdminSearchMerchandisingRuleWithResponse request returning *DeleteAdminSearchMerchandisingRuleClientResponse
+func (c *ClientWithResponses) DeleteAdminSearchMerchandisingRuleWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteAdminSearchMerchandisingRuleClientResponse, error) {
+	rsp, err := c.DeleteAdminSearchMerchandisingRule(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAdminSearchMerchandisingRuleClientResponse(rsp)
+}
+
+// GetAdminSearchMerchandisingRuleWithResponse request returning *GetAdminSearchMerchandisingRuleClientResponse
+func (c *ClientWithResponses) GetAdminSearchMerchandisingRuleWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetAdminSearchMerchandisingRuleClientResponse, error) {
+	rsp, err := c.GetAdminSearchMerchandisingRule(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAdminSearchMerchandisingRuleClientResponse(rsp)
+}
+
+// UpdateAdminSearchMerchandisingRuleWithBodyWithResponse request with arbitrary body returning *UpdateAdminSearchMerchandisingRuleClientResponse
+func (c *ClientWithResponses) UpdateAdminSearchMerchandisingRuleWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAdminSearchMerchandisingRuleClientResponse, error) {
+	rsp, err := c.UpdateAdminSearchMerchandisingRuleWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAdminSearchMerchandisingRuleClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateAdminSearchMerchandisingRuleWithResponse(ctx context.Context, id int, body UpdateAdminSearchMerchandisingRuleJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAdminSearchMerchandisingRuleClientResponse, error) {
+	rsp, err := c.UpdateAdminSearchMerchandisingRule(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAdminSearchMerchandisingRuleClientResponse(rsp)
+}
+
+// ListAdminSearchMerchandisingRuleAuditWithResponse request returning *ListAdminSearchMerchandisingRuleAuditClientResponse
+func (c *ClientWithResponses) ListAdminSearchMerchandisingRuleAuditWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*ListAdminSearchMerchandisingRuleAuditClientResponse, error) {
+	rsp, err := c.ListAdminSearchMerchandisingRuleAudit(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminSearchMerchandisingRuleAuditClientResponse(rsp)
+}
+
+// GetAdminSearchOperationsWithResponse request returning *GetAdminSearchOperationsClientResponse
+func (c *ClientWithResponses) GetAdminSearchOperationsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetAdminSearchOperationsClientResponse, error) {
+	rsp, err := c.GetAdminSearchOperations(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAdminSearchOperationsClientResponse(rsp)
+}
+
+// PreviewAdminSearchWithBodyWithResponse request with arbitrary body returning *PreviewAdminSearchClientResponse
+func (c *ClientWithResponses) PreviewAdminSearchWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PreviewAdminSearchClientResponse, error) {
+	rsp, err := c.PreviewAdminSearchWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePreviewAdminSearchClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) PreviewAdminSearchWithResponse(ctx context.Context, body PreviewAdminSearchJSONRequestBody, reqEditors ...RequestEditorFn) (*PreviewAdminSearchClientResponse, error) {
+	rsp, err := c.PreviewAdminSearch(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePreviewAdminSearchClientResponse(rsp)
+}
+
+// SearchAdminProductsWithResponse request returning *SearchAdminProductsClientResponse
+func (c *ClientWithResponses) SearchAdminProductsWithResponse(ctx context.Context, params *SearchAdminProductsParams, reqEditors ...RequestEditorFn) (*SearchAdminProductsClientResponse, error) {
+	rsp, err := c.SearchAdminProducts(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSearchAdminProductsClientResponse(rsp)
+}
+
+// ListAdminSearchRankingProfilesWithResponse request returning *ListAdminSearchRankingProfilesClientResponse
+func (c *ClientWithResponses) ListAdminSearchRankingProfilesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminSearchRankingProfilesClientResponse, error) {
+	rsp, err := c.ListAdminSearchRankingProfiles(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminSearchRankingProfilesClientResponse(rsp)
+}
+
+// CreateAdminSearchRankingProfileWithBodyWithResponse request with arbitrary body returning *CreateAdminSearchRankingProfileClientResponse
+func (c *ClientWithResponses) CreateAdminSearchRankingProfileWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAdminSearchRankingProfileClientResponse, error) {
+	rsp, err := c.CreateAdminSearchRankingProfileWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminSearchRankingProfileClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateAdminSearchRankingProfileWithResponse(ctx context.Context, body CreateAdminSearchRankingProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAdminSearchRankingProfileClientResponse, error) {
+	rsp, err := c.CreateAdminSearchRankingProfile(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminSearchRankingProfileClientResponse(rsp)
+}
+
+// DeleteAdminSearchRankingProfileWithResponse request returning *DeleteAdminSearchRankingProfileClientResponse
+func (c *ClientWithResponses) DeleteAdminSearchRankingProfileWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteAdminSearchRankingProfileClientResponse, error) {
+	rsp, err := c.DeleteAdminSearchRankingProfile(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAdminSearchRankingProfileClientResponse(rsp)
+}
+
+// GetAdminSearchRankingProfileWithResponse request returning *GetAdminSearchRankingProfileClientResponse
+func (c *ClientWithResponses) GetAdminSearchRankingProfileWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetAdminSearchRankingProfileClientResponse, error) {
+	rsp, err := c.GetAdminSearchRankingProfile(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAdminSearchRankingProfileClientResponse(rsp)
+}
+
+// UpdateAdminSearchRankingProfileWithBodyWithResponse request with arbitrary body returning *UpdateAdminSearchRankingProfileClientResponse
+func (c *ClientWithResponses) UpdateAdminSearchRankingProfileWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAdminSearchRankingProfileClientResponse, error) {
+	rsp, err := c.UpdateAdminSearchRankingProfileWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAdminSearchRankingProfileClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateAdminSearchRankingProfileWithResponse(ctx context.Context, id int, body UpdateAdminSearchRankingProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAdminSearchRankingProfileClientResponse, error) {
+	rsp, err := c.UpdateAdminSearchRankingProfile(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAdminSearchRankingProfileClientResponse(rsp)
+}
+
+// CreateAdminSearchConversionRefreshWithResponse request returning *CreateAdminSearchConversionRefreshClientResponse
+func (c *ClientWithResponses) CreateAdminSearchConversionRefreshWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CreateAdminSearchConversionRefreshClientResponse, error) {
+	rsp, err := c.CreateAdminSearchConversionRefresh(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminSearchConversionRefreshClientResponse(rsp)
+}
+
+// CreateAdminSearchSalesRefreshWithResponse request returning *CreateAdminSearchSalesRefreshClientResponse
+func (c *ClientWithResponses) CreateAdminSearchSalesRefreshWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CreateAdminSearchSalesRefreshClientResponse, error) {
+	rsp, err := c.CreateAdminSearchSalesRefresh(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminSearchSalesRefreshClientResponse(rsp)
+}
+
+// CreateAdminSearchReindexWithResponse request returning *CreateAdminSearchReindexClientResponse
+func (c *ClientWithResponses) CreateAdminSearchReindexWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CreateAdminSearchReindexClientResponse, error) {
+	rsp, err := c.CreateAdminSearchReindex(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminSearchReindexClientResponse(rsp)
+}
+
+// ListAdminSearchSynonymsWithResponse request returning *ListAdminSearchSynonymsClientResponse
+func (c *ClientWithResponses) ListAdminSearchSynonymsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminSearchSynonymsClientResponse, error) {
+	rsp, err := c.ListAdminSearchSynonyms(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminSearchSynonymsClientResponse(rsp)
+}
+
+// CreateAdminSearchSynonymWithBodyWithResponse request with arbitrary body returning *CreateAdminSearchSynonymClientResponse
+func (c *ClientWithResponses) CreateAdminSearchSynonymWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAdminSearchSynonymClientResponse, error) {
+	rsp, err := c.CreateAdminSearchSynonymWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminSearchSynonymClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateAdminSearchSynonymWithResponse(ctx context.Context, body CreateAdminSearchSynonymJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAdminSearchSynonymClientResponse, error) {
+	rsp, err := c.CreateAdminSearchSynonym(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminSearchSynonymClientResponse(rsp)
+}
+
+// DeleteAdminSearchSynonymWithResponse request returning *DeleteAdminSearchSynonymClientResponse
+func (c *ClientWithResponses) DeleteAdminSearchSynonymWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteAdminSearchSynonymClientResponse, error) {
+	rsp, err := c.DeleteAdminSearchSynonym(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAdminSearchSynonymClientResponse(rsp)
+}
+
+// GetAdminSearchSynonymWithResponse request returning *GetAdminSearchSynonymClientResponse
+func (c *ClientWithResponses) GetAdminSearchSynonymWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetAdminSearchSynonymClientResponse, error) {
+	rsp, err := c.GetAdminSearchSynonym(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAdminSearchSynonymClientResponse(rsp)
+}
+
+// UpdateAdminSearchSynonymWithBodyWithResponse request with arbitrary body returning *UpdateAdminSearchSynonymClientResponse
+func (c *ClientWithResponses) UpdateAdminSearchSynonymWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAdminSearchSynonymClientResponse, error) {
+	rsp, err := c.UpdateAdminSearchSynonymWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAdminSearchSynonymClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateAdminSearchSynonymWithResponse(ctx context.Context, id int, body UpdateAdminSearchSynonymJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAdminSearchSynonymClientResponse, error) {
+	rsp, err := c.UpdateAdminSearchSynonym(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAdminSearchSynonymClientResponse(rsp)
+}
+
+// ListAdminSearchTypoProfilesWithResponse request returning *ListAdminSearchTypoProfilesClientResponse
+func (c *ClientWithResponses) ListAdminSearchTypoProfilesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAdminSearchTypoProfilesClientResponse, error) {
+	rsp, err := c.ListAdminSearchTypoProfiles(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminSearchTypoProfilesClientResponse(rsp)
+}
+
+// CreateAdminSearchTypoProfileWithBodyWithResponse request with arbitrary body returning *CreateAdminSearchTypoProfileClientResponse
+func (c *ClientWithResponses) CreateAdminSearchTypoProfileWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAdminSearchTypoProfileClientResponse, error) {
+	rsp, err := c.CreateAdminSearchTypoProfileWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminSearchTypoProfileClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateAdminSearchTypoProfileWithResponse(ctx context.Context, body CreateAdminSearchTypoProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAdminSearchTypoProfileClientResponse, error) {
+	rsp, err := c.CreateAdminSearchTypoProfile(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAdminSearchTypoProfileClientResponse(rsp)
+}
+
+// DeleteAdminSearchTypoProfileWithResponse request returning *DeleteAdminSearchTypoProfileClientResponse
+func (c *ClientWithResponses) DeleteAdminSearchTypoProfileWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteAdminSearchTypoProfileClientResponse, error) {
+	rsp, err := c.DeleteAdminSearchTypoProfile(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAdminSearchTypoProfileClientResponse(rsp)
+}
+
+// GetAdminSearchTypoProfileWithResponse request returning *GetAdminSearchTypoProfileClientResponse
+func (c *ClientWithResponses) GetAdminSearchTypoProfileWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetAdminSearchTypoProfileClientResponse, error) {
+	rsp, err := c.GetAdminSearchTypoProfile(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAdminSearchTypoProfileClientResponse(rsp)
+}
+
+// UpdateAdminSearchTypoProfileWithBodyWithResponse request with arbitrary body returning *UpdateAdminSearchTypoProfileClientResponse
+func (c *ClientWithResponses) UpdateAdminSearchTypoProfileWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAdminSearchTypoProfileClientResponse, error) {
+	rsp, err := c.UpdateAdminSearchTypoProfileWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAdminSearchTypoProfileClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateAdminSearchTypoProfileWithResponse(ctx context.Context, id int, body UpdateAdminSearchTypoProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAdminSearchTypoProfileClientResponse, error) {
+	rsp, err := c.UpdateAdminSearchTypoProfile(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAdminSearchTypoProfileClientResponse(rsp)
+}
+
 // ExportAdminTaxReportWithResponse request returning *ExportAdminTaxReportClientResponse
 func (c *ClientWithResponses) ExportAdminTaxReportWithResponse(ctx context.Context, params *ExportAdminTaxReportParams, reqEditors ...RequestEditorFn) (*ExportAdminTaxReportClientResponse, error) {
 	rsp, err := c.ExportAdminTaxReport(ctx, params, reqEditors...)
@@ -31836,6 +37051,92 @@ func (c *ClientWithResponses) GetProductWithResponse(ctx context.Context, id int
 		return nil, err
 	}
 	return ParseGetProductClientResponse(rsp)
+}
+
+// RevokeSearchConsentWithBodyWithResponse request with arbitrary body returning *RevokeSearchConsentClientResponse
+func (c *ClientWithResponses) RevokeSearchConsentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RevokeSearchConsentClientResponse, error) {
+	rsp, err := c.RevokeSearchConsentWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRevokeSearchConsentClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) RevokeSearchConsentWithResponse(ctx context.Context, body RevokeSearchConsentJSONRequestBody, reqEditors ...RequestEditorFn) (*RevokeSearchConsentClientResponse, error) {
+	rsp, err := c.RevokeSearchConsent(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRevokeSearchConsentClientResponse(rsp)
+}
+
+// CreateSearchEventWithBodyWithResponse request with arbitrary body returning *CreateSearchEventClientResponse
+func (c *ClientWithResponses) CreateSearchEventWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSearchEventClientResponse, error) {
+	rsp, err := c.CreateSearchEventWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateSearchEventClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateSearchEventWithResponse(ctx context.Context, body CreateSearchEventJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSearchEventClientResponse, error) {
+	rsp, err := c.CreateSearchEvent(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateSearchEventClientResponse(rsp)
+}
+
+// CreateSearchImpressionWithBodyWithResponse request with arbitrary body returning *CreateSearchImpressionClientResponse
+func (c *ClientWithResponses) CreateSearchImpressionWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSearchImpressionClientResponse, error) {
+	rsp, err := c.CreateSearchImpressionWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateSearchImpressionClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateSearchImpressionWithResponse(ctx context.Context, body CreateSearchImpressionJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSearchImpressionClientResponse, error) {
+	rsp, err := c.CreateSearchImpression(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateSearchImpressionClientResponse(rsp)
+}
+
+// SearchProductsWithResponse request returning *SearchProductsClientResponse
+func (c *ClientWithResponses) SearchProductsWithResponse(ctx context.Context, params *SearchProductsParams, reqEditors ...RequestEditorFn) (*SearchProductsClientResponse, error) {
+	rsp, err := c.SearchProducts(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSearchProductsClientResponse(rsp)
+}
+
+// CreateSearchProofWithBodyWithResponse request with arbitrary body returning *CreateSearchProofClientResponse
+func (c *ClientWithResponses) CreateSearchProofWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSearchProofClientResponse, error) {
+	rsp, err := c.CreateSearchProofWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateSearchProofClientResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateSearchProofWithResponse(ctx context.Context, body CreateSearchProofJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSearchProofClientResponse, error) {
+	rsp, err := c.CreateSearchProof(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateSearchProofClientResponse(rsp)
+}
+
+// GetSearchSuggestionsWithResponse request returning *GetSearchSuggestionsClientResponse
+func (c *ClientWithResponses) GetSearchSuggestionsWithResponse(ctx context.Context, params *GetSearchSuggestionsParams, reqEditors ...RequestEditorFn) (*GetSearchSuggestionsClientResponse, error) {
+	rsp, err := c.GetSearchSuggestions(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSearchSuggestionsClientResponse(rsp)
 }
 
 // ReceiveWebhookEventWithBodyWithResponse request with arbitrary body returning *ReceiveWebhookEventClientResponse
@@ -41667,6 +46968,1993 @@ func ParseReceiveAdminPurchaseOrderClientResponse(rsp *http.Response) (*ReceiveA
 	return response, nil
 }
 
+// ParseGetAdminSearchAnalyticsClientResponse parses an HTTP response from a GetAdminSearchAnalyticsWithResponse call
+func ParseGetAdminSearchAnalyticsClientResponse(rsp *http.Response) (*GetAdminSearchAnalyticsClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAdminSearchAnalyticsClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchAnalytics
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminSearchConfigurationHistoryClientResponse parses an HTTP response from a ListAdminSearchConfigurationHistoryWithResponse call
+func ParseListAdminSearchConfigurationHistoryClientResponse(rsp *http.Response) (*ListAdminSearchConfigurationHistoryClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminSearchConfigurationHistoryClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchConfigurationAuditListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAdminSearchFreshnessClientResponse parses an HTTP response from a GetAdminSearchFreshnessWithResponse call
+func ParseGetAdminSearchFreshnessClientResponse(rsp *http.Response) (*GetAdminSearchFreshnessClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAdminSearchFreshnessClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchFreshness
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAdminSearchIncidentsClientResponse parses an HTTP response from a GetAdminSearchIncidentsWithResponse call
+func ParseGetAdminSearchIncidentsClientResponse(rsp *http.Response) (*GetAdminSearchIncidentsClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAdminSearchIncidentsClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchIndexIncidentListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminSearchMerchandisingAuditClientResponse parses an HTTP response from a ListAdminSearchMerchandisingAuditWithResponse call
+func ParseListAdminSearchMerchandisingAuditClientResponse(rsp *http.Response) (*ListAdminSearchMerchandisingAuditClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminSearchMerchandisingAuditClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchMerchandisingAuditListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminSearchMerchandisingRulesClientResponse parses an HTTP response from a ListAdminSearchMerchandisingRulesWithResponse call
+func ParseListAdminSearchMerchandisingRulesClientResponse(rsp *http.Response) (*ListAdminSearchMerchandisingRulesClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminSearchMerchandisingRulesClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchMerchandisingRuleListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateAdminSearchMerchandisingRuleClientResponse parses an HTTP response from a CreateAdminSearchMerchandisingRuleWithResponse call
+func ParseCreateAdminSearchMerchandisingRuleClientResponse(rsp *http.Response) (*CreateAdminSearchMerchandisingRuleClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateAdminSearchMerchandisingRuleClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest SearchMerchandisingRule
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteAdminSearchMerchandisingRuleClientResponse parses an HTTP response from a DeleteAdminSearchMerchandisingRuleWithResponse call
+func ParseDeleteAdminSearchMerchandisingRuleClientResponse(rsp *http.Response) (*DeleteAdminSearchMerchandisingRuleClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteAdminSearchMerchandisingRuleClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAdminSearchMerchandisingRuleClientResponse parses an HTTP response from a GetAdminSearchMerchandisingRuleWithResponse call
+func ParseGetAdminSearchMerchandisingRuleClientResponse(rsp *http.Response) (*GetAdminSearchMerchandisingRuleClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAdminSearchMerchandisingRuleClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchMerchandisingRule
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateAdminSearchMerchandisingRuleClientResponse parses an HTTP response from a UpdateAdminSearchMerchandisingRuleWithResponse call
+func ParseUpdateAdminSearchMerchandisingRuleClientResponse(rsp *http.Response) (*UpdateAdminSearchMerchandisingRuleClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateAdminSearchMerchandisingRuleClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchMerchandisingRule
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminSearchMerchandisingRuleAuditClientResponse parses an HTTP response from a ListAdminSearchMerchandisingRuleAuditWithResponse call
+func ParseListAdminSearchMerchandisingRuleAuditClientResponse(rsp *http.Response) (*ListAdminSearchMerchandisingRuleAuditClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminSearchMerchandisingRuleAuditClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchMerchandisingAuditListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAdminSearchOperationsClientResponse parses an HTTP response from a GetAdminSearchOperationsWithResponse call
+func ParseGetAdminSearchOperationsClientResponse(rsp *http.Response) (*GetAdminSearchOperationsClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAdminSearchOperationsClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchOperationsStatus
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePreviewAdminSearchClientResponse parses an HTTP response from a PreviewAdminSearchWithResponse call
+func ParsePreviewAdminSearchClientResponse(rsp *http.Response) (*PreviewAdminSearchClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PreviewAdminSearchClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchPreviewResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequestsProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ServiceUnavailableProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSearchAdminProductsClientResponse parses an HTTP response from a SearchAdminProductsWithResponse call
+func ParseSearchAdminProductsClientResponse(rsp *http.Response) (*SearchAdminProductsClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SearchAdminProductsClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AdminProductSearchResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequestsProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ServiceUnavailableProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminSearchRankingProfilesClientResponse parses an HTTP response from a ListAdminSearchRankingProfilesWithResponse call
+func ParseListAdminSearchRankingProfilesClientResponse(rsp *http.Response) (*ListAdminSearchRankingProfilesClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminSearchRankingProfilesClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchRankingProfileListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateAdminSearchRankingProfileClientResponse parses an HTTP response from a CreateAdminSearchRankingProfileWithResponse call
+func ParseCreateAdminSearchRankingProfileClientResponse(rsp *http.Response) (*CreateAdminSearchRankingProfileClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateAdminSearchRankingProfileClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest SearchRankingProfile
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteAdminSearchRankingProfileClientResponse parses an HTTP response from a DeleteAdminSearchRankingProfileWithResponse call
+func ParseDeleteAdminSearchRankingProfileClientResponse(rsp *http.Response) (*DeleteAdminSearchRankingProfileClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteAdminSearchRankingProfileClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAdminSearchRankingProfileClientResponse parses an HTTP response from a GetAdminSearchRankingProfileWithResponse call
+func ParseGetAdminSearchRankingProfileClientResponse(rsp *http.Response) (*GetAdminSearchRankingProfileClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAdminSearchRankingProfileClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchRankingProfile
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateAdminSearchRankingProfileClientResponse parses an HTTP response from a UpdateAdminSearchRankingProfileWithResponse call
+func ParseUpdateAdminSearchRankingProfileClientResponse(rsp *http.Response) (*UpdateAdminSearchRankingProfileClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateAdminSearchRankingProfileClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchRankingProfile
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateAdminSearchConversionRefreshClientResponse parses an HTTP response from a CreateAdminSearchConversionRefreshWithResponse call
+func ParseCreateAdminSearchConversionRefreshClientResponse(rsp *http.Response) (*CreateAdminSearchConversionRefreshClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateAdminSearchConversionRefreshClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest SearchRefreshAccepted
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateAdminSearchSalesRefreshClientResponse parses an HTTP response from a CreateAdminSearchSalesRefreshWithResponse call
+func ParseCreateAdminSearchSalesRefreshClientResponse(rsp *http.Response) (*CreateAdminSearchSalesRefreshClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateAdminSearchSalesRefreshClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest SearchRefreshAccepted
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateAdminSearchReindexClientResponse parses an HTTP response from a CreateAdminSearchReindexWithResponse call
+func ParseCreateAdminSearchReindexClientResponse(rsp *http.Response) (*CreateAdminSearchReindexClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateAdminSearchReindexClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest SearchReindexAccepted
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequestsProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ServiceUnavailableProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminSearchSynonymsClientResponse parses an HTTP response from a ListAdminSearchSynonymsWithResponse call
+func ParseListAdminSearchSynonymsClientResponse(rsp *http.Response) (*ListAdminSearchSynonymsClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminSearchSynonymsClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchSynonymSetListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateAdminSearchSynonymClientResponse parses an HTTP response from a CreateAdminSearchSynonymWithResponse call
+func ParseCreateAdminSearchSynonymClientResponse(rsp *http.Response) (*CreateAdminSearchSynonymClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateAdminSearchSynonymClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest SearchSynonymSet
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteAdminSearchSynonymClientResponse parses an HTTP response from a DeleteAdminSearchSynonymWithResponse call
+func ParseDeleteAdminSearchSynonymClientResponse(rsp *http.Response) (*DeleteAdminSearchSynonymClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteAdminSearchSynonymClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAdminSearchSynonymClientResponse parses an HTTP response from a GetAdminSearchSynonymWithResponse call
+func ParseGetAdminSearchSynonymClientResponse(rsp *http.Response) (*GetAdminSearchSynonymClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAdminSearchSynonymClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchSynonymSet
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateAdminSearchSynonymClientResponse parses an HTTP response from a UpdateAdminSearchSynonymWithResponse call
+func ParseUpdateAdminSearchSynonymClientResponse(rsp *http.Response) (*UpdateAdminSearchSynonymClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateAdminSearchSynonymClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchSynonymSet
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAdminSearchTypoProfilesClientResponse parses an HTTP response from a ListAdminSearchTypoProfilesWithResponse call
+func ParseListAdminSearchTypoProfilesClientResponse(rsp *http.Response) (*ListAdminSearchTypoProfilesClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminSearchTypoProfilesClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchTypoToleranceProfileListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateAdminSearchTypoProfileClientResponse parses an HTTP response from a CreateAdminSearchTypoProfileWithResponse call
+func ParseCreateAdminSearchTypoProfileClientResponse(rsp *http.Response) (*CreateAdminSearchTypoProfileClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateAdminSearchTypoProfileClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest SearchTypoToleranceProfile
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteAdminSearchTypoProfileClientResponse parses an HTTP response from a DeleteAdminSearchTypoProfileWithResponse call
+func ParseDeleteAdminSearchTypoProfileClientResponse(rsp *http.Response) (*DeleteAdminSearchTypoProfileClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteAdminSearchTypoProfileClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAdminSearchTypoProfileClientResponse parses an HTTP response from a GetAdminSearchTypoProfileWithResponse call
+func ParseGetAdminSearchTypoProfileClientResponse(rsp *http.Response) (*GetAdminSearchTypoProfileClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAdminSearchTypoProfileClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchTypoToleranceProfile
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateAdminSearchTypoProfileClientResponse parses an HTTP response from a UpdateAdminSearchTypoProfileWithResponse call
+func ParseUpdateAdminSearchTypoProfileClientResponse(rsp *http.Response) (*UpdateAdminSearchTypoProfileClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateAdminSearchTypoProfileClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchTypoToleranceProfile
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest AuthenticationRequiredProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ConflictProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ValidationProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseExportAdminTaxReportClientResponse parses an HTTP response from a ExportAdminTaxReportWithResponse call
 func ParseExportAdminTaxReportClientResponse(rsp *http.Response) (*ExportAdminTaxReportClientResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -45105,6 +52393,330 @@ func ParseGetProductClientResponse(rsp *http.Response) (*GetProductClientRespons
 	return response, nil
 }
 
+// ParseRevokeSearchConsentClientResponse parses an HTTP response from a RevokeSearchConsentWithResponse call
+func ParseRevokeSearchConsentClientResponse(rsp *http.Response) (*RevokeSearchConsentClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RevokeSearchConsentClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateSearchEventClientResponse parses an HTTP response from a CreateSearchEventWithResponse call
+func ParseCreateSearchEventClientResponse(rsp *http.Response) (*CreateSearchEventClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateSearchEventClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchEventResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequestsProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateSearchImpressionClientResponse parses an HTTP response from a CreateSearchImpressionWithResponse call
+func ParseCreateSearchImpressionClientResponse(rsp *http.Response) (*CreateSearchImpressionClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateSearchImpressionClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchImpressionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequestsProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ServiceUnavailableProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSearchProductsClientResponse parses an HTTP response from a SearchProductsWithResponse call
+func ParseSearchProductsClientResponse(rsp *http.Response) (*SearchProductsClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SearchProductsClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ProductSearchResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequestsProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ServiceUnavailableProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateSearchProofClientResponse parses an HTTP response from a CreateSearchProofWithResponse call
+func ParseCreateSearchProofClientResponse(rsp *http.Response) (*CreateSearchProofClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateSearchProofClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchProofResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ForbiddenProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequestsProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ServiceUnavailableProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSearchSuggestionsClientResponse parses an HTTP response from a GetSearchSuggestionsWithResponse call
+func ParseGetSearchSuggestionsClientResponse(rsp *http.Response) (*GetSearchSuggestionsClientResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSearchSuggestionsClientResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SearchSuggestionsResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequestProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequestsProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerErrorProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest ServiceUnavailableProblem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseReceiveWebhookEventClientResponse parses an HTTP response from a ReceiveWebhookEventWithResponse call
 func ParseReceiveWebhookEventClientResponse(rsp *http.Response) (*ReceiveWebhookEventClientResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -45661,6 +53273,102 @@ type ServerInterface interface {
 
 	// (POST /api/v1/admin/purchase-orders/{id}/receive)
 	ReceiveAdminPurchaseOrder(c *gin.Context, id int)
+	// Read consented search analytics
+	// (GET /api/v1/admin/search/analytics)
+	GetAdminSearchAnalytics(c *gin.Context, params GetAdminSearchAnalyticsParams)
+	// List immutable search configuration changes
+	// (GET /api/v1/admin/search/configuration-history)
+	ListAdminSearchConfigurationHistory(c *gin.Context, params ListAdminSearchConfigurationHistoryParams)
+	// Get search index freshness
+	// (GET /api/v1/admin/search/freshness)
+	GetAdminSearchFreshness(c *gin.Context)
+	// List stale-index incidents and recovery history
+	// (GET /api/v1/admin/search/incidents)
+	GetAdminSearchIncidents(c *gin.Context, params GetAdminSearchIncidentsParams)
+	// List all merchandising audit history, including deleted rules
+	// (GET /api/v1/admin/search/merchandising-audit)
+	ListAdminSearchMerchandisingAudit(c *gin.Context)
+	// List search merchandising rules
+	// (GET /api/v1/admin/search/merchandising-rules)
+	ListAdminSearchMerchandisingRules(c *gin.Context)
+	// Create a named search merchandising rule
+	// (POST /api/v1/admin/search/merchandising-rules)
+	CreateAdminSearchMerchandisingRule(c *gin.Context)
+	// Delete a search merchandising rule
+	// (DELETE /api/v1/admin/search/merchandising-rules/{id})
+	DeleteAdminSearchMerchandisingRule(c *gin.Context, id int)
+	// Get a search merchandising rule
+	// (GET /api/v1/admin/search/merchandising-rules/{id})
+	GetAdminSearchMerchandisingRule(c *gin.Context, id int)
+	// Update a search merchandising rule
+	// (PATCH /api/v1/admin/search/merchandising-rules/{id})
+	UpdateAdminSearchMerchandisingRule(c *gin.Context, id int)
+
+	// (GET /api/v1/admin/search/merchandising-rules/{id}/audit)
+	ListAdminSearchMerchandisingRuleAudit(c *gin.Context, id int)
+	// Inspect search capacity and circuit status
+	// (GET /api/v1/admin/search/operations)
+	GetAdminSearchOperations(c *gin.Context)
+
+	// (POST /api/v1/admin/search/preview)
+	PreviewAdminSearch(c *gin.Context)
+	// Search published products with ranking explanations
+	// (GET /api/v1/admin/search/products)
+	SearchAdminProducts(c *gin.Context, params SearchAdminProductsParams)
+	// List search ranking profiles
+	// (GET /api/v1/admin/search/ranking-profiles)
+	ListAdminSearchRankingProfiles(c *gin.Context)
+	// Create a named search ranking profile
+	// (POST /api/v1/admin/search/ranking-profiles)
+	CreateAdminSearchRankingProfile(c *gin.Context)
+	// Delete a search ranking profile
+	// (DELETE /api/v1/admin/search/ranking-profiles/{id})
+	DeleteAdminSearchRankingProfile(c *gin.Context, id int)
+	// Get a search ranking profile
+	// (GET /api/v1/admin/search/ranking-profiles/{id})
+	GetAdminSearchRankingProfile(c *gin.Context, id int)
+	// Update a search ranking profile
+	// (PATCH /api/v1/admin/search/ranking-profiles/{id})
+	UpdateAdminSearchRankingProfile(c *gin.Context, id int)
+	// Queue the daily search conversion signal refresh
+	// (POST /api/v1/admin/search/refresh-conversion)
+	CreateAdminSearchConversionRefresh(c *gin.Context)
+	// Queue the daily search sales signal refresh
+	// (POST /api/v1/admin/search/refresh-sales)
+	CreateAdminSearchSalesRefresh(c *gin.Context)
+	// Queue a full search reindex
+	// (POST /api/v1/admin/search/reindex)
+	CreateAdminSearchReindex(c *gin.Context)
+	// List search synonym sets
+	// (GET /api/v1/admin/search/synonyms)
+	ListAdminSearchSynonyms(c *gin.Context)
+	// Create a search synonym set
+	// (POST /api/v1/admin/search/synonyms)
+	CreateAdminSearchSynonym(c *gin.Context)
+	// Delete a search synonym set
+	// (DELETE /api/v1/admin/search/synonyms/{id})
+	DeleteAdminSearchSynonym(c *gin.Context, id int)
+	// Get a search synonym set
+	// (GET /api/v1/admin/search/synonyms/{id})
+	GetAdminSearchSynonym(c *gin.Context, id int)
+	// Update a search synonym set
+	// (PATCH /api/v1/admin/search/synonyms/{id})
+	UpdateAdminSearchSynonym(c *gin.Context, id int)
+	// List search typo tolerance profiles
+	// (GET /api/v1/admin/search/typo-profiles)
+	ListAdminSearchTypoProfiles(c *gin.Context)
+	// Create a named search typo tolerance profile
+	// (POST /api/v1/admin/search/typo-profiles)
+	CreateAdminSearchTypoProfile(c *gin.Context)
+	// Delete a search typo tolerance profile
+	// (DELETE /api/v1/admin/search/typo-profiles/{id})
+	DeleteAdminSearchTypoProfile(c *gin.Context, id int)
+	// Get a search typo tolerance profile
+	// (GET /api/v1/admin/search/typo-profiles/{id})
+	GetAdminSearchTypoProfile(c *gin.Context, id int)
+	// Update a search typo tolerance profile
+	// (PATCH /api/v1/admin/search/typo-profiles/{id})
+	UpdateAdminSearchTypoProfile(c *gin.Context, id int)
 
 	// (GET /api/v1/admin/tax/reports/export)
 	ExportAdminTaxReport(c *gin.Context, params ExportAdminTaxReportParams)
@@ -45859,6 +53567,24 @@ type ServerInterface interface {
 	// Get product by id
 	// (GET /api/v1/products/{id})
 	GetProduct(c *gin.Context, id int)
+	// Revoke anonymous search analytics consent
+	// (POST /api/v1/search/consent/revoke)
+	RevokeSearchConsent(c *gin.Context)
+	// Record a verified search result click
+	// (POST /api/v1/search/events)
+	CreateSearchEvent(c *gin.Context)
+	// Record an opted-in search impression
+	// (POST /api/v1/search/impressions)
+	CreateSearchImpression(c *gin.Context)
+	// Search published products
+	// (GET /api/v1/search/products)
+	SearchProducts(c *gin.Context, params SearchProductsParams)
+	// Exchange a cacheable server snapshot for a consented browser exposure proof
+	// (POST /api/v1/search/proofs)
+	CreateSearchProof(c *gin.Context)
+	// Suggest product search queries
+	// (GET /api/v1/search/suggestions)
+	GetSearchSuggestions(c *gin.Context, params GetSearchSuggestionsParams)
 
 	// (POST /api/v1/webhooks/{provider})
 	ReceiveWebhookEvent(c *gin.Context, provider string)
@@ -50763,6 +58489,897 @@ func (siw *ServerInterfaceWrapper) ReceiveAdminPurchaseOrder(c *gin.Context) {
 	siw.Handler.ReceiveAdminPurchaseOrder(c, id)
 }
 
+// GetAdminSearchAnalytics operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminSearchAnalytics(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAdminSearchAnalyticsParams
+
+	// ------------- Optional query parameter "days" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "days", c.Request.URL.Query(), &params.Days)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter days: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminSearchAnalytics(c, params)
+}
+
+// ListAdminSearchConfigurationHistory operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminSearchConfigurationHistory(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminSearchConfigurationHistoryParams
+
+	// ------------- Optional query parameter "kind" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "kind", c.Request.URL.Query(), &params.Kind)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter kind: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "entity_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "entity_id", c.Request.URL.Query(), &params.EntityId)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter entity_id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminSearchConfigurationHistory(c, params)
+}
+
+// GetAdminSearchFreshness operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminSearchFreshness(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminSearchFreshness(c)
+}
+
+// GetAdminSearchIncidents operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminSearchIncidents(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAdminSearchIncidentsParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "status", c.Request.URL.Query(), &params.Status)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter status: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminSearchIncidents(c, params)
+}
+
+// ListAdminSearchMerchandisingAudit operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminSearchMerchandisingAudit(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminSearchMerchandisingAudit(c)
+}
+
+// ListAdminSearchMerchandisingRules operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminSearchMerchandisingRules(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminSearchMerchandisingRules(c)
+}
+
+// CreateAdminSearchMerchandisingRule operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminSearchMerchandisingRule(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminSearchMerchandisingRule(c)
+}
+
+// DeleteAdminSearchMerchandisingRule operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAdminSearchMerchandisingRule(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteAdminSearchMerchandisingRule(c, id)
+}
+
+// GetAdminSearchMerchandisingRule operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminSearchMerchandisingRule(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminSearchMerchandisingRule(c, id)
+}
+
+// UpdateAdminSearchMerchandisingRule operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminSearchMerchandisingRule(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminSearchMerchandisingRule(c, id)
+}
+
+// ListAdminSearchMerchandisingRuleAudit operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminSearchMerchandisingRuleAudit(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminSearchMerchandisingRuleAudit(c, id)
+}
+
+// GetAdminSearchOperations operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminSearchOperations(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminSearchOperations(c)
+}
+
+// PreviewAdminSearch operation middleware
+func (siw *ServerInterfaceWrapper) PreviewAdminSearch(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.PreviewAdminSearch(c)
+}
+
+// SearchAdminProducts operation middleware
+func (siw *ServerInterfaceWrapper) SearchAdminProducts(c *gin.Context) {
+
+	var err error
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SearchAdminProductsParams
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "q", c.Request.URL.Query(), &params.Q)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "min_price" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "min_price", c.Request.URL.Query(), &params.MinPrice)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter min_price: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "max_price" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "max_price", c.Request.URL.Query(), &params.MaxPrice)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter max_price: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "brand_slug" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "brand_slug", c.Request.URL.Query(), &params.BrandSlug)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter brand_slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "category_slug" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "category_slug", c.Request.URL.Query(), &params.CategorySlug)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter category_slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "has_variant_stock" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "has_variant_stock", c.Request.URL.Query(), &params.HasVariantStock)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter has_variant_stock: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "price_range" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "price_range", c.Request.URL.Query(), &params.PriceRange)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter price_range: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "attribute" -------------
+
+	err = runtime.BindQueryParameter("deepObject", true, false, "attribute", c.Request.URL.Query(), &params.Attribute)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter attribute: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "ranking_profile" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "ranking_profile", c.Request.URL.Query(), &params.RankingProfile)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter ranking_profile: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "sort" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "sort", c.Request.URL.Query(), &params.Sort)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter sort: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "order" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "order", c.Request.URL.Query(), &params.Order)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter order: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.SearchAdminProducts(c, params)
+}
+
+// ListAdminSearchRankingProfiles operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminSearchRankingProfiles(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminSearchRankingProfiles(c)
+}
+
+// CreateAdminSearchRankingProfile operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminSearchRankingProfile(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminSearchRankingProfile(c)
+}
+
+// DeleteAdminSearchRankingProfile operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAdminSearchRankingProfile(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteAdminSearchRankingProfile(c, id)
+}
+
+// GetAdminSearchRankingProfile operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminSearchRankingProfile(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminSearchRankingProfile(c, id)
+}
+
+// UpdateAdminSearchRankingProfile operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminSearchRankingProfile(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminSearchRankingProfile(c, id)
+}
+
+// CreateAdminSearchConversionRefresh operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminSearchConversionRefresh(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminSearchConversionRefresh(c)
+}
+
+// CreateAdminSearchSalesRefresh operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminSearchSalesRefresh(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminSearchSalesRefresh(c)
+}
+
+// CreateAdminSearchReindex operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminSearchReindex(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminSearchReindex(c)
+}
+
+// ListAdminSearchSynonyms operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminSearchSynonyms(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminSearchSynonyms(c)
+}
+
+// CreateAdminSearchSynonym operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminSearchSynonym(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminSearchSynonym(c)
+}
+
+// DeleteAdminSearchSynonym operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAdminSearchSynonym(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteAdminSearchSynonym(c, id)
+}
+
+// GetAdminSearchSynonym operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminSearchSynonym(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminSearchSynonym(c, id)
+}
+
+// UpdateAdminSearchSynonym operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminSearchSynonym(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminSearchSynonym(c, id)
+}
+
+// ListAdminSearchTypoProfiles operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminSearchTypoProfiles(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListAdminSearchTypoProfiles(c)
+}
+
+// CreateAdminSearchTypoProfile operation middleware
+func (siw *ServerInterfaceWrapper) CreateAdminSearchTypoProfile(c *gin.Context) {
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateAdminSearchTypoProfile(c)
+}
+
+// DeleteAdminSearchTypoProfile operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAdminSearchTypoProfile(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeleteAdminSearchTypoProfile(c, id)
+}
+
+// GetAdminSearchTypoProfile operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminSearchTypoProfile(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAdminSearchTypoProfile(c, id)
+}
+
+// UpdateAdminSearchTypoProfile operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAdminSearchTypoProfile(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	c.Set(CookieAuthScopes, []string{})
+
+	c.Set(BearerAuthScopes, []string{})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.UpdateAdminSearchTypoProfile(c, id)
+}
+
 // ExportAdminTaxReport operation middleware
 func (siw *ServerInterfaceWrapper) ExportAdminTaxReport(c *gin.Context) {
 
@@ -52675,14 +61292,6 @@ func (siw *ServerInterfaceWrapper) ListProducts(c *gin.Context) {
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListProductsParams
 
-	// ------------- Optional query parameter "q" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "q", c.Request.URL.Query(), &params.Q)
-	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
-		return
-	}
-
 	// ------------- Optional query parameter "min_price" -------------
 
 	err = runtime.BindQueryParameter("form", true, false, "min_price", c.Request.URL.Query(), &params.MinPrice)
@@ -52795,6 +61404,213 @@ func (siw *ServerInterfaceWrapper) GetProduct(c *gin.Context) {
 	}
 
 	siw.Handler.GetProduct(c, id)
+}
+
+// RevokeSearchConsent operation middleware
+func (siw *ServerInterfaceWrapper) RevokeSearchConsent(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.RevokeSearchConsent(c)
+}
+
+// CreateSearchEvent operation middleware
+func (siw *ServerInterfaceWrapper) CreateSearchEvent(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateSearchEvent(c)
+}
+
+// CreateSearchImpression operation middleware
+func (siw *ServerInterfaceWrapper) CreateSearchImpression(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateSearchImpression(c)
+}
+
+// SearchProducts operation middleware
+func (siw *ServerInterfaceWrapper) SearchProducts(c *gin.Context) {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SearchProductsParams
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "q", c.Request.URL.Query(), &params.Q)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "min_price" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "min_price", c.Request.URL.Query(), &params.MinPrice)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter min_price: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "max_price" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "max_price", c.Request.URL.Query(), &params.MaxPrice)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter max_price: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "brand_slug" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "brand_slug", c.Request.URL.Query(), &params.BrandSlug)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter brand_slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "category_slug" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "category_slug", c.Request.URL.Query(), &params.CategorySlug)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter category_slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "has_variant_stock" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "has_variant_stock", c.Request.URL.Query(), &params.HasVariantStock)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter has_variant_stock: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "price_range" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "price_range", c.Request.URL.Query(), &params.PriceRange)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter price_range: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "attribute" -------------
+
+	err = runtime.BindQueryParameter("deepObject", true, false, "attribute", c.Request.URL.Query(), &params.Attribute)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter attribute: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "sort" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "sort", c.Request.URL.Query(), &params.Sort)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter sort: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "order" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "order", c.Request.URL.Query(), &params.Order)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter order: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.SearchProducts(c, params)
+}
+
+// CreateSearchProof operation middleware
+func (siw *ServerInterfaceWrapper) CreateSearchProof(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.CreateSearchProof(c)
+}
+
+// GetSearchSuggestions operation middleware
+func (siw *ServerInterfaceWrapper) GetSearchSuggestions(c *gin.Context) {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetSearchSuggestionsParams
+
+	// ------------- Required query parameter "q" -------------
+
+	if paramValue := c.Query("q"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Query argument q is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "q", c.Request.URL.Query(), &params.Q)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetSearchSuggestions(c, params)
 }
 
 // ReceiveWebhookEvent operation middleware
@@ -53017,6 +61833,38 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/api/v1/admin/purchase-orders/:id/cancel", wrapper.CancelAdminPurchaseOrder)
 	router.POST(options.BaseURL+"/api/v1/admin/purchase-orders/:id/issue", wrapper.IssueAdminPurchaseOrder)
 	router.POST(options.BaseURL+"/api/v1/admin/purchase-orders/:id/receive", wrapper.ReceiveAdminPurchaseOrder)
+	router.GET(options.BaseURL+"/api/v1/admin/search/analytics", wrapper.GetAdminSearchAnalytics)
+	router.GET(options.BaseURL+"/api/v1/admin/search/configuration-history", wrapper.ListAdminSearchConfigurationHistory)
+	router.GET(options.BaseURL+"/api/v1/admin/search/freshness", wrapper.GetAdminSearchFreshness)
+	router.GET(options.BaseURL+"/api/v1/admin/search/incidents", wrapper.GetAdminSearchIncidents)
+	router.GET(options.BaseURL+"/api/v1/admin/search/merchandising-audit", wrapper.ListAdminSearchMerchandisingAudit)
+	router.GET(options.BaseURL+"/api/v1/admin/search/merchandising-rules", wrapper.ListAdminSearchMerchandisingRules)
+	router.POST(options.BaseURL+"/api/v1/admin/search/merchandising-rules", wrapper.CreateAdminSearchMerchandisingRule)
+	router.DELETE(options.BaseURL+"/api/v1/admin/search/merchandising-rules/:id", wrapper.DeleteAdminSearchMerchandisingRule)
+	router.GET(options.BaseURL+"/api/v1/admin/search/merchandising-rules/:id", wrapper.GetAdminSearchMerchandisingRule)
+	router.PATCH(options.BaseURL+"/api/v1/admin/search/merchandising-rules/:id", wrapper.UpdateAdminSearchMerchandisingRule)
+	router.GET(options.BaseURL+"/api/v1/admin/search/merchandising-rules/:id/audit", wrapper.ListAdminSearchMerchandisingRuleAudit)
+	router.GET(options.BaseURL+"/api/v1/admin/search/operations", wrapper.GetAdminSearchOperations)
+	router.POST(options.BaseURL+"/api/v1/admin/search/preview", wrapper.PreviewAdminSearch)
+	router.GET(options.BaseURL+"/api/v1/admin/search/products", wrapper.SearchAdminProducts)
+	router.GET(options.BaseURL+"/api/v1/admin/search/ranking-profiles", wrapper.ListAdminSearchRankingProfiles)
+	router.POST(options.BaseURL+"/api/v1/admin/search/ranking-profiles", wrapper.CreateAdminSearchRankingProfile)
+	router.DELETE(options.BaseURL+"/api/v1/admin/search/ranking-profiles/:id", wrapper.DeleteAdminSearchRankingProfile)
+	router.GET(options.BaseURL+"/api/v1/admin/search/ranking-profiles/:id", wrapper.GetAdminSearchRankingProfile)
+	router.PATCH(options.BaseURL+"/api/v1/admin/search/ranking-profiles/:id", wrapper.UpdateAdminSearchRankingProfile)
+	router.POST(options.BaseURL+"/api/v1/admin/search/refresh-conversion", wrapper.CreateAdminSearchConversionRefresh)
+	router.POST(options.BaseURL+"/api/v1/admin/search/refresh-sales", wrapper.CreateAdminSearchSalesRefresh)
+	router.POST(options.BaseURL+"/api/v1/admin/search/reindex", wrapper.CreateAdminSearchReindex)
+	router.GET(options.BaseURL+"/api/v1/admin/search/synonyms", wrapper.ListAdminSearchSynonyms)
+	router.POST(options.BaseURL+"/api/v1/admin/search/synonyms", wrapper.CreateAdminSearchSynonym)
+	router.DELETE(options.BaseURL+"/api/v1/admin/search/synonyms/:id", wrapper.DeleteAdminSearchSynonym)
+	router.GET(options.BaseURL+"/api/v1/admin/search/synonyms/:id", wrapper.GetAdminSearchSynonym)
+	router.PATCH(options.BaseURL+"/api/v1/admin/search/synonyms/:id", wrapper.UpdateAdminSearchSynonym)
+	router.GET(options.BaseURL+"/api/v1/admin/search/typo-profiles", wrapper.ListAdminSearchTypoProfiles)
+	router.POST(options.BaseURL+"/api/v1/admin/search/typo-profiles", wrapper.CreateAdminSearchTypoProfile)
+	router.DELETE(options.BaseURL+"/api/v1/admin/search/typo-profiles/:id", wrapper.DeleteAdminSearchTypoProfile)
+	router.GET(options.BaseURL+"/api/v1/admin/search/typo-profiles/:id", wrapper.GetAdminSearchTypoProfile)
+	router.PATCH(options.BaseURL+"/api/v1/admin/search/typo-profiles/:id", wrapper.UpdateAdminSearchTypoProfile)
 	router.GET(options.BaseURL+"/api/v1/admin/tax/reports/export", wrapper.ExportAdminTaxReport)
 	router.GET(options.BaseURL+"/api/v1/admin/users", wrapper.ListUsers)
 	router.PATCH(options.BaseURL+"/api/v1/admin/users/:id/role", wrapper.UpdateUserRole)
@@ -53083,6 +61931,12 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/api/v1/product-attributes", wrapper.ListProductAttributes)
 	router.GET(options.BaseURL+"/api/v1/products", wrapper.ListProducts)
 	router.GET(options.BaseURL+"/api/v1/products/:id", wrapper.GetProduct)
+	router.POST(options.BaseURL+"/api/v1/search/consent/revoke", wrapper.RevokeSearchConsent)
+	router.POST(options.BaseURL+"/api/v1/search/events", wrapper.CreateSearchEvent)
+	router.POST(options.BaseURL+"/api/v1/search/impressions", wrapper.CreateSearchImpression)
+	router.GET(options.BaseURL+"/api/v1/search/products", wrapper.SearchProducts)
+	router.POST(options.BaseURL+"/api/v1/search/proofs", wrapper.CreateSearchProof)
+	router.GET(options.BaseURL+"/api/v1/search/suggestions", wrapper.GetSearchSuggestions)
 	router.POST(options.BaseURL+"/api/v1/webhooks/:provider", wrapper.ReceiveWebhookEvent)
 }
 
@@ -64596,6 +73450,2399 @@ func (response ReceiveAdminPurchaseOrder500ApplicationProblemPlusJSONResponse) V
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetAdminSearchAnalyticsRequestObject struct {
+	Params GetAdminSearchAnalyticsParams
+}
+
+type GetAdminSearchAnalyticsResponseObject interface {
+	VisitGetAdminSearchAnalyticsResponse(w http.ResponseWriter) error
+}
+
+type GetAdminSearchAnalytics200JSONResponse SearchAnalytics
+
+func (response GetAdminSearchAnalytics200JSONResponse) VisitGetAdminSearchAnalyticsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchAnalytics400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchAnalytics400ApplicationProblemPlusJSONResponse) VisitGetAdminSearchAnalyticsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchAnalytics401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchAnalytics401ApplicationProblemPlusJSONResponse) VisitGetAdminSearchAnalyticsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchAnalytics403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchAnalytics403ApplicationProblemPlusJSONResponse) VisitGetAdminSearchAnalyticsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchAnalytics500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchAnalytics500ApplicationProblemPlusJSONResponse) VisitGetAdminSearchAnalyticsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchConfigurationHistoryRequestObject struct {
+	Params ListAdminSearchConfigurationHistoryParams
+}
+
+type ListAdminSearchConfigurationHistoryResponseObject interface {
+	VisitListAdminSearchConfigurationHistoryResponse(w http.ResponseWriter) error
+}
+
+type ListAdminSearchConfigurationHistory200JSONResponse SearchConfigurationAuditListResponse
+
+func (response ListAdminSearchConfigurationHistory200JSONResponse) VisitListAdminSearchConfigurationHistoryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchConfigurationHistory400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchConfigurationHistory400ApplicationProblemPlusJSONResponse) VisitListAdminSearchConfigurationHistoryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchConfigurationHistory401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchConfigurationHistory401ApplicationProblemPlusJSONResponse) VisitListAdminSearchConfigurationHistoryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchConfigurationHistory403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchConfigurationHistory403ApplicationProblemPlusJSONResponse) VisitListAdminSearchConfigurationHistoryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchConfigurationHistory500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchConfigurationHistory500ApplicationProblemPlusJSONResponse) VisitListAdminSearchConfigurationHistoryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchFreshnessRequestObject struct {
+}
+
+type GetAdminSearchFreshnessResponseObject interface {
+	VisitGetAdminSearchFreshnessResponse(w http.ResponseWriter) error
+}
+
+type GetAdminSearchFreshness200JSONResponse SearchFreshness
+
+func (response GetAdminSearchFreshness200JSONResponse) VisitGetAdminSearchFreshnessResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchFreshness400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchFreshness400ApplicationProblemPlusJSONResponse) VisitGetAdminSearchFreshnessResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchFreshness401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchFreshness401ApplicationProblemPlusJSONResponse) VisitGetAdminSearchFreshnessResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchFreshness403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchFreshness403ApplicationProblemPlusJSONResponse) VisitGetAdminSearchFreshnessResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchFreshness500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchFreshness500ApplicationProblemPlusJSONResponse) VisitGetAdminSearchFreshnessResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchIncidentsRequestObject struct {
+	Params GetAdminSearchIncidentsParams
+}
+
+type GetAdminSearchIncidentsResponseObject interface {
+	VisitGetAdminSearchIncidentsResponse(w http.ResponseWriter) error
+}
+
+type GetAdminSearchIncidents200JSONResponse SearchIndexIncidentListResponse
+
+func (response GetAdminSearchIncidents200JSONResponse) VisitGetAdminSearchIncidentsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchIncidents400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchIncidents400ApplicationProblemPlusJSONResponse) VisitGetAdminSearchIncidentsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchIncidents401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchIncidents401ApplicationProblemPlusJSONResponse) VisitGetAdminSearchIncidentsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchIncidents403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchIncidents403ApplicationProblemPlusJSONResponse) VisitGetAdminSearchIncidentsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchIncidents500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchIncidents500ApplicationProblemPlusJSONResponse) VisitGetAdminSearchIncidentsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingAuditRequestObject struct {
+}
+
+type ListAdminSearchMerchandisingAuditResponseObject interface {
+	VisitListAdminSearchMerchandisingAuditResponse(w http.ResponseWriter) error
+}
+
+type ListAdminSearchMerchandisingAudit200JSONResponse SearchMerchandisingAuditListResponse
+
+func (response ListAdminSearchMerchandisingAudit200JSONResponse) VisitListAdminSearchMerchandisingAuditResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingAudit400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchMerchandisingAudit400ApplicationProblemPlusJSONResponse) VisitListAdminSearchMerchandisingAuditResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingAudit401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchMerchandisingAudit401ApplicationProblemPlusJSONResponse) VisitListAdminSearchMerchandisingAuditResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingAudit403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchMerchandisingAudit403ApplicationProblemPlusJSONResponse) VisitListAdminSearchMerchandisingAuditResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingAudit500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchMerchandisingAudit500ApplicationProblemPlusJSONResponse) VisitListAdminSearchMerchandisingAuditResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingRulesRequestObject struct {
+}
+
+type ListAdminSearchMerchandisingRulesResponseObject interface {
+	VisitListAdminSearchMerchandisingRulesResponse(w http.ResponseWriter) error
+}
+
+type ListAdminSearchMerchandisingRules200JSONResponse SearchMerchandisingRuleListResponse
+
+func (response ListAdminSearchMerchandisingRules200JSONResponse) VisitListAdminSearchMerchandisingRulesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingRules400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchMerchandisingRules400ApplicationProblemPlusJSONResponse) VisitListAdminSearchMerchandisingRulesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingRules401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchMerchandisingRules401ApplicationProblemPlusJSONResponse) VisitListAdminSearchMerchandisingRulesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingRules403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchMerchandisingRules403ApplicationProblemPlusJSONResponse) VisitListAdminSearchMerchandisingRulesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingRules500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchMerchandisingRules500ApplicationProblemPlusJSONResponse) VisitListAdminSearchMerchandisingRulesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchMerchandisingRuleRequestObject struct {
+	Body *CreateAdminSearchMerchandisingRuleJSONRequestBody
+}
+
+type CreateAdminSearchMerchandisingRuleResponseObject interface {
+	VisitCreateAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminSearchMerchandisingRule201JSONResponse SearchMerchandisingRule
+
+func (response CreateAdminSearchMerchandisingRule201JSONResponse) VisitCreateAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchMerchandisingRule400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchMerchandisingRule400ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchMerchandisingRule401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchMerchandisingRule401ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchMerchandisingRule403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchMerchandisingRule403ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchMerchandisingRule422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchMerchandisingRule422ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchMerchandisingRule500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchMerchandisingRule500ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchMerchandisingRuleRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DeleteAdminSearchMerchandisingRuleResponseObject interface {
+	VisitDeleteAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error
+}
+
+type DeleteAdminSearchMerchandisingRule204Response struct {
+}
+
+func (response DeleteAdminSearchMerchandisingRule204Response) VisitDeleteAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteAdminSearchMerchandisingRule400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchMerchandisingRule400ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchMerchandisingRule401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchMerchandisingRule401ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchMerchandisingRule403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchMerchandisingRule403ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchMerchandisingRule404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchMerchandisingRule404ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchMerchandisingRule500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchMerchandisingRule500ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchMerchandisingRuleRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetAdminSearchMerchandisingRuleResponseObject interface {
+	VisitGetAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error
+}
+
+type GetAdminSearchMerchandisingRule200JSONResponse SearchMerchandisingRule
+
+func (response GetAdminSearchMerchandisingRule200JSONResponse) VisitGetAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchMerchandisingRule400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchMerchandisingRule400ApplicationProblemPlusJSONResponse) VisitGetAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchMerchandisingRule401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchMerchandisingRule401ApplicationProblemPlusJSONResponse) VisitGetAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchMerchandisingRule403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchMerchandisingRule403ApplicationProblemPlusJSONResponse) VisitGetAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchMerchandisingRule404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchMerchandisingRule404ApplicationProblemPlusJSONResponse) VisitGetAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchMerchandisingRule500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchMerchandisingRule500ApplicationProblemPlusJSONResponse) VisitGetAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchMerchandisingRuleRequestObject struct {
+	Id   int `json:"id"`
+	Body *UpdateAdminSearchMerchandisingRuleJSONRequestBody
+}
+
+type UpdateAdminSearchMerchandisingRuleResponseObject interface {
+	VisitUpdateAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminSearchMerchandisingRule200JSONResponse SearchMerchandisingRule
+
+func (response UpdateAdminSearchMerchandisingRule200JSONResponse) VisitUpdateAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchMerchandisingRule400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchMerchandisingRule400ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchMerchandisingRule401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchMerchandisingRule401ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchMerchandisingRule403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchMerchandisingRule403ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchMerchandisingRule404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchMerchandisingRule404ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchMerchandisingRule422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchMerchandisingRule422ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchMerchandisingRule500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchMerchandisingRule500ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchMerchandisingRuleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingRuleAuditRequestObject struct {
+	Id int `json:"id"`
+}
+
+type ListAdminSearchMerchandisingRuleAuditResponseObject interface {
+	VisitListAdminSearchMerchandisingRuleAuditResponse(w http.ResponseWriter) error
+}
+
+type ListAdminSearchMerchandisingRuleAudit200JSONResponse SearchMerchandisingAuditListResponse
+
+func (response ListAdminSearchMerchandisingRuleAudit200JSONResponse) VisitListAdminSearchMerchandisingRuleAuditResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingRuleAudit400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchMerchandisingRuleAudit400ApplicationProblemPlusJSONResponse) VisitListAdminSearchMerchandisingRuleAuditResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingRuleAudit401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchMerchandisingRuleAudit401ApplicationProblemPlusJSONResponse) VisitListAdminSearchMerchandisingRuleAuditResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingRuleAudit403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchMerchandisingRuleAudit403ApplicationProblemPlusJSONResponse) VisitListAdminSearchMerchandisingRuleAuditResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingRuleAudit404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchMerchandisingRuleAudit404ApplicationProblemPlusJSONResponse) VisitListAdminSearchMerchandisingRuleAuditResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchMerchandisingRuleAudit500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchMerchandisingRuleAudit500ApplicationProblemPlusJSONResponse) VisitListAdminSearchMerchandisingRuleAuditResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchOperationsRequestObject struct {
+}
+
+type GetAdminSearchOperationsResponseObject interface {
+	VisitGetAdminSearchOperationsResponse(w http.ResponseWriter) error
+}
+
+type GetAdminSearchOperations200JSONResponse SearchOperationsStatus
+
+func (response GetAdminSearchOperations200JSONResponse) VisitGetAdminSearchOperationsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchOperations400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchOperations400ApplicationProblemPlusJSONResponse) VisitGetAdminSearchOperationsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchOperations401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchOperations401ApplicationProblemPlusJSONResponse) VisitGetAdminSearchOperationsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchOperations403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchOperations403ApplicationProblemPlusJSONResponse) VisitGetAdminSearchOperationsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchOperations500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchOperations500ApplicationProblemPlusJSONResponse) VisitGetAdminSearchOperationsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PreviewAdminSearchRequestObject struct {
+	Body *PreviewAdminSearchJSONRequestBody
+}
+
+type PreviewAdminSearchResponseObject interface {
+	VisitPreviewAdminSearchResponse(w http.ResponseWriter) error
+}
+
+type PreviewAdminSearch200JSONResponse SearchPreviewResponse
+
+func (response PreviewAdminSearch200JSONResponse) VisitPreviewAdminSearchResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PreviewAdminSearch400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PreviewAdminSearch400ApplicationProblemPlusJSONResponse) VisitPreviewAdminSearchResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PreviewAdminSearch401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PreviewAdminSearch401ApplicationProblemPlusJSONResponse) VisitPreviewAdminSearchResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PreviewAdminSearch403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PreviewAdminSearch403ApplicationProblemPlusJSONResponse) VisitPreviewAdminSearchResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PreviewAdminSearch404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PreviewAdminSearch404ApplicationProblemPlusJSONResponse) VisitPreviewAdminSearchResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PreviewAdminSearch422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PreviewAdminSearch422ApplicationProblemPlusJSONResponse) VisitPreviewAdminSearchResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PreviewAdminSearch429ApplicationProblemPlusJSONResponse struct {
+	TooManyRequestsProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PreviewAdminSearch429ApplicationProblemPlusJSONResponse) VisitPreviewAdminSearchResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(429)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PreviewAdminSearch500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PreviewAdminSearch500ApplicationProblemPlusJSONResponse) VisitPreviewAdminSearchResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PreviewAdminSearch503ApplicationProblemPlusJSONResponse struct {
+	ServiceUnavailableProblemApplicationProblemPlusJSONResponse
+}
+
+func (response PreviewAdminSearch503ApplicationProblemPlusJSONResponse) VisitPreviewAdminSearchResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SearchAdminProductsRequestObject struct {
+	Params SearchAdminProductsParams
+}
+
+type SearchAdminProductsResponseObject interface {
+	VisitSearchAdminProductsResponse(w http.ResponseWriter) error
+}
+
+type SearchAdminProducts200JSONResponse AdminProductSearchResponse
+
+func (response SearchAdminProducts200JSONResponse) VisitSearchAdminProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SearchAdminProducts400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SearchAdminProducts400ApplicationProblemPlusJSONResponse) VisitSearchAdminProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SearchAdminProducts401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SearchAdminProducts401ApplicationProblemPlusJSONResponse) VisitSearchAdminProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SearchAdminProducts403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SearchAdminProducts403ApplicationProblemPlusJSONResponse) VisitSearchAdminProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SearchAdminProducts404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SearchAdminProducts404ApplicationProblemPlusJSONResponse) VisitSearchAdminProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SearchAdminProducts429ApplicationProblemPlusJSONResponse struct {
+	TooManyRequestsProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SearchAdminProducts429ApplicationProblemPlusJSONResponse) VisitSearchAdminProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(429)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SearchAdminProducts500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SearchAdminProducts500ApplicationProblemPlusJSONResponse) VisitSearchAdminProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SearchAdminProducts503ApplicationProblemPlusJSONResponse struct {
+	ServiceUnavailableProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SearchAdminProducts503ApplicationProblemPlusJSONResponse) VisitSearchAdminProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchRankingProfilesRequestObject struct {
+}
+
+type ListAdminSearchRankingProfilesResponseObject interface {
+	VisitListAdminSearchRankingProfilesResponse(w http.ResponseWriter) error
+}
+
+type ListAdminSearchRankingProfiles200JSONResponse SearchRankingProfileListResponse
+
+func (response ListAdminSearchRankingProfiles200JSONResponse) VisitListAdminSearchRankingProfilesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchRankingProfiles400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchRankingProfiles400ApplicationProblemPlusJSONResponse) VisitListAdminSearchRankingProfilesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchRankingProfiles401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchRankingProfiles401ApplicationProblemPlusJSONResponse) VisitListAdminSearchRankingProfilesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchRankingProfiles403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchRankingProfiles403ApplicationProblemPlusJSONResponse) VisitListAdminSearchRankingProfilesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchRankingProfiles500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchRankingProfiles500ApplicationProblemPlusJSONResponse) VisitListAdminSearchRankingProfilesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchRankingProfileRequestObject struct {
+	Body *CreateAdminSearchRankingProfileJSONRequestBody
+}
+
+type CreateAdminSearchRankingProfileResponseObject interface {
+	VisitCreateAdminSearchRankingProfileResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminSearchRankingProfile201JSONResponse SearchRankingProfile
+
+func (response CreateAdminSearchRankingProfile201JSONResponse) VisitCreateAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchRankingProfile400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchRankingProfile400ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchRankingProfile401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchRankingProfile401ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchRankingProfile403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchRankingProfile403ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchRankingProfile409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchRankingProfile409ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchRankingProfile422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchRankingProfile422ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchRankingProfile500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchRankingProfile500ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchRankingProfileRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DeleteAdminSearchRankingProfileResponseObject interface {
+	VisitDeleteAdminSearchRankingProfileResponse(w http.ResponseWriter) error
+}
+
+type DeleteAdminSearchRankingProfile204Response struct {
+}
+
+func (response DeleteAdminSearchRankingProfile204Response) VisitDeleteAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteAdminSearchRankingProfile400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchRankingProfile400ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchRankingProfile401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchRankingProfile401ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchRankingProfile403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchRankingProfile403ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchRankingProfile404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchRankingProfile404ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchRankingProfile409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchRankingProfile409ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchRankingProfile500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchRankingProfile500ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchRankingProfileRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetAdminSearchRankingProfileResponseObject interface {
+	VisitGetAdminSearchRankingProfileResponse(w http.ResponseWriter) error
+}
+
+type GetAdminSearchRankingProfile200JSONResponse SearchRankingProfile
+
+func (response GetAdminSearchRankingProfile200JSONResponse) VisitGetAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchRankingProfile400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchRankingProfile400ApplicationProblemPlusJSONResponse) VisitGetAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchRankingProfile401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchRankingProfile401ApplicationProblemPlusJSONResponse) VisitGetAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchRankingProfile403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchRankingProfile403ApplicationProblemPlusJSONResponse) VisitGetAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchRankingProfile404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchRankingProfile404ApplicationProblemPlusJSONResponse) VisitGetAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchRankingProfile500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchRankingProfile500ApplicationProblemPlusJSONResponse) VisitGetAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchRankingProfileRequestObject struct {
+	Id   int `json:"id"`
+	Body *UpdateAdminSearchRankingProfileJSONRequestBody
+}
+
+type UpdateAdminSearchRankingProfileResponseObject interface {
+	VisitUpdateAdminSearchRankingProfileResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminSearchRankingProfile200JSONResponse SearchRankingProfile
+
+func (response UpdateAdminSearchRankingProfile200JSONResponse) VisitUpdateAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchRankingProfile400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchRankingProfile400ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchRankingProfile401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchRankingProfile401ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchRankingProfile403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchRankingProfile403ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchRankingProfile404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchRankingProfile404ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchRankingProfile409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchRankingProfile409ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchRankingProfile422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchRankingProfile422ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchRankingProfile500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchRankingProfile500ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchRankingProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchConversionRefreshRequestObject struct {
+}
+
+type CreateAdminSearchConversionRefreshResponseObject interface {
+	VisitCreateAdminSearchConversionRefreshResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminSearchConversionRefresh202JSONResponse SearchRefreshAccepted
+
+func (response CreateAdminSearchConversionRefresh202JSONResponse) VisitCreateAdminSearchConversionRefreshResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchConversionRefresh400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchConversionRefresh400ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchConversionRefreshResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchConversionRefresh401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchConversionRefresh401ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchConversionRefreshResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchConversionRefresh403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchConversionRefresh403ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchConversionRefreshResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchConversionRefresh409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchConversionRefresh409ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchConversionRefreshResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchConversionRefresh500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchConversionRefresh500ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchConversionRefreshResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchSalesRefreshRequestObject struct {
+}
+
+type CreateAdminSearchSalesRefreshResponseObject interface {
+	VisitCreateAdminSearchSalesRefreshResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminSearchSalesRefresh202JSONResponse SearchRefreshAccepted
+
+func (response CreateAdminSearchSalesRefresh202JSONResponse) VisitCreateAdminSearchSalesRefreshResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchSalesRefresh400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchSalesRefresh400ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchSalesRefreshResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchSalesRefresh401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchSalesRefresh401ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchSalesRefreshResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchSalesRefresh403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchSalesRefresh403ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchSalesRefreshResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchSalesRefresh409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchSalesRefresh409ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchSalesRefreshResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchSalesRefresh500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchSalesRefresh500ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchSalesRefreshResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchReindexRequestObject struct {
+}
+
+type CreateAdminSearchReindexResponseObject interface {
+	VisitCreateAdminSearchReindexResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminSearchReindex202JSONResponse SearchReindexAccepted
+
+func (response CreateAdminSearchReindex202JSONResponse) VisitCreateAdminSearchReindexResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchReindex400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchReindex400ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchReindexResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchReindex401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchReindex401ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchReindexResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchReindex403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchReindex403ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchReindexResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchReindex409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchReindex409ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchReindexResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchReindex429ApplicationProblemPlusJSONResponse struct {
+	TooManyRequestsProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchReindex429ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchReindexResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(429)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchReindex500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchReindex500ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchReindexResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchReindex503ApplicationProblemPlusJSONResponse struct {
+	ServiceUnavailableProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchReindex503ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchReindexResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchSynonymsRequestObject struct {
+}
+
+type ListAdminSearchSynonymsResponseObject interface {
+	VisitListAdminSearchSynonymsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminSearchSynonyms200JSONResponse SearchSynonymSetListResponse
+
+func (response ListAdminSearchSynonyms200JSONResponse) VisitListAdminSearchSynonymsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchSynonyms400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchSynonyms400ApplicationProblemPlusJSONResponse) VisitListAdminSearchSynonymsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchSynonyms401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchSynonyms401ApplicationProblemPlusJSONResponse) VisitListAdminSearchSynonymsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchSynonyms403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchSynonyms403ApplicationProblemPlusJSONResponse) VisitListAdminSearchSynonymsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchSynonyms500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchSynonyms500ApplicationProblemPlusJSONResponse) VisitListAdminSearchSynonymsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchSynonymRequestObject struct {
+	Body *CreateAdminSearchSynonymJSONRequestBody
+}
+
+type CreateAdminSearchSynonymResponseObject interface {
+	VisitCreateAdminSearchSynonymResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminSearchSynonym201JSONResponse SearchSynonymSet
+
+func (response CreateAdminSearchSynonym201JSONResponse) VisitCreateAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchSynonym400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchSynonym400ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchSynonym401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchSynonym401ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchSynonym403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchSynonym403ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchSynonym409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchSynonym409ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchSynonym422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchSynonym422ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchSynonym500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchSynonym500ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchSynonymRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DeleteAdminSearchSynonymResponseObject interface {
+	VisitDeleteAdminSearchSynonymResponse(w http.ResponseWriter) error
+}
+
+type DeleteAdminSearchSynonym204Response struct {
+}
+
+func (response DeleteAdminSearchSynonym204Response) VisitDeleteAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteAdminSearchSynonym400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchSynonym400ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchSynonym401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchSynonym401ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchSynonym403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchSynonym403ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchSynonym404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchSynonym404ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchSynonym500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchSynonym500ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchSynonymRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetAdminSearchSynonymResponseObject interface {
+	VisitGetAdminSearchSynonymResponse(w http.ResponseWriter) error
+}
+
+type GetAdminSearchSynonym200JSONResponse SearchSynonymSet
+
+func (response GetAdminSearchSynonym200JSONResponse) VisitGetAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchSynonym400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchSynonym400ApplicationProblemPlusJSONResponse) VisitGetAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchSynonym401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchSynonym401ApplicationProblemPlusJSONResponse) VisitGetAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchSynonym403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchSynonym403ApplicationProblemPlusJSONResponse) VisitGetAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchSynonym404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchSynonym404ApplicationProblemPlusJSONResponse) VisitGetAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchSynonym500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchSynonym500ApplicationProblemPlusJSONResponse) VisitGetAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchSynonymRequestObject struct {
+	Id   int `json:"id"`
+	Body *UpdateAdminSearchSynonymJSONRequestBody
+}
+
+type UpdateAdminSearchSynonymResponseObject interface {
+	VisitUpdateAdminSearchSynonymResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminSearchSynonym200JSONResponse SearchSynonymSet
+
+func (response UpdateAdminSearchSynonym200JSONResponse) VisitUpdateAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchSynonym400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchSynonym400ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchSynonym401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchSynonym401ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchSynonym403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchSynonym403ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchSynonym404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchSynonym404ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchSynonym409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchSynonym409ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchSynonym422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchSynonym422ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchSynonym500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchSynonym500ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchSynonymResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchTypoProfilesRequestObject struct {
+}
+
+type ListAdminSearchTypoProfilesResponseObject interface {
+	VisitListAdminSearchTypoProfilesResponse(w http.ResponseWriter) error
+}
+
+type ListAdminSearchTypoProfiles200JSONResponse SearchTypoToleranceProfileListResponse
+
+func (response ListAdminSearchTypoProfiles200JSONResponse) VisitListAdminSearchTypoProfilesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchTypoProfiles400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchTypoProfiles400ApplicationProblemPlusJSONResponse) VisitListAdminSearchTypoProfilesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchTypoProfiles401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchTypoProfiles401ApplicationProblemPlusJSONResponse) VisitListAdminSearchTypoProfilesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchTypoProfiles403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchTypoProfiles403ApplicationProblemPlusJSONResponse) VisitListAdminSearchTypoProfilesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListAdminSearchTypoProfiles500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response ListAdminSearchTypoProfiles500ApplicationProblemPlusJSONResponse) VisitListAdminSearchTypoProfilesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchTypoProfileRequestObject struct {
+	Body *CreateAdminSearchTypoProfileJSONRequestBody
+}
+
+type CreateAdminSearchTypoProfileResponseObject interface {
+	VisitCreateAdminSearchTypoProfileResponse(w http.ResponseWriter) error
+}
+
+type CreateAdminSearchTypoProfile201JSONResponse SearchTypoToleranceProfile
+
+func (response CreateAdminSearchTypoProfile201JSONResponse) VisitCreateAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchTypoProfile400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchTypoProfile400ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchTypoProfile401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchTypoProfile401ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchTypoProfile403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchTypoProfile403ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchTypoProfile409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchTypoProfile409ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchTypoProfile422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchTypoProfile422ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateAdminSearchTypoProfile500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateAdminSearchTypoProfile500ApplicationProblemPlusJSONResponse) VisitCreateAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchTypoProfileRequestObject struct {
+	Id int `json:"id"`
+}
+
+type DeleteAdminSearchTypoProfileResponseObject interface {
+	VisitDeleteAdminSearchTypoProfileResponse(w http.ResponseWriter) error
+}
+
+type DeleteAdminSearchTypoProfile204Response struct {
+}
+
+func (response DeleteAdminSearchTypoProfile204Response) VisitDeleteAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteAdminSearchTypoProfile400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchTypoProfile400ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchTypoProfile401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchTypoProfile401ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchTypoProfile403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchTypoProfile403ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchTypoProfile404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchTypoProfile404ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchTypoProfile409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchTypoProfile409ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteAdminSearchTypoProfile500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response DeleteAdminSearchTypoProfile500ApplicationProblemPlusJSONResponse) VisitDeleteAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchTypoProfileRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetAdminSearchTypoProfileResponseObject interface {
+	VisitGetAdminSearchTypoProfileResponse(w http.ResponseWriter) error
+}
+
+type GetAdminSearchTypoProfile200JSONResponse SearchTypoToleranceProfile
+
+func (response GetAdminSearchTypoProfile200JSONResponse) VisitGetAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchTypoProfile400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchTypoProfile400ApplicationProblemPlusJSONResponse) VisitGetAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchTypoProfile401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchTypoProfile401ApplicationProblemPlusJSONResponse) VisitGetAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchTypoProfile403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchTypoProfile403ApplicationProblemPlusJSONResponse) VisitGetAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchTypoProfile404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchTypoProfile404ApplicationProblemPlusJSONResponse) VisitGetAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAdminSearchTypoProfile500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetAdminSearchTypoProfile500ApplicationProblemPlusJSONResponse) VisitGetAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchTypoProfileRequestObject struct {
+	Id   int `json:"id"`
+	Body *UpdateAdminSearchTypoProfileJSONRequestBody
+}
+
+type UpdateAdminSearchTypoProfileResponseObject interface {
+	VisitUpdateAdminSearchTypoProfileResponse(w http.ResponseWriter) error
+}
+
+type UpdateAdminSearchTypoProfile200JSONResponse SearchTypoToleranceProfile
+
+func (response UpdateAdminSearchTypoProfile200JSONResponse) VisitUpdateAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchTypoProfile400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchTypoProfile400ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchTypoProfile401ApplicationProblemPlusJSONResponse struct {
+	AuthenticationRequiredProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchTypoProfile401ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchTypoProfile403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchTypoProfile403ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchTypoProfile404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchTypoProfile404ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchTypoProfile409ApplicationProblemPlusJSONResponse struct {
+	ConflictProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchTypoProfile409ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchTypoProfile422ApplicationProblemPlusJSONResponse struct {
+	ValidationProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchTypoProfile422ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateAdminSearchTypoProfile500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response UpdateAdminSearchTypoProfile500ApplicationProblemPlusJSONResponse) VisitUpdateAdminSearchTypoProfileResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type ExportAdminTaxReportRequestObject struct {
 	Params ExportAdminTaxReportParams
 }
@@ -68619,6 +79866,390 @@ func (response GetProduct500ApplicationProblemPlusJSONResponse) VisitGetProductR
 	return json.NewEncoder(w).Encode(response)
 }
 
+type RevokeSearchConsentRequestObject struct {
+	Body *RevokeSearchConsentJSONRequestBody
+}
+
+type RevokeSearchConsentResponseObject interface {
+	VisitRevokeSearchConsentResponse(w http.ResponseWriter) error
+}
+
+type RevokeSearchConsent204Response struct {
+}
+
+func (response RevokeSearchConsent204Response) VisitRevokeSearchConsentResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type RevokeSearchConsent400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response RevokeSearchConsent400ApplicationProblemPlusJSONResponse) VisitRevokeSearchConsentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RevokeSearchConsent500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response RevokeSearchConsent500ApplicationProblemPlusJSONResponse) VisitRevokeSearchConsentResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchEventRequestObject struct {
+	Body *CreateSearchEventJSONRequestBody
+}
+
+type CreateSearchEventResponseObject interface {
+	VisitCreateSearchEventResponse(w http.ResponseWriter) error
+}
+
+type CreateSearchEvent200JSONResponse SearchEventResponse
+
+func (response CreateSearchEvent200JSONResponse) VisitCreateSearchEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchEvent400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateSearchEvent400ApplicationProblemPlusJSONResponse) VisitCreateSearchEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchEvent403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateSearchEvent403ApplicationProblemPlusJSONResponse) VisitCreateSearchEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchEvent429ApplicationProblemPlusJSONResponse struct {
+	TooManyRequestsProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateSearchEvent429ApplicationProblemPlusJSONResponse) VisitCreateSearchEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(429)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchEvent500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateSearchEvent500ApplicationProblemPlusJSONResponse) VisitCreateSearchEventResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchImpressionRequestObject struct {
+	Body *CreateSearchImpressionJSONRequestBody
+}
+
+type CreateSearchImpressionResponseObject interface {
+	VisitCreateSearchImpressionResponse(w http.ResponseWriter) error
+}
+
+type CreateSearchImpression200JSONResponse SearchImpressionResponse
+
+func (response CreateSearchImpression200JSONResponse) VisitCreateSearchImpressionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchImpression400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateSearchImpression400ApplicationProblemPlusJSONResponse) VisitCreateSearchImpressionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchImpression403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateSearchImpression403ApplicationProblemPlusJSONResponse) VisitCreateSearchImpressionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchImpression429ApplicationProblemPlusJSONResponse struct {
+	TooManyRequestsProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateSearchImpression429ApplicationProblemPlusJSONResponse) VisitCreateSearchImpressionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(429)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchImpression500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateSearchImpression500ApplicationProblemPlusJSONResponse) VisitCreateSearchImpressionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchImpression503ApplicationProblemPlusJSONResponse struct {
+	ServiceUnavailableProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateSearchImpression503ApplicationProblemPlusJSONResponse) VisitCreateSearchImpressionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SearchProductsRequestObject struct {
+	Params SearchProductsParams
+}
+
+type SearchProductsResponseObject interface {
+	VisitSearchProductsResponse(w http.ResponseWriter) error
+}
+
+type SearchProducts200JSONResponse ProductSearchResponse
+
+func (response SearchProducts200JSONResponse) VisitSearchProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SearchProducts400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SearchProducts400ApplicationProblemPlusJSONResponse) VisitSearchProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SearchProducts404ApplicationProblemPlusJSONResponse struct {
+	NotFoundProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SearchProducts404ApplicationProblemPlusJSONResponse) VisitSearchProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SearchProducts429ApplicationProblemPlusJSONResponse struct {
+	TooManyRequestsProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SearchProducts429ApplicationProblemPlusJSONResponse) VisitSearchProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(429)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SearchProducts500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SearchProducts500ApplicationProblemPlusJSONResponse) VisitSearchProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SearchProducts503ApplicationProblemPlusJSONResponse struct {
+	ServiceUnavailableProblemApplicationProblemPlusJSONResponse
+}
+
+func (response SearchProducts503ApplicationProblemPlusJSONResponse) VisitSearchProductsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchProofRequestObject struct {
+	Body *CreateSearchProofJSONRequestBody
+}
+
+type CreateSearchProofResponseObject interface {
+	VisitCreateSearchProofResponse(w http.ResponseWriter) error
+}
+
+type CreateSearchProof200ResponseHeaders struct {
+	CacheControl string
+}
+
+type CreateSearchProof200JSONResponse struct {
+	Body    SearchProofResponse
+	Headers CreateSearchProof200ResponseHeaders
+}
+
+func (response CreateSearchProof200JSONResponse) VisitCreateSearchProofResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", fmt.Sprint(response.Headers.CacheControl))
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type CreateSearchProof400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateSearchProof400ApplicationProblemPlusJSONResponse) VisitCreateSearchProofResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchProof403ApplicationProblemPlusJSONResponse struct {
+	ForbiddenProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateSearchProof403ApplicationProblemPlusJSONResponse) VisitCreateSearchProofResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchProof429ApplicationProblemPlusJSONResponse struct {
+	TooManyRequestsProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateSearchProof429ApplicationProblemPlusJSONResponse) VisitCreateSearchProofResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(429)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchProof500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateSearchProof500ApplicationProblemPlusJSONResponse) VisitCreateSearchProofResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateSearchProof503ApplicationProblemPlusJSONResponse struct {
+	ServiceUnavailableProblemApplicationProblemPlusJSONResponse
+}
+
+func (response CreateSearchProof503ApplicationProblemPlusJSONResponse) VisitCreateSearchProofResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetSearchSuggestionsRequestObject struct {
+	Params GetSearchSuggestionsParams
+}
+
+type GetSearchSuggestionsResponseObject interface {
+	VisitGetSearchSuggestionsResponse(w http.ResponseWriter) error
+}
+
+type GetSearchSuggestions200JSONResponse SearchSuggestionsResponse
+
+func (response GetSearchSuggestions200JSONResponse) VisitGetSearchSuggestionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetSearchSuggestions400ApplicationProblemPlusJSONResponse struct {
+	BadRequestProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetSearchSuggestions400ApplicationProblemPlusJSONResponse) VisitGetSearchSuggestionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetSearchSuggestions429ApplicationProblemPlusJSONResponse struct {
+	TooManyRequestsProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetSearchSuggestions429ApplicationProblemPlusJSONResponse) VisitGetSearchSuggestionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(429)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetSearchSuggestions500ApplicationProblemPlusJSONResponse struct {
+	InternalServerErrorProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetSearchSuggestions500ApplicationProblemPlusJSONResponse) VisitGetSearchSuggestionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetSearchSuggestions503ApplicationProblemPlusJSONResponse struct {
+	ServiceUnavailableProblemApplicationProblemPlusJSONResponse
+}
+
+func (response GetSearchSuggestions503ApplicationProblemPlusJSONResponse) VisitGetSearchSuggestionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(503)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type ReceiveWebhookEventRequestObject struct {
 	Provider string `json:"provider"`
 	Body     *ReceiveWebhookEventJSONRequestBody
@@ -69179,6 +80810,102 @@ type StrictServerInterface interface {
 
 	// (POST /api/v1/admin/purchase-orders/{id}/receive)
 	ReceiveAdminPurchaseOrder(ctx context.Context, request ReceiveAdminPurchaseOrderRequestObject) (ReceiveAdminPurchaseOrderResponseObject, error)
+	// Read consented search analytics
+	// (GET /api/v1/admin/search/analytics)
+	GetAdminSearchAnalytics(ctx context.Context, request GetAdminSearchAnalyticsRequestObject) (GetAdminSearchAnalyticsResponseObject, error)
+	// List immutable search configuration changes
+	// (GET /api/v1/admin/search/configuration-history)
+	ListAdminSearchConfigurationHistory(ctx context.Context, request ListAdminSearchConfigurationHistoryRequestObject) (ListAdminSearchConfigurationHistoryResponseObject, error)
+	// Get search index freshness
+	// (GET /api/v1/admin/search/freshness)
+	GetAdminSearchFreshness(ctx context.Context, request GetAdminSearchFreshnessRequestObject) (GetAdminSearchFreshnessResponseObject, error)
+	// List stale-index incidents and recovery history
+	// (GET /api/v1/admin/search/incidents)
+	GetAdminSearchIncidents(ctx context.Context, request GetAdminSearchIncidentsRequestObject) (GetAdminSearchIncidentsResponseObject, error)
+	// List all merchandising audit history, including deleted rules
+	// (GET /api/v1/admin/search/merchandising-audit)
+	ListAdminSearchMerchandisingAudit(ctx context.Context, request ListAdminSearchMerchandisingAuditRequestObject) (ListAdminSearchMerchandisingAuditResponseObject, error)
+	// List search merchandising rules
+	// (GET /api/v1/admin/search/merchandising-rules)
+	ListAdminSearchMerchandisingRules(ctx context.Context, request ListAdminSearchMerchandisingRulesRequestObject) (ListAdminSearchMerchandisingRulesResponseObject, error)
+	// Create a named search merchandising rule
+	// (POST /api/v1/admin/search/merchandising-rules)
+	CreateAdminSearchMerchandisingRule(ctx context.Context, request CreateAdminSearchMerchandisingRuleRequestObject) (CreateAdminSearchMerchandisingRuleResponseObject, error)
+	// Delete a search merchandising rule
+	// (DELETE /api/v1/admin/search/merchandising-rules/{id})
+	DeleteAdminSearchMerchandisingRule(ctx context.Context, request DeleteAdminSearchMerchandisingRuleRequestObject) (DeleteAdminSearchMerchandisingRuleResponseObject, error)
+	// Get a search merchandising rule
+	// (GET /api/v1/admin/search/merchandising-rules/{id})
+	GetAdminSearchMerchandisingRule(ctx context.Context, request GetAdminSearchMerchandisingRuleRequestObject) (GetAdminSearchMerchandisingRuleResponseObject, error)
+	// Update a search merchandising rule
+	// (PATCH /api/v1/admin/search/merchandising-rules/{id})
+	UpdateAdminSearchMerchandisingRule(ctx context.Context, request UpdateAdminSearchMerchandisingRuleRequestObject) (UpdateAdminSearchMerchandisingRuleResponseObject, error)
+
+	// (GET /api/v1/admin/search/merchandising-rules/{id}/audit)
+	ListAdminSearchMerchandisingRuleAudit(ctx context.Context, request ListAdminSearchMerchandisingRuleAuditRequestObject) (ListAdminSearchMerchandisingRuleAuditResponseObject, error)
+	// Inspect search capacity and circuit status
+	// (GET /api/v1/admin/search/operations)
+	GetAdminSearchOperations(ctx context.Context, request GetAdminSearchOperationsRequestObject) (GetAdminSearchOperationsResponseObject, error)
+
+	// (POST /api/v1/admin/search/preview)
+	PreviewAdminSearch(ctx context.Context, request PreviewAdminSearchRequestObject) (PreviewAdminSearchResponseObject, error)
+	// Search published products with ranking explanations
+	// (GET /api/v1/admin/search/products)
+	SearchAdminProducts(ctx context.Context, request SearchAdminProductsRequestObject) (SearchAdminProductsResponseObject, error)
+	// List search ranking profiles
+	// (GET /api/v1/admin/search/ranking-profiles)
+	ListAdminSearchRankingProfiles(ctx context.Context, request ListAdminSearchRankingProfilesRequestObject) (ListAdminSearchRankingProfilesResponseObject, error)
+	// Create a named search ranking profile
+	// (POST /api/v1/admin/search/ranking-profiles)
+	CreateAdminSearchRankingProfile(ctx context.Context, request CreateAdminSearchRankingProfileRequestObject) (CreateAdminSearchRankingProfileResponseObject, error)
+	// Delete a search ranking profile
+	// (DELETE /api/v1/admin/search/ranking-profiles/{id})
+	DeleteAdminSearchRankingProfile(ctx context.Context, request DeleteAdminSearchRankingProfileRequestObject) (DeleteAdminSearchRankingProfileResponseObject, error)
+	// Get a search ranking profile
+	// (GET /api/v1/admin/search/ranking-profiles/{id})
+	GetAdminSearchRankingProfile(ctx context.Context, request GetAdminSearchRankingProfileRequestObject) (GetAdminSearchRankingProfileResponseObject, error)
+	// Update a search ranking profile
+	// (PATCH /api/v1/admin/search/ranking-profiles/{id})
+	UpdateAdminSearchRankingProfile(ctx context.Context, request UpdateAdminSearchRankingProfileRequestObject) (UpdateAdminSearchRankingProfileResponseObject, error)
+	// Queue the daily search conversion signal refresh
+	// (POST /api/v1/admin/search/refresh-conversion)
+	CreateAdminSearchConversionRefresh(ctx context.Context, request CreateAdminSearchConversionRefreshRequestObject) (CreateAdminSearchConversionRefreshResponseObject, error)
+	// Queue the daily search sales signal refresh
+	// (POST /api/v1/admin/search/refresh-sales)
+	CreateAdminSearchSalesRefresh(ctx context.Context, request CreateAdminSearchSalesRefreshRequestObject) (CreateAdminSearchSalesRefreshResponseObject, error)
+	// Queue a full search reindex
+	// (POST /api/v1/admin/search/reindex)
+	CreateAdminSearchReindex(ctx context.Context, request CreateAdminSearchReindexRequestObject) (CreateAdminSearchReindexResponseObject, error)
+	// List search synonym sets
+	// (GET /api/v1/admin/search/synonyms)
+	ListAdminSearchSynonyms(ctx context.Context, request ListAdminSearchSynonymsRequestObject) (ListAdminSearchSynonymsResponseObject, error)
+	// Create a search synonym set
+	// (POST /api/v1/admin/search/synonyms)
+	CreateAdminSearchSynonym(ctx context.Context, request CreateAdminSearchSynonymRequestObject) (CreateAdminSearchSynonymResponseObject, error)
+	// Delete a search synonym set
+	// (DELETE /api/v1/admin/search/synonyms/{id})
+	DeleteAdminSearchSynonym(ctx context.Context, request DeleteAdminSearchSynonymRequestObject) (DeleteAdminSearchSynonymResponseObject, error)
+	// Get a search synonym set
+	// (GET /api/v1/admin/search/synonyms/{id})
+	GetAdminSearchSynonym(ctx context.Context, request GetAdminSearchSynonymRequestObject) (GetAdminSearchSynonymResponseObject, error)
+	// Update a search synonym set
+	// (PATCH /api/v1/admin/search/synonyms/{id})
+	UpdateAdminSearchSynonym(ctx context.Context, request UpdateAdminSearchSynonymRequestObject) (UpdateAdminSearchSynonymResponseObject, error)
+	// List search typo tolerance profiles
+	// (GET /api/v1/admin/search/typo-profiles)
+	ListAdminSearchTypoProfiles(ctx context.Context, request ListAdminSearchTypoProfilesRequestObject) (ListAdminSearchTypoProfilesResponseObject, error)
+	// Create a named search typo tolerance profile
+	// (POST /api/v1/admin/search/typo-profiles)
+	CreateAdminSearchTypoProfile(ctx context.Context, request CreateAdminSearchTypoProfileRequestObject) (CreateAdminSearchTypoProfileResponseObject, error)
+	// Delete a search typo tolerance profile
+	// (DELETE /api/v1/admin/search/typo-profiles/{id})
+	DeleteAdminSearchTypoProfile(ctx context.Context, request DeleteAdminSearchTypoProfileRequestObject) (DeleteAdminSearchTypoProfileResponseObject, error)
+	// Get a search typo tolerance profile
+	// (GET /api/v1/admin/search/typo-profiles/{id})
+	GetAdminSearchTypoProfile(ctx context.Context, request GetAdminSearchTypoProfileRequestObject) (GetAdminSearchTypoProfileResponseObject, error)
+	// Update a search typo tolerance profile
+	// (PATCH /api/v1/admin/search/typo-profiles/{id})
+	UpdateAdminSearchTypoProfile(ctx context.Context, request UpdateAdminSearchTypoProfileRequestObject) (UpdateAdminSearchTypoProfileResponseObject, error)
 
 	// (GET /api/v1/admin/tax/reports/export)
 	ExportAdminTaxReport(ctx context.Context, request ExportAdminTaxReportRequestObject) (ExportAdminTaxReportResponseObject, error)
@@ -69377,6 +81104,24 @@ type StrictServerInterface interface {
 	// Get product by id
 	// (GET /api/v1/products/{id})
 	GetProduct(ctx context.Context, request GetProductRequestObject) (GetProductResponseObject, error)
+	// Revoke anonymous search analytics consent
+	// (POST /api/v1/search/consent/revoke)
+	RevokeSearchConsent(ctx context.Context, request RevokeSearchConsentRequestObject) (RevokeSearchConsentResponseObject, error)
+	// Record a verified search result click
+	// (POST /api/v1/search/events)
+	CreateSearchEvent(ctx context.Context, request CreateSearchEventRequestObject) (CreateSearchEventResponseObject, error)
+	// Record an opted-in search impression
+	// (POST /api/v1/search/impressions)
+	CreateSearchImpression(ctx context.Context, request CreateSearchImpressionRequestObject) (CreateSearchImpressionResponseObject, error)
+	// Search published products
+	// (GET /api/v1/search/products)
+	SearchProducts(ctx context.Context, request SearchProductsRequestObject) (SearchProductsResponseObject, error)
+	// Exchange a cacheable server snapshot for a consented browser exposure proof
+	// (POST /api/v1/search/proofs)
+	CreateSearchProof(ctx context.Context, request CreateSearchProofRequestObject) (CreateSearchProofResponseObject, error)
+	// Suggest product search queries
+	// (GET /api/v1/search/suggestions)
+	GetSearchSuggestions(ctx context.Context, request GetSearchSuggestionsRequestObject) (GetSearchSuggestionsResponseObject, error)
 
 	// (POST /api/v1/webhooks/{provider})
 	ReceiveWebhookEvent(ctx context.Context, request ReceiveWebhookEventRequestObject) (ReceiveWebhookEventResponseObject, error)
@@ -74467,6 +86212,912 @@ func (sh *strictHandler) ReceiveAdminPurchaseOrder(ctx *gin.Context, id int) {
 	}
 }
 
+// GetAdminSearchAnalytics operation middleware
+func (sh *strictHandler) GetAdminSearchAnalytics(ctx *gin.Context, params GetAdminSearchAnalyticsParams) {
+	var request GetAdminSearchAnalyticsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminSearchAnalytics(ctx, request.(GetAdminSearchAnalyticsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminSearchAnalytics")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminSearchAnalyticsResponseObject); ok {
+		if err := validResponse.VisitGetAdminSearchAnalyticsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminSearchConfigurationHistory operation middleware
+func (sh *strictHandler) ListAdminSearchConfigurationHistory(ctx *gin.Context, params ListAdminSearchConfigurationHistoryParams) {
+	var request ListAdminSearchConfigurationHistoryRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminSearchConfigurationHistory(ctx, request.(ListAdminSearchConfigurationHistoryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminSearchConfigurationHistory")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminSearchConfigurationHistoryResponseObject); ok {
+		if err := validResponse.VisitListAdminSearchConfigurationHistoryResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminSearchFreshness operation middleware
+func (sh *strictHandler) GetAdminSearchFreshness(ctx *gin.Context) {
+	var request GetAdminSearchFreshnessRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminSearchFreshness(ctx, request.(GetAdminSearchFreshnessRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminSearchFreshness")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminSearchFreshnessResponseObject); ok {
+		if err := validResponse.VisitGetAdminSearchFreshnessResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminSearchIncidents operation middleware
+func (sh *strictHandler) GetAdminSearchIncidents(ctx *gin.Context, params GetAdminSearchIncidentsParams) {
+	var request GetAdminSearchIncidentsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminSearchIncidents(ctx, request.(GetAdminSearchIncidentsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminSearchIncidents")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminSearchIncidentsResponseObject); ok {
+		if err := validResponse.VisitGetAdminSearchIncidentsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminSearchMerchandisingAudit operation middleware
+func (sh *strictHandler) ListAdminSearchMerchandisingAudit(ctx *gin.Context) {
+	var request ListAdminSearchMerchandisingAuditRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminSearchMerchandisingAudit(ctx, request.(ListAdminSearchMerchandisingAuditRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminSearchMerchandisingAudit")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminSearchMerchandisingAuditResponseObject); ok {
+		if err := validResponse.VisitListAdminSearchMerchandisingAuditResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminSearchMerchandisingRules operation middleware
+func (sh *strictHandler) ListAdminSearchMerchandisingRules(ctx *gin.Context) {
+	var request ListAdminSearchMerchandisingRulesRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminSearchMerchandisingRules(ctx, request.(ListAdminSearchMerchandisingRulesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminSearchMerchandisingRules")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminSearchMerchandisingRulesResponseObject); ok {
+		if err := validResponse.VisitListAdminSearchMerchandisingRulesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminSearchMerchandisingRule operation middleware
+func (sh *strictHandler) CreateAdminSearchMerchandisingRule(ctx *gin.Context) {
+	var request CreateAdminSearchMerchandisingRuleRequestObject
+
+	var body CreateAdminSearchMerchandisingRuleJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminSearchMerchandisingRule(ctx, request.(CreateAdminSearchMerchandisingRuleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminSearchMerchandisingRule")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminSearchMerchandisingRuleResponseObject); ok {
+		if err := validResponse.VisitCreateAdminSearchMerchandisingRuleResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteAdminSearchMerchandisingRule operation middleware
+func (sh *strictHandler) DeleteAdminSearchMerchandisingRule(ctx *gin.Context, id int) {
+	var request DeleteAdminSearchMerchandisingRuleRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAdminSearchMerchandisingRule(ctx, request.(DeleteAdminSearchMerchandisingRuleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAdminSearchMerchandisingRule")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteAdminSearchMerchandisingRuleResponseObject); ok {
+		if err := validResponse.VisitDeleteAdminSearchMerchandisingRuleResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminSearchMerchandisingRule operation middleware
+func (sh *strictHandler) GetAdminSearchMerchandisingRule(ctx *gin.Context, id int) {
+	var request GetAdminSearchMerchandisingRuleRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminSearchMerchandisingRule(ctx, request.(GetAdminSearchMerchandisingRuleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminSearchMerchandisingRule")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminSearchMerchandisingRuleResponseObject); ok {
+		if err := validResponse.VisitGetAdminSearchMerchandisingRuleResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminSearchMerchandisingRule operation middleware
+func (sh *strictHandler) UpdateAdminSearchMerchandisingRule(ctx *gin.Context, id int) {
+	var request UpdateAdminSearchMerchandisingRuleRequestObject
+
+	request.Id = id
+
+	var body UpdateAdminSearchMerchandisingRuleJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminSearchMerchandisingRule(ctx, request.(UpdateAdminSearchMerchandisingRuleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminSearchMerchandisingRule")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminSearchMerchandisingRuleResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminSearchMerchandisingRuleResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminSearchMerchandisingRuleAudit operation middleware
+func (sh *strictHandler) ListAdminSearchMerchandisingRuleAudit(ctx *gin.Context, id int) {
+	var request ListAdminSearchMerchandisingRuleAuditRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminSearchMerchandisingRuleAudit(ctx, request.(ListAdminSearchMerchandisingRuleAuditRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminSearchMerchandisingRuleAudit")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminSearchMerchandisingRuleAuditResponseObject); ok {
+		if err := validResponse.VisitListAdminSearchMerchandisingRuleAuditResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminSearchOperations operation middleware
+func (sh *strictHandler) GetAdminSearchOperations(ctx *gin.Context) {
+	var request GetAdminSearchOperationsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminSearchOperations(ctx, request.(GetAdminSearchOperationsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminSearchOperations")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminSearchOperationsResponseObject); ok {
+		if err := validResponse.VisitGetAdminSearchOperationsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PreviewAdminSearch operation middleware
+func (sh *strictHandler) PreviewAdminSearch(ctx *gin.Context) {
+	var request PreviewAdminSearchRequestObject
+
+	var body PreviewAdminSearchJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PreviewAdminSearch(ctx, request.(PreviewAdminSearchRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PreviewAdminSearch")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(PreviewAdminSearchResponseObject); ok {
+		if err := validResponse.VisitPreviewAdminSearchResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SearchAdminProducts operation middleware
+func (sh *strictHandler) SearchAdminProducts(ctx *gin.Context, params SearchAdminProductsParams) {
+	var request SearchAdminProductsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.SearchAdminProducts(ctx, request.(SearchAdminProductsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SearchAdminProducts")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(SearchAdminProductsResponseObject); ok {
+		if err := validResponse.VisitSearchAdminProductsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminSearchRankingProfiles operation middleware
+func (sh *strictHandler) ListAdminSearchRankingProfiles(ctx *gin.Context) {
+	var request ListAdminSearchRankingProfilesRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminSearchRankingProfiles(ctx, request.(ListAdminSearchRankingProfilesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminSearchRankingProfiles")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminSearchRankingProfilesResponseObject); ok {
+		if err := validResponse.VisitListAdminSearchRankingProfilesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminSearchRankingProfile operation middleware
+func (sh *strictHandler) CreateAdminSearchRankingProfile(ctx *gin.Context) {
+	var request CreateAdminSearchRankingProfileRequestObject
+
+	var body CreateAdminSearchRankingProfileJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminSearchRankingProfile(ctx, request.(CreateAdminSearchRankingProfileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminSearchRankingProfile")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminSearchRankingProfileResponseObject); ok {
+		if err := validResponse.VisitCreateAdminSearchRankingProfileResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteAdminSearchRankingProfile operation middleware
+func (sh *strictHandler) DeleteAdminSearchRankingProfile(ctx *gin.Context, id int) {
+	var request DeleteAdminSearchRankingProfileRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAdminSearchRankingProfile(ctx, request.(DeleteAdminSearchRankingProfileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAdminSearchRankingProfile")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteAdminSearchRankingProfileResponseObject); ok {
+		if err := validResponse.VisitDeleteAdminSearchRankingProfileResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminSearchRankingProfile operation middleware
+func (sh *strictHandler) GetAdminSearchRankingProfile(ctx *gin.Context, id int) {
+	var request GetAdminSearchRankingProfileRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminSearchRankingProfile(ctx, request.(GetAdminSearchRankingProfileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminSearchRankingProfile")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminSearchRankingProfileResponseObject); ok {
+		if err := validResponse.VisitGetAdminSearchRankingProfileResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminSearchRankingProfile operation middleware
+func (sh *strictHandler) UpdateAdminSearchRankingProfile(ctx *gin.Context, id int) {
+	var request UpdateAdminSearchRankingProfileRequestObject
+
+	request.Id = id
+
+	var body UpdateAdminSearchRankingProfileJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminSearchRankingProfile(ctx, request.(UpdateAdminSearchRankingProfileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminSearchRankingProfile")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminSearchRankingProfileResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminSearchRankingProfileResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminSearchConversionRefresh operation middleware
+func (sh *strictHandler) CreateAdminSearchConversionRefresh(ctx *gin.Context) {
+	var request CreateAdminSearchConversionRefreshRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminSearchConversionRefresh(ctx, request.(CreateAdminSearchConversionRefreshRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminSearchConversionRefresh")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminSearchConversionRefreshResponseObject); ok {
+		if err := validResponse.VisitCreateAdminSearchConversionRefreshResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminSearchSalesRefresh operation middleware
+func (sh *strictHandler) CreateAdminSearchSalesRefresh(ctx *gin.Context) {
+	var request CreateAdminSearchSalesRefreshRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminSearchSalesRefresh(ctx, request.(CreateAdminSearchSalesRefreshRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminSearchSalesRefresh")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminSearchSalesRefreshResponseObject); ok {
+		if err := validResponse.VisitCreateAdminSearchSalesRefreshResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminSearchReindex operation middleware
+func (sh *strictHandler) CreateAdminSearchReindex(ctx *gin.Context) {
+	var request CreateAdminSearchReindexRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminSearchReindex(ctx, request.(CreateAdminSearchReindexRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminSearchReindex")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminSearchReindexResponseObject); ok {
+		if err := validResponse.VisitCreateAdminSearchReindexResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminSearchSynonyms operation middleware
+func (sh *strictHandler) ListAdminSearchSynonyms(ctx *gin.Context) {
+	var request ListAdminSearchSynonymsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminSearchSynonyms(ctx, request.(ListAdminSearchSynonymsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminSearchSynonyms")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminSearchSynonymsResponseObject); ok {
+		if err := validResponse.VisitListAdminSearchSynonymsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminSearchSynonym operation middleware
+func (sh *strictHandler) CreateAdminSearchSynonym(ctx *gin.Context) {
+	var request CreateAdminSearchSynonymRequestObject
+
+	var body CreateAdminSearchSynonymJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminSearchSynonym(ctx, request.(CreateAdminSearchSynonymRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminSearchSynonym")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminSearchSynonymResponseObject); ok {
+		if err := validResponse.VisitCreateAdminSearchSynonymResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteAdminSearchSynonym operation middleware
+func (sh *strictHandler) DeleteAdminSearchSynonym(ctx *gin.Context, id int) {
+	var request DeleteAdminSearchSynonymRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAdminSearchSynonym(ctx, request.(DeleteAdminSearchSynonymRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAdminSearchSynonym")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteAdminSearchSynonymResponseObject); ok {
+		if err := validResponse.VisitDeleteAdminSearchSynonymResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminSearchSynonym operation middleware
+func (sh *strictHandler) GetAdminSearchSynonym(ctx *gin.Context, id int) {
+	var request GetAdminSearchSynonymRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminSearchSynonym(ctx, request.(GetAdminSearchSynonymRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminSearchSynonym")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminSearchSynonymResponseObject); ok {
+		if err := validResponse.VisitGetAdminSearchSynonymResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminSearchSynonym operation middleware
+func (sh *strictHandler) UpdateAdminSearchSynonym(ctx *gin.Context, id int) {
+	var request UpdateAdminSearchSynonymRequestObject
+
+	request.Id = id
+
+	var body UpdateAdminSearchSynonymJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminSearchSynonym(ctx, request.(UpdateAdminSearchSynonymRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminSearchSynonym")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminSearchSynonymResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminSearchSynonymResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminSearchTypoProfiles operation middleware
+func (sh *strictHandler) ListAdminSearchTypoProfiles(ctx *gin.Context) {
+	var request ListAdminSearchTypoProfilesRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminSearchTypoProfiles(ctx, request.(ListAdminSearchTypoProfilesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminSearchTypoProfiles")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListAdminSearchTypoProfilesResponseObject); ok {
+		if err := validResponse.VisitListAdminSearchTypoProfilesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateAdminSearchTypoProfile operation middleware
+func (sh *strictHandler) CreateAdminSearchTypoProfile(ctx *gin.Context) {
+	var request CreateAdminSearchTypoProfileRequestObject
+
+	var body CreateAdminSearchTypoProfileJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAdminSearchTypoProfile(ctx, request.(CreateAdminSearchTypoProfileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAdminSearchTypoProfile")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateAdminSearchTypoProfileResponseObject); ok {
+		if err := validResponse.VisitCreateAdminSearchTypoProfileResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteAdminSearchTypoProfile operation middleware
+func (sh *strictHandler) DeleteAdminSearchTypoProfile(ctx *gin.Context, id int) {
+	var request DeleteAdminSearchTypoProfileRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAdminSearchTypoProfile(ctx, request.(DeleteAdminSearchTypoProfileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAdminSearchTypoProfile")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeleteAdminSearchTypoProfileResponseObject); ok {
+		if err := validResponse.VisitDeleteAdminSearchTypoProfileResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminSearchTypoProfile operation middleware
+func (sh *strictHandler) GetAdminSearchTypoProfile(ctx *gin.Context, id int) {
+	var request GetAdminSearchTypoProfileRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminSearchTypoProfile(ctx, request.(GetAdminSearchTypoProfileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminSearchTypoProfile")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetAdminSearchTypoProfileResponseObject); ok {
+		if err := validResponse.VisitGetAdminSearchTypoProfileResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateAdminSearchTypoProfile operation middleware
+func (sh *strictHandler) UpdateAdminSearchTypoProfile(ctx *gin.Context, id int) {
+	var request UpdateAdminSearchTypoProfileRequestObject
+
+	request.Id = id
+
+	var body UpdateAdminSearchTypoProfileJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAdminSearchTypoProfile(ctx, request.(UpdateAdminSearchTypoProfileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAdminSearchTypoProfile")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(UpdateAdminSearchTypoProfileResponseObject); ok {
+		if err := validResponse.VisitUpdateAdminSearchTypoProfileResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ExportAdminTaxReport operation middleware
 func (sh *strictHandler) ExportAdminTaxReport(ctx *gin.Context, params ExportAdminTaxReportParams) {
 	var request ExportAdminTaxReportRequestObject
@@ -76367,6 +89018,192 @@ func (sh *strictHandler) GetProduct(ctx *gin.Context, id int) {
 	}
 }
 
+// RevokeSearchConsent operation middleware
+func (sh *strictHandler) RevokeSearchConsent(ctx *gin.Context) {
+	var request RevokeSearchConsentRequestObject
+
+	var body RevokeSearchConsentJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.RevokeSearchConsent(ctx, request.(RevokeSearchConsentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RevokeSearchConsent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(RevokeSearchConsentResponseObject); ok {
+		if err := validResponse.VisitRevokeSearchConsentResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateSearchEvent operation middleware
+func (sh *strictHandler) CreateSearchEvent(ctx *gin.Context) {
+	var request CreateSearchEventRequestObject
+
+	var body CreateSearchEventJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateSearchEvent(ctx, request.(CreateSearchEventRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateSearchEvent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateSearchEventResponseObject); ok {
+		if err := validResponse.VisitCreateSearchEventResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateSearchImpression operation middleware
+func (sh *strictHandler) CreateSearchImpression(ctx *gin.Context) {
+	var request CreateSearchImpressionRequestObject
+
+	var body CreateSearchImpressionJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateSearchImpression(ctx, request.(CreateSearchImpressionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateSearchImpression")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateSearchImpressionResponseObject); ok {
+		if err := validResponse.VisitCreateSearchImpressionResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SearchProducts operation middleware
+func (sh *strictHandler) SearchProducts(ctx *gin.Context, params SearchProductsParams) {
+	var request SearchProductsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.SearchProducts(ctx, request.(SearchProductsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SearchProducts")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(SearchProductsResponseObject); ok {
+		if err := validResponse.VisitSearchProductsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateSearchProof operation middleware
+func (sh *strictHandler) CreateSearchProof(ctx *gin.Context) {
+	var request CreateSearchProofRequestObject
+
+	var body CreateSearchProofJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateSearchProof(ctx, request.(CreateSearchProofRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateSearchProof")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(CreateSearchProofResponseObject); ok {
+		if err := validResponse.VisitCreateSearchProofResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetSearchSuggestions operation middleware
+func (sh *strictHandler) GetSearchSuggestions(ctx *gin.Context, params GetSearchSuggestionsParams) {
+	var request GetSearchSuggestionsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetSearchSuggestions(ctx, request.(GetSearchSuggestionsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetSearchSuggestions")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetSearchSuggestionsResponseObject); ok {
+		if err := validResponse.VisitGetSearchSuggestionsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ReceiveWebhookEvent operation middleware
 func (sh *strictHandler) ReceiveWebhookEvent(ctx *gin.Context, provider string) {
 	var request ReceiveWebhookEventRequestObject
@@ -76405,452 +89242,575 @@ func (sh *strictHandler) ReceiveWebhookEvent(ctx *gin.Context, provider string) 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"8fu//vD16/8FAAD//yDTpxK2ZgUA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

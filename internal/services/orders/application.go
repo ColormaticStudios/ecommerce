@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	searchservice "ecommerce/internal/search"
 	checkoutservice "ecommerce/internal/services/checkout"
 	"ecommerce/models"
 
@@ -64,7 +65,13 @@ func (s *Service) Create(ctx context.Context, sessionID uint, userID *uint, gues
 	if err != nil {
 		return models.Order{}, err
 	}
-	if err := s.db.WithContext(ctx).Create(&order).Error; err != nil {
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&order).Error; err != nil {
+			return err
+		}
+		searchservice.BestEffortAnalyticsTx(ctx, tx, func() error { return searchservice.CaptureOrderAttributionTx(ctx, tx, order.ID, sessionID) })
+		return nil
+	}); err != nil {
 		return models.Order{}, err
 	}
 	return s.Get(ctx, order.ID, userID)
@@ -82,7 +89,11 @@ func (s *Service) CreateOrReplaceOpen(ctx context.Context, sessionID uint, userI
 			Order("id DESC").First(&existing).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			created = true
-			return tx.Create(&candidate).Error
+			if err := tx.Create(&candidate).Error; err != nil {
+				return err
+			}
+			searchservice.BestEffortAnalyticsTx(ctx, tx, func() error { return searchservice.CaptureOrderAttributionTx(ctx, tx, candidate.ID, sessionID) })
+			return nil
 		}
 		if err != nil {
 			return err
@@ -101,7 +112,11 @@ func (s *Service) CreateOrReplaceOpen(ctx context.Context, sessionID uint, userI
 		for index := range candidate.Items {
 			candidate.Items[index].OrderID = existing.ID
 		}
-		return tx.Create(&candidate.Items).Error
+		if err := tx.Create(&candidate.Items).Error; err != nil {
+			return err
+		}
+		searchservice.BestEffortAnalyticsTx(ctx, tx, func() error { return searchservice.CaptureOrderAttributionTx(ctx, tx, candidate.ID, sessionID) })
+		return nil
 	})
 	if err != nil {
 		return models.Order{}, false, err

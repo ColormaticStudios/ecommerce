@@ -4,9 +4,11 @@ import (
 	"context"
 	"io"
 	"log"
+	"path/filepath"
 	"testing"
 	"time"
 
+	"ecommerce/internal/jobs"
 	"ecommerce/internal/migrations"
 	paymentservice "ecommerce/internal/services/payments"
 	"ecommerce/models"
@@ -20,11 +22,14 @@ import (
 func newWebhookTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
-	dsn := "file:" + t.Name() + "?mode=memory&cache=shared"
+	// The processor goroutine writes while tests poll from another connection. A
+	// shared-cache memory database fails those overlaps with "table is locked"
+	// instead of waiting, so use a file database that honors busy_timeout.
+	dsn := "file:" + filepath.Join(t.TempDir(), "webhooks.db") + "?_busy_timeout=5000&_journal_mode=WAL"
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	require.NoError(t, err)
 	require.NoError(t, migrations.RunWithoutContract(db))
-	return db
+	return jobs.WithRuntime(db, jobs.NewRuntime(db, jobs.Config{}))
 }
 
 func waitForWebhookState(

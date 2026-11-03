@@ -500,6 +500,176 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/search/consent/revoke": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Revoke anonymous search analytics consent */
+		post: operations["revokeSearchConsent"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/search/proofs": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Exchange a cacheable server snapshot for a consented browser exposure proof */
+		post: operations["createSearchProof"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/search/impressions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Record an opted-in search impression */
+		post: operations["createSearchImpression"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/search/events": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Record a verified search result click */
+		post: operations["createSearchEvent"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/analytics": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Read consented search analytics */
+		get: operations["getAdminSearchAnalytics"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/incidents": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List stale-index incidents and recovery history */
+		get: operations["getAdminSearchIncidents"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/configuration-history": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List immutable search configuration changes */
+		get: operations["listAdminSearchConfigurationHistory"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/operations": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Inspect search capacity and circuit status */
+		get: operations["getAdminSearchOperations"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/search/products": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Search published products */
+		get: operations["searchProducts"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/search/suggestions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Suggest product search queries */
+		get: operations["getSearchSuggestions"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/products": {
 		parameters: {
 			query?: never;
@@ -1127,6 +1297,294 @@ export interface paths {
 		options?: never;
 		head?: never;
 		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/products": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Search published products with ranking explanations */
+		get: operations["searchAdminProducts"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/ranking-profiles": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List search ranking profiles */
+		get: operations["listAdminSearchRankingProfiles"];
+		put?: never;
+		/** Create a named search ranking profile */
+		post: operations["createAdminSearchRankingProfile"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/ranking-profiles/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Get a search ranking profile */
+		get: operations["getAdminSearchRankingProfile"];
+		put?: never;
+		post?: never;
+		/** Delete a search ranking profile */
+		delete: operations["deleteAdminSearchRankingProfile"];
+		options?: never;
+		head?: never;
+		/** Update a search ranking profile */
+		patch: operations["updateAdminSearchRankingProfile"];
+		trace?: never;
+	};
+	"/api/v1/admin/search/merchandising-rules": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List search merchandising rules */
+		get: operations["listAdminSearchMerchandisingRules"];
+		put?: never;
+		/** Create a named search merchandising rule */
+		post: operations["createAdminSearchMerchandisingRule"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/merchandising-rules/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Get a search merchandising rule */
+		get: operations["getAdminSearchMerchandisingRule"];
+		put?: never;
+		post?: never;
+		/** Delete a search merchandising rule */
+		delete: operations["deleteAdminSearchMerchandisingRule"];
+		options?: never;
+		head?: never;
+		/** Update a search merchandising rule */
+		patch: operations["updateAdminSearchMerchandisingRule"];
+		trace?: never;
+	};
+	"/api/v1/admin/search/merchandising-rules/{id}/audit": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get: operations["listAdminSearchMerchandisingRuleAudit"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/merchandising-audit": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List all merchandising audit history, including deleted rules */
+		get: operations["listAdminSearchMerchandisingAudit"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/preview": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["previewAdminSearch"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/freshness": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Get search index freshness */
+		get: operations["getAdminSearchFreshness"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/reindex": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** Queue a full search reindex */
+		post: operations["createAdminSearchReindex"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/refresh-sales": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Queue the daily search sales signal refresh
+		 * @description Reuses the current UTC day's durable job, including a previously completed job. Execution is owned by the background worker.
+		 */
+		post: operations["createAdminSearchSalesRefresh"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/refresh-conversion": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Queue the daily search conversion signal refresh
+		 * @description Reuses the current UTC day's durable job, including a previously completed job. Execution is owned by the background worker.
+		 */
+		post: operations["createAdminSearchConversionRefresh"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/synonyms": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List search synonym sets */
+		get: operations["listAdminSearchSynonyms"];
+		put?: never;
+		/** Create a search synonym set */
+		post: operations["createAdminSearchSynonym"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/synonyms/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Get a search synonym set */
+		get: operations["getAdminSearchSynonym"];
+		put?: never;
+		post?: never;
+		/** Delete a search synonym set */
+		delete: operations["deleteAdminSearchSynonym"];
+		options?: never;
+		head?: never;
+		/** Update a search synonym set */
+		patch: operations["updateAdminSearchSynonym"];
+		trace?: never;
+	};
+	"/api/v1/admin/search/typo-profiles": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List search typo tolerance profiles */
+		get: operations["listAdminSearchTypoProfiles"];
+		put?: never;
+		/** Create a named search typo tolerance profile */
+		post: operations["createAdminSearchTypoProfile"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/admin/search/typo-profiles/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Get a search typo tolerance profile */
+		get: operations["getAdminSearchTypoProfile"];
+		put?: never;
+		post?: never;
+		/** Delete a search typo tolerance profile */
+		delete: operations["deleteAdminSearchTypoProfile"];
+		options?: never;
+		head?: never;
+		/** Update a search typo tolerance profile */
+		patch: operations["updateAdminSearchTypoProfile"];
 		trace?: never;
 	};
 	"/api/v1/admin/products": {
@@ -3290,6 +3748,7 @@ export interface components {
 			| "product_variant"
 			| "product_option"
 			| "product_option_value"
+			| "product_attribute"
 			| "brand"
 			| "category"
 			| "website_settings"
@@ -4309,6 +4768,11 @@ export interface components {
 			title: string;
 			/** Format: double */
 			price: number;
+			/**
+			 * Format: double
+			 * @description Private variant unit cost, returned only by administrator catalog endpoints and omitted from all storefront responses.
+			 */
+			unit_cost?: number | null;
 			/** Format: double */
 			compare_at_price?: number | null;
 			stock: number;
@@ -4748,6 +5212,11 @@ export interface components {
 			title: string;
 			/** Format: double */
 			price: number;
+			/**
+			 * Format: double
+			 * @description Private unit cost. Omission or null clears the cost when replacing the product draft.
+			 */
+			unit_cost?: number | null;
 			/** Format: double */
 			compare_at_price?: number | null;
 			stock: number;
@@ -4797,6 +5266,635 @@ export interface components {
 			data: components["schemas"]["Product"][];
 			pagination: components["schemas"]["Pagination"];
 		};
+		/** @enum {string} */
+		SearchSynonymDirection: "uni" | "bi";
+		SearchSynonymSet: {
+			id: number;
+			name: string;
+			direction: components["schemas"]["SearchSynonymDirection"];
+			/** @description For uni direction, the first term is the source and the remaining terms are replacements. For bi direction, every term is equivalent. */
+			terms: string[];
+			is_active: boolean;
+			updated_by?: number | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		SearchSynonymSetInput: {
+			name: string;
+			direction: components["schemas"]["SearchSynonymDirection"];
+			/** @description For uni direction, the first term is the source and the remaining terms are replacements. For bi direction, every term is equivalent. */
+			terms: string[];
+			/** @default true */
+			is_active: boolean;
+		};
+		SearchSynonymSetPatch: {
+			name?: string;
+			direction?: components["schemas"]["SearchSynonymDirection"];
+			/** @description For uni direction, the first term is the source and the remaining terms are replacements. For bi direction, every term is equivalent. */
+			terms?: string[];
+			is_active?: boolean;
+		};
+		SearchSynonymSetListResponse: {
+			data: components["schemas"]["SearchSynonymSet"][];
+		};
+		SearchTypoToleranceProfile: {
+			id: number;
+			name: string;
+			minimum_token_length: number;
+			one_edit_minimum_length: number;
+			two_edit_minimum_length: number;
+			strict_mode: boolean;
+			/** @description True for the single globally active typo tolerance profile. */
+			is_active: boolean;
+			updated_by?: number | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		SearchTypoToleranceProfileInput: {
+			name: string;
+			/** @default 4 */
+			minimum_token_length: number;
+			/** @default 4 */
+			one_edit_minimum_length: number;
+			/** @default 8 */
+			two_edit_minimum_length: number;
+			/** @default false */
+			strict_mode: boolean;
+			/**
+			 * @description Activating a profile atomically deactivates the prior global profile.
+			 * @default false
+			 */
+			is_active: boolean;
+		};
+		SearchTypoToleranceProfilePatch: {
+			name?: string;
+			minimum_token_length?: number;
+			one_edit_minimum_length?: number;
+			two_edit_minimum_length?: number;
+			strict_mode?: boolean;
+			/** @description Activating a profile atomically deactivates the prior global profile. */
+			is_active?: boolean;
+		};
+		SearchTypoToleranceProfileListResponse: {
+			data: components["schemas"]["SearchTypoToleranceProfile"][];
+		};
+		SearchRankingWeights: {
+			/** Format: double */
+			token_coverage: number;
+			/** Format: double */
+			exact_phrase: number;
+			/** Format: double */
+			name: number;
+			/** Format: double */
+			brand: number;
+			/** Format: double */
+			attributes: number;
+			/** Format: double */
+			recency: number;
+			/** Format: double */
+			availability: number;
+			/** Format: double */
+			sales: number;
+			/** Format: double */
+			margin: number;
+			/** Format: double */
+			conversion: number;
+		};
+		SearchRankingWeightsInput: {
+			/** Format: double */
+			token_coverage: number;
+			/** Format: double */
+			exact_phrase: number;
+			/** Format: double */
+			name: number;
+			/** Format: double */
+			brand: number;
+			/** Format: double */
+			attributes: number;
+			/** Format: double */
+			recency: number;
+			/** Format: double */
+			availability: number;
+			/** Format: double */
+			sales: number;
+			/** Format: double */
+			margin: number;
+			/** Format: double */
+			conversion: number;
+		};
+		SearchRankingProfileInput: {
+			name: string;
+			weights: components["schemas"]["SearchRankingWeightsInput"];
+			/** @description Selecting a default atomically deselects the previous default. */
+			is_default?: boolean;
+		};
+		SearchRankingProfilePatch: {
+			name?: string;
+			weights?: components["schemas"]["SearchRankingWeightsInput"];
+			/** @description Selecting a default atomically deselects the previous default. */
+			is_default?: boolean;
+		};
+		SearchRankingProfile: {
+			id: number;
+			name: string;
+			weights: components["schemas"]["SearchRankingWeights"];
+			/** @description Selecting a default atomically deselects the previous default. */
+			is_default: boolean;
+			version: number;
+			updated_by: number | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		SearchRankingProfileListResponse: {
+			data: components["schemas"]["SearchRankingProfile"][];
+		};
+		SearchRankingComponent: {
+			name: string;
+			/** Format: double */
+			value: number;
+			/** Format: double */
+			weight: number;
+			/** Format: double */
+			contribution: number;
+		};
+		SearchRankingExplanation: {
+			/**
+			 * Format: double
+			 * @description Score after the winning boost multiplier, before pin or bury placement.
+			 */
+			adjusted_score: number;
+			product_id: number;
+			/** Format: double */
+			score: number;
+			components: components["schemas"]["SearchRankingComponent"][];
+		};
+		AdminProductSearchResponse: {
+			rule_decisions: components["schemas"]["SearchRuleDecision"][];
+			items: components["schemas"]["Product"][];
+			facets: components["schemas"]["SearchFacet"][];
+			metadata: components["schemas"]["ProductSearchMetadata"];
+			pagination: components["schemas"]["Pagination"];
+			explanations: components["schemas"]["SearchRankingExplanation"][];
+		};
+		SearchMerchandisingQuery: {
+			/** @enum {string} */
+			mode: "exact" | "prefix" | "contains";
+			value: string;
+		};
+		SearchMerchandisingPredicate: {
+			query?: components["schemas"]["SearchMerchandisingQuery"];
+			category_slugs?: string[];
+			/**
+			 * @description Empty applies to all supported channels; P3 supports storefront.
+			 * @enum {string}
+			 */
+			channel?: "" | "storefront";
+		};
+		SearchMerchandisingTargetInput: {
+			product_id: number;
+			position?: number;
+		};
+		SearchMerchandisingTarget: {
+			product_id: number;
+			position?: number;
+			product_name: string;
+		};
+		SearchMerchandisingActionInput: {
+			targets: components["schemas"]["SearchMerchandisingTargetInput"][];
+			/**
+			 * Format: double
+			 * @description Required only for boost actions; never stacks with another boost.
+			 */
+			multiplier?: number;
+		};
+		SearchMerchandisingAction: {
+			targets: components["schemas"]["SearchMerchandisingTarget"][];
+			/**
+			 * Format: double
+			 * @description Required only for boost actions; never stacks with another boost.
+			 */
+			multiplier?: number;
+		};
+		SearchMerchandisingRuleInput: {
+			name: string;
+			/** @enum {string} */
+			rule_type: "pin" | "bury" | "hide" | "boost" | "include";
+			predicate?: components["schemas"]["SearchMerchandisingPredicate"];
+			action: components["schemas"]["SearchMerchandisingActionInput"];
+			/** @default 0 */
+			priority: number;
+			/** Format: date-time */
+			starts_at?: string;
+			/** Format: date-time */
+			ends_at?: string;
+			/** @default true */
+			is_active: boolean;
+		};
+		SearchMerchandisingRulePatch: {
+			name?: string;
+			/** @enum {string} */
+			rule_type?: "pin" | "bury" | "hide" | "boost" | "include";
+			predicate?: components["schemas"]["SearchMerchandisingPredicate"];
+			action?: components["schemas"]["SearchMerchandisingActionInput"];
+			priority?: number;
+			/** Format: date-time */
+			starts_at?: string;
+			/** Format: date-time */
+			ends_at?: string;
+			is_active?: boolean;
+			/** @description Clear the start boundary; cannot be combined with starts_at. */
+			clear_starts_at?: boolean;
+			/** @description Clear the end boundary; cannot be combined with ends_at. */
+			clear_ends_at?: boolean;
+		};
+		SearchMerchandisingPreviewRule: {
+			name: string;
+			/** @enum {string} */
+			rule_type: "pin" | "bury" | "hide" | "boost" | "include";
+			predicate?: components["schemas"]["SearchMerchandisingPredicate"];
+			action: components["schemas"]["SearchMerchandisingActionInput"];
+			/** @default 0 */
+			priority: number;
+			/** Format: date-time */
+			starts_at?: string;
+			/** Format: date-time */
+			ends_at?: string;
+			/** @default true */
+			is_active: boolean;
+			/** @description Optional identity for a persisted rule; zero represents an unsaved rule. */
+			id?: number;
+		};
+		SearchMerchandisingRule: {
+			name: string;
+			/** @enum {string} */
+			rule_type: "pin" | "bury" | "hide" | "boost" | "include";
+			predicate: components["schemas"]["SearchMerchandisingPredicate"];
+			action: components["schemas"]["SearchMerchandisingAction"];
+			/** @default 0 */
+			priority: number;
+			/** Format: date-time */
+			starts_at: string | null;
+			/** Format: date-time */
+			ends_at: string | null;
+			/** @default true */
+			is_active: boolean;
+			id: number;
+			version: number;
+			updated_by: number | null;
+			/** Format: date-time */
+			created_at: string;
+			/** Format: date-time */
+			updated_at: string;
+		};
+		SearchMerchandisingRuleListResponse: {
+			data: components["schemas"]["SearchMerchandisingRule"][];
+		};
+		SearchRuleDecision: {
+			rule_id: number;
+			rule_name: string;
+			/** @enum {string} */
+			rule_type: "pin" | "bury" | "hide" | "boost" | "include";
+			/** @description Zero denotes a decision about the rule rather than a target. */
+			product_id: number;
+			product_name: string;
+			/** @enum {string} */
+			outcome: "applied" | "skipped" | "conflict";
+			reason: string;
+			position?: number;
+			/** Format: double */
+			multiplier?: number;
+		};
+		SearchMerchandisingAudit: {
+			id: number;
+			rule_id: number;
+			/** @enum {string} */
+			operation: "create" | "update" | "delete";
+			actor_id: number | null;
+			before: components["schemas"]["SearchMerchandisingRule"] | null;
+			after: components["schemas"]["SearchMerchandisingRule"] | null;
+			/** Format: date-time */
+			created_at: string;
+		};
+		SearchMerchandisingAuditListResponse: {
+			data: components["schemas"]["SearchMerchandisingAudit"][];
+		};
+		SearchPreviewFilters: {
+			q?: string;
+			/** Format: double */
+			min_price?: number;
+			/** Format: double */
+			max_price?: number;
+			/** @description Same semantics as the public search query parameter. */
+			brand_slug?: string[];
+			/** @description Same semantics as the public search query parameter. */
+			category_slug?: string[];
+			/** @description Same semantics as the public search query parameter. */
+			has_variant_stock?: boolean[];
+			/** @description Same semantics as the public search query parameter. */
+			price_range?: string[];
+			/** @description Same semantics as the public search query parameter. */
+			attribute?: {
+				[key: string]: string[];
+			};
+			ranking_profile?: string;
+			/** @enum {string} */
+			sort?: "relevance" | "price" | "name" | "created_at";
+			/** @enum {string} */
+			order?: "asc" | "desc";
+			page?: number;
+			limit?: number;
+		};
+		SearchPreviewRequest: {
+			filters: {
+				q?: string;
+				/** Format: double */
+				min_price?: number;
+				/** Format: double */
+				max_price?: number;
+				/** @description Same semantics as the public search query parameter. */
+				brand_slug?: string[];
+				/** @description Same semantics as the public search query parameter. */
+				category_slug?: string[];
+				/** @description Same semantics as the public search query parameter. */
+				has_variant_stock?: boolean[];
+				/** @description Same semantics as the public search query parameter. */
+				price_range?: string[];
+				/** @description Same semantics as the public search query parameter. */
+				attribute?: {
+					[key: string]: string[];
+				};
+				ranking_profile?: string;
+				/** @enum {string} */
+				sort?: "relevance" | "price" | "name" | "created_at";
+				/** @enum {string} */
+				order?: "asc" | "desc";
+				page?: number;
+				limit?: number;
+			};
+			/** @description Complete replacement rule set. Omit to use persisted rules; an empty array disables all rules for the proposed side. Preview never saves changes. */
+			rules?: components["schemas"]["SearchMerchandisingPreviewRule"][];
+			/**
+			 * Format: date-time
+			 * @description Simulated UTC time for campaign windows; ranking signals are unchanged.
+			 */
+			at?: string;
+		};
+		SearchPreviewResponse: {
+			baseline: components["schemas"]["AdminProductSearchResponse"];
+			proposed: components["schemas"]["AdminProductSearchResponse"];
+		};
+		SearchFacetValue: {
+			value: string;
+			label?: string;
+			count: number;
+			selected: boolean;
+			disabled: boolean;
+			/**
+			 * Format: double
+			 * @description Inclusive lower boundary for a dynamically generated range value.
+			 */
+			min_price?: number | null;
+			/**
+			 * Format: double
+			 * @description Inclusive upper boundary for a dynamically generated range value.
+			 */
+			max_price?: number | null;
+		};
+		SearchFacet: {
+			name: string;
+			label?: string;
+			/** @enum {string} */
+			type: "terms" | "range" | "boolean" | "attribute";
+			values: components["schemas"]["SearchFacetValue"][];
+		};
+		SearchConsentRevokeInput: {
+			session_token: string;
+		};
+		SearchProofInput: {
+			snapshot_token: string;
+			/** @enum {boolean} */
+			consent: true;
+			/** Format: uuid */
+			event_id: string;
+		};
+		SearchProofResponse: {
+			result_token: string;
+		};
+		SearchImpressionInput: {
+			/** Format: uuid */
+			event_id: string;
+			/** @enum {boolean} */
+			consent: true;
+			session_token?: string;
+			/** @description Short-lived signed server exposure snapshot from public search; never produced for admin or degraded results. */
+			result_token: string;
+		};
+		SearchImpressionResponse: {
+			impression_id: string;
+			session_token: string;
+		};
+		SearchEventInput: {
+			session_token: string;
+			impression_id: string;
+			/** Format: uuid */
+			event_id: string;
+			/** @enum {string} */
+			type: "click";
+			product_id: number;
+			position: number;
+		};
+		SearchEventResponse: {
+			event_id: string;
+			click_id: string;
+		};
+		SearchQueryMetrics: {
+			/** Format: double */
+			zero_result_rate: number;
+			/** Format: double */
+			ctr_at_5: number;
+			/** Format: double */
+			ctr_at_10: number;
+			/** Format: double */
+			conversion_at_5: number;
+			/** Format: double */
+			conversion_at_10: number;
+			/** Format: double */
+			p95_latency_ms: number;
+			/** Format: double */
+			p99_latency_ms: number;
+			query: string;
+			searches: number;
+			unique_sessions: number;
+			zero_results: number;
+			clicks: number;
+			add_to_carts: number;
+			paid_orders: number;
+			ctr: number;
+			conversion_rate: number;
+			average_latency_ms: number;
+		};
+		SearchAnalytics: {
+			pagination: components["schemas"]["Pagination"];
+			facet_usage: {
+				[key: string]: number;
+			};
+			/** Format: double */
+			zero_result_rate: number;
+			/** Format: double */
+			ctr_at_5: number;
+			/** Format: double */
+			ctr_at_10: number;
+			/** Format: double */
+			conversion_at_5: number;
+			/** Format: double */
+			conversion_at_10: number;
+			/** Format: double */
+			p95_latency_ms: number;
+			/** Format: double */
+			p99_latency_ms: number;
+			days: number;
+			searches: number;
+			unique_sessions: number;
+			zero_results: number;
+			clicks: number;
+			add_to_carts: number;
+			paid_orders: number;
+			ctr: number;
+			conversion_rate: number;
+			average_latency_ms: number;
+			queries: components["schemas"]["SearchQueryMetrics"][];
+			popular: string[];
+			trending: string[];
+		};
+		SearchIndexIncident: {
+			id: number;
+			index_name: string;
+			/** @enum {string} */
+			reason: "index_lag" | "missing_baseline";
+			/** @enum {string} */
+			status: "open" | "resolved";
+			/** Format: date-time */
+			opened_at: string;
+			/** Format: date-time */
+			detected_at: string;
+			/** Format: date-time */
+			last_observed_at: string;
+			/** Format: date-time */
+			recovered_at: string | null;
+			/** Format: int64 */
+			duration_seconds: number;
+			/** Format: int64 */
+			max_lag_seconds: number;
+			/** Format: int64 */
+			max_pending_jobs: number;
+			/** Format: int64 */
+			document_count: number;
+		};
+		SearchIndexIncidentListResponse: {
+			data: components["schemas"]["SearchIndexIncident"][];
+			pagination: components["schemas"]["Pagination"];
+		};
+		SearchConfigurationAudit: {
+			id: number;
+			/** @enum {string} */
+			kind: "synonym" | "typo_profile" | "ranking_profile";
+			entity_id: number;
+			/** @enum {string} */
+			operation: "baseline" | "create" | "update" | "delete";
+			actor_id: number | null;
+			before: {
+				[key: string]: unknown;
+			} | null;
+			after: {
+				[key: string]: unknown;
+			} | null;
+			/** Format: date-time */
+			created_at: string;
+		};
+		SearchConfigurationAuditListResponse: {
+			items: components["schemas"]["SearchConfigurationAudit"][];
+			pagination: components["schemas"]["Pagination"];
+		};
+		SearchOperationsStatus: {
+			max_concurrent: number;
+			search_timeout_ms: number;
+			circuit_failure_threshold: number;
+			circuit_open_ms: number;
+			reindex_queue_limit: number;
+			active_searches: number;
+			/** @enum {string} */
+			circuit_state: "closed" | "open" | "half_open";
+			consecutive_failures: number;
+			/** Format: date-time */
+			circuit_open_until: string | null;
+			pending_reindexes: number;
+		};
+		ProductSearchMetadata: {
+			degraded: boolean;
+			fallback_reason?: string;
+			ranking_profile: string;
+			ranking_profile_version: number;
+			normalized_query: string;
+			applied_rewrites: components["schemas"]["SearchAppliedRewrite"][];
+			/** @description Suggested corrected query when the original query has no exact results. */
+			did_you_mean: string | null;
+			/** @description True when the response items come from the deterministic relaxed fallback. */
+			relaxed: boolean;
+			/** Format: date-time */
+			indexed_at: string | null;
+		};
+		SearchAppliedRewrite: {
+			/** @enum {string} */
+			kind: "synonym" | "typo";
+			original: string;
+			replacement: string;
+		};
+		ProductSearchResponse: {
+			/** @description Server-signed snapshot valid for one hour. Cacheable pages exchange it through the consented browser proof endpoint; omitted for admin or degraded search. */
+			result_snapshot?: string;
+			/** @description Signed exposure proof expiring after five minutes. Omitted for admin or degraded search. */
+			result_token?: string;
+			items: components["schemas"]["Product"][];
+			facets: components["schemas"]["SearchFacet"][];
+			metadata: components["schemas"]["ProductSearchMetadata"];
+			pagination: components["schemas"]["Pagination"];
+		};
+		SearchSuggestionsResponse: {
+			suggestions: string[];
+			corrections: string[];
+		};
+		SearchFreshness: {
+			/** @enum {string} */
+			status: "healthy" | "degraded" | "stale";
+			/** Format: int64 */
+			lag_seconds: number;
+			/** Format: int64 */
+			pending_jobs: number;
+			/** Format: int64 */
+			document_count: number;
+			/** Format: date-time */
+			last_indexed_at: string | null;
+			/** Format: date-time */
+			last_full_reindex_at: string | null;
+		};
+		SearchRefreshAccepted: {
+			job_id: string;
+			/** @enum {string} */
+			status: "queued" | "succeeded";
+			/** @enum {string} */
+			disposition?: "queued" | "reused_completed";
+		};
+		SearchReindexAccepted: {
+			job_id: string;
+			/** @enum {string} */
+			status: "queued";
+		};
 		CartItem: {
 			id: number;
 			cart_id: number;
@@ -4833,6 +5931,8 @@ export interface components {
 			item_count: number;
 		};
 		AddCartItemRequest: {
+			search_click_id?: string;
+			search_session_token?: string;
 			product_variant_id: number;
 			quantity: number;
 		};
@@ -5961,6 +7061,7 @@ export interface operations {
 			200: {
 				headers: {
 					ETag?: string;
+					/** @description Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution. */
 					"Cache-Control"?: string;
 					[name: string]: unknown;
 				};
@@ -5972,6 +7073,7 @@ export interface operations {
 			304: {
 				headers: {
 					ETag?: string;
+					/** @description Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution. */
 					"Cache-Control"?: string;
 					[name: string]: unknown;
 				};
@@ -6001,6 +7103,7 @@ export interface operations {
 			200: {
 				headers: {
 					ETag?: string;
+					/** @description Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution. */
 					"Cache-Control"?: string;
 					[name: string]: unknown;
 				};
@@ -6012,6 +7115,7 @@ export interface operations {
 			304: {
 				headers: {
 					ETag?: string;
+					/** @description Private, no-store for audience-dependent rollout cohorts; public revalidation for deterministic locale resolution. */
 					"Cache-Control"?: string;
 					[name: string]: unknown;
 				};
@@ -7067,10 +8171,308 @@ export interface operations {
 			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};
-	listProducts: {
+	revokeSearchConsent: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchConsentRevokeInput"];
+			};
+		};
+		responses: {
+			/** @description Anonymous analytics deleted and session revoked */
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			400: components["responses"]["BadRequestProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createSearchProof: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchProofInput"];
+			};
+		};
+		responses: {
+			/** @description Short-lived exposure proof; this response must not be cached */
+			200: {
+				headers: {
+					"Cache-Control"?: string;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchProofResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
+		};
+	};
+	createSearchImpression: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchImpressionInput"];
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchImpressionResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
+		};
+	};
+	createSearchEvent: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchEventInput"];
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchEventResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminSearchAnalytics: {
+		parameters: {
+			query?: {
+				days?: number;
+				page?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchAnalytics"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminSearchIncidents: {
+		parameters: {
+			query?: {
+				page?: number;
+				limit?: number;
+				status?: "open" | "resolved";
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Incident history, newest first */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchIndexIncidentListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminSearchConfigurationHistory: {
+		parameters: {
+			query?: {
+				kind?: "synonym" | "typo_profile" | "ranking_profile";
+				entity_id?: number;
+				page?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Configuration changes, newest first */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchConfigurationAuditListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminSearchOperations: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchOperationsStatus"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	searchProducts: {
 		parameters: {
 			query?: {
 				q?: string;
+				/**
+				 * @deprecated
+				 * @description Legacy inclusive minimum price. Cannot be combined with price_range.
+				 */
+				min_price?: number;
+				/**
+				 * @deprecated
+				 * @description Legacy inclusive maximum price. Cannot be combined with price_range.
+				 */
+				max_price?: number;
+				brand_slug?: string[];
+				category_slug?: string[];
+				/** @description Repeated values use OR semantics within the stock facet. */
+				has_variant_stock?: boolean[];
+				/** @description Repeated inclusive price ranges use OR semantics within the price facet. Each value is encoded as min:max; either boundary may be omitted. Overlapping ranges are treated as a union. */
+				price_range?: string[];
+				/** @description Attribute values use OR within each attribute and AND across attributes. Encode array values with indexed deep-object keys, such as attribute[color][0]=red&attribute[color][1]=blue. */
+				attribute?: {
+					[key: string]: string[];
+				};
+				/** @description Defaults to relevance for a keyword query and newest for an empty query. */
+				sort?: "relevance" | "price" | "name" | "created_at";
+				order?: "asc" | "desc";
+				page?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search results, facets, and index metadata */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["ProductSearchResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
+		};
+	};
+	getSearchSuggestions: {
+		parameters: {
+			query: {
+				q: string;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Prefix suggestions and optional discovery hints */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchSuggestionsResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
+		};
+	};
+	listProducts: {
+		parameters: {
+			query?: {
 				min_price?: number;
 				max_price?: number;
 				brand_slug?: string;
@@ -8351,6 +9753,802 @@ export interface operations {
 			401: components["responses"]["AuthenticationRequiredProblem"];
 			403: components["responses"]["ForbiddenProblem"];
 			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	searchAdminProducts: {
+		parameters: {
+			query?: {
+				q?: string;
+				/**
+				 * @deprecated
+				 * @description Legacy inclusive minimum price. Cannot be combined with price_range.
+				 */
+				min_price?: number;
+				/**
+				 * @deprecated
+				 * @description Legacy inclusive maximum price. Cannot be combined with price_range.
+				 */
+				max_price?: number;
+				brand_slug?: string[];
+				category_slug?: string[];
+				/** @description Repeated values use OR semantics within the stock facet. */
+				has_variant_stock?: boolean[];
+				/** @description Repeated inclusive price ranges use OR semantics within the price facet. Each value is encoded as min:max; either boundary may be omitted. Overlapping ranges are treated as a union. */
+				price_range?: string[];
+				/** @description Attribute values use OR within each attribute and AND across attributes. Encode array values with indexed deep-object keys, such as attribute[color][0]=red&attribute[color][1]=blue. */
+				attribute?: {
+					[key: string]: string[];
+				};
+				/** @description Named ranking profile; omitted selects the global default. */
+				ranking_profile?: string;
+				/** @description Defaults to relevance for a keyword query and newest for an empty query. */
+				sort?: "relevance" | "price" | "name" | "created_at";
+				order?: "asc" | "desc";
+				page?: number;
+				limit?: number;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search results, facets, and index metadata */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["AdminProductSearchResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
+		};
+	};
+	listAdminSearchRankingProfiles: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search ranking profiles */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchRankingProfileListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createAdminSearchRankingProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchRankingProfileInput"];
+			};
+		};
+		responses: {
+			/** @description Created search ranking profile */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchRankingProfile"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminSearchRankingProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search ranking profile */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchRankingProfile"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	deleteAdminSearchRankingProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search ranking profile deleted */
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	updateAdminSearchRankingProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchRankingProfilePatch"];
+			};
+		};
+		responses: {
+			/** @description Updated search ranking profile */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchRankingProfile"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminSearchMerchandisingRules: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search merchandising rules */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchMerchandisingRuleListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createAdminSearchMerchandisingRule: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchMerchandisingRuleInput"];
+			};
+		};
+		responses: {
+			/** @description Created search merchandising rule */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchMerchandisingRule"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminSearchMerchandisingRule: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search merchandising rule */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchMerchandisingRule"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	deleteAdminSearchMerchandisingRule: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search merchandising rule deleted */
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	updateAdminSearchMerchandisingRule: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchMerchandisingRulePatch"];
+			};
+		};
+		responses: {
+			/** @description Updated search merchandising rule */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchMerchandisingRule"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminSearchMerchandisingRuleAudit: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search merchandising result */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchMerchandisingAuditListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminSearchMerchandisingAudit: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search merchandising result */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchMerchandisingAuditListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	previewAdminSearch: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchPreviewRequest"];
+			};
+		};
+		responses: {
+			/** @description Search merchandising result */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchPreviewResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			422: components["responses"]["ValidationProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
+		};
+	};
+	getAdminSearchFreshness: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search index freshness and backlog status */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchFreshness"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createAdminSearchReindex: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Full search reindex accepted */
+			202: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchReindexAccepted"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			429: components["responses"]["TooManyRequestsProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+			503: components["responses"]["ServiceUnavailableProblem"];
+		};
+	};
+	createAdminSearchSalesRefresh: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Daily signal refresh job accepted */
+			202: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchRefreshAccepted"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createAdminSearchConversionRefresh: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Daily signal refresh job accepted */
+			202: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchRefreshAccepted"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminSearchSynonyms: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search synonym sets */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchSynonymSetListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createAdminSearchSynonym: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchSynonymSetInput"];
+			};
+		};
+		responses: {
+			/** @description Created search synonym set */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchSynonymSet"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminSearchSynonym: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search synonym set */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchSynonymSet"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	deleteAdminSearchSynonym: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search synonym set deleted */
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	updateAdminSearchSynonym: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchSynonymSetPatch"];
+			};
+		};
+		responses: {
+			/** @description Updated search synonym set */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchSynonymSet"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	listAdminSearchTypoProfiles: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search typo tolerance profiles */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchTypoToleranceProfileListResponse"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	createAdminSearchTypoProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchTypoToleranceProfileInput"];
+			};
+		};
+		responses: {
+			/** @description Created search typo tolerance profile */
+			201: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchTypoToleranceProfile"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	getAdminSearchTypoProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search typo tolerance profile */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchTypoToleranceProfile"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	deleteAdminSearchTypoProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Search typo tolerance profile deleted */
+			204: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content?: never;
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			500: components["responses"]["InternalServerErrorProblem"];
+		};
+	};
+	updateAdminSearchTypoProfile: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				id: number;
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["SearchTypoToleranceProfilePatch"];
+			};
+		};
+		responses: {
+			/** @description Updated search typo tolerance profile */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["SearchTypoToleranceProfile"];
+				};
+			};
+			400: components["responses"]["BadRequestProblem"];
+			401: components["responses"]["AuthenticationRequiredProblem"];
+			403: components["responses"]["ForbiddenProblem"];
+			404: components["responses"]["NotFoundProblem"];
+			409: components["responses"]["ConflictProblem"];
+			422: components["responses"]["ValidationProblem"];
 			500: components["responses"]["InternalServerErrorProblem"];
 		};
 	};

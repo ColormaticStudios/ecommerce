@@ -70,7 +70,10 @@ func LoadLiveProductUpsertInput(db *gorm.DB, mediaService *media.Service, produc
 	if err != nil {
 		return apicontract.ProductUpsertInput{}, err
 	}
+	return inputFromLiveProduct(product, options, variants, attributeValues, seo, valueMap, mediaService)
+}
 
+func inputFromLiveProduct(product models.Product, options []models.ProductOption, variants []models.ProductVariant, attributeValues []models.ProductAttributeValue, seo models.SEOMetadata, valueMap map[uint]liveOptionValueRecord, mediaService *media.Service) (apicontract.ProductUpsertInput, error) {
 	input := apicontract.ProductUpsertInput{
 		Attributes:        make([]apicontract.ProductAttributeValueInput, 0, len(attributeValues)),
 		Description:       product.Description,
@@ -139,6 +142,7 @@ func LoadLiveProductUpsertInput(db *gorm.DB, mediaService *media.Service, produc
 		isPublished := variant.IsPublished
 		variantInput := apicontract.ProductVariantInput{
 			CompareAtPrice: moneyFloatPtr(variant.CompareAtPrice),
+			UnitCost:       moneyFloatPtr(variant.UnitCost),
 			HeightCm:       variant.HeightCm,
 			IsPublished:    &isPublished,
 			LengthCm:       variant.LengthCm,
@@ -248,6 +252,7 @@ func ProductContractToUpsertInput(product apicontract.Product) apicontract.Produ
 		isPublished := variant.IsPublished
 		entry := apicontract.ProductVariantInput{
 			CompareAtPrice: variant.CompareAtPrice,
+			UnitCost:       variant.UnitCost,
 			HeightCm:       variant.HeightCm,
 			IsPublished:    &isPublished,
 			LengthCm:       variant.LengthCm,

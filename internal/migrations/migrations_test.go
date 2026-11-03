@@ -569,8 +569,17 @@ func TestRunWithoutContractSkipsContractMigrations(t *testing.T) {
 
 	status, err := statusForMigrations(db, orderedMigrations)
 	require.NoError(t, err)
-	require.Equal(t, oidcLoginUIVersion, status.LatestAppliedVersion)
-	require.Equal(t, 3, status.PendingCount)
+	var expectedLatest string
+	expectedPending := 0
+	for _, migration := range orderedMigrations {
+		if slices.Contains(migration.Tags, "contract") {
+			expectedPending++
+		} else {
+			expectedLatest = migration.Version
+		}
+	}
+	require.Equal(t, expectedLatest, status.LatestAppliedVersion)
+	require.Equal(t, expectedPending, status.PendingCount)
 }
 
 func TestRunAppliesAllOrderedMigrationsAndReplayIsIdempotent(t *testing.T) {
@@ -592,6 +601,59 @@ func TestRunAppliesAllOrderedMigrationsAndReplayIsIdempotent(t *testing.T) {
 
 func TestLatestVersionMatchesImportLightSchemaContract(t *testing.T) {
 	require.Equal(t, schemacontract.LatestMigrationVersion, LatestVersion())
+}
+
+func TestSearchFoundationP0MigrationCreatesProjectionAndConfigurationTables(t *testing.T) {
+	db := newTestDB(t)
+	migrationIndex := slices.IndexFunc(orderedMigrations, func(migration Migration) bool {
+		return migration.Version == searchFoundationP0Version
+	})
+	require.Greater(t, migrationIndex, 0)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex+1]))
+	for _, table := range []string{"search_documents", "search_index_states", "search_synonym_sets", "search_ranking_profiles", "search_merchandising_rules", "search_query_events", "search_click_events"} {
+		require.Truef(t, db.Migrator().HasTable(table), "expected %s", table)
+	}
+	require.True(t, db.Migrator().HasIndex("search_documents", "idx_search_documents_entity"))
+}
+
+func TestSearchQueryUnderstandingP1MigrationSeedsOneActiveTypoProfile(t *testing.T) {
+	db := newTestDB(t)
+	migrationIndex := slices.IndexFunc(orderedMigrations, func(migration Migration) bool {
+		return migration.Version == searchQueryUnderstandingP1Version
+	})
+	require.Greater(t, migrationIndex, 0)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex]))
+	require.False(t, db.Migrator().HasTable(&searchP1TypoToleranceProfileSchema{}))
+
+	legacySynonym := searchP0SynonymSetSchema{
+		Name: "apparel", Direction: "bi", TermsJSON: `["shirt","top"]`, IsActive: true,
+	}
+	require.NoError(t, db.Create(&legacySynonym).Error)
+	require.NoError(t, runWithMigrations(db, orderedMigrations[:migrationIndex+1]))
+	require.True(t, db.Migrator().HasTable(&searchP1TypoToleranceProfileSchema{}))
+	require.True(t, db.Migrator().HasIndex("search_typo_tolerance_profiles", "idx_search_typo_tolerance_profiles_one_active"))
+
+	var profiles []searchP1TypoToleranceProfileSchema
+	require.NoError(t, db.Find(&profiles).Error)
+	require.Len(t, profiles, 1)
+	assert.Equal(t, "default", profiles[0].Name)
+	assert.Equal(t, 4, profiles[0].MinimumTokenLength)
+	assert.Equal(t, 4, profiles[0].OneEditMinimumLength)
+	assert.Equal(t, 8, profiles[0].TwoEditMinimumLength)
+	assert.False(t, profiles[0].StrictMode)
+	assert.True(t, profiles[0].IsActive)
+
+	var synonymCount int64
+	require.NoError(t, db.Table("search_synonym_sets").Where("name = ?", "apparel").Count(&synonymCount).Error)
+	assert.EqualValues(t, 1, synonymCount, "P1 must preserve P0 synonym configuration")
+
+	duplicateActive := map[string]any{
+		"name": "other", "minimum_token_length": 4, "one_edit_minimum_length": 4,
+		"two_edit_minimum_length": 8, "strict_mode": false, "is_active": true,
+		"created_at": time.Now().UTC(), "updated_at": time.Now().UTC(),
+	}
+	err := db.Table("search_typo_tolerance_profiles").Create(duplicateActive).Error
+	require.Error(t, err, "the database must reject a second active profile")
 }
 
 func TestOIDCLoginUIMigrationAddsDisplayNameAndCatalog(t *testing.T) {
@@ -662,7 +724,7 @@ func TestLocalizationP1BackfillsAccountPreferencesMarketsAndBaselineKeys(t *test
 	require.Equal(t, int64(len(localizationP1BaselineKeys)), keyCount)
 }
 
-func TestLocalizationP1BaselineContainsExtractedSourceCatalog(t *testing.T) {
+func TestLocalizationMigrationsContainExtractedSourceCatalog(t *testing.T) {
 	data, err := os.ReadFile(filepath.Join("..", "..", "defaults", "localization.en-US.json"))
 	require.NoError(t, err)
 	var catalog struct {
@@ -674,7 +736,7 @@ func TestLocalizationP1BaselineContainsExtractedSourceCatalog(t *testing.T) {
 		} `json:"messages"`
 	}
 	require.NoError(t, json.Unmarshal(data, &catalog))
-	seeded := make(map[string]localizationP1BaselineKey, len(localizationP1BaselineKeys)+len(localizationP3CatalogKeys)+len(localizationP4CatalogKeys)+len(localizationP5ErrorCatalogKeys)+len(oidcLoginUICatalogKeys))
+	seeded := make(map[string]localizationP1BaselineKey, len(localizationP1BaselineKeys)+len(localizationP3CatalogKeys)+len(localizationP4CatalogKeys)+len(localizationP5ErrorCatalogKeys)+len(oidcLoginUICatalogKeys)+len(searchMerchandisingP3CatalogKeys)+len(searchAnalyticsP4CatalogKeys)+len(searchSignalsCatalogKeys))
 	for _, key := range localizationP1BaselineKeys {
 		seeded[key.Namespace+"."+key.Key] = key
 	}
@@ -688,6 +750,21 @@ func TestLocalizationP1BaselineContainsExtractedSourceCatalog(t *testing.T) {
 		seeded[key.Namespace+"."+key.Key] = key
 	}
 	for _, key := range oidcLoginUICatalogKeys {
+		seeded[key.Namespace+"."+key.Key] = key
+	}
+	for _, key := range searchMerchandisingP3CatalogKeys {
+		seeded[key.Namespace+"."+key.Key] = key
+	}
+	for _, key := range searchSignalsCatalogKeys {
+		seeded[key.Namespace+"."+key.Key] = key
+	}
+	for _, key := range searchAnalyticsP4CatalogKeys {
+		seeded[key.Namespace+"."+key.Key] = key
+	}
+	for _, key := range searchReviewCatalogKeys {
+		seeded[key.Namespace+"."+key.Key] = key
+	}
+	for _, key := range searchUICatalogKeys {
 		seeded[key.Namespace+"."+key.Key] = key
 	}
 	for _, message := range catalog.Messages {

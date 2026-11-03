@@ -121,6 +121,8 @@ const localizationHardeningP5Version = "2026081302_localization_hardening_p5"
 const localizationUsageContextVersion = "2026082701_localization_usage_context"
 const platformJobsP1Version = "2026090301_platform_jobs_p1"
 const oidcLoginUIVersion = "2026090501_oidc_login_ui"
+const searchFoundationP0Version = "2026091601_search_foundation_p0"
+const searchQueryUnderstandingP1Version = "2026092601_search_query_understanding_p1"
 
 const (
 	platformJobsP1MediaJobType    = "media.process"
@@ -1968,6 +1970,304 @@ var orderedMigrations = []Migration{
 		}},
 		Up: migrateOIDCLoginUI,
 	},
+	{
+		Version:         searchFoundationP0Version,
+		Name:            "add search foundation projection and configuration tables",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "search", "jobs"},
+		PostChecks: []PostCheck{{
+			Name: "search_foundation_tables_exist",
+			Check: func(tx *gorm.DB) error {
+				for _, table := range []string{"search_documents", "search_index_states", "search_synonym_sets", "search_ranking_profiles", "search_merchandising_rules", "search_query_events", "search_click_events"} {
+					if !tx.Migrator().HasTable(table) {
+						return fmt.Errorf("missing search foundation table %s", table)
+					}
+				}
+				return nil
+			},
+		}},
+		Up: func(tx *gorm.DB) error {
+			for _, model := range []any{
+				&searchP0DocumentSchema{}, &searchP0IndexStateSchema{}, &searchP0SynonymSetSchema{},
+				&searchP0RankingProfileSchema{}, &searchP0MerchandisingRuleSchema{},
+				&searchP0QueryEventSchema{}, &searchP0ClickEventSchema{},
+			} {
+				if err := ops.CreateTableIfNotExists(tx, model); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
+	{
+		Version:         searchQueryUnderstandingP1Version,
+		Name:            "add search query understanding configuration",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "backfill", "search"},
+		PostChecks: []PostCheck{{
+			Name: "search_typo_tolerance_profile_ready",
+			Check: func(tx *gorm.DB) error {
+				if !tx.Migrator().HasTable(&searchP1TypoToleranceProfileSchema{}) {
+					return errors.New("search typo tolerance profiles table is missing")
+				}
+				if !tx.Migrator().HasIndex("search_typo_tolerance_profiles", "idx_search_typo_tolerance_profiles_one_active") {
+					return errors.New("search typo tolerance active-profile index is missing")
+				}
+				var activeCount int64
+				if err := tx.Table("search_typo_tolerance_profiles").Where("deleted_at IS NULL AND is_active = ?", true).Count(&activeCount).Error; err != nil {
+					return err
+				}
+				if activeCount != 1 {
+					return fmt.Errorf("expected exactly one active search typo tolerance profile, found %d", activeCount)
+				}
+				return nil
+			},
+		}},
+		Up: migrateSearchQueryUnderstandingP1,
+	},
+	{
+		Version:         searchRankingP2Version,
+		Name:            "add search ranking profiles and projected sales signals",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "backfill", "search", "jobs"},
+		Up:              migrateSearchRankingP2,
+		PostChecks: []PostCheck{{Name: "search_ranking_ready", Check: func(tx *gorm.DB) error {
+			if !tx.Migrator().HasTable("search_sales_signals") || !tx.Migrator().HasColumn("search_ranking_profiles", "version") {
+				return errors.New("search ranking schema missing")
+			}
+			var count int64
+			if err := tx.Session(&gorm.Session{NewDB: true}).Table("search_ranking_profiles").Where("is_default = ? AND deleted_at IS NULL", true).Count(&count).Error; err != nil {
+				return err
+			}
+			if count != 1 {
+				return fmt.Errorf("expected one default ranking profile, found %d", count)
+			}
+			return nil
+		}}},
+	},
+	{
+		Version:         searchMerchandisingP3Version,
+		Name:            "add versioned search merchandising rules and audit snapshots",
+		TransactionMode: TransactionModeRequired,
+		Tags:            []string{"expand", "backfill", "search", "merchandising", "localization"},
+		Up:              migrateSearchMerchandisingP3,
+		PostChecks: []PostCheck{{Name: "search_merchandising_ready", Check: func(tx *gorm.DB) error {
+			if !tx.Session(&gorm.Session{NewDB: true}).Migrator().HasColumn("search_merchandising_rules", "version") || !tx.Session(&gorm.Session{NewDB: true}).Migrator().HasTable(&searchP3MerchandisingAuditSchema{}) {
+				return errors.New("search merchandising schema missing")
+			}
+			return nil
+		}}},
+	},
+	{Version: searchAnalyticsP4Version, Name: "activate anonymous search analytics and verified commerce attribution", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "search", "analytics"}, Up: migrateSearchAnalyticsP4},
+	{Version: searchSignalsIncidentsVersion, Name: "add private variant costs, ranking signals, and stale-index incident history", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "search", "catalog"}, Up: migrateSearchSignalsIncidents},
+	{Version: searchProjectionRevisionsVersion, Name: "track outstanding product projection revisions", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "backfill", "search"}, Up: migrateSearchProjectionRevisions},
+	{Version: searchCompactAnalyticsVersion, Name: "backfill compact authoritative search analytics", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "backfill", "search"}, Up: migrateSearchCompactAnalytics},
+	{Version: searchSQLRetrievalVersion, Name: "normalize exact SQL search retrieval and vocabulary postings", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "backfill", "search"}, Up: migrateSearchSQLRetrieval},
+	{Version: searchCompactAnalyticsContractVersion, Name: "remove full search result analytics payloads", TransactionMode: TransactionModeRequired, Tags: []string{"contract", "search"}, ContractBlockers: []string{"allow_contract_migrations"}, Up: migrateSearchCompactAnalyticsContract},
+	{Version: searchConfigurationHistoryVersion, Name: "retain search configuration change snapshots", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "backfill", "search"}, Up: migrateSearchConfigurationHistory},
+	{Version: searchAttributeLocalizationVersion, Name: "localize product attribute headings", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "backfill", "search", "localization"}, Up: migrateSearchAttributeLocalization},
+	{Version: searchReviewCatalogVersion, Name: "publish search administration and storefront messages", TransactionMode: TransactionModeRequired, Tags: []string{"backfill", "search", "localization"}, Up: migrateSearchReviewCatalog, PostChecks: []PostCheck{{Name: "search_review_source_catalog_ready", Check: localizationDefaultSourceCatalogPublished}}},
+	{Version: searchInventoryDebtVersion, Name: "track inventory projection debt per variant", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "search"}, Up: migrateSearchInventoryDebt},
+	{Version: searchUICatalogVersion, Name: "publish search UI review messages", TransactionMode: TransactionModeRequired, Tags: []string{"backfill", "search", "localization"}, Up: migrateSearchUICatalog, PostChecks: []PostCheck{{Name: "search_ui_source_catalog_ready", Check: localizationDefaultSourceCatalogPublished}}},
+	{Version: searchFanoutCheckpointVersion, Name: "checkpoint catalog search fanout batches", TransactionMode: TransactionModeRequired, Tags: []string{"expand", "search"}, Up: migrateSearchFanoutCheckpoint},
+}
+
+var searchAnalyticsP4CatalogKeys = []localizationP1BaselineKey{
+	{Namespace: "admin", Key: "navigation.search_analytics", SourceText: "Search analytics", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.search_synonyms", SourceText: "Search synonyms", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.search_typo_profiles", SourceText: "Search typo profiles", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.search_ranking_profiles", SourceText: "Search ranking profiles", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "navigation.search_operations", SourceText: "Search operations", OwnerDomain: "admin"},
+
+	{Namespace: "storefront", Key: "search.apply_filters", SourceText: "Apply filters", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.availability", SourceText: "Availability", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.brands", SourceText: "Brands", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.categories", SourceText: "Categories", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.consent", SourceText: "Allow anonymous search activity to improve search. You can turn this off at any time; raw activity is retained for 90 days.", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.degraded", SourceText: "Search is temporarily unavailable. Showing basic catalog browsing with your filters; keyword matching and relevance sorting are unavailable.", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.did_you_mean", SourceText: "Did you mean", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.in_stock", SourceText: "In stock", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.out_of_stock", SourceText: "Out of stock", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.popular", SourceText: "Popular searches", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.price", SourceText: "Price", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.relaxed", SourceText: "Showing related matches. Try the spelling suggestion or adjust your filters for closer results.", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.submit", SourceText: "Search", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.suggestions", SourceText: "Search suggestions", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.title", SourceText: "Product search", OwnerDomain: "storefront"},
+
+	{Namespace: "storefront", Key: "search.trending", SourceText: "Trending searches", OwnerDomain: "storefront"},
+
+	{Namespace: "errors", Key: "invalid_search_event", SourceText: "The search event is invalid or expired.", OwnerDomain: "http"},
+
+	{Namespace: "errors", Key: "search_capacity_exhausted", SourceText: "Search is busy. Please try again shortly.", OwnerDomain: "http"},
+
+	{Namespace: "errors", Key: "search_unavailable", SourceText: "Search is temporarily unavailable.", OwnerDomain: "http"},
+}
+
+// These schemas freeze the tables introduced by the search P0 migration.
+type searchP0DocumentSchema struct {
+	ID              uint         `gorm:"primaryKey"`
+	EntityType      string       `gorm:"not null;size:32;uniqueIndex:idx_search_documents_entity,priority:1;index"`
+	EntityID        uint         `gorm:"not null;uniqueIndex:idx_search_documents_entity,priority:2;index"`
+	PayloadJSON     string       `gorm:"type:text;not null"`
+	SearchableText  string       `gorm:"type:text;not null"`
+	NormalizedName  string       `gorm:"not null;size:255;index"`
+	BrandSlug       string       `gorm:"not null;size:255;default:'';index"`
+	CategoryTokens  string       `gorm:"type:text;not null;default:''"`
+	AttributeTokens string       `gorm:"type:text;not null;default:''"`
+	MinPrice        models.Money `gorm:"type:numeric(12,2);not null;index"`
+	MaxPrice        models.Money `gorm:"type:numeric(12,2);not null;index"`
+	Available       bool         `gorm:"not null;default:false;index"`
+	Active          bool         `gorm:"not null;default:true;index"`
+	Version         int64        `gorm:"not null"`
+	SourceCreatedAt time.Time    `gorm:"not null;index"`
+	SourceUpdatedAt time.Time    `gorm:"not null;index"`
+	IndexedAt       time.Time    `gorm:"not null;index"`
+	CreatedAt       time.Time    `gorm:"not null"`
+	UpdatedAt       time.Time    `gorm:"not null"`
+}
+
+func (searchP0DocumentSchema) TableName() string { return "search_documents" }
+
+type searchP0IndexStateSchema struct {
+	Name                   string     `gorm:"primaryKey;size:64"`
+	LastIndexedAt          *time.Time `gorm:"index"`
+	LastFullReindexStarted *time.Time
+	LastFullReindexAt      *time.Time `gorm:"index"`
+	DocumentCount          int64      `gorm:"not null;default:0"`
+	CreatedAt              time.Time  `gorm:"not null"`
+	UpdatedAt              time.Time  `gorm:"not null"`
+}
+
+func (searchP0IndexStateSchema) TableName() string { return "search_index_states" }
+
+type searchP0SynonymSetSchema struct {
+	ID        uint `gorm:"primaryKey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+	Name      string         `gorm:"not null;size:120;uniqueIndex"`
+	Direction string         `gorm:"not null;size:8"`
+	TermsJSON string         `gorm:"type:text;not null"`
+	IsActive  bool           `gorm:"not null;default:true;index"`
+	UpdatedBy *uint          `gorm:"index"`
+}
+
+func (searchP0SynonymSetSchema) TableName() string { return "search_synonym_sets" }
+
+type searchP0RankingProfileSchema struct {
+	ID          uint `gorm:"primaryKey"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
+	Name        string         `gorm:"not null;size:120;uniqueIndex"`
+	WeightsJSON string         `gorm:"type:text;not null"`
+	IsDefault   bool           `gorm:"not null;default:false;index"`
+	UpdatedBy   *uint          `gorm:"index"`
+}
+
+func (searchP0RankingProfileSchema) TableName() string { return "search_ranking_profiles" }
+
+type searchP0MerchandisingRuleSchema struct {
+	ID            uint `gorm:"primaryKey"`
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	DeletedAt     gorm.DeletedAt `gorm:"index"`
+	Name          string         `gorm:"not null;size:120"`
+	RuleType      string         `gorm:"not null;size:32;index"`
+	PredicateJSON string         `gorm:"type:text;not null"`
+	ActionJSON    string         `gorm:"type:text;not null"`
+	Priority      int            `gorm:"not null;default:0;index"`
+	StartsAt      *time.Time     `gorm:"index"`
+	EndsAt        *time.Time     `gorm:"index"`
+	IsActive      bool           `gorm:"not null;default:true;index"`
+	UpdatedBy     *uint          `gorm:"index"`
+}
+
+func (searchP0MerchandisingRuleSchema) TableName() string { return "search_merchandising_rules" }
+
+type searchP0QueryEventSchema struct {
+	ID              uint      `gorm:"primaryKey"`
+	Query           string    `gorm:"type:text;not null"`
+	NormalizedQuery string    `gorm:"type:text;not null;index"`
+	FiltersJSON     string    `gorm:"type:text;not null"`
+	ResultCount     int       `gorm:"not null"`
+	LatencyMs       int64     `gorm:"not null"`
+	SessionID       string    `gorm:"not null;size:128;default:'';index"`
+	UserID          *uint     `gorm:"index"`
+	CreatedAt       time.Time `gorm:"not null;index"`
+}
+
+func (searchP0QueryEventSchema) TableName() string { return "search_query_events" }
+
+type searchP0ClickEventSchema struct {
+	ID               uint      `gorm:"primaryKey"`
+	QueryEventID     uint      `gorm:"not null;index"`
+	ProductVariantID uint      `gorm:"not null;index"`
+	Position         int       `gorm:"not null"`
+	ClickedAt        time.Time `gorm:"not null;index"`
+}
+
+func (searchP0ClickEventSchema) TableName() string { return "search_click_events" }
+
+// searchP1TypoToleranceProfileSchema freezes the table introduced by the
+// search P1 migration so later runtime model changes cannot break replay.
+type searchP1TypoToleranceProfileSchema struct {
+	ID                   uint `gorm:"primaryKey"`
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
+	DeletedAt            gorm.DeletedAt `gorm:"index"`
+	Name                 string         `gorm:"not null;size:120;uniqueIndex"`
+	MinimumTokenLength   int            `gorm:"not null"`
+	OneEditMinimumLength int            `gorm:"not null"`
+	TwoEditMinimumLength int            `gorm:"not null"`
+	StrictMode           bool           `gorm:"not null;default:false"`
+	IsActive             bool           `gorm:"not null;default:false;index"`
+	UpdatedBy            *uint          `gorm:"index"`
+}
+
+func (searchP1TypoToleranceProfileSchema) TableName() string {
+	return "search_typo_tolerance_profiles"
+}
+
+func migrateSearchQueryUnderstandingP1(tx *gorm.DB) error {
+	if err := ops.CreateTableIfNotExists(tx, &searchP1TypoToleranceProfileSchema{}); err != nil {
+		return err
+	}
+	if err := tx.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_search_typo_tolerance_profiles_one_active
+		ON search_typo_tolerance_profiles (is_active)
+		WHERE is_active = TRUE AND deleted_at IS NULL`).Error; err != nil {
+		return err
+	}
+	now := time.Now().UTC()
+	defaultProfile := map[string]any{
+		"name":                    "default",
+		"minimum_token_length":    4,
+		"one_edit_minimum_length": 4,
+		"two_edit_minimum_length": 8,
+		"strict_mode":             false,
+		"is_active":               true,
+		"created_at":              now,
+		"updated_at":              now,
+	}
+	return tx.Table("search_typo_tolerance_profiles").Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "name"}},
+		DoNothing: true,
+	}).Create(defaultProfile).Error
 }
 
 // These schemas freeze the tables introduced by the P1 migration. Runtime
@@ -5396,4 +5696,10 @@ func migrationStepAlertThresholdMs() int64 {
 		return 30_000
 	}
 	return parsed.Milliseconds()
+}
+
+var searchSignalsCatalogKeys = []localizationP1BaselineKey{
+	{Namespace: "admin", Key: "product.variant.unit_cost", SourceText: "Unit cost", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "product.variant.unit_cost_label", SourceText: "Variant {number} unit cost", OwnerDomain: "admin"},
+	{Namespace: "admin", Key: "product.variant.unit_cost_help", SourceText: "Private to administrators. Leave blank when the cost is unknown.", OwnerDomain: "admin"},
 }

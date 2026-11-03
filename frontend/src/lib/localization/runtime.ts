@@ -1,3 +1,4 @@
+import { localizedPageUrl } from "./url";
 import type { components } from "$lib/api/generated/openapi";
 import { writable, type Unsubscriber } from "svelte/store";
 import type { LocalizationRolloutDomain } from "./domain";
@@ -160,6 +161,11 @@ export class LocalizationRuntime {
 			}
 		}
 		this.state.set(this);
+		if (persist && typeof window !== "undefined") {
+			const current = new URL(window.location.href);
+			if (current.searchParams.get("locale") !== this.requestedLocale)
+				window.location.assign(localizedPageUrl(current, this.requestedLocale));
+		}
 	}
 
 	async refresh(): Promise<void> {

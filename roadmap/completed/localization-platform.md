@@ -55,7 +55,7 @@
 - Product catalog depth baseline:
   - Catalog’s canonical purchasable model is already variant-first; localization adds translated display fields only.
   - Do not reintroduce product-level purchase semantics while localizing product copy.
-- Search (`roadmap/search-discoverability-quality.md`):
+- Search (`roadmap/completed/search-discoverability-quality.md`):
   - Initial localization rollout keeps search behavior deterministic with canonical-language indexing fallback.
   - Multilingual search relevance remains a later search phase and consumes localized content once stable.
 - Customer communications (`roadmap/customer-communications-email-sms.md`):

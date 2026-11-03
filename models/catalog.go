@@ -50,6 +50,7 @@ type ProductVariant struct {
 	SKU              string                      `json:"sku" gorm:"not null;index"`
 	Title            string                      `json:"title" gorm:"not null"`
 	Price            Money                       `json:"price" gorm:"type:numeric(12,2);not null"`
+	UnitCost         *Money                      `json:"-" gorm:"type:numeric(12,2)"`
 	CompareAtPrice   *Money                      `json:"compare_at_price,omitempty" gorm:"type:numeric(12,2)"`
 	Stock            int                         `json:"stock" gorm:"not null;default:0"`
 	Position         int                         `json:"position" gorm:"not null;default:1"`
@@ -160,6 +161,7 @@ type ProductVariantDraft struct {
 	SKU                    string                           `json:"sku" gorm:"not null"`
 	Title                  string                           `json:"title" gorm:"not null"`
 	Price                  Money                            `json:"price" gorm:"type:numeric(12,2);not null"`
+	UnitCost               *Money                           `json:"-" gorm:"type:numeric(12,2)"`
 	CompareAtPrice         *Money                           `json:"compare_at_price,omitempty" gorm:"type:numeric(12,2)"`
 	Stock                  int                              `json:"stock" gorm:"not null;default:0"`
 	Position               int                              `json:"position" gorm:"not null;default:1"`

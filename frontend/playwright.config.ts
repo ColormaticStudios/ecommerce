@@ -30,6 +30,7 @@ if (isCI && dbDriver !== "postgres") {
 const e2eServerEnv: Record<string, string> = {
 	...process.env,
 	E2E_API_PORT: apiPort,
+	E2E_APP_PORT: appPort,
 	E2E_DB_DRIVER: dbDriver,
 };
 
@@ -50,7 +51,8 @@ export default defineConfig({
 	testDir: "./e2e",
 	fullyParallel: false,
 	retries: process.env.CI ? 2 : 0,
-	workers: process.env.CI ? 1 : undefined,
+	// The degraded-search drill temporarily pauses a shared projection table.
+	workers: 1,
 	reporter: "list",
 	use: {
 		baseURL: appBaseURL,

@@ -232,6 +232,38 @@ func (s *Service) ReplaceRollouts(ctx context.Context, inputs []RolloutInput, ac
 	return s.ListRollouts(ctx)
 }
 
+// RolloutDependsOnIdentity reports whether this resolution can select different
+// locales for different audience cohorts. Deterministic disabled/zero gates are
+// skipped; the first fully enabled gate terminates the fallback walk.
+func (s *Service) RolloutDependsOnIdentity(ctx context.Context, resolution Resolution, domain string) (bool, error) {
+	if !validRolloutDomain(domain) || len(resolution.FallbackChain) == 0 {
+		return false, ErrInvalidTranslation
+	}
+	// Every validated resolution ends at the permanently fully enabled global
+	// default. Its single-locale chain cannot depend on an audience cohort.
+	if len(resolution.FallbackChain) == 1 {
+		return false, nil
+	}
+	var rows []models.LocalizationRollout
+	if err := s.db.WithContext(ctx).Preload("Locale").Where("domain = ?", domain).Find(&rows).Error; err != nil {
+		return false, err
+	}
+	settings := make(map[string]models.LocalizationRollout, len(rows))
+	for _, row := range rows {
+		settings[row.Locale.Code] = row
+	}
+	for _, locale := range resolution.FallbackChain {
+		setting, exists := settings[locale]
+		if !exists || setting.IsEnabled && setting.Percentage == 100 {
+			return false, nil
+		}
+		if setting.IsEnabled && setting.Percentage > 0 {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (s *Service) ApplyRollout(ctx context.Context, resolution Resolution, domain, identity string) (Resolution, error) {
 	domain = strings.TrimSpace(domain)
 	if domain == "" {

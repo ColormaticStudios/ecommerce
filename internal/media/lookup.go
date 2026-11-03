@@ -1,6 +1,7 @@
 package media
 
 import (
+	"context"
 	"errors"
 
 	"ecommerce/models"
@@ -55,6 +56,12 @@ func (s *Service) ProductMediaURLsByRole(productID uint, role string) ([]string,
 }
 
 func (s *Service) ProductMediaURLsByProductIDs(productIDs []uint) (map[uint][]string, error) {
+	return s.OwnerMediaURLs(context.Background(), OwnerTypeProduct, productIDs, RoleProductImage)
+}
+
+// OwnerMediaURLs resolves a bounded page of owners in two queries, retaining
+// reference order and the same readiness checks as single-owner lookups.
+func (s *Service) OwnerMediaURLs(ctx context.Context, ownerType string, productIDs []uint, role string) (map[uint][]string, error) {
 	urlsByProduct := make(map[uint][]string)
 	if len(productIDs) == 0 {
 		return urlsByProduct, nil
@@ -78,8 +85,8 @@ func (s *Service) ProductMediaURLsByProductIDs(productIDs []uint) (map[uint][]st
 	}
 
 	var refs []models.MediaReference
-	if err := s.DB.Where("owner_type = ? AND owner_id IN ? AND role = ?",
-		OwnerTypeProduct, uniqueIDs, RoleProductImage).
+	if err := s.DB.WithContext(ctx).Where("owner_type = ? AND owner_id IN ? AND role = ?",
+		ownerType, uniqueIDs, role).
 		Order("owner_id asc").
 		Order("position asc").
 		Order("created_at asc").
@@ -107,7 +114,7 @@ func (s *Service) ProductMediaURLsByProductIDs(productIDs []uint) (map[uint][]st
 	}
 
 	var mediaObjs []models.MediaObject
-	if err := s.DB.Where("id IN ?", mediaIDs).Find(&mediaObjs).Error; err != nil {
+	if err := s.DB.WithContext(ctx).Where("id IN ?", mediaIDs).Find(&mediaObjs).Error; err != nil {
 		return nil, err
 	}
 

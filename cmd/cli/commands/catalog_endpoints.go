@@ -11,9 +11,10 @@ func withCatalogEndpoints[T any](ctx context.Context, run func(context.Context, 
 		var zero T
 		return zero, err
 	}
-	db := getDB()
+	cfg := getConfig()
+	db := getDBWithConfig(cfg)
 	defer closeDB(db)
-	endpoints, err := httpapi.NewCatalogEndpoints(db, nil)
+	endpoints, err := httpapi.NewCatalogEndpoints(db, nil, newJobRuntime(db, cfg))
 	if err != nil {
 		var zero T
 		return zero, err

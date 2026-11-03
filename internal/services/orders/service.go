@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	searchservice "ecommerce/internal/search"
 	inventoryservice "ecommerce/internal/services/inventory"
 	"ecommerce/models"
 
@@ -117,5 +118,11 @@ func ApplyStatusTransition(tx *gorm.DB, order *models.Order, newStatus string) e
 	}
 
 	order.Status = newStatus
-	return tx.Save(order).Error
+	if err := tx.Save(order).Error; err != nil {
+		return err
+	}
+	if newStatus == models.StatusPaid {
+		searchservice.BestEffortAnalyticsTx(tx.Statement.Context, tx, func() error { return searchservice.RecordPaidOrderAttributionTx(tx.Statement.Context, tx, order.ID) })
+	}
+	return nil
 }

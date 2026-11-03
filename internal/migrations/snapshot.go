@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 func SchemaSnapshot(db *gorm.DB) (string, error) {
@@ -49,6 +50,9 @@ func SchemaSnapshot(db *gorm.DB) (string, error) {
 }
 
 func tableIndexes(db *gorm.DB, table string) ([]string, error) {
+	if db.Dialector.Name() == "postgres" {
+		return postgresTableIndexes(db, table)
+	}
 	indexes, err := db.Migrator().GetIndexes(table)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list indexes for table %s: %w", table, err)
@@ -71,13 +75,48 @@ func tableIndexes(db *gorm.DB, table string) ([]string, error) {
 		}
 		lines = append(lines, fmt.Sprintf(
 			"%s columns=%s unique=%s option=%s",
-			index.Name(),
+			canonicalSnapshotIndexName(table, index.Name(), index.Columns()),
 			strings.Join(index.Columns(), ","),
 			unique,
 			normalizeWhitespace(index.Option()),
 		))
 	}
 	sort.Strings(lines)
+	return lines, nil
+}
+
+func canonicalSnapshotIndexName(table, name string, columns []string) string {
+	// SQLite allows GORM's default 64-character generated identifiers, whereas
+	// PostgreSQL's naming strategy uses 63. Compare generated names at the
+	// stricter limit without rewriting explicitly named project indexes.
+	if len(columns) == 1 && (schema.NamingStrategy{}).IndexName(table, columns[0]) == name {
+		return (schema.NamingStrategy{IdentifierMaxLength: 63}).IndexName(table, columns[0])
+	}
+	return name
+}
+
+// GORM's PostgreSQL index inspector orders attributes by their name, which
+// loses the column order that determines a composite index's access paths.
+func postgresTableIndexes(db *gorm.DB, table string) ([]string, error) {
+	var rows []struct {
+		Name, Columns string
+		IsUnique      bool
+	}
+	err := db.Raw(`SELECT idx.relname AS name, i.indisunique AS is_unique,
+ string_agg(COALESCE(a.attname, pg_get_indexdef(i.indexrelid, k.ordinality::int, true)), ',' ORDER BY k.ordinality) AS columns
+ FROM pg_class tbl JOIN pg_namespace n ON n.oid=tbl.relnamespace
+ JOIN pg_index i ON i.indrelid=tbl.oid JOIN pg_class idx ON idx.oid=i.indexrelid
+ CROSS JOIN LATERAL unnest(i.indkey) WITH ORDINALITY k(attnum, ordinality)
+ LEFT JOIN pg_attribute a ON a.attrelid=tbl.oid AND a.attnum=k.attnum
+ WHERE n.nspname=current_schema() AND tbl.relname=? AND left(idx.relname,4)='idx_'
+ GROUP BY idx.relname,i.indisunique ORDER BY idx.relname`, table).Scan(&rows).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to list indexes for table %s: %w", table, err)
+	}
+	lines := make([]string, 0, len(rows))
+	for _, row := range rows {
+		lines = append(lines, fmt.Sprintf("%s columns=%s unique=%t option=", row.Name, row.Columns, row.IsUnique))
+	}
 	return lines, nil
 }
 

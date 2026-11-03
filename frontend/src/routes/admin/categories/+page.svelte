@@ -333,7 +333,6 @@
 						tone="admin"
 						type="button"
 						variant="primary"
-						class="rounded-full whitespace-nowrap"
 						disabled={saving || deleting}
 						onclick={() => void saveCategory()}
 					>
@@ -344,7 +343,6 @@
 						tone="admin"
 						type="button"
 						variant="regular"
-						class="rounded-full whitespace-nowrap"
 						disabled={saving || deleting}
 						onclick={requestNewCategory}
 					>
@@ -356,7 +354,6 @@
 							tone="admin"
 							type="button"
 							variant="danger"
-							class="rounded-full whitespace-nowrap"
 							disabled={saving || deleting}
 							onclick={() => void deleteCategory()}
 						>

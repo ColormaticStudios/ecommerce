@@ -13,6 +13,7 @@ const sourceRoots = [
   resolve(repositoryRoot, "frontend/src/routes"),
   resolve(repositoryRoot, "frontend/src/lib/components"),
   resolve(repositoryRoot, "frontend/src/lib/admin"),
+  resolve(repositoryRoot, "frontend/src/lib/search"),
 ];
 
 async function filesUnder(path) {
